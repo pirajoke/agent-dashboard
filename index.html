@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── Design tokens ── */
+:root {
+    --bg: #09090b;
+    --bg2: #0f0f13;
+    --card: rgba(17,17,21,0.7);
+    --card-solid: #111115;
+    --card2: #1a1a22;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.1);
+    --text: #e4e4e7;
+    --text2: #a1a1aa;
+    --muted: #71717a;
+    --dim: #52525b;
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --green: #22c55e;
+    --green2: #4ade80;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --pink: #ec4899;
+    --cyan: #06b6d4;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --glass: blur(16px) saturate(180%);
+}
+
+/* ── Reset & base ── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Background ── */
+.bg-noise {
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+}
+.bg-gradient {
+    position: fixed; inset: 0;
+    background:
+        radial-gradient(ellipse 800px 600px at 20% 0%, rgba(249,115,22,0.04), transparent 60%),
+        radial-gradient(ellipse 600px 400px at 80% 100%, rgba(59,130,246,0.03), transparent 60%);
+    pointer-events: none; z-index: 0;
+}
+
+/* ── Layout ── */
+.shell {
+    position: relative; z-index: 1;
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    background: rgba(9,9,11,0.85);
+    backdrop-filter: var(--glass);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+.sidebar-brand {
+    padding: 0 1.25rem;
+    margin-bottom: 2rem;
+}
+.sidebar-brand h1 {
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.sidebar-brand .sb-sub {
+    font-size: 0.65rem;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 0.15rem;
+}
+.sidebar-nav {
+    list-style: none;
+    padding: 0 0.5rem;
+    flex: 1;
+}
+.sidebar-nav li {
+    margin-bottom: 2px;
+}
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+.sidebar-nav a:hover {
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+}
+.sidebar-nav a.active {
+    background: rgba(249,115,22,0.08);
+    color: var(--accent);
+}
+.sidebar-nav .nav-icon {
+    width: 16px; height: 16px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+.sidebar-nav a.active .nav-icon { opacity: 1; }
+.sidebar-nav .nav-count {
+    margin-left: auto;
+    font-size: 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    color: var(--dim);
+}
+.sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+}
+.sidebar-footer .sf-live {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.65rem; font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+}
+.live-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.main {
+    margin-left: 220px;
+    flex: 1;
+    padding: 2rem 2.5rem;
+    max-width: 1320px;
+}
+
+/* ── Top bar ── */
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+}
+.topbar-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+}
+.topbar-meta {
+    display: flex; align-items: center; gap: 1rem;
+}
+.topbar-meta .tm-item {
+    font-size: 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    display: flex; align-items: center; gap: 0.35rem;
+}
+
+/* ── Stats strip ── */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+}
+.stat {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1rem 0.9rem;
+    text-align: center;
+    transition: border-color 0.2s, transform 0.15s;
+}
+.stat:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+}
+.stat-val {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    line-height: 1.1;
+}
+.stat-val.accent { color: var(--accent); }
+.stat-val.green { color: var(--green); }
+.stat-val.blue { color: var(--blue); }
+.stat-val.purple { color: var(--purple); }
+.stat-lbl {
+    font-size: 0.6rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+    font-weight: 600;
+}
+
+/* ── Section ── */
+.section {
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.4s ease-out both;
+}
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.section:nth-child(2) { animation-delay: 0.05s; }
+.section:nth-child(3) { animation-delay: 0.1s; }
+.section:nth-child(4) { animation-delay: 0.15s; }
+.section:nth-child(5) { animation-delay: 0.2s; }
+.section:nth-child(6) { animation-delay: 0.25s; }
+
+.section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.section-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+.section-count {
+    font-size: 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    background: rgba(255,255,255,0.04);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+.section-empty {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--dim);
+    font-size: 0.8rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+/* ── Agent grid ── */
+.agents {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.75rem;
+}
+.ag {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+.ag:hover {
+    border-color: var(--border2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+.ag-active { border-color: rgba(34,197,94,0.2); }
+.ag-active::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    opacity: 0.6;
+}
+.ag-blocked { border-color: rgba(239,68,68,0.2); }
+.ag-blocked::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--red);
+    opacity: 0.4;
+}
+.ag-top {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.5rem;
+}
+.ag-orb {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.5rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--bg);
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    position: relative;
+}
+.ag-orb-ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: 12px;
+    border: 1.5px solid;
+    opacity: 0.2;
+}
+.ag-active .ag-orb-ring {
+    animation: pulse 3s ease-in-out infinite;
+    opacity: 0.4;
+}
+.ag-info .ag-id {
+    font-size: 0.55rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    opacity: 0.5;
+}
+.ag-info .ag-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+.ag-status {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-left: auto;
+}
+.ag-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+}
+.ag-dot-active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.ag-dot-idle { background: var(--yellow); opacity: 0.6; }
+.ag-dot-blocked { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.ag-zone {
+    font-size: 0.68rem;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+    line-height: 1.35;
+    min-height: 1.8em;
+}
+.ag-merged {
+    font-size: 0.55rem;
+    color: var(--dim);
+    opacity: 0.6;
+    margin-bottom: 0.3rem;
+    font-style: italic;
+}
+.ag-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    margin-bottom: 0.4rem;
+}
+.ag-badge {
+    font-size: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    background: color-mix(in srgb, var(--badge-color) 8%, transparent);
+    color: var(--badge-color);
+    border: 1px solid color-mix(in srgb, var(--badge-color) 15%, transparent);
+}
+.ag-tasks {
+    font-size: 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+}
+
+/* ── Network graph ── */
+.network-wrap {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    overflow: hidden;
+}
+
+/* ── Metrics ── */
+.mt-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+.mt-s {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.7rem 1rem;
+    text-align: center;
+}
+.mt-sv {
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    display: block;
+    color: var(--text);
+}
+.mt-sl {
+    font-size: 0.55rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+}
+.mt-board {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    overflow: hidden;
+}
+.mt-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+}
+.mt-row:hover { background: rgba(255,255,255,0.02); }
+.mt-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+.mt-rank {
+    font-size: 0.75rem;
+    min-width: 2rem;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    font-weight: 700;
+}
+.mt-agent {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 120px;
+}
+.mt-orb {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.42rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--bg);
+    flex-shrink: 0;
+}
+.mt-name {
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+}
+.mt-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 40px;
+}
+.mt-num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+}
+.mt-lbl {
+    font-size: 0.45rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.mt-bar-wrap {
+    flex: 1;
+    min-width: 80px;
+    height: 6px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+.mt-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease-out;
+    opacity: 0.85;
+}
+.mt-score {
+    position: absolute;
+    right: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.55rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+}
+
+/* ── Chat / Communications ── */
+.chat-scroll {
+    max-height: 600px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+.chat-empty, .linear-empty {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--dim);
+    font-size: 0.8rem;
+}
+.chat-msg {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-radius: var(--radius-sm);
+    transition: background 0.1s;
+}
+.chat-msg:hover {
+    background: rgba(255,255,255,0.015);
+}
+.chat-grouped {
+    padding-top: 0;
+    margin-top: -0.3rem;
+}
+.chat-avatar {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.45rem;
+    font-weight: 800;
+    color: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.chat-avatar-space {
+    width: 32px;
+    flex-shrink: 0;
+}
+.chat-content {
+    flex: 1;
+    min-width: 0;
+}
+.chat-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.2rem;
+}
+.chat-sender {
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+}
+.chat-arrow {
+    flex-shrink: 0;
+    opacity: 0.4;
+}
+.chat-receiver {
+    font-size: 0.65rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+}
+.chat-type-badge {
+    font-size: 0.5rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.08rem 0.35rem;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    border: 1px solid;
+}
+.chat-time {
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    margin-left: auto;
+}
+.chat-bubble {
+    padding: 0.4rem 0.6rem;
+    background: rgba(255,255,255,0.025);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
+    border-left: 2px solid var(--bubble-accent);
+    max-width: 95%;
+}
+.chat-body {
+    font-size: 0.78rem;
+    color: var(--text2);
+    line-height: 1.45;
+    word-break: break-word;
+}
+.chat-chips {
+    display: flex;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+}
+.chat-chip {
+    font-size: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.08rem 0.3rem;
+    border-radius: 3px;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--chip-color) 10%, transparent);
+    color: var(--chip-color);
+}
+
+/* ── Linear Queue ── */
+.linear-wrap {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.linear-project {
+    border-bottom: 1px solid var(--border);
+}
+.linear-project:last-child { border-bottom: none; }
+.linear-project-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    background: rgba(255,255,255,0.02);
+}
+.linear-project-name {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.01em;
+}
+.linear-project-count {
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    background: rgba(255,255,255,0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+.linear-issue {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 1rem;
+    transition: background 0.1s;
+    border-top: 1px solid rgba(255,255,255,0.03);
+}
+.linear-issue:hover {
+    background: rgba(255,255,255,0.02);
+}
+.linear-priority {
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+.linear-id {
+    font-size: 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 55px;
+}
+.linear-title {
+    font-size: 0.78rem;
+    color: var(--text);
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.linear-issue-right {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+.linear-label {
+    font-size: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    background: rgba(168,85,247,0.1);
+    color: var(--purple);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.linear-state {
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* ── Platform Capabilities ── */
+.caps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+}
+.cap-card {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    transition: border-color 0.15s;
+}
+.cap-card:hover {
+    border-color: var(--border2);
+}
+.cap-icon {
+    width: 34px; height: 34px;
+    background: rgba(249,115,22,0.08);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.cap-info {
+    flex: 1;
+    min-width: 0;
+}
+.cap-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+}
+.cap-desc {
+    font-size: 0.65rem;
+    color: var(--dim);
+    line-height: 1.35;
+}
+.cap-file {
+    font-size: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    background: rgba(255,255,255,0.04);
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    align-self: center;
+    white-space: nowrap;
+}
+
+/* ── Tables ── */
+.tbl-wrap {
+    background: var(--card);
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+th {
+    text-align: left;
+    padding: 0.65rem 1rem;
+    font-size: 0.55rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border);
+}
+td {
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: middle;
+}
+tr { transition: background 0.1s; }
+tr:nth-child(even) { background: rgba(255,255,255,0.01); }
+tr:hover { background: rgba(255,255,255,0.03); }
+tr:last-child td { border-bottom: none; }
+.proj-name { font-weight: 600; white-space: nowrap; font-size: 0.78rem; }
+.status-pill {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    border-radius: 5px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+}
+.status-active { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.15); }
+.status-other { background: rgba(234,179,8,0.1); color: var(--yellow); border: 1px solid rgba(234,179,8,0.15); }
+.status-done { background: rgba(34,197,94,0.08); color: var(--green2); border: 1px solid rgba(34,197,94,0.1); }
+.pbar {
+    width: 60px;
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 0.35rem;
+    overflow: hidden;
+}
+.pfill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+}
+.ptxt {
+    font-size: 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+}
+.next-action {
+    max-width: 240px;
+    color: var(--dim);
+    font-size: 0.68rem;
+}
+.agents-col {
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent2);
+    opacity: 0.6;
+}
+.fresh-hot { color: var(--green); font-weight: 600; font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; }
+.fresh-warm { color: var(--yellow); font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; }
+.fresh-cold { color: var(--red); font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; }
+.completed-section {
+    opacity: 0.45;
+    transition: opacity 0.2s;
+}
+.completed-section:hover { opacity: 0.85; }
+
+/* ── Footer ── */
+.footer {
+    margin-top: 3rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+    font-size: 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1200px) {
+    .agents { grid-template-columns: repeat(3, 1fr); }
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .caps-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+}
+@media (max-width: 768px) {
+    .agents { grid-template-columns: repeat(2, 1fr); }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .caps-grid { grid-template-columns: 1fr; }
+    .main { padding: 1rem; }
+    .mt-summary { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="bg-noise"></div>
+<div class="bg-gradient"></div>
+
+<div class="shell">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <h1>Command Center</h1>
+        <div class="sb-sub">agent orchestration</div>
+    </div>
+    <ul class="sidebar-nav">
+        <li><a href="#overview" class="active">
+            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
+            Overview
+        </a></li>
+        <li><a href="#agents">
+            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
+            Agents <span class="nav-count">5</span>
+        </a></li>
+        <li><a href="#network">
+            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="3" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="13" cy="4" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="13" cy="12" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="5" y1="7.5" x2="11" y2="4.5" stroke="currentColor" stroke-width="1.2"/><line x1="5" y1="8.5" x2="11" y2="11.5" stroke="currentColor" stroke-width="1.2"/></svg>
+            Network
+        </a></li>
+        <li><a href="#metrics">
+            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="1" y="9" width="3" height="6" rx="0.5" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="6.5" y="5" width="3" height="10" rx="0.5" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="12" y="1" width="3" height="14" rx="0.5" stroke="currentColor" fill="none" stroke-width="1.2"/></svg>
+            Metrics
+        </a></li>
+        <li><a href="#comms">
+            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 3h12v8H5l-3 3V3z" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
+            Comms <span class="nav-count">50</span>
+        </a></li>
+        <li><a href="#linear">
+            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Linear <span class="nav-count">21</span>
+        </a></li>
+        <li><a href="#projects">
+            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 4l5-2 5 2v8l-5 2-5-2V4z" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
+            Projects <span class="nav-count">20</span>
+        </a></li>
+        <li><a href="#platform">
+            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.3"/><line x1="8" y1="2" x2="8" y2="4" stroke="currentColor" stroke-width="1.3"/><line x1="8" y1="12" x2="8" y2="14" stroke="currentColor" stroke-width="1.3"/><line x1="2" y1="8" x2="4" y2="8" stroke="currentColor" stroke-width="1.3"/><line x1="12" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.3"/></svg>
+            Platform
+        </a></li>
+    </ul>
+    <div class="sidebar-footer">
+        <div class="sf-live">
+            <span class="live-dot"></span>
+            <span>2026-03-31 12:11:27</span>
+        </div>
+    </div>
+</nav>
+
+<!-- Main content -->
+<main class="main">
+
+<div class="topbar" id="overview">
+    <div class="topbar-title">Overview</div>
+    <div class="topbar-meta">
+        <span class="tm-item"><span class="live-dot"></span> Live</span>
+        <span class="tm-item">2026-03-31 12:11:27</span>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="stat"><div class="stat-val accent">5</div><div class="stat-lbl">Active Agents</div></div>
+    <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
+    <div class="stat"><div class="stat-val">205</div><div class="stat-lbl">Open Tasks</div></div>
+    <div class="stat"><div class="stat-val green">442</div><div class="stat-lbl">Completed</div></div>
+    <div class="stat"><div class="stat-val blue">21</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
+</div>
+
+<div class="section" id="agents">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--accent)"></div>
+        <div class="section-title">Agents</div>
+        <div class="section-count">5</div>
+    </div>
+    <div class="agents">
+        <div class="ag ag-active">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#ff6b35">
+                    <div class="ag-orb-ring" style="border-color:#ff6b35"></div>
+                    RE
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#ff6b35">RESEARCHER</div>
+                    <div class="ag-name">Researcher</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+            </div>
+            <div class="ag-zone">Deep search, synthesis, content, editing</div>
+            <div class="ag-merged">+ EDITOR</div>
+            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ff6b35">AI-SINGULARITY-CHANNEL</span><span class="ag-badge" style="--badge-color:#ff6b35">INSTANT PRESENTATION</span><span class="ag-badge" style="--badge-color:#ff6b35">MY-DICTIONARY</span><span class="ag-badge" style="--badge-color:#ff6b35">STOCK-CONTENT-BOT</span></div>
+            <div class="ag-tasks">27 tasks</div>
+        </div>
+        <div class="ag ag-active">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#58a6ff">
+                    <div class="ag-orb-ring" style="border-color:#58a6ff"></div>
+                    CO
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#58a6ff">COORDINATOR</div>
+                    <div class="ag-name">Coordinator</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+            </div>
+            <div class="ag-zone">Task flow, delegation, planning, comms, bridge</div>
+            <div class="ag-merged">+ PLANNER, COMMS, BRIDGE</div>
+            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#58a6ff">AGENT-MEMORY</span><span class="ag-badge" style="--badge-color:#58a6ff">LINEAR</span><span class="ag-badge" style="--badge-color:#58a6ff">AGENTS-MD</span><span class="ag-badge" style="--badge-color:#58a6ff">SECOND-BRAIN</span><span class="ag-badge" style="--badge-color:#58a6ff">MESHLY</span><span class="ag-badge" style="--badge-color:#58a6ff">MAXIM-SITE</span></div>
+            <div class="ag-tasks">53 tasks</div>
+        </div>
+        <div class="ag ag-active">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#3fb950">
+                    <div class="ag-orb-ring" style="border-color:#3fb950"></div>
+                    AN
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#3fb950">ANALYST</div>
+                    <div class="ag-name">Analyst</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+            </div>
+            <div class="ag-zone">Data → structured insights</div>
+            
+            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#3fb950">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#3fb950">HEALTH</span></div>
+            <div class="ag-tasks">84 tasks</div>
+        </div>
+        <div class="ag ag-active">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#79c0ff">
+                    <div class="ag-orb-ring" style="border-color:#79c0ff"></div>
+                    VA
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#79c0ff">VAULT</div>
+                    <div class="ag-name">Vault Keeper</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+            </div>
+            <div class="ag-zone">Obsidian routing, hygiene, Tech-Base</div>
+            
+            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#79c0ff">MY-OBSIDIAN</span><span class="ag-badge" style="--badge-color:#79c0ff">SKILLS</span></div>
+            <div class="ag-tasks">11 tasks</div>
+        </div>
+        <div class="ag ag-active">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#ffa657">
+                    <div class="ag-orb-ring" style="border-color:#ffa657"></div>
+                    BU
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#ffa657">BUILDER</div>
+                    <div class="ag-name">Builder</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+            </div>
+            <div class="ag-zone">Code, features, MVP, deploy, infra</div>
+            <div class="ag-merged">+ DEVOPS</div>
+            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ffa657">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#ffa657">MAXIM-SITE</span><span class="ag-badge" style="--badge-color:#ffa657">MESHLY</span><span class="ag-badge" style="--badge-color:#ffa657">STOCK-CONTENT-BOT</span><span class="ag-badge" style="--badge-color:#ffa657">RELOCATION-TO-M4</span><span class="ag-badge" style="--badge-color:#ffa657">MY-OBSIDIAN</span></div>
+            <div class="ag-tasks">111 tasks</div>
+        </div></div>
+</div>
+
+<div class="section" id="network">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--blue)"></div>
+        <div class="section-title">Network</div>
+        <div class="section-count">5 links</div>
+    </div>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+        <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
+        <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
+              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">COOR</text>
+        <text x="280" y="58" text-anchor="middle" fill="#64748b" font-size="5.5"
+              font-family="Inter,sans-serif" font-weight="600">active</text>
+        <circle cx="80" cy="170" r="24" fill="none" stroke="#ff6b35" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="80" cy="170" r="20" fill="#ff6b3518" stroke="#ff6b35" stroke-width="1.5"/>
+        <text x="80" y="167" text-anchor="middle" fill="#ff6b35" font-size="7" font-weight="800"
+              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">RESE</text>
+        <text x="80" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
+              font-family="Inter,sans-serif" font-weight="600">active</text>
+        <circle cx="230" cy="170" r="24" fill="none" stroke="#3fb950" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="230" cy="170" r="20" fill="#3fb95018" stroke="#3fb950" stroke-width="1.5"/>
+        <text x="230" y="167" text-anchor="middle" fill="#3fb950" font-size="7" font-weight="800"
+              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">ANAL</text>
+        <text x="230" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
+              font-family="Inter,sans-serif" font-weight="600">active</text>
+        <circle cx="380" cy="170" r="24" fill="none" stroke="#79c0ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="380" cy="170" r="20" fill="#79c0ff18" stroke="#79c0ff" stroke-width="1.5"/>
+        <text x="380" y="167" text-anchor="middle" fill="#79c0ff" font-size="7" font-weight="800"
+              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">VAUL</text>
+        <text x="380" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
+              font-family="Inter,sans-serif" font-weight="600">active</text>
+        <circle cx="480" cy="170" r="24" fill="none" stroke="#ffa657" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="480" cy="170" r="20" fill="#ffa65718" stroke="#ffa657" stroke-width="1.5"/>
+        <text x="480" y="167" text-anchor="middle" fill="#ffa657" font-size="7" font-weight="800"
+              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">BUIL</text>
+        <text x="480" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
+              font-family="Inter,sans-serif" font-weight="600">active</text></svg></div>
+</div>
+
+<div class="section" id="metrics">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--cyan)"></div>
+        <div class="section-title">Performance</div>
+        <div class="section-count">efficiency scores</div>
+    </div>
+    
+    <div class="mt-summary">
+        <div class="mt-s"><span class="mt-sv">99</span><span class="mt-sl">total tasks</span></div>
+        <div class="mt-s"><span class="mt-sv" style="color:#22c55e">47</span><span class="mt-sl">completed</span></div>
+        <div class="mt-s"><span class="mt-sv">6</span><span class="mt-sl">active agents</span></div>
+        <div class="mt-s"><span class="mt-sv">41.6</span><span class="mt-sl">avg efficiency</span></div>
+    </div><div class="mt-board">
+        <div class="mt-row">
+            <div class="mt-rank">#1</div>
+            <div class="mt-agent">
+                <div class="mt-orb" style="background:#79c0ff">VA</div>
+                <span class="mt-name" style="color:#79c0ff">VAULT</span>
+            </div>
+            <div class="mt-stat"><span class="mt-num">3</span><span class="mt-lbl">tasks</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#22c55e">2</span><span class="mt-lbl">done</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#ef4444">1</span><span class="mt-lbl">blocked</span></div>
+            <div class="mt-stat"><span class="mt-num">67%</span><span class="mt-lbl">rate</span></div>
+            <div class="mt-stat"><span class="mt-num">182s</span><span class="mt-lbl">avg</span></div>
+            <div class="mt-bar-wrap">
+                <div class="mt-bar" style="width:54.9%;background:#eab308"></div>
+                <span class="mt-score">54.9</span>
+            </div>
+        </div>
+        <div class="mt-row">
+            <div class="mt-rank">#2</div>
+            <div class="mt-agent">
+                <div class="mt-orb" style="background:#58a6ff">CO</div>
+                <span class="mt-name" style="color:#58a6ff">COORDINATOR</span>
+            </div>
+            <div class="mt-stat"><span class="mt-num">43</span><span class="mt-lbl">tasks</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#22c55e">28</span><span class="mt-lbl">done</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#ef4444">15</span><span class="mt-lbl">blocked</span></div>
+            <div class="mt-stat"><span class="mt-num">65%</span><span class="mt-lbl">rate</span></div>
+            <div class="mt-stat"><span class="mt-num">468s</span><span class="mt-lbl">avg</span></div>
+            <div class="mt-bar-wrap">
+                <div class="mt-bar" style="width:49.1%;background:#eab308"></div>
+                <span class="mt-score">49.1</span>
+            </div>
+        </div>
+        <div class="mt-row">
+            <div class="mt-rank">#3</div>
+            <div class="mt-agent">
+                <div class="mt-orb" style="background:#ff6b35">RE</div>
+                <span class="mt-name" style="color:#ff6b35">RESEARCHER</span>
+            </div>
+            <div class="mt-stat"><span class="mt-num">22</span><span class="mt-lbl">tasks</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#22c55e">13</span><span class="mt-lbl">done</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#ef4444">9</span><span class="mt-lbl">blocked</span></div>
+            <div class="mt-stat"><span class="mt-num">59%</span><span class="mt-lbl">rate</span></div>
+            <div class="mt-stat"><span class="mt-num">385s</span><span class="mt-lbl">avg</span></div>
+            <div class="mt-bar-wrap">
+                <div class="mt-bar" style="width:45.5%;background:#eab308"></div>
+                <span class="mt-score">45.5</span>
+            </div>
+        </div>
+        <div class="mt-row">
+            <div class="mt-rank">#4</div>
+            <div class="mt-agent">
+                <div class="mt-orb" style="background:#8b949e">CA</div>
+                <span class="mt-name" style="color:#8b949e">CANARY</span>
+            </div>
+            <div class="mt-stat"><span class="mt-num">21</span><span class="mt-lbl">tasks</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#22c55e">0</span><span class="mt-lbl">done</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#ef4444">21</span><span class="mt-lbl">blocked</span></div>
+            <div class="mt-stat"><span class="mt-num">0%</span><span class="mt-lbl">rate</span></div>
+            <div class="mt-stat"><span class="mt-num">26s</span><span class="mt-lbl">avg</span></div>
+            <div class="mt-bar-wrap">
+                <div class="mt-bar" style="width:37.4%;background:#ef4444"></div>
+                <span class="mt-score">37.4</span>
+            </div>
+        </div>
+        <div class="mt-row">
+            <div class="mt-rank">#5</div>
+            <div class="mt-agent">
+                <div class="mt-orb" style="background:#3fb950">AN</div>
+                <span class="mt-name" style="color:#3fb950">ANALYST</span>
+            </div>
+            <div class="mt-stat"><span class="mt-num">2</span><span class="mt-lbl">tasks</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#22c55e">1</span><span class="mt-lbl">done</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#ef4444">1</span><span class="mt-lbl">blocked</span></div>
+            <div class="mt-stat"><span class="mt-num">50%</span><span class="mt-lbl">rate</span></div>
+            <div class="mt-stat"><span class="mt-num">500s</span><span class="mt-lbl">avg</span></div>
+            <div class="mt-bar-wrap">
+                <div class="mt-bar" style="width:32.0%;background:#ef4444"></div>
+                <span class="mt-score">32.0</span>
+            </div>
+        </div>
+        <div class="mt-row">
+            <div class="mt-rank">#6</div>
+            <div class="mt-agent">
+                <div class="mt-orb" style="background:#ffa657">BU</div>
+                <span class="mt-name" style="color:#ffa657">BUILDER</span>
+            </div>
+            <div class="mt-stat"><span class="mt-num">8</span><span class="mt-lbl">tasks</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#22c55e">3</span><span class="mt-lbl">done</span></div>
+            <div class="mt-stat"><span class="mt-num" style="color:#ef4444">5</span><span class="mt-lbl">blocked</span></div>
+            <div class="mt-stat"><span class="mt-num">38%</span><span class="mt-lbl">rate</span></div>
+            <div class="mt-stat"><span class="mt-num">377s</span><span class="mt-lbl">avg</span></div>
+            <div class="mt-bar-wrap">
+                <div class="mt-bar" style="width:30.5%;background:#ef4444"></div>
+                <span class="mt-score">30.5</span>
+            </div>
+        </div></div>
+</div>
+
+<div class="section" id="comms">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--purple)"></div>
+        <div class="section-title">Communications</div>
+        <div class="section-count">50 msgs</div>
+    </div>
+    <div class="chat-scroll">
+            <div class="chat-msg">
+                <div class="chat-avatar" style="background:#58a6ff">CO</div>
+                <div class="chat-content">
+                    <div class="chat-meta">
+                        <span class="chat-sender" style="color:#58a6ff">COORDINATOR</span>
+                        <svg class="chat-arrow" viewBox="0 0 16 16" width="12" height="12"><path d="M1 8h12m-4-4l4 4-4 4" stroke="#58a6ff" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span class="chat-receiver" style="color:#58a6ff">COORDINATOR</span>
+                        <span class="chat-type-badge" style="background:#58a6ff18;color:#58a6ff;border-color:#58a6ff30">&#9632; REPORT</span>
+                        <span class="chat-time">2026-03-30 19:03</span>
+                    </div>
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Created comprehensive test suite (40 tests, all passing) for /agent Telegram command in tests/test_agent.py. Coverage includes: all 10 roles via Russian aliases (координатор, разраб, билдер, аналитик,</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-148</span><span class="chat-chip" style="--chip-color:#58a6ff">AGENT-MEMORY</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Autonomous: Test /agent Telegram command across all roles, aliases, and edge cases</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-148</span><span class="chat-chip" style="--chip-color:#58a6ff">AGENT-MEMORY</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Test /agent Telegram command across all roles, aliases, and edge cases</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-148</span><span class="chat-chip" style="--chip-color:#58a6ff">AGENT-MEMORY</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Write skill for Krisp import workflow</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-137</span><span class="chat-chip" style="--chip-color:#58a6ff">SKILLS</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Set up git pull cron for cloned skill repos</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-136</span><span class="chat-chip" style="--chip-color:#58a6ff">SKILLS</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Created Skills/anthropic-skills/INDEX.md with structured catalog of 17 skills (descriptions + triggers, 5 categories). Updated lumus SKILL.md to read INDEX.md instead of `ls`. Updated SKILLS Tech-Base</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-135</span><span class="chat-chip" style="--chip-color:#58a6ff">SKILLS</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Autonomous: Add anthropic-skills to lumus scan</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-135</span><span class="chat-chip" style="--chip-color:#58a6ff">SKILLS</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Add anthropic-skills to lumus scan</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-135</span><span class="chat-chip" style="--chip-color:#58a6ff">SKILLS</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Test all 10 slash commands in clean session</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-133</span><span class="chat-chip" style="--chip-color:#58a6ff">SKILLS</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Error: Reached max turns (25)</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-132</span><span class="chat-chip" style="--chip-color:#58a6ff">RELOCATION-TO-M4</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Autonomous: Migrate Telegram Bot to Mac Mini with launchd</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-132</span><span class="chat-chip" style="--chip-color:#58a6ff">RELOCATION-TO-M4</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Created user-facing reference note explaining instant local save (Mac) vs GitHub-backed save (Render). Covers both mechanisms, comparison table, auto-detection logic, and troubleshooting. Updated all </div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-129</span><span class="chat-chip" style="--chip-color:#58a6ff">MY-OBSIDIAN</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Autonomous: Document local vs GitHub-backed save differences for user</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-129</span><span class="chat-chip" style="--chip-color:#58a6ff">MY-OBSIDIAN</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Error: Reached max turns (25)</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-132</span><span class="chat-chip" style="--chip-color:#58a6ff">RELOCATION-TO-M4</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Autonomous: Migrate Telegram Bot to Mac Mini with launchd</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-132</span><span class="chat-chip" style="--chip-color:#58a6ff">RELOCATION-TO-M4</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Migrate Telegram Bot to Mac Mini with launchd</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-132</span><span class="chat-chip" style="--chip-color:#58a6ff">RELOCATION-TO-M4</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Document local vs GitHub-backed save differences for user</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-129</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Enable cloud PDF only where Chrome runtime exists</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-128</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Add Claude-generated contextual examples</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-126</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Implement spaced repetition algorithm</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-125</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Build basic Telegram bot for daily flashcards</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-124</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Save exported words to Obsidian with translations</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-123</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Export all words from dictionary search history</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-122</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Find alternative to API if no search history available</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-121</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="chat-msg chat-grouped">
+                <div class="chat-avatar-space"></div>
+                <div class="chat-content">
+                    <div class="chat-bubble" style="--bubble-accent:#58a6ff">
+                        <div class="chat-body">Auto-triage from backlog: Check if Yandex Dictionary API returns search history</div>
+                        <div class="chat-chips"><span class="chat-chip" style="--chip-color:#60a5fa">PER-120</span></div>
+                    </div>
+                </div>
+            </div></div>
+</div>
+
+<div class="section" id="linear">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--blue)"></div>
+        <div class="section-title">Linear Queue</div>
+        <div class="section-count">21 issues</div>
+    </div>
+    <div class="linear-wrap"><div class="linear-project"><div class="linear-project-header"><span class="linear-project-name">No Project</span><span class="linear-project-count">21</span></div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-137</span>
+                <span class="linear-title">Write skill for Krisp import workflow</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-136</span>
+                <span class="linear-title">Set up git pull cron for cloned skill repos</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-133</span>
+                <span class="linear-title">Test all 10 slash commands in clean session</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-132</span>
+                <span class="linear-title">Migrate Telegram Bot to Mac Mini with launchd</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-128</span>
+                <span class="linear-title">Enable cloud PDF only where Chrome runtime exists</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-24</span>
+                <span class="linear-title">Agent Sync Ledger (Codex + Claude)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">sync/pending</span><span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-130</span>
+                <span class="linear-title">Investigate monitoring alert with subsequent self-recovery</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-108</span>
+                <span class="linear-title">Delete temporary API scripts from ~/.claude/</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-117</span>
+                <span class="linear-title">Delete untracked mp4 files from gptapbot-demo</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-110</span>
+                <span class="linear-title">Create weekly cycle W14 in Linear</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">ai-blocked</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-120</span>
+                <span class="linear-title">Check if Yandex Dictionary API returns search history</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-121</span>
+                <span class="linear-title">Find alternative to API if no search history available</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-122</span>
+                <span class="linear-title">Export all words from dictionary search history</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-123</span>
+                <span class="linear-title">Save exported words to Obsidian with translations</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-124</span>
+                <span class="linear-title">Build basic Telegram bot for daily flashcards</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-126</span>
+                <span class="linear-title">Add Claude-generated contextual examples</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-125</span>
+                <span class="linear-title">Implement spaced repetition algorithm</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-47</span>
+                <span class="linear-title">Extend regression harness to /start, search, idea buttons, follow-up, voice save</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:codex</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-33</span>
+                <span class="linear-title">Restore Mac mini access for runner bootstrap</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-27</span>
+                <span class="linear-title">Mac mini runner setup (launchd + watchdog + logs)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ai-task</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-26</span>
+                <span class="linear-title">Autonomous 3h project queue (Codex + Claude)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ai-task</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div></div></div>
+</div>
+
+<div class="section" id="projects">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--green)"></div>
+        <div class="section-title">Active Projects</div>
+        <div class="section-count">20</div>
+    </div>
+    <div class="tbl-wrap">
+    <table>
+    <thead><tr><th>Project</th><th>Status</th><th>Open</th><th>Progress</th><th>Fresh</th><th>Next Action</th><th>Agents</th></tr></thead>
+    <tbody>
+        <tr>
+            <td class="proj-name">AGENT-MEMORY</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:85%"></div></div>
+                <span class="ptxt">85%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">Наблюдать Linear Autopilot в проде (лог: `~/scripts/claude-linear-responder.l...</td>
+            <td class="agents-col">COORDINATOR</td>
+        </tr>
+        <tr>
+            <td class="proj-name">AGENTS-MD</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">3</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:85%"></div></div>
+                <span class="ptxt">85%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Проверить что Claude Code подхватывает правила через wrapper (PER-53)</td>
+            <td class="agents-col">COORDINATOR</td>
+        </tr>
+        <tr>
+            <td class="proj-name">AI-SINGULARITY-CHANNEL</td>
+            <td><span class="status-pill status-other">reviewed</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">5</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:78%"></div></div>
+                <span class="ptxt">78%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Категории новостей (AI research, startups, big tech, open source) (PER-56)</td>
+            <td class="agents-col">RESEARCHER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">CLAUDE-HUB</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:64%"></div></div>
+                <span class="ptxt">64%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Тестирование iTerm split pane версии (PER-150)</td>
+            <td class="agents-col">—</td>
+        </tr>
+        <tr>
+            <td class="proj-name">FASTDATA-VOICE-AGENT</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">79</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:57%"></div></div>
+                <span class="ptxt">57%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">Добавить `POSTGRES_PASSWORD` в реальный `.env` на Render (ручной шаг)</td>
+            <td class="agents-col">ANALYST, BUILDER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">HEALTH</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">5</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:0%"></div></div>
+                <span class="ptxt">0%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Fill [[20-Projects/HEALTH/01_Vision/How I Want to Feel at 60]].</td>
+            <td class="agents-col">ANALYST</td>
+        </tr>
+        <tr>
+            <td class="proj-name">INSTANT PRESENTATION</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:64%"></div></div>
+                <span class="ptxt">64%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">Smoke-тест на business/lecture/social транскриптах (PER-95)</td>
+            <td class="agents-col">RESEARCHER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">JARVIS</td>
+            <td><span class="status-pill status-other">—</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">5</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:81%"></div></div>
+                <span class="ptxt">81%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">—</td>
+            <td class="agents-col">—</td>
+        </tr>
+        <tr>
+            <td class="proj-name">LINEAR</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">28</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:59%"></div></div>
+                <span class="ptxt">59%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">Run first triage session (PER-98)</td>
+            <td class="agents-col">COORDINATOR</td>
+        </tr>
+        <tr>
+            <td class="proj-name">MAXIM-SITE</td>
+            <td><span class="status-pill status-other">reviewed</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">3</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:92%"></div></div>
+                <span class="ptxt">92%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Включить Cloudflare proxy + SSL Full</td>
+            <td class="agents-col">COORDINATOR, BUILDER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">MESHLY</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">9</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:82%"></div></div>
+                <span class="ptxt">82%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Rotate owner-managed third-party secrets (`GMAIL_APP_PASSWORD`, `N8N_AI_WEBHO...</td>
+            <td class="agents-col">COORDINATOR, BUILDER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">MY-DICTIONARY</td>
+            <td><span class="status-pill status-other">idea</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">10</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:17%"></div></div>
+                <span class="ptxt">17%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Изучить Яндекс.Словарь API — есть ли история поиска (PER-119)</td>
+            <td class="agents-col">RESEARCHER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">MY-OBSIDIAN</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:58%"></div></div>
+                <span class="ptxt">58%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">Прогнать ручной Telegram smoke уже на OpenRouter-backed analysis:</td>
+            <td class="agents-col">VAULT, BUILDER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">MY-REMEMBRALL</td>
+            <td><span class="status-pill status-other">idea</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">1</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:0%"></div></div>
+                <span class="ptxt">0%</span>
+            </td>
+            <td class="fresh-cold">18d</td>
+            <td class="next-action">Определить следующие шаги проекта</td>
+            <td class="agents-col">—</td>
+        </tr>
+        <tr>
+            <td class="proj-name">PROJECT-RESUME</td>
+            <td><span class="status-pill status-other">—</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">12</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:25%"></div></div>
+                <span class="ptxt">25%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">—</td>
+            <td class="agents-col">—</td>
+        </tr>
+        <tr>
+            <td class="proj-name">RELOCATION-TO-M4</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:92%"></div></div>
+                <span class="ptxt">92%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Разобрать monitoring noise: почему ночью прилетел alert при последующем self-...</td>
+            <td class="agents-col">BUILDER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">SECOND-BRAIN</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">2</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:75%"></div></div>
+                <span class="ptxt">75%</span>
+            </td>
+            <td class="fresh-warm">9d</td>
+            <td class="next-action">Keep HEALTH as the active build domain.</td>
+            <td class="agents-col">COORDINATOR</td>
+        </tr>
+        <tr>
+            <td class="proj-name">SKILLS</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">3</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:79%"></div></div>
+                <span class="ptxt">79%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">Протестировать все 10 slash-команд в чистой сессии (PER-133)</td>
+            <td class="agents-col">VAULT</td>
+        </tr>
+        <tr>
+            <td class="proj-name">STOCK-CONTENT-BOT</td>
+            <td><span class="status-pill status-other">reviewed</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:62%"></div></div>
+                <span class="ptxt">62%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">Smoke test Telegram flow against `stock_content_bot` database on M4 (PER-138)</td>
+            <td class="agents-col">RESEARCHER, BUILDER</td>
+        </tr>
+        <tr>
+            <td class="proj-name">WORKSHOP-SMENA</td>
+            <td><span class="status-pill status-active">active</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
+            <td>
+                <div class="pbar"><div class="pfill" style="width:76%"></div></div>
+                <span class="ptxt">76%</span>
+            </td>
+            <td class="fresh-hot">1d</td>
+            <td class="next-action">Decide whether to keep the MVP single-event only or support multiple events.</td>
+            <td class="agents-col">—</td>
+        </tr></tbody>
+    </table>
+    </div>
+</div>
+
+<div class="section completed-section">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--dim)"></div>
+        <div class="section-title">Completed</div>
+        <div class="section-count">0</div>
+    </div>
+    <div class="tbl-wrap">
+    <table>
+    <thead><tr><th>Project</th><th>Status</th><th>Done</th><th>Progress</th><th>Last</th><th>Final State</th><th>Agents</th></tr></thead>
+    <tbody></tbody>
+    </table>
+    </div>
+</div>
+
+<div class="section" id="platform">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--accent)"></div>
+        <div class="section-title">Platform Capabilities</div>
+        <div class="section-count">6 modules</div>
+    </div>
+    <div class="caps-grid">
+        <div class="cap-card">
+            <div class="cap-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="color:var(--accent)"><path d="M3 12h4l3-9 4 18 3-9h4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="cap-info">
+                <div class="cap-name">Smart Routing</div>
+                <div class="cap-desc">Dynamic task-to-agent matching based on skills and load</div>
+            </div>
+            <div class="cap-file">agent_router.py</div>
+        </div>
+        <div class="cap-card">
+            <div class="cap-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="color:var(--accent)"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"/><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="cap-info">
+                <div class="cap-name">Circuit Breaker</div>
+                <div class="cap-desc">Auto-disable failing agents, prevent cascade failures</div>
+            </div>
+            <div class="cap-file">agent_dispatch.py</div>
+        </div>
+        <div class="cap-card">
+            <div class="cap-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="color:var(--accent)"><rect x="3" y="12" width="4" height="9" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="10" y="6" width="4" height="15" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/><rect x="17" y="3" width="4" height="18" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+            </div>
+            <div class="cap-info">
+                <div class="cap-name">Performance Metrics</div>
+                <div class="cap-desc">Track efficiency, success rate, and throughput per agent</div>
+            </div>
+            <div class="cap-file">agent_metrics.py</div>
+        </div>
+        <div class="cap-card">
+            <div class="cap-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="color:var(--accent)"><path d="M12 3v3m0 12v3m-9-9h3m12 0h3m-4.2-7.8l-2.1 2.1m-5.4 5.4l-2.1 2.1m0-9.6l2.1 2.1m5.4 5.4l2.1 2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="cap-info">
+                <div class="cap-name">Auto-Retrospective</div>
+                <div class="cap-desc">Generate weekly insights and improvement suggestions</div>
+            </div>
+            <div class="cap-file">agent_retro.py</div>
+        </div>
+        <div class="cap-card">
+            <div class="cap-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="color:var(--accent)"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            </div>
+            <div class="cap-info">
+                <div class="cap-name">Comms Bus</div>
+                <div class="cap-desc">Structured agent-to-agent messaging with typed channels</div>
+            </div>
+            <div class="cap-file">agent_comms.py</div>
+        </div>
+        <div class="cap-card">
+            <div class="cap-icon">
+                <svg viewBox="0 0 24 24" width="20" height="20" style="color:var(--accent)"><path d="M4 4h16v16H4z" stroke="currentColor" stroke-width="2" fill="none" rx="2"/><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="cap-info">
+                <div class="cap-name">Linear Sync</div>
+                <div class="cap-desc">Auto-detect and respond to Linear issue assignments</div>
+            </div>
+            <div class="cap-file">autopilot</div>
+        </div></div>
+</div>
+
+<div class="footer">command center v3 // 5 agents // 21 linear issues // 2026-03-31 12:11:27</div>
+
+</main>
+</div>
+</body>
+</html>
