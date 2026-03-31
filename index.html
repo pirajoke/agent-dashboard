@@ -444,6 +444,37 @@ body {
 .obadge-red { background: rgba(248,81,73,0.15); color: #f85149; }
 .obadge-dim { background: rgba(255,255,255,0.05); color: var(--dim); }
 
+/* ── Billing Cycle ── */
+.osub-billing-cycle {
+    margin-bottom: 0.5rem;
+}
+.osub-billing-label {
+    font-size: max(0.55rem, 10px);
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+.osub-billing-info {
+    font-size: max(0.6rem, 10px);
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 0.25rem;
+}
+
+/* ── Rate Limit Tag ── */
+.osub-rate-tag {
+    font-size: max(0.5rem, 9px);
+    color: var(--muted);
+    background: rgba(255,255,255,0.06);
+    padding: 0.05rem 0.35rem;
+    border-radius: 4px;
+    margin-left: 0.3rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
 /* ── Limit-First Primary Bar ── */
 .osub-limit-primary {
     background: rgba(255,255,255,0.03);
@@ -1325,7 +1356,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-03-31 14:45:46</span>
+            <span>2026-03-31 14:50:55</span>
         </div>
     </div>
 </nav>
@@ -1337,7 +1368,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-03-31 14:45:46</span>
+        <span class="tm-item">2026-03-31 14:50:55</span>
     </div>
 </div>
 
@@ -1365,20 +1396,20 @@ tr:last-child td { border-bottom: none; }
             <div class="orch-meta">Changed: 2026-03-31 04:52 | manual</div>
         </div>
         <div class="orch-card orch-budget">
-            <div class="orch-label">COMBINED <span class="orch-combined-cost">$400/mo</span></div>
+            <div class="orch-label">COMBINED <span class="orch-combined-cost">$220/mo flat</span></div>
             <div class="orch-combined-limits">
                 <div class="orch-combined-row">
                     <span class="orch-combined-agent" style="color:#ff6b35">Claude</span>
-                    <div class="orch-combined-bar"><div class="orch-combined-bar-fill" style="width:100%;background:#ef4444"></div></div>
-                    <span class="orch-combined-count">2314/45</span>
+                    <div class="orch-combined-bar"><div class="orch-combined-bar-fill" style="width:84%;background:#ff6b35"></div></div>
+                    <span class="orch-combined-count">5d left &middot; renews 2026-04-05</span>
                 </div>
                 <div class="orch-combined-row">
                     <span class="orch-combined-agent" style="color:#3fb950">Codex</span>
-                    <div class="orch-combined-bar"><div class="orch-combined-bar-fill" style="width:100%;background:#3fb950;opacity:0.3"></div></div>
-                    <span class="orch-combined-count">unlimited &middot; 125</span>
+                    <div class="orch-combined-bar"><div class="orch-combined-bar-fill" style="width:68%;background:#3fb950"></div></div>
+                    <span class="orch-combined-count">10d left &middot; renews 2026-04-10</span>
                 </div>
             </div>
-            <div class="orch-combined-footer">3330.2M tokens &middot; 31x savings</div>
+            <div class="orch-combined-footer">3335.2M tokens &middot; $12,447 API-eq &middot; 57x ROI</div>
         </div>
     </div>
     <div class="orch-agents-detail">
@@ -1397,24 +1428,32 @@ tr:last-child td { border-bottom: none; }
             </div>
 
             
+            <div class="osub-billing-cycle">
+                <div class="osub-billing-label">BILLING CYCLE &middot; 2026-03-05 &rarr; 2026-04-05</div>
+                <div class="osub-limit-bar">
+                    <div class="osub-limit-bar-fill" style="width:84%;background:#ff6b35"></div>
+                </div>
+                <div class="osub-billing-info">Day 26/31 &middot; 5 days left &middot; $200/mo flat</div>
+            </div>
+            
             <div class="osub-limit-primary">
                 <div class="osub-limit-bar-wrap">
                     <div class="osub-limit-bar">
                         <div class="osub-limit-bar-fill" style="width:100%;background:#ef4444"></div>
                     </div>
-                    <div class="osub-limit-count">2314 / 45 msgs</div>
+                    <div class="osub-limit-count">2357 / ~45 msgs/day <span class="osub-rate-tag">rate limit</span></div>
                 </div>
                 <div class="osub-limit-reset">Resets in 16h 11m</div>
             </div>
             
             <div class="osub-month-summary">
-                <span class="osub-month-label">This Month</span>
-                <span class="osub-month-stats">1722.1M tokens &middot; 37,392 msgs &middot; 27 days</span>
-                <span class="osub-month-savings">$4,398 API-eq &rarr; <strong>22x savings</strong></span>
+                <span class="osub-month-label">This Cycle</span>
+                <span class="osub-month-stats">1727.1M tokens &middot; 37,435 msgs &middot; 27 days active</span>
+                <span class="osub-month-savings">$4,407 API-eq &rarr; <strong>22x ROI</strong></span>
             </div>
 
             <div class="osub-features"><span class="osub-feat">CLI + IDE</span><span class="osub-feat">Agent tool</span><span class="osub-feat">MCP servers</span><span class="osub-feat">Hooks</span><span class="osub-feat">Unlimited Sonnet</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 07:45</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 07:50</div>
         </div>
         <div class="osub osub-full">
             <div class="osub-head">
@@ -1425,28 +1464,36 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="osub-right">
                     <span class="obadge obadge-green">ACTIVE</span>
-                    <span class="osub-plan">Pro $200/mo</span>
+                    <span class="osub-plan">Plus $20/mo</span>
                 </div>
             </div>
 
+            
+            <div class="osub-billing-cycle">
+                <div class="osub-billing-label">BILLING CYCLE &middot; 2026-03-10 &rarr; 2026-04-10</div>
+                <div class="osub-limit-bar">
+                    <div class="osub-limit-bar-fill" style="width:68%;background:#3fb950"></div>
+                </div>
+                <div class="osub-billing-info">Day 21/31 &middot; 10 days left &middot; $20/mo flat</div>
+            </div>
             
             <div class="osub-limit-primary">
                 <div class="osub-limit-bar-wrap">
                     <div class="osub-limit-bar osub-limit-unlimited">
                         <div class="osub-limit-bar-fill" style="width:100%;background:#3fb950;opacity:0.3"></div>
                     </div>
-                    <div class="osub-limit-count">unlimited &middot; 125 sessions today</div>
+                    <div class="osub-limit-count">unlimited &middot; 128 sessions today</div>
                 </div>
             </div>
             
             <div class="osub-month-summary">
-                <span class="osub-month-label">This Month</span>
-                <span class="osub-month-stats">1608.1M tokens &middot; 813 sessions &middot; 18 days</span>
-                <span class="osub-month-savings">$8,040 API-eq &rarr; <strong>40x savings</strong></span>
+                <span class="osub-month-label">This Cycle</span>
+                <span class="osub-month-stats">1608.1M tokens &middot; 816 sessions &middot; 18 days active</span>
+                <span class="osub-month-savings">$8,040 API-eq &rarr; <strong>402x ROI</strong></span>
             </div>
 
             <div class="osub-features"><span class="osub-feat">Cloud sandbox</span><span class="osub-feat">Parallel tasks</span><span class="osub-feat">Git integration</span><span class="osub-feat">Auto PR</span><span class="osub-feat">Background exec</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 07:45</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 07:50</div>
         </div>
     </div>
 </div>
@@ -1551,7 +1598,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2282,7 +2329,7 @@ tr:last-child td { border-bottom: none; }
         </div></div>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 0 linear issues // 2026-03-31 14:45:46</div>
+<div class="footer">command center v3 // 5 agents // 0 linear issues // 2026-03-31 14:50:55</div>
 
 </main>
 </div>
