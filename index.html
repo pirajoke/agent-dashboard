@@ -289,7 +289,7 @@ body {
 /* ── Orchestrator ── */
 .orch-grid {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 250px 200px 1fr;
     gap: 1rem;
 }
 .orch-card {
@@ -1584,7 +1584,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-01 01:19:15</span>
+            <span>2026-04-01 01:22:00</span>
         </div>
     </div>
 </nav>
@@ -1596,7 +1596,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-01 01:19:15</span>
+        <span class="tm-item">2026-04-01 01:22:00</span>
     </div>
 </div>
 
@@ -1605,7 +1605,7 @@ tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
     <div class="stat"><div class="stat-val">270</div><div class="stat-lbl">Open Tasks</div></div>
     <div class="stat"><div class="stat-val green">460</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val blue">5</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">63%</div><div class="stat-lbl">Progress</div></div>
 </div>
 
@@ -1623,6 +1623,12 @@ tr:last-child td { border-bottom: none; }
             <div class="orch-desc">Codex + Codex</div>
             <div class="orch-meta">Changed: 2026-03-31 17:52 | dashboard-github</div>
             <button class="launch-btn" id="launchBtn" onclick="event.preventDefault();launchAgents();return false;" type="button">Launch Agents</button>
+        </div>
+        <div class="orch-card">
+            <div class="orch-label">MODEL</div>
+            <div class="oslider model-slider"><div class="oslider-item model-item " data-model="opus" title="Opus 4.6 — max quality" style="cursor:pointer">OP</div><div class="oslider-item model-item oslider-active" data-model="sonnet" title="Sonnet 4.6 — balanced" style="cursor:pointer">SN</div><div class="oslider-item model-item " data-model="haiku" title="Haiku 4.5 — fast & cheap" style="cursor:pointer">HK</div></div>
+            <div class="orch-desc model-desc">Sonnet 4.6 — balanced</div>
+            <div class="orch-meta model-meta">Token cost: $3/M in</div>
         </div>
         <div class="orch-card orch-budget">
             <div class="orch-label">COMBINED <span class="orch-combined-cost">$220/mo flat</span></div>
@@ -1741,7 +1747,7 @@ tr:last-child td { border-bottom: none; }
         </div>
         <div class="live-panel">
             <div class="live-panel-title">Services</div>
-            <div class="live-svc-summary">6/14 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">responder</span><span class="live-svc-age">55m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
+            <div class="live-svc-summary">6/14 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">responder</span><span class="live-svc-age">58m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
         </div>
     </div>
     <div class="live-panel-wide">
@@ -1850,7 +1856,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2107,7 +2113,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-high" style="width:79%"></div></div>
                 <span class="ptxt">79%</span>
             </td>
-            <td class="fresh-hot">0d</td>
+            <td class="fresh-hot">1d</td>
             <td class="next-action">Протестировать все 10 slash-команд в чистой сессии (PER-133)</td>
             <td class="agents-col">VAULT</td>
         </tr>
@@ -2157,7 +2163,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-01 01:19:15</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-01 01:22:00</div>
 
 </main>
 </div>
@@ -2256,6 +2262,29 @@ async function launchAgents() {
         btn.classList.remove('running');
     }
 }
+
+// ── Model switcher ──
+document.querySelectorAll('.model-item').forEach(el => {
+    el.addEventListener('click', async function(e) {
+        e.preventDefault(); e.stopPropagation();
+        const model = this.dataset.model;
+        if (!model) return;
+        document.querySelectorAll('.model-item').forEach(s => s.classList.remove('oslider-active'));
+        this.classList.add('oslider-active');
+        const descMap = {'opus':'Opus 4.6 — max quality','sonnet':'Sonnet 4.6 — balanced','haiku':'Haiku 4.5 — fast & cheap'};
+        const costMap = {'opus':'$15/M in','sonnet':'$3/M in','haiku':'$0.80/M in'};
+        const descEl = document.querySelector('.model-desc');
+        const metaEl = document.querySelector('.model-meta');
+        if (descEl) descEl.textContent = descMap[model] || model;
+        if (metaEl) metaEl.textContent = 'Switching via GitHub...';
+        const ok = await ghCommit('model-request.json', {model, ts: new Date().toISOString(), source: 'dashboard'}, `model: ${model}`);
+        if (ok) {
+            if (metaEl) metaEl.textContent = `Token cost: ${costMap[model]} — applies on next rebuild`;
+        } else {
+            location.reload();
+        }
+    });
+});
 </script>
 </body>
 </html>
