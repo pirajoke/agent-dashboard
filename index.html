@@ -1325,6 +1325,160 @@ tr:last-child td { border-bottom: none; }
     background: transparent;
 }
 
+/* ── Live task tracking ── */
+.live-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.live-panel, .live-panel-wide {
+    background: rgba(22,22,30,0.7);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+}
+.live-panel-wide {
+    border-radius: 12px;
+}
+.live-panel-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--dim);
+    margin-bottom: 0.75rem;
+}
+.live-task {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0;
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.live-task:last-child { border-bottom: none; }
+.live-pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: livePulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
+.live-issue {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--blue);
+    min-width: 60px;
+}
+.live-title {
+    flex: 1;
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.live-agent {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    min-width: 70px;
+}
+.live-status {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+}
+.live-st-active { background: rgba(88,166,255,0.15); color: var(--blue); }
+.live-st-done { background: rgba(63,185,80,0.15); color: var(--green); }
+.live-svc {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    font-size: 0.75rem;
+}
+.live-svc-summary {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.5rem;
+}
+.live-dot-sm {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.live-health-ok { background: var(--green); }
+.live-health-warn { background: var(--yellow); }
+.live-health-err { background: var(--red, #f85149); }
+.live-svc-name {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--fg);
+    flex: 1;
+}
+.live-svc-age {
+    font-size: 0.65rem;
+    color: var(--dim);
+}
+.live-event {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.live-event:last-child { border-bottom: none; }
+.live-evt-time {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    min-width: 36px;
+    font-size: 0.65rem;
+}
+.live-evt-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.live-evt-label {
+    font-weight: 600;
+    min-width: 55px;
+    font-size: 0.65rem;
+}
+.live-evt-issue {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--blue);
+    min-width: 55px;
+    font-size: 0.7rem;
+}
+.live-evt-detail {
+    flex: 1;
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.live-evt-dur {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    font-size: 0.65rem;
+    min-width: 30px;
+    text-align: right;
+}
+.live-empty {
+    color: var(--dim);
+    font-size: 0.75rem;
+    padding: 1rem 0;
+    text-align: center;
+    font-style: italic;
+}
+
 /* ── Font floor ── */
 * { min-height: 0; }
 .osub-real-updated, .osub-month-label, .osub-month-stats, .osub-month-savings,
@@ -1350,6 +1504,7 @@ tr:last-child td { border-bottom: none; }
     .agents { grid-template-columns: repeat(2, 1fr); }
     .stats { grid-template-columns: repeat(2, 1fr); }
     .caps-grid { grid-template-columns: 1fr; }
+    .live-grid { grid-template-columns: 1fr; }
     .orch-grid { grid-template-columns: 1fr; }
     .orch-agents-detail { grid-template-columns: 1fr; }
     .mt-summary { grid-template-columns: repeat(2, 1fr); }
@@ -1377,6 +1532,10 @@ tr:last-child td { border-bottom: none; }
         <li><a href="#orchestrator">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="8" r="3" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
             Orchestrator
+        <li><a href="#live">
+            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor" opacity="0.8"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.4"/></svg>
+            Live <span class="nav-count">15</span>
+        </a></li>
         <li><a href="#agents">
             <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
             Agents <span class="nav-count">5</span>
@@ -1396,7 +1555,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-03-31 15:31:05</span>
+            <span>2026-03-31 15:39:23</span>
         </div>
     </div>
 </nav>
@@ -1408,7 +1567,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-03-31 15:31:05</span>
+        <span class="tm-item">2026-03-31 15:39:23</span>
     </div>
 </div>
 
@@ -1449,7 +1608,7 @@ tr:last-child td { border-bottom: none; }
                     <span class="orch-combined-count">10d left &middot; renews 2026-04-10</span>
                 </div>
             </div>
-            <div class="orch-combined-footer">3363.6M tokens &middot; $12,502 API-eq &middot; 57x ROI</div>
+            <div class="orch-combined-footer">3371.6M tokens &middot; $12,529 API-eq &middot; 57x ROI</div>
         </div>
     </div>
     <div class="orch-agents-detail">
@@ -1481,19 +1640,19 @@ tr:last-child td { border-bottom: none; }
                     <div class="osub-limit-bar">
                         <div class="osub-limit-bar-fill" style="width:100%;background:#ef4444"></div>
                     </div>
-                    <div class="osub-limit-count">2614 / ~45 msgs/day <span class="osub-rate-tag">rate limit</span></div>
+                    <div class="osub-limit-count">2782 / ~45 msgs/day <span class="osub-rate-tag">rate limit</span></div>
                 </div>
-                <div class="osub-limit-reset">Resets in 15h 30m</div>
+                <div class="osub-limit-reset">Resets in 15h 24m</div>
             </div>
             
             <div class="osub-month-summary">
                 <span class="osub-month-label">This Cycle</span>
-                <span class="osub-month-stats">1754.4M tokens &middot; 37,692 msgs &middot; 27 days active</span>
-                <span class="osub-month-savings">$4,456 API-eq &rarr; <strong>22x ROI</strong></span>
+                <span class="osub-month-stats">1762.3M tokens &middot; 37,860 msgs &middot; 27 days active</span>
+                <span class="osub-month-savings">$4,483 API-eq &rarr; <strong>22x ROI</strong></span>
             </div>
 
             <div class="osub-features"><span class="osub-feat">CLI + IDE</span><span class="osub-feat">Agent tool</span><span class="osub-feat">MCP servers</span><span class="osub-feat">Hooks</span><span class="osub-feat">Unlimited Sonnet</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 08:27</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 08:38</div>
         </div>
         <div class="osub osub-full">
             <div class="osub-head">
@@ -1528,13 +1687,36 @@ tr:last-child td { border-bottom: none; }
             
             <div class="osub-month-summary">
                 <span class="osub-month-label">This Cycle</span>
-                <span class="osub-month-stats">1609.1M tokens &middot; 818 sessions &middot; 18 days active</span>
+                <span class="osub-month-stats">1609.3M tokens &middot; 818 sessions &middot; 18 days active</span>
                 <span class="osub-month-savings">$8,046 API-eq &rarr; <strong>402x ROI</strong></span>
             </div>
 
             <div class="osub-features"><span class="osub-feat">Cloud sandbox</span><span class="osub-feat">Parallel tasks</span><span class="osub-feat">Git integration</span><span class="osub-feat">Auto PR</span><span class="osub-feat">Background exec</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 08:27</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 08:38</div>
         </div>
+    </div>
+</div>
+
+<div class="section" id="live">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--green)"><div style="position:absolute;width:100%;height:100%;border-radius:50%;background:var(--green);animation:livePulse 2s ease-in-out infinite;"></div></div>
+        <div class="section-title">Live</div>
+        <div class="section-count">tasks &amp; services</div>
+    </div>
+    
+    <div class="live-grid">
+        <div class="live-panel">
+            <div class="live-panel-title">Active Tasks</div>
+            <div class="live-empty">No active tasks</div>
+        </div>
+        <div class="live-panel">
+            <div class="live-panel-title">Services</div>
+            <div class="live-svc-summary">6/15 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">871m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">873m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">-387m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">responder</span><span class="live-svc-age">873m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">933m ago</span></div>
+        </div>
+    </div>
+    <div class="live-panel-wide">
+        <div class="live-panel-title">Recent Events</div>
+        <div class="live-event"><span class="live-evt-time">19:03</span><span class="live-evt-dot" style="background:#3fb950"></span><span class="live-evt-label" style="color:#3fb950">done</span><span class="live-evt-issue">PER-148</span><span class="live-evt-detail">COORDINATOR AGENT-MEMORY</span><span class="live-evt-dur">226s</span></div><div class="live-event"><span class="live-evt-time">18:47</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-137</span><span class="live-evt-detail">— No SKILLS project/repo found locally; </span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">18:34</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-136</span><span class="live-evt-detail">— No cloned skill repos paths specified,</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">18:21</span><span class="live-evt-dot" style="background:#3fb950"></span><span class="live-evt-label" style="color:#3fb950">done</span><span class="live-evt-issue">PER-135</span><span class="live-evt-detail">VAULT SKILLS</span><span class="live-evt-dur">273s</span></div><div class="live-event"><span class="live-evt-time">18:03</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-133</span><span class="live-evt-detail">— No repo path, no skill definitions, un</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">17:51</span><span class="live-evt-dot" style="background:#8b949e"></span><span class="live-evt-label" style="color:#8b949e">task_faile</span><span class="live-evt-issue">PER-132</span><span class="live-evt-detail">COORDINATOR RELOCATION-TO-M4</span><span class="live-evt-dur">518s</span></div><div class="live-event"><span class="live-evt-time">17:10</span><span class="live-evt-dot" style="background:#3fb950"></span><span class="live-evt-label" style="color:#3fb950">done</span><span class="live-evt-issue">PER-129</span><span class="live-evt-detail">VAULT MY-OBSIDIAN</span><span class="live-evt-dur">226s</span></div><div class="live-event"><span class="live-evt-time">16:54</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-128</span><span class="live-evt-detail">canary_no_response</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">16:47</span><span class="live-evt-dot" style="background:#8b949e"></span><span class="live-evt-label" style="color:#8b949e">task_faile</span><span class="live-evt-issue">PER-132</span><span class="live-evt-detail">BUILDER RELOCATION-TO-M4</span><span class="live-evt-dur">220s</span></div><div class="live-event"><span class="live-evt-time">16:32</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-129</span><span class="live-evt-detail">— No target file/location specified for </span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">16:20</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-128</span><span class="live-evt-detail">— No repo/file paths specified; unclear </span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">16:09</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-126</span><span class="live-evt-detail">— No repo path, no API details, no archi</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">15:58</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-125</span><span class="live-evt-detail">— No repo path, no codebase context, no </span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">15:47</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-124</span><span class="live-evt-detail">— No MY-DICTIONARY path found, no flashc</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">15:36</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-126</span><span class="live-evt-detail">— No repo path, no API details, no archi</span><span class="live-evt-dur"></span></div>
     </div>
 </div>
 
@@ -1638,7 +1820,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -1945,7 +2127,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-03-31 15:31:05</div>
+<div class="footer">command center v3 // 5 agents // 2026-03-31 15:39:23</div>
 
 </main>
 </div>
