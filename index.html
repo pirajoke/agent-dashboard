@@ -498,6 +498,16 @@ body {
     font-size: 0.55rem;
 }
 
+.osub-savings {
+    background: rgba(63,185,80,0.05);
+    border: 1px solid rgba(63,185,80,0.15);
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem !important;
+}
+.osub-savings strong {
+    color: #3fb950;
+    font-size: 0.75rem;
+}
 .osub-pricing {
     font-size: 0.6rem;
     color: var(--dim);
@@ -1248,7 +1258,7 @@ tr:last-child td { border-bottom: none; }
         </a></li>
         <li><a href="#linear">
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Linear <span class="nav-count">0</span>
+            Linear <span class="nav-count">4</span>
         </a></li>
         <li><a href="#projects">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 4l5-2 5 2v8l-5 2-5-2V4z" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -1265,7 +1275,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-03-31 14:09:30</span>
+            <span>2026-03-31 14:13:03</span>
         </div>
     </div>
 </nav>
@@ -1277,7 +1287,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-03-31 14:09:30</span>
+        <span class="tm-item">2026-03-31 14:13:03</span>
     </div>
 </div>
 
@@ -1286,7 +1296,7 @@ tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
     <div class="stat"><div class="stat-val">210</div><div class="stat-lbl">Open Tasks</div></div>
     <div class="stat"><div class="stat-val green">454</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val blue">4</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
 </div>
 
@@ -1305,23 +1315,22 @@ tr:last-child td { border-bottom: none; }
             <div class="orch-meta">Changed: 2026-03-31 04:52 | manual</div>
         </div>
         <div class="orch-card orch-budget">
-            <div class="orch-label">COMBINED BUDGET</div>
+            <div class="orch-label">COMBINED</div>
             <div class="orch-total-grid">
                 <div class="orch-total-item">
-                    <span class="orch-total-label">Today</span>
-                    <span class="orch-total-val">$0.0000 / $20.00</span>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:0%;background:#3fb950"></div></div>
+                    <span class="orch-total-label">You Pay</span>
+                    <span class="orch-total-val">$400/mo</span>
                 </div>
                 <div class="orch-total-item">
-                    <span class="orch-total-label">Month</span>
-                    <span class="orch-total-val">$137.2126 / $400.00</span>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:34%;background:#3fb950"></div></div>
+                    <span class="orch-total-label">API Would Cost</span>
+                    <span class="orch-total-val">$12,368/mo</span>
                 </div>
                 <div class="orch-total-item">
-                    <span class="orch-total-label">All Time</span>
-                    <span class="orch-total-val">$137.2126</span>
+                    <span class="orch-total-label">Savings</span>
+                    <span class="orch-total-val" style="color:#3fb950">31x</span>
                 </div>
             </div>
+            <div class="osub-tokens" style="margin-top:0.4rem">3299.6M tokens &middot; $272.18 today</div>
         </div>
     </div>
     <div class="orch-agents-detail">
@@ -1339,49 +1348,50 @@ tr:last-child td { border-bottom: none; }
                 </div>
             </div>
 
-            
             <div class="osub-real">
-                <div class="osub-real-label">SUBSCRIPTION USAGE</div>
+                <div class="osub-real-label">REAL USAGE (auto-synced from local data)</div>
                 <div class="osub-real-bar-wrap">
-                    <div class="osub-real-pct">67%</div>
-                    <div class="osub-real-bar"><div class="osub-bar-fill" style="width:67%;background:#ff6b35"></div></div>
+                    <div class="osub-real-pct">1691.6M</div>
+                    <div class="osub-real-bar"><div class="osub-bar-fill" style="width:85%;background:#ff6b35"></div></div>
                 </div>
-                <div class="osub-real-detail">
-                    $67 / $100
-                     &middot; resets Apr 15
-                </div>
-                <div class="osub-real-updated">updated 2026-03-31 06:11</div>
+                <div class="osub-real-detail">tokens this month</div>
             </div>
-
-            <div class="osub-pricing">In: $15 / Out: $75 per 1M tokens &middot; ~45 Opus msgs/day on Max</div>
 
             <div class="osub-budget-grid">
                 <div class="osub-period">
                     <div class="osub-period-head">
-                        <span>Today (estimated)</span>
-                        <span class="osub-amount">$0.0000 / $10.00</span>
+                        <span>Today</span>
+                        <span class="osub-amount">110.6M tokens</span>
                     </div>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:0%;background:#ff6b35"></div></div>
-                    <div class="osub-tokens">0 in / 0 out &middot; 0 reqs</div>
+                    <div class="osub-tokens">$272.18 API-equivalent &middot; 1,933 msgs</div>
                 </div>
                 <div class="osub-period">
                     <div class="osub-period-head">
-                        <span>This Month (estimated)</span>
-                        <span class="osub-amount">$137.2126 / $200.00</span>
+                        <span>This Month</span>
+                        <span class="osub-amount">$4,327.92 API-eq</span>
                     </div>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:69%;background:#ff6b35"></div></div>
-                    <div class="osub-tokens">4.1M in / 1.0M out &middot; 59 reqs</div>
+                    <div class="osub-bar"><div class="osub-bar-fill" style="width:100%;background:#ff6b35"></div></div>
+                    <div class="osub-tokens">1691.6M tokens &middot; 37,011 msgs &middot; 27 days active</div>
                 </div>
                 <div class="osub-period">
                     <div class="osub-period-head">
-                        <span>All Time (estimated)</span>
-                        <span class="osub-amount">$137.2126</span>
+                        <span>All Time</span>
+                        <span class="osub-amount">$4,327.92 API-eq</span>
                     </div>
-                    <div class="osub-tokens">4.1M in / 1.0M out &middot; 59 reqs</div>
+                    <div class="osub-tokens">1691.6M tokens total</div>
+                </div>
+                <div class="osub-period osub-savings">
+                    <div class="osub-period-head">
+                        <span>Subscription</span>
+                        <span class="osub-amount">$200/mo flat</span>
+                    </div>
+                    <div class="osub-tokens">API would cost $4,328 &rarr; <strong>22x savings</strong></div>
                 </div>
             </div>
 
+            <div class="osub-pricing">In: $15 / Out: $75 per 1M tokens &middot; ~45 Opus msgs/day on Max</div>
             <div class="osub-features"><span class="osub-feat">CLI + IDE</span><span class="osub-feat">Agent tool</span><span class="osub-feat">MCP servers</span><span class="osub-feat">Hooks</span><span class="osub-feat">Unlimited Sonnet</span></div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 07:11</div>
         </div>
         <div class="osub osub-full">
             <div class="osub-head">
@@ -1396,49 +1406,50 @@ tr:last-child td { border-bottom: none; }
                 </div>
             </div>
 
-            
             <div class="osub-real">
-                <div class="osub-real-label">SUBSCRIPTION USAGE</div>
+                <div class="osub-real-label">REAL USAGE (auto-synced from local data)</div>
                 <div class="osub-real-bar-wrap">
-                    <div class="osub-real-pct">12%</div>
-                    <div class="osub-real-bar"><div class="osub-bar-fill" style="width:12%;background:#3fb950"></div></div>
+                    <div class="osub-real-pct">1608.1M</div>
+                    <div class="osub-real-bar"><div class="osub-bar-fill" style="width:80%;background:#3fb950"></div></div>
                 </div>
-                <div class="osub-real-detail">
-                    $24 / $200
-                     &middot; resets Apr 15
-                </div>
-                <div class="osub-real-updated">updated 2026-03-31 06:11</div>
+                <div class="osub-real-detail">tokens this month</div>
             </div>
-
-            <div class="osub-pricing">In: $2 / Out: $8 per 1M tokens &middot; Unlimited on Pro plan</div>
 
             <div class="osub-budget-grid">
                 <div class="osub-period">
                     <div class="osub-period-head">
-                        <span>Today (estimated)</span>
-                        <span class="osub-amount">$0.0000 / $10.00</span>
+                        <span>Today</span>
+                        <span class="osub-amount">0 tokens</span>
                     </div>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:0%;background:#3fb950"></div></div>
-                    <div class="osub-tokens">0 in / 0 out &middot; 0 reqs</div>
+                    <div class="osub-tokens">$0.00 API-equivalent &middot; 118 sessions</div>
                 </div>
                 <div class="osub-period">
                     <div class="osub-period-head">
-                        <span>This Month (estimated)</span>
-                        <span class="osub-amount">$0.0000 / $200.00</span>
+                        <span>This Month</span>
+                        <span class="osub-amount">$8,040.37 API-eq</span>
                     </div>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:0%;background:#3fb950"></div></div>
-                    <div class="osub-tokens">0 in / 0 out &middot; 0 reqs</div>
+                    <div class="osub-bar"><div class="osub-bar-fill" style="width:100%;background:#3fb950"></div></div>
+                    <div class="osub-tokens">1608.1M tokens &middot; 806 sessions &middot; 18 days active</div>
                 </div>
                 <div class="osub-period">
                     <div class="osub-period-head">
-                        <span>All Time (estimated)</span>
-                        <span class="osub-amount">$0.0000</span>
+                        <span>All Time</span>
+                        <span class="osub-amount">$8,040.37 API-eq</span>
                     </div>
-                    <div class="osub-tokens">0 in / 0 out &middot; 0 reqs</div>
+                    <div class="osub-tokens">1608.1M tokens total</div>
+                </div>
+                <div class="osub-period osub-savings">
+                    <div class="osub-period-head">
+                        <span>Subscription</span>
+                        <span class="osub-amount">$200/mo flat</span>
+                    </div>
+                    <div class="osub-tokens">API would cost $8,040 &rarr; <strong>40x savings</strong></div>
                 </div>
             </div>
 
+            <div class="osub-pricing">In: $2 / Out: $8 per 1M tokens &middot; Unlimited on Pro plan</div>
             <div class="osub-features"><span class="osub-feat">Cloud sandbox</span><span class="osub-feat">Parallel tasks</span><span class="osub-feat">Git integration</span><span class="osub-feat">Auto PR</span><span class="osub-feat">Background exec</span></div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 07:11</div>
         </div>
     </div>
 </div>
@@ -1543,7 +1554,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -1932,9 +1943,45 @@ tr:last-child td { border-bottom: none; }
     <div class="section-head">
         <div class="section-dot" style="background:var(--blue)"></div>
         <div class="section-title">Linear Queue</div>
-        <div class="section-count">0 issues</div>
+        <div class="section-count">4 issues</div>
     </div>
-    <div class="linear-wrap"><div class="linear-empty">No active Linear issues found. Linear API may be offline.</div></div>
+    <div class="linear-wrap"><div class="linear-project"><div class="linear-project-header"><span class="linear-project-name">No Project</span><span class="linear-project-count">4</span></div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-24</span>
+                <span class="linear-title">Agent Sync Ledger (Codex + Claude)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">sync/pending</span><span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-47</span>
+                <span class="linear-title">Extend regression harness to /start, search, idea buttons, follow-up, voice save</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:codex</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-33</span>
+                <span class="linear-title">Restore Mac mini access for runner bootstrap</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-27</span>
+                <span class="linear-title">Mac mini runner setup (launchd + watchdog + logs)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ai-task</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div></div></div>
 </div>
 
 <div class="section" id="projects">
@@ -2274,7 +2321,7 @@ tr:last-child td { border-bottom: none; }
         </div></div>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 0 linear issues // 2026-03-31 14:09:30</div>
+<div class="footer">command center v3 // 5 agents // 4 linear issues // 2026-03-31 14:13:03</div>
 
 </main>
 </div>
