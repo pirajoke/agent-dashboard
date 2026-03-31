@@ -1,0 +1,179 @@
+{
+  "generated": "2026-03-31T09:37:34Z",
+  "feed": [
+    {
+      "ts": "2026-03-31 16:30:50",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 16:20:48",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 16:10:46",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 16:00:43",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 15:50:29",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 15:40:27",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 15:30:25",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 15:20:23",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 15:10:21",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    },
+    {
+      "ts": "2026-03-31 15:00:20",
+      "svc": "executor",
+      "type": "start",
+      "icon": "⚡",
+      "msg": "Executor cycle started",
+      "color": "#f97316"
+    }
+  ],
+  "services": [
+    {
+      "name": "handy-voice-router",
+      "status": "running",
+      "pid": "773"
+    },
+    {
+      "name": "update-changelogs",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "dashboard-server",
+      "status": "running",
+      "pid": "6144"
+    },
+    {
+      "name": "krisp-auto-import",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "jarvis",
+      "status": "running",
+      "pid": "774"
+    },
+    {
+      "name": "linear-bot",
+      "status": "running",
+      "pid": "99084"
+    },
+    {
+      "name": "linear-done-notifier",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "generate-live-feed",
+      "status": "running",
+      "pid": "95986"
+    },
+    {
+      "name": "claude-linear-responder",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "dashboard-rebuild",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "claude-evening-summary",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "log-rotate",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "claude-autonomous-executor",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "claude-nightly-report",
+      "status": "idle",
+      "pid": null
+    },
+    {
+      "name": "skills-pull",
+      "status": "idle",
+      "pid": null
+    }
+  ],
+  "in_progress": [
+    {
+      "id": "PER-24",
+      "title": "Agent Sync Ledger (Codex + Claude)",
+      "priority": 1,
+      "state": "In Progress"
+    }
+  ],
+  "active_tasks": [
+    {
+      "issue": "PER-24",
+      "detail": "Agent Sync Ledger (Codex + Claude)",
+      "agent": "claude",
+      "status": "In Progress",
+      "color": "#ef4444"
+    }
+  ]
+}
