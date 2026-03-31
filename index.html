@@ -157,8 +157,9 @@ body {
     animation: pulse 2s ease-in-out infinite;
 }
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+    70% { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
 }
 
 .main {
@@ -376,6 +377,12 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.osub-full:hover {
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.15), 0 0 16px rgba(255,255,255,0.02);
 }
 .osub-head {
     display: flex;
@@ -437,129 +444,147 @@ body {
 .obadge-red { background: rgba(248,81,73,0.15); color: #f85149; }
 .obadge-dim { background: rgba(255,255,255,0.05); color: var(--dim); }
 
-/* ── Real Usage (from settings page) ── */
-.osub-real {
+/* ── Limit-First Primary Bar ── */
+.osub-limit-primary {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 8px;
-    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    padding: 0.75rem;
     margin-bottom: 0.6rem;
 }
-.osub-real-label {
-    font-size: 0.55rem;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 0.4rem;
-    font-weight: 600;
-}
-.osub-real-bar-wrap {
+.osub-limit-bar-wrap {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.4rem;
 }
-.osub-real-pct {
-    font-size: 1.3rem;
-    font-weight: 900;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text);
-    min-width: 3rem;
-}
-.osub-real-bar {
-    flex: 1;
-    height: 10px;
+.osub-limit-bar {
+    width: 100%;
+    height: 14px;
     background: rgba(255,255,255,0.06);
-    border-radius: 5px;
+    border-radius: 7px;
     overflow: hidden;
 }
-.osub-real-detail {
+.osub-limit-unlimited {
+    opacity: 0.6;
+}
+.osub-limit-bar-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.4s ease, background 0.3s;
+}
+.osub-limit-count {
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text);
+    letter-spacing: -0.02em;
+}
+.osub-limit-reset {
     font-size: 0.65rem;
     color: var(--dim);
     font-family: 'JetBrains Mono', monospace;
-    margin-top: 0.3rem;
+    margin-top: 0.2rem;
 }
+
+/* ── Month Summary (secondary) ── */
+.osub-month-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    margin-bottom: 0.4rem;
+}
+.osub-month-label {
+    font-size: 0.55rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+}
+.osub-month-stats {
+    font-size: 0.65rem;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+}
+.osub-month-savings {
+    font-size: 0.6rem;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+}
+.osub-month-savings strong {
+    color: #3fb950;
+}
+
 .osub-real-updated {
     font-size: 0.5rem;
     color: var(--dim);
     opacity: 0.5;
     margin-top: 0.15rem;
 }
-.osub-real-empty {
-    opacity: 0.4;
-}
-.osub-real-hint {
-    font-size: 0.6rem;
-    color: var(--dim);
-}
-.osub-real-hint code {
-    background: rgba(255,255,255,0.06);
-    padding: 0.1rem 0.3rem;
-    border-radius: 3px;
-    font-size: 0.55rem;
-}
 
-.osub-savings {
-    background: rgba(63,185,80,0.05);
-    border: 1px solid rgba(63,185,80,0.15);
-    border-radius: 6px;
-    padding: 0.4rem 0.5rem !important;
+/* ── Combined Card — Limits Focus ── */
+.orch-combined-cost {
+    float: right;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: none;
+    letter-spacing: 0;
 }
-.osub-savings strong {
-    color: #3fb950;
-    font-size: 0.75rem;
-}
-.osub-pricing {
-    font-size: 0.6rem;
-    color: var(--dim);
-    margin-bottom: 0.6rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.osub-budget-grid {
+.orch-combined-limits {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-top: 0.4rem;
 }
-.osub-period {
-
-}
-.osub-period-head {
+.orch-combined-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.2rem;
+    gap: 0.5rem;
 }
-.osub-period-head > span:first-child {
-    font-size: 0.65rem;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-.osub-amount {
-    font-size: 0.75rem;
+.orch-combined-agent {
+    font-size: 0.7rem;
     font-weight: 700;
+    min-width: 3.5rem;
     font-family: 'JetBrains Mono', monospace;
-    color: var(--text);
 }
+.orch-combined-bar {
+    flex: 1;
+    height: 10px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 5px;
+    overflow: hidden;
+}
+.orch-combined-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.4s ease;
+}
+.orch-combined-count {
+    font-size: 0.65rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+    min-width: 5rem;
+    text-align: right;
+}
+.orch-combined-footer {
+    font-size: 0.6rem;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 0.5rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
 .osub-tokens {
     font-size: 0.55rem;
     color: var(--dim);
     font-family: 'JetBrains Mono', monospace;
     margin-top: 0.15rem;
-}
-.osub-bar {
-    height: 6px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-top: 0.2rem;
-}
-.osub-bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.3s;
 }
 
 .osub-features {
@@ -596,9 +621,9 @@ body {
     overflow: hidden;
 }
 .ag:hover {
-    border-color: var(--border2);
+    border-color: rgba(249,115,22,0.25);
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2), 0 0 20px rgba(249,115,22,0.06);
 }
 .ag-active { border-color: rgba(34,197,94,0.2); }
 .ag-active::after {
@@ -667,12 +692,24 @@ body {
     margin-left: auto;
 }
 .ag-dot {
-    width: 6px; height: 6px;
+    width: 8px; height: 8px;
     border-radius: 50%;
 }
-.ag-dot-active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.ag-dot-active {
+    background: var(--green);
+    animation: ringPulse 2s ease-out infinite;
+}
 .ag-dot-idle { background: var(--yellow); opacity: 0.6; }
-.ag-dot-blocked { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.ag-dot-blocked {
+    background: var(--red);
+    animation: ringPulse 2s ease-out infinite;
+    --ring-color: var(--red);
+}
+@keyframes ringPulse {
+    0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
 .ag-zone {
     font-size: 0.68rem;
     color: var(--dim);
@@ -1201,22 +1238,35 @@ tr:last-child td { border-bottom: none; }
     text-align: center;
 }
 
+/* ── Font floor ── */
+* { min-height: 0; }
+.osub-real-updated, .osub-month-label, .osub-month-stats, .osub-month-savings,
+.osub-feat, .obadge, .orch-meta, .osub-tokens, .osub-limit-reset,
+.orch-combined-footer, .stat-lbl, .section-count, .sidebar-nav .nav-count {
+    font-size: max(0.55rem, 10px);
+}
+
 /* ── Responsive ── */
 @media (max-width: 1200px) {
     .agents { grid-template-columns: repeat(3, 1fr); }
     .stats { grid-template-columns: repeat(3, 1fr); }
     .caps-grid { grid-template-columns: repeat(2, 1fr); }
+    .orch-agents-detail { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
     .sidebar { display: none; }
     .main { margin-left: 0; }
 }
 @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 1rem; }
     .agents { grid-template-columns: repeat(2, 1fr); }
     .stats { grid-template-columns: repeat(2, 1fr); }
     .caps-grid { grid-template-columns: 1fr; }
-    .main { padding: 1rem; }
+    .orch-grid { grid-template-columns: 1fr; }
+    .orch-agents-detail { grid-template-columns: 1fr; }
     .mt-summary { grid-template-columns: repeat(2, 1fr); }
+    .topbar { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
 }
 </style>
 </head>
@@ -1275,7 +1325,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-03-31 14:25:03</span>
+            <span>2026-03-31 14:30:14</span>
         </div>
     </div>
 </nav>
@@ -1287,7 +1337,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-03-31 14:25:03</span>
+        <span class="tm-item">2026-03-31 14:30:14</span>
     </div>
 </div>
 
@@ -1315,22 +1365,20 @@ tr:last-child td { border-bottom: none; }
             <div class="orch-meta">Changed: 2026-03-31 04:52 | manual</div>
         </div>
         <div class="orch-card orch-budget">
-            <div class="orch-label">COMBINED</div>
-            <div class="orch-total-grid">
-                <div class="orch-total-item">
-                    <span class="orch-total-label">You Pay</span>
-                    <span class="orch-total-val">$400/mo</span>
+            <div class="orch-label">COMBINED <span class="orch-combined-cost">$400/mo</span></div>
+            <div class="orch-combined-limits">
+                <div class="orch-combined-row">
+                    <span class="orch-combined-agent" style="color:#ff6b35">Claude</span>
+                    <div class="orch-combined-bar"><div class="orch-combined-bar-fill" style="width:100%;background:#ef4444"></div></div>
+                    <span class="orch-combined-count">2187/45</span>
                 </div>
-                <div class="orch-total-item">
-                    <span class="orch-total-label">API Would Cost</span>
-                    <span class="orch-total-val">$12,398/mo</span>
-                </div>
-                <div class="orch-total-item">
-                    <span class="orch-total-label">Savings</span>
-                    <span class="orch-total-val" style="color:#3fb950">31x</span>
+                <div class="orch-combined-row">
+                    <span class="orch-combined-agent" style="color:#3fb950">Codex</span>
+                    <div class="orch-combined-bar"><div class="orch-combined-bar-fill" style="width:100%;background:#3fb950;opacity:0.3"></div></div>
+                    <span class="orch-combined-count">unlimited &middot; 124</span>
                 </div>
             </div>
-            <div class="osub-tokens" style="margin-top:0.4rem">3310.2M tokens &middot; $301.45 today</div>
+            <div class="orch-combined-footer">3318.4M tokens &middot; 31x savings</div>
         </div>
     </div>
     <div class="orch-agents-detail">
@@ -1348,50 +1396,25 @@ tr:last-child td { border-bottom: none; }
                 </div>
             </div>
 
-            <div class="osub-real">
-                <div class="osub-real-label">REAL USAGE (auto-synced from local data)</div>
-                <div class="osub-real-bar-wrap">
-                    <div class="osub-real-pct">1702.1M</div>
-                    <div class="osub-real-bar"><div class="osub-bar-fill" style="width:85%;background:#ff6b35"></div></div>
+            
+            <div class="osub-limit-primary">
+                <div class="osub-limit-bar-wrap">
+                    <div class="osub-limit-bar">
+                        <div class="osub-limit-bar-fill" style="width:100%;background:#ef4444"></div>
+                    </div>
+                    <div class="osub-limit-count">2187 / 45 msgs</div>
                 </div>
-                <div class="osub-real-detail">tokens this month</div>
+                <div class="osub-limit-reset">Resets in 16h 30m</div>
+            </div>
+            
+            <div class="osub-month-summary">
+                <span class="osub-month-label">This Month</span>
+                <span class="osub-month-stats">1710.3M tokens &middot; 37,265 msgs &middot; 27 days</span>
+                <span class="osub-month-savings">$4,377 API-eq &rarr; <strong>22x savings</strong></span>
             </div>
 
-            <div class="osub-budget-grid">
-                <div class="osub-period">
-                    <div class="osub-period-head">
-                        <span>Today</span>
-                        <span class="osub-amount">121.2M tokens</span>
-                    </div>
-                    <div class="osub-tokens">$301.45 API-equivalent &middot; 2,080 msgs</div>
-                </div>
-                <div class="osub-period">
-                    <div class="osub-period-head">
-                        <span>This Month</span>
-                        <span class="osub-amount">$4,357.19 API-eq</span>
-                    </div>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:100%;background:#ff6b35"></div></div>
-                    <div class="osub-tokens">1702.1M tokens &middot; 37,158 msgs &middot; 27 days active</div>
-                </div>
-                <div class="osub-period">
-                    <div class="osub-period-head">
-                        <span>All Time</span>
-                        <span class="osub-amount">$4,357.19 API-eq</span>
-                    </div>
-                    <div class="osub-tokens">1702.1M tokens total</div>
-                </div>
-                <div class="osub-period osub-savings">
-                    <div class="osub-period-head">
-                        <span>Subscription</span>
-                        <span class="osub-amount">$200/mo flat</span>
-                    </div>
-                    <div class="osub-tokens">API would cost $4,357 &rarr; <strong>22x savings</strong></div>
-                </div>
-            </div>
-
-            <div class="osub-pricing">In: $15 / Out: $75 per 1M tokens &middot; ~45 Opus msgs/day on Max</div>
             <div class="osub-features"><span class="osub-feat">CLI + IDE</span><span class="osub-feat">Agent tool</span><span class="osub-feat">MCP servers</span><span class="osub-feat">Hooks</span><span class="osub-feat">Unlimited Sonnet</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 07:25</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 07:30</div>
         </div>
         <div class="osub osub-full">
             <div class="osub-head">
@@ -1406,50 +1429,24 @@ tr:last-child td { border-bottom: none; }
                 </div>
             </div>
 
-            <div class="osub-real">
-                <div class="osub-real-label">REAL USAGE (auto-synced from local data)</div>
-                <div class="osub-real-bar-wrap">
-                    <div class="osub-real-pct">1608.1M</div>
-                    <div class="osub-real-bar"><div class="osub-bar-fill" style="width:80%;background:#3fb950"></div></div>
-                </div>
-                <div class="osub-real-detail">tokens this month</div>
-            </div>
-
-            <div class="osub-budget-grid">
-                <div class="osub-period">
-                    <div class="osub-period-head">
-                        <span>Today</span>
-                        <span class="osub-amount">0 tokens</span>
+            
+            <div class="osub-limit-primary">
+                <div class="osub-limit-bar-wrap">
+                    <div class="osub-limit-bar osub-limit-unlimited">
+                        <div class="osub-limit-bar-fill" style="width:100%;background:#3fb950;opacity:0.3"></div>
                     </div>
-                    <div class="osub-tokens">$0.00 API-equivalent &middot; 123 sessions</div>
-                </div>
-                <div class="osub-period">
-                    <div class="osub-period-head">
-                        <span>This Month</span>
-                        <span class="osub-amount">$8,040.37 API-eq</span>
-                    </div>
-                    <div class="osub-bar"><div class="osub-bar-fill" style="width:100%;background:#3fb950"></div></div>
-                    <div class="osub-tokens">1608.1M tokens &middot; 811 sessions &middot; 18 days active</div>
-                </div>
-                <div class="osub-period">
-                    <div class="osub-period-head">
-                        <span>All Time</span>
-                        <span class="osub-amount">$8,040.37 API-eq</span>
-                    </div>
-                    <div class="osub-tokens">1608.1M tokens total</div>
-                </div>
-                <div class="osub-period osub-savings">
-                    <div class="osub-period-head">
-                        <span>Subscription</span>
-                        <span class="osub-amount">$200/mo flat</span>
-                    </div>
-                    <div class="osub-tokens">API would cost $8,040 &rarr; <strong>40x savings</strong></div>
+                    <div class="osub-limit-count">unlimited &middot; 124 sessions today</div>
                 </div>
             </div>
+            
+            <div class="osub-month-summary">
+                <span class="osub-month-label">This Month</span>
+                <span class="osub-month-stats">1608.1M tokens &middot; 812 sessions &middot; 18 days</span>
+                <span class="osub-month-savings">$8,040 API-eq &rarr; <strong>40x savings</strong></span>
+            </div>
 
-            <div class="osub-pricing">In: $2 / Out: $8 per 1M tokens &middot; Unlimited on Pro plan</div>
             <div class="osub-features"><span class="osub-feat">Cloud sandbox</span><span class="osub-feat">Parallel tasks</span><span class="osub-feat">Git integration</span><span class="osub-feat">Auto PR</span><span class="osub-feat">Background exec</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 07:25</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 07:30</div>
         </div>
     </div>
 </div>
@@ -1554,7 +1551,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2285,7 +2282,7 @@ tr:last-child td { border-bottom: none; }
         </div></div>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 0 linear issues // 2026-03-31 14:25:03</div>
+<div class="footer">command center v3 // 5 agents // 0 linear issues // 2026-03-31 14:30:14</div>
 
 </main>
 </div>
