@@ -286,6 +286,61 @@ body {
     border-radius: var(--radius);
 }
 
+/* ── Orchestrator Master Toggle ── */
+.orch-master-toggle {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+}
+.orch-master-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--fg);
+}
+.orch-master-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+.orch-status-on { background: rgba(0,200,80,0.2); color: #0c6; }
+.orch-status-off { background: rgba(255,60,60,0.2); color: #f44; }
+.toggle-switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    cursor: pointer;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #444;
+    border-radius: 28px;
+    transition: 0.3s;
+}
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    height: 22px; width: 22px;
+    left: 3px; bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider {
+    background: #0c6;
+}
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+.orch-disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
 /* ── Orchestrator ── */
 .orch-grid {
     display: grid;
@@ -1637,7 +1692,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-01 02:01:20 ICT</span>
+            <span>2026-04-01 02:05:39 ICT</span>
         </div>
     </div>
 </nav>
@@ -1649,7 +1704,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-01 02:01:20 ICT</span>
+        <span class="tm-item">2026-04-01 02:05:39 ICT</span>
     </div>
 </div>
 
@@ -1658,7 +1713,7 @@ tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
     <div class="stat"><div class="stat-val">270</div><div class="stat-lbl">Open Tasks</div></div>
     <div class="stat"><div class="stat-val green">460</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val blue">6</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">63%</div><div class="stat-lbl">Progress</div></div>
 </div>
 
@@ -1669,12 +1724,20 @@ tr:last-child td { border-bottom: none; }
         <div class="section-count">mode + budget</div>
     </div>
     
-    <div class="orch-grid">
+    <div class="orch-master-toggle">
+        <span class="orch-master-label">Orchestrator</span>
+        <span class="orch-master-status orch-status-on">RUNNING</span>
+        <label class="toggle-switch" id="orchToggle">
+            <input type="checkbox" checked id="orchToggleInput">
+            <span class="toggle-slider"></span>
+        </label>
+    </div>
+    <div class="orch-grid ">
         <div class="orch-card">
             <div class="orch-label">MODE</div>
             <div class="oslider"><div class="oslider-item oslider-active" data-mode="claude-claude" title="Claude + Claude" style="cursor:pointer">CC</div><div class="oslider-item " data-mode="claude-codex" title="Claude + Codex" style="cursor:pointer">CX</div><div class="oslider-item " data-mode="codex-codex" title="Codex + Codex" style="cursor:pointer">XX</div></div>
             <div class="orch-desc">Claude + Claude</div>
-            <div class="orch-meta">Changed: 2026-03-31 19:00 | manual-override</div>
+            <div class="orch-meta">Changed: 2026-03-31 19:01 | dashboard-github</div>
             <button class="launch-btn" id="launchBtn" onclick="event.preventDefault();launchAgents();return false;" type="button">Launch Agents</button>
         </div>
         <div class="orch-card">
@@ -1813,7 +1876,7 @@ tr:last-child td { border-bottom: none; }
         </div>
         <div class="live-panel">
             <div class="live-panel-title">Services</div>
-            <div class="live-svc-summary">6/13 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">responder</span><span class="live-svc-age">6m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
+            <div class="live-svc-summary">6/13 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">responder</span><span class="live-svc-age">10m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
         </div>
     </div>
     <div class="live-panel-wide">
@@ -2229,7 +2292,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-01 02:01:20 ICT</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-01 02:05:39 ICT</div>
 
 </main>
 </div>
@@ -2301,6 +2364,24 @@ document.querySelectorAll('.oslider-item:not(.agent-model-item)').forEach(el => 
             location.reload();
         }
     });
+});
+
+// ── Orchestrator ON/OFF toggle ──
+document.getElementById('orchToggleInput').addEventListener('change', async function(e) {
+    e.preventDefault(); e.stopPropagation();
+    const on = this.checked;
+    const grid = document.querySelector('.orch-grid');
+    const status = document.querySelector('.orch-master-status');
+    if (on) {
+        grid.classList.remove('orch-disabled');
+        status.textContent = 'RUNNING';
+        status.className = 'orch-master-status orch-status-on';
+    } else {
+        grid.classList.add('orch-disabled');
+        status.textContent = 'PAUSED';
+        status.className = 'orch-master-status orch-status-off';
+    }
+    await ghCommit('pause-request.json', {paused: !on, ts: new Date().toISOString(), source: 'dashboard'}, `orchestrator: ${on ? 'resume' : 'pause'}`);
 });
 
 // ── Launch Agents ──
