@@ -1205,7 +1205,7 @@ tr { transition: background 0.1s; }
 tr:nth-child(even) { background: rgba(255,255,255,0.01); }
 tr:hover { background: rgba(255,255,255,0.03); }
 tr:last-child td { border-bottom: none; }
-.proj-name { font-weight: 600; white-space: nowrap; font-size: 0.78rem; }
+.proj-name { font-weight: 600; white-space: nowrap; font-size: 0.78rem; color: var(--text); }
 .status-pill {
     display: inline-block;
     padding: 0.15rem 0.45rem;
@@ -1215,9 +1215,9 @@ tr:last-child td { border-bottom: none; }
     font-family: 'JetBrains Mono', monospace;
     letter-spacing: 0.04em;
 }
-.status-active { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.15); }
-.status-other { background: rgba(234,179,8,0.1); color: var(--yellow); border: 1px solid rgba(234,179,8,0.15); }
-.status-done { background: rgba(34,197,94,0.08); color: var(--green2); border: 1px solid rgba(34,197,94,0.1); }
+.status-active { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(255,255,255,0.08); }
+.status-other { background: rgba(255,255,255,0.04); color: var(--dim); border: 1px solid rgba(255,255,255,0.06); }
+.status-done { background: rgba(255,255,255,0.03); color: var(--dim); border: 1px solid rgba(255,255,255,0.05); }
 .pbar {
     width: 60px;
     height: 3px;
@@ -1231,7 +1231,7 @@ tr:last-child td { border-bottom: none; }
 .pfill {
     height: 100%;
     border-radius: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    background: rgba(255,255,255,0.25);
 }
 .ptxt {
     font-size: 0.6rem;
@@ -1246,8 +1246,8 @@ tr:last-child td { border-bottom: none; }
 .agents-col {
     font-size: 0.55rem;
     font-family: 'JetBrains Mono', monospace;
-    color: var(--accent2);
-    opacity: 0.6;
+    color: var(--dim);
+    opacity: 0.7;
 }
 .fresh-hot { color: var(--green); font-weight: 600; font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; }
 .fresh-warm { color: var(--yellow); font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; }
@@ -1389,7 +1389,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-03-31 15:16:50</span>
+            <span>2026-03-31 15:17:48</span>
         </div>
     </div>
 </nav>
@@ -1401,7 +1401,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-03-31 15:16:50</span>
+        <span class="tm-item">2026-03-31 15:17:48</span>
     </div>
 </div>
 
@@ -1410,7 +1410,7 @@ tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
     <div class="stat"><div class="stat-val">210</div><div class="stat-lbl">Open Tasks</div></div>
     <div class="stat"><div class="stat-val green">454</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val blue">4</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
 </div>
 
@@ -1631,7 +1631,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -1938,7 +1938,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-03-31 15:16:50</div>
+<div class="footer">command center v3 // 5 agents // 2026-03-31 15:17:48</div>
 
 </main>
 </div>
