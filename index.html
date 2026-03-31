@@ -1563,7 +1563,7 @@ tr:last-child td { border-bottom: none; }
             Orchestrator
         <li><a data-target="#live" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor" opacity="0.8"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.4"/></svg>
-            Live <span class="nav-count">14</span>
+            Live <span class="nav-count">13</span>
         </a></li>
         <li><a data-target="#agents" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
@@ -1584,7 +1584,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-01 01:29:40</span>
+            <span>2026-04-01 01:34:53</span>
         </div>
     </div>
 </nav>
@@ -1596,7 +1596,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-01 01:29:40</span>
+        <span class="tm-item">2026-04-01 01:34:53</span>
     </div>
 </div>
 
@@ -1625,10 +1625,23 @@ tr:last-child td { border-bottom: none; }
             <button class="launch-btn" id="launchBtn" onclick="event.preventDefault();launchAgents();return false;" type="button">Launch Agents</button>
         </div>
         <div class="orch-card">
-            <div class="orch-label">MODEL</div>
-            <div class="oslider model-slider"><div class="oslider-item model-item " data-model="opus" title="Opus 4.6 — max quality" style="cursor:pointer">OP</div><div class="oslider-item model-item oslider-active" data-model="sonnet" title="Sonnet 4.6 — balanced" style="cursor:pointer">SN</div><div class="oslider-item model-item " data-model="haiku" title="Haiku 4.5 — fast & cheap" style="cursor:pointer">HK</div></div>
-            <div class="orch-desc model-desc">Sonnet 4.6 — balanced</div>
-            <div class="orch-meta model-meta">Token cost: $3/M in</div>
+            <div class="orch-label">MODELS</div>
+            <div class="agent-models-grid">
+        <div class="agent-model-card">
+            <div class="agent-model-name">Executor</div>
+            <div class="oslider agent-model-slider" data-agent="executor"><div class="oslider-item agent-model-item " data-agent="executor" data-model="opus" style="cursor:pointer">OP</div><div class="oslider-item agent-model-item oslider-active" data-agent="executor" data-model="sonnet" style="cursor:pointer">SN</div><div class="oslider-item agent-model-item " data-agent="executor" data-model="haiku" style="cursor:pointer">HK</div></div>
+            <div class="agent-model-current">sonnet</div>
+        </div>
+        <div class="agent-model-card">
+            <div class="agent-model-name">Responder</div>
+            <div class="oslider agent-model-slider" data-agent="responder"><div class="oslider-item agent-model-item " data-agent="responder" data-model="opus" style="cursor:pointer">OP</div><div class="oslider-item agent-model-item " data-agent="responder" data-model="sonnet" style="cursor:pointer">SN</div><div class="oslider-item agent-model-item oslider-active" data-agent="responder" data-model="haiku" style="cursor:pointer">HK</div></div>
+            <div class="agent-model-current">haiku</div>
+        </div>
+        <div class="agent-model-card">
+            <div class="agent-model-name">Codex</div>
+            <div class="oslider agent-model-slider" data-agent="codex"><div class="oslider-item agent-model-item oslider-active" data-agent="codex" data-model="gpt-4.1" style="cursor:pointer">4.1</div><div class="oslider-item agent-model-item " data-agent="codex" data-model="gpt-4.1-mini" style="cursor:pointer">mini</div><div class="oslider-item agent-model-item " data-agent="codex" data-model="o3" style="cursor:pointer">o3</div></div>
+            <div class="agent-model-current">gpt-4.1</div>
+        </div></div>
         </div>
         <div class="orch-card orch-budget">
             <div class="orch-label">COMBINED <span class="orch-combined-cost">$220/mo flat</span></div>
@@ -1644,7 +1657,7 @@ tr:last-child td { border-bottom: none; }
                     <span class="orch-combined-count">10d left &middot; renews 2026-04-10</span>
                 </div>
             </div>
-            <div class="orch-combined-footer">3459.3M tokens &middot; $12,823 API-eq &middot; 58x ROI</div>
+            <div class="orch-combined-footer">3463.3M tokens &middot; $12,831 API-eq &middot; 58x ROI</div>
         </div>
     </div>
     <div class="orch-agents-detail">
@@ -1676,19 +1689,19 @@ tr:last-child td { border-bottom: none; }
                     <div class="osub-limit-bar">
                         <div class="osub-limit-bar-fill" style="width:100%;background:#ef4444"></div>
                     </div>
-                    <div class="osub-limit-count">3543 / ~45 msgs/day <span class="osub-rate-tag">rate limit</span></div>
+                    <div class="osub-limit-count">3567 / ~45 msgs/day <span class="osub-rate-tag">rate limit</span></div>
                 </div>
-                <div class="osub-limit-reset">Resets in 5h 30m</div>
+                <div class="osub-limit-reset">Resets in 5h 24m</div>
             </div>
             
             <div class="osub-month-summary">
                 <span class="osub-month-label">This Cycle</span>
-                <span class="osub-month-stats">1811.4M tokens &middot; 38,621 msgs &middot; 27 days active</span>
-                <span class="osub-month-savings">$4,583 API-eq &rarr; <strong>23x ROI</strong></span>
+                <span class="osub-month-stats">1814.9M tokens &middot; 38,645 msgs &middot; 27 days active</span>
+                <span class="osub-month-savings">$4,589 API-eq &rarr; <strong>23x ROI</strong></span>
             </div>
 
             <div class="osub-features"><span class="osub-feat">CLI + IDE</span><span class="osub-feat">Agent tool</span><span class="osub-feat">MCP servers</span><span class="osub-feat">Hooks</span><span class="osub-feat">Unlimited Sonnet</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 18:29</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 18:34</div>
         </div>
         <div class="osub osub-full">
             <div class="osub-head">
@@ -1723,12 +1736,12 @@ tr:last-child td { border-bottom: none; }
             
             <div class="osub-month-summary">
                 <span class="osub-month-label">This Cycle</span>
-                <span class="osub-month-stats">1647.9M tokens &middot; 864 sessions &middot; 18 days active</span>
-                <span class="osub-month-savings">$8,240 API-eq &rarr; <strong>412x ROI</strong></span>
+                <span class="osub-month-stats">1648.4M tokens &middot; 864 sessions &middot; 18 days active</span>
+                <span class="osub-month-savings">$8,242 API-eq &rarr; <strong>412x ROI</strong></span>
             </div>
 
             <div class="osub-features"><span class="osub-feat">Cloud sandbox</span><span class="osub-feat">Parallel tasks</span><span class="osub-feat">Git integration</span><span class="osub-feat">Auto PR</span><span class="osub-feat">Background exec</span></div>
-            <div class="osub-real-updated">auto-synced 2026-03-31 18:29</div>
+            <div class="osub-real-updated">auto-synced 2026-03-31 18:34</div>
         </div>
     </div>
 </div>
@@ -1747,7 +1760,7 @@ tr:last-child td { border-bottom: none; }
         </div>
         <div class="live-panel">
             <div class="live-panel-title">Services</div>
-            <div class="live-svc-summary">5/14 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">responder</span><span class="live-svc-age">2m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
+            <div class="live-svc-summary">5/13 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">responder</span><span class="live-svc-age">7m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
         </div>
     </div>
     <div class="live-panel-wide">
@@ -1856,7 +1869,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2163,7 +2176,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-01 01:29:40</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-01 01:34:53</div>
 
 </main>
 </div>
