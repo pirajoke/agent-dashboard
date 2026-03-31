@@ -340,6 +340,35 @@ body {
     font-size: 0.6rem;
     color: var(--dim);
 }
+.launch-btn {
+    margin-top: 0.75rem;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, var(--accent), #e05520);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+}
+.launch-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+}
+.launch-btn:active {
+    transform: translateY(0);
+}
+.launch-btn.running {
+    background: linear-gradient(135deg, #3fb950, #2ea043);
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(63,185,80,0.3); }
+    50% { box-shadow: 0 0 20px rgba(63,185,80,0.6); }
+}
 /* ── Combined Budget ── */
 .orch-total-grid {
     display: flex;
@@ -1555,7 +1584,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-01 00:42:16</span>
+            <span>2026-04-01 00:46:28</span>
         </div>
     </div>
 </nav>
@@ -1567,16 +1596,16 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-01 00:42:16</span>
+        <span class="tm-item">2026-04-01 00:46:28</span>
     </div>
 </div>
 
 <div class="stats">
     <div class="stat"><div class="stat-val accent">5</div><div class="stat-lbl">Active Agents</div></div>
     <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
-    <div class="stat"><div class="stat-val">210</div><div class="stat-lbl">Open Tasks</div></div>
+    <div class="stat"><div class="stat-val">213</div><div class="stat-lbl">Open Tasks</div></div>
     <div class="stat"><div class="stat-val green">455</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val blue">4</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
 </div>
 
@@ -1593,6 +1622,7 @@ tr:last-child td { border-bottom: none; }
             <div class="oslider"><div class="oslider-item " data-mode="claude-claude" title="Claude + Claude" style="cursor:pointer">CC</div><div class="oslider-item " data-mode="claude-codex" title="Claude + Codex" style="cursor:pointer">CX</div><div class="oslider-item oslider-active" data-mode="codex-codex" title="Codex + Codex" style="cursor:pointer">XX</div></div>
             <div class="orch-desc">Codex + Codex</div>
             <div class="orch-meta">Changed: 2026-03-31 11:07 | dashboard-github</div>
+            <button class="launch-btn" id="launchBtn" onclick="launchAgents()">Launch Agents</button>
         </div>
         <div class="orch-card orch-budget">
             <div class="orch-label">COMBINED <span class="orch-combined-cost">$220/mo flat</span></div>
@@ -1711,7 +1741,7 @@ tr:last-child td { border-bottom: none; }
         </div>
         <div class="live-panel">
             <div class="live-panel-title">Services</div>
-            <div class="live-svc-summary">6/15 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">responder</span><span class="live-svc-age">18m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
+            <div class="live-svc-summary">6/15 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">responder</span><span class="live-svc-age">22m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
         </div>
     </div>
     <div class="live-panel-wide">
@@ -1759,7 +1789,7 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Task flow, delegation, planning, comms, bridge</div>
             <div class="ag-merged">+ PLANNER, COMMS, BRIDGE</div>
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#58a6ff">AGENT-MEMORY</span><span class="ag-badge" style="--badge-color:#58a6ff">LINEAR</span><span class="ag-badge" style="--badge-color:#58a6ff">AGENTS-MD</span><span class="ag-badge" style="--badge-color:#58a6ff">SECOND-BRAIN</span><span class="ag-badge" style="--badge-color:#58a6ff">MESHLY</span><span class="ag-badge" style="--badge-color:#58a6ff">MAXIM-SITE</span></div>
-            <div class="ag-tasks">56 tasks</div>
+            <div class="ag-tasks">58 tasks</div>
         </div>
         <div class="ag ag-active">
             <div class="ag-top">
@@ -1793,7 +1823,7 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Obsidian routing, hygiene, Tech-Base</div>
             
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#79c0ff">MY-OBSIDIAN</span><span class="ag-badge" style="--badge-color:#79c0ff">SKILLS</span></div>
-            <div class="ag-tasks">11 tasks</div>
+            <div class="ag-tasks">12 tasks</div>
         </div>
         <div class="ag ag-active">
             <div class="ag-top">
@@ -1810,7 +1840,7 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Code, features, MVP, deploy, infra</div>
             <div class="ag-merged">+ DEVOPS</div>
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ffa657">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#ffa657">MAXIM-SITE</span><span class="ag-badge" style="--badge-color:#ffa657">MESHLY</span><span class="ag-badge" style="--badge-color:#ffa657">STOCK-CONTENT-BOT</span><span class="ag-badge" style="--badge-color:#ffa657">RELOCATION-TO-M4</span><span class="ag-badge" style="--badge-color:#ffa657">MY-OBSIDIAN</span></div>
-            <div class="ag-tasks">111 tasks</div>
+            <div class="ag-tasks">112 tasks</div>
         </div></div>
 </div>
 
@@ -1820,7 +1850,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -1964,10 +1994,10 @@ tr:last-child td { border-bottom: none; }
         <tr>
             <td class="proj-name">LINEAR</td>
             <td><span class="status-pill status-active">active</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">31</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">33</td>
             <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:60%"></div></div>
-                <span class="ptxt">60%</span>
+                <div class="pbar"><div class="pfill pfill-mid" style="width:59%"></div></div>
+                <span class="ptxt">59%</span>
             </td>
             <td class="fresh-hot">0d</td>
             <td class="next-action">Run first triage session (PER-98)</td>
@@ -2012,10 +2042,10 @@ tr:last-child td { border-bottom: none; }
         <tr>
             <td class="proj-name">MY-OBSIDIAN</td>
             <td><span class="status-pill status-active">active</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">9</td>
             <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:60%"></div></div>
-                <span class="ptxt">60%</span>
+                <div class="pbar"><div class="pfill pfill-mid" style="width:57%"></div></div>
+                <span class="ptxt">57%</span>
             </td>
             <td class="fresh-hot">0d</td>
             <td class="next-action">Прогнать ручной Telegram smoke уже на OpenRouter-backed analysis:</td>
@@ -2127,7 +2157,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-01 00:42:16</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-01 00:46:28</div>
 
 </main>
 </div>
@@ -2192,6 +2222,32 @@ document.querySelectorAll('.oslider-item').forEach(el => {
         }
     });
 });
+
+// ── Launch Agents ──
+async function ghCommit(path, data, msg) {
+    let token = localStorage.getItem('gh_dashboard_token');
+    if (!token) { token = prompt('GitHub PAT:'); if (!token) return false; localStorage.setItem('gh_dashboard_token', token); }
+    let sha = null;
+    try { const r = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${path}`, {headers:{'Authorization':`token ${token}`}}); if (r.ok) sha = (await r.json()).sha; } catch(e) {}
+    const body = {message: msg, content: btoa(JSON.stringify(data))};
+    if (sha) body.sha = sha;
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${path}`, {method:'PUT', headers:{'Authorization':`token ${token}`,'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    if (res.status === 401 || res.status === 403) { localStorage.removeItem('gh_dashboard_token'); return false; }
+    return res.ok;
+}
+
+async function launchAgents() {
+    const btn = document.getElementById('launchBtn');
+    btn.textContent = 'Launching...';
+    btn.classList.add('running');
+    const ok = await ghCommit('run-request.json', {action:'run', ts: new Date().toISOString(), source:'dashboard'}, 'run: launch agents');
+    if (ok) {
+        btn.textContent = 'Queued — starts on next cycle (~5 min)';
+    } else {
+        btn.textContent = 'Launch Agents';
+        btn.classList.remove('running');
+    }
+}
 </script>
 </body>
 </html>
