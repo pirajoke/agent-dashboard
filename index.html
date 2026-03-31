@@ -284,6 +284,105 @@ body {
     border-radius: var(--radius);
 }
 
+/* ── Orchestrator ── */
+.orch-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1rem;
+}
+.orch-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+.orch-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+}
+.oslider {
+    display: flex;
+    gap: 0;
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+.oslider-item {
+    flex: 1;
+    text-align: center;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    transition: all 0.2s;
+    cursor: default;
+}
+.oslider-active {
+    background: var(--accent);
+    color: #000;
+    border-radius: 5px;
+    box-shadow: 0 0 12px rgba(255,107,53,0.3);
+}
+.orch-desc {
+    font-size: 0.8rem;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+}
+.orch-meta {
+    font-size: 0.6rem;
+    color: var(--dim);
+}
+.otable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+}
+.otable th {
+    color: var(--dim);
+    font-weight: 600;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+.otable td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    font-family: 'JetBrains Mono', monospace;
+}
+.oagent { font-weight: 700; color: var(--text); }
+.ocost { color: var(--dim); }
+.otok { color: var(--dim); font-size: 0.65rem; }
+.ototal td { border-top: 1px solid var(--border); font-weight: 700; color: var(--text); }
+.obar {
+    display: inline-block;
+    width: 60px;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    vertical-align: middle;
+    margin-right: 0.3rem;
+}
+.ofill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+.opct {
+    font-size: 0.6rem;
+    color: var(--dim);
+    vertical-align: middle;
+}
+
 /* ── Agent grid ── */
 .agents {
     display: grid;
@@ -942,6 +1041,9 @@ tr:last-child td { border-bottom: none; }
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
             Overview
         </a></li>
+        <li><a href="#orchestrator">
+            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="8" r="3" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
+            Orchestrator
         <li><a href="#agents">
             <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
             Agents <span class="nav-count">5</span>
@@ -960,12 +1062,15 @@ tr:last-child td { border-bottom: none; }
         </a></li>
         <li><a href="#linear">
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M5 8l2 2 4-4" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Linear <span class="nav-count">0</span>
+            Linear <span class="nav-count">21</span>
         </a></li>
         <li><a href="#projects">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 4l5-2 5 2v8l-5 2-5-2V4z" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
             Projects <span class="nav-count">20</span>
         </a></li>
+        <li><a href="#done">
+            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M3 8l3 3 7-7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Done <span class="nav-count">0</span>
         <li><a href="#platform">
             <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.3"/><line x1="8" y1="2" x2="8" y2="4" stroke="currentColor" stroke-width="1.3"/><line x1="8" y1="12" x2="8" y2="14" stroke="currentColor" stroke-width="1.3"/><line x1="2" y1="8" x2="4" y2="8" stroke="currentColor" stroke-width="1.3"/><line x1="12" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.3"/></svg>
             Platform
@@ -974,7 +1079,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-03-31 12:23:31</span>
+            <span>2026-03-31 12:27:16</span>
         </div>
     </div>
 </nav>
@@ -986,7 +1091,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-03-31 12:23:31</span>
+        <span class="tm-item">2026-03-31 12:27:16</span>
     </div>
 </div>
 
@@ -995,8 +1100,59 @@ tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
     <div class="stat"><div class="stat-val">205</div><div class="stat-lbl">Open Tasks</div></div>
     <div class="stat"><div class="stat-val green">442</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val blue">21</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
+</div>
+
+<div class="section" id="orchestrator">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--purple)"></div>
+        <div class="section-title">Orchestrator</div>
+        <div class="section-count">mode + budget</div>
+    </div>
+    
+    <div class="orch-grid">
+        <div class="orch-card">
+            <div class="orch-label">MODE</div>
+            <div class="oslider"><div class="oslider-item " title="Claude + Claude">CC</div><div class="oslider-item oslider-active" title="Claude + Codex">CX</div><div class="oslider-item " title="Codex + Codex">XX</div></div>
+            <div class="orch-desc">Claude + Codex</div>
+            <div class="orch-meta">Changed: 2026-03-31 04:52 | manual</div>
+        </div>
+        <div class="orch-card orch-budget">
+            <div class="orch-label">BUDGET & TOKENS</div>
+            <table class="otable">
+            <thead><tr>
+                <th>Agent</th><th>Tokens (today)</th><th>Cost</th><th>Daily</th><th>Month $</th><th>Monthly</th>
+            </tr></thead>
+            <tbody>
+                
+        <tr>
+            <td class="oagent">CLAUDE</td>
+            <td class="otok">0 / 0</td>
+            <td class="ocost">$0.0000</td>
+            <td><div class="obar"><div class="ofill" style="width:0%;background:#3fb950"></div></div><span class="opct">0%</span></td>
+            <td class="ocost">$0.0000</td>
+            <td><div class="obar"><div class="ofill" style="width:0%;background:#3fb950"></div></div><span class="opct">0%</span></td>
+        </tr>
+        <tr>
+            <td class="oagent">CODEX</td>
+            <td class="otok">0 / 0</td>
+            <td class="ocost">$0.0000</td>
+            <td><div class="obar"><div class="ofill" style="width:0%;background:#3fb950"></div></div><span class="opct">0%</span></td>
+            <td class="ocost">$0.0000</td>
+            <td><div class="obar"><div class="ofill" style="width:0%;background:#3fb950"></div></div><span class="opct">0%</span></td>
+        </tr>
+                <tr class="ototal">
+                    <td>TOTAL</td><td></td>
+                    <td class="ocost">$0.0000</td>
+                    <td><div class="obar"><div class="ofill" style="width:0%;background:#3fb950"></div></div><span class="opct">0%</span></td>
+                    <td class="ocost">$0.0000</td>
+                    <td><div class="obar"><div class="ofill" style="width:0%;background:#3fb950"></div></div><span class="opct">0%</span></td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <div class="section" id="agents">
@@ -1099,7 +1255,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -1488,9 +1644,198 @@ tr:last-child td { border-bottom: none; }
     <div class="section-head">
         <div class="section-dot" style="background:var(--blue)"></div>
         <div class="section-title">Linear Queue</div>
-        <div class="section-count">0 issues</div>
+        <div class="section-count">21 issues</div>
     </div>
-    <div class="linear-wrap"><div class="linear-empty">No active Linear issues found. Linear API may be offline.</div></div>
+    <div class="linear-wrap"><div class="linear-project"><div class="linear-project-header"><span class="linear-project-name">No Project</span><span class="linear-project-count">21</span></div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-137</span>
+                <span class="linear-title">Write skill for Krisp import workflow</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-136</span>
+                <span class="linear-title">Set up git pull cron for cloned skill repos</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-133</span>
+                <span class="linear-title">Test all 10 slash commands in clean session</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-132</span>
+                <span class="linear-title">Migrate Telegram Bot to Mac Mini with launchd</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-128</span>
+                <span class="linear-title">Enable cloud PDF only where Chrome runtime exists</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-24</span>
+                <span class="linear-title">Agent Sync Ledger (Codex + Claude)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">sync/pending</span><span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-130</span>
+                <span class="linear-title">Investigate monitoring alert with subsequent self-recovery</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-108</span>
+                <span class="linear-title">Delete temporary API scripts from ~/.claude/</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-117</span>
+                <span class="linear-title">Delete untracked mp4 files from gptapbot-demo</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-110</span>
+                <span class="linear-title">Create weekly cycle W14 in Linear</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">ai-blocked</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-120</span>
+                <span class="linear-title">Check if Yandex Dictionary API returns search history</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-121</span>
+                <span class="linear-title">Find alternative to API if no search history available</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-122</span>
+                <span class="linear-title">Export all words from dictionary search history</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-123</span>
+                <span class="linear-title">Save exported words to Obsidian with translations</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-124</span>
+                <span class="linear-title">Build basic Telegram bot for daily flashcards</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-126</span>
+                <span class="linear-title">Add Claude-generated contextual examples</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:transparent"></span>
+                <span class="linear-id">PER-125</span>
+                <span class="linear-title">Implement spaced repetition algorithm</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:claude</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-blocked</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-47</span>
+                <span class="linear-title">Extend regression harness to /start, search, idea buttons, follow-up, voice save</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">agent:codex</span><span class="linear-label">source/obsidian</span><span class="linear-label">ai-task</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-33</span>
+                <span class="linear-title">Restore Mac mini access for runner bootstrap</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#f97316" title="High"></span>
+                <span class="linear-id">PER-27</span>
+                <span class="linear-title">Mac mini runner setup (launchd + watchdog + logs)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ai-task</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">Blocked</span>
+                </div>
+            </div>
+            <div class="linear-issue">
+                <span class="linear-priority" style="background:#ef4444" title="Urgent"></span>
+                <span class="linear-id">PER-26</span>
+                <span class="linear-title">Autonomous 3h project queue (Codex + Claude)</span>
+                <div class="linear-issue-right">
+                    <span class="linear-label">source/codex</span><span class="linear-label">source/claude</span><span class="linear-label">ai-task</span><span class="linear-label">ops</span>
+                    <span class="linear-state" style="color:#3b82f6;background:rgba(59,130,246,0.12)">In Progress</span>
+                </div>
+            </div></div></div>
 </div>
 
 <div class="section" id="projects">
@@ -1747,10 +2092,10 @@ tr:last-child td { border-bottom: none; }
     </div>
 </div>
 
-<div class="section completed-section">
+<div class="section" id="done">
     <div class="section-head">
-        <div class="section-dot" style="background:var(--dim)"></div>
-        <div class="section-title">Completed</div>
+        <div class="section-dot" style="background:var(--green)"></div>
+        <div class="section-title">Done Projects</div>
         <div class="section-count">0</div>
     </div>
     <div class="tbl-wrap">
@@ -1830,7 +2175,7 @@ tr:last-child td { border-bottom: none; }
         </div></div>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 0 linear issues // 2026-03-31 12:23:31</div>
+<div class="footer">command center v3 // 5 agents // 21 linear issues // 2026-03-31 12:27:16</div>
 
 </main>
 </div>
