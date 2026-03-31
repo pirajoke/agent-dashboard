@@ -376,43 +376,51 @@ body {
     gap: 0.6rem;
 }
 .agent-model-card {
-    display: grid;
-    grid-template-columns: 80px 1fr auto;
+    display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.3rem 0;
 }
 .agent-model-name {
     font-size: 0.75rem;
     font-weight: 700;
     color: var(--fg);
+    min-width: 75px;
 }
 .agent-model-slider {
     display: flex;
     gap: 4px;
+    flex-shrink: 0;
 }
-.agent-model-slider .oslider-item {
-    padding: 0.25rem 0.6rem;
-    font-size: 0.65rem;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 4px;
-    color: var(--text);
+.agent-model-slider .agent-model-item {
+    display: inline-block;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    color: rgba(255,255,255,0.5);
     cursor: pointer;
+    transition: all 0.15s;
+    flex: none;
 }
-.agent-model-slider .oslider-item:hover {
-    background: rgba(255,255,255,0.15);
+.agent-model-slider .agent-model-item:hover {
+    background: rgba(255,255,255,0.12);
     border-color: var(--accent);
+    color: var(--fg);
 }
-.agent-model-slider .oslider-active {
+.agent-model-slider .agent-model-item.oslider-active {
     background: var(--accent);
     color: #000;
     border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(255,107,53,0.3);
 }
 .agent-model-current {
     font-size: 0.6rem;
     color: var(--dim);
-    min-width: 50px;
-    text-align: right;
+    margin-left: auto;
 }
 /* ── Combined Budget ── */
 .orch-total-grid {
@@ -1629,7 +1637,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-01 01:45:28</span>
+            <span>2026-04-01 01:49:44 ICT</span>
         </div>
     </div>
 </nav>
@@ -1641,7 +1649,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-01 01:45:28</span>
+        <span class="tm-item">2026-04-01 01:49:44 ICT</span>
     </div>
 </div>
 
@@ -1650,7 +1658,7 @@ tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="stat-val">13</div><div class="stat-lbl">Active Projects</div></div>
     <div class="stat"><div class="stat-val">270</div><div class="stat-lbl">Open Tasks</div></div>
     <div class="stat"><div class="stat-val green">460</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
+    <div class="stat"><div class="stat-val blue">5</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">63%</div><div class="stat-lbl">Progress</div></div>
 </div>
 
@@ -1805,7 +1813,7 @@ tr:last-child td { border-bottom: none; }
         </div>
         <div class="live-panel">
             <div class="live-panel-title">Services</div>
-            <div class="live-svc-summary">5/13 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">responder</span><span class="live-svc-age">18m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
+            <div class="live-svc-summary">6/13 running</div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">evening-summary</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">executor</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">morning-brief</span><span class="live-svc-age">offline</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">responder</span><span class="live-svc-age">1m ago</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">test-dead</span><span class="live-svc-age">offline</span></div>
         </div>
     </div>
     <div class="live-panel-wide">
@@ -1914,7 +1922,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         <circle cx="280" cy="50" r="24" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.3"><animate attributeName="r" values="24;28;24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.3;0.1;0.3" dur="2s" repeatCount="indefinite"/></circle>
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2221,7 +2229,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-01 01:45:28</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-01 01:49:44 ICT</div>
 
 </main>
 </div>
