@@ -1835,6 +1835,54 @@ tr:last-child td { border-bottom: none; }
     .caps-grid { grid-template-columns: repeat(2, 1fr); }
     .orch-agents-detail { grid-template-columns: 1fr; }
 }
+/* ── Phase 2: Quick Action Buttons ── */
+.qa-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    color: var(--dim);
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1;
+}
+.qa-btn:hover {
+    background: rgba(249,115,22,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+.qa-sm { font-size: 0.6rem; padding: 0.15rem 0.3rem; }
+.actions-col { white-space: nowrap; }
+.ag-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.4rem;
+}
+.ag-actions { display: flex; gap: 0.3rem; }
+
+/* ── Phase 2: Focus Mode ── */
+.focus-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+}
+.focus-label { color: var(--blue); }
+.focus-clear {
+    margin-left: auto;
+    color: var(--dim);
+    font-size: 0.7rem;
+    text-decoration: underline;
+}
+.focus-clear:hover { color: var(--text); }
+
 /* ── Phase 1: Staleness Banner ── */
 .staleness-banner {
     background: rgba(234,179,8,0.1);
@@ -2116,7 +2164,7 @@ tr:last-child td { border-bottom: none; }
         </a></li>
         <li><a data-target="#projects" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 4l5-2 5 2v8l-5 2-5-2V4z" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
-            Projects <span class="nav-count">14</span>
+            Projects <span class="nav-count">15</span>
         </a></li>
         <li><a data-target="#done" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M3 8l3 3 7-7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2126,7 +2174,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-20 21:09:35 ICT</span>
+            <span>2026-04-20 21:14:34 ICT</span>
         </div>
     </div>
 </nav>
@@ -2138,15 +2186,15 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-20 21:09:35 ICT</span>
+        <span class="tm-item">2026-04-20 21:14:34 ICT</span>
     </div>
 </div>
 
 <div class="stats">
     <div class="stat"><div class="stat-val accent">0</div><div class="stat-lbl">Active Agents</div></div>
     <div class="stat"><div class="stat-val">0</div><div class="stat-lbl">Active Projects</div></div>
-    <div class="stat"><div class="stat-val">308</div><div class="stat-lbl">Open Tasks</div></div>
-    <div class="stat"><div class="stat-val green">667</div><div class="stat-lbl">Completed</div></div>
+    <div class="stat"><div class="stat-val">320</div><div class="stat-lbl">Open Tasks</div></div>
+    <div class="stat"><div class="stat-val green">673</div><div class="stat-lbl">Completed</div></div>
     <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
 </div>
@@ -2418,7 +2466,12 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Deep search, synthesis, content, editing</div>
             <div class="ag-merged">+ EDITOR</div>
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ff6b35">AI-SINGULARITY-CHANNEL</span><span class="ag-badge" style="--badge-color:#ff6b35">INSTANT PRESENTATION</span><span class="ag-badge" style="--badge-color:#ff6b35">MY-DICTIONARY</span><span class="ag-badge" style="--badge-color:#ff6b35">STOCK-CONTENT-BOT</span></div>
-            <div class="ag-tasks">13 tasks</div>
+            <div class="ag-bottom">
+                <div class="ag-tasks">13 tasks</div>
+                <div class="ag-actions">
+                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-RESEARCHER'}).then(ok=>showToast(ok?'Launched RESEARCHER':'API offline','info'))" title="Run">▶</button>
+                </div>
+            </div>
         </div>
         <div class="ag ag-idle">
             <div class="ag-top">
@@ -2435,7 +2488,12 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Task flow, delegation, planning, comms, bridge</div>
             <div class="ag-merged">+ PLANNER, COMMS, BRIDGE</div>
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#58a6ff">AGENT-MEMORY</span><span class="ag-badge" style="--badge-color:#58a6ff">LINEAR</span><span class="ag-badge" style="--badge-color:#58a6ff">AGENTS-MD</span><span class="ag-badge" style="--badge-color:#58a6ff">SECOND-BRAIN</span><span class="ag-badge" style="--badge-color:#58a6ff">MESHLY</span><span class="ag-badge" style="--badge-color:#58a6ff">MAXIM-SITE</span></div>
-            <div class="ag-tasks">4 tasks</div>
+            <div class="ag-bottom">
+                <div class="ag-tasks">4 tasks</div>
+                <div class="ag-actions">
+                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-COORDINATOR'}).then(ok=>showToast(ok?'Launched COORDINATOR':'API offline','info'))" title="Run">▶</button>
+                </div>
+            </div>
         </div>
         <div class="ag ag-idle">
             <div class="ag-top">
@@ -2452,7 +2510,12 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Data → structured insights</div>
             
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#3fb950">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#3fb950">HEALTH</span></div>
-            <div class="ag-tasks">150 tasks</div>
+            <div class="ag-bottom">
+                <div class="ag-tasks">150 tasks</div>
+                <div class="ag-actions">
+                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-ANALYST'}).then(ok=>showToast(ok?'Launched ANALYST':'API offline','info'))" title="Run">▶</button>
+                </div>
+            </div>
         </div>
         <div class="ag ag-idle">
             <div class="ag-top">
@@ -2469,7 +2532,12 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Obsidian routing, hygiene, Tech-Base</div>
             
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#79c0ff">MY-OBSIDIAN</span><span class="ag-badge" style="--badge-color:#79c0ff">SKILLS</span></div>
-            <div class="ag-tasks">9 tasks</div>
+            <div class="ag-bottom">
+                <div class="ag-tasks">9 tasks</div>
+                <div class="ag-actions">
+                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-VAULT'}).then(ok=>showToast(ok?'Launched VAULT':'API offline','info'))" title="Run">▶</button>
+                </div>
+            </div>
         </div>
         <div class="ag ag-idle">
             <div class="ag-top">
@@ -2486,7 +2554,12 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Code, features, MVP, deploy, infra</div>
             <div class="ag-merged">+ DEVOPS</div>
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ffa657">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#ffa657">MAXIM-SITE</span><span class="ag-badge" style="--badge-color:#ffa657">MESHLY</span><span class="ag-badge" style="--badge-color:#ffa657">STOCK-CONTENT-BOT</span><span class="ag-badge" style="--badge-color:#ffa657">RELOCATION-TO-M4</span><span class="ag-badge" style="--badge-color:#ffa657">MY-OBSIDIAN</span></div>
-            <div class="ag-tasks">171 tasks</div>
+            <div class="ag-bottom">
+                <div class="ag-tasks">171 tasks</div>
+                <div class="ag-actions">
+                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-BUILDER'}).then(ok=>showToast(ok?'Launched BUILDER':'API offline','info'))" title="Run">▶</button>
+                </div>
+            </div>
         </div></div>
 </div>
 
@@ -2496,7 +2569,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2534,12 +2607,12 @@ tr:last-child td { border-bottom: none; }
         <summary class="proj-summary">
             <div class="section-dot" style="background:var(--green)"></div>
             <span class="section-title">Active Projects</span>
-            <span class="section-count">14</span>
+            <span class="section-count">15</span>
             <span class="proj-chevron"></span>
         </summary>
         <div class="tbl-wrap">
         <table>
-        <thead><tr><th>Project</th><th>Status</th><th>Open</th><th>Progress</th><th>Fresh</th><th>Next Action</th><th>Agents</th></tr></thead>
+        <thead><tr><th>Project</th><th>Status</th><th>Open</th><th>Progress</th><th>Fresh</th><th>Next Action</th><th>Agents</th><th></th></tr></thead>
         <tbody>
         <tr>
             <td class="proj-name">AI-DESK-ASSISTANT</td>
@@ -2552,6 +2625,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">14d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/AI-DESK-ASSISTANT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">AI-SINGULARITY-CHANNEL</td>
@@ -2564,6 +2641,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-cold">21d</td>
             <td class="next-action">—</td>
             <td class="agents-col">RESEARCHER</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/AI-SINGULARITY-CHANNEL/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">FASTDATA-VOICE-AGENT</td>
@@ -2576,6 +2657,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">ANALYST, BUILDER</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/FASTDATA-VOICE-AGENT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">HEALTH</td>
@@ -2588,6 +2673,26 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">ANALYST</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/HEALTH/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
+        </tr>
+        <tr>
+            <td class="proj-name">Instant-PPT</td>
+            <td><span class="status-pill status-other">—</span></td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">12</td>
+            <td>
+                <div class="pbar"><div class="pfill pfill-low" style="width:33%"></div></div>
+                <span class="ptxt">33%</span>
+            </td>
+            <td class="fresh-hot">0d</td>
+            <td class="next-action">—</td>
+            <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/Instant-PPT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">JARVIS</td>
@@ -2600,6 +2705,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">13d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/JARVIS/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">M4-Migration</td>
@@ -2612,6 +2721,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">5d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/M4-Migration/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">MY-OBSIDIAN</td>
@@ -2624,6 +2737,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">10d</td>
             <td class="next-action">—</td>
             <td class="agents-col">VAULT, BUILDER</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/MY-OBSIDIAN/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">PPT-GOOGLE</td>
@@ -2636,6 +2753,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/PPT-GOOGLE/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">PPT-TG</td>
@@ -2648,6 +2769,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-cold">21d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/PPT-TG/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">RELOCATION-TO-M4</td>
@@ -2660,6 +2785,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">5d</td>
             <td class="next-action">—</td>
             <td class="agents-col">BUILDER</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/RELOCATION-TO-M4/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">SECOND-BRAIN</td>
@@ -2672,6 +2801,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">5d</td>
             <td class="next-action">—</td>
             <td class="agents-col">COORDINATOR</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/SECOND-BRAIN/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">SMILE</td>
@@ -2684,6 +2817,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">10d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/SMILE/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">STOCK-CONTENT-BOT</td>
@@ -2696,6 +2833,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">12d</td>
             <td class="next-action">—</td>
             <td class="agents-col">RESEARCHER, BUILDER</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/STOCK-CONTENT-BOT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr>
         <tr>
             <td class="proj-name">Zerkalo-Kommunikacii</td>
@@ -2708,6 +2849,10 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col">
+                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/Zerkalo-Kommunikacii/Tech-Base/TODO.md')" title="Open TODO">📋</button>
+                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
+            </td>
         </tr></tbody>
         </table>
         </div>
@@ -2724,7 +2869,7 @@ tr:last-child td { border-bottom: none; }
         </summary>
         <div class="tbl-wrap">
         <table>
-        <thead><tr><th>Project</th><th>Status</th><th>Done</th><th>Progress</th><th>Last</th><th>Final State</th><th>Agents</th></tr></thead>
+        <thead><tr><th>Project</th><th>Status</th><th>Done</th><th>Progress</th><th>Last</th><th>Final State</th><th>Agents</th><th></th></tr></thead>
         <tbody>
         <tr>
             <td class="proj-name">AI-Consultations</td>
@@ -2737,6 +2882,7 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-cold">—</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col"></td>
         </tr>
         <tr>
             <td class="proj-name">DONE</td>
@@ -2749,6 +2895,7 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-cold">—</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col"></td>
         </tr>
         <tr>
             <td class="proj-name">MESHLY-V2</td>
@@ -2761,13 +2908,14 @@ tr:last-child td { border-bottom: none; }
             <td class="fresh-warm">11d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
+            <td class="actions-col"></td>
         </tr></tbody>
         </table>
         </div>
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-20 21:09:35 ICT</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-20 21:14:34 ICT</div>
 
 </main>
 </div>
@@ -3028,11 +3176,23 @@ const LOCAL_API = 'http://localhost:7777';
         }
     });
 
+    // Focus commands from projects
+    document.querySelectorAll('#projects tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim();
+        if (name) {
+            commands.push({
+                label: `Focus: ${name}`,
+                category: 'focus',
+                action: () => { location.href = `${location.pathname}?focus=${encodeURIComponent(name)}`; }
+            });
+        }
+    });
+
     // Action commands
     commands.push({
         label: 'Rebuild Dashboard',
         category: 'action',
-        action: () => postLocal('/api/orchestrator/run', {source:'palette'}).then(ok => {
+        action: () => postLocal('/api/rebuild').then(ok => {
             if (ok) showToast('Rebuild triggered');
             else showToast('Local API offline', 'warn');
         })
@@ -3046,6 +3206,11 @@ const LOCAL_API = 'http://localhost:7777';
         label: 'Refresh Page',
         category: 'action',
         action: () => location.reload()
+    });
+    commands.push({
+        label: 'Clear Focus',
+        category: 'action',
+        action: () => { location.href = location.pathname; }
     });
 
     // Create palette DOM
@@ -3166,6 +3331,41 @@ const LOCAL_API = 'http://localhost:7777';
             case '?':
                 showToast('Shortcuts: 1-8 sections, / search, r refresh, ? help');
                 break;
+        }
+    });
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 2: Focus Mode ──
+// ══════════════════════════════════════════════════════════════
+(function initFocusMode() {
+    const params = new URLSearchParams(location.search);
+    const focus = params.get('focus');
+    if (!focus) return;
+
+    const focusLower = focus.toLowerCase();
+
+    // Show focus indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'focus-indicator';
+    indicator.innerHTML = `<span class="focus-label">Focus: <strong>${focus}</strong></span><a class="focus-clear" href="${location.pathname}">× Clear</a>`;
+    document.querySelector('.main')?.prepend(indicator);
+
+    // Filter project rows — hide non-matching
+    document.querySelectorAll('#projects tbody tr, #done tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim().toLowerCase() || '';
+        if (!name.includes(focusLower)) {
+            tr.style.display = 'none';
+        }
+    });
+
+    // Filter agent cards — dim non-matching
+    document.querySelectorAll('.ag').forEach(el => {
+        const badges = el.querySelector('.ag-badges')?.textContent?.toLowerCase() || '';
+        const id = el.querySelector('.ag-id')?.textContent?.toLowerCase() || '';
+        if (!badges.includes(focusLower) && !id.includes(focusLower)) {
+            el.style.opacity = '0.3';
+            el.style.pointerEvents = 'none';
         }
     });
 })();
