@@ -1835,6 +1835,228 @@ tr:last-child td { border-bottom: none; }
     .caps-grid { grid-template-columns: repeat(2, 1fr); }
     .orch-agents-detail { grid-template-columns: 1fr; }
 }
+/* ── Phase 1: Staleness Banner ── */
+.staleness-banner {
+    background: rgba(234,179,8,0.1);
+    border: 1px solid rgba(234,179,8,0.3);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--yellow);
+}
+.stale-icon { font-size: 1rem; }
+.stale-action {
+    margin-left: auto;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    opacity: 0.8;
+}
+.stale-action:hover { opacity: 1; }
+
+/* ── Phase 1: Since Last Visit ── */
+.since-last-visit {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+}
+.slv-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+}
+.slv-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text2);
+}
+.slv-ago {
+    font-size: 0.65rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    background: rgba(255,255,255,0.05);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+.slv-items { display: flex; flex-direction: column; gap: 0.3rem; }
+.slv-item {
+    font-size: 0.78rem;
+    color: var(--text);
+    padding: 0.2rem 0;
+}
+.slv-good { color: var(--green); }
+.slv-warn { color: var(--yellow); }
+.slv-new { color: var(--blue); }
+.slv-calm { color: var(--dim); font-style: italic; }
+
+/* ── Phase 1: Exception-based Agents ── */
+.ag-collapsed {
+    display: none !important;
+}
+.agents-collapse-toggle {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 0.6rem;
+    font-size: 0.72rem;
+    color: var(--dim);
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+}
+.agents-collapse-toggle:hover {
+    color: var(--text2);
+    border-color: var(--text2);
+    background: rgba(255,255,255,0.02);
+}
+.ag-highlight {
+    outline: 2px solid var(--accent) !important;
+    outline-offset: 2px;
+    animation: pulse-outline 1s ease-in-out 2;
+}
+@keyframes pulse-outline {
+    0%, 100% { outline-color: var(--accent); }
+    50% { outline-color: transparent; }
+}
+.row-highlight {
+    background: rgba(249,115,22,0.1) !important;
+    outline: 1px solid var(--accent);
+}
+
+/* ── Phase 1: Command Palette ── */
+.cmd-palette {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 20vh;
+}
+.cmd-palette.hidden { display: none; }
+.cmd-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+}
+.cmd-dialog {
+    position: relative;
+    width: 520px;
+    max-width: 90vw;
+    background: var(--card-solid);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+.cmd-input {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+}
+.cmd-input::placeholder { color: var(--dim); }
+.cmd-results {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 0.4rem 0;
+}
+.cmd-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 1.2rem;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.cmd-item:hover, .cmd-selected {
+    background: rgba(249,115,22,0.08);
+}
+.cmd-cat {
+    font-size: 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+    background: rgba(255,255,255,0.05);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    min-width: 50px;
+    text-align: center;
+}
+.cmd-label {
+    font-size: 0.8rem;
+    color: var(--text);
+}
+.cmd-empty {
+    padding: 1rem 1.2rem;
+    font-size: 0.78rem;
+    color: var(--dim);
+    text-align: center;
+}
+.cmd-footer {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem 1.2rem;
+    border-top: 1px solid var(--border);
+}
+.cmd-hint {
+    font-size: 0.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+}
+
+/* ── Phase 1: Toast Notifications ── */
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.toast {
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    animation: toast-in 0.2s ease-out;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.toast-info {
+    background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.3);
+    color: var(--blue);
+}
+.toast-warn {
+    background: rgba(234,179,8,0.15);
+    border: 1px solid rgba(234,179,8,0.3);
+    color: var(--yellow);
+}
+.toast-out {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+}
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 900px) {
     .sidebar { display: none; }
     .main { margin-left: 0; }
@@ -1850,6 +2072,7 @@ tr:last-child td { border-bottom: none; }
     .orch-agents-detail { grid-template-columns: 1fr; }
     .mt-summary { grid-template-columns: repeat(2, 1fr); }
     .topbar { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+    .cmd-dialog { width: 95vw; }
 }
 
 </style>
@@ -1903,7 +2126,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-20 20:47:45 ICT</span>
+            <span>2026-04-20 21:09:35 ICT</span>
         </div>
     </div>
 </nav>
@@ -1915,7 +2138,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-20 20:47:45 ICT</span>
+        <span class="tm-item">2026-04-20 21:09:35 ICT</span>
     </div>
 </div>
 
@@ -2099,7 +2322,7 @@ tr:last-child td { border-bottom: none; }
         <div class="cbar-bar ">
             <div class="cbar-bar-fill" style="width:8.0%;background:var(--green)"></div>
         </div>
-        <div class="cbar-bar-reset">resets in 3d 3h</div>
+        <div class="cbar-bar-reset">resets in 3d 2h</div>
     </div></div>
             <div class="cbar-footer">
                 <span>40.6M session tok</span>
@@ -2129,7 +2352,7 @@ tr:last-child td { border-bottom: none; }
         <div class="cbar-bar ">
             <div class="cbar-bar-fill" style="width:52.0%;background:var(--yellow)"></div>
         </div>
-        <div class="cbar-bar-reset">resets in 3d 13h</div>
+        <div class="cbar-bar-reset">resets in 3d 12h</div>
     </div></div>
             <div class="cbar-footer">
                 <span>13.1M session tok</span>
@@ -2273,7 +2496,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2544,7 +2767,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-20 20:47:45 ICT</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-20 21:09:35 ICT</div>
 
 </main>
 </div>
@@ -2589,9 +2812,384 @@ tr:last-child td { border-bottom: none; }
         }
     });
 })();
+
 const GH_REPO = 'pirajoke/agent-dashboard';
 const GH_MODE_PATH = 'mode-request.json';
 const LOCAL_API = 'http://localhost:7777';
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Staleness Banner ──
+// ══════════════════════════════════════════════════════════════
+(function initStaleness() {
+    const tsEl = document.querySelector('.topbar-meta .tm-item:last-child');
+    if (!tsEl) return;
+    const tsText = tsEl.textContent.trim();
+    // Parse "2026-04-20 14:30:00 ICT" format
+    const match = tsText.match(/(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
+    if (!match) return;
+    const buildTime = new Date(`${match[1]}T${match[2]}+07:00`); // ICT = UTC+7
+    const now = new Date();
+    const ageMin = Math.floor((now - buildTime) / 60000);
+
+    if (ageMin > 30) {
+        const banner = document.createElement('div');
+        banner.className = 'staleness-banner';
+        const ageLabel = ageMin > 1440 ? `${Math.floor(ageMin/1440)}d ago` :
+                         ageMin > 60 ? `${Math.floor(ageMin/60)}h ago` : `${ageMin}m ago`;
+        banner.innerHTML = `<span class="stale-icon">⚠</span> Dashboard data is stale (built ${ageLabel}). <span class="stale-action" onclick="location.reload()">Refresh</span>`;
+        document.querySelector('.main').prepend(banner);
+    }
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: "Since Last Visit" Block ──
+// ══════════════════════════════════════════════════════════════
+(function initSinceLastVisit() {
+    const STORAGE_KEY = 'cc_last_visit';
+    const SNAPSHOT_KEY = 'cc_snapshot';
+    const now = Date.now();
+    const lastVisit = localStorage.getItem(STORAGE_KEY);
+    const prevSnapshot = localStorage.getItem(SNAPSHOT_KEY);
+
+    // Collect current state snapshot
+    const currentSnapshot = {
+        agents: [],
+        projects: [],
+        openTasks: 0,
+        closedTasks: 0,
+    };
+
+    // Parse agents
+    document.querySelectorAll('.ag').forEach(el => {
+        const id = el.querySelector('.ag-id')?.textContent?.trim() || '';
+        const health = el.classList.contains('ag-active') ? 'active' :
+                       el.classList.contains('ag-blocked') ? 'blocked' : 'idle';
+        const tasks = parseInt(el.querySelector('.ag-tasks')?.textContent) || 0;
+        currentSnapshot.agents.push({id, health, tasks});
+    });
+
+    // Parse projects from table
+    document.querySelectorAll('#projects tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim() || '';
+        const status = tr.querySelector('.status-pill')?.textContent?.trim() || '';
+        const open = parseInt(tr.children[2]?.textContent) || 0;
+        currentSnapshot.projects.push({name, status, open});
+        currentSnapshot.openTasks += open;
+    });
+
+    // Parse stats
+    const statVals = document.querySelectorAll('.stat-val');
+    if (statVals.length >= 4) {
+        currentSnapshot.openTasks = parseInt(statVals[2]?.textContent) || 0;
+        currentSnapshot.closedTasks = parseInt(statVals[3]?.textContent) || 0;
+    }
+
+    // Save current visit
+    localStorage.setItem(STORAGE_KEY, now.toString());
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(currentSnapshot));
+
+    // If no previous visit, skip
+    if (!lastVisit || !prevSnapshot) return;
+
+    let prev;
+    try { prev = JSON.parse(prevSnapshot); } catch(e) { return; }
+
+    // Compute diff
+    const changes = [];
+    const lastTime = parseInt(lastVisit);
+    const agoMin = Math.floor((now - lastTime) / 60000);
+    const agoLabel = agoMin > 1440 ? `${Math.floor(agoMin/1440)}d` :
+                     agoMin > 60 ? `${Math.floor(agoMin/60)}h` : `${agoMin}m`;
+
+    // Task delta
+    const taskDelta = currentSnapshot.openTasks - (prev.openTasks || 0);
+    const closedDelta = currentSnapshot.closedTasks - (prev.closedTasks || 0);
+    if (closedDelta > 0) changes.push(`<span class="slv-good">+${closedDelta} tasks completed</span>`);
+    if (taskDelta > 0) changes.push(`<span class="slv-warn">+${taskDelta} new open tasks</span>`);
+    if (taskDelta < 0 && closedDelta <= 0) changes.push(`<span class="slv-good">${Math.abs(taskDelta)} tasks resolved</span>`);
+
+    // Agent health changes
+    const prevAgentMap = {};
+    (prev.agents || []).forEach(a => prevAgentMap[a.id] = a);
+    currentSnapshot.agents.forEach(a => {
+        const pa = prevAgentMap[a.id];
+        if (pa && pa.health !== a.health) {
+            const icon = a.health === 'blocked' ? '🔴' : a.health === 'active' ? '🟢' : '🟡';
+            changes.push(`${icon} <strong>${a.id}</strong> ${pa.health} → ${a.health}`);
+        }
+    });
+
+    // Project changes
+    const prevProjMap = {};
+    (prev.projects || []).forEach(p => prevProjMap[p.name] = p);
+    currentSnapshot.projects.forEach(p => {
+        const pp = prevProjMap[p.name];
+        if (!pp) {
+            changes.push(`<span class="slv-new">New project: ${p.name}</span>`);
+        } else if (pp.status !== p.status) {
+            changes.push(`<strong>${p.name}</strong> status: ${pp.status} → ${p.status}`);
+        }
+    });
+
+    if (changes.length === 0) changes.push('<span class="slv-calm">No changes since your last visit</span>');
+
+    // Render block
+    const block = document.createElement('div');
+    block.className = 'since-last-visit';
+    block.innerHTML = `
+        <div class="slv-header">
+            <span class="slv-title">Since last visit</span>
+            <span class="slv-ago">${agoLabel} ago</span>
+        </div>
+        <div class="slv-items">${changes.map(c => `<div class="slv-item">${c}</div>`).join('')}</div>
+    `;
+
+    // Insert after stats
+    const stats = document.querySelector('.stats');
+    if (stats) stats.after(block);
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Exception-based Agent Display ──
+// ══════════════════════════════════════════════════════════════
+(function initExceptionView() {
+    const agentsContainer = document.querySelector('.agents');
+    if (!agentsContainer) return;
+    const agents = agentsContainer.querySelectorAll('.ag');
+    const healthy = [];
+    const problematic = [];
+    agents.forEach(el => {
+        if (el.classList.contains('ag-active')) healthy.push(el);
+        else problematic.push(el);
+    });
+    // If all healthy or all problematic, don't rearrange
+    if (problematic.length === 0 || healthy.length === 0) return;
+    // Move problematic first
+    problematic.forEach(el => agentsContainer.prepend(el));
+    // Collapse healthy agents
+    if (healthy.length > 2) {
+        const toggle = document.createElement('div');
+        toggle.className = 'agents-collapse-toggle';
+        toggle.innerHTML = `<span class="act-text">Show ${healthy.length} healthy agents</span>`;
+        toggle.style.cursor = 'pointer';
+        let collapsed = true;
+        healthy.forEach(el => el.classList.add('ag-collapsed'));
+        toggle.addEventListener('click', () => {
+            collapsed = !collapsed;
+            healthy.forEach(el => el.classList.toggle('ag-collapsed', collapsed));
+            toggle.querySelector('.act-text').textContent = collapsed
+                ? `Show ${healthy.length} healthy agents`
+                : `Hide healthy agents`;
+        });
+        // Insert toggle after last problematic
+        const lastProb = problematic[problematic.length - 1];
+        lastProb.after(toggle);
+    }
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Cmd+K Command Palette ──
+// ══════════════════════════════════════════════════════════════
+(function initCommandPalette() {
+    // Build palette data
+    const commands = [];
+
+    // Navigation commands
+    document.querySelectorAll('.sidebar-nav a[data-target]').forEach(a => {
+        const label = a.textContent.trim().replace(/\d+$/, '').trim();
+        commands.push({
+            label: `Go to ${label}`,
+            category: 'nav',
+            action: () => { a.click(); }
+        });
+    });
+
+    // Agent commands
+    document.querySelectorAll('.ag').forEach(el => {
+        const id = el.querySelector('.ag-id')?.textContent?.trim();
+        if (id) {
+            commands.push({
+                label: `Agent: ${id}`,
+                category: 'agent',
+                action: () => { el.scrollIntoView({behavior:'smooth'}); el.classList.add('ag-highlight'); setTimeout(()=>el.classList.remove('ag-highlight'),2000); }
+            });
+        }
+    });
+
+    // Project commands
+    document.querySelectorAll('#projects tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim();
+        if (name) {
+            commands.push({
+                label: `Project: ${name}`,
+                category: 'project',
+                action: () => { tr.scrollIntoView({behavior:'smooth'}); tr.classList.add('row-highlight'); setTimeout(()=>tr.classList.remove('row-highlight'),2000); }
+            });
+        }
+    });
+
+    // Action commands
+    commands.push({
+        label: 'Rebuild Dashboard',
+        category: 'action',
+        action: () => postLocal('/api/orchestrator/run', {source:'palette'}).then(ok => {
+            if (ok) showToast('Rebuild triggered');
+            else showToast('Local API offline', 'warn');
+        })
+    });
+    commands.push({
+        label: 'Launch Agents',
+        category: 'action',
+        action: () => { document.getElementById('launchBtn')?.click(); }
+    });
+    commands.push({
+        label: 'Refresh Page',
+        category: 'action',
+        action: () => location.reload()
+    });
+
+    // Create palette DOM
+    const palette = document.createElement('div');
+    palette.className = 'cmd-palette hidden';
+    palette.innerHTML = `
+        <div class="cmd-backdrop"></div>
+        <div class="cmd-dialog">
+            <input class="cmd-input" type="text" placeholder="Search commands, agents, projects..." autofocus>
+            <div class="cmd-results"></div>
+            <div class="cmd-footer">
+                <span class="cmd-hint">↑↓ navigate</span>
+                <span class="cmd-hint">↵ select</span>
+                <span class="cmd-hint">esc close</span>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(palette);
+
+    const input = palette.querySelector('.cmd-input');
+    const results = palette.querySelector('.cmd-results');
+    const backdrop = palette.querySelector('.cmd-backdrop');
+    let selectedIdx = 0;
+    let filtered = [];
+
+    function render(query) {
+        filtered = query
+            ? commands.filter(c => c.label.toLowerCase().includes(query.toLowerCase()))
+            : commands.slice(0, 10);
+        selectedIdx = 0;
+        results.innerHTML = filtered.map((c, i) => `
+            <div class="cmd-item ${i===0?'cmd-selected':''}" data-idx="${i}">
+                <span class="cmd-cat">${c.category}</span>
+                <span class="cmd-label">${c.label}</span>
+            </div>
+        `).join('') || '<div class="cmd-empty">No results</div>';
+    }
+
+    function updateSelection() {
+        results.querySelectorAll('.cmd-item').forEach((el, i) => {
+            el.classList.toggle('cmd-selected', i === selectedIdx);
+        });
+        results.querySelector('.cmd-selected')?.scrollIntoView({block:'nearest'});
+    }
+
+    function execute() {
+        if (filtered[selectedIdx]) {
+            close();
+            filtered[selectedIdx].action();
+        }
+    }
+
+    function open() {
+        palette.classList.remove('hidden');
+        input.value = '';
+        render('');
+        setTimeout(() => input.focus(), 50);
+    }
+
+    function close() {
+        palette.classList.add('hidden');
+    }
+
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); selectedIdx = Math.min(selectedIdx+1, filtered.length-1); updateSelection(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); selectedIdx = Math.max(selectedIdx-1, 0); updateSelection(); }
+        else if (e.key === 'Enter') { e.preventDefault(); execute(); }
+        else if (e.key === 'Escape') { close(); }
+    });
+    results.addEventListener('click', (e) => {
+        const item = e.target.closest('.cmd-item');
+        if (item) { selectedIdx = parseInt(item.dataset.idx); execute(); }
+    });
+    backdrop.addEventListener('click', close);
+
+    // Global shortcut: Cmd+K or Ctrl+K
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            palette.classList.contains('hidden') ? open() : close();
+        }
+    });
+
+    // Expose for keyboard shortcut
+    window._cmdPalette = { open, close };
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Keyboard Shortcuts ──
+// ══════════════════════════════════════════════════════════════
+(function initKeyboardShortcuts() {
+    const navLinks = document.querySelectorAll('.sidebar-nav a[data-target]');
+    const navArray = Array.from(navLinks);
+
+    document.addEventListener('keydown', (e) => {
+        // Skip if in input/textarea or palette open
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+        // 1-8 for sections
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= navArray.length) {
+            e.preventDefault();
+            navArray[num - 1].click();
+            return;
+        }
+
+        switch(e.key) {
+            case 'r':
+                e.preventDefault();
+                location.reload();
+                break;
+            case '/':
+                e.preventDefault();
+                if (window._cmdPalette) window._cmdPalette.open();
+                break;
+            case '?':
+                showToast('Shortcuts: 1-8 sections, / search, r refresh, ? help');
+                break;
+        }
+    });
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Toast notification helper ──
+// ══════════════════════════════════════════════════════════════
+function showToast(msg, type) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type === 'warn' ? 'toast-warn' : 'toast-info'}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => { toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── Existing functionality ──
+// ══════════════════════════════════════════════════════════════
 
 function setOrchMeta(text) {
     const metaEl = document.querySelector('.orch-meta');
