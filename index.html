@@ -1670,6 +1670,7 @@ tr:last-child td { border-bottom: none; }
 .live-health-ok { background: var(--green); }
 .live-health-warn { background: var(--yellow); }
 .live-health-err { background: var(--red, #f85149); }
+.live-health-off { background: var(--dim); }
 .live-svc-name {
     font-family: 'JetBrains Mono', monospace;
     color: var(--fg);
@@ -1850,6 +1851,7 @@ tr:last-child td { border-bottom: none; }
     .mt-summary { grid-template-columns: repeat(2, 1fr); }
     .topbar { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
 }
+
 </style>
 </head>
 <body>
@@ -1901,7 +1903,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-17 11:11:11 ICT</span>
+            <span>2026-04-20 20:47:45 ICT</span>
         </div>
     </div>
 </nav>
@@ -1913,17 +1915,17 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-17 11:11:11 ICT</span>
+        <span class="tm-item">2026-04-20 20:47:45 ICT</span>
     </div>
 </div>
 
 <div class="stats">
     <div class="stat"><div class="stat-val accent">0</div><div class="stat-lbl">Active Agents</div></div>
     <div class="stat"><div class="stat-val">0</div><div class="stat-lbl">Active Projects</div></div>
-    <div class="stat"><div class="stat-val">279</div><div class="stat-lbl">Open Tasks</div></div>
-    <div class="stat"><div class="stat-val green">570</div><div class="stat-lbl">Completed</div></div>
+    <div class="stat"><div class="stat-val">308</div><div class="stat-lbl">Open Tasks</div></div>
+    <div class="stat"><div class="stat-val green">667</div><div class="stat-lbl">Completed</div></div>
     <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
-    <div class="stat"><div class="stat-val purple">67%</div><div class="stat-lbl">Progress</div></div>
+    <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
 </div>
 
 <div class="section" id="orchestrator">
@@ -1982,7 +1984,7 @@ tr:last-child td { border-bottom: none; }
                     <span class="orch-combined-count">23d left &middot; renews 2026-05-10</span>
                 </div>
             </div>
-            <div class="orch-combined-footer">1425.8M tokens &middot; $4,531 API-eq &middot; 21x ROI</div>
+            <div class="orch-combined-footer">1426.1M tokens &middot; $4,532 API-eq &middot; 21x ROI</div>
         </div>
     </div>
     <div class="orch-agents-detail">
@@ -1999,7 +2001,6 @@ tr:last-child td { border-bottom: none; }
                     <span class="osub-plan">Max $200/mo</span>
                 </div>
             </div>
-
             
             <div class="osub-billing-cycle">
                 <div class="osub-billing-label">BILLING CYCLE &middot; 2026-04-05 &rarr; 2026-05-05</div>
@@ -2012,21 +2013,20 @@ tr:last-child td { border-bottom: none; }
             <div class="osub-limit-primary">
                 <div class="osub-limit-bar-wrap">
                     <div class="osub-limit-bar">
-                        <div class="osub-limit-bar-fill" style="width:47%;background:#22c55e"></div>
+                        <div class="osub-limit-bar-fill" style="width:82%;background:#eab308"></div>
                     </div>
-                    <div class="osub-limit-count">21 / ~45 msgs/day <span class="osub-rate-tag">rate limit</span></div>
+                    <div class="osub-limit-count">37 / ~45 msgs/day <span class="osub-rate-tag">rate limit</span></div>
                 </div>
-                <div class="osub-limit-reset">Resets in 19h 48m</div>
+                <div class="osub-limit-reset">Resets in 19h 36m</div>
             </div>
             
             <div class="osub-month-summary">
                 <span class="osub-month-label">This Cycle</span>
-                <span class="osub-month-stats">1006.2M tokens &middot; 19,792 msgs &middot; 17 days active</span>
-                <span class="osub-month-savings">$2,433 API-eq &rarr; <strong>12x ROI</strong></span>
+                <span class="osub-month-stats">1006.5M tokens &middot; 19,808 msgs &middot; 17 days active</span>
+                <span class="osub-month-savings">$2,434 API-eq &rarr; <strong>12x ROI</strong></span>
             </div>
-
             <div class="osub-features"><span class="osub-feat">CLI + IDE</span><span class="osub-feat">Agent tool</span><span class="osub-feat">MCP servers</span><span class="osub-feat">Hooks</span><span class="osub-feat">Unlimited Sonnet</span></div>
-            <div class="osub-real-updated">auto-synced 2026-04-17 04:11</div>
+            <div class="osub-real-updated">auto-synced 2026-04-17 04:21</div>
         </div>
         <div class="osub osub-full">
             <div class="osub-head">
@@ -2040,7 +2040,6 @@ tr:last-child td { border-bottom: none; }
                     <span class="osub-plan">Plus $20/mo</span>
                 </div>
             </div>
-
             
             <div class="osub-billing-cycle">
                 <div class="osub-billing-label">BILLING CYCLE &middot; 2026-04-10 &rarr; 2026-05-10</div>
@@ -2064,7 +2063,6 @@ tr:last-child td { border-bottom: none; }
                 <span class="osub-month-stats">419.6M tokens &middot; 64 sessions &middot; 8 days active</span>
                 <span class="osub-month-savings">$2,098 API-eq &rarr; <strong>105x ROI</strong></span>
             </div>
-
             <div class="osub-features"><span class="osub-feat">Responses API</span><span class="osub-feat">Low-cost worker</span><span class="osub-feat">Git integration</span><span class="osub-feat">Prompt caching</span><span class="osub-feat">Background exec</span></div>
             <div class="osub-real-updated">auto-synced 2026-04-17 04:11</div>
         </div>
@@ -2082,45 +2080,15 @@ tr:last-child td { border-bottom: none; }
                 <div class="cbar-icon" style="background:#3fb950">X</div>
                 <div class="cbar-title">Codex</div>
                 <span class="cbar-plan">Plus $20/mo</span>
-                <div class="cbar-updated">15:58</div>
+                <div class="cbar-updated">11:22</div>
             </div>
             <div class="cbar-bars"><div class="cbar-bar-row">
         <div class="cbar-bar-meta">
             <span class="cbar-bar-label">Session</span>
-            <span class="cbar-bar-pct" style="color:var(--green)">100% left</span>
+            <span class="cbar-bar-pct" style="color:var(--green)">89% left</span>
         </div>
         <div class="cbar-bar ">
-            <div class="cbar-bar-fill" style="width:0.0%;background:var(--green)"></div>
-        </div>
-        <div class="cbar-bar-reset">resets in now</div>
-    </div><div class="cbar-bar-row">
-        <div class="cbar-bar-meta">
-            <span class="cbar-bar-label">Weekly</span>
-            <span class="cbar-bar-pct" style="color:var(--red)">0% left</span>
-        </div>
-        <div class="cbar-bar ">
-            <div class="cbar-bar-fill" style="width:100.0%;background:var(--red)"></div>
-        </div>
-        <div class="cbar-bar-reset">resets in now</div>
-    </div></div>
-            <div class="cbar-footer">
-                <span>40.2M session tok</span>
-                <span>$709 / 30d</span>
-            </div>
-        </div><div class="cbar-card">
-            <div class="cbar-head">
-                <div class="cbar-icon" style="background:#ff6b35">C</div>
-                <div class="cbar-title">Claude</div>
-                <span class="cbar-plan">Max $200/mo</span>
-                <div class="cbar-updated">15:57</div>
-            </div>
-            <div class="cbar-bars"><div class="cbar-bar-row">
-        <div class="cbar-bar-meta">
-            <span class="cbar-bar-label">Session</span>
-            <span class="cbar-bar-pct" style="color:var(--red)">0% left</span>
-        </div>
-        <div class="cbar-bar ">
-            <div class="cbar-bar-fill" style="width:100.0%;background:var(--red)"></div>
+            <div class="cbar-bar-fill" style="width:11.0%;background:var(--green)"></div>
         </div>
         <div class="cbar-bar-reset">resets in now</div>
     </div><div class="cbar-bar-row">
@@ -2131,11 +2099,41 @@ tr:last-child td { border-bottom: none; }
         <div class="cbar-bar ">
             <div class="cbar-bar-fill" style="width:8.0%;background:var(--green)"></div>
         </div>
-        <div class="cbar-bar-reset">resets in 4d 9h</div>
+        <div class="cbar-bar-reset">resets in 3d 3h</div>
     </div></div>
             <div class="cbar-footer">
-                <span>1.1M session tok</span>
-                <span>$895 / 30d</span>
+                <span>40.6M session tok</span>
+                <span>$811 / 30d</span>
+            </div>
+        </div><div class="cbar-card">
+            <div class="cbar-head">
+                <div class="cbar-icon" style="background:#ff6b35">C</div>
+                <div class="cbar-title">Claude</div>
+                <span class="cbar-plan">Max $200/mo</span>
+                <div class="cbar-updated">11:22</div>
+            </div>
+            <div class="cbar-bars"><div class="cbar-bar-row">
+        <div class="cbar-bar-meta">
+            <span class="cbar-bar-label">Session</span>
+            <span class="cbar-bar-pct" style="color:var(--red)">0% left</span>
+        </div>
+        <div class="cbar-bar ">
+            <div class="cbar-bar-fill" style="width:100.0%;background:var(--red)"></div>
+        </div>
+        <div class="cbar-bar-reset">resets in now</div>
+    </div><div class="cbar-bar-row">
+        <div class="cbar-bar-meta">
+            <span class="cbar-bar-label">Weekly</span>
+            <span class="cbar-bar-pct" style="color:var(--yellow)">48% left</span>
+        </div>
+        <div class="cbar-bar ">
+            <div class="cbar-bar-fill" style="width:52.0%;background:var(--yellow)"></div>
+        </div>
+        <div class="cbar-bar-reset">resets in 3d 13h</div>
+    </div></div>
+            <div class="cbar-footer">
+                <span>13.1M session tok</span>
+                <span>$764 / 30d</span>
             </div>
         </div></div>
 </div>
@@ -2159,6 +2157,14 @@ tr:last-child td { border-bottom: none; }
         <div class="live-panel">
             <div class="live-panel-title">Mac Mini M4</div>
             <div class="live-svc-summary">maxxs-mac-mini · unreachable</div><div class="live-alerts"><span class="live-alert live-alert-critical">SSH down</span></div><div class="live-m4-meta"><div class="live-m4-line"><span class="live-m4-key">Target</span><span class="live-m4-val">maxx@100.77.209.73</span></div><div class="live-m4-line"><span class="live-m4-key">LaunchAgents</span><span class="live-m4-val">0/0 running</span></div><div class="live-m4-line"><span class="live-m4-key">Containers</span><span class="live-m4-val">0/0 up</span></div><div class="live-m4-line"><span class="live-m4-key">Public</span><span class="live-m4-val">2/2 healthy</span></div><div class="live-m4-line"><span class="live-m4-key">Uptime</span><span class="live-m4-val">ssh: connect to host 100.77.209.73 port 22: Address already in use</span></div><div class="live-m4-line"><span class="live-m4-key">Backup</span><span class="live-m4-val">n/a</span></div><div class="live-m4-line"><span class="live-m4-key">Backup age</span><span class="live-m4-val">n/a</span></div></div><div class="live-alert-details"><div class="live-alert-detail"><span class="live-alert-detail-label">SSH down</span><span class="live-alert-detail-text">ssh: connect to host 100.77.209.73 port 22: Address already in use</span></div></div><div class="live-svc-group"><div class="live-svc-group-title">LaunchAgents</div><div class="live-empty">No data</div></div><div class="live-svc-group"><div class="live-svc-group-title">Containers</div><div class="live-empty">No data</div></div><div class="live-svc-group"><div class="live-svc-group-title">Public endpoints</div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">meshly-mini</span><span class="live-svc-age">200</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">n8n</span><span class="live-svc-age">200</span></div></div>
+        </div>
+        
+        <div class="live-panel">
+            <div class="live-panel-title">Local Services</div>
+            <div class="live-svc-summary" id="local-services-summary">Loading local status…</div>
+            <div id="local-services-list">
+                <div class="live-empty">Querying launchd and local processes…</div>
+            </div>
         </div>
     </div>
     <div class="live-panel-wide">
@@ -2223,7 +2229,7 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Data → structured insights</div>
             
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#3fb950">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#3fb950">HEALTH</span></div>
-            <div class="ag-tasks">147 tasks</div>
+            <div class="ag-tasks">150 tasks</div>
         </div>
         <div class="ag ag-idle">
             <div class="ag-top">
@@ -2257,7 +2263,7 @@ tr:last-child td { border-bottom: none; }
             <div class="ag-zone">Code, features, MVP, deploy, infra</div>
             <div class="ag-merged">+ DEVOPS</div>
             <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ffa657">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#ffa657">MAXIM-SITE</span><span class="ag-badge" style="--badge-color:#ffa657">MESHLY</span><span class="ag-badge" style="--badge-color:#ffa657">STOCK-CONTENT-BOT</span><span class="ag-badge" style="--badge-color:#ffa657">RELOCATION-TO-M4</span><span class="ag-badge" style="--badge-color:#ffa657">MY-OBSIDIAN</span></div>
-            <div class="ag-tasks">169 tasks</div>
+            <div class="ag-tasks">171 tasks</div>
         </div></div>
 </div>
 
@@ -2267,7 +2273,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2320,7 +2326,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-mid" style="width:62%"></div></div>
                 <span class="ptxt">62%</span>
             </td>
-            <td class="fresh-warm">10d</td>
+            <td class="fresh-warm">14d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
         </tr>
@@ -2332,31 +2338,31 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-high" style="width:78%"></div></div>
                 <span class="ptxt">78%</span>
             </td>
-            <td class="fresh-cold">18d</td>
+            <td class="fresh-cold">21d</td>
             <td class="next-action">—</td>
             <td class="agents-col">RESEARCHER</td>
         </tr>
         <tr>
             <td class="proj-name">FASTDATA-VOICE-AGENT</td>
             <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">142</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">144</td>
             <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:46%"></div></div>
-                <span class="ptxt">46%</span>
+                <div class="pbar"><div class="pfill pfill-mid" style="width:47%"></div></div>
+                <span class="ptxt">47%</span>
             </td>
-            <td class="fresh-warm">6d</td>
+            <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">ANALYST, BUILDER</td>
         </tr>
         <tr>
             <td class="proj-name">HEALTH</td>
             <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">5</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">6</td>
             <td>
                 <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
                 <span class="ptxt">0%</span>
             </td>
-            <td class="fresh-cold">18d</td>
+            <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">ANALYST</td>
         </tr>
@@ -2368,7 +2374,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-high" style="width:88%"></div></div>
                 <span class="ptxt">88%</span>
             </td>
-            <td class="fresh-warm">9d</td>
+            <td class="fresh-warm">13d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
         </tr>
@@ -2380,7 +2386,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
                 <span class="ptxt">0%</span>
             </td>
-            <td class="fresh-hot">2d</td>
+            <td class="fresh-warm">5d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
         </tr>
@@ -2392,19 +2398,19 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-mid" style="width:65%"></div></div>
                 <span class="ptxt">65%</span>
             </td>
-            <td class="fresh-warm">7d</td>
+            <td class="fresh-warm">10d</td>
             <td class="next-action">—</td>
             <td class="agents-col">VAULT, BUILDER</td>
         </tr>
         <tr>
             <td class="proj-name">PPT-GOOGLE</td>
             <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">7</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">13</td>
             <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:59%"></div></div>
-                <span class="ptxt">59%</span>
+                <div class="pbar"><div class="pfill pfill-mid" style="width:43%"></div></div>
+                <span class="ptxt">43%</span>
             </td>
-            <td class="fresh-warm">8d</td>
+            <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
         </tr>
@@ -2416,7 +2422,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-mid" style="width:64%"></div></div>
                 <span class="ptxt">64%</span>
             </td>
-            <td class="fresh-cold">17d</td>
+            <td class="fresh-cold">21d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
         </tr>
@@ -2428,7 +2434,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-high" style="width:85%"></div></div>
                 <span class="ptxt">85%</span>
             </td>
-            <td class="fresh-hot">1d</td>
+            <td class="fresh-warm">5d</td>
             <td class="next-action">—</td>
             <td class="agents-col">BUILDER</td>
         </tr>
@@ -2440,7 +2446,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-mid" style="width:71%"></div></div>
                 <span class="ptxt">71%</span>
             </td>
-            <td class="fresh-hot">1d</td>
+            <td class="fresh-warm">5d</td>
             <td class="next-action">—</td>
             <td class="agents-col">COORDINATOR</td>
         </tr>
@@ -2452,7 +2458,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-high" style="width:90%"></div></div>
                 <span class="ptxt">90%</span>
             </td>
-            <td class="fresh-warm">6d</td>
+            <td class="fresh-warm">10d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
         </tr>
@@ -2464,17 +2470,17 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-mid" style="width:72%"></div></div>
                 <span class="ptxt">72%</span>
             </td>
-            <td class="fresh-warm">8d</td>
+            <td class="fresh-warm">12d</td>
             <td class="next-action">—</td>
             <td class="agents-col">RESEARCHER, BUILDER</td>
         </tr>
         <tr>
             <td class="proj-name">Zerkalo-Kommunikacii</td>
             <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">15</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">35</td>
             <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:87%"></div></div>
-                <span class="ptxt">87%</span>
+                <div class="pbar"><div class="pfill pfill-high" style="width:84%"></div></div>
+                <span class="ptxt">84%</span>
             </td>
             <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
@@ -2529,7 +2535,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-high" style="width:100%"></div></div>
                 <span class="ptxt">100%</span>
             </td>
-            <td class="fresh-warm">8d</td>
+            <td class="fresh-warm">11d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
         </tr></tbody>
@@ -2538,7 +2544,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-17 11:11:11 ICT</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-20 20:47:45 ICT</div>
 
 </main>
 </div>
@@ -2592,6 +2598,15 @@ function setOrchMeta(text) {
     if (metaEl) metaEl.textContent = text;
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
 async function postLocal(path, data) {
     try {
         const res = await fetch(`${LOCAL_API}${path}`, {
@@ -2603,6 +2618,32 @@ async function postLocal(path, data) {
         return true;
     } catch (e) {
         return false;
+    }
+}
+
+async function refreshLocalServices() {
+    const summaryEl = document.getElementById('local-services-summary');
+    const listEl = document.getElementById('local-services-list');
+    if (!summaryEl || !listEl) return;
+    try {
+        const res = await fetch(`${LOCAL_API}/api/local-services?ts=${Date.now()}`, {cache: 'no-store'});
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        summaryEl.textContent = `${data.enabled_count}/${data.launchd_total} launchd enabled · ${data.running_count}/${data.total} running`;
+        const rows = (data.items || []).map(item => {
+            const dotCls = item.running
+                ? 'live-health-ok'
+                : (item.status === 'disabled' ? 'live-health-off' : 'live-health-warn');
+            const enabledLabel = item.enabled === null
+                ? item.status
+                : (item.enabled ? 'enabled' : 'disabled');
+            const meta = [enabledLabel, item.kind, item.detail].filter(Boolean).join(' · ');
+            return `<div class="live-svc"><span class="live-dot-sm ${dotCls}"></span><span class="live-svc-name">${escapeHtml(item.name)}</span><span class="live-svc-age">${escapeHtml(meta)}</span></div>`;
+        }).join('');
+        listEl.innerHTML = rows || '<div class="live-empty">No local services configured</div>';
+    } catch (e) {
+        summaryEl.textContent = 'Local API unavailable';
+        listEl.innerHTML = '<div class="live-empty">Open the dashboard on this Mac while `dashboard-server.py` is running to see local service state.</div>';
     }
 }
 
@@ -2786,6 +2827,9 @@ document.querySelectorAll('.agent-model-item').forEach(el => {
         }
     });
 });
+refreshLocalServices();
+setInterval(refreshLocalServices, 15000);
+
 </script>
 </body>
 </html>
