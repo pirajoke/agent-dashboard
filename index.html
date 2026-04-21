@@ -1835,6 +1835,39 @@ tr:last-child td { border-bottom: none; }
     .caps-grid { grid-template-columns: repeat(2, 1fr); }
     .orch-agents-detail { grid-template-columns: 1fr; }
 }
+/* ── Phase 3: Sparklines ── */
+.sparklines-row {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+.sparkline-card {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.sparkline-label {
+    font-size: 0.65rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    min-width: 80px;
+}
+.sparkline { flex: 1; }
+.sparkline-val {
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--text);
+    min-width: 40px;
+    text-align: right;
+}
+
 /* ── Phase 2: Quick Action Buttons ── */
 .qa-btn {
     background: rgba(255,255,255,0.05);
@@ -2174,7 +2207,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-20 21:14:34 ICT</span>
+            <span>2026-04-20 21:30:57 ICT</span>
         </div>
     </div>
 </nav>
@@ -2186,7 +2219,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Overview</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-20 21:14:34 ICT</span>
+        <span class="tm-item">2026-04-20 21:30:57 ICT</span>
     </div>
 </div>
 
@@ -2198,6 +2231,20 @@ tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
     <div class="stat"><div class="stat-val purple">68%</div><div class="stat-lbl">Progress</div></div>
 </div>
+
+
+    <div class="sparklines-row">
+        <div class="sparkline-card">
+            <div class="sparkline-label">Open Tasks (30d)</div>
+            <svg class="sparkline" viewBox="0 0 120 30" width="120" height="30"><polyline points="0.0,2.0 17.1,5.7 34.3,9.4 51.4,13.1 68.6,16.9 85.7,20.6 102.9,24.3 120.0,28.0" fill="none" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="sparkline-val">320</div>
+        </div>
+        <div class="sparkline-card">
+            <div class="sparkline-label">Completed (30d)</div>
+            <svg class="sparkline" viewBox="0 0 120 30" width="120" height="30"><polyline points="0.0,28.0 17.1,24.3 34.3,20.6 51.4,16.9 68.6,13.1 85.7,9.4 102.9,5.7 120.0,2.0" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="sparkline-val">673</div>
+        </div>
+    </div>
 
 <div class="section" id="orchestrator">
     <div class="section-head">
@@ -2569,7 +2616,7 @@ tr:last-child td { border-bottom: none; }
         <div class="section-title">Network</div>
         <div class="section-count">5 links</div>
     </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="5s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
+    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
         
         <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
         <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
@@ -2734,7 +2781,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-mid" style="width:65%"></div></div>
                 <span class="ptxt">65%</span>
             </td>
-            <td class="fresh-warm">10d</td>
+            <td class="fresh-warm">11d</td>
             <td class="next-action">—</td>
             <td class="agents-col">VAULT, BUILDER</td>
             <td class="actions-col">
@@ -2915,7 +2962,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-20 21:14:34 ICT</div>
+<div class="footer">command center v3 // 5 agents // 2026-04-20 21:30:57 ICT</div>
 
 </main>
 </div>
