@@ -5,15 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Command Center v2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>* { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
   --bg: #0a0a0c;
   --card: #111114;
+  --card-hover: #161619;
   --border: rgba(255,255,255,0.06);
   --text: #e4e4e7;
   --text-dim: #71717a;
+  --text-muted: #3f3f46;
   --accent: #f97316;
   --green: #22c55e;
   --yellow: #eab308;
@@ -29,7 +31,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   padding: 24px;
-  max-width: 900px;
+  max-width: 720px;
   margin: 0 auto;
 }
 
@@ -38,173 +40,252 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
 }
 .header h1 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   letter-spacing: 0.02em;
+  color: var(--text-dim);
 }
 .staleness-badge {
   font-family: var(--mono);
   font-size: 11px;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 4px;
   background: rgba(34,197,94,0.1);
   color: var(--green);
-  border: 1px solid rgba(34,197,94,0.2);
+  border: 1px solid rgba(34,197,94,0.15);
 }
 .staleness-badge.stale {
   background: rgba(239,68,68,0.1);
   color: var(--red);
-  border-color: rgba(239,68,68,0.2);
+  border-color: rgba(239,68,68,0.15);
 }
 .staleness-badge.warning {
   background: rgba(234,179,8,0.1);
   color: var(--yellow);
-  border-color: rgba(234,179,8,0.2);
+  border-color: rgba(234,179,8,0.15);
 }
 
-/* Cards */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 20px;
-}
-.card-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-dim);
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.card-title::before {
-  content: '';
-  display: inline-block;
-  width: 3px;
-  height: 12px;
-  background: var(--accent);
-  border-radius: 1px;
-}
-
-/* M4 status line */
-.status-line {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-  font-family: var(--mono);
-  font-size: 13px;
-  flex-wrap: wrap;
-}
+/* Status dots */
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
 }
-.dot-green { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.4); }
-.dot-yellow { background: var(--yellow); box-shadow: 0 0 6px rgba(234,179,8,0.4); }
-.dot-red { background: var(--red); box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+.dot-green { background: var(--green); box-shadow: 0 0 5px rgba(34,197,94,0.35); }
+.dot-yellow { background: var(--yellow); box-shadow: 0 0 5px rgba(234,179,8,0.35); }
+.dot-red { background: var(--red); box-shadow: 0 0 5px rgba(239,68,68,0.35); }
 .dot-dim { background: #52525b; }
 
-/* Three columns */
-.columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.column h3 {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.column ul {
-  list-style: none;
-}
-.column li {
-  font-family: var(--mono);
-  font-size: 13px;
-  padding: 5px 0;
+/* Avatar */
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.avatar-emoji {
+  font-size: 20px;
+  line-height: 1;
 }
 
-/* Backup & Alerts */
-.info-row {
+/* Agent cards */
+.agent-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.agent-card:hover {
+  border-color: rgba(255,255,255,0.1);
+}
+.agent-card.expanded .agent-details {
+  display: block;
+}
+.agent-card.expanded .expand-icon svg {
+  transform: rotate(180deg);
+}
+
+/* Summary row (always visible) */
+.agent-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s;
+}
+.agent-summary:hover {
+  background: var(--card-hover);
+}
+.agent-info {
+  flex: 1;
+  min-width: 0;
+}
+.agent-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+.agent-role {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 400;
+  margin-left: 6px;
+}
+.agent-status {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--text-dim);
-  padding: 4px 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.info-row strong {
-  color: var(--text);
-  font-weight: 500;
+.agent-alert {
+  font-family: var(--mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
 }
-.alert-item {
+.agent-alert.ok { color: var(--green); background: rgba(34,197,94,0.08); }
+.agent-alert.yellow { color: var(--yellow); background: rgba(234,179,8,0.08); }
+.agent-alert.red { color: var(--red); background: rgba(239,68,68,0.08); }
+.expand-icon {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+}
+.expand-icon svg {
+  transition: transform 0.2s;
+}
+
+/* Details (hidden by default) */
+.agent-details {
+  display: none;
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  padding-top: 16px;
+}
+.detail-section { }
+.detail-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.detail-section ul {
+  list-style: none;
+}
+.detail-section li {
   font-family: var(--mono);
   font-size: 12px;
   padding: 3px 0;
   display: flex;
   align-items: center;
+  gap: 7px;
+}
+.detail-row {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
   gap: 6px;
 }
+.dim { color: var(--text-muted); }
 
-/* Subscriptions table */
-.sub-table {
-  width: 100%;
-  border-collapse: collapse;
+/* Archive inside details */
+.archive-details {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
 }
-.sub-table th {
+.archive-toggle {
   font-family: var(--mono);
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-dim);
-  text-align: left;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+}
+.archive-toggle::-webkit-details-marker { display: none; }
+.archive-toggle:hover { color: var(--text-dim); }
+.archive-list {
+  margin-top: 8px;
+}
+.archive-row {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #52525b;
+  padding: 2px 0;
+  display: flex;
+  justify-content: space-between;
+}
+.archive-meta {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* Subscriptions (compact) */
+.sub-list {
+  padding-top: 12px;
+}
+.sub-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-  font-weight: 400;
-}
-.sub-table th:nth-child(3),
-.sub-table td:nth-child(3) {
-  text-align: right;
-}
-.sub-table td {
   font-family: var(--mono);
   font-size: 13px;
-  padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
-.sub-table tr:last-child td {
-  border-bottom: none;
+.sub-row:last-child { border-bottom: none; }
+.sub-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.sub-total {
-  font-family: var(--mono);
-  font-size: 14px;
-  color: var(--accent);
-  margin-bottom: 14px;
-}
-.renew-date {
+.sub-cost {
   color: var(--text-dim);
-  font-size: 12px;
+  min-width: 40px;
+  text-align: right;
 }
-.renew-soon {
-  color: var(--yellow);
+.renew-normal { color: var(--text-muted); font-size: 11px; min-width: 50px; text-align: right; }
+.renew-soon { color: var(--yellow); font-size: 11px; min-width: 50px; text-align: right; }
+.renew-urgent { color: var(--red); font-size: 11px; font-weight: 500; min-width: 50px; text-align: right; }
+.sub-footer {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 10px;
 }
 
 /* Footer */
@@ -212,203 +293,167 @@ body {
   text-align: center;
   font-family: var(--mono);
   font-size: 11px;
-  color: #3f3f46;
-  margin-top: 24px;
-  padding-top: 16px;
+  color: var(--text-muted);
+  margin-top: 20px;
+  padding-top: 12px;
   border-top: 1px solid var(--border);
 }
 
 /* Stale banner */
 .stale-banner {
-  background: rgba(239,68,68,0.08);
-  border: 1px solid rgba(239,68,68,0.2);
-  border-radius: 6px;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.15);
+  border-radius: 8px;
   padding: 10px 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-family: var(--mono);
   font-size: 12px;
   color: var(--red);
   display: none;
 }
-.stale-banner.visible {
-  display: block;
-}
+.stale-banner.visible { display: block; }
 
 /* Help toast */
 .help-toast {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 20px;
+  right: 20px;
   background: #18181b;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-dim);
   display: none;
   z-index: 100;
-  min-width: 180px;
 }
 .help-toast.visible { display: block; }
 .help-toast kbd {
   background: #27272a;
-  padding: 2px 6px;
+  padding: 1px 5px;
   border-radius: 3px;
   color: var(--text);
-  font-size: 11px;
+  font-size: 10px;
 }
-
-/* Archive */
-.archive-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 4px;
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s, border-color 0.15s;
-}
-.archive-btn:hover {
-  color: var(--text);
-  border-color: rgba(255,255,255,0.15);
-}
-.archive-panel {
-  display: none;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 16px;
-}
-.archive-panel.visible { display: block; }
-.archive-header {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-}
-.archive-row {
-  font-family: var(--mono);
-  font-size: 12px;
-  display: flex;
-  gap: 12px;
-  padding: 3px 0;
-  color: #52525b;
-}
-.archive-name { color: #71717a; min-width: 140px; }
-.archive-type { color: #3f3f46; min-width: 80px; }
-.archive-date { color: #3f3f46; margin-left: auto; }
 
 /* Responsive */
 @media (max-width: 640px) {
   body { padding: 12px; }
-  .columns { grid-template-columns: 1fr; gap: 12px; }
-  .header { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .detail-grid { grid-template-columns: 1fr; gap: 12px; }
+  .agent-summary { flex-wrap: wrap; gap: 10px; }
+  .agent-alert { order: 3; width: 100%; }
 }
 </style>
 </head>
 <body>
   <div class="header">
-    <h1>Command Center v2</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T07:10:12Z">checking...</span>
+    <h1>Command Center</h1>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T07:19:26Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
 
-  <div class="card">
-  <div class="card-title">
-    Hygiene Agent
-    <button class="archive-btn" onclick="document.getElementById('archive-panel').classList.toggle('visible')" title="Archived services">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
-    </button>
+  <div class="agent-card">
+  <div class="agent-summary" onclick="this.parentElement.classList.toggle('expanded')">
+    <div class="avatar" style="background:#1a3a2a">
+  <span class="avatar-emoji">&#x1F6E1;</span>
+</div>
+    <div class="agent-info">
+      <div class="agent-name">Atlas <span class="agent-role">Hygiene Agent</span></div>
+      <div class="agent-status"><span class="status-dot dot-green"></span> Online &middot; Uptime 8 days, 14:41 &middot; 3 running</div>
+    </div>
+    <div class="agent-alert ok"><span class="status-dot dot-green"></span> All systems healthy</div>
+    <div class="expand-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
   </div>
-  <div class="archive-panel" id="archive-panel">
-    <div class="archive-header">Archived</div>
-    <div class="archive-row"><span class="archive-name">n8n</span><span class="archive-type">container</span><span class="archive-date">2026-04-23</span></div>
-<div class="archive-row"><span class="archive-name">meshly-api</span><span class="archive-type">container</span><span class="archive-date">2026-04-23</span></div>
-<div class="archive-row"><span class="archive-name">stock-content-bot</span><span class="archive-type">container</span><span class="archive-date">2026-04-23</span></div>
-<div class="archive-row"><span class="archive-name">m4-healthcheck</span><span class="archive-type">service</span><span class="archive-date">2026-04-23</span></div>
-<div class="archive-row"><span class="archive-name">m4-docker-ensure</span><span class="archive-type">service</span><span class="archive-date">2026-04-23</span></div>
-<div class="archive-row"><span class="archive-name">meshly-mini</span><span class="archive-type">endpoint</span><span class="archive-date">2026-04-23</span></div>
-<div class="archive-row"><span class="archive-name">n8n.meshly.fr</span><span class="archive-type">endpoint</span><span class="archive-date">2026-04-23</span></div>
-
-  </div>
-  <div class="status-line">
-    <span class="status-dot dot-green"></span>
-    <span>Mac Mini M4 &middot; maxx@100.77.209.73</span>
-    <span style="color:var(--text-dim)">Status: Online</span>
-    <span style="color:var(--text-dim)">Uptime: 8 days, 14:32</span>
-  </div>
-  <div class="columns">
-    <div class="column">
-      <h3>Background Tasks</h3>
-      <ul><li><span class="status-dot dot-green"></span> Tunnel (Cloudflare)</li>
+  <div class="agent-details">
+    <div class="detail-grid">
+      <div class="detail-section">
+        <div class="detail-label">Background Tasks</div>
+        <ul><li><span class="status-dot dot-green"></span> Tunnel (Cloudflare)</li>
 <li><span class="status-dot dot-green"></span> Database Backup</li>
 </ul>
-    </div>
-    <div class="column">
-      <h3>Apps</h3>
-      <ul><li><span class="status-dot dot-green"></span> PostgreSQL Database</li>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Apps</div>
+        <ul><li><span class="status-dot dot-green"></span> PostgreSQL Database</li>
 </ul>
+      </div>
+      <div class="detail-section">
+        <div class="detail-label">Info</div>
+        <div class="detail-row">Backup: pg-20260423-0300.sql.gz (6h ago)</div>
+        <div class="detail-row">Disk: 835.4GB free / 926.4GB (10% used)</div>
+        <div class="detail-row">Target: maxx@100.77.209.73</div>
+      </div>
     </div>
-    <div class="column">
-      <h3>Public URLs</h3>
-      <ul><li class="info-row">None active</li></ul>
+    <div class="detail-section" style="margin-top:12px">
+      <div class="detail-label">Alerts</div>
+      <div class="detail-row"><span class="status-dot dot-green"></span> Healthy: SSH, backup, and endpoints look good</div>
+
+    </div>
+    <details class="archive-details">
+      <summary class="archive-toggle">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+        7 archived
+      </summary>
+      <div class="archive-list"><div class="archive-row">n8n Automations<span class="archive-meta">app &middot; stopped Apr 23</span></div>
+<div class="archive-row">Meshly API<span class="archive-meta">app &middot; stopped Apr 23</span></div>
+<div class="archive-row">Stock Bot<span class="archive-meta">app &middot; stopped Apr 23</span></div>
+<div class="archive-row">Health Monitor<span class="archive-meta">task &middot; stopped Apr 23</span></div>
+<div class="archive-row">Docker Guardian<span class="archive-meta">task &middot; stopped Apr 23</span></div>
+<div class="archive-row">meshly-mini.meshly.fr<span class="archive-meta">url &middot; stopped Apr 23</span></div>
+<div class="archive-row">n8n.meshly.fr<span class="archive-meta">url &middot; stopped Apr 23</span></div>
+</div>
+    </details>
+  </div>
+</div>
+  <div class="agent-card">
+  <div class="agent-summary" onclick="this.parentElement.classList.toggle('expanded')">
+    <div class="avatar" style="background:#2a2a1a">
+  <span class="avatar-emoji">&#x1F4B3;</span>
+</div>
+    <div class="agent-info">
+      <div class="agent-name">Keeper <span class="agent-role">Subscription Tracker</span></div>
+      <div class="agent-status">5 subscriptions &middot; $243/mo</div>
+    </div>
+    <div class="expand-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </div>
   </div>
-  <div class="info-row"><strong>Latest Backup:</strong> pg-20260423-0300.sql.gz (6h, 0.0MB)</div>
-  <div class="info-row"><strong>Disk:</strong> 835.4GB free / 926.4GB total</div>
-  <div style="margin-top:8px"><div class="alert-item"><span class="status-dot dot-green"></span> Healthy: SSH, backup, and endpoints look good</div>
+  <div class="agent-details">
+    <div class="sub-list"><div class="sub-row">
+  <span class="sub-name">Claude Code</span>
+  <span class="sub-cost">$200</span>
+  <span class="renew-normal">May 5</span>
+</div>
+<div class="sub-row">
+  <span class="sub-name">OpenAI / Codex</span>
+  <span class="sub-cost">$20</span>
+  <span class="renew-normal">May 10</span>
+</div>
+<div class="sub-row">
+  <span class="sub-name">Krisp</span>
+  <span class="sub-cost">$8</span>
+  <span class="renew-normal">May 1</span>
+</div>
+<div class="sub-row">
+  <span class="sub-name">SuperWhisper</span>
+  <span class="sub-cost">$8</span>
+  
+</div>
+<div class="sub-row">
+  <span class="sub-name">Render</span>
+  <span class="sub-cost">$7</span>
+  
 </div>
 </div>
-  <div class="card">
-  <div class="card-title">Subscriptions</div>
-  <div class="sub-total">Total: $243/mo</div>
-  <table class="sub-table">
-    <thead>
-      <tr><th>Service</th><th>Plan</th><th>Cost</th><th>Renews</th></tr>
-    </thead>
-    <tbody><tr>
-  <td>Claude Code</td>
-  <td style="color:var(--text-dim)">Max</td>
-  <td>$200/mo</td>
-  <td class="renew-date">May 5</td>
-</tr>
-<tr>
-  <td>OpenAI / Codex</td>
-  <td style="color:var(--text-dim)">Pro</td>
-  <td>$20/mo</td>
-  <td class="renew-date">May 10</td>
-</tr>
-<tr>
-  <td>Krisp</td>
-  <td style="color:var(--text-dim)">Pro</td>
-  <td>$8/mo</td>
-  <td class="renew-date">May 1</td>
-</tr>
-<tr>
-  <td>SuperWhisper</td>
-  <td style="color:var(--text-dim)">Pro</td>
-  <td>$8/mo</td>
-  <td class="renew-date">—</td>
-</tr>
-<tr>
-  <td>Render</td>
-  <td style="color:var(--text-dim)">Individual</td>
-  <td>$7/mo</td>
-  <td class="renew-date">—</td>
-</tr>
-</tbody>
-  </table>
+    <div class="sub-footer">Edit: ~/.agent-bridge/subscriptions.json</div>
+  </div>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 15:12 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 15:21 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
