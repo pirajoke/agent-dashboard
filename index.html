@@ -178,44 +178,117 @@ body {
 /* Details (hidden by default) */
 .agent-details {
   display: none;
-  padding: 0 20px 20px;
+  padding: 4px 20px 20px;
   border-top: 1px solid var(--border);
 }
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  padding-top: 16px;
-}
-.detail-section { }
-.detail-label {
-  font-family: var(--mono);
-  font-size: 10px;
+
+/* Section titles */
+.section-title {
+  font-size: 11px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-muted);
-  margin-bottom: 8px;
-}
-.detail-section ul {
-  list-style: none;
-}
-.detail-section li {
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 3px 0;
+  margin: 16px 0 10px;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 }
-.detail-row {
-  font-family: var(--mono);
-  font-size: 12px;
+.count-badge {
+  font-size: 10px;
+  background: rgba(255,255,255,0.05);
+  padding: 1px 6px;
+  border-radius: 4px;
   color: var(--text-dim);
-  padding: 2px 0;
+  font-weight: 400;
+}
+
+/* Health check tiles */
+.health-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.health-tile {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  transition: background 0.1s;
 }
+.health-tile:hover {
+  background: rgba(255,255,255,0.04);
+}
+.health-tile.green { border-left: 3px solid var(--green); }
+.health-tile.yellow { border-left: 3px solid var(--yellow); }
+.health-tile.red { border-left: 3px solid var(--red); }
+.health-tile-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.health-tile-info {
+  flex: 1;
+  min-width: 0;
+}
+.health-tile-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.health-tile-detail {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.health-tile-dot {
+  flex-shrink: 0;
+}
+
+/* Service items */
+.svc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+}
+.svc-item {
+  font-size: 13px;
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.svc-item span {
+  color: var(--text-dim);
+}
+
+/* Blockers */
+.blocker-section {
+  margin-top: 12px;
+}
+.blocker-pill {
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.12);
+  color: var(--red);
+  margin-bottom: 6px;
+}
+
+.empty-state {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px 0;
+}
+
 .dim { color: var(--text-muted); }
 
 /* Archive inside details */
@@ -349,7 +422,7 @@ body {
 <body>
   <div class="header">
     <h1>Command Center</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T07:39:45Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T08:30:47Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
@@ -360,55 +433,98 @@ body {
   <span class="avatar-emoji">&#x1F6E1;</span>
 </div>
     <div class="agent-info">
-      <div class="agent-name">Atlas <span class="agent-role">Hygiene Agent</span></div>
-      <div class="agent-status"><span class="status-dot dot-green"></span> Online &middot; Uptime 8 days, 15:01 &middot; <span class="status-dot dot-green"></span> Daily check: ran today &middot; 1 blocked</div>
+      <div class="agent-name">Atlas <span class="agent-role">System Monitor</span></div>
+      <div class="agent-status">
+        <span class="status-dot dot-green"></span> Online &middot; 8 days, 15:52
+        &middot; <span class="status-dot dot-yellow"></span> 2 warnings
+      </div>
     </div>
-    <div class="agent-alert ok"><span class="status-dot dot-green"></span> All systems healthy</div>
+    <div class="agent-alert ok"><span class="status-dot dot-green"></span> All clear</div>
     <div class="expand-icon">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </div>
   </div>
   <div class="agent-details">
-    <div class="detail-grid">
-      <div class="detail-section">
-        <div class="detail-label">Background Tasks</div>
-        <ul><li><span class="status-dot dot-green"></span> Tunnel (Cloudflare)</li>
-<li><span class="status-dot dot-green"></span> Database Backup</li>
-</ul>
-      </div>
-      <div class="detail-section">
-        <div class="detail-label">Apps</div>
-        <ul><li><span class="status-dot dot-green"></span> PostgreSQL Database</li>
-</ul>
-      </div>
-      <div class="detail-section">
-        <div class="detail-label">Info</div>
-        <div class="detail-row">Backup: pg-20260423-0300.sql.gz (7h ago)</div>
-        <div class="detail-row">Disk: 835.4GB free / 926.4GB (10% used)</div>
-        <div class="detail-row">Target: maxx@100.77.209.73</div>
-      </div>
-    </div>
-    <div class="detail-section" style="margin-top:12px">
-      <div class="detail-label">Daily Hygiene (Codex)</div>
-      <div class="detail-row"><span class="status-dot dot-green"></span> Last report: 2026-04-23</div>
-<div class="detail-row"><span class="status-dot dot-green"></span> Disk: 2% used, 835GB free / 926GB</div>
-<div class="detail-row"><span class="status-dot dot-green"></span> Memory: 199MB free / 16384MB total</div>
-<div class="detail-row"><span class="status-dot dot-green"></span> Docker: pg-main: up, 1 total running</div>
-<div class="detail-row"><span class="status-dot dot-yellow"></span> Tailscale: tailscale CLI not found</div>
-<div class="detail-row"><span class="status-dot dot-yellow"></span> LaunchD: 1/5 failed: obsidian-tg-bot(exit:1)</div>
-<div class="detail-row"><span class="status-dot dot-green"></span> Backup: pg-20260423-0300.sql.gz (6.7h ago)</div>
-<div class="detail-row"><span class="status-dot dot-green"></span> Git: clean, up to date</div>
-<div class="detail-row"><span class="status-dot dot-green"></span> Locks: 0 stale</div>
-<div class="detail-row"><span class="status-dot dot-red"></span> GitHub issue logging is unavailable because `gh` is not installed or authenticated on Mac mini</div>
-<div class="detail-row"><span class="status-dot dot-yellow"></span> paused automation archive/delete/return triage remains a separate decision</div>
-<div class="detail-row"><span class="status-dot dot-yellow"></span> automation IDs and schedules are not changed automatically</div>
+    <div class="section-title">System Health</div>
+    <div class="health-grid">
+      <div class="health-tile green">
+  <div class="health-tile-icon">💾</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Storage</div>
+    <div class="health-tile-detail">2% used, 835GB free / 926GB</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+</div>
+<div class="health-tile green">
+  <div class="health-tile-icon">🧠</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Memory</div>
+    <div class="health-tile-detail">199MB free / 16384MB total</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+</div>
+<div class="health-tile green">
+  <div class="health-tile-icon">🐳</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Database</div>
+    <div class="health-tile-detail">pg-main: up, 1 total running</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+</div>
+<div class="health-tile yellow">
+  <div class="health-tile-icon">🔗</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Network</div>
+    <div class="health-tile-detail">tailscale CLI not found</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
+</div>
+<div class="health-tile yellow">
+  <div class="health-tile-icon">⚙️</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Services</div>
+    <div class="health-tile-detail">1/5 failed: obsidian-tg-bot(exit:1)</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
+</div>
+<div class="health-tile green">
+  <div class="health-tile-icon">📦</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Backup</div>
+    <div class="health-tile-detail">pg-20260423-0300.sql.gz (6.7h ago)</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+</div>
+<div class="health-tile green">
+  <div class="health-tile-icon">📂</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Code Sync</div>
+    <div class="health-tile-detail">clean, up to date</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+</div>
+<div class="health-tile green">
+  <div class="health-tile-icon">🔒</div>
+  <div class="health-tile-info">
+    <div class="health-tile-name">Locks</div>
+    <div class="health-tile-detail">0 stale</div>
+  </div>
+  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+</div>
 
     </div>
-    <div class="detail-section" style="margin-top:12px">
-      <div class="detail-label">Alerts</div>
-      <div class="detail-row"><span class="status-dot dot-green"></span> Healthy: SSH, backup, and endpoints look good</div>
+
+    <div class="section-title">Running Services <span class="count-badge">3/3</span></div>
+    <div class="svc-grid">
+      <div class="svc-item"><span class="status-dot dot-green"></span> <span>Tunnel (Cloudflare)</span></div>
+<div class="svc-item"><span class="status-dot dot-green"></span> <span>Database Backup</span></div>
+<div class="svc-item"><span class="status-dot dot-green"></span> <span>PostgreSQL Database</span></div>
 
     </div>
+
+    <div class="blocker-section"><div class="section-title">Needs Attention</div><div class="blocker-pill">GitHub issue logging is unavailable because `gh` is not installed or authenticated on Mac mini</div>
+</div>
+
     <details class="archive-details">
       <summary class="archive-toggle">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
@@ -469,7 +585,7 @@ body {
   </div>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 15:42 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 16:33 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
