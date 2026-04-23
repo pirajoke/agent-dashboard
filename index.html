@@ -683,7 +683,7 @@ body {
 <body>
   <div class="header">
     <h1>Command Center</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T10:22:52Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T10:33:02Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
@@ -696,8 +696,8 @@ body {
     <div class="agent-info">
       <div class="agent-name">Atlas <span class="agent-role">System Monitor</span></div>
       <div class="agent-status">
-        <span class="status-dot dot-green"></span> Online &middot; 8 days, 17:44
-        &middot; <span class="status-dot dot-yellow"></span> 2 warnings
+        <span class="status-dot dot-green"></span> Online &middot; 8 days, 17:55
+        &middot; <span class="status-dot dot-green"></span> 8 checks passed
         &middot; <span class="next-run">Next: <span id="hygiene-timer">...</span></span>
       </div>
     </div>
@@ -745,7 +745,7 @@ body {
   </summary>
   <div class="health-tile-expand">
     <div class="health-tile-desc">RAM for running apps. macOS compresses unused data automatically.</div>
-    <div class="health-tile-tech">5.1GB free</div>
+    <div class="health-tile-tech">5.2GB free</div>
   </div>
 </details>
 <details class="health-tile green">
@@ -762,32 +762,32 @@ body {
     <div class="health-tile-tech">pg-main: up, 1 total running</div>
   </div>
 </details>
-<details class="health-tile yellow">
+<details class="health-tile green">
   <summary class="health-tile-summary">
     <div class="health-tile-icon">🔗</div>
     <div class="health-tile-info">
       <div class="health-tile-name">Network</div>
       <div class="health-tile-detail">Remote access</div>
     </div>
-    <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
   </summary>
   <div class="health-tile-expand">
     <div class="health-tile-desc">VPN tunnel for remote access from anywhere in the world.</div>
-    <div class="health-tile-tech">tailscale CLI not found</div>
+    <div class="health-tile-tech">connected (100.77.209.73)</div>
   </div>
 </details>
-<details class="health-tile yellow">
+<details class="health-tile green">
   <summary class="health-tile-summary">
     <div class="health-tile-icon">⚙️</div>
     <div class="health-tile-info">
       <div class="health-tile-name">Services</div>
       <div class="health-tile-detail">Background tasks</div>
     </div>
-    <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
   </summary>
   <div class="health-tile-expand">
     <div class="health-tile-desc">Auto-start tasks: tunnel, backups, bots. Runs 24/7.</div>
-    <div class="health-tile-tech">1/5 failed: obsidian-tg-bot(exit:1)</div>
+    <div class="health-tile-tech">4/4 healthy</div>
   </div>
 </details>
 <details class="health-tile green">
@@ -801,7 +801,7 @@ body {
   </summary>
   <div class="health-tile-expand">
     <div class="health-tile-desc">Nightly database copy. Insurance against data loss.</div>
-    <div class="health-tile-tech">pg-20260423-0300.sql.gz (7.8h ago)</div>
+    <div class="health-tile-tech">pg-20260423-0300.sql.gz (9.6h ago)</div>
   </div>
 </details>
 <details class="health-tile green">
@@ -850,7 +850,7 @@ body {
       <details class="rpt-entry">
   <summary class="rpt-summary">
     <span class="rpt-date">Apr 23</span>
-    <span class="rpt-verdict yellow"><span class="status-dot dot-yellow"></span> 2 warnings</span>
+    <span class="rpt-verdict green"><span class="status-dot dot-green"></span> All clear</span>
     <span class="rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
   </summary>
   <div class="rpt-detail">
@@ -994,7 +994,7 @@ body {
   </div>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 18:23 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 18:36 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
@@ -1058,6 +1058,9 @@ body {
   }
   updateHygieneTimer();
   setInterval(updateHygieneTimer, 60000);
+
+  // Auto-refresh every 5 minutes
+  setInterval(function() { location.reload(); }, 300000);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', function(e) {
