@@ -166,6 +166,17 @@ body {
 .agent-alert.ok { color: var(--green); background: rgba(34,197,94,0.08); }
 .agent-alert.yellow { color: var(--yellow); background: rgba(234,179,8,0.08); }
 .agent-alert.red { color: var(--red); background: rgba(239,68,68,0.08); }
+.next-run {
+  color: var(--text-muted);
+}
+#hygiene-timer {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.timer-active {
+  color: var(--green);
+  font-weight: 500;
+}
 .expand-icon {
   color: var(--text-muted);
   display: flex;
@@ -576,7 +587,7 @@ body {
 <body>
   <div class="header">
     <h1>Command Center</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T09:06:22Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T10:12:41Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
@@ -589,8 +600,9 @@ body {
     <div class="agent-info">
       <div class="agent-name">Atlas <span class="agent-role">System Monitor</span></div>
       <div class="agent-status">
-        <span class="status-dot dot-green"></span> Online &middot; 8 days, 16:28
+        <span class="status-dot dot-green"></span> Online &middot; 8 days, 17:34
         &middot; <span class="status-dot dot-yellow"></span> 2 warnings
+        &middot; <span class="next-run">Next: <span id="hygiene-timer">...</span></span>
       </div>
     </div>
     <div class="agent-alert ok"><span class="status-dot dot-green"></span> All clear</div>
@@ -886,7 +898,7 @@ body {
   </div>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 17:10 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 18:13 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
@@ -918,6 +930,38 @@ body {
       }
     }
   }
+
+  // Next hygiene countdown
+  // Runs daily at 09:00 Asia/Kuala_Lumpur (UTC+8)
+  function updateHygieneTimer() {
+    var el = document.getElementById('hygiene-timer');
+    if (!el) return;
+
+    var now = new Date();
+    // Calculate current time in KL (UTC+8)
+    var utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+    var klNow = new Date(utcMs + 8 * 3600000);
+
+    // Next 09:00 KL
+    var next = new Date(klNow);
+    next.setHours(9, 0, 0, 0);
+    if (klNow.getHours() >= 9) {
+      next.setDate(next.getDate() + 1);
+    }
+
+    // Diff in ms (KL time)
+    var diffMs = next.getTime() - klNow.getTime();
+    var hours = Math.floor(diffMs / 3600000);
+    var mins = Math.floor((diffMs % 3600000) / 60000);
+
+    if (hours === 0 && mins <= 5) {
+      el.innerHTML = '<span class="timer-active">Running now...</span>';
+    } else {
+      el.textContent = hours + 'h ' + mins + 'm';
+    }
+  }
+  updateHygieneTimer();
+  setInterval(updateHygieneTimer, 60000);
 
   // Keyboard shortcuts
   document.addEventListener('keydown', function(e) {
