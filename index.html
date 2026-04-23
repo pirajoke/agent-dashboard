@@ -526,6 +526,73 @@ body {
   margin-top: 10px;
 }
 
+/* Pulse — Time Tracker */
+.pulse-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 120px;
+  padding: 8px 0;
+}
+.pulse-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+.pulse-bar-value {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  height: 16px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 4px;
+}
+.pulse-bar {
+  flex: 1;
+  width: 100%;
+  max-width: 40px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+.pulse-bar-fill {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  background: rgba(255,255,255,0.08);
+  transition: height 0.3s ease;
+}
+.pulse-bar-fill.active {
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(249,115,22,0.25);
+}
+.pulse-bar-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.pulse-projects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pulse-proj {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(249,115,22,0.08);
+  color: var(--accent);
+  border: 1px solid rgba(249,115,22,0.15);
+}
+
 /* Footer */
 .footer {
   text-align: center;
@@ -675,6 +742,12 @@ body {
   .section-title { font-size: 10px; margin: 12px 0 8px; }
   .count-badge { font-size: 9px; }
 
+  /* Pulse */
+  .pulse-chart { height: 90px; gap: 4px; }
+  .pulse-bar-value { font-size: 9px; }
+  .pulse-bar-label { font-size: 9px; }
+  .pulse-proj { font-size: 10px; padding: 2px 6px; }
+
   /* Footer */
   .footer { font-size: 10px; }
 }
@@ -683,7 +756,7 @@ body {
 <body>
   <div class="header">
     <h1>Command Center</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T10:33:02Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T10:58:28Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
@@ -696,7 +769,7 @@ body {
     <div class="agent-info">
       <div class="agent-name">Atlas <span class="agent-role">System Monitor</span></div>
       <div class="agent-status">
-        <span class="status-dot dot-green"></span> Online &middot; 8 days, 17:55
+        <span class="status-dot dot-green"></span> Online &middot; 8 days, 18:20
         &middot; <span class="status-dot dot-green"></span> 8 checks passed
         &middot; <span class="next-run">Next: <span id="hygiene-timer">...</span></span>
       </div>
@@ -993,8 +1066,65 @@ body {
     <div class="sub-footer">Edit: ~/.agent-bridge/subscriptions.json</div>
   </div>
 </div>
+  <div class="agent-card">
+  <div class="agent-summary" onclick="this.parentElement.classList.toggle('expanded')">
+    <div class="avatar" style="background:#1a2a3a">
+  <span class="avatar-emoji">&#x23F1;</span>
+</div>
+    <div class="agent-info">
+      <div class="agent-name">Pulse <span class="agent-role">Time Tracker</span></div>
+      <div class="agent-status">3.7h today &middot; 18.2h this week &middot; avg 2.6h/day</div>
+    </div>
+    <div class="expand-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </div>
+  <div class="agent-details">
+    <div class="section-title">Last 7 Days</div>
+    <div class="pulse-chart"><div class="pulse-bar-col">
+  <div class="pulse-bar-value">3.2</div>
+  <div class="pulse-bar"><div class="pulse-bar-fill active" style="height:51%"></div></div>
+  <div class="pulse-bar-label">Fr</div>
+</div>
+<div class="pulse-bar-col">
+  <div class="pulse-bar-value">2.0</div>
+  <div class="pulse-bar"><div class="pulse-bar-fill active" style="height:32%"></div></div>
+  <div class="pulse-bar-label">Sa</div>
+</div>
+<div class="pulse-bar-col">
+  <div class="pulse-bar-value">0.6</div>
+  <div class="pulse-bar"><div class="pulse-bar-fill active" style="height:10%"></div></div>
+  <div class="pulse-bar-label">Su</div>
+</div>
+<div class="pulse-bar-col">
+  <div class="pulse-bar-value">6.3</div>
+  <div class="pulse-bar"><div class="pulse-bar-fill active" style="height:100%"></div></div>
+  <div class="pulse-bar-label">Mo</div>
+</div>
+<div class="pulse-bar-col">
+  <div class="pulse-bar-value">1.8</div>
+  <div class="pulse-bar"><div class="pulse-bar-fill active" style="height:29%"></div></div>
+  <div class="pulse-bar-label">Tu</div>
+</div>
+<div class="pulse-bar-col">
+  <div class="pulse-bar-value">0.6</div>
+  <div class="pulse-bar"><div class="pulse-bar-fill active" style="height:10%"></div></div>
+  <div class="pulse-bar-label">We</div>
+</div>
+<div class="pulse-bar-col">
+  <div class="pulse-bar-value">3.7</div>
+  <div class="pulse-bar"><div class="pulse-bar-fill active" style="height:59%"></div></div>
+  <div class="pulse-bar-label">Th</div>
+</div>
+</div>
+    <div class="section-title">Today's Projects</div><div class="pulse-projects"><span class="pulse-proj">agent-dashboard</span>
+<span class="pulse-proj">maxim-site</span>
+<span class="pulse-proj">scripts</span>
+</div>
+  </div>
+</div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 18:36 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 21:55 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
