@@ -71,9 +71,9 @@ body {
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 16px;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
 }
 .card-title {
   font-family: var(--mono);
@@ -100,9 +100,10 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   font-family: var(--mono);
   font-size: 13px;
+  flex-wrap: wrap;
 }
 .status-dot {
   width: 8px;
@@ -136,11 +137,11 @@ body {
 }
 .column li {
   font-family: var(--mono);
-  font-size: 12px;
-  padding: 3px 0;
+  font-size: 13px;
+  padding: 5px 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 /* Backup & Alerts */
@@ -258,6 +259,52 @@ body {
   font-size: 11px;
 }
 
+/* Archive */
+.archive-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.archive-btn:hover {
+  color: var(--text);
+  border-color: rgba(255,255,255,0.15);
+}
+.archive-panel {
+  display: none;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.archive-panel.visible { display: block; }
+.archive-header {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.archive-row {
+  font-family: var(--mono);
+  font-size: 12px;
+  display: flex;
+  gap: 12px;
+  padding: 3px 0;
+  color: #52525b;
+}
+.archive-name { color: #71717a; min-width: 140px; }
+.archive-type { color: #3f3f46; min-width: 80px; }
+.archive-date { color: #3f3f46; margin-left: auto; }
+
 /* Responsive */
 @media (max-width: 640px) {
   body { padding: 12px; }
@@ -269,43 +316,55 @@ body {
 <body>
   <div class="header">
     <h1>Command Center v2</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T07:08:16Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T07:10:12Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
 
   <div class="card">
-  <div class="card-title">Hygiene Agent</div>
+  <div class="card-title">
+    Hygiene Agent
+    <button class="archive-btn" onclick="document.getElementById('archive-panel').classList.toggle('visible')" title="Archived services">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+    </button>
+  </div>
+  <div class="archive-panel" id="archive-panel">
+    <div class="archive-header">Archived</div>
+    <div class="archive-row"><span class="archive-name">n8n</span><span class="archive-type">container</span><span class="archive-date">2026-04-23</span></div>
+<div class="archive-row"><span class="archive-name">meshly-api</span><span class="archive-type">container</span><span class="archive-date">2026-04-23</span></div>
+<div class="archive-row"><span class="archive-name">stock-content-bot</span><span class="archive-type">container</span><span class="archive-date">2026-04-23</span></div>
+<div class="archive-row"><span class="archive-name">m4-healthcheck</span><span class="archive-type">service</span><span class="archive-date">2026-04-23</span></div>
+<div class="archive-row"><span class="archive-name">m4-docker-ensure</span><span class="archive-type">service</span><span class="archive-date">2026-04-23</span></div>
+<div class="archive-row"><span class="archive-name">meshly-mini</span><span class="archive-type">endpoint</span><span class="archive-date">2026-04-23</span></div>
+<div class="archive-row"><span class="archive-name">n8n.meshly.fr</span><span class="archive-type">endpoint</span><span class="archive-date">2026-04-23</span></div>
+
+  </div>
   <div class="status-line">
     <span class="status-dot dot-green"></span>
     <span>Mac Mini M4 &middot; maxx@100.77.209.73</span>
-    <span style="color:var(--text-dim)">Status: REACHABLE</span>
-    <span style="color:var(--text-dim)">Uptime: 8 days, 14:30</span>
+    <span style="color:var(--text-dim)">Status: Online</span>
+    <span style="color:var(--text-dim)">Uptime: 8 days, 14:32</span>
   </div>
   <div class="columns">
     <div class="column">
-      <h3>Services</h3>
-      <ul><li><span class="status-dot dot-green"></span> cloudflared-m4</li>
-<li><span class="status-dot dot-red"></span> m4-healthcheck</li>
-<li><span class="status-dot dot-red"></span> m4-docker-ensure</li>
-<li><span class="status-dot dot-green"></span> m4-pg-backup</li>
+      <h3>Background Tasks</h3>
+      <ul><li><span class="status-dot dot-green"></span> Tunnel (Cloudflare)</li>
+<li><span class="status-dot dot-green"></span> Database Backup</li>
 </ul>
     </div>
     <div class="column">
-      <h3>Containers</h3>
-      <ul><li><span class="status-dot dot-green"></span> pg-main</li>
+      <h3>Apps</h3>
+      <ul><li><span class="status-dot dot-green"></span> PostgreSQL Database</li>
 </ul>
     </div>
     <div class="column">
-      <h3>Endpoints</h3>
-      <ul><li><span class="status-dot dot-red"></span> meshly-mini</li>
-<li><span class="status-dot dot-red"></span> n8n</li>
-</ul>
+      <h3>Public URLs</h3>
+      <ul><li class="info-row">None active</li></ul>
     </div>
   </div>
   <div class="info-row"><strong>Latest Backup:</strong> pg-20260423-0300.sql.gz (6h, 0.0MB)</div>
   <div class="info-row"><strong>Disk:</strong> 835.4GB free / 926.4GB total</div>
-  <div style="margin-top:8px"><div class="alert-item"><span class="status-dot dot-red"></span> Endpoint fail: meshly-mini, n8n</div>
+  <div style="margin-top:8px"><div class="alert-item"><span class="status-dot dot-green"></span> Healthy: SSH, backup, and endpoints look good</div>
 </div>
 </div>
   <div class="card">
@@ -349,7 +408,7 @@ body {
   </table>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 15:08 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 15:12 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
