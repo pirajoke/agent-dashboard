@@ -210,10 +210,6 @@ body {
   gap: 8px;
 }
 .health-tile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
   border-radius: 8px;
   background: rgba(255,255,255,0.02);
   border: 1px solid var(--border);
@@ -225,6 +221,16 @@ body {
 .health-tile.green { border-left: 3px solid var(--green); }
 .health-tile.yellow { border-left: 3px solid var(--yellow); }
 .health-tile.red { border-left: 3px solid var(--red); }
+.health-tile-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.health-tile-summary::-webkit-details-marker { display: none; }
 .health-tile-icon {
   font-size: 18px;
   width: 24px;
@@ -244,12 +250,22 @@ body {
   font-size: 11px;
   color: var(--text-dim);
   margin-top: 1px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .health-tile-dot {
   flex-shrink: 0;
+}
+.health-tile-expand {
+  padding: 0 12px 10px 46px;
+}
+.health-tile-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.health-tile-tech {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 /* Service items */
@@ -422,7 +438,7 @@ body {
 <body>
   <div class="header">
     <h1>Command Center</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T08:46:03Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T09:01:17Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
@@ -435,7 +451,7 @@ body {
     <div class="agent-info">
       <div class="agent-name">Atlas <span class="agent-role">System Monitor</span></div>
       <div class="agent-status">
-        <span class="status-dot dot-green"></span> Online &middot; 8 days, 16:08
+        <span class="status-dot dot-green"></span> Online &middot; 8 days, 16:23
         &middot; <span class="status-dot dot-yellow"></span> 2 warnings
       </div>
     </div>
@@ -447,70 +463,118 @@ body {
   <div class="agent-details">
     <div class="section-title">System Health</div>
     <div class="health-grid">
-      <div class="health-tile green">
-  <div class="health-tile-icon">💾</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Storage</div>
-    <div class="health-tile-detail">2% used, 835GB free / 926GB</div>
+      <details class="health-tile green">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">💾</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Storage</div>
+      <div class="health-tile-detail">Place for files</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">SSD storage on Mac mini. If full, nothing works.</div>
+    <div class="health-tile-tech">2% used, 835GB free / 926GB</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
-</div>
-<div class="health-tile green">
-  <div class="health-tile-icon">🧠</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Memory</div>
-    <div class="health-tile-detail">5.1GB free</div>
+</details>
+<details class="health-tile green">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">🧠</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Memory</div>
+      <div class="health-tile-detail">Speed for apps</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">RAM for running apps. macOS compresses unused data automatically.</div>
+    <div class="health-tile-tech">5.1GB free</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
-</div>
-<div class="health-tile green">
-  <div class="health-tile-icon">🐳</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Database</div>
-    <div class="health-tile-detail">pg-main: up, 1 total running</div>
+</details>
+<details class="health-tile green">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">🐳</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Database</div>
+      <div class="health-tile-detail">Data storage</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">PostgreSQL database container. Stores project data (bots, APIs).</div>
+    <div class="health-tile-tech">pg-main: up, 1 total running</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
-</div>
-<div class="health-tile yellow">
-  <div class="health-tile-icon">🔗</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Network</div>
-    <div class="health-tile-detail">tailscale CLI not found</div>
+</details>
+<details class="health-tile yellow">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">🔗</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Network</div>
+      <div class="health-tile-detail">Remote access</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">VPN tunnel for remote access from anywhere in the world.</div>
+    <div class="health-tile-tech">tailscale CLI not found</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
-</div>
-<div class="health-tile yellow">
-  <div class="health-tile-icon">⚙️</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Services</div>
-    <div class="health-tile-detail">1/5 failed: obsidian-tg-bot(exit:1)</div>
+</details>
+<details class="health-tile yellow">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">⚙️</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Services</div>
+      <div class="health-tile-detail">Background tasks</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">Auto-start tasks: tunnel, backups, bots. Runs 24/7.</div>
+    <div class="health-tile-tech">1/5 failed: obsidian-tg-bot(exit:1)</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-yellow"></span></div>
-</div>
-<div class="health-tile green">
-  <div class="health-tile-icon">📦</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Backup</div>
-    <div class="health-tile-detail">pg-20260423-0300.sql.gz (7.8h ago)</div>
+</details>
+<details class="health-tile green">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">📦</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Backup</div>
+      <div class="health-tile-detail">Data safety net</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">Nightly database copy. Insurance against data loss.</div>
+    <div class="health-tile-tech">pg-20260423-0300.sql.gz (7.8h ago)</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
-</div>
-<div class="health-tile green">
-  <div class="health-tile-icon">📂</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Code Sync</div>
-    <div class="health-tile-detail">clean, up to date</div>
+</details>
+<details class="health-tile green">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">📂</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Code Sync</div>
+      <div class="health-tile-detail">Notes sync</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">Obsidian vault sync with GitHub. Ensures notes are backed up.</div>
+    <div class="health-tile-tech">clean, up to date</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
-</div>
-<div class="health-tile green">
-  <div class="health-tile-icon">🔒</div>
-  <div class="health-tile-info">
-    <div class="health-tile-name">Locks</div>
-    <div class="health-tile-detail">0 stale</div>
+</details>
+<details class="health-tile green">
+  <summary class="health-tile-summary">
+    <div class="health-tile-icon">🔒</div>
+    <div class="health-tile-info">
+      <div class="health-tile-name">Locks</div>
+      <div class="health-tile-detail">Cleanup check</div>
+    </div>
+    <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
+  </summary>
+  <div class="health-tile-expand">
+    <div class="health-tile-desc">Stale temp files from crashed scripts. Auto-cleaned if found.</div>
+    <div class="health-tile-tech">0 stale</div>
   </div>
-  <div class="health-tile-dot"><span class="status-dot dot-green"></span></div>
-</div>
+</details>
 
     </div>
 
@@ -584,7 +648,7 @@ body {
   </div>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 16:47 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 17:06 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
