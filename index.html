@@ -575,19 +575,115 @@ body {
   font-size: 10px;
 }
 
-/* Responsive */
+/* Responsive — mobile */
 @media (max-width: 640px) {
-  body { padding: 12px; }
-  .detail-grid { grid-template-columns: 1fr; gap: 12px; }
-  .agent-summary { flex-wrap: wrap; gap: 10px; }
-  .agent-alert { order: 3; width: 100%; }
+  body {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+  .header h1 { font-size: 14px; }
+
+  /* Agent cards */
+  .agent-summary {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+  .avatar-emoji { font-size: 17px; }
+  .agent-name { font-size: 13px; }
+  .agent-status {
+    font-size: 11px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .agent-alert {
+    order: 3;
+    width: 100%;
+    font-size: 11px;
+    justify-content: center;
+  }
+  .next-run { display: none; }
+  .agent-details { padding: 0 14px 14px; }
+
+  /* Health tiles — single column */
+  .health-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .health-tile-summary { padding: 8px 10px; }
+  .health-tile-icon { font-size: 16px; width: 20px; }
+  .health-tile-name { font-size: 12px; }
+  .health-tile-detail { font-size: 10px; }
+  .health-tile-expand { padding: 0 10px 8px 36px; }
+  .health-tile-desc { font-size: 11px; }
+  .health-tile-tech { font-size: 10px; }
+
+  /* Services — single column */
+  .svc-grid {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .svc-item { font-size: 12px; }
+
+  /* Workflow steps */
+  .wf-step { padding: 4px 0; }
+  .wf-num { width: 18px; height: 18px; font-size: 10px; }
+  .wf-text { font-size: 12px; }
+
+  /* Reports */
+  .rpt-summary {
+    padding: 7px 10px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .rpt-date { font-size: 11px; min-width: 38px; }
+  .rpt-verdict { font-size: 10px; min-width: 60px; }
+  .rpt-tldr {
+    font-size: 11px;
+    width: 100%;
+    white-space: normal;
+    -webkit-line-clamp: 2;
+  }
+  .rpt-detail { padding: 0 10px 8px; }
+
+  /* Subscriptions */
+  .sub-row { font-size: 12px; gap: 8px; padding: 5px 0; }
+  .sub-name { font-size: 12px; }
+  .sub-cost { font-size: 12px; }
+  .renew-normal, .renew-soon, .renew-urgent { font-size: 10px; }
+  .sub-footer { font-size: 9px; }
+
+  /* Blockers */
+  .blocker-pill { font-size: 11px; padding: 6px 10px; }
+
+  /* Archive */
+  .archive-row { font-size: 10px; flex-wrap: wrap; gap: 2px; }
+  .archive-meta { font-size: 9px; }
+
+  /* Section titles */
+  .section-title { font-size: 10px; margin: 12px 0 8px; }
+  .count-badge { font-size: 9px; }
+
+  /* Footer */
+  .footer { font-size: 10px; }
 }
 </style>
 </head>
 <body>
   <div class="header">
     <h1>Command Center</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T10:12:41Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T10:22:52Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
@@ -600,7 +696,7 @@ body {
     <div class="agent-info">
       <div class="agent-name">Atlas <span class="agent-role">System Monitor</span></div>
       <div class="agent-status">
-        <span class="status-dot dot-green"></span> Online &middot; 8 days, 17:34
+        <span class="status-dot dot-green"></span> Online &middot; 8 days, 17:44
         &middot; <span class="status-dot dot-yellow"></span> 2 warnings
         &middot; <span class="next-run">Next: <span id="hygiene-timer">...</span></span>
       </div>
@@ -898,7 +994,7 @@ body {
   </div>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 18:16 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 18:23 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
