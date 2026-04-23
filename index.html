@@ -269,7 +269,7 @@ body {
 <body>
   <div class="header">
     <h1>Command Center v2</h1>
-    <span class="staleness-badge" id="staleness" data-generated="2026-04-17T04:10:38Z">checking...</span>
+    <span class="staleness-badge" id="staleness" data-generated="2026-04-23T06:53:52Z">checking...</span>
   </div>
 
   <div class="stale-banner" id="stale-banner"></div>
@@ -277,19 +277,27 @@ body {
   <div class="card">
   <div class="card-title">Hygiene Agent</div>
   <div class="status-line">
-    <span class="status-dot dot-red"></span>
+    <span class="status-dot dot-green"></span>
     <span>Mac Mini M4 &middot; maxx@100.77.209.73</span>
-    <span style="color:var(--text-dim)">Status: UNREACHABLE</span>
-    <span style="color:var(--text-dim)">Uptime: —</span>
+    <span style="color:var(--text-dim)">Status: REACHABLE</span>
+    <span style="color:var(--text-dim)">Uptime: 8 days, 14:16</span>
   </div>
   <div class="columns">
     <div class="column">
       <h3>Services</h3>
-      <ul><li class="info-row">No data</li></ul>
+      <ul><li><span class="status-dot dot-green"></span> cloudflared-m4</li>
+<li><span class="status-dot dot-green"></span> m4-healthcheck</li>
+<li><span class="status-dot dot-green"></span> m4-docker-ensure</li>
+<li><span class="status-dot dot-green"></span> m4-pg-backup</li>
+</ul>
     </div>
     <div class="column">
       <h3>Containers</h3>
-      <ul><li class="info-row">No data</li></ul>
+      <ul><li><span class="status-dot dot-green"></span> meshly-api</li>
+<li><span class="status-dot dot-green"></span> n8n</li>
+<li><span class="status-dot dot-green"></span> stock-content-bot</li>
+<li><span class="status-dot dot-green"></span> pg-main</li>
+</ul>
     </div>
     <div class="column">
       <h3>Endpoints</h3>
@@ -298,9 +306,9 @@ body {
 </ul>
     </div>
   </div>
-  <div class="info-row"><strong>Latest Backup:</strong> No backup found</div>
-  
-  <div style="margin-top:8px"><div class="alert-item"><span class="status-dot dot-red"></span> SSH down: ssh: connect to host 100.77.209.73 port 22: Address already in use</div>
+  <div class="info-row"><strong>Latest Backup:</strong> pg-20260423-0300.sql.gz (6h, 0.0MB)</div>
+  <div class="info-row"><strong>Disk:</strong> 835.4GB free / 926.4GB total</div>
+  <div style="margin-top:8px"><div class="alert-item"><span class="status-dot dot-green"></span> Healthy: SSH, backup, and endpoints look good</div>
 </div>
 </div>
   <div class="card">
@@ -344,7 +352,7 @@ body {
   </table>
 </div>
 
-  <div class="footer">v2 &middot; built 2026-04-23 14:52 +08</div>
+  <div class="footer">v2 &middot; built 2026-04-23 14:54 +08</div>
 
   <div class="help-toast" id="help-toast">
     <div><kbd>r</kbd> reload</div>
