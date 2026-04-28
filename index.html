@@ -2157,6 +2157,39 @@ tr:last-child td { border-bottom: none; }
     .frac-summary { grid-template-columns: repeat(3, 1fr); }
 }
 
+/* ── Real Agent sub-items ── */
+.ag-stats-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--text2);
+    margin-top: 0.25rem;
+    padding: 0 0.25rem;
+}
+.ag-sub-items {
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.4rem;
+}
+.ag-sub-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 4px;
+    font-size: 0.7rem;
+}
+.ag-sub-name {
+    color: var(--text);
+    font-weight: 500;
+    min-width: 0;
+}
+.ag-sub-detail {
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
 /* ── Fraction Agent ── */
 .frac-summary {
     display: grid;
@@ -2284,6 +2317,384 @@ tr:last-child td { border-bottom: none; }
 .frac-status-error { color: var(--red); }
 .frac-status-idle { color: var(--dim); }
 
+/* ── Atlas — System Monitor ── */
+.atlas-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 1rem;
+}
+.atlas-mascot { flex-shrink: 0; }
+.atlas-mascot .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.atlas-mascot .avatar-emoji { font-size: 22px; }
+.atlas-info { flex: 1; min-width: 0; }
+.atlas-name { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.atlas-role { font-weight: 400; color: var(--muted); font-size: 0.8rem; margin-left: 6px; }
+.atlas-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text2);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.atlas-section { margin-top: 0.75rem; }
+.atlas-section-sum {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+    list-style: none;
+}
+.atlas-section-sum::-webkit-details-marker { display: none; }
+
+/* Health tiles */
+.health-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.health-tile {
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    transition: background 0.1s;
+}
+.health-tile:hover { background: rgba(255,255,255,0.04); }
+.health-tile.green { border-left: 3px solid var(--green); }
+.health-tile.yellow { border-left: 3px solid var(--yellow); }
+.health-tile.red { border-left: 3px solid var(--red); }
+.health-tile-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+.health-tile-summary::-webkit-details-marker { display: none; }
+.health-tile-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+.health-tile-info { flex: 1; min-width: 0; }
+.health-tile-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.health-tile-detail { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.health-tile-dot { flex-shrink: 0; }
+.health-tile-expand { padding: 0 12px 10px 46px; }
+.health-tile-desc { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.health-tile-tech { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+
+/* Workflow steps */
+.workflow-steps { display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 4px 0 8px; }
+.wf-step { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.wf-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(255,255,255,0.06); color: var(--text2);
+    font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.wf-text { font-size: 13px; color: var(--text2); }
+.wf-text b { color: var(--text); font-weight: 500; }
+.wf-arrow { color: var(--muted); font-size: 11px; padding-left: 7px; }
+
+/* Report history */
+.rpt-list { display: flex; flex-direction: column; gap: 2px; }
+.rpt-entry { border-radius: 6px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); }
+.rpt-entry[open] { background: rgba(255,255,255,0.03); }
+.rpt-summary {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; cursor: pointer; list-style: none; user-select: none;
+}
+.rpt-summary::-webkit-details-marker { display: none; }
+.rpt-date { font-size: 12px; font-weight: 500; color: var(--text2); min-width: 44px; }
+.rpt-verdict { font-size: 11px; display: flex; align-items: center; gap: 5px; min-width: 80px; }
+.rpt-verdict.green { color: var(--green); }
+.rpt-verdict.yellow { color: var(--yellow); }
+.rpt-verdict.red { color: var(--red); }
+.rpt-tldr { font-size: 12px; color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rpt-detail { padding: 0 12px 10px 12px; }
+.rpt-tldr-full { font-size: 12px; color: var(--text2); margin-bottom: 8px; line-height: 1.5; }
+.rpt-fixed, .rpt-blocked { margin-top: 6px; }
+.rpt-fixed-label { font-size: 11px; font-weight: 500; color: var(--green); }
+.rpt-blocked-label { font-size: 11px; font-weight: 500; color: var(--red); }
+.rpt-fixed ul, .rpt-blocked ul { list-style: none; margin-top: 4px; }
+.rpt-fixed li, .rpt-blocked li { font-size: 12px; color: var(--text2); padding: 2px 0 2px 12px; position: relative; }
+.rpt-fixed li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-size: 11px; }
+.rpt-blocked li::before { content: "✕"; position: absolute; left: 0; color: var(--red); font-size: 11px; }
+
+/* Agent alert badge */
+.agent-alert {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+}
+.agent-alert.ok { color: var(--green); background: rgba(34,197,94,0.08); }
+.agent-alert.yellow { color: var(--yellow); background: rgba(234,179,8,0.08); }
+.agent-alert.red { color: var(--red); background: rgba(239,68,68,0.08); }
+
+/* ── Keeper — Subscription Tracker ── */
+.keeper-header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 0.75rem;
+}
+.keeper-header .avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+}
+.keeper-header .avatar-emoji { font-size: 22px; }
+.keeper-info { flex: 1; }
+.keeper-name { font-size: 0.95rem; font-weight: 600; }
+.keeper-role { font-weight: 400; color: var(--muted); font-size: 0.8rem; margin-left: 6px; }
+.keeper-status { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+.sub-list { padding-top: 0; }
+.sub-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 0; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; border-bottom: 1px solid var(--border);
+}
+.sub-row:last-child { border-bottom: none; }
+.sub-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub-cost { color: var(--text2); min-width: 40px; text-align: right; }
+.renew-normal { color: var(--muted); font-size: 0.68rem; min-width: 50px; text-align: right; }
+.renew-soon { color: var(--yellow); font-size: 0.68rem; min-width: 50px; text-align: right; }
+.renew-urgent { color: var(--red); font-size: 0.68rem; font-weight: 500; min-width: 50px; text-align: right; }
+.sub-footer { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.5rem; }
+
+/* ── Pulse — Time Tracker ── */
+.pulse-header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 0.75rem;
+}
+.pulse-header .avatar {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+}
+.pulse-header .avatar-emoji { font-size: 22px; }
+.pulse-info { flex: 1; }
+.pulse-name { font-size: 0.95rem; font-weight: 600; }
+.pulse-role { font-weight: 400; color: var(--muted); font-size: 0.8rem; margin-left: 6px; }
+.pulse-status { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+.pulse-section-label { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 0.5rem 0 0.3rem; }
+.pulse-chart {
+    display: flex; align-items: flex-end; gap: 8px; height: 120px; padding: 8px 0;
+}
+.pulse-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.pulse-bar-value { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--text2); height: 16px; display: flex; align-items: flex-end; margin-bottom: 4px; }
+.pulse-bar {
+    flex: 1; width: 100%; max-width: 40px;
+    background: rgba(255,255,255,0.03); border-radius: 4px 4px 0 0;
+    position: relative; overflow: hidden; display: flex; align-items: flex-end;
+}
+.pulse-bar-fill {
+    width: 100%; border-radius: 4px 4px 0 0;
+    background: rgba(255,255,255,0.08); transition: height 0.3s ease;
+}
+.pulse-bar-fill.active { background: var(--accent); box-shadow: 0 0 8px rgba(249,115,22,0.25); }
+.pulse-bar-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; }
+.pulse-projects { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pulse-proj {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+    padding: 3px 8px; border-radius: 4px;
+    background: rgba(249,115,22,0.08); color: var(--accent); border: 1px solid rgba(249,115,22,0.15);
+}
+#hygiene-timer { font-family: 'JetBrains Mono', monospace; color: var(--text2); font-weight: 500; }
+.timer-active { color: var(--green) !important; font-weight: 500; }
+
+/* ── NOW Section ── */
+.now-status-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; margin-bottom: 12px;
+    background: rgba(255,255,255,0.02); border-radius: 10px;
+    border: 1px solid var(--border);
+}
+.now-dots { display: flex; gap: 16px; flex-wrap: wrap; }
+.now-dot-item { display: flex; align-items: center; gap: 6px; }
+.now-dot-label { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text2); }
+.now-check-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); }
+
+.now-alerts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.now-alert {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px; font-size: 0.8rem;
+}
+.now-alert-error { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.2); color: var(--red); }
+.now-alert-warn { background: rgba(210,153,34,0.08); border: 1px solid rgba(210,153,34,0.2); color: var(--yellow); }
+
+.now-stats {
+    display: flex; gap: 0; margin-bottom: 12px;
+    background: rgba(255,255,255,0.02); border-radius: 10px;
+    border: 1px solid var(--border); overflow: hidden;
+}
+.now-stat {
+    flex: 1; text-align: center; padding: 12px 8px;
+    border-right: 1px solid var(--border);
+}
+.now-stat:last-child { border-right: none; }
+.now-stat-val {
+    font-family: 'JetBrains Mono', monospace; font-size: 1.1rem;
+    font-weight: 700; color: var(--accent);
+}
+.now-stat-lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+
+.now-pulse {
+    background: rgba(255,255,255,0.02); border-radius: 10px;
+    border: 1px solid var(--border); padding: 12px 16px;
+}
+.now-pulse-chart { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+.now-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.now-bar-val { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--text2); height: 14px; margin-bottom: 3px; }
+.now-bar {
+    flex: 1; width: 100%; max-width: 36px;
+    background: rgba(255,255,255,0.03); border-radius: 4px 4px 0 0;
+    display: flex; align-items: flex-end; overflow: hidden;
+}
+.now-bar-fill {
+    width: 100%; border-radius: 4px 4px 0 0;
+    background: rgba(255,255,255,0.08); transition: height 0.3s ease;
+}
+.now-bar-fill.active { background: var(--accent); box-shadow: 0 0 8px rgba(249,115,22,0.25); }
+.now-bar-day { font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; color: var(--muted); margin-top: 3px; text-transform: uppercase; }
+.now-projects { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.now-proj {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+    padding: 2px 8px; border-radius: 4px;
+    background: rgba(249,115,22,0.08); color: var(--accent); border: 1px solid rgba(249,115,22,0.15);
+}
+
+/* ── System Section ── */
+.sys-m4 {
+    padding: 10px 14px; margin-bottom: 12px;
+    background: rgba(255,255,255,0.02); border-radius: 10px;
+    border: 1px solid var(--border);
+}
+.sys-m4-header { display: flex; align-items: center; gap: 8px; }
+.sys-m4-host { font-weight: 600; font-size: 0.85rem; }
+.sys-m4-uptime { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text2); margin-left: auto; }
+.sys-m4-stats {
+    display: flex; gap: 16px; margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--muted);
+}
+
+.sys-section { margin-top: 12px; }
+.sys-section-sum {
+    font-size: 0.78rem; font-weight: 600; color: var(--text2);
+    cursor: pointer; padding: 6px 0; list-style: none;
+}
+.sys-section-sum::before { content: "▸ "; color: var(--muted); }
+[open] > .sys-section-sum::before { content: "▾ "; }
+
+.sys-expand-sum {
+    font-size: 0.75rem; font-weight: 600; color: var(--text2);
+    cursor: pointer; padding: 6px 0; list-style: none;
+}
+.sys-expand-sum::before { content: "▸ "; color: var(--muted); }
+[open] > .sys-expand-sum::before { content: "▾ "; }
+
+.sys-atlas-expand { margin-top: 8px; padding-left: 8px; border-left: 2px solid var(--border); }
+.sys-health-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; padding: 6px 0; }
+.sys-health-tile {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 6px;
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    font-size: 0.75rem;
+}
+.sys-health-tile.red { border-color: rgba(248,81,73,0.3); }
+.sys-health-tile.yellow { border-color: rgba(210,153,34,0.3); }
+.sys-tile-name { font-weight: 500; min-width: 60px; }
+.sys-tile-detail { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--text2); }
+
+.sys-reports-list { padding: 4px 0; }
+.sys-report {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 0; font-size: 0.72rem; border-bottom: 1px solid var(--border);
+}
+.sys-report:last-child { border-bottom: none; }
+.sys-rpt-date { font-family: 'JetBrains Mono', monospace; color: var(--muted); min-width: 50px; }
+.sys-rpt-score { font-family: 'JetBrains Mono', monospace; color: var(--text2); min-width: 30px; }
+.sys-rpt-tldr { color: var(--text2); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sys-services { padding: 6px 0; }
+.sys-svc-running, .sys-svc-idle { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0; }
+.sys-svc {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 6px;
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    font-size: 0.72rem;
+}
+.sys-svc-name { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; }
+.sys-svc-status { font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--muted); }
+
+.sys-idle-toggle { margin-top: 6px; }
+
+.sys-events { padding: 4px 0; }
+.sys-event {
+    display: flex; align-items: center; gap: 8px;
+    padding: 3px 0; font-size: 0.72rem; border-bottom: 1px solid var(--border);
+}
+.sys-event:last-child { border-bottom: none; }
+.sys-evt-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--muted); min-width: 40px; }
+.sys-evt-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.sys-evt-type { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; min-width: 60px; }
+.sys-evt-issue { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text2); min-width: 50px; }
+.sys-evt-agent { font-size: 0.65rem; color: var(--muted); }
+
+/* ── Costs Section ── */
+.cost-total {
+    display: flex; flex-direction: column; gap: 0;
+    background: rgba(255,255,255,0.02); border-radius: 10px;
+    border: 1px solid var(--border); overflow: hidden; margin-bottom: 12px;
+}
+.cost-total-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 16px; border-bottom: 1px solid var(--border);
+}
+.cost-total-item:last-child { border-bottom: none; }
+.cost-total-sum { background: rgba(255,255,255,0.03); }
+.cost-total-lbl { font-size: 0.8rem; color: var(--text2); }
+.cost-total-val { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: var(--accent); }
+.cost-total-sum .cost-total-val { font-size: 1rem; }
+
+.cost-orch {
+    display: flex; gap: 16px; padding: 8px 14px; margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text2);
+    background: rgba(255,255,255,0.02); border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.cost-token-card {
+    padding: 10px 14px; margin-bottom: 8px;
+    background: rgba(255,255,255,0.02); border-radius: 8px;
+}
+.cost-token-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.cost-token-name { font-weight: 600; font-size: 0.85rem; }
+.cost-token-plan { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--muted); }
+.cost-token-stats { display: flex; gap: 20px; }
+.cost-token-stat { text-align: center; }
+.cost-token-val { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; }
+.cost-token-lbl { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; }
+
+.cost-subs-details { margin-top: 8px; }
+.cost-sub-list { padding: 4px 0; }
+.cost-sub-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 0; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; border-bottom: 1px solid var(--border);
+}
+.cost-sub-row:last-child { border-bottom: none; }
+.cost-sub-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cost-sub-cost { color: var(--text2); min-width: 40px; text-align: right; }
+.cost-sub-renew { font-size: 0.68rem; min-width: 50px; text-align: right; }
+
 </style>
 </head>
 <body>
@@ -2299,43 +2710,27 @@ tr:last-child td { border-bottom: none; }
         <div class="sb-sub">agent orchestration</div>
     </div>
     <ul class="sidebar-nav">
-        <li><a data-target="#overview" href="javascript:void(0)" class="active">
-            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
-            Overview
-        </a></li>
-        <li><a data-target="#codexbar" href="javascript:void(0)">
-            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="2" rx="1" fill="currentColor" opacity="0.6"/><rect x="2" y="7.5" width="8" height="2" rx="1" fill="currentColor" opacity="0.8"/><rect x="2" y="11" width="10" height="2" rx="1" fill="currentColor"/></svg>
-            CodexBar
-        </a></li>
-        <li><a data-target="#live" href="javascript:void(0)">
-            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor" opacity="0.8"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.2" opacity="0.4"/></svg>
-            Live <span class="nav-count">13</span>
-        </a></li>
-        <li><a data-target="#agents" href="javascript:void(0)">
-            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3" stroke="currentColor" fill="none" stroke-width="1.3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" fill="none" stroke-width="1.3"/></svg>
-            Agents <span class="nav-count">5</span>
-        </a></li>
-        <li><a data-target="#network" href="javascript:void(0)">
-            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="3" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="13" cy="4" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="13" cy="12" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="5" y1="7.5" x2="11" y2="4.5" stroke="currentColor" stroke-width="1.2"/><line x1="5" y1="8.5" x2="11" y2="11.5" stroke="currentColor" stroke-width="1.2"/></svg>
-            Network
+        <li><a data-target="#now" href="javascript:void(0)" class="active">
+            <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.3"/><line x1="8" y1="4" x2="8" y2="8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="8" y1="8" x2="11" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            NOW
         </a></li>
         <li><a data-target="#projects" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 4l5-2 5 2v8l-5 2-5-2V4z" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
             Projects <span class="nav-count">10</span>
         </a></li>
-        <li><a data-target="#done" href="javascript:void(0)">
-            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M3 8l3 3 7-7" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Done <span class="nav-count">11</span>
+        <li><a data-target="#system" href="javascript:void(0)">
+            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="8" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="1"/><line x1="8" y1="10" x2="8" y2="14" stroke="currentColor" stroke-width="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="currentColor" stroke-width="1"/><line x1="10" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1"/></svg>
+            System <span class="nav-count">2/5</span>
         </a></li>
-        <li><a data-target="#fraction" href="javascript:void(0)">
-            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="1" y1="8" x2="15" y2="8" stroke="currentColor" stroke-width="1.2"/><line x1="8" y1="1" x2="8" y2="15" stroke="currentColor" stroke-width="1.2"/></svg>
-            Fraction <span class="nav-count">13</span>
+        <li><a data-target="#costs" href="javascript:void(0)">
+            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.2"/></svg>
+            Costs <span class="nav-count">$243/mo</span>
         </a></li>
     </ul>
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-28 17:55:58 ICT</span>
+            <span>2026-04-28 18:39:43 ICT</span>
         </div>
     </div>
 </nav>
@@ -2343,306 +2738,85 @@ tr:last-child td { border-bottom: none; }
 <!-- Main content -->
 <main class="main">
 
-<div class="topbar" id="overview">
-    <div class="topbar-title">Overview</div>
+<!-- NOW Section -->
+<div class="topbar" id="now">
+    <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-28 17:55:58 ICT</span>
+        <span class="tm-item">2026-04-28 18:39:43 ICT</span>
     </div>
 </div>
 
-<div class="stats">
-    <div class="stat"><div class="stat-val accent">0</div><div class="stat-lbl">Active Agents</div></div>
-    <div class="stat"><div class="stat-val">0</div><div class="stat-lbl">Active Projects</div></div>
-    <div class="stat"><div class="stat-val">176</div><div class="stat-lbl">Open Tasks</div></div>
-    <div class="stat"><div class="stat-val green">602</div><div class="stat-lbl">Completed</div></div>
-    <div class="stat"><div class="stat-val blue">0</div><div class="stat-lbl">Linear Issues</div></div>
-    <div class="stat"><div class="stat-val purple">77%</div><div class="stat-lbl">Progress</div></div>
-</div>
 
-
-    <div class="sparklines-row">
-        <div class="sparkline-card">
-            <div class="sparkline-label">Open Tasks (30d)</div>
-            <svg class="sparkline" viewBox="0 0 120 30" width="120" height="30"><polyline points="0.0,2.0 15.0,5.7 30.0,9.4 45.0,13.1 60.0,16.9 75.0,20.6 90.0,24.3 105.0,28.0 120.0,28.0" fill="none" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <div class="sparkline-val">320</div>
+    <div class="now-status-bar">
+        <div class="now-dots"><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Storage</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Memory</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Database</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Network</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Services</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Backup</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Code Sync</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Locks</span></div></div>
+        <div class="now-check-time">checked: 2026-04-28</div>
+    </div><div class="now-alerts"><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> JARVIS is offline</div><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> Atlas is offline</div><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Dashboard is degraded</div></div>
+    <div class="now-stats">
+        <div class="now-stat">
+            <span class="now-stat-val">2/5</span>
+            <span class="now-stat-lbl">agents</span>
         </div>
-        <div class="sparkline-card">
-            <div class="sparkline-label">Completed (30d)</div>
-            <svg class="sparkline" viewBox="0 0 120 30" width="120" height="30"><polyline points="0.0,28.0 15.0,24.3 30.0,20.6 45.0,16.9 60.0,13.1 75.0,9.4 90.0,5.7 105.0,2.0 120.0,2.0" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <div class="sparkline-val">673</div>
+        <div class="now-stat">
+            <span class="now-stat-val">8/8</span>
+            <span class="now-stat-lbl">checks</span>
+        </div>
+        <div class="now-stat">
+            <span class="now-stat-val">0.0h</span>
+            <span class="now-stat-lbl">today</span>
+        </div>
+        <div class="now-stat">
+            <span class="now-stat-val">72.0h</span>
+            <span class="now-stat-lbl">week</span>
+        </div>
+        <div class="now-stat">
+            <span class="now-stat-val">10.3h</span>
+            <span class="now-stat-lbl">avg/day</span>
         </div>
     </div>
-
-<!-- Orchestrator section removed -->
-
-<div class="section" id="codexbar">
-    <div class="section-head">
-        <div class="section-dot" style="background:var(--cyan)"></div>
-        <div class="section-title">CodexBar</div>
-        <div class="section-count">provider limits</div>
-    </div>
-    <div class="cbar-grid"><div class="cbar-card">
-            <div class="cbar-head">
-                <div class="cbar-icon" style="background:#3fb950">X</div>
-                <div class="cbar-title">Codex</div>
-                <span class="cbar-plan">Plus $20/mo</span>
-                <div class="cbar-updated">14:33</div>
-            </div>
-            <div class="cbar-bars"><div class="cbar-bar-row">
-        <div class="cbar-bar-meta">
-            <span class="cbar-bar-label">Session</span>
-            <span class="cbar-bar-pct" style="color:var(--green)">100% left</span>
-        </div>
-        <div class="cbar-bar ">
-            <div class="cbar-bar-fill" style="width:0.0%;background:var(--green)"></div>
-        </div>
-        <div class="cbar-bar-reset">resets in now</div>
-    </div><div class="cbar-bar-row">
-        <div class="cbar-bar-meta">
-            <span class="cbar-bar-label">Weekly</span>
-            <span class="cbar-bar-pct" style="color:var(--green)">99% left</span>
-        </div>
-        <div class="cbar-bar ">
-            <div class="cbar-bar-fill" style="width:1.0%;background:var(--green)"></div>
-        </div>
-        <div class="cbar-bar-reset">resets in 15h 8m</div>
-    </div></div>
-            <div class="cbar-footer">
-                <span>7.2M session tok</span>
-                <span>$458 / 30d</span>
-            </div>
-        </div><div class="cbar-card">
-            <div class="cbar-head">
-                <div class="cbar-icon" style="background:#ff6b35">C</div>
-                <div class="cbar-title">Claude</div>
-                <span class="cbar-plan">Max $200/mo</span>
-                <div class="cbar-updated">14:33</div>
-            </div>
-            <div class="cbar-bars"><div class="cbar-bar-row">
-        <div class="cbar-bar-meta">
-            <span class="cbar-bar-label">Session</span>
-            <span class="cbar-bar-pct" style="color:var(--red)">0% left</span>
-        </div>
-        <div class="cbar-bar ">
-            <div class="cbar-bar-fill" style="width:100.0%;background:var(--red)"></div>
-        </div>
-        <div class="cbar-bar-reset">resets in now</div>
-    </div><div class="cbar-bar-row">
-        <div class="cbar-bar-meta">
-            <span class="cbar-bar-label">Weekly</span>
-            <span class="cbar-bar-pct" style="color:var(--red)">8% left</span>
-        </div>
-        <div class="cbar-bar ">
-            <div class="cbar-bar-fill" style="width:92.0%;background:var(--red)"></div>
-        </div>
-        <div class="cbar-bar-reset">resets in now</div>
-    </div></div>
-            <div class="cbar-footer">
-                <span>465K session tok</span>
-                <span>$795 / 30d</span>
-            </div>
+    <div class="now-pulse">
+        <div class="now-pulse-chart"><div class="now-bar-col">
+            <div class="now-bar-val">12.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-day">We</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">12.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-day">Th</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">12.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-day">Fr</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">12.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-day">Sa</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">12.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-day">Su</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">12.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-day">Mo</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">0.0</div>
+            <div class="now-bar"><div class="now-bar-fill active" style="height:3%"></div></div>
+            <div class="now-bar-day">Tu</div>
         </div></div>
-</div>
+        
+    </div>
 
-<div class="section" id="live">
+<!-- Projects Section -->
+<div class="section" id="projects">
     <div class="section-head">
         <div class="section-dot" style="background:var(--green)"></div>
-        <div class="section-title">Live</div>
-        <div class="section-count">tasks &amp; services</div>
+        <div class="section-title">Projects</div>
+        <div class="section-count">10 active</div>
     </div>
-    
-    <div class="live-grid">
-        <div class="live-panel">
-            <div class="live-panel-title">Active Tasks</div>
-            <div class="live-empty">No active tasks</div>
-        </div>
-        <div class="live-panel">
-            <div class="live-panel-title">Services</div>
-            <div class="live-svc-summary">6/13 running</div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">light-linear-worker</span><span class="live-svc-age">idle</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">generate-live-feed</span><span class="live-svc-age">PID 13637</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">bridge-tunnel</span><span class="live-svc-age">PID 962</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">jarvis-voice</span><span class="live-svc-age">PID 808</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">krisp-auto-import</span><span class="live-svc-age">idle</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">bridge-worker</span><span class="live-svc-age">PID 798</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">bridge-api</span><span class="live-svc-age">PID 794</span></div><div class="live-svc"><span class="live-dot-sm live-health-ok"></span><span class="live-svc-name">jarvis-menubar</span><span class="live-svc-age">PID 13588</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">dashboard-v2-rebuild</span><span class="live-svc-age">idle</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">claude-evening-summary</span><span class="live-svc-age">idle</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">log-rotate</span><span class="live-svc-age">idle</span></div><div class="live-svc"><span class="live-dot-sm live-health-warn"></span><span class="live-svc-name">claude-nightly-report</span><span class="live-svc-age">idle</span></div><div class="live-svc"><span class="live-dot-sm live-health-err"></span><span class="live-svc-name">skills-pull</span><span class="live-svc-age">error:1</span></div>
-        </div>
-        <div class="live-panel">
-            <div class="live-panel-title">Mac Mini M4</div>
-            <div class="live-svc-summary">maxxs-mac-mini · unreachable</div><div class="live-alerts"><span class="live-alert live-alert-critical">SSH down</span></div><div class="live-m4-meta"><div class="live-m4-line"><span class="live-m4-key">Target</span><span class="live-m4-val">maxx@100.77.209.73</span></div><div class="live-m4-line"><span class="live-m4-key">LaunchAgents</span><span class="live-m4-val">0/0 running</span></div><div class="live-m4-line"><span class="live-m4-key">Containers</span><span class="live-m4-val">0/0 up</span></div><div class="live-m4-line"><span class="live-m4-key">Public</span><span class="live-m4-val">0/0 healthy</span></div><div class="live-m4-line"><span class="live-m4-key">Uptime</span><span class="live-m4-val">ssh: connect to host 100.77.209.73 port 22: Operation timed out</span></div><div class="live-m4-line"><span class="live-m4-key">Backup</span><span class="live-m4-val">n/a</span></div><div class="live-m4-line"><span class="live-m4-key">Backup age</span><span class="live-m4-val">n/a</span></div></div><div class="live-alert-details"><div class="live-alert-detail"><span class="live-alert-detail-label">SSH down</span><span class="live-alert-detail-text">ssh: connect to host 100.77.209.73 port 22: Operation timed out</span></div></div><div class="live-svc-group"><div class="live-svc-group-title">LaunchAgents</div><div class="live-empty">No data</div></div><div class="live-svc-group"><div class="live-svc-group-title">Containers</div><div class="live-empty">No data</div></div><div class="live-svc-group"><div class="live-svc-group-title">Public endpoints</div><div class="live-empty">No data</div></div>
-        </div>
-        
-        <div class="live-panel">
-            <div class="live-panel-title">Local Services</div>
-            <div class="live-svc-summary" id="local-services-summary">Loading local status…</div>
-            <div id="local-services-list">
-                <div class="live-empty">Querying launchd and local processes…</div>
-            </div>
-        </div>
-    </div>
-    <div class="live-panel-wide">
-        <div class="live-panel-title">Recent Events</div>
-        <div class="live-event"><span class="live-evt-time">03-31 19:08</span><span class="live-evt-dot" style="background:#3fb950"></span><span class="live-evt-label" style="color:#3fb950">done</span><span class="live-evt-issue">PER-26</span><span class="live-evt-detail">COORDINATOR</span><span class="live-evt-dur">480s</span></div><div class="live-event"><span class="live-evt-time">03-31 18:39</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-93</span><span class="live-evt-detail">canary_no_response</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">03-31 18:26</span><span class="live-evt-dot" style="background:#f85149"></span><span class="live-evt-label" style="color:#f85149">failed</span><span class="live-evt-issue">PER-26</span><span class="live-evt-detail">COORDINATOR</span><span class="live-evt-dur">625s</span></div><div class="live-event"><span class="live-evt-time">03-30 19:03</span><span class="live-evt-dot" style="background:#3fb950"></span><span class="live-evt-label" style="color:#3fb950">done</span><span class="live-evt-issue">PER-148</span><span class="live-evt-detail">COORDINATOR AGENT-MEMORY</span><span class="live-evt-dur">226s</span></div><div class="live-event"><span class="live-evt-time">03-30 18:47</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-137</span><span class="live-evt-detail">— No SKILLS project/repo found locally; </span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">03-30 18:34</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-136</span><span class="live-evt-detail">— No cloned skill repos paths specified,</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">03-30 18:21</span><span class="live-evt-dot" style="background:#3fb950"></span><span class="live-evt-label" style="color:#3fb950">done</span><span class="live-evt-issue">PER-135</span><span class="live-evt-detail">VAULT SKILLS</span><span class="live-evt-dur">273s</span></div><div class="live-event"><span class="live-evt-time">03-30 18:03</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-133</span><span class="live-evt-detail">— No repo path, no skill definitions, un</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">03-30 17:51</span><span class="live-evt-dot" style="background:#f85149"></span><span class="live-evt-label" style="color:#f85149">failed</span><span class="live-evt-issue">PER-132</span><span class="live-evt-detail">COORDINATOR RELOCATION-TO-M4</span><span class="live-evt-dur">518s</span></div><div class="live-event"><span class="live-evt-time">03-30 17:10</span><span class="live-evt-dot" style="background:#3fb950"></span><span class="live-evt-label" style="color:#3fb950">done</span><span class="live-evt-issue">PER-129</span><span class="live-evt-detail">VAULT MY-OBSIDIAN</span><span class="live-evt-dur">226s</span></div><div class="live-event"><span class="live-evt-time">03-30 16:54</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-128</span><span class="live-evt-detail">canary_no_response</span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">03-30 16:47</span><span class="live-evt-dot" style="background:#f85149"></span><span class="live-evt-label" style="color:#f85149">failed</span><span class="live-evt-issue">PER-132</span><span class="live-evt-detail">BUILDER RELOCATION-TO-M4</span><span class="live-evt-dur">220s</span></div><div class="live-event"><span class="live-evt-time">03-30 16:32</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-129</span><span class="live-evt-detail">— No target file/location specified for </span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">03-30 16:20</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-128</span><span class="live-evt-detail">— No repo/file paths specified; unclear </span><span class="live-evt-dur"></span></div><div class="live-event"><span class="live-evt-time">03-30 16:09</span><span class="live-evt-dot" style="background:#d29922"></span><span class="live-evt-label" style="color:#d29922">rejected</span><span class="live-evt-issue">PER-126</span><span class="live-evt-detail">— No repo path, no API details, no archi</span><span class="live-evt-dur"></span></div>
-    </div>
-</div>
-
-<div class="section" id="agents">
-    <div class="section-head">
-        <div class="section-dot" style="background:var(--accent)"></div>
-        <div class="section-title">Agents</div>
-        <div class="section-count">5</div>
-    </div>
-    <div class="agents">
-        <div class="ag ag-idle">
-            <div class="ag-top">
-                <div class="ag-orb" style="background:#ff6b35">
-                    <div class="ag-orb-ring" style="border-color:#ff6b35"></div>
-                    RE
-                </div>
-                <div class="ag-info">
-                    <div class="ag-id" style="color:#ff6b35">RESEARCHER</div>
-                    <div class="ag-name">Researcher</div>
-                </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
-            </div>
-            <div class="ag-zone">Deep search, synthesis, content, editing</div>
-            <div class="ag-merged">+ EDITOR</div>
-            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ff6b35">AI-SINGULARITY-CHANNEL</span><span class="ag-badge" style="--badge-color:#ff6b35">INSTANT PRESENTATION</span><span class="ag-badge" style="--badge-color:#ff6b35">MY-DICTIONARY</span><span class="ag-badge" style="--badge-color:#ff6b35">STOCK-CONTENT-BOT</span></div>
-            <div class="ag-bottom">
-                <div class="ag-tasks">8 tasks</div>
-                <div class="ag-actions">
-                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-RESEARCHER'}).then(ok=>showToast(ok?'Launched RESEARCHER':'API offline','info'))" title="Run">▶</button>
-                </div>
-            </div>
-        </div>
-        <div class="ag ag-idle">
-            <div class="ag-top">
-                <div class="ag-orb" style="background:#58a6ff">
-                    <div class="ag-orb-ring" style="border-color:#58a6ff"></div>
-                    CO
-                </div>
-                <div class="ag-info">
-                    <div class="ag-id" style="color:#58a6ff">COORDINATOR</div>
-                    <div class="ag-name">Coordinator</div>
-                </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
-            </div>
-            <div class="ag-zone">Task flow, delegation, planning, comms, bridge</div>
-            <div class="ag-merged">+ PLANNER, COMMS, BRIDGE</div>
-            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#58a6ff">AGENT-MEMORY</span><span class="ag-badge" style="--badge-color:#58a6ff">LINEAR</span><span class="ag-badge" style="--badge-color:#58a6ff">AGENTS-MD</span><span class="ag-badge" style="--badge-color:#58a6ff">SECOND-BRAIN</span><span class="ag-badge" style="--badge-color:#58a6ff">MESHLY</span><span class="ag-badge" style="--badge-color:#58a6ff">MAXIM-SITE</span></div>
-            <div class="ag-bottom">
-                <div class="ag-tasks">4 tasks</div>
-                <div class="ag-actions">
-                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-COORDINATOR'}).then(ok=>showToast(ok?'Launched COORDINATOR':'API offline','info'))" title="Run">▶</button>
-                </div>
-            </div>
-        </div>
-        <div class="ag ag-idle">
-            <div class="ag-top">
-                <div class="ag-orb" style="background:#3fb950">
-                    <div class="ag-orb-ring" style="border-color:#3fb950"></div>
-                    AN
-                </div>
-                <div class="ag-info">
-                    <div class="ag-id" style="color:#3fb950">ANALYST</div>
-                    <div class="ag-name">Analyst</div>
-                </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
-            </div>
-            <div class="ag-zone">Data → structured insights</div>
-            
-            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#3fb950">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#3fb950">HEALTH</span></div>
-            <div class="ag-bottom">
-                <div class="ag-tasks">6 tasks</div>
-                <div class="ag-actions">
-                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-ANALYST'}).then(ok=>showToast(ok?'Launched ANALYST':'API offline','info'))" title="Run">▶</button>
-                </div>
-            </div>
-        </div>
-        <div class="ag ag-idle">
-            <div class="ag-top">
-                <div class="ag-orb" style="background:#79c0ff">
-                    <div class="ag-orb-ring" style="border-color:#79c0ff"></div>
-                    VA
-                </div>
-                <div class="ag-info">
-                    <div class="ag-id" style="color:#79c0ff">VAULT</div>
-                    <div class="ag-name">Vault Keeper</div>
-                </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
-            </div>
-            <div class="ag-zone">Obsidian routing, hygiene, Tech-Base</div>
-            
-            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#79c0ff">MY-OBSIDIAN</span><span class="ag-badge" style="--badge-color:#79c0ff">SKILLS</span></div>
-            <div class="ag-bottom">
-                <div class="ag-tasks">9 tasks</div>
-                <div class="ag-actions">
-                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-VAULT'}).then(ok=>showToast(ok?'Launched VAULT':'API offline','info'))" title="Run">▶</button>
-                </div>
-            </div>
-        </div>
-        <div class="ag ag-idle">
-            <div class="ag-top">
-                <div class="ag-orb" style="background:#ffa657">
-                    <div class="ag-orb-ring" style="border-color:#ffa657"></div>
-                    BU
-                </div>
-                <div class="ag-info">
-                    <div class="ag-id" style="color:#ffa657">BUILDER</div>
-                    <div class="ag-name">Builder</div>
-                </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
-            </div>
-            <div class="ag-zone">Code, features, MVP, deploy, infra</div>
-            <div class="ag-merged">+ DEVOPS</div>
-            <div class="ag-badges"><span class="ag-badge" style="--badge-color:#ffa657">FASTDATA-VOICE-AGENT</span><span class="ag-badge" style="--badge-color:#ffa657">MAXIM-SITE</span><span class="ag-badge" style="--badge-color:#ffa657">MESHLY</span><span class="ag-badge" style="--badge-color:#ffa657">STOCK-CONTENT-BOT</span><span class="ag-badge" style="--badge-color:#ffa657">RELOCATION-TO-M4</span><span class="ag-badge" style="--badge-color:#ffa657">MY-OBSIDIAN</span></div>
-            <div class="ag-bottom">
-                <div class="ag-tasks">17 tasks</div>
-                <div class="ag-actions">
-                    <button class="qa-btn qa-sm" onclick="postLocal('/api/orchestrator/run',{source:'agent-BUILDER'}).then(ok=>showToast(ok?'Launched BUILDER':'API offline','info'))" title="Run">▶</button>
-                </div>
-            </div>
-        </div></div>
-</div>
-
-<div class="section" id="network">
-    <div class="section-head">
-        <div class="section-dot" style="background:var(--blue)"></div>
-        <div class="section-title">Network</div>
-        <div class="section-count">5 links</div>
-    </div>
-    <div class="network-wrap"><svg viewBox="0 0 580 260" width="100%" height="260" xmlns="http://www.w3.org/2000/svg" style="display:block"><line x1="280" y1="50" x2="80" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M280,50 L80,170"/></circle><line x1="280" y1="50" x2="230" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M280,50 L230,170"/></circle><line x1="280" y1="50" x2="380" y2="170" stroke="#58a6ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#58a6ff" opacity="0.8"><animateMotion dur="6s" repeatCount="indefinite" path="M280,50 L380,170"/></circle><line x1="230" y1="170" x2="480" y2="170" stroke="#3fb950" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#3fb950" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M230,170 L480,170"/></circle><line x1="380" y1="170" x2="280" y2="50" stroke="#79c0ff" stroke-width="1.5" opacity="0.25"/><circle r="2.5" fill="#79c0ff" opacity="0.8"><animateMotion dur="4s" repeatCount="indefinite" path="M380,170 L280,50"/></circle>
-        
-        <circle cx="280" cy="50" r="20" fill="#58a6ff18" stroke="#58a6ff" stroke-width="1.5"/>
-        <text x="280" y="47" text-anchor="middle" fill="#58a6ff" font-size="7" font-weight="800"
-              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">COOR</text>
-        <text x="280" y="58" text-anchor="middle" fill="#64748b" font-size="5.5"
-              font-family="Inter,sans-serif" font-weight="600">idle</text>
-        
-        <circle cx="80" cy="170" r="20" fill="#ff6b3518" stroke="#ff6b35" stroke-width="1.5"/>
-        <text x="80" y="167" text-anchor="middle" fill="#ff6b35" font-size="7" font-weight="800"
-              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">RESE</text>
-        <text x="80" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
-              font-family="Inter,sans-serif" font-weight="600">idle</text>
-        
-        <circle cx="230" cy="170" r="20" fill="#3fb95018" stroke="#3fb950" stroke-width="1.5"/>
-        <text x="230" y="167" text-anchor="middle" fill="#3fb950" font-size="7" font-weight="800"
-              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">ANAL</text>
-        <text x="230" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
-              font-family="Inter,sans-serif" font-weight="600">idle</text>
-        
-        <circle cx="380" cy="170" r="20" fill="#79c0ff18" stroke="#79c0ff" stroke-width="1.5"/>
-        <text x="380" y="167" text-anchor="middle" fill="#79c0ff" font-size="7" font-weight="800"
-              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">VAUL</text>
-        <text x="380" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
-              font-family="Inter,sans-serif" font-weight="600">idle</text>
-        
-        <circle cx="480" cy="170" r="20" fill="#ffa65718" stroke="#ffa657" stroke-width="1.5"/>
-        <text x="480" y="167" text-anchor="middle" fill="#ffa657" font-size="7" font-weight="800"
-              font-family="JetBrains Mono,monospace" letter-spacing="0.05em">BUIL</text>
-        <text x="480" y="178" text-anchor="middle" fill="#64748b" font-size="5.5"
-              font-family="Inter,sans-serif" font-weight="600">idle</text></svg></div>
-</div>
-
-<div class="section" id="projects">
     <details class="proj-details" open>
         <summary class="proj-summary">
-            <div class="section-dot" style="background:var(--green)"></div>
-            <span class="section-title">Active Projects</span>
+            <span class="section-title">Active</span>
             <span class="section-count">10</span>
             <span class="proj-chevron"></span>
         </summary>
@@ -2663,7 +2837,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">—</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/3D-WEB-SITES/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2679,7 +2852,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">—</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/AI-DESK-ASSISTANT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2695,7 +2867,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">—</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/FRENCH-ICLOUD/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2711,7 +2882,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">ANALYST</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/HEALTH/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2727,7 +2897,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">—</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/JARVIS/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2743,7 +2912,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">VAULT, BUILDER</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/MY-OBSIDIAN/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2759,7 +2927,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">COORDINATOR</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/SECOND-BRAIN/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2775,7 +2942,6 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">RESEARCHER, BUILDER</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/STOCK-CONTENT-BOT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
@@ -2791,35 +2957,30 @@ tr:last-child td { border-bottom: none; }
             <td class="agents-col">—</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/TRADING-BOT-LAB/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr>
         <tr>
             <td class="proj-name">Zerkalo-Kommunikacii</td>
             <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">72</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">71</td>
             <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:84%"></div></div>
-                <span class="ptxt">84%</span>
+                <div class="pbar"><div class="pfill pfill-high" style="width:85%"></div></div>
+                <span class="ptxt">85%</span>
             </td>
             <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
             <td class="actions-col">
                 <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/Zerkalo-Kommunikacii/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-                <button class="qa-btn" onclick="postLocal('/api/rebuild')" title="Rebuild">🔄</button>
             </td>
         </tr></tbody>
         </table>
         </div>
     </details>
-</div>
-
-<div class="section" id="done">
     <details class="proj-details">
         <summary class="proj-summary">
             <div class="section-dot" style="background:var(--dim)"></div>
-            <span class="section-title">Done Projects</span>
+            <span class="section-title">Done</span>
             <span class="section-count">11</span>
             <span class="proj-chevron"></span>
         </summary>
@@ -2975,222 +3136,394 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="section" id="fraction">
+<!-- System Section -->
+<div class="section" id="system">
     <div class="section-head">
-        <div class="section-dot" style="background:var(--purple)"></div>
-        <div class="section-title">Fraction Agent</div>
-        <div class="section-count">13 processes &middot; 682 MB</div>
+        <div class="section-dot" style="background:var(--accent)"></div>
+        <div class="section-title">System</div>
+        <div class="section-count">2/5 agents</div>
     </div>
     
-    <div class="frac-summary">
-        <div class="frac-summary-item">
-            <div class="frac-summary-val accent">13</div>
-            <div class="frac-summary-lbl">Processes</div>
+    
+        <div class="sys-m4">
+            <div class="sys-m4-header">
+                <span class="status-dot dot-red"></span>
+                <span class="sys-m4-host">maxxs-mac-mini</span>
+                <span class="sys-m4-uptime">unreachable</span>
+            </div>
+            <div class="sys-m4-stats">
+                <span>LaunchAgents: 0/0</span>
+                <span>Containers: 0/0</span>
+            </div>
         </div>
-        <div class="frac-summary-item">
-            <div class="frac-summary-val blue">7</div>
-            <div class="frac-summary-lbl">MCP Servers</div>
+    <div class="agents">
+        <div class="ag ag-active">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#ff6b35">
+                    <div class="ag-orb-ring" style="border-color:#ff6b35"></div>
+                    C
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#ff6b35">CLAUDE</div>
+                    <div class="ag-name">Claude Code</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+            </div>
+            <div class="ag-zone">AI coding sessions + MCP servers</div>
+            <div class="ag-stats-line">2 sessions · 5 MCP servers · 367 MB RAM</div>
+            <div class="ag-sub-items">
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">Session PID 34667</span>
+                <span class="ag-sub-detail">CPU 6,0% · 365 MB</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">Session PID 63304</span>
+                <span class="ag-sub-detail">CPU 0,0% · 2 MB</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">MCP: Exa Search</span>
+                <span class="ag-sub-detail">PID 34927 · 4 MB</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">MCP: Obsidian</span>
+                <span class="ag-sub-detail">PID 34853 · 9 MB</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">MCP: Linear</span>
+                <span class="ag-sub-detail">PID 34767 · 15 MB</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">MCP: Obsidian</span>
+                <span class="ag-sub-detail">PID 19666 · 5 MB</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">MCP: Obsidian</span>
+                <span class="ag-sub-detail">PID 19354 · 5 MB</span>
+            </div></div>
+            
         </div>
-        <div class="frac-summary-item">
-            <div class="frac-summary-val yellow">682 MB</div>
-            <div class="frac-summary-lbl">Total RAM</div>
+        <div class="ag ag-active">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#3fb950">
+                    <div class="ag-orb-ring" style="border-color:#3fb950"></div>
+                    X
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#3fb950">CODEX</div>
+                    <div class="ag-name">OpenAI Codex</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+            </div>
+            <div class="ag-zone">AI code execution + task runner</div>
+            <div class="ag-stats-line">2 processes · 135 MB RAM</div>
+            <div class="ag-sub-items">
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">Codex PID 19293</span>
+                <span class="ag-sub-detail">CPU 3,9% · 131 MB</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">Codex PID 19288</span>
+                <span class="ag-sub-detail">CPU 0,0% · 4 MB</span>
+            </div></div>
+            
         </div>
-        <div class="frac-summary-item">
-            <div class="frac-summary-val green">1</div>
-            <div class="frac-summary-lbl">Services</div>
+        <div class="ag ag-off">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#58a6ff">
+                    <div class="ag-orb-ring" style="border-color:#58a6ff"></div>
+                    J
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#58a6ff">JARVIS</div>
+                    <div class="ag-name">JARVIS</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
+            </div>
+            <div class="ag-zone">Voice assistant + bridge infrastructure</div>
+            <div class="ag-stats-line">0/5 services · no heartbeat</div>
+            <div class="ag-sub-items">
+            <div class="ag-sub-item">
+                <span class="status-dot dot-red"></span>
+                <span class="ag-sub-name">Voice Engine</span>
+                <span class="ag-sub-detail">launchd: jarvis-voice</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-red"></span>
+                <span class="ag-sub-name">Menu Bar</span>
+                <span class="ag-sub-detail">launchd: jarvis-menubar</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-red"></span>
+                <span class="ag-sub-name">Bridge API</span>
+                <span class="ag-sub-detail">launchd: bridge-api</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-red"></span>
+                <span class="ag-sub-name">Bridge Worker</span>
+                <span class="ag-sub-detail">launchd: bridge-worker</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-red"></span>
+                <span class="ag-sub-name">Bridge Tunnel</span>
+                <span class="ag-sub-detail">launchd: bridge-tunnel</span>
+            </div></div>
+            
         </div>
-        <div class="frac-summary-item">
-            <div class="frac-summary-val" style="color:var(--red)">0</div>
-            <div class="frac-summary-lbl">Errors</div>
+        <div class="ag ag-off">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#79c0ff">
+                    <div class="ag-orb-ring" style="border-color:#79c0ff"></div>
+                    A
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#79c0ff">ATLAS</div>
+                    <div class="ag-name">Atlas</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
+            </div>
+            <div class="ag-zone">Mac Mini M4 system monitor · daily hygiene</div>
+            <div class="ag-stats-line">launchd: off · last report: today</div>
+            <div class="ag-sub-items">
+            <div class="ag-sub-item">
+                <span class="status-dot dot-red"></span>
+                <span class="ag-sub-name">Daily Hygiene Cron</span>
+                <span class="ag-sub-detail">09:00 KL time · off</span>
+            </div></div>
+            
+            <details class="sys-atlas-expand">
+                <summary class="sys-expand-sum">Health Checks (8/8)</summary>
+                <div class="sys-health-grid">
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Storage</span>
+                <span class="sys-tile-detail">2% used, 834GB free / 926GB</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Memory</span>
+                <span class="sys-tile-detail">4.9GB free</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Database</span>
+                <span class="sys-tile-detail">pg-main: up, 1 total running</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Network</span>
+                <span class="sys-tile-detail">connected (100.77.209.73)</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Services</span>
+                <span class="sys-tile-detail">4/4 healthy</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Backup</span>
+                <span class="sys-tile-detail">pg-20260428-0300.sql.gz (0.2h ago)</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Code Sync</span>
+                <span class="sys-tile-detail">clean, up to date</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Locks</span>
+                <span class="sys-tile-detail">0 stale</span>
+            </div></div>
+            </details>
+            <details class="sys-atlas-expand">
+                <summary class="sys-expand-sum">Daily Reports (7)</summary>
+                <div class="sys-reports-list">
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-04-28</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-04-27</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-04-26</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-04-25</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-04-24</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div></div>
+            </details>
         </div>
+        <div class="ag ag-degraded">
+            <div class="ag-top">
+                <div class="ag-orb" style="background:#ffa657">
+                    <div class="ag-orb-ring" style="border-color:#ffa657"></div>
+                    D
+                </div>
+                <div class="ag-info">
+                    <div class="ag-id" style="color:#ffa657">DASHBOARD</div>
+                    <div class="ag-name">Dashboard</div>
+                </div>
+                <div class="ag-status"><div class="ag-dot ag-dot-blocked"></div></div>
+            </div>
+            <div class="ag-zone">Self-update pipeline · live feed + rebuild</div>
+            <div class="ag-stats-line">feed: off · rebuild: idle</div>
+            <div class="ag-sub-items">
+            <div class="ag-sub-item">
+                <span class="status-dot dot-red"></span>
+                <span class="ag-sub-name">Live Feed Generator</span>
+                <span class="ag-sub-detail">launchd · off</span>
+            </div>
+            <div class="ag-sub-item">
+                <span class="status-dot dot-green"></span>
+                <span class="ag-sub-name">Dashboard Rebuild</span>
+                <span class="ag-sub-detail">launchd · 3x/day</span>
+            </div></div>
+            
+        </div></div>
+    <details class="sys-section" open>
+        <summary class="sys-section-sum">Services (0 running)</summary>
+        
+    <div class="sys-services">
+        <div class="sys-svc-running"></div>
     </div>
-
-    
-        <div class="frac-orch">
-            <span class="frac-orch-mode">Mode: <strong>claude-claude</strong></span>
-            <span class="frac-orch-budget">Claude $?/d &middot; Codex $?/d</span>
-        </div>
-    
-            <div class="frac-usage-card" style="border-left: 3px solid #ff6b35">
-                <div class="frac-usage-header">
-                    <span class="frac-usage-name" style="color:#ff6b35">Claude</span>
-                    <span class="frac-usage-plan">Max</span>
-                </div>
-                <div class="frac-usage-stats">
-                    <div class="frac-stat">
-                        <div class="frac-stat-val">0</div>
-                        <div class="frac-stat-lbl">tokens/month</div>
-                    </div>
-                    <div class="frac-stat">
-                        <div class="frac-stat-val">$0</div>
-                        <div class="frac-stat-lbl">API-eq cost</div>
-                    </div>
-                    <div class="frac-stat">
-                        <div class="frac-stat-val">18.9x</div>
-                        <div class="frac-stat-lbl">savings</div>
-                    </div>
-                </div>
-            </div>
-            <div class="frac-usage-card" style="border-left: 3px solid #3fb950">
-                <div class="frac-usage-header">
-                    <span class="frac-usage-name" style="color:#3fb950">Codex</span>
-                    <span class="frac-usage-plan">Plus</span>
-                </div>
-                <div class="frac-usage-stats">
-                    <div class="frac-stat">
-                        <div class="frac-stat-val">0</div>
-                        <div class="frac-stat-lbl">tokens/month</div>
-                    </div>
-                    <div class="frac-stat">
-                        <div class="frac-stat-val">$0</div>
-                        <div class="frac-stat-lbl">API-eq cost</div>
-                    </div>
-                    <div class="frac-stat">
-                        <div class="frac-stat-val">198.4x</div>
-                        <div class="frac-stat-lbl">savings</div>
-                    </div>
-                </div>
-            </div>
-
-    <details class="frac-details" open>
-        <summary class="frac-details-sum">Active Processes (13)</summary>
-        <div class="tbl-wrap">
-        <table class="frac-table">
-        <thead><tr><th></th><th>Process</th><th>PID</th><th>CPU</th><th>RAM</th><th>Since</th></tr></thead>
-        <tbody>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#ff6b3520;color:#ff6b35">C</span></td>
-            <td class="frac-cmd">claude</td>
-            <td class="frac-pid">34667</td>
-            <td class="frac-cpu">2.8%</td>
-            <td class="frac-ram frac-ram-high">388 MB</td>
-            <td class="frac-started">6:46PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#3fb95020;color:#3fb950">X</span></td>
-            <td class="frac-cmd">OpenAI Codex</td>
-            <td class="frac-pid">19293</td>
-            <td class="frac-cpu">1.8%</td>
-            <td class="frac-ram frac-ram-mid">115 MB</td>
-            <td class="frac-started">2:01PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#8b949e20;color:#8b949e">N</span></td>
-            <td class="frac-cmd">/Applications/Obsidian.app/Contents/Frameworks/Obsidian Help</td>
-            <td class="frac-pid">38383</td>
-            <td class="frac-cpu">0.7%</td>
-            <td class="frac-ram frac-ram-mid">79 MB</td>
-            <td class="frac-started">6:51PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#ff6b3520;color:#ff6b35">C</span></td>
-            <td class="frac-cmd">claude</td>
-            <td class="frac-pid">12414</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">22 MB</td>
-            <td class="frac-started">1:53PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#06b6d420;color:#06b6d4">M</span></td>
-            <td class="frac-cmd">MCP: Linear</td>
-            <td class="frac-pid">34767</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">15 MB</td>
-            <td class="frac-started">6:46PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#06b6d420;color:#06b6d4">M</span></td>
-            <td class="frac-cmd">MCP: Obsidian</td>
-            <td class="frac-pid">34853</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">13 MB</td>
-            <td class="frac-started">6:46PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#06b6d420;color:#06b6d4">M</span></td>
-            <td class="frac-cmd">MCP: Linear</td>
-            <td class="frac-pid">12527</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">12 MB</td>
-            <td class="frac-started">1:53PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#06b6d420;color:#06b6d4">M</span></td>
-            <td class="frac-cmd">MCP: Exa Search</td>
-            <td class="frac-pid">34927</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">11 MB</td>
-            <td class="frac-started">6:46PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#8b949e20;color:#8b949e">N</span></td>
-            <td class="frac-cmd">node /Users/pirajoke/.npm/_npx/590bd8cfc4710544/node_modules</td>
-            <td class="frac-pid">34818</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">11 MB</td>
-            <td class="frac-started">6:46PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#06b6d420;color:#06b6d4">M</span></td>
-            <td class="frac-cmd">MCP: Obsidian</td>
-            <td class="frac-pid">19666</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">5 MB</td>
-            <td class="frac-started">2:02PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#06b6d420;color:#06b6d4">M</span></td>
-            <td class="frac-cmd">MCP: Obsidian</td>
-            <td class="frac-pid">19354</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">5 MB</td>
-            <td class="frac-started">2:02PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#3fb95020;color:#3fb950">X</span></td>
-            <td class="frac-cmd">OpenAI Codex</td>
-            <td class="frac-pid">19288</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">4 MB</td>
-            <td class="frac-started">2:01PM</td>
-        </tr>
-        <tr>
-            <td><span class="frac-type-badge" style="background:#06b6d420;color:#06b6d4">M</span></td>
-            <td class="frac-cmd">MCP: Exa Search</td>
-            <td class="frac-pid">12638</td>
-            <td class="frac-cpu">0.0%</td>
-            <td class="frac-ram ">2 MB</td>
-            <td class="frac-started">1:53PM</td>
-        </tr></tbody>
-        </table>
-        </div>
+        <details class="sys-idle-toggle">
+            <summary class="sys-expand-sum">Idle/Stopped (2)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-rebuild</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">log-rotate</span><span class="sys-svc-status">idle</span></div></div>
+        </details>
     </details>
-
-    <details class="frac-details">
-        <summary class="frac-details-sum">LaunchD Services (2) &mdash; 1 running, 1 idle, 0 errors</summary>
-        <div class="tbl-wrap">
-        <table class="frac-table">
-        <thead><tr><th></th><th>Service</th><th>PID</th><th>Status</th></tr></thead>
-        <tbody>
-        <tr>
-            <td><span class="status-dot dot-green"></span></td>
-            <td class="frac-svc-name">dashboard-rebuild</td>
-            <td class="frac-pid">41519</td>
-            <td class="frac-status frac-status-running">running</td>
-        </tr>
-        <tr>
-            <td><span class="status-dot dot-dim"></span></td>
-            <td class="frac-svc-name">log-rotate</td>
-            <td class="frac-pid"></td>
-            <td class="frac-status frac-status-idle">idle</td>
-        </tr></tbody>
-        </table>
-        </div>
+    <details class="sys-section">
+        <summary class="sys-section-sum">Recent Events (10)</summary>
+        <div class="sys-events"><div class="sys-event"><span class="sys-evt-time">19:08</span><span class="sys-evt-dot" style="background:var(--green)"></span><span class="sys-evt-type">task_complete</span><span class="sys-evt-issue">PER-26</span><span class="sys-evt-agent">COORDINATOR</span></div><div class="sys-event"><span class="sys-evt-time">18:39</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-93</span><span class="sys-evt-agent"></span></div><div class="sys-event"><span class="sys-evt-time">18:26</span><span class="sys-evt-dot" style="background:var(--red)"></span><span class="sys-evt-type">task_failed</span><span class="sys-evt-issue">PER-26</span><span class="sys-evt-agent">COORDINATOR</span></div><div class="sys-event"><span class="sys-evt-time">19:03</span><span class="sys-evt-dot" style="background:var(--green)"></span><span class="sys-evt-type">task_complete</span><span class="sys-evt-issue">PER-148</span><span class="sys-evt-agent">COORDINATOR</span></div><div class="sys-event"><span class="sys-evt-time">18:47</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-137</span><span class="sys-evt-agent"></span></div><div class="sys-event"><span class="sys-evt-time">18:34</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-136</span><span class="sys-evt-agent"></span></div><div class="sys-event"><span class="sys-evt-time">18:21</span><span class="sys-evt-dot" style="background:var(--green)"></span><span class="sys-evt-type">task_complete</span><span class="sys-evt-issue">PER-135</span><span class="sys-evt-agent">VAULT</span></div><div class="sys-event"><span class="sys-evt-time">18:03</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-133</span><span class="sys-evt-agent"></span></div></div>
     </details>
-    
 </div>
 
-<div class="footer">command center v3 // 5 agents // 2026-04-28 17:55:58 ICT</div>
+<!-- Costs Section -->
+<div class="section" id="costs">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--yellow)"></div>
+        <div class="section-title">Costs</div>
+        <div class="section-count">$243/mo</div>
+    </div>
+    
+    
+    <div class="cost-total">
+        <div class="cost-total-item">
+            <span class="cost-total-lbl">Subscriptions</span>
+            <span class="cost-total-val">$243/mo</span>
+        </div>
+        <div class="cost-total-item">
+            <span class="cost-total-lbl">AI Token Usage</span>
+            <span class="cost-total-val">$0/mo</span>
+        </div>
+        <div class="cost-total-item cost-total-sum">
+            <span class="cost-total-lbl">Total</span>
+            <span class="cost-total-val">$243/mo</span>
+        </div>
+    </div>
+    
+        <div class="cost-orch">
+            <span>Mode: <strong>claude-claude</strong></span>
+            <span>Claude $?/d</span>
+            <span>Codex $?/d</span>
+        </div>
+    
+        <div class="cost-token-card" style="border-left: 3px solid #ff6b35">
+            <div class="cost-token-header">
+                <span class="cost-token-name" style="color:#ff6b35">Claude</span>
+                <span class="cost-token-plan">Max</span>
+            </div>
+            <div class="cost-token-stats">
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">0</div>
+                    <div class="cost-token-lbl">tokens/mo</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">$0</div>
+                    <div class="cost-token-lbl">API-eq</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">18.9x</div>
+                    <div class="cost-token-lbl">savings</div>
+                </div>
+            </div>
+        </div>
+        <div class="cost-token-card" style="border-left: 3px solid #3fb950">
+            <div class="cost-token-header">
+                <span class="cost-token-name" style="color:#3fb950">Codex</span>
+                <span class="cost-token-plan">Plus</span>
+            </div>
+            <div class="cost-token-stats">
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">0</div>
+                    <div class="cost-token-lbl">tokens/mo</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">$0</div>
+                    <div class="cost-token-lbl">API-eq</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">198.4x</div>
+                    <div class="cost-token-lbl">savings</div>
+                </div>
+            </div>
+        </div>
+    <details class="cost-subs-details" open>
+        <summary class="sys-expand-sum">Subscriptions (5)</summary>
+        <div class="cost-sub-list">
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">Claude Code</span>
+            <span class="cost-sub-cost">$200</span>
+            <span class="cost-sub-renew renew-soon">May 05</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">OpenAI / Codex</span>
+            <span class="cost-sub-cost">$20</span>
+            <span class="cost-sub-renew renew-normal">May 10</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">Krisp</span>
+            <span class="cost-sub-cost">$8</span>
+            <span class="cost-sub-renew renew-urgent">May 01</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">SuperWhisper</span>
+            <span class="cost-sub-cost">$8</span>
+            <span class="cost-sub-renew renew-urgent">May 01</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">Render</span>
+            <span class="cost-sub-cost">$7</span>
+            <span class="cost-sub-renew renew-urgent">May 01</span>
+        </div></div>
+    </details>
+</div>
+
+<div class="footer">command center v4 // 5 agents // 2026-04-28 18:39:43 ICT</div>
 
 </main>
 </div>
@@ -3902,6 +4235,32 @@ document.querySelectorAll('.agent-model-item').forEach(el => {
 });
 refreshLocalServices();
 setInterval(refreshLocalServices, 15000);
+
+// ══════════════════════════════════════════════════════════════
+// ── Atlas: Hygiene Timer ──
+// ══════════════════════════════════════════════════════════════
+(function initHygieneTimer() {
+    function update() {
+        var el = document.getElementById('hygiene-timer');
+        if (!el) return;
+        var now = new Date();
+        var utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+        var klNow = new Date(utcMs + 8 * 3600000);
+        var next = new Date(klNow);
+        next.setHours(9, 0, 0, 0);
+        if (klNow.getHours() >= 9) next.setDate(next.getDate() + 1);
+        var diffMs = next.getTime() - klNow.getTime();
+        var hours = Math.floor(diffMs / 3600000);
+        var mins = Math.floor((diffMs % 3600000) / 60000);
+        if (hours === 0 && mins <= 5) {
+            el.innerHTML = '<span class="timer-active">Running now...</span>';
+        } else {
+            el.textContent = hours + 'h ' + mins + 'm';
+        }
+    }
+    update();
+    setInterval(update, 60000);
+})();
 
 </script>
 </body>
