@@ -889,85 +889,155 @@ body {
 }
 
 /* ── Agent grid ── */
+/* ── Topology Map ── */
+.topo-map {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+}
+.topo-svg {
+    width: 100%;
+    max-width: 620px;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+/* ── Agent Grid — 2 columns ── */
 .agents {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
 }
 .ag {
     background: var(--card);
     backdrop-filter: var(--glass);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
     border-radius: var(--radius);
-    padding: 1rem;
-    transition: all 0.2s ease;
+    padding: 1.25rem 1.25rem 1rem;
+    transition: all 0.25s ease;
     position: relative;
     overflow: hidden;
 }
 .ag:hover {
     border-color: rgba(249,115,22,0.25);
+    border-left-color: rgba(249,115,22,0.25);
     transform: translateY(-2px);
     box-shadow: 0 8px 30px rgba(0,0,0,0.2), 0 0 20px rgba(249,115,22,0.06);
 }
-.ag-active { border-color: rgba(34,197,94,0.2); }
-.ag-active::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--green), transparent);
-    opacity: 0.6;
+
+/* ── Health state: Active ── */
+.ag-active {
+    border-left-color: var(--green);
+    box-shadow: inset 3px 0 12px -6px rgba(34,197,94,0.15);
 }
-.ag-blocked { border-color: rgba(239,68,68,0.2); }
-.ag-blocked::after {
-    content: '';
+.ag-active:hover { border-left-color: var(--green); }
+
+/* ── Health state: Degraded ── */
+.ag-degraded {
+    border-left-color: var(--yellow);
+    box-shadow: inset 3px 0 12px -6px rgba(234,179,8,0.15);
+}
+.ag-degraded:hover { border-left-color: var(--yellow); }
+
+/* ── Health state: Off ── */
+.ag-off {
+    opacity: 0.45;
+    border-left-color: var(--dim);
+}
+.ag-off .ag-orb {
+    filter: grayscale(1);
+}
+.ag-off:hover {
+    opacity: 0.65;
+    border-left-color: var(--dim);
+}
+
+/* ── Health badges ── */
+.ag-badge-offline {
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
+    top: 10px; right: 10px;
     background: var(--red);
-    opacity: 0.4;
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.08em;
+    z-index: 2;
 }
+.ag-badge-degraded {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: var(--yellow);
+    color: var(--bg);
+    font-size: 0.55rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.08em;
+    z-index: 2;
+}
+
 .ag-top {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    margin-bottom: 0.5rem;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
 }
 .ag-orb {
-    width: 36px; height: 36px;
-    border-radius: 10px;
+    width: 48px; height: 48px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.5rem;
+    font-size: 0.7rem;
     font-weight: 800;
     font-family: 'JetBrains Mono', monospace;
     color: var(--bg);
     letter-spacing: 0.05em;
     flex-shrink: 0;
     position: relative;
+    transition: filter 0.3s;
 }
 .ag-orb-ring {
     position: absolute;
-    inset: -3px;
-    border-radius: 12px;
+    inset: -4px;
+    border-radius: 17px;
     border: 1.5px solid;
     opacity: 0.2;
 }
-.ag-active .ag-orb-ring {
-    animation: pulse 3s ease-in-out infinite;
+.ag-orb-active .ag-orb-ring {
+    animation: orbPulse 3s ease-in-out infinite;
     opacity: 0.4;
 }
-.ag-info .ag-id {
-    font-size: 0.55rem;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.08em;
-    opacity: 0.5;
+@keyframes orbPulse {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.05); }
 }
+.ag-orb-degraded .ag-orb-ring {
+    animation: orbBlink 4s ease-in-out infinite;
+}
+@keyframes orbBlink {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.05; }
+}
+
 .ag-info .ag-name {
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 700;
+    line-height: 1.2;
+}
+.ag-zone-inline {
+    font-size: 0.72rem;
+    color: var(--dim);
+    margin-top: 2px;
+    line-height: 1.35;
 }
 .ag-status {
     display: flex;
@@ -976,30 +1046,61 @@ body {
     margin-left: auto;
 }
 .ag-dot {
-    width: 8px; height: 8px;
+    width: 10px; height: 10px;
     border-radius: 50%;
 }
 .ag-dot-active {
     background: var(--green);
     animation: ringPulse 2s ease-out infinite;
 }
-.ag-dot-idle { background: var(--yellow); opacity: 0.6; }
+.ag-dot-idle { background: var(--dim); opacity: 0.6; }
 .ag-dot-blocked {
-    background: var(--red);
+    background: var(--yellow);
     animation: ringPulse 2s ease-out infinite;
-    --ring-color: var(--red);
+    --ring-color: var(--yellow);
 }
 @keyframes ringPulse {
     0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
     70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
     100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
 }
-.ag-zone {
-    font-size: 0.68rem;
-    color: var(--dim);
+
+/* ── Stat pills ── */
+.ag-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
     margin-bottom: 0.5rem;
-    line-height: 1.35;
-    min-height: 1.8em;
+}
+.ag-pill {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.68rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+    white-space: nowrap;
+}
+
+/* ── Collapsible sub-items ── */
+.ag-sub-expand {
+    margin-top: 0.4rem;
+}
+.ag-sub-toggle {
+    font-size: 0.72rem;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 0;
+    font-weight: 500;
+    list-style: none;
+}
+.ag-sub-toggle::before {
+    content: '\25B8 ';
+    font-size: 0.65rem;
+}
+.ag-sub-expand[open] .ag-sub-toggle::before {
+    content: '\25BE ';
 }
 .ag-merged {
     font-size: 0.55rem;
@@ -1830,7 +1931,7 @@ tr:last-child td { border-bottom: none; }
 
 /* ── Responsive ── */
 @media (max-width: 1200px) {
-    .agents { grid-template-columns: repeat(3, 1fr); }
+    .agents { grid-template-columns: repeat(2, 1fr); }
     .stats { grid-template-columns: repeat(3, 1fr); }
     .caps-grid { grid-template-columns: repeat(2, 1fr); }
     .orch-agents-detail { grid-template-columns: 1fr; }
@@ -2145,7 +2246,7 @@ tr:last-child td { border-bottom: none; }
 @media (max-width: 768px) {
     .sidebar { display: none; }
     .main { margin-left: 0; padding: 1rem; }
-    .agents { grid-template-columns: repeat(2, 1fr); }
+    .agents { grid-template-columns: 1fr; }
     .stats { grid-template-columns: repeat(2, 1fr); }
     .caps-grid { grid-template-columns: 1fr; }
     .live-grid { grid-template-columns: 1fr; }
@@ -2158,24 +2259,17 @@ tr:last-child td { border-bottom: none; }
 }
 
 /* ── Real Agent sub-items ── */
-.ag-stats-line {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--text2);
-    margin-top: 0.25rem;
-    padding: 0 0.25rem;
-}
 .ag-sub-items {
-    margin-top: 0.5rem;
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
     border-top: 1px solid var(--border);
-    padding-top: 0.4rem;
 }
 .ag-sub-item {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 3px 4px;
-    font-size: 0.7rem;
+    font-size: 0.72rem;
 }
 .ag-sub-name {
     color: var(--text);
@@ -2730,7 +2824,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-04-28 18:39:43 ICT</span>
+            <span>2026-04-28 19:00:07 ICT</span>
         </div>
     </div>
 </nav>
@@ -2743,7 +2837,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-04-28 18:39:43 ICT</span>
+        <span class="tm-item">2026-04-28 19:00:07 ICT</span>
     </div>
 </div>
 
@@ -2962,10 +3056,10 @@ tr:last-child td { border-bottom: none; }
         <tr>
             <td class="proj-name">Zerkalo-Kommunikacii</td>
             <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">71</td>
+            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">77</td>
             <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:85%"></div></div>
-                <span class="ptxt">85%</span>
+                <div class="pbar"><div class="pfill pfill-high" style="width:84%"></div></div>
+                <span class="ptxt">84%</span>
             </td>
             <td class="fresh-hot">0d</td>
             <td class="next-action">—</td>
@@ -3156,148 +3250,166 @@ tr:last-child td { border-bottom: none; }
                 <span>Containers: 0/0</span>
             </div>
         </div>
+    
+    <div class="topo-map">
+        <svg viewBox="0 0 620 290" xmlns="http://www.w3.org/2000/svg" class="topo-svg">
+            <line x1="300" y1="40" x2="520" y2="40" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="100" y2="140" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="300" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="500" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="500" y1="140" x2="500" y2="240" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="300" cy="40" r="14" fill="#ff6b35" opacity="1"/><text x="300" y="68" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CLAUDE</text><circle cx="300" cy="40" r="14" fill="none" stroke="#ff6b35" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="140" r="14" fill="#3fb950" opacity="1"/><text x="100" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CODEX</text><circle cx="100" cy="140" r="14" fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="300" cy="140" r="14" fill="#58a6ff" opacity="0.35"/><text x="300" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">JARVIS</text><circle cx="500" cy="140" r="14" fill="#79c0ff" opacity="0.35"/><text x="500" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">ATLAS</text><circle cx="500" cy="240" r="14" fill="#ffa657" opacity="1"/><text x="500" y="268" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">DASHBOARD</text><circle cx="520" cy="40" r="10" fill="#71717a" opacity="1"/><text x="520" y="64" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="7.5" font-family="JetBrains Mono, monospace" font-weight="600">MCP</text><circle cx="520" cy="40" r="10" fill="none" stroke="#71717a" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="10" to="20" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle>
+        </svg>
+    </div>
     <div class="agents">
         <div class="ag ag-active">
+            
             <div class="ag-top">
-                <div class="ag-orb" style="background:#ff6b35">
+                <div class="ag-orb ag-orb-active" style="background:#ff6b35">
                     <div class="ag-orb-ring" style="border-color:#ff6b35"></div>
                     C
                 </div>
                 <div class="ag-info">
-                    <div class="ag-id" style="color:#ff6b35">CLAUDE</div>
                     <div class="ag-name">Claude Code</div>
+                    <div class="ag-zone-inline">AI coding sessions + MCP servers</div>
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-zone">AI coding sessions + MCP servers</div>
-            <div class="ag-stats-line">2 sessions · 5 MCP servers · 367 MB RAM</div>
-            <div class="ag-sub-items">
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">Session PID 34667</span>
-                <span class="ag-sub-detail">CPU 6,0% · 365 MB</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">Session PID 63304</span>
-                <span class="ag-sub-detail">CPU 0,0% · 2 MB</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">MCP: Exa Search</span>
-                <span class="ag-sub-detail">PID 34927 · 4 MB</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">MCP: Obsidian</span>
-                <span class="ag-sub-detail">PID 34853 · 9 MB</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">MCP: Linear</span>
-                <span class="ag-sub-detail">PID 34767 · 15 MB</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">MCP: Obsidian</span>
-                <span class="ag-sub-detail">PID 19666 · 5 MB</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">MCP: Obsidian</span>
-                <span class="ag-sub-detail">PID 19354 · 5 MB</span>
-            </div></div>
+            <div class="ag-pills"><span class="ag-pill">1 session</span><span class="ag-pill">5 MCP servers</span><span class="ag-pill">24 MB RAM</span></div>
+            
+            <details class="ag-sub-expand">
+                <summary class="ag-sub-toggle">Running processes (6)</summary>
+                <div class="ag-sub-items">
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 34667</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 24 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Exa Search</span>
+                    <span class="ag-sub-detail">PID 34927 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 34853 · 6 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Linear</span>
+                    <span class="ag-sub-detail">PID 34767 · 5 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 19666 · 5 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 19354 · 5 MB</span>
+                </div></div>
+            </details>
             
         </div>
         <div class="ag ag-active">
+            
             <div class="ag-top">
-                <div class="ag-orb" style="background:#3fb950">
+                <div class="ag-orb ag-orb-active" style="background:#3fb950">
                     <div class="ag-orb-ring" style="border-color:#3fb950"></div>
                     X
                 </div>
                 <div class="ag-info">
-                    <div class="ag-id" style="color:#3fb950">CODEX</div>
                     <div class="ag-name">OpenAI Codex</div>
+                    <div class="ag-zone-inline">AI code execution + task runner</div>
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-zone">AI code execution + task runner</div>
-            <div class="ag-stats-line">2 processes · 135 MB RAM</div>
-            <div class="ag-sub-items">
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">Codex PID 19293</span>
-                <span class="ag-sub-detail">CPU 3,9% · 131 MB</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">Codex PID 19288</span>
-                <span class="ag-sub-detail">CPU 0,0% · 4 MB</span>
-            </div></div>
+            <div class="ag-pills"><span class="ag-pill">2 processes</span><span class="ag-pill">116 MB RAM</span></div>
+            
+            <details class="ag-sub-expand">
+                <summary class="ag-sub-toggle">Running processes (2)</summary>
+                <div class="ag-sub-items">
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Codex PID 19293</span>
+                    <span class="ag-sub-detail">CPU 9.8% · 112 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Codex PID 19288</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 4 MB</span>
+                </div></div>
+            </details>
             
         </div>
         <div class="ag ag-off">
+            <span class="ag-badge-offline">OFFLINE</span>
             <div class="ag-top">
-                <div class="ag-orb" style="background:#58a6ff">
+                <div class="ag-orb ag-orb-off" style="background:#58a6ff">
                     <div class="ag-orb-ring" style="border-color:#58a6ff"></div>
                     J
                 </div>
                 <div class="ag-info">
-                    <div class="ag-id" style="color:#58a6ff">JARVIS</div>
                     <div class="ag-name">JARVIS</div>
+                    <div class="ag-zone-inline">Voice assistant + bridge infrastructure</div>
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
             </div>
-            <div class="ag-zone">Voice assistant + bridge infrastructure</div>
-            <div class="ag-stats-line">0/5 services · no heartbeat</div>
-            <div class="ag-sub-items">
-            <div class="ag-sub-item">
-                <span class="status-dot dot-red"></span>
-                <span class="ag-sub-name">Voice Engine</span>
-                <span class="ag-sub-detail">launchd: jarvis-voice</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-red"></span>
-                <span class="ag-sub-name">Menu Bar</span>
-                <span class="ag-sub-detail">launchd: jarvis-menubar</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-red"></span>
-                <span class="ag-sub-name">Bridge API</span>
-                <span class="ag-sub-detail">launchd: bridge-api</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-red"></span>
-                <span class="ag-sub-name">Bridge Worker</span>
-                <span class="ag-sub-detail">launchd: bridge-worker</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-red"></span>
-                <span class="ag-sub-name">Bridge Tunnel</span>
-                <span class="ag-sub-detail">launchd: bridge-tunnel</span>
-            </div></div>
+            <div class="ag-pills"><span class="ag-pill">0/5 services</span><span class="ag-pill">no heartbeat</span></div>
+            
+            <details class="ag-sub-expand">
+                <summary class="ag-sub-toggle">Running processes (5)</summary>
+                <div class="ag-sub-items">
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-red"></span>
+                    <span class="ag-sub-name">Voice Engine</span>
+                    <span class="ag-sub-detail">launchd: jarvis-voice</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-red"></span>
+                    <span class="ag-sub-name">Menu Bar</span>
+                    <span class="ag-sub-detail">launchd: jarvis-menubar</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-red"></span>
+                    <span class="ag-sub-name">Bridge API</span>
+                    <span class="ag-sub-detail">launchd: bridge-api</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-red"></span>
+                    <span class="ag-sub-name">Bridge Worker</span>
+                    <span class="ag-sub-detail">launchd: bridge-worker</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-red"></span>
+                    <span class="ag-sub-name">Bridge Tunnel</span>
+                    <span class="ag-sub-detail">launchd: bridge-tunnel</span>
+                </div></div>
+            </details>
             
         </div>
         <div class="ag ag-off">
+            <span class="ag-badge-offline">OFFLINE</span>
             <div class="ag-top">
-                <div class="ag-orb" style="background:#79c0ff">
+                <div class="ag-orb ag-orb-off" style="background:#79c0ff">
                     <div class="ag-orb-ring" style="border-color:#79c0ff"></div>
                     A
                 </div>
                 <div class="ag-info">
-                    <div class="ag-id" style="color:#79c0ff">ATLAS</div>
                     <div class="ag-name">Atlas</div>
+                    <div class="ag-zone-inline">Mac Mini M4 system monitor · daily hygiene</div>
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
             </div>
-            <div class="ag-zone">Mac Mini M4 system monitor · daily hygiene</div>
-            <div class="ag-stats-line">launchd: off · last report: today</div>
-            <div class="ag-sub-items">
-            <div class="ag-sub-item">
-                <span class="status-dot dot-red"></span>
-                <span class="ag-sub-name">Daily Hygiene Cron</span>
-                <span class="ag-sub-detail">09:00 KL time · off</span>
-            </div></div>
+            <div class="ag-pills"><span class="ag-pill">launchd: off</span><span class="ag-pill">last report: today</span></div>
+            
+            <details class="ag-sub-expand">
+                <summary class="ag-sub-toggle">Running processes (1)</summary>
+                <div class="ag-sub-items">
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-red"></span>
+                    <span class="ag-sub-name">Daily Hygiene Cron</span>
+                    <span class="ag-sub-detail">09:00 KL time · off</span>
+                </div></div>
+            </details>
             
             <details class="sys-atlas-expand">
                 <summary class="sys-expand-sum">Health Checks (8/8)</summary>
@@ -3379,41 +3491,45 @@ tr:last-child td { border-bottom: none; }
             </details>
         </div>
         <div class="ag ag-degraded">
+            <span class="ag-badge-degraded">DEGRADED</span>
             <div class="ag-top">
-                <div class="ag-orb" style="background:#ffa657">
+                <div class="ag-orb ag-orb-degraded" style="background:#ffa657">
                     <div class="ag-orb-ring" style="border-color:#ffa657"></div>
                     D
                 </div>
                 <div class="ag-info">
-                    <div class="ag-id" style="color:#ffa657">DASHBOARD</div>
                     <div class="ag-name">Dashboard</div>
+                    <div class="ag-zone-inline">Self-update pipeline · live feed + rebuild</div>
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-blocked"></div></div>
             </div>
-            <div class="ag-zone">Self-update pipeline · live feed + rebuild</div>
-            <div class="ag-stats-line">feed: off · rebuild: idle</div>
-            <div class="ag-sub-items">
-            <div class="ag-sub-item">
-                <span class="status-dot dot-red"></span>
-                <span class="ag-sub-name">Live Feed Generator</span>
-                <span class="ag-sub-detail">launchd · off</span>
-            </div>
-            <div class="ag-sub-item">
-                <span class="status-dot dot-green"></span>
-                <span class="ag-sub-name">Dashboard Rebuild</span>
-                <span class="ag-sub-detail">launchd · 3x/day</span>
-            </div></div>
+            <div class="ag-pills"><span class="ag-pill">feed: off</span><span class="ag-pill">rebuild: running</span></div>
+            
+            <details class="ag-sub-expand">
+                <summary class="ag-sub-toggle">Running processes (2)</summary>
+                <div class="ag-sub-items">
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-red"></span>
+                    <span class="ag-sub-name">Live Feed Generator</span>
+                    <span class="ag-sub-detail">launchd · off</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Dashboard Rebuild</span>
+                    <span class="ag-sub-detail">launchd · 3x/day</span>
+                </div></div>
+            </details>
             
         </div></div>
     <details class="sys-section" open>
-        <summary class="sys-section-sum">Services (0 running)</summary>
+        <summary class="sys-section-sum">Services (1 running)</summary>
         
     <div class="sys-services">
-        <div class="sys-svc-running"></div>
+        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-rebuild</span></div></div>
     </div>
         <details class="sys-idle-toggle">
-            <summary class="sys-expand-sum">Idle/Stopped (2)</summary>
-            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-rebuild</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">log-rotate</span><span class="sys-svc-status">idle</span></div></div>
+            <summary class="sys-expand-sum">Idle/Stopped (1)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">log-rotate</span><span class="sys-svc-status">idle</span></div></div>
         </details>
     </details>
     <details class="sys-section">
@@ -3467,7 +3583,7 @@ tr:last-child td { border-bottom: none; }
                     <div class="cost-token-lbl">API-eq</div>
                 </div>
                 <div class="cost-token-stat">
-                    <div class="cost-token-val">18.9x</div>
+                    <div class="cost-token-val">19.3x</div>
                     <div class="cost-token-lbl">savings</div>
                 </div>
             </div>
@@ -3487,7 +3603,7 @@ tr:last-child td { border-bottom: none; }
                     <div class="cost-token-lbl">API-eq</div>
                 </div>
                 <div class="cost-token-stat">
-                    <div class="cost-token-val">198.4x</div>
+                    <div class="cost-token-val">205.8x</div>
                     <div class="cost-token-lbl">savings</div>
                 </div>
             </div>
@@ -3523,7 +3639,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v4 // 5 agents // 2026-04-28 18:39:43 ICT</div>
+<div class="footer">command center v4 // 5 agents // 2026-04-28 19:00:07 ICT</div>
 
 </main>
 </div>
