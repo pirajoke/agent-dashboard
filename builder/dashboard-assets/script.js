@@ -1,0 +1,816 @@
+// ── Prevent hash-triggered scroll jumps on interactive clicks ──
+(function() {
+    const p = new URLSearchParams(location.search).get('token');
+    if (p) {
+        fetch('http://localhost:7777/api/github/token', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({token: p})
+        }).finally(() => history.replaceState(null, '', location.pathname + location.hash));
+    }
+    // Sidebar nav: scroll + active highlight
+    const navLinks = document.querySelectorAll('.sidebar-nav a[data-target]');
+    navLinks.forEach(a => {
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.dataset.target);
+            if (target) target.scrollIntoView({behavior:'smooth'});
+            navLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    // Scroll spy: highlight active nav on scroll
+    const sections = Array.from(navLinks).map(a => document.querySelector(a.dataset.target)).filter(Boolean);
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(() => {
+                let current = sections[0];
+                for (const s of sections) {
+                    if (s.getBoundingClientRect().top <= 120) current = s;
+                }
+                navLinks.forEach(a => {
+                    a.classList.toggle('active', a.dataset.target === '#' + current.id);
+                });
+                ticking = false;
+            });
+        }
+    });
+})();
+
+const GH_REPO = 'pirajoke/agent-dashboard';
+const GH_MODE_PATH = 'mode-request.json';
+const LOCAL_API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:7777'
+    : window.location.origin;
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Staleness Banner ──
+// ══════════════════════════════════════════════════════════════
+(function initStaleness() {
+    const tsEl = document.querySelector('.topbar-meta .tm-item:last-child');
+    if (!tsEl) return;
+    const tsText = tsEl.textContent.trim();
+    // Parse "2026-04-20 14:30:00 ICT" format
+    const match = tsText.match(/(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/);
+    if (!match) return;
+    const buildTime = new Date(`${match[1]}T${match[2]}+07:00`); // ICT = UTC+7
+    const now = new Date();
+    const ageMin = Math.floor((now - buildTime) / 60000);
+
+    if (ageMin > 30) {
+        const banner = document.createElement('div');
+        banner.className = 'staleness-banner';
+        const ageLabel = ageMin > 1440 ? `${Math.floor(ageMin/1440)}d ago` :
+                         ageMin > 60 ? `${Math.floor(ageMin/60)}h ago` : `${ageMin}m ago`;
+        banner.innerHTML = `<span class="stale-icon">⚠</span> Dashboard data is stale (built ${ageLabel}). <span class="stale-action" onclick="location.reload()">Refresh</span>`;
+        document.querySelector('.main').prepend(banner);
+    }
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: "Since Last Visit" Block ──
+// ══════════════════════════════════════════════════════════════
+(function initSinceLastVisit() {
+    const STORAGE_KEY = 'cc_last_visit';
+    const SNAPSHOT_KEY = 'cc_snapshot';
+    const now = Date.now();
+    const lastVisit = localStorage.getItem(STORAGE_KEY);
+    const prevSnapshot = localStorage.getItem(SNAPSHOT_KEY);
+
+    // Collect current state snapshot
+    const currentSnapshot = {
+        agents: [],
+        projects: [],
+        openTasks: 0,
+        closedTasks: 0,
+    };
+
+    // Parse agents
+    document.querySelectorAll('.ag').forEach(el => {
+        const id = el.querySelector('.ag-id')?.textContent?.trim() || '';
+        const health = el.classList.contains('ag-active') ? 'active' :
+                       el.classList.contains('ag-blocked') ? 'blocked' : 'idle';
+        const tasks = parseInt(el.querySelector('.ag-tasks')?.textContent) || 0;
+        currentSnapshot.agents.push({id, health, tasks});
+    });
+
+    // Parse projects from table
+    document.querySelectorAll('#projects tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim() || '';
+        const status = tr.querySelector('.status-pill')?.textContent?.trim() || '';
+        const open = parseInt(tr.children[2]?.textContent) || 0;
+        currentSnapshot.projects.push({name, status, open});
+        currentSnapshot.openTasks += open;
+    });
+
+    // Parse stats
+    const statVals = document.querySelectorAll('.stat-val');
+    if (statVals.length >= 4) {
+        currentSnapshot.openTasks = parseInt(statVals[2]?.textContent) || 0;
+        currentSnapshot.closedTasks = parseInt(statVals[3]?.textContent) || 0;
+    }
+
+    // Save current visit
+    localStorage.setItem(STORAGE_KEY, now.toString());
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(currentSnapshot));
+
+    // If no previous visit, skip
+    if (!lastVisit || !prevSnapshot) return;
+
+    let prev;
+    try { prev = JSON.parse(prevSnapshot); } catch(e) { return; }
+
+    // Compute diff
+    const changes = [];
+    const lastTime = parseInt(lastVisit);
+    const agoMin = Math.floor((now - lastTime) / 60000);
+    const agoLabel = agoMin > 1440 ? `${Math.floor(agoMin/1440)}d` :
+                     agoMin > 60 ? `${Math.floor(agoMin/60)}h` : `${agoMin}m`;
+
+    // Task delta
+    const taskDelta = currentSnapshot.openTasks - (prev.openTasks || 0);
+    const closedDelta = currentSnapshot.closedTasks - (prev.closedTasks || 0);
+    if (closedDelta > 0) changes.push(`<span class="slv-good">+${closedDelta} tasks completed</span>`);
+    if (taskDelta > 0) changes.push(`<span class="slv-warn">+${taskDelta} new open tasks</span>`);
+    if (taskDelta < 0 && closedDelta <= 0) changes.push(`<span class="slv-good">${Math.abs(taskDelta)} tasks resolved</span>`);
+
+    // Agent health changes
+    const prevAgentMap = {};
+    (prev.agents || []).forEach(a => prevAgentMap[a.id] = a);
+    currentSnapshot.agents.forEach(a => {
+        const pa = prevAgentMap[a.id];
+        if (pa && pa.health !== a.health) {
+            const icon = a.health === 'blocked' ? '🔴' : a.health === 'active' ? '🟢' : '🟡';
+            changes.push(`${icon} <strong>${a.id}</strong> ${pa.health} → ${a.health}`);
+        }
+    });
+
+    // Project changes
+    const prevProjMap = {};
+    (prev.projects || []).forEach(p => prevProjMap[p.name] = p);
+    currentSnapshot.projects.forEach(p => {
+        const pp = prevProjMap[p.name];
+        if (!pp) {
+            changes.push(`<span class="slv-new">New project: ${p.name}</span>`);
+        } else if (pp.status !== p.status) {
+            changes.push(`<strong>${p.name}</strong> status: ${pp.status} → ${p.status}`);
+        }
+    });
+
+    if (changes.length === 0) changes.push('<span class="slv-calm">No changes since your last visit</span>');
+
+    // Render block
+    const block = document.createElement('div');
+    block.className = 'since-last-visit';
+    block.innerHTML = `
+        <div class="slv-header">
+            <span class="slv-title">Since last visit</span>
+            <span class="slv-ago">${agoLabel} ago</span>
+        </div>
+        <div class="slv-items">${changes.map(c => `<div class="slv-item">${c}</div>`).join('')}</div>
+    `;
+
+    // Insert after stats
+    const stats = document.querySelector('.stats');
+    if (stats) stats.after(block);
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Exception-based Agent Display ──
+// ══════════════════════════════════════════════════════════════
+(function initExceptionView() {
+    const agentsContainer = document.querySelector('.agents');
+    if (!agentsContainer) return;
+    const agents = agentsContainer.querySelectorAll('.ag');
+    const healthy = [];
+    const problematic = [];
+    agents.forEach(el => {
+        if (el.classList.contains('ag-active')) healthy.push(el);
+        else problematic.push(el);
+    });
+    // If all healthy or all problematic, don't rearrange
+    if (problematic.length === 0 || healthy.length === 0) return;
+    // Move problematic first
+    problematic.forEach(el => agentsContainer.prepend(el));
+    // Collapse healthy agents
+    if (healthy.length > 2) {
+        const toggle = document.createElement('div');
+        toggle.className = 'agents-collapse-toggle';
+        toggle.innerHTML = `<span class="act-text">Show ${healthy.length} healthy agents</span>`;
+        toggle.style.cursor = 'pointer';
+        let collapsed = true;
+        healthy.forEach(el => el.classList.add('ag-collapsed'));
+        toggle.addEventListener('click', () => {
+            collapsed = !collapsed;
+            healthy.forEach(el => el.classList.toggle('ag-collapsed', collapsed));
+            toggle.querySelector('.act-text').textContent = collapsed
+                ? `Show ${healthy.length} healthy agents`
+                : `Hide healthy agents`;
+        });
+        // Insert toggle after last problematic
+        const lastProb = problematic[problematic.length - 1];
+        lastProb.after(toggle);
+    }
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Builder Dialogue ──
+// ══════════════════════════════════════════════════════════════
+(function initBuilderDialogue() {
+    const feed = document.getElementById('builder-feed');
+    const form = document.getElementById('builder-form');
+    const statusEl = document.getElementById('builder-status');
+    if (!feed) return;
+
+    const esc = (value) => String(value || '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+
+    function shortTime(raw) {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return raw.slice(0, 16);
+        return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    }
+
+    function renderTask(task) {
+        const messages = (task.messages || []).slice(-5).map((m) => `
+            <div class="builder-msg" data-sender="${esc(m.sender)}">
+                <div class="builder-msg-meta">${esc(shortTime(m.created_at))} · ${esc(m.sender)} → ${esc(m.receiver)} · ${esc(m.type)}</div>
+                <div class="builder-msg-body">${esc(m.body).slice(0, 1200)}</div>
+            </div>
+        `).join('');
+        return `
+            <div class="builder-task">
+                <div class="builder-task-head">
+                    <code class="builder-task-id">${esc(task.id)}</code>
+                    <span class="builder-task-role">${esc(task.agent_role || 'AUTO')}</span>
+                    <span class="builder-task-state ${esc(task.status)}">${esc(task.status)}</span>
+                </div>
+                <div class="builder-task-desc">${esc(task.description)}</div>
+                <div class="builder-messages">${messages || '<div class="builder-empty">No dialogue yet</div>'}</div>
+            </div>
+        `;
+    }
+
+    async function refreshBuilder() {
+        try {
+            const res = await fetch('/api/bridge/tasks?limit=12&include_messages=1', {cache: 'no-store'});
+            const data = await res.json();
+            const tasks = data.tasks || [];
+            const builderTasks = tasks.filter((t) => !t.agent_role || String(t.agent_role).toUpperCase() === 'BUILDER');
+            if (statusEl) statusEl.textContent = `${builderTasks.length} recent`;
+            feed.innerHTML = builderTasks.length
+                ? builderTasks.map(renderTask).join('')
+                : '<div class="builder-empty">No Builder tasks yet</div>';
+        } catch (err) {
+            if (statusEl) statusEl.textContent = 'offline';
+            feed.innerHTML = `<div class="builder-empty">Bridge unavailable: ${esc(err.message)}</div>`;
+        }
+    }
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = form.querySelector('[name="description"]');
+            const description = input.value.trim();
+            if (!description) return;
+            form.querySelector('button').disabled = true;
+            try {
+                await fetch('/api/bridge/dispatch', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({description, agent_role: 'BUILDER'})
+                });
+                input.value = '';
+                await refreshBuilder();
+            } finally {
+                form.querySelector('button').disabled = false;
+            }
+        });
+    }
+
+    refreshBuilder();
+    setInterval(refreshBuilder, 5000);
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Cmd+K Command Palette ──
+// ══════════════════════════════════════════════════════════════
+(function initCommandPalette() {
+    // Build palette data
+    const commands = [];
+
+    // Navigation commands
+    document.querySelectorAll('.sidebar-nav a[data-target]').forEach(a => {
+        const label = a.textContent.trim().replace(/\d+$/, '').trim();
+        commands.push({
+            label: `Go to ${label}`,
+            category: 'nav',
+            action: () => { a.click(); }
+        });
+    });
+
+    // Agent commands
+    document.querySelectorAll('.ag').forEach(el => {
+        const id = el.querySelector('.ag-id')?.textContent?.trim();
+        if (id) {
+            commands.push({
+                label: `Agent: ${id}`,
+                category: 'agent',
+                action: () => { el.scrollIntoView({behavior:'smooth'}); el.classList.add('ag-highlight'); setTimeout(()=>el.classList.remove('ag-highlight'),2000); }
+            });
+        }
+    });
+
+    // Project commands
+    document.querySelectorAll('#projects tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim();
+        if (name) {
+            commands.push({
+                label: `Project: ${name}`,
+                category: 'project',
+                action: () => { tr.scrollIntoView({behavior:'smooth'}); tr.classList.add('row-highlight'); setTimeout(()=>tr.classList.remove('row-highlight'),2000); }
+            });
+        }
+    });
+
+    // Focus commands from projects
+    document.querySelectorAll('#projects tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim();
+        if (name) {
+            commands.push({
+                label: `Focus: ${name}`,
+                category: 'focus',
+                action: () => { location.href = `${location.pathname}?focus=${encodeURIComponent(name)}`; }
+            });
+        }
+    });
+
+    // Action commands
+    commands.push({
+        label: 'Rebuild Dashboard',
+        category: 'action',
+        action: () => postLocal('/api/rebuild').then(ok => {
+            if (ok) showToast('Rebuild triggered');
+            else showToast('Local API offline', 'warn');
+        })
+    });
+    commands.push({
+        label: 'Launch Agents',
+        category: 'action',
+        action: () => { document.getElementById('launchBtn')?.click(); }
+    });
+    commands.push({
+        label: 'Refresh Page',
+        category: 'action',
+        action: () => location.reload()
+    });
+    commands.push({
+        label: 'Clear Focus',
+        category: 'action',
+        action: () => { location.href = location.pathname; }
+    });
+
+    // Create palette DOM
+    const palette = document.createElement('div');
+    palette.className = 'cmd-palette hidden';
+    palette.innerHTML = `
+        <div class="cmd-backdrop"></div>
+        <div class="cmd-dialog">
+            <input class="cmd-input" type="text" placeholder="Search commands, agents, projects..." autofocus>
+            <div class="cmd-results"></div>
+            <div class="cmd-footer">
+                <span class="cmd-hint">↑↓ navigate</span>
+                <span class="cmd-hint">↵ select</span>
+                <span class="cmd-hint">esc close</span>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(palette);
+
+    const input = palette.querySelector('.cmd-input');
+    const results = palette.querySelector('.cmd-results');
+    const backdrop = palette.querySelector('.cmd-backdrop');
+    let selectedIdx = 0;
+    let filtered = [];
+
+    function render(query) {
+        filtered = query
+            ? commands.filter(c => c.label.toLowerCase().includes(query.toLowerCase()))
+            : commands.slice(0, 10);
+        selectedIdx = 0;
+        results.innerHTML = filtered.map((c, i) => `
+            <div class="cmd-item ${i===0?'cmd-selected':''}" data-idx="${i}">
+                <span class="cmd-cat">${c.category}</span>
+                <span class="cmd-label">${c.label}</span>
+            </div>
+        `).join('') || '<div class="cmd-empty">No results</div>';
+    }
+
+    function updateSelection() {
+        results.querySelectorAll('.cmd-item').forEach((el, i) => {
+            el.classList.toggle('cmd-selected', i === selectedIdx);
+        });
+        results.querySelector('.cmd-selected')?.scrollIntoView({block:'nearest'});
+    }
+
+    function execute() {
+        if (filtered[selectedIdx]) {
+            close();
+            filtered[selectedIdx].action();
+        }
+    }
+
+    function open() {
+        palette.classList.remove('hidden');
+        input.value = '';
+        render('');
+        setTimeout(() => input.focus(), 50);
+    }
+
+    function close() {
+        palette.classList.add('hidden');
+    }
+
+    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); selectedIdx = Math.min(selectedIdx+1, filtered.length-1); updateSelection(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); selectedIdx = Math.max(selectedIdx-1, 0); updateSelection(); }
+        else if (e.key === 'Enter') { e.preventDefault(); execute(); }
+        else if (e.key === 'Escape') { close(); }
+    });
+    results.addEventListener('click', (e) => {
+        const item = e.target.closest('.cmd-item');
+        if (item) { selectedIdx = parseInt(item.dataset.idx); execute(); }
+    });
+    backdrop.addEventListener('click', close);
+
+    // Global shortcut: Cmd+K or Ctrl+K
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            palette.classList.contains('hidden') ? open() : close();
+        }
+    });
+
+    // Expose for keyboard shortcut
+    window._cmdPalette = { open, close };
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 1: Keyboard Shortcuts ──
+// ══════════════════════════════════════════════════════════════
+(function initKeyboardShortcuts() {
+    const navLinks = document.querySelectorAll('.sidebar-nav a[data-target]');
+    const navArray = Array.from(navLinks);
+
+    document.addEventListener('keydown', (e) => {
+        // Skip if in input/textarea or palette open
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+        // 1-8 for sections
+        const num = parseInt(e.key);
+        if (num >= 1 && num <= navArray.length) {
+            e.preventDefault();
+            navArray[num - 1].click();
+            return;
+        }
+
+        switch(e.key) {
+            case 'r':
+                e.preventDefault();
+                location.reload();
+                break;
+            case '/':
+                e.preventDefault();
+                if (window._cmdPalette) window._cmdPalette.open();
+                break;
+            case '?':
+                showToast('Shortcuts: 1-8 sections, / search, r refresh, ? help');
+                break;
+        }
+    });
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Phase 2: Focus Mode ──
+// ══════════════════════════════════════════════════════════════
+(function initFocusMode() {
+    const params = new URLSearchParams(location.search);
+    const focus = params.get('focus');
+    if (!focus) return;
+
+    const focusLower = focus.toLowerCase();
+
+    // Show focus indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'focus-indicator';
+    indicator.innerHTML = `<span class="focus-label">Focus: <strong>${focus}</strong></span><a class="focus-clear" href="${location.pathname}">× Clear</a>`;
+    document.querySelector('.main')?.prepend(indicator);
+
+    // Filter project rows — hide non-matching
+    document.querySelectorAll('#projects tbody tr, #done tbody tr').forEach(tr => {
+        const name = tr.querySelector('.proj-name')?.textContent?.trim().toLowerCase() || '';
+        if (!name.includes(focusLower)) {
+            tr.style.display = 'none';
+        }
+    });
+
+    // Filter agent cards — dim non-matching
+    document.querySelectorAll('.ag').forEach(el => {
+        const badges = el.querySelector('.ag-badges')?.textContent?.toLowerCase() || '';
+        const id = el.querySelector('.ag-id')?.textContent?.toLowerCase() || '';
+        if (!badges.includes(focusLower) && !id.includes(focusLower)) {
+            el.style.opacity = '0.3';
+            el.style.pointerEvents = 'none';
+        }
+    });
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Toast notification helper ──
+// ══════════════════════════════════════════════════════════════
+function showToast(msg, type) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${type === 'warn' ? 'toast-warn' : 'toast-info'}`;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => { toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ── Existing functionality ──
+// ══════════════════════════════════════════════════════════════
+
+function setOrchMeta(text) {
+    const metaEl = document.querySelector('.orch-meta');
+    if (metaEl) metaEl.textContent = text;
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+async function postLocal(path, data) {
+    try {
+        const res = await fetch(`${LOCAL_API}${path}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data || {})
+        });
+        if (!res.ok) return false;
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function refreshLocalServices() {
+    const summaryEl = document.getElementById('local-services-summary');
+    const listEl = document.getElementById('local-services-list');
+    if (!summaryEl || !listEl) return;
+    try {
+        const res = await fetch(`${LOCAL_API}/api/local-services?ts=${Date.now()}`, {cache: 'no-store'});
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        summaryEl.textContent = `${data.enabled_count}/${data.launchd_total} launchd enabled · ${data.running_count}/${data.total} running`;
+        const rows = (data.items || []).map(item => {
+            const dotCls = item.running
+                ? 'live-health-ok'
+                : (item.status === 'disabled' ? 'live-health-off' : 'live-health-warn');
+            const enabledLabel = item.enabled === null
+                ? item.status
+                : (item.enabled ? 'enabled' : 'disabled');
+            const meta = [enabledLabel, item.kind, item.detail].filter(Boolean).join(' · ');
+            return `<div class="live-svc"><span class="live-dot-sm ${dotCls}"></span><span class="live-svc-name">${escapeHtml(item.name)}</span><span class="live-svc-age">${escapeHtml(meta)}</span></div>`;
+        }).join('');
+        listEl.innerHTML = rows || '<div class="live-empty">No local services configured</div>';
+    } catch (e) {
+        summaryEl.textContent = 'Local API unavailable';
+        listEl.innerHTML = '<div class="live-empty">Open the dashboard on this Mac while `dashboard-server.py` is running to see local service state.</div>';
+    }
+}
+
+async function ensureGithubToken(allowPrompt) {
+    if (!allowPrompt) return false;
+    try {
+        const statusRes = await fetch(`${LOCAL_API}/api/github/token`);
+        if (statusRes.ok) {
+            const status = await statusRes.json();
+            if (status && status.has_token) return true;
+        }
+    } catch (e) {}
+    const token = prompt('GitHub PAT (stored on local dashboard server only):');
+    if (!token) return false;
+    try {
+        const saveRes = await fetch(`${LOCAL_API}/api/github/token`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({token})
+        });
+        return saveRes.ok;
+    } catch (e) {
+        return false;
+    }
+}
+
+document.querySelectorAll('.oslider-item:not(.agent-model-item)').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.addEventListener('click', async function(e) {
+        e.preventDefault(); e.stopPropagation();
+        const modeMap = {'CC':'claude-claude','CX':'claude-codex','XX':'codex-codex'};
+        const mode = modeMap[this.textContent.trim()];
+        if (!mode) return;
+        this.closest('.oslider').querySelectorAll('.oslider-item').forEach(s => s.classList.remove('oslider-active'));
+        this.classList.add('oslider-active');
+        const descMap = {'claude-claude':'Claude + Claude','claude-codex':'Claude + Codex','codex-codex':'Codex + Codex'};
+        const descEl = document.querySelector('.orch-desc');
+        if (descEl) descEl.textContent = descMap[mode] || mode;
+        setOrchMeta('Applying mode...');
+        const localOk = await postLocal('/api/mode', {mode});
+        let ghOk = false;
+        if (localOk) {
+            ghOk = await ghCommit(
+                GH_MODE_PATH,
+                {mode, ts: new Date().toISOString(), source: 'dashboard'},
+                `mode: ${mode}`,
+                {allowPrompt: false}
+            );
+            setOrchMeta(ghOk ? 'Applied locally + synced to GitHub' : 'Applied locally (cloud sync pending)');
+        } else {
+            setOrchMeta('Local API offline; queueing via GitHub...');
+            ghOk = await ghCommit(
+                GH_MODE_PATH,
+                {mode, ts: new Date().toISOString(), source: 'dashboard'},
+                `mode: ${mode}`,
+                {allowPrompt: true}
+            );
+            if (ghOk) setOrchMeta('Queued — applies on next rebuild (~5 min)');
+        }
+        const ok = localOk || ghOk;
+        if (ok) {
+            return;
+        } else {
+            setOrchMeta('Mode switch failed (local + GitHub).');
+            location.reload();
+        }
+    });
+});
+
+// ── Orchestrator ON/OFF toggle — GitHub API + local apply ──
+document.getElementById('orchToggleInput').addEventListener('change', async function() {
+    const cb = this;
+    const on = cb.checked;
+    const grid = document.querySelector('.orch-grid');
+    const status = document.querySelector('.orch-master-status');
+    status.textContent = on ? 'STARTING...' : 'STOPPING...';
+    status.className = 'orch-master-status';
+
+    const localOk = await postLocal('/api/orchestrator/toggle', {active: on});
+    const ghOk = await ghCommit(
+        'pause-request.json',
+        {paused: !on, ts: new Date().toISOString(), source: 'dashboard'},
+        `orchestrator: ${on ? 'resume' : 'pause'}`,
+        {allowPrompt: !localOk}
+    );
+    const applied = localOk || ghOk;
+
+    // 3. Update UI
+    if (on) {
+        grid.classList.remove('orch-disabled');
+        status.textContent = localOk ? 'RUNNING (local)' : (ghOk ? 'RUNNING (queued)' : 'RUNNING (failed)');
+        status.className = 'orch-master-status orch-status-on';
+    } else {
+        grid.classList.add('orch-disabled');
+        status.textContent = localOk ? 'PAUSED (local)' : (ghOk ? 'PAUSED (queued)' : 'PAUSED (failed)');
+        status.className = 'orch-master-status orch-status-off';
+    }
+    if (!applied) {
+        // Revert checkbox if neither method worked
+        cb.checked = !on;
+        status.textContent = on ? 'PAUSED' : 'RUNNING';
+        status.className = on ? 'orch-master-status orch-status-off' : 'orch-master-status orch-status-on';
+        grid.classList.toggle('orch-disabled', on);
+        alert('Could not toggle orchestrator. Check GitHub token or localhost server.');
+    }
+});
+
+// ── Launch Agents ──
+async function ghCommit(path, data, msg, options) {
+    const opts = options || {};
+    const allowPrompt = opts.allowPrompt !== false;
+    const hasToken = await ensureGithubToken(allowPrompt);
+    if (!hasToken) return false;
+    try {
+        const res = await fetch(`${LOCAL_API}/api/github/commit`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({path, message: msg, data})
+        });
+        if (res.ok) return true;
+        if (res.status === 401 && allowPrompt) {
+            await fetch(`${LOCAL_API}/api/github/token`, {method: 'DELETE'});
+            const refreshed = await ensureGithubToken(true);
+            if (!refreshed) return false;
+            const retry = await fetch(`${LOCAL_API}/api/github/commit`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({path, message: msg, data})
+            });
+            return retry.ok;
+        }
+    } catch (e) {}
+    return false;
+}
+
+async function launchAgents() {
+    const btn = document.getElementById('launchBtn');
+    btn.textContent = 'Launching...';
+    btn.classList.add('running');
+    const localOk = await postLocal('/api/orchestrator/run', {source:'dashboard'});
+    const ghOk = await ghCommit(
+        'run-request.json',
+        {action:'run', ts: new Date().toISOString(), source:'dashboard'},
+        'run: launch agents',
+        {allowPrompt: !localOk}
+    );
+    if (localOk || ghOk) {
+        btn.textContent = localOk ? 'Launched now (local)' : 'Queued — starts on next cycle (~5 min)';
+        setTimeout(() => { btn.textContent = 'Launch Agents'; btn.classList.remove('running'); }, 5000);
+    } else {
+        btn.textContent = 'Launch Agents';
+        btn.classList.remove('running');
+    }
+}
+
+// ── Per-agent model switcher ──
+document.querySelectorAll('.agent-model-item').forEach(el => {
+    el.addEventListener('click', async function(e) {
+        e.preventDefault(); e.stopPropagation();
+        const agent = this.dataset.agent;
+        const model = this.dataset.model;
+        if (!agent || !model) return;
+        // Update UI: only within same agent's slider
+        this.closest('.agent-model-slider').querySelectorAll('.oslider-item').forEach(s => s.classList.remove('oslider-active'));
+        this.classList.add('oslider-active');
+        const label = this.closest('.agent-model-card').querySelector('.agent-model-current');
+        if (label) label.textContent = model;
+        const localOk = await postLocal('/api/model', {agent, model});
+        const ghOk = await ghCommit(
+            'model-request.json',
+            {agent, model, ts: new Date().toISOString(), source: 'dashboard'},
+            `model: ${agent}=${model}`,
+            {allowPrompt: !localOk}
+        );
+        if (localOk || ghOk) {
+            if (label) label.textContent = localOk ? (model + ' (applied)') : (model + ' (queued)');
+        } else {
+            // Rollback UI
+            if (label) label.textContent = 'error — reload';
+            setTimeout(() => location.reload(), 2000);
+        }
+    });
+});
+refreshLocalServices();
+setInterval(refreshLocalServices, 15000);
+
+// ══════════════════════════════════════════════════════════════
+// ── Atlas: Hygiene Timer ──
+// ══════════════════════════════════════════════════════════════
+(function initHygieneTimer() {
+    function update() {
+        var el = document.getElementById('hygiene-timer');
+        if (!el) return;
+        var now = new Date();
+        var utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+        var klNow = new Date(utcMs + 8 * 3600000);
+        var next = new Date(klNow);
+        next.setHours(9, 0, 0, 0);
+        if (klNow.getHours() >= 9) next.setDate(next.getDate() + 1);
+        var diffMs = next.getTime() - klNow.getTime();
+        var hours = Math.floor(diffMs / 3600000);
+        var mins = Math.floor((diffMs % 3600000) / 60000);
+        if (hours === 0 && mins <= 5) {
+            el.innerHTML = '<span class="timer-active">Running now...</span>';
+        } else {
+            el.textContent = hours + 'h ' + mins + 'm';
+        }
+    }
+    update();
+    setInterval(update, 60000);
+})();

@@ -7,10 +7,13 @@ Single-page HTML dashboard showing all agents, projects, orchestrator state, liv
 
 | Path | Role |
 |---|---|
-| `~/scripts/build-agent-dashboard.py` | Thin entry point — calls `dashboard_builder` package |
-| `~/scripts/dashboard_builder/` | Modular Python package (config, agents, projects, comms, linear, metrics, codexbar, orchestrator, live, html_builder, md_builder) |
-| `~/scripts/dashboard-assets/style.css` | Extracted CSS |
-| `~/scripts/dashboard-assets/script.js` | Extracted JS (sidebar nav, mode slider, local services probe) |
+| `builder/` | Git-managed source of truth for dashboard builder |
+| `builder/build-agent-dashboard.py` | Thin entry point — calls `dashboard_builder` package |
+| `builder/dashboard_builder/` | Modular Python package (config, agents, projects, comms, linear, metrics, codexbar, orchestrator, live, html_builder, md_builder) |
+| `builder/dashboard-assets/style.css` | Extracted CSS |
+| `builder/dashboard-assets/script.js` | Extracted JS (sidebar nav, mode slider, local services probe) |
+| `builder/deploy_to_scripts.sh` | Copies git-managed source into the Mac Mini runtime `~/scripts` and validates build |
+| `~/scripts/` | Runtime copy used by launchd/rebuild scripts |
 
 ## Output
 
@@ -44,12 +47,18 @@ build-agent-dashboard.py  →  agent-dashboard.html + agents-dashboard.md
 dashboard-rebuild.sh      →  copy to ~/agent-dashboard/index.html + git push
 ```
 
-Both scripts run as launchd services (`com.pirajoke.generate-live-feed`, `com.pirajoke.dashboard-server`).
+The runtime scripts run from `~/scripts`. Source edits should be made in `builder/`, then applied with `builder/deploy_to_scripts.sh`.
 
 ## How to rebuild manually
 
 ```bash
 cd ~/scripts && python3 build-agent-dashboard.py
+```
+
+To apply git-managed source to runtime first:
+
+```bash
+cd ~/agent-dashboard && builder/deploy_to_scripts.sh
 ```
 
 ## Module structure
