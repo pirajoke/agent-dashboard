@@ -32,6 +32,7 @@ Single-page HTML dashboard showing all agents, projects, orchestrator state, liv
 - **Token ledger**: `~/.agent-bridge/token_ledger.jsonl`
 - **CodexBar**: `~/Library/Group Containers/group.com.steipete.codexbar/widget-snapshot.json`
 - **Linear**: via `~/.claude/lib/linear_api.py` CLI
+- **JARVIS Pipeline**: `/Users/pirajoke/jarvis` git checkout, `launchctl` service state, `/tmp/jarvis-bot.err` AIOS startup log, and `/Users/pirajoke/jarvis/data/jarvis.db` `answer_sources`
 
 ## Pipeline
 
@@ -65,9 +66,26 @@ dashboard_builder/
 ├── codexbar.py        # CodexBar provider usage bars
 ├── orchestrator.py    # Mode slider, subscriptions, budgets
 ├── live.py            # Live feed, events, health, Mac Mini panel
+├── jarvis_pipeline.py # JARVIS runtime/deploy/source-aware card
 ├── html_builder.py    # Full HTML assembly
 └── md_builder.py      # Obsidian markdown output
 ```
+
+## JARVIS Pipeline card
+
+The NOW section includes a compact JARVIS Pipeline card. It shows:
+
+- runtime PID from `com.pirajoke.jarvis-bot`;
+- git branch/HEAD and clean checkout status;
+- AIOS startup status and context pack freshness;
+- source-aware answer ledger count from `answer_sources`;
+- deploy script presence;
+- Human Interface Layer presence.
+
+Yellow means the system is running but needs a live Telegram source smoke, usually:
+
+1. `что сейчас по Jarvis?`
+2. `покажи источники`
 
 ## GitHub Pages
 
