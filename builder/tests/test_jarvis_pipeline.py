@@ -114,6 +114,95 @@ class JarvisPipelineTests(unittest.TestCase):
         self.assertTrue(goals["ok"])
         self.assertEqual(goals["month"], "2026-07")
 
+    def test_webhook_delivery_status_reads_fresh_monitor_setting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "jarvis.db"
+            with sqlite3.connect(db) as con:
+                con.execute("create table settings (key text primary key, value text not null)")
+                con.execute(
+                    "insert into settings values (?, ?)",
+                    (
+                        jarvis_pipeline.WEBHOOK_STATUS_SETTING,
+                        json.dumps(
+                            {
+                                "ok": True,
+                                "status": "ok",
+                                "checked_at": "2026-06-30T12:00:00+00:00",
+                                "label": "JARVIS Linear Sync",
+                                "enabled": True,
+                                "failure_count": 0,
+                                "message": "Linear webhook delivery is healthy",
+                            }
+                        ),
+                    ),
+                )
+
+            class _FixedDateTime:
+                @staticmethod
+                def now(tz=None):
+                    from datetime import datetime, timezone
+
+                    return datetime(2026, 6, 30, 12, 10, tzinfo=tz or timezone.utc)
+
+                @staticmethod
+                def fromisoformat(value):
+                    from datetime import datetime
+
+                    return datetime.fromisoformat(value)
+
+            with patch.object(jarvis_pipeline, "JARVIS_DB", db), patch.object(
+                jarvis_pipeline, "datetime", _FixedDateTime
+            ):
+                webhook = jarvis_pipeline._webhook_delivery_status()
+
+        self.assertTrue(webhook["ok"])
+        self.assertEqual(webhook["status"], "ok")
+        self.assertEqual(webhook["detail"], "ok")
+
+    def test_webhook_delivery_status_warns_on_failures_and_stale_checks(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "jarvis.db"
+            with sqlite3.connect(db) as con:
+                con.execute("create table settings (key text primary key, value text not null)")
+                con.execute(
+                    "insert into settings values (?, ?)",
+                    (
+                        jarvis_pipeline.WEBHOOK_STATUS_SETTING,
+                        json.dumps(
+                            {
+                                "ok": False,
+                                "status": "failures",
+                                "checked_at": "2026-06-30T10:00:00+00:00",
+                                "failure_count": 2,
+                                "message": "Linear webhook has 2 delivery failure(s)",
+                            }
+                        ),
+                    ),
+                )
+
+            class _FixedDateTime:
+                @staticmethod
+                def now(tz=None):
+                    from datetime import datetime, timezone
+
+                    return datetime(2026, 6, 30, 12, 0, tzinfo=tz or timezone.utc)
+
+                @staticmethod
+                def fromisoformat(value):
+                    from datetime import datetime
+
+                    return datetime.fromisoformat(value)
+
+            with patch.object(jarvis_pipeline, "JARVIS_DB", db), patch.object(
+                jarvis_pipeline, "datetime", _FixedDateTime
+            ):
+                webhook = jarvis_pipeline._webhook_delivery_status()
+
+        self.assertFalse(webhook["ok"])
+        self.assertEqual(webhook["severity"], "red")
+        self.assertIn("2 failures", webhook["detail"])
+        self.assertIn("stale", webhook["detail"])
+
 
 if __name__ == "__main__":
     unittest.main()

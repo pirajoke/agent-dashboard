@@ -15,6 +15,8 @@ JARVIS_DB = JARVIS_REPO / "data" / "jarvis.db"
 DEPLOY_SCRIPT = JARVIS_REPO / "scripts" / "deploy_macmini.sh"
 JARVIS_LOG = Path("/tmp/jarvis-bot.err")
 LAUNCHD_SERVICE = "gui/501/com.pirajoke.jarvis-bot"
+WEBHOOK_STATUS_SETTING = "linear_webhook:delivery_status"
+WEBHOOK_STATUS_MAX_AGE_MINUTES = 30
 
 
 def _run(args: list[str], *, cwd: Path | None = None, timeout: int = 5) -> str:
@@ -261,7 +263,67 @@ def _goals_status() -> dict:
     return {"ok": ok, "month": month, "detail": detail}
 
 
-def _warning_items(*, git: dict, aios: dict, contract: dict, sync: dict, goals: dict) -> list[str]:
+def _webhook_delivery_status() -> dict:
+    if not JARVIS_DB.exists():
+        return {"ok": False, "status": "missing", "detail": "db missing", "severity": "yellow"}
+    try:
+        con = sqlite3.connect(str(JARVIS_DB))
+        row = con.execute("select value from settings where key = ?", (WEBHOOK_STATUS_SETTING,)).fetchone()
+    except Exception:
+        return {"ok": False, "status": "query_failed", "detail": "query failed", "severity": "yellow"}
+    finally:
+        try:
+            con.close()
+        except Exception:
+            pass
+    if not row:
+        return {"ok": False, "status": "not_checked", "detail": "not checked", "severity": "yellow"}
+    try:
+        data = json.loads(row[0] or "{}")
+    except json.JSONDecodeError:
+        return {"ok": False, "status": "invalid_json", "detail": "invalid monitor JSON", "severity": "yellow"}
+
+    checked_at = str(data.get("checked_at") or "")
+    age_minutes = _age_minutes(checked_at)
+    stale = age_minutes is None or age_minutes > WEBHOOK_STATUS_MAX_AGE_MINUTES
+    status = str(data.get("status") or "unknown")
+    failure_count = int(data.get("failure_count") or 0)
+    enabled = bool(data.get("enabled"))
+    label = str(data.get("label") or "webhook")
+    detail = f"{status}"
+    if failure_count:
+        detail += f" · {failure_count} failures"
+    if stale:
+        detail += " · stale"
+    severity = "red" if status in {"disabled", "failures", "api_error"} else "yellow"
+    ok = bool(data.get("ok")) and not stale
+    return {
+        "ok": ok,
+        "status": status,
+        "detail": detail,
+        "message": str(data.get("message") or detail),
+        "label": label,
+        "enabled": enabled,
+        "failure_count": failure_count,
+        "checked_at": checked_at,
+        "age_minutes": age_minutes,
+        "severity": severity if not ok else "green",
+    }
+
+
+def _age_minutes(value: str) -> float | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return (datetime.now(timezone.utc) - parsed.astimezone(timezone.utc)).total_seconds() / 60
+
+
+def _warning_items(*, git: dict, aios: dict, contract: dict, sync: dict, goals: dict, webhook: dict) -> list[str]:
     warnings: list[str] = []
     if git.get("dirty"):
         warnings.append("JARVIS runtime checkout is dirty.")
@@ -271,6 +333,8 @@ def _warning_items(*, git: dict, aios: dict, contract: dict, sync: dict, goals: 
         warnings.append(f"goals.yaml stale: {goals.get('detail')}.")
     if sync.get("unsynced"):
         warnings.append(f"{sync.get('unsynced')} open Telegram todos are not linked to Linear.")
+    if not webhook.get("ok"):
+        warnings.append(f"Linear webhook delivery: {webhook.get('message') or webhook.get('detail')}.")
     if contract.get("needs_review"):
         warnings.append("Latest intake contract needs review.")
     return warnings[:4]
@@ -283,6 +347,7 @@ def collect_jarvis_pipeline_data() -> dict:
     contract = _latest_intake_contract()
     sync = _todo_sync_status()
     goals = _goals_status()
+    webhook = _webhook_delivery_status()
     aios_line = _tail_matching(JARVIS_LOG, "AIOS context startup:")
     start_line = _tail_matching(JARVIS_LOG, "JARVIS bot started")
     aios = _parse_aios(aios_line)
@@ -298,11 +363,12 @@ def collect_jarvis_pipeline_data() -> dict:
         {"key": "source", "label": "Sources", "ok": ledger["count"] > 0, "detail": f"{ledger['count']} answers"},
         {"key": "contract", "label": "Contract", "ok": contract["ok"], "detail": contract["summary"]},
         {"key": "linear", "label": "Linear Sync", "ok": sync["ok"], "detail": sync["detail"]},
+        {"key": "webhook", "label": "Webhook", "ok": webhook["ok"], "detail": webhook["detail"], "severity": webhook["severity"]},
         {"key": "goals", "label": "Goals", "ok": goals["ok"], "detail": goals["detail"]},
         {"key": "deploy", "label": "Deploy", "ok": DEPLOY_SCRIPT.exists(), "detail": "git script" if DEPLOY_SCRIPT.exists() else "missing"},
         {"key": "human", "label": "Human Layer", "ok": human_layer, "detail": "enabled" if human_layer else "missing"},
     ]
-    warnings = _warning_items(git=git, aios=aios, contract=contract, sync=sync, goals=goals)
+    warnings = _warning_items(git=git, aios=aios, contract=contract, sync=sync, goals=goals, webhook=webhook)
     failed = [c for c in checks if not c["ok"]]
     if not failed:
         status = "green"
@@ -313,6 +379,9 @@ def collect_jarvis_pipeline_data() -> dict:
     elif sync.get("unsynced"):
         status = "yellow"
         next_action = "Sync or triage local Telegram todos without Linear IDs."
+    elif not webhook.get("ok"):
+        status = "red" if webhook.get("severity") == "red" else "yellow"
+        next_action = "Run python -m jarvis.linear_webhook_monitor --config config.yaml --write and inspect Linear webhook failures."
     else:
         status = "yellow"
         next_action = "Run one live source-backed Telegram question, then show sources."
@@ -329,6 +398,7 @@ def collect_jarvis_pipeline_data() -> dict:
         "contract": contract,
         "sync": sync,
         "goals": goals,
+        "webhook": webhook,
         "warnings": warnings,
         "next_action": next_action,
         "collected_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
@@ -343,6 +413,8 @@ def build_jarvis_pipeline_html(data: dict) -> str:
     for check in data.get("checks", []):
         dot = "dot-green" if check.get("ok") else "dot-yellow"
         if check.get("key") in {"runtime", "git", "aios"} and not check.get("ok"):
+            dot = "dot-red"
+        if check.get("key") == "webhook" and check.get("severity") == "red":
             dot = "dot-red"
         checks_html += (
             '<div class="jpipe-check">'
