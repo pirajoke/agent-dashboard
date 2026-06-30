@@ -1928,6 +1928,7 @@ tr:last-child td { border-bottom: none; }
     .caps-grid { grid-template-columns: repeat(2, 1fr); }
     .orch-agents-detail { grid-template-columns: 1fr; }
     .jpipe-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .jpipe-unsynced { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* ── Phase 3: Sparklines ── */
 .sparklines-row {
@@ -2363,6 +2364,8 @@ tr:last-child td { border-bottom: none; }
     .jpipe-head { flex-direction: column; align-items: flex-start; gap: 0.55rem; }
     .jpipe-grid { grid-template-columns: 1fr; }
     .jpipe-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .jpipe-signals,
+    .jpipe-unsynced { grid-template-columns: 1fr; }
 }
 
 /* ── Real Agent sub-items ── */
@@ -2885,6 +2888,81 @@ tr:last-child td { border-bottom: none; }
     border-radius: 8px;
     padding: 0.55rem 0.65rem;
     margin-bottom: 0.65rem;
+}
+.jpipe-signals {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    margin-bottom: 0.65rem;
+}
+.jpipe-signal {
+    min-width: 0;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 0.65rem;
+}
+.jpipe-signal span,
+.jpipe-unsynced-item span {
+    display: block;
+    font-size: 0.55rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.18rem;
+}
+.jpipe-signal strong,
+.jpipe-unsynced-item strong {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.67rem;
+    color: var(--text2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.jpipe-signal em {
+    display: block;
+    margin-top: 0.18rem;
+    font-style: normal;
+    font-size: 0.64rem;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.jpipe-unsynced {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin-bottom: 0.65rem;
+}
+.jpipe-unsynced-item,
+.jpipe-empty {
+    min-width: 0;
+    background: rgba(234,179,8,0.045);
+    border: 1px solid rgba(234,179,8,0.12);
+    border-radius: 8px;
+    padding: 0.48rem 0.55rem;
+}
+.jpipe-empty {
+    grid-column: 1 / -1;
+    font-size: 0.68rem;
+    color: var(--muted);
+}
+.jpipe-warnings {
+    display: grid;
+    gap: 0.35rem;
+    margin-bottom: 0.65rem;
+}
+.jpipe-warnings div {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    font-size: 0.68rem;
+    color: var(--text2);
 }
 .jpipe-next {
     font-size: 0.72rem;
