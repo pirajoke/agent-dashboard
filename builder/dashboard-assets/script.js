@@ -344,6 +344,10 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
 
     function normalizedState(task) {
         const raw = String(task.status || task.state || '').toLowerCase();
+        const outcome = `${task.error || ''} ${task.result || ''}`.toLowerCase();
+        if (outcome.match(/\b(authentication_error|failed|traceback|exception|exit code [1-9]|error: 4\d\d|error: 5\d\d)\b/)) {
+            return 'failed';
+        }
         if (['done', 'complete', 'completed', 'success', 'succeeded'].includes(raw)) return 'done';
         if (['failed', 'error'].includes(raw)) return 'failed';
         if (['blocked', 'waiting', 'needs_input'].includes(raw)) return 'blocked';
