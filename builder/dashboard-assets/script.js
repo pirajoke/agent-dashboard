@@ -309,6 +309,11 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     const drawer = document.getElementById('workshop-drawer');
     const drawerContent = document.getElementById('workshop-drawer-content');
     const drawerClose = document.getElementById('workshop-drawer-close');
+    const selectedTaskEl = document.getElementById('workshop-selected-task');
+    const causalSummaryEl = document.getElementById('workshop-causal-summary');
+    const causalGraphEl = document.getElementById('workshop-causal-graph');
+    const causalReasonsEl = document.getElementById('workshop-causal-reasons');
+    const causalTimelineEl = document.getElementById('workshop-causal-timeline');
     if (!board || !markersEl || !taskList) return;
 
     const AGENT_POSITIONS = {
@@ -330,6 +335,7 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         GITHUB: 'GitHub',
     };
     let latestTasks = [];
+    let selectedTaskId = null;
 
     const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -342,9 +348,29 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         return d.toLocaleString([], {month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'});
     }
 
+    function asText(value) {
+        if (value == null) return '';
+        if (typeof value === 'string') return value;
+        try {
+            return JSON.stringify(value);
+        } catch (_) {
+            return String(value);
+        }
+    }
+
+    function compact(value, limit = 160) {
+        const text = asText(value).replace(/\s+/g, ' ').trim();
+        if (!text) return '';
+        return text.length > limit ? text.slice(0, limit - 3).trim() + '...' : text;
+    }
+
+    function taskId(task) {
+        return String(task?.id ?? '');
+    }
+
     function normalizedState(task) {
         const raw = String(task.status || task.state || '').toLowerCase();
-        const outcome = `${task.error || ''} ${task.result || ''}`.toLowerCase();
+        const outcome = `${task.error || ''} ${asText(task.result)}`.toLowerCase();
         if (outcome.match(/\b(authentication_error|failed|traceback|exception|exit code [1-9]|error: 4\d\d|error: 5\d\d)\b/)) {
             return 'failed';
         }
@@ -358,25 +384,191 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
 
     function taskText(task) {
         const msgText = (task.messages || []).map((m) => [m.sender, m.receiver, m.type, m.body].join(' ')).join(' ');
-        return `${task.description || ''} ${task.agent_role || ''} ${msgText}`.toLowerCase();
+        return `${task.description || ''} ${task.agent_role || ''} ${task.error || ''} ${asText(task.result)} ${msgText}`.toLowerCase();
     }
 
     function deriveAgent(task) {
         const text = taskText(task);
         const role = String(task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
+        if (['ROUTER', 'PLANNER', 'BUILDER', 'TESTER', 'DEPLOYER', 'VAULT', 'GITHUB'].includes(role)) return role;
         if (text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) return 'TESTER';
         if (text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) return 'DEPLOYER';
         if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) return 'VAULT';
         if (text.match(/\b(github|git push|commit|pull request|linear|issue)\b/)) return 'GITHUB';
         if (text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) return 'PLANNER';
         if (text.match(/\b(route|router|telegram intake|intent)\b/)) return 'ROUTER';
-        if (['ROUTER', 'PLANNER', 'BUILDER', 'TESTER', 'DEPLOYER', 'VAULT', 'GITHUB'].includes(role)) return role;
         return 'BUILDER';
     }
 
     function taskTitle(task) {
         const raw = String(task.description || task.title || 'Untitled task').replace(/\s+/g, ' ').trim();
         return raw.length > 110 ? raw.slice(0, 107).trim() + '...' : raw;
+    }
+
+    function agentReason(task, agent) {
+        const text = taskText(task);
+        const role = String(task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
+        if (agent === 'TESTER' && text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) {
+            return 'TESTER selected because the task mentions validation, smoke tests, compile checks, or pytest.';
+        }
+        if (agent === 'DEPLOYER' && text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) {
+            return 'DEPLOYER selected because the task touches rollout, launchd, service restart, or Mac Mini runtime.';
+        }
+        if (agent === 'VAULT' && text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) {
+            return 'VAULT selected because the task needs Obsidian memory, status files, or source-aware notes.';
+        }
+        if (agent === 'GITHUB' && text.match(/\b(github|git push|commit|pull request|linear|issue)\b/)) {
+            return 'GITHUB selected because the task mentions commits, GitHub, pull requests, Linear, or issues.';
+        }
+        if (agent === 'PLANNER' && text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) {
+            return 'PLANNER selected because the task asks for planning, scope, breakdown, handoff, or acceptance criteria.';
+        }
+        if (agent === 'ROUTER' && text.match(/\b(route|router|telegram intake|intent)\b/)) {
+            return 'ROUTER selected because the task is about Telegram intake, routing, or intent detection.';
+        }
+        if (role && AGENT_LABELS[role]) {
+            return `${AGENT_LABELS[role]} selected from explicit Bridge role ${role}.`;
+        }
+        return `${AGENT_LABELS[agent] || agent} selected as the default code/problem-solving agent.`;
+    }
+
+    function inferTools(task) {
+        const text = taskText(task);
+        const rules = [
+            {id: 'telegram', label: 'Telegram', detail: 'user message and bot reply', re: /\b(telegram|bot|intake|reply|message)\b/},
+            {id: 'obsidian', label: 'Obsidian', detail: 'memory, status, project notes', re: /\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|claude\.md)\b/},
+            {id: 'github', label: 'GitHub', detail: 'commits, push, issues, source control', re: /\b(github|git push|commit|pull request|pr\b|issue)\b/},
+            {id: 'repo', label: 'Repo', detail: 'local code checkout', re: /\b(repo|code|fix|patch|script|python|javascript|css|html)\b/},
+            {id: 'tests', label: 'Tests', detail: 'unit tests, smoke checks, compile', re: /\b(pytest|unittest|test|smoke|compileall|validation|node --check)\b/},
+            {id: 'macmini', label: 'Mac Mini', detail: 'production runtime and launchd', re: /\b(mac mini|macmini|launchd|deploy|restart|service|runtime)\b/},
+            {id: 'linear', label: 'Linear', detail: 'project/task tracking', re: /\b(linear|issue|dashboard)\b/},
+        ];
+        const tools = rules.filter((rule) => rule.re.test(text));
+        if (tools.length) return tools;
+        return [{id: 'bridge', label: 'Bridge', detail: 'task queue and agent messages'}];
+    }
+
+    function failureReason(task) {
+        const candidates = [
+            task.error,
+            task.result,
+            ...(task.messages || []).map((message) => message.body),
+        ].map(asText).filter(Boolean);
+        const important = /(authentication_error|permission denied|fatal:|traceback|exception|failed|error:|exit code [1-9]|mmap failed|resource deadlock|blocked)/i;
+        const found = candidates
+            .flatMap((text) => text.split(/\n+/))
+            .map((line) => line.trim())
+            .find((line) => important.test(line));
+        if (!found) return '';
+        if (/authentication_error/i.test(found)) return 'authentication_error: credentials are invalid, expired, or unavailable.';
+        if (/permission denied/i.test(found)) return 'Permission denied: the agent could not access the required GitHub/repo resource.';
+        if (/mmap failed|resource deadlock/i.test(found)) return 'Git operation hit a resource/deadlock problem; retry or serialize git sync.';
+        return compact(found, 260);
+    }
+
+    function buildCausalModel(task) {
+        const agent = deriveAgent(task);
+        const state = normalizedState(task);
+        const tools = inferTools(task);
+        const failure = failureReason(task);
+        const nodes = [
+            {label: 'User / Telegram', detail: compact(taskTitle(task), 84), tone: 'user'},
+            {label: 'JARVIS', detail: 'parses request and decides whether to route, remember, answer, or code', tone: 'core'},
+            {label: 'Bridge queue', detail: compact(task.id || 'task dispatch', 84), tone: 'bridge'},
+            {label: AGENT_LABELS[agent] || agent, detail: compact(agentReason(task, agent), 96), tone: 'agent'},
+            {label: tools.map((tool) => tool.label).join(' + '), detail: tools.map((tool) => tool.detail).join(' / '), tone: 'tool'},
+            {label: state === 'failed' ? 'Failed' : state === 'blocked' ? 'Blocked' : state === 'done' ? 'Done' : state === 'running' ? 'Running' : 'Pending', detail: failure || compact(task.result || task.error || 'waiting for next event', 96), tone: state},
+        ];
+        return {agent, state, tools, failure, nodes};
+    }
+
+    function timelineEvents(task) {
+        const events = [];
+        if (task.created_at) {
+            events.push({
+                time: task.created_at,
+                actor: 'Bridge',
+                title: 'Task created',
+                body: taskTitle(task),
+            });
+        }
+        (task.messages || []).slice(-10).forEach((message) => {
+            events.push({
+                time: message.created_at,
+                actor: `${message.sender || '?'} -> ${message.receiver || '?'}`,
+                title: message.type || 'message',
+                body: compact(message.body || '', 280),
+            });
+        });
+        const failure = failureReason(task);
+        if (failure || task.result || task.error) {
+            events.push({
+                time: task.updated_at || task.created_at,
+                actor: 'Result',
+                title: normalizedState(task),
+                body: failure || compact(task.result || task.error, 280),
+            });
+        } else if (task.updated_at && task.updated_at !== task.created_at) {
+            events.push({
+                time: task.updated_at,
+                actor: 'Bridge',
+                title: 'Last update',
+                body: normalizedState(task),
+            });
+        }
+        return events;
+    }
+
+    function renderCausalView(task) {
+        if (!selectedTaskEl || !causalSummaryEl || !causalGraphEl || !causalReasonsEl || !causalTimelineEl) return;
+        if (!task) {
+            selectedTaskEl.textContent = 'No task selected';
+            causalSummaryEl.textContent = 'Waiting for Bridge data';
+            causalGraphEl.innerHTML = '<div class="workshop-empty">No recent Bridge tasks.</div>';
+            causalReasonsEl.innerHTML = '<div class="workshop-empty">No decision data yet.</div>';
+            causalTimelineEl.innerHTML = '<div class="workshop-empty">No messages yet.</div>';
+            return;
+        }
+
+        const model = buildCausalModel(task);
+        const messageCount = (task.messages || []).length;
+        selectedTaskEl.textContent = taskTitle(task);
+        causalSummaryEl.textContent = `${model.state} · ${AGENT_LABELS[model.agent] || model.agent} · ${messageCount} messages · ${shortTime(task.updated_at || task.created_at)}`;
+        causalGraphEl.innerHTML = model.nodes.map((node, idx) => `
+            <div class="workshop-flow-step workshop-flow-${esc(node.tone)}">
+                <div class="workshop-flow-node">
+                    <strong>${esc(node.label)}</strong>
+                    <span>${esc(node.detail)}</span>
+                </div>
+                ${idx < model.nodes.length - 1 ? '<div class="workshop-flow-edge"><span>triggers</span></div>' : ''}
+            </div>
+        `).join('');
+
+        const reasons = [
+            agentReason(task, model.agent),
+            `Tools inferred: ${model.tools.map((tool) => `${tool.label} (${tool.detail})`).join(', ')}.`,
+            `State normalized from Bridge status/result as ${model.state}.`,
+        ];
+        if (model.failure) reasons.push(`Blocker: ${model.failure}`);
+        causalReasonsEl.innerHTML = reasons.map((reason) => `<div class="workshop-reason">${esc(reason)}</div>`).join('');
+
+        const events = timelineEvents(task);
+        causalTimelineEl.innerHTML = events.length ? events.map((event) => `
+            <div class="workshop-time-event">
+                <div class="workshop-time-meta">
+                    <span>${esc(shortTime(event.time))}</span>
+                    <strong>${esc(event.actor)}</strong>
+                    <em>${esc(event.title)}</em>
+                </div>
+                <p>${esc(event.body || '-')}</p>
+            </div>
+        `).join('') : '<div class="workshop-empty">No messages yet.</div>';
+    }
+
+    function markSelectedTask() {
+        document.querySelectorAll('[data-task-id]').forEach((el) => {
+            el.classList.toggle('is-selected', String(el.dataset.taskId) === String(selectedTaskId));
+        });
     }
 
     function updateCounters(tasks) {
@@ -432,10 +624,11 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
             const agent = deriveAgent(task);
             const pos = AGENT_POSITIONS[agent] || AGENT_POSITIONS.BUILDER;
             const state = normalizedState(task);
+            const selected = String(taskId(task)) === String(selectedTaskId) ? ' is-selected' : '';
             const dx = ((idx % 3) - 1) * 3.2;
             const dy = (Math.floor(idx / 3) % 3) * 5.5;
             return `
-                <button class="workshop-marker workshop-marker-${state}" data-task-id="${esc(task.id)}"
+                <button class="workshop-marker workshop-marker-${state}${selected}" data-task-id="${esc(task.id)}"
                     style="left:${pos.x + dx}%;top:${pos.y + 12 + dy}%"
                     title="${esc(taskTitle(task))}">
                     <span>${esc(agent.slice(0, 2))}</span>
@@ -452,8 +645,9 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
             const state = normalizedState(task);
             const agent = deriveAgent(task);
             const messageCount = (task.messages || []).length;
+            const selected = String(taskId(task)) === String(selectedTaskId) ? ' is-selected' : '';
             return `
-                <button class="workshop-task workshop-task-${state}" data-task-id="${esc(task.id)}">
+                <button class="workshop-task workshop-task-${state}${selected}" data-task-id="${esc(task.id)}">
                     <span class="workshop-task-top">
                         <code>${esc(String(task.id || '').slice(0, 12))}</code>
                         <em>${esc(AGENT_LABELS[agent] || agent)}</em>
@@ -483,6 +677,9 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     function openTask(taskId) {
         const task = latestTasks.find((item) => String(item.id) === String(taskId));
         if (!task || !drawer || !drawerContent) return;
+        selectedTaskId = String(task.id || '');
+        renderCausalView(task);
+        markSelectedTask();
         const state = normalizedState(task);
         const agent = deriveAgent(task);
         drawerContent.innerHTML = `
@@ -517,18 +714,25 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             latestTasks = data.tasks || [];
+            if (!latestTasks.some((task) => String(task.id || '') === String(selectedTaskId))) {
+                selectedTaskId = latestTasks.length ? String(latestTasks[0].id || '') : null;
+            }
             updateCounters(latestTasks);
             updateAgents(latestTasks);
             renderMarkers(latestTasks);
             renderTaskList(latestTasks);
             bindTaskClicks();
+            renderCausalView(latestTasks.find((task) => String(task.id || '') === String(selectedTaskId)));
+            markSelectedTask();
             if (statusEl) statusEl.textContent = `${latestTasks.length} tasks`;
         } catch (err) {
             latestTasks = [];
+            selectedTaskId = null;
             updateCounters([]);
             updateAgents([]);
             markersEl.innerHTML = '';
             taskList.innerHTML = `<div class="workshop-empty">Bridge unavailable: ${esc(err.message)}</div>`;
+            renderCausalView(null);
             if (statusEl) statusEl.textContent = 'offline';
         }
     }

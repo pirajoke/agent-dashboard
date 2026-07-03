@@ -3416,6 +3416,10 @@ tr:last-child td { border-bottom: none; }
 .workshop-task:hover {
     border-color: rgba(249,115,22,0.34);
 }
+.workshop-task.is-selected {
+    border-color: rgba(6,182,212,0.48);
+    background: rgba(6,182,212,0.08);
+}
 .workshop-task-running { border-left-color: var(--blue); }
 .workshop-task-pending { border-left-color: var(--yellow); }
 .workshop-task-blocked,
@@ -3467,6 +3471,171 @@ tr:last-child td { border-bottom: none; }
     padding: 1rem;
     border: 1px dashed var(--border2);
     border-radius: 8px;
+}
+.workshop-marker.is-selected {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+}
+.workshop-control {
+    min-width: 0;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    backdrop-filter: var(--glass);
+}
+.workshop-control-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 0.9rem;
+}
+.workshop-control-head strong {
+    display: block;
+    max-width: 760px;
+    font-size: 1rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+.workshop-control-head > span {
+    flex-shrink: 0;
+    max-width: 360px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    padding: 0.45rem 0.6rem;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+.workshop-causal-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
+    gap: 0.85rem;
+}
+.workshop-causal-panel {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+    padding: 0.85rem;
+}
+.workshop-causal-panel-wide {
+    grid-row: span 2;
+}
+.workshop-flow {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.workshop-flow-step {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 74px;
+    gap: 0.55rem;
+    align-items: stretch;
+}
+.workshop-flow-step:last-child {
+    grid-template-columns: minmax(0, 1fr);
+}
+.workshop-flow-node {
+    min-width: 0;
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--dim);
+    border-radius: 8px;
+    background: rgba(9,9,11,0.66);
+    padding: 0.7rem;
+}
+.workshop-flow-node strong {
+    display: block;
+    margin-bottom: 0.28rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
+    color: var(--text);
+}
+.workshop-flow-node span {
+    display: block;
+    color: var(--text2);
+    font-size: 0.68rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+.workshop-flow-edge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.56rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.workshop-flow-edge::before {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border2);
+}
+.workshop-flow-edge span {
+    border: 1px solid var(--border2);
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    padding: 0.16rem 0.32rem;
+}
+.workshop-flow-user .workshop-flow-node { border-left-color: var(--blue); }
+.workshop-flow-core .workshop-flow-node { border-left-color: var(--accent); }
+.workshop-flow-bridge .workshop-flow-node { border-left-color: var(--purple); }
+.workshop-flow-agent .workshop-flow-node { border-left-color: var(--cyan); }
+.workshop-flow-tool .workshop-flow-node { border-left-color: var(--yellow); }
+.workshop-flow-running .workshop-flow-node { border-left-color: var(--blue); }
+.workshop-flow-pending .workshop-flow-node { border-left-color: var(--yellow); }
+.workshop-flow-done .workshop-flow-node { border-left-color: var(--green); }
+.workshop-flow-blocked .workshop-flow-node,
+.workshop-flow-failed .workshop-flow-node { border-left-color: var(--red); }
+.workshop-reasons,
+.workshop-causal-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.workshop-reason,
+.workshop-time-event {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(9,9,11,0.5);
+    padding: 0.65rem;
+    color: var(--text2);
+    font-size: 0.68rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+.workshop-time-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.42rem;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.56rem;
+}
+.workshop-time-meta strong {
+    color: var(--text2);
+}
+.workshop-time-meta em {
+    color: var(--muted);
+    font-style: normal;
+}
+.workshop-time-event p {
+    margin: 0;
+    color: var(--text2);
 }
 .workshop-drawer {
     position: fixed;
@@ -3588,6 +3757,12 @@ tr:last-child td { border-bottom: none; }
     .workshop-shell {
         grid-template-columns: 1fr;
     }
+    .workshop-causal-grid {
+        grid-template-columns: 1fr;
+    }
+    .workshop-causal-panel-wide {
+        grid-row: auto;
+    }
     .workshop-task-list {
         max-height: 360px;
     }
@@ -3615,6 +3790,26 @@ tr:last-child td { border-bottom: none; }
     .workshop-agent[data-workshop-agent="GITHUB"] { left: 50% !important; top: 88% !important; }
     .workshop-room {
         opacity: 0.32;
+    }
+    .workshop-control {
+        padding: 0.75rem;
+    }
+    .workshop-control-head {
+        flex-direction: column;
+    }
+    .workshop-control-head > span {
+        width: 100%;
+        max-width: none;
+    }
+    .workshop-flow-step,
+    .workshop-flow-step:last-child {
+        grid-template-columns: 1fr;
+    }
+    .workshop-flow-edge {
+        min-height: 24px;
+    }
+    .workshop-flow-edge::before {
+        max-width: 42%;
     }
     .workshop-drawer-grid {
         grid-template-columns: 1fr;

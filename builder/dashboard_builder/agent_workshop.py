@@ -74,6 +74,35 @@ def build_agent_workshop_html() -> str:
             </div>
         </aside>
     </div>
+    <div class="workshop-control" id="workshop-control-room">
+        <div class="workshop-control-head">
+            <div>
+                <span class="workshop-side-kicker">Control Room</span>
+                <strong id="workshop-selected-task">No task selected</strong>
+            </div>
+            <span id="workshop-causal-summary">Waiting for Bridge data</span>
+        </div>
+        <div class="workshop-causal-grid">
+            <div class="workshop-causal-panel workshop-causal-panel-wide">
+                <span class="workshop-side-kicker">Causal graph</span>
+                <div class="workshop-flow" id="workshop-causal-graph">
+                    <div class="workshop-empty">Loading live task graph...</div>
+                </div>
+            </div>
+            <div class="workshop-causal-panel">
+                <span class="workshop-side-kicker">Why this path</span>
+                <div class="workshop-reasons" id="workshop-causal-reasons">
+                    <div class="workshop-empty">No decision data yet.</div>
+                </div>
+            </div>
+            <div class="workshop-causal-panel">
+                <span class="workshop-side-kicker">Timeline</span>
+                <div class="workshop-causal-timeline" id="workshop-causal-timeline">
+                    <div class="workshop-empty">No messages yet.</div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="workshop-drawer hidden" id="workshop-drawer" aria-live="polite">
         <div class="workshop-drawer-panel">
             <button class="workshop-drawer-close" id="workshop-drawer-close" type="button" title="Close">&times;</button>

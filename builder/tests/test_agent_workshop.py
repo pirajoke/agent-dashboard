@@ -14,6 +14,11 @@ class AgentWorkshopTests(unittest.TestCase):
         self.assertIn('id="workshop-board"', html)
         self.assertIn('id="workshop-task-list"', html)
         self.assertIn('id="workshop-drawer"', html)
+        self.assertIn('id="workshop-control-room"', html)
+        self.assertIn('id="workshop-selected-task"', html)
+        self.assertIn('id="workshop-causal-graph"', html)
+        self.assertIn('id="workshop-causal-reasons"', html)
+        self.assertIn('id="workshop-causal-timeline"', html)
         self.assertIn('data-workshop-agent="BUILDER"', html)
         self.assertIn('data-workshop-agent="VAULT"', html)
         self.assertGreaterEqual(len(AGENT_ROOMS), 7)
@@ -23,7 +28,9 @@ class AgentWorkshopTests(unittest.TestCase):
 
         self.assertIn('data-target="#workshop"', html)
         self.assertIn("Agent Workshop", html)
+        self.assertIn("Control Room", html)
         self.assertIn("initAgentWorkshop", html)
+        self.assertIn("renderCausalView", html)
 
 
 if __name__ == "__main__":
