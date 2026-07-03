@@ -6,6 +6,7 @@ from .projects import is_project_active
 from .now import collect_now_data, build_now_html
 from .system import collect_system_data, build_system_html
 from .costs import collect_costs_data, build_costs_html
+from .agent_workshop import build_agent_workshop_html
 
 
 def _build_project_row(p: dict, completed: bool = False) -> str:
@@ -90,6 +91,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
     now_html = build_now_html(now_data)
     system_html = build_system_html(system_data)
     costs_html = build_costs_html(costs_data)
+    workshop_html = build_agent_workshop_html()
 
     # Projects
     active_projs = [p for p in projects if is_project_active(p)]
@@ -140,6 +142,10 @@ def build_html(projects: list[dict], timestamp: str) -> str:
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M4 11l-1 3 3-1 7-7-2-2-7 7z" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M10 3l3 3" stroke="currentColor" stroke-width="1.2"/></svg>
             Builder
         </a></li>
+        <li><a data-target="#workshop" href="javascript:void(0)">
+            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M5 10h2M9 10h2M5 7h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Workshop
+        </a></li>
         <li><a data-target="#costs" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.2"/></svg>
             Costs <span class="nav-count">${costs_data['total_monthly']:,.0f}/mo</span>
@@ -168,6 +174,8 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 {now_html}
 
 {_build_builder_dialogue_html()}
+
+{workshop_html}
 
 <!-- Projects Section -->
 <div class="section" id="projects">

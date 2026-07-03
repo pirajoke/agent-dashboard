@@ -158,6 +158,7 @@ body {
 .main {
     margin-left: 220px;
     flex: 1;
+    min-width: 0;
     padding: 2rem 2.5rem;
     max-width: 1320px;
 }
@@ -2350,7 +2351,7 @@ tr:last-child td { border-bottom: none; }
 }
 @media (max-width: 768px) {
     .sidebar { display: none; }
-    .main { margin-left: 0; padding: 1rem; }
+    .main { margin-left: 0; padding: 1rem; width: 100%; max-width: 100%; }
     .agents { grid-template-columns: 1fr; }
     .stats { grid-template-columns: repeat(2, 1fr); }
     .caps-grid { grid-template-columns: 1fr; }
@@ -3093,3 +3094,529 @@ tr:last-child td { border-bottom: none; }
 .cost-sub-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cost-sub-cost { color: var(--text2); min-width: 40px; text-align: right; }
 .cost-sub-renew { font-size: 0.68rem; min-width: 50px; text-align: right; }
+
+/* ── Agent Workshop ── */
+.workshop-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 1rem;
+    align-items: stretch;
+}
+.workshop-main,
+.workshop-side {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: var(--glass);
+}
+.workshop-main {
+    min-width: 0;
+    padding: 1rem;
+}
+.workshop-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+}
+.workshop-metrics div {
+    min-width: 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.55rem 0.65rem;
+}
+.workshop-metrics span {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+}
+.workshop-metrics em {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.58rem;
+    color: var(--dim);
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.workshop-board {
+    position: relative;
+    min-height: 460px;
+    overflow: hidden;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background:
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(249,115,22,0.08), rgba(6,182,212,0.05) 42%, rgba(34,197,94,0.04));
+    background-size: 48px 48px, 48px 48px, auto;
+}
+.workshop-routes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+.workshop-routes path {
+    fill: none;
+    stroke: rgba(255,255,255,0.18);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 12 12;
+}
+.workshop-room {
+    position: absolute;
+    min-width: 106px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.65rem;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 8px;
+    background: rgba(9,9,11,0.72);
+    color: var(--text2);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.workshop-room-code { border-color: rgba(249,115,22,0.22); }
+.workshop-room-runtime { border-color: rgba(34,197,94,0.18); }
+.workshop-room-memory { border-color: rgba(6,182,212,0.2); }
+.workshop-room-git { border-color: rgba(168,85,247,0.2); }
+.workshop-agent {
+    position: absolute;
+    width: 134px;
+    min-height: 92px;
+    transform: translate(-50%, -50%);
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    grid-template-rows: auto auto auto;
+    column-gap: 0.55rem;
+    align-items: center;
+    padding: 0.65rem;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    background: rgba(17,17,21,0.92);
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
+    z-index: 2;
+}
+.workshop-agent:hover {
+    border-color: rgba(249,115,22,0.45);
+    transform: translate(-50%, -52%);
+}
+.workshop-figure {
+    grid-row: 1 / span 3;
+    position: relative;
+    width: 30px;
+    height: 54px;
+    justify-self: center;
+}
+.workshop-head,
+.workshop-body,
+.workshop-leg {
+    position: absolute;
+    display: block;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.workshop-head {
+    top: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--text);
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.22);
+}
+.workshop-body {
+    top: 24px;
+    width: 22px;
+    height: 20px;
+    border-radius: 6px;
+    background: var(--accent);
+}
+.workshop-leg {
+    top: 43px;
+    width: 6px;
+    height: 10px;
+    border-radius: 4px;
+    background: var(--text2);
+    transform-origin: 50% 0;
+}
+.workshop-leg-a { margin-left: -5px; }
+.workshop-leg-b { margin-left: 5px; }
+.workshop-agent-name {
+    min-width: 0;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+.workshop-agent-room {
+    min-width: 0;
+    margin-top: 0.16rem;
+    font-size: 0.6rem;
+    color: var(--dim);
+    line-height: 1.2;
+}
+.workshop-agent-state {
+    align-self: end;
+    margin-top: 0.35rem;
+    width: fit-content;
+    max-width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.56rem;
+    color: var(--muted);
+    background: rgba(255,255,255,0.05);
+    border-radius: 5px;
+    padding: 0.12rem 0.35rem;
+    white-space: nowrap;
+}
+.workshop-agent.is-active {
+    border-color: rgba(59,130,246,0.38);
+}
+.workshop-agent.is-running {
+    background: rgba(17,24,39,0.96);
+    box-shadow: 0 0 0 1px rgba(59,130,246,0.22), 0 12px 28px rgba(0,0,0,0.22);
+}
+.workshop-agent.is-running .workshop-figure {
+    animation: workshopWalk 0.72s ease-in-out infinite;
+}
+.workshop-agent.is-running .workshop-leg-a {
+    animation: workshopLegA 0.72s ease-in-out infinite;
+}
+.workshop-agent.is-running .workshop-leg-b {
+    animation: workshopLegB 0.72s ease-in-out infinite;
+}
+.workshop-agent.is-pending {
+    border-color: rgba(234,179,8,0.34);
+}
+.workshop-agent.is-blocked,
+.workshop-agent.is-failed {
+    border-color: rgba(239,68,68,0.45);
+    box-shadow: 0 0 0 1px rgba(239,68,68,0.14);
+}
+.workshop-agent.is-done {
+    border-color: rgba(34,197,94,0.34);
+}
+@keyframes workshopWalk {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+@keyframes workshopLegA {
+    0%, 100% { transform: translateX(-50%) rotate(-14deg); }
+    50% { transform: translateX(-50%) rotate(14deg); }
+}
+@keyframes workshopLegB {
+    0%, 100% { transform: translateX(-50%) rotate(14deg); }
+    50% { transform: translateX(-50%) rotate(-14deg); }
+}
+.workshop-marker {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translate(-50%, -50%);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    color: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 900;
+    cursor: pointer;
+    z-index: 4;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+}
+.workshop-marker-running {
+    background: var(--blue);
+    animation: workshopMarkerMove 1.2s ease-in-out infinite;
+}
+.workshop-marker-pending { background: var(--yellow); }
+.workshop-marker-blocked,
+.workshop-marker-failed { background: var(--red); }
+.workshop-marker-done { background: var(--green); }
+.workshop-marker-cancelled { background: var(--dim); }
+@keyframes workshopMarkerMove {
+    0%, 100% { margin-top: 0; }
+    50% { margin-top: -8px; }
+}
+.workshop-side {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+}
+.workshop-side-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+.workshop-side-kicker {
+    display: block;
+    font-size: 0.58rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    margin-bottom: 0.18rem;
+}
+.workshop-side-head strong {
+    display: block;
+    font-size: 0.95rem;
+}
+.workshop-icon-btn,
+.workshop-drawer-close {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    cursor: pointer;
+}
+.workshop-icon-btn:hover,
+.workshop-drawer-close:hover {
+    border-color: rgba(249,115,22,0.45);
+    color: var(--text);
+}
+.workshop-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    overflow: auto;
+    max-height: 560px;
+    padding-right: 0.2rem;
+}
+.workshop-task {
+    width: 100%;
+    display: block;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--dim);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+    color: var(--text);
+    padding: 0.65rem;
+    text-align: left;
+    cursor: pointer;
+}
+.workshop-task:hover {
+    border-color: rgba(249,115,22,0.34);
+}
+.workshop-task-running { border-left-color: var(--blue); }
+.workshop-task-pending { border-left-color: var(--yellow); }
+.workshop-task-blocked,
+.workshop-task-failed { border-left-color: var(--red); }
+.workshop-task-done { border-left-color: var(--green); }
+.workshop-task-cancelled { border-left-color: var(--dim); opacity: 0.72; }
+.workshop-task-top {
+    display: grid;
+    grid-template-columns: minmax(70px, 1fr) auto auto;
+    gap: 0.45rem;
+    align-items: center;
+    margin-bottom: 0.42rem;
+}
+.workshop-task-top code {
+    min-width: 0;
+    font-size: 0.58rem;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.workshop-task-top em,
+.workshop-task-top strong {
+    font-size: 0.55rem;
+    font-style: normal;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
+}
+.workshop-task-top strong {
+    color: var(--text2);
+    text-transform: uppercase;
+}
+.workshop-task-title {
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: var(--text);
+}
+.workshop-task-meta {
+    display: block;
+    margin-top: 0.42rem;
+    font-size: 0.58rem;
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+}
+.workshop-empty {
+    color: var(--dim);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    padding: 1rem;
+    border: 1px dashed var(--border2);
+    border-radius: 8px;
+}
+.workshop-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    justify-content: flex-end;
+    background: rgba(0,0,0,0.42);
+}
+.workshop-drawer.hidden {
+    display: none;
+}
+.workshop-drawer-panel {
+    width: min(620px, 100vw);
+    height: 100vh;
+    overflow: auto;
+    background: rgba(12,12,16,0.98);
+    border-left: 1px solid var(--border2);
+    padding: 1.2rem;
+    box-shadow: -18px 0 48px rgba(0,0,0,0.35);
+}
+.workshop-drawer-close {
+    position: sticky;
+    top: 0;
+    float: right;
+    z-index: 2;
+}
+.workshop-drawer-head {
+    clear: both;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+.workshop-drawer-head h3 {
+    font-size: 1.05rem;
+    line-height: 1.35;
+    font-weight: 800;
+}
+.workshop-drawer-state {
+    flex-shrink: 0;
+    border-left-width: 0;
+    border-radius: 6px;
+    padding: 0.25rem 0.45rem;
+    font-size: 0.62rem;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    background: rgba(255,255,255,0.06);
+}
+.workshop-drawer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin: 1rem 0;
+}
+.workshop-drawer-grid div {
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+    padding: 0.7rem;
+}
+.workshop-drawer-grid span {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.56rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.workshop-drawer-grid strong {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text2);
+}
+.workshop-trace {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+.workshop-trace-msg {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.035);
+    overflow: hidden;
+}
+.workshop-trace-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+    padding: 0.55rem 0.7rem;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.56rem;
+    color: var(--dim);
+}
+.workshop-trace-meta strong {
+    color: var(--text2);
+}
+.workshop-trace-meta em {
+    color: var(--muted);
+    font-style: normal;
+}
+.workshop-trace-body {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: 0.7rem;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--text2);
+}
+@media (max-width: 1120px) {
+    .workshop-shell {
+        grid-template-columns: 1fr;
+    }
+    .workshop-task-list {
+        max-height: 360px;
+    }
+}
+@media (max-width: 760px) {
+    .workshop-main,
+    .workshop-side {
+        padding: 0.75rem;
+    }
+    .workshop-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .workshop-board {
+        min-height: 640px;
+    }
+    .workshop-agent {
+        width: 128px;
+    }
+    .workshop-agent[data-workshop-agent="ROUTER"] { left: 28% !important; top: 13% !important; }
+    .workshop-agent[data-workshop-agent="PLANNER"] { left: 72% !important; top: 13% !important; }
+    .workshop-agent[data-workshop-agent="BUILDER"] { left: 28% !important; top: 36% !important; }
+    .workshop-agent[data-workshop-agent="TESTER"] { left: 72% !important; top: 36% !important; }
+    .workshop-agent[data-workshop-agent="DEPLOYER"] { left: 72% !important; top: 66% !important; }
+    .workshop-agent[data-workshop-agent="VAULT"] { left: 28% !important; top: 66% !important; }
+    .workshop-agent[data-workshop-agent="GITHUB"] { left: 50% !important; top: 88% !important; }
+    .workshop-room {
+        opacity: 0.32;
+    }
+    .workshop-drawer-grid {
+        grid-template-columns: 1fr;
+    }
+}

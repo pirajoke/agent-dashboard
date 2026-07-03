@@ -258,6 +258,7 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     async function refreshBuilder() {
         try {
             const res = await fetch('/api/bridge/tasks?limit=12&include_messages=1', {cache: 'no-store'});
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const tasks = data.tasks || [];
             const builderTasks = tasks.filter((t) => !t.agent_role || String(t.agent_role).toUpperCase() === 'BUILDER');
@@ -294,6 +295,256 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
 
     refreshBuilder();
     setInterval(refreshBuilder, 5000);
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Agent Workshop ──
+// ══════════════════════════════════════════════════════════════
+(function initAgentWorkshop() {
+    const board = document.getElementById('workshop-board');
+    const markersEl = document.getElementById('workshop-markers');
+    const taskList = document.getElementById('workshop-task-list');
+    const statusEl = document.getElementById('workshop-status');
+    const refreshBtn = document.getElementById('workshop-refresh');
+    const drawer = document.getElementById('workshop-drawer');
+    const drawerContent = document.getElementById('workshop-drawer-content');
+    const drawerClose = document.getElementById('workshop-drawer-close');
+    if (!board || !markersEl || !taskList) return;
+
+    const AGENT_POSITIONS = {
+        ROUTER: {x: 15, y: 22},
+        PLANNER: {x: 38, y: 18},
+        BUILDER: {x: 63, y: 21},
+        TESTER: {x: 84, y: 34},
+        DEPLOYER: {x: 74, y: 68},
+        VAULT: {x: 45, y: 72},
+        GITHUB: {x: 20, y: 68},
+    };
+    const AGENT_LABELS = {
+        ROUTER: 'Router',
+        PLANNER: 'Planner',
+        BUILDER: 'Builder',
+        TESTER: 'Tester',
+        DEPLOYER: 'Deployer',
+        VAULT: 'Vault',
+        GITHUB: 'GitHub',
+    };
+    let latestTasks = [];
+
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+
+    function shortTime(raw) {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return String(raw).slice(0, 16);
+        return d.toLocaleString([], {month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'});
+    }
+
+    function normalizedState(task) {
+        const raw = String(task.status || task.state || '').toLowerCase();
+        if (['done', 'complete', 'completed', 'success', 'succeeded'].includes(raw)) return 'done';
+        if (['failed', 'error'].includes(raw)) return 'failed';
+        if (['blocked', 'waiting', 'needs_input'].includes(raw)) return 'blocked';
+        if (['cancelled', 'canceled'].includes(raw)) return 'cancelled';
+        if (['running', 'in_progress', 'working', 'active'].includes(raw)) return 'running';
+        return 'pending';
+    }
+
+    function taskText(task) {
+        const msgText = (task.messages || []).map((m) => [m.sender, m.receiver, m.type, m.body].join(' ')).join(' ');
+        return `${task.description || ''} ${task.agent_role || ''} ${msgText}`.toLowerCase();
+    }
+
+    function deriveAgent(task) {
+        const text = taskText(task);
+        const role = String(task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
+        if (text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) return 'TESTER';
+        if (text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) return 'DEPLOYER';
+        if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) return 'VAULT';
+        if (text.match(/\b(github|git push|commit|pull request|linear|issue)\b/)) return 'GITHUB';
+        if (text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) return 'PLANNER';
+        if (text.match(/\b(route|router|telegram intake|intent)\b/)) return 'ROUTER';
+        if (['ROUTER', 'PLANNER', 'BUILDER', 'TESTER', 'DEPLOYER', 'VAULT', 'GITHUB'].includes(role)) return role;
+        return 'BUILDER';
+    }
+
+    function taskTitle(task) {
+        const raw = String(task.description || task.title || 'Untitled task').replace(/\s+/g, ' ').trim();
+        return raw.length > 110 ? raw.slice(0, 107).trim() + '...' : raw;
+    }
+
+    function updateCounters(tasks) {
+        const counts = {running: 0, pending: 0, blocked: 0, done: 0};
+        tasks.forEach((task) => {
+            const state = normalizedState(task);
+            if (state === 'failed' || state === 'blocked') counts.blocked += 1;
+            else if (state === 'done') counts.done += 1;
+            else if (state === 'running') counts.running += 1;
+            else if (state === 'pending') counts.pending += 1;
+        });
+        Object.entries(counts).forEach(([key, value]) => {
+            const el = document.getElementById(`workshop-count-${key}`);
+            if (el) el.textContent = value;
+        });
+    }
+
+    function updateAgents(tasks) {
+        const byAgent = {};
+        document.querySelectorAll('[data-workshop-agent]').forEach((el) => {
+            const id = el.dataset.workshopAgent;
+            byAgent[id] = {el, states: [], count: 0};
+            el.classList.remove('is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed', 'is-active');
+        });
+
+        tasks.forEach((task) => {
+            const agent = deriveAgent(task);
+            if (!byAgent[agent]) return;
+            byAgent[agent].states.push(normalizedState(task));
+            byAgent[agent].count += 1;
+        });
+
+        Object.entries(byAgent).forEach(([agent, entry]) => {
+            const stateEl = entry.el.querySelector('.workshop-agent-state');
+            if (!entry.count) {
+                if (stateEl) stateEl.textContent = 'idle';
+                return;
+            }
+            const states = entry.states;
+            let state = 'pending';
+            if (states.some((s) => s === 'running')) state = 'running';
+            else if (states.some((s) => s === 'blocked' || s === 'failed')) state = 'blocked';
+            else if (states.some((s) => s === 'pending')) state = 'pending';
+            else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
+            entry.el.classList.add('is-active', `is-${state}`);
+            if (stateEl) stateEl.textContent = `${state} · ${entry.count}`;
+        });
+    }
+
+    function renderMarkers(tasks) {
+        const visible = tasks.slice(0, 18);
+        markersEl.innerHTML = visible.map((task, idx) => {
+            const agent = deriveAgent(task);
+            const pos = AGENT_POSITIONS[agent] || AGENT_POSITIONS.BUILDER;
+            const state = normalizedState(task);
+            const dx = ((idx % 3) - 1) * 3.2;
+            const dy = (Math.floor(idx / 3) % 3) * 5.5;
+            return `
+                <button class="workshop-marker workshop-marker-${state}" data-task-id="${esc(task.id)}"
+                    style="left:${pos.x + dx}%;top:${pos.y + 12 + dy}%"
+                    title="${esc(taskTitle(task))}">
+                    <span>${esc(agent.slice(0, 2))}</span>
+                </button>`;
+        }).join('');
+    }
+
+    function renderTaskList(tasks) {
+        if (!tasks.length) {
+            taskList.innerHTML = '<div class="workshop-empty">No recent Bridge tasks.</div>';
+            return;
+        }
+        taskList.innerHTML = tasks.slice(0, 12).map((task) => {
+            const state = normalizedState(task);
+            const agent = deriveAgent(task);
+            const messageCount = (task.messages || []).length;
+            return `
+                <button class="workshop-task workshop-task-${state}" data-task-id="${esc(task.id)}">
+                    <span class="workshop-task-top">
+                        <code>${esc(String(task.id || '').slice(0, 12))}</code>
+                        <em>${esc(AGENT_LABELS[agent] || agent)}</em>
+                        <strong>${esc(state)}</strong>
+                    </span>
+                    <span class="workshop-task-title">${esc(taskTitle(task))}</span>
+                    <span class="workshop-task-meta">${esc(shortTime(task.updated_at || task.created_at))} · ${messageCount} messages</span>
+                </button>`;
+        }).join('');
+    }
+
+    function messageTimeline(task) {
+        const messages = (task.messages || []).slice(-12);
+        if (!messages.length) return '<div class="workshop-empty">No Bridge messages yet.</div>';
+        return messages.map((message) => `
+            <div class="workshop-trace-msg">
+                <div class="workshop-trace-meta">
+                    <span>${esc(shortTime(message.created_at))}</span>
+                    <strong>${esc(message.sender || '?')} -> ${esc(message.receiver || '?')}</strong>
+                    <em>${esc(message.type || 'message')}</em>
+                </div>
+                <div class="workshop-trace-body">${esc(message.body || '').slice(0, 2000)}</div>
+            </div>
+        `).join('');
+    }
+
+    function openTask(taskId) {
+        const task = latestTasks.find((item) => String(item.id) === String(taskId));
+        if (!task || !drawer || !drawerContent) return;
+        const state = normalizedState(task);
+        const agent = deriveAgent(task);
+        drawerContent.innerHTML = `
+            <div class="workshop-drawer-head">
+                <div>
+                    <span class="workshop-side-kicker">${esc(AGENT_LABELS[agent] || agent)} trace</span>
+                    <h3>${esc(taskTitle(task))}</h3>
+                </div>
+                <span class="workshop-drawer-state workshop-task-${state}">${esc(state)}</span>
+            </div>
+            <div class="workshop-drawer-grid">
+                <div><span>Task</span><strong>${esc(task.id || '-')}</strong></div>
+                <div><span>Role</span><strong>${esc(task.agent_role || 'AUTO')}</strong></div>
+                <div><span>Created</span><strong>${esc(shortTime(task.created_at))}</strong></div>
+                <div><span>Updated</span><strong>${esc(shortTime(task.updated_at))}</strong></div>
+            </div>
+            <div class="workshop-trace">${messageTimeline(task)}</div>
+        `;
+        drawer.classList.remove('hidden');
+    }
+
+    function bindTaskClicks() {
+        document.querySelectorAll('[data-task-id]').forEach((el) => {
+            el.addEventListener('click', () => openTask(el.dataset.taskId));
+        });
+    }
+
+    async function refreshWorkshop() {
+        if (statusEl) statusEl.textContent = 'loading';
+        try {
+            const res = await fetch('/api/bridge/tasks?limit=40&include_messages=1', {cache: 'no-store'});
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            latestTasks = data.tasks || [];
+            updateCounters(latestTasks);
+            updateAgents(latestTasks);
+            renderMarkers(latestTasks);
+            renderTaskList(latestTasks);
+            bindTaskClicks();
+            if (statusEl) statusEl.textContent = `${latestTasks.length} tasks`;
+        } catch (err) {
+            latestTasks = [];
+            updateCounters([]);
+            updateAgents([]);
+            markersEl.innerHTML = '';
+            taskList.innerHTML = `<div class="workshop-empty">Bridge unavailable: ${esc(err.message)}</div>`;
+            if (statusEl) statusEl.textContent = 'offline';
+        }
+    }
+
+    document.querySelectorAll('[data-workshop-agent]').forEach((el) => {
+        el.addEventListener('click', () => {
+            const agent = el.dataset.workshopAgent;
+            const task = latestTasks.find((item) => deriveAgent(item) === agent);
+            if (task) openTask(task.id);
+        });
+    });
+    if (refreshBtn) refreshBtn.addEventListener('click', refreshWorkshop);
+    if (drawerClose) drawerClose.addEventListener('click', () => drawer.classList.add('hidden'));
+    if (drawer) drawer.addEventListener('click', (event) => {
+        if (event.target === drawer) drawer.classList.add('hidden');
+    });
+
+    window.AgentWorkshopRefresh = refreshWorkshop;
+    refreshWorkshop();
+    setInterval(refreshWorkshop, 5000);
 })();
 
 // ══════════════════════════════════════════════════════════════
@@ -673,7 +924,8 @@ document.querySelectorAll('.oslider-item:not(.agent-model-item)').forEach(el => 
 });
 
 // ── Orchestrator ON/OFF toggle — GitHub API + local apply ──
-document.getElementById('orchToggleInput').addEventListener('change', async function() {
+const orchToggleInput = document.getElementById('orchToggleInput');
+if (orchToggleInput) orchToggleInput.addEventListener('change', async function() {
     const cb = this;
     const on = cb.checked;
     const grid = document.querySelector('.orch-grid');
@@ -740,6 +992,7 @@ async function ghCommit(path, data, msg, options) {
 
 async function launchAgents() {
     const btn = document.getElementById('launchBtn');
+    if (!btn) return;
     btn.textContent = 'Launching...';
     btn.classList.add('running');
     const localOk = await postLocal('/api/orchestrator/run', {source:'dashboard'});
