@@ -1554,9 +1554,10 @@ setInterval(refreshLocalServices, 15000);
         requestAnimationFrame(animateTheater);
     }
 
-    function updateTheaterPeople(tasks) {
+    function updateTheaterPeople(tasks, selectedTask) {
         const personState = {};
         Object.keys(LABELS).forEach((agent) => { personState[agent] = []; });
+        const focusRoute = selectedTask ? new Set(theaterRoute(selectedTask)) : new Set();
         tasks.slice(0, 16).forEach((task) => {
             const state = theaterState(task);
             theaterRoute(task).forEach((agent) => {
@@ -1566,7 +1567,7 @@ setInterval(refreshLocalServices, 15000);
         document.querySelectorAll('[data-theater-agent]').forEach((el) => {
             const agent = el.dataset.theaterAgent;
             const states = personState[agent] || [];
-            el.classList.remove('is-active', 'is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed');
+            el.classList.remove('is-active', 'is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed', 'is-focus-route');
             const label = el.querySelector('.theater-person-state');
             if (!states.length) {
                 if (label) label.textContent = 'idle';
@@ -1578,34 +1579,37 @@ setInterval(refreshLocalServices, 15000);
             else if (states.some((s) => s === 'pending')) state = 'pending';
             else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
             el.classList.add('is-active', `is-${state}`);
+            if (focusRoute.has(agent)) el.classList.add('is-focus-route');
             if (label) {
                 const neutralAgents = ['USER', 'JARVIS', 'BRIDGE'];
-                if (neutralAgents.includes(agent)) label.textContent = `${states.length} tasks`;
-                else if (state === 'blocked') label.textContent = `check · ${states.length}`;
-                else if (state === 'running') label.textContent = `moving · ${states.length}`;
-                else label.textContent = `${state} · ${states.length}`;
+                if (focusRoute.has(agent)) label.textContent = 'focus';
+                else if (neutralAgents.includes(agent)) label.textContent = `${states.length}`;
+                else if (state === 'blocked') label.textContent = `check ${states.length}`;
+                else if (state === 'running') label.textContent = `move ${states.length}`;
+                else label.textContent = `${state} ${states.length}`;
             }
         });
     }
 
-    function renderTheaterRunners(tasks) {
-        const activeFirst = [...tasks].sort((a, b) => {
+    function renderTheaterRunners(tasks, selectedTask) {
+        const activeFirst = selectedTask ? [selectedTask] : [...tasks].sort((a, b) => {
             const rank = {running: 0, pending: 1, failed: 2, blocked: 2, done: 3, cancelled: 4};
             return (rank[theaterState(a)] ?? 5) - (rank[theaterState(b)] ?? 5);
         });
-        const visible = activeFirst.slice(0, 5);
+        const visible = activeFirst.slice(0, 1);
         runnersEl.innerHTML = visible.map((task) => {
             const state = theaterState(task);
             const agent = theaterAgent(task);
             const route = theaterRoute(task).join(',');
             const id = String(task.id || '');
             return `
-                <div class="theater-runner theater-runner-${escTheater(state)}" data-task-id="${escTheater(id)}"
+                <button class="theater-runner theater-runner-${escTheater(state)}" data-task-id="${escTheater(id)}"
                     data-route="${escTheater(route)}" data-state="${escTheater(state)}"
-                    data-runner-agent="${escTheater(agent)}" data-seed="${theaterSeed(id)}">
+                    data-runner-agent="${escTheater(agent)}" data-seed="${theaterSeed(id)}"
+                    type="button" title="${escTheater(theaterTitle(task))}">
                     <span class="theater-mini-person" aria-hidden="true"></span>
-                    <span class="theater-runner-label">${escTheater(LABELS[agent] || agent)} · ${escTheater(state)}</span>
-                </div>`;
+                    <span class="theater-runner-label">focus task</span>
+                </button>`;
         }).join('');
         if (!theaterAnimationStarted) {
             theaterAnimationStarted = true;
@@ -1679,9 +1683,9 @@ setInterval(refreshLocalServices, 15000);
         theaterSelectedId = selected ? String(selected.id || '') : null;
         const running = tasks.filter((task) => theaterState(task) === 'running').length;
         const blocked = tasks.filter((task) => ['blocked', 'failed'].includes(theaterState(task))).length;
-        if (statusEl) statusEl.textContent = `${tasks.length} tasks · ${running} moving · ${blocked} blocked`;
-        updateTheaterPeople(tasks);
-        renderTheaterRunners(tasks);
+        if (statusEl) statusEl.textContent = `focus task · ${tasks.length} total · ${running} moving · ${blocked} blocked`;
+        updateTheaterPeople(tasks, selected);
+        renderTheaterRunners(tasks, selected);
         renderTheaterCurrent(selected);
         renderTheaterStory(selected);
     }

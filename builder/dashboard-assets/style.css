@@ -4659,15 +4659,30 @@ tr:last-child td { border-bottom: none; }
     background: rgba(35,103,55,0.78);
 }
 
+.theater-person-card.is-focus-route .theater-person-name {
+    background: rgba(58,34,28,0.92);
+    box-shadow: 0 0 0 2px rgba(244,185,79,0.95), 0 3px 0 rgba(0,0,0,0.25);
+}
+
+.theater-person-card.is-focus-route .theater-person-state {
+    background: #f4b94f;
+    color: #4a2632;
+    font-weight: 900;
+}
+
 .theater-runners {
     z-index: 8;
     pointer-events: auto;
 }
 
 .theater-runner {
-    width: 34px;
-    min-height: 42px;
+    width: 96px;
+    min-height: 62px;
     pointer-events: auto;
+    border: 0;
+    background: transparent;
+    color: #fff8d8;
+    cursor: pointer;
 }
 
 .theater-runner .theater-mini-person {
@@ -4698,7 +4713,18 @@ tr:last-child td { border-bottom: none; }
 }
 
 .theater-runner-label {
-    display: none;
+    display: block;
+    margin-top: 4px;
+    padding: 3px 7px 2px;
+    border-radius: 999px;
+    background: rgba(43,26,41,0.84);
+    color: #fff8d8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.24);
 }
 
 .theater-panel {
@@ -4925,9 +4951,14 @@ tr:last-child td { border-bottom: none; }
 }
 
 .theater-runner .theater-mini-person {
-    transform: scale(1.45);
+    transform: scale(1.9);
     transform-origin: center bottom;
     filter: drop-shadow(0 8px 6px rgba(49,39,24,0.34));
+}
+
+.theater-runner:focus-visible .theater-mini-person {
+    outline: 3px solid #fff8d8;
+    outline-offset: 3px;
 }
 
 @keyframes aiTownWalkDown {

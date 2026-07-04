@@ -39,6 +39,9 @@ class AgentTheaterTests(unittest.TestCase):
 
         self.assertIn("ai-town-32x32folk.png", css)
         self.assertIn("data-runner-agent", script)
+        self.assertIn("focus task", script)
+        self.assertIn("slice(0, 1)", script)
+        self.assertNotIn("slice(0, 5)", script)
         self.assertTrue((ASSETS_DIR / "ai-town-32x32folk.png").exists())
         self.assertGreater((ASSETS_DIR / "ai-town-32x32folk.png").stat().st_size, 1000)
 
