@@ -3844,6 +3844,39 @@ tr:last-child td { border-bottom: none; }
     align-items: stretch;
 }
 
+.operator-status {
+    display: grid;
+    grid-template-columns: 0.9fr 0.9fr 1.35fr 1.35fr;
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+}
+
+.operator-card {
+    min-height: 68px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(17,17,21,0.76);
+    padding: 0.75rem 0.85rem;
+    display: grid;
+    align-content: center;
+    gap: 0.25rem;
+}
+
+.operator-label {
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.operator-card strong {
+    color: var(--text);
+    font-size: 0.78rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
 .theater-stage,
 .theater-panel {
     background: rgba(14,14,18,0.82);
@@ -4979,6 +5012,9 @@ tr:last-child td { border-bottom: none; }
     .theater-layout {
         grid-template-columns: 1fr;
     }
+    .operator-status {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .theater-stage,
     .theater-panel {
         min-height: 560px;
@@ -4986,6 +5022,9 @@ tr:last-child td { border-bottom: none; }
 }
 
 @media (max-width: 780px) {
+    .operator-status {
+        grid-template-columns: 1fr;
+    }
     .theater-stage {
         min-height: 620px;
         border-width: 5px;
@@ -5064,7 +5103,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-07-05 05:26:56 ICT</span>
+            <span>2026-07-05 06:12:01 ICT</span>
         </div>
     </div>
 </nav>
@@ -5077,7 +5116,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Agent Theater</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-07-05 05:26:56 ICT</span>
+        <span class="tm-item">2026-07-05 06:12:01 ICT</span>
     </div>
 </div>
 
@@ -5087,6 +5126,24 @@ tr:last-child td { border-bottom: none; }
         <div class="section-dot" style="background:var(--green)"></div>
         <div class="section-title">Agent Theater</div>
         <div class="section-count" id="theater-status">loading</div>
+    </div>
+    <div class="operator-status" id="theater-operator-status">
+        <div class="operator-card">
+            <span class="operator-label">Services</span>
+            <strong id="theater-ops-services">checking</strong>
+        </div>
+        <div class="operator-card">
+            <span class="operator-label">Live queue</span>
+            <strong id="theater-ops-live">checking</strong>
+        </div>
+        <div class="operator-card operator-card-wide">
+            <span class="operator-label">Main blocker</span>
+            <strong id="theater-ops-blocker">checking</strong>
+        </div>
+        <div class="operator-card operator-card-wide">
+            <span class="operator-label">Next action</span>
+            <strong id="theater-ops-next">checking</strong>
+        </div>
     </div>
     <div class="theater-layout">
         <div class="theater-stage" id="theater-stage">
@@ -5243,7 +5300,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-07-05 05:26:56 ICT</span>
+        <span class="tm-item">2026-07-05 06:12:01 ICT</span>
     </div>
 </div>
 
@@ -6080,7 +6137,7 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">9 sessions</span><span class="ag-pill">0 MCP servers</span><span class="ag-pill">738 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">9 sessions</span><span class="ag-pill">0 MCP servers</span><span class="ag-pill">736 MB RAM</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (9)</summary>
@@ -6088,27 +6145,27 @@ tr:last-child td { border-bottom: none; }
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19214</span>
-                    <span class="ag-sub-detail">CPU 5.3% · 75 MB</span>
+                    <span class="ag-sub-detail">CPU 5.7% · 75 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19331</span>
-                    <span class="ag-sub-detail">CPU 0.5% · 267 MB</span>
+                    <span class="ag-sub-detail">CPU 0.5% · 266 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19209</span>
-                    <span class="ag-sub-detail">CPU 0.1% · 153 MB</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 155 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19406</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 42 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 41 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19405</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 28 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 27 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
@@ -6118,7 +6175,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19220</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 61 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 60 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
@@ -6351,14 +6408,14 @@ tr:last-child td { border-bottom: none; }
             
         </div></div>
     <details class="sys-section" open>
-        <summary class="sys-section-sum">Services (18 running)</summary>
+        <summary class="sys-section-sum">Services (19 running)</summary>
         
     <div class="sys-services">
-        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-tunnel</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-linear-webhook</span></div></div>
+        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-tunnel</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-data-sync</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-linear-webhook</span></div></div>
     </div>
         <details class="sys-idle-toggle">
-            <summary class="sys-expand-sum">Idle/Stopped (13)</summary>
-            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-auto-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-data-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-linear-webhook-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">omniharness</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">obsidian-linear-sync</span><span class="sys-svc-status">idle</span></div></div>
+            <summary class="sys-expand-sum">Idle/Stopped (12)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-auto-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-linear-webhook-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">omniharness</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">obsidian-linear-sync</span><span class="sys-svc-status">idle</span></div></div>
         </details>
     </details>
     <details class="sys-section">
@@ -6468,7 +6525,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v4 // 5 agents // 2026-07-05 05:26:56 ICT</div>
+<div class="footer">command center v4 // 5 agents // 2026-07-05 06:12:01 ICT</div>
 
 </main>
 </div>
@@ -7843,7 +7900,13 @@ setInterval(refreshLocalServices, 15000);
     const storyEl = document.getElementById('theater-story');
     const storyCountEl = document.getElementById('theater-story-count');
     const refreshBtn = document.getElementById('theater-refresh');
+    const opsServicesEl = document.getElementById('theater-ops-services');
+    const opsLiveEl = document.getElementById('theater-ops-live');
+    const opsBlockerEl = document.getElementById('theater-ops-blocker');
+    const opsNextEl = document.getElementById('theater-ops-next');
     if (!stage || !runnersEl || !currentEl || !storyEl) return;
+
+    const LIVE_WINDOW_MS = 6 * 60 * 60 * 1000;
 
     const STATIONS = {
         USER: {x: 12, y: 55},
@@ -7941,6 +8004,30 @@ setInterval(refreshLocalServices, 15000);
         return 'pending';
     }
 
+    function theaterTaskTime(task) {
+        const raw = task?.updated_at || task?.completed_at || task?.claimed_at || task?.created_at || '';
+        const time = new Date(raw).getTime();
+        return Number.isNaN(time) ? 0 : time;
+    }
+
+    function theaterTaskAgeMs(task) {
+        const time = theaterTaskTime(task);
+        return time ? Date.now() - time : Number.POSITIVE_INFINITY;
+    }
+
+    function theaterIsLiveTask(task) {
+        const state = theaterState(task);
+        if (state === 'running' || state === 'pending') return true;
+        if ((state === 'failed' || state === 'blocked') && theaterTaskAgeMs(task) <= LIVE_WINDOW_MS) return true;
+        return false;
+    }
+
+    function theaterLastBlocker(tasks) {
+        return [...tasks]
+            .filter((task) => ['failed', 'blocked'].includes(theaterState(task)))
+            .sort((a, b) => theaterTaskTime(b) - theaterTaskTime(a))[0] || null;
+    }
+
     function theaterTaskText(task) {
         const messages = (task.messages || []).map((m) => `${m.sender} ${m.receiver} ${m.type} ${m.body}`).join(' ');
         const meta = theaterAllMeta(task).map(theaterText).join(' ');
@@ -7975,6 +8062,15 @@ setInterval(refreshLocalServices, 15000);
             if (line) return theaterCompact(line, 190);
         }
         return `${LABELS[agent] || agent} is handling this task from Bridge queue.`;
+    }
+
+    function theaterHumanBlocker(task) {
+        if (!task) return 'none';
+        const reason = theaterReason(task, theaterAgent(task));
+        if (/authentication_error|invalid authentication credentials/i.test(reason)) {
+            return 'Agent auth is broken: Claude/Codex credentials need refresh.';
+        }
+        return reason;
     }
 
     function theaterRoute(task) {
@@ -8147,20 +8243,49 @@ setInterval(refreshLocalServices, 15000);
     }
 
     function chooseTheaterTask(tasks) {
-        if (!tasks.length) return null;
-        const active = tasks.find((task) => ['running', 'pending', 'blocked', 'failed'].includes(theaterState(task)));
-        return active || tasks[0];
+        const liveTasks = tasks.filter(theaterIsLiveTask);
+        if (!liveTasks.length) return null;
+        const active = liveTasks.find((task) => ['running', 'pending'].includes(theaterState(task)));
+        return active || liveTasks[0];
+    }
+
+    function renderOperatorStatus(tasks, liveTasks, health) {
+        const services = Array.isArray(health?.services) ? health.services : [];
+        const runningServices = services.filter((svc) => svc.status === 'running' && svc.port_ok !== false).length;
+        const blocker = theaterLastBlocker(tasks);
+        const blockerText = theaterHumanBlocker(blocker);
+        if (opsServicesEl) {
+            opsServicesEl.textContent = services.length ? `${runningServices}/${services.length} running` : 'health unavailable';
+        }
+        if (opsLiveEl) {
+            const stale = Math.max(0, tasks.length - liveTasks.length);
+            opsLiveEl.textContent = `${liveTasks.length} live · ${stale} historical`;
+        }
+        if (opsBlockerEl) {
+            opsBlockerEl.textContent = blockerText;
+        }
+        if (opsNextEl) {
+            if (!services.length) opsNextEl.textContent = 'Fix dashboard health API visibility first.';
+            else if (blocker && /auth|credentials/i.test(blockerText)) {
+                opsNextEl.textContent = 'Refresh agent CLI auth on Mac Mini, then run a real Builder smoke.';
+            } else if (!liveTasks.length) {
+                opsNextEl.textContent = 'Send a small Builder task from Telegram and watch it appear here.';
+            } else {
+                opsNextEl.textContent = 'Open the focused task and verify result/evidence.';
+            }
+        }
     }
 
     function renderTheater(tasks) {
         theaterTasks = tasks;
-        const selected = tasks.find((task) => String(task.id) === String(theaterSelectedId)) || chooseTheaterTask(tasks);
+        const liveTasks = tasks.filter(theaterIsLiveTask);
+        const selectedCandidate = liveTasks.find((task) => String(task.id) === String(theaterSelectedId));
+        const selected = selectedCandidate || chooseTheaterTask(tasks);
         theaterSelectedId = selected ? String(selected.id || '') : null;
-        const running = tasks.filter((task) => theaterState(task) === 'running').length;
-        const blocked = tasks.filter((task) => ['blocked', 'failed'].includes(theaterState(task))).length;
-        if (statusEl) statusEl.textContent = `focus task · ${tasks.length} total · ${running} moving · ${blocked} blocked`;
-        updateTheaterPeople(tasks, selected);
-        renderTheaterRunners(tasks, selected);
+        const blocked = liveTasks.filter((task) => ['blocked', 'failed'].includes(theaterState(task))).length;
+        if (statusEl) statusEl.textContent = `${liveTasks.length} live · ${tasks.length} total · ${blocked} blocked`;
+        updateTheaterPeople(liveTasks, selected);
+        renderTheaterRunners(liveTasks, selected);
         renderTheaterCurrent(selected);
         renderTheaterStory(selected);
     }
@@ -8168,14 +8293,24 @@ setInterval(refreshLocalServices, 15000);
     async function refreshTheater() {
         if (statusEl) statusEl.textContent = 'loading';
         try {
-            const res = await fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'});
+            const [res, healthRes] = await Promise.all([
+                fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'}),
+                fetch('/api/health', {cache: 'no-store'}).catch(() => null),
+            ]);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            renderTheater(data.tasks || []);
+            const tasks = data.tasks || [];
+            let health = null;
+            if (healthRes && healthRes.ok) {
+                try { health = await healthRes.json(); } catch (_) { health = null; }
+            }
+            renderTheater(tasks);
+            renderOperatorStatus(tasks, tasks.filter(theaterIsLiveTask), health);
         } catch (err) {
             if (statusEl) statusEl.textContent = 'offline';
             currentEl.innerHTML = `<div class="theater-empty">Bridge unavailable: ${escTheater(err.message)}</div>`;
             storyEl.innerHTML = '<div class="theater-empty">No live events.</div>';
+            renderOperatorStatus([], [], null);
         }
     }
 
