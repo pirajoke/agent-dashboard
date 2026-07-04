@@ -4385,6 +4385,474 @@ tr:last-child td { border-bottom: none; }
     }
 }
 
+/* ── Agent Theater v2: AI Town-inspired town map ── */
+.theater-layout {
+    grid-template-columns: minmax(0, 1.7fr) minmax(330px, 0.58fr);
+    gap: 1.1rem;
+}
+
+.theater-stage {
+    min-height: 650px;
+    border: 8px solid #271827;
+    border-radius: 6px;
+    box-shadow:
+        inset 0 0 0 8px #8c523a,
+        inset 0 0 0 15px #d08a55,
+        0 22px 50px rgba(0,0,0,0.42);
+    background:
+        linear-gradient(90deg, rgba(66,125,48,0.38) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(66,125,48,0.38) 1px, transparent 1px),
+        radial-gradient(circle at 18% 20%, rgba(255,255,255,0.18) 0 2px, transparent 3px),
+        radial-gradient(circle at 72% 70%, rgba(255,255,255,0.2) 0 2px, transparent 3px),
+        linear-gradient(135deg, #58b64a 0 25%, #4dab43 25% 50%, #57b84b 50% 75%, #4aa640 75%);
+    background-size: 42px 42px, 42px 42px, 180px 160px, 210px 190px, 24px 24px;
+    image-rendering: pixelated;
+}
+
+.theater-stage::before {
+    inset: 26px;
+    border: 2px solid rgba(42,80,32,0.35);
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.09);
+}
+
+.theater-stage::after {
+    content: "AI AGENT TOWN";
+    position: absolute;
+    left: 50%;
+    top: 18px;
+    transform: translateX(-50%);
+    z-index: 9;
+    padding: 7px 18px 8px;
+    border: 4px solid #2a1826;
+    background: #f0ad3f;
+    color: #7b2e56;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900;
+    font-size: clamp(1rem, 2vw, 1.45rem);
+    letter-spacing: 0.08em;
+    text-shadow: 0 3px 0 rgba(89,36,70,0.24);
+    box-shadow: inset 0 -7px 0 #c86744, 0 7px 0 rgba(42,24,38,0.75);
+}
+
+.theater-map {
+    inset: 34px 30px 30px;
+    width: calc(100% - 60px);
+    height: calc(100% - 64px);
+    z-index: 2;
+}
+
+.theater-track {
+    stroke: #e4ad68;
+    stroke-width: 44;
+    stroke-dasharray: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 4px 0 rgba(123,75,45,0.32));
+}
+
+.theater-track-main { stroke: #e7b06c; }
+.theater-track-memory { stroke: #dda45f; }
+.theater-track-git { stroke: #d99b5a; }
+.theater-track-deploy { stroke: #e6aa62; }
+
+.theater-track + .theater-track {
+    opacity: 0.96;
+}
+
+.theater-cloud {
+    position: absolute;
+    z-index: 1;
+    width: 112px;
+    height: 30px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.42);
+    box-shadow:
+        22px -9px 0 3px rgba(255,255,255,0.38),
+        48px 0 0 0 rgba(255,255,255,0.34);
+    opacity: 0.55;
+}
+
+.theater-cloud-a { left: 10%; top: 14%; }
+.theater-cloud-b { left: 69%; top: 11%; transform: scale(0.82); }
+
+.theater-field {
+    position: absolute;
+    right: 12%;
+    top: 18%;
+    width: 190px;
+    height: 108px;
+    z-index: 3;
+    border-radius: 10px;
+    background:
+        repeating-linear-gradient(0deg, transparent 0 21px, rgba(255,255,255,0.09) 21px 24px),
+        repeating-linear-gradient(90deg, transparent 0 21px, rgba(255,255,255,0.08) 21px 24px),
+        #5b3c2d;
+    box-shadow: inset 0 0 0 6px #4b3126, 0 7px 0 rgba(62,38,28,0.28);
+}
+
+.theater-field::before {
+    content: "";
+    position: absolute;
+    inset: 14px 18px;
+    background:
+        radial-gradient(circle, #73ce58 0 6px, transparent 7px) 0 0/36px 32px,
+        radial-gradient(circle, #e98237 0 3px, transparent 4px) 7px 7px/36px 32px;
+}
+
+.theater-tree {
+    position: absolute;
+    width: 34px;
+    height: 46px;
+    z-index: 4;
+}
+
+.theater-tree::before {
+    content: "";
+    position: absolute;
+    left: 13px;
+    top: 24px;
+    width: 9px;
+    height: 20px;
+    background: #7a4a2d;
+}
+
+.theater-tree::after {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: 0;
+    width: 32px;
+    height: 30px;
+    border-radius: 50%;
+    background: #37883c;
+    box-shadow: inset -6px -7px 0 rgba(31,93,37,0.36);
+}
+
+.theater-tree-a { left: 10%; top: 28%; }
+.theater-tree-b { left: 35%; top: 13%; transform: scale(0.82); }
+
+.theater-station {
+    min-width: 92px;
+    height: 32px;
+    z-index: 6;
+    transform: translate(-50%, -220%);
+    border: 4px solid #2b1a29;
+    background: #f1d39a;
+    color: #6d3d32;
+    border-radius: 2px;
+    font-size: 0.66rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.45);
+    box-shadow: inset 0 -5px 0 rgba(130,72,48,0.22), 0 5px 0 rgba(46,28,34,0.45);
+}
+
+.theater-person-card {
+    width: 78px;
+    min-height: 88px;
+    top: calc(var(--y) * 1%);
+    border: 0;
+    background: transparent;
+    padding: 0;
+    gap: 1px;
+    z-index: 7;
+    color: #ffffff;
+    filter: drop-shadow(0 9px 8px rgba(31,52,26,0.28));
+}
+
+.theater-person-card:hover {
+    transform: translate(-50%, calc(-50% - 4px));
+}
+
+.theater-person {
+    width: 42px;
+    height: 58px;
+}
+
+.theater-person-head {
+    top: 0;
+    width: 20px;
+    height: 20px;
+    background: #fff1dc;
+    border: 2px solid rgba(84,48,37,0.25);
+    box-shadow: inset 0 -4px 0 rgba(232,158,95,0.35), 0 2px 0 rgba(64,36,30,0.25);
+}
+
+.theater-person-torso {
+    top: 23px;
+    width: 26px;
+    height: 24px;
+    border-radius: 9px 9px 5px 5px;
+    background: #13b8cf;
+    box-shadow: inset -5px -5px 0 rgba(8,115,132,0.35);
+}
+
+.theater-person-card[data-theater-agent="USER"] .theater-person-torso { background: #18c9b5; }
+.theater-person-card[data-theater-agent="JARVIS"] .theater-person-torso { background: #4f9df8; }
+.theater-person-card[data-theater-agent="BRIDGE"] .theater-person-torso { background: #a56bf2; }
+.theater-person-card[data-theater-agent="BUILDER"] .theater-person-torso { background: #f97316; }
+.theater-person-card[data-theater-agent="TESTER"] .theater-person-torso { background: #eab308; }
+.theater-person-card[data-theater-agent="DEPLOYER"] .theater-person-torso { background: #22c55e; }
+.theater-person-card[data-theater-agent="VAULT"] .theater-person-torso { background: #06b6d4; }
+.theater-person-card[data-theater-agent="GITHUB"] .theater-person-torso { background: #ec4899; }
+
+.theater-person-arm {
+    top: 28px;
+    width: 7px;
+    height: 22px;
+    background: #13b8cf;
+    box-shadow: inset -2px -3px 0 rgba(8,115,132,0.28);
+}
+
+.theater-person-arm-a { margin-left: -18px; }
+.theater-person-arm-b { margin-left: 18px; }
+
+.theater-person-leg {
+    top: 46px;
+    width: 8px;
+    height: 17px;
+    background: #9bd3ff;
+    box-shadow: inset -2px -3px 0 rgba(66,112,175,0.3);
+}
+
+.theater-person-name {
+    margin-top: -1px;
+    padding: 3px 6px 2px;
+    border-radius: 6px;
+    background: rgba(31,24,34,0.78);
+    color: #ffffff;
+    font-size: 0.68rem;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.42);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+}
+
+.theater-person-job {
+    display: none;
+}
+
+.theater-person-state {
+    min-width: 0;
+    height: 17px;
+    max-width: 76px;
+    padding: 0 6px;
+    background: rgba(31,24,34,0.64);
+    color: rgba(255,255,255,0.86);
+    font-size: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.theater-person-card.is-active,
+.theater-person-card.is-running,
+.theater-person-card.is-pending,
+.theater-person-card.is-blocked,
+.theater-person-card.is-failed,
+.theater-person-card.is-done {
+    border-color: transparent;
+    background: transparent;
+}
+
+.theater-person-card.is-blocked .theater-person-state,
+.theater-person-card.is-failed .theater-person-state {
+    background: rgba(111,57,33,0.76);
+    color: #ffe2c4;
+}
+
+.theater-person-card.is-running .theater-person-state {
+    background: rgba(19,88,127,0.78);
+}
+
+.theater-person-card.is-done .theater-person-state {
+    background: rgba(35,103,55,0.78);
+}
+
+.theater-runners {
+    z-index: 8;
+    pointer-events: auto;
+}
+
+.theater-runner {
+    width: 34px;
+    min-height: 42px;
+    pointer-events: auto;
+}
+
+.theater-runner .theater-mini-person {
+    width: 22px;
+    height: 32px;
+}
+
+.theater-mini-person::before {
+    left: 5px;
+    width: 13px;
+    height: 13px;
+    background: #fff1dc;
+    border: 2px solid rgba(84,48,37,0.25);
+}
+
+.theater-mini-person::after {
+    top: 15px;
+    left: 3px;
+    width: 17px;
+    height: 17px;
+    border-radius: 7px 7px 3px 3px;
+    background: #f97316;
+    box-shadow:
+        -7px 5px 0 -4px #f97316,
+        7px 5px 0 -4px #f97316,
+        -4px 19px 0 -4px #9bd3ff,
+        4px 19px 0 -4px #9bd3ff;
+}
+
+.theater-runner-label {
+    display: none;
+}
+
+.theater-panel {
+    min-height: 650px;
+    border: 8px solid #2a1826;
+    border-radius: 6px;
+    padding: 1.2rem;
+    background:
+        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px),
+        #ead096;
+    background-size: 18px 18px;
+    color: #39262b;
+    box-shadow:
+        inset 0 0 0 8px #8b523d,
+        inset 0 0 0 14px #c88650,
+        0 22px 50px rgba(0,0,0,0.35);
+}
+
+.theater-kicker {
+    color: #8c5139;
+    font-size: 0.62rem;
+}
+
+.theater-panel-top strong,
+.theater-story-head span:last-child {
+    color: #3a2630;
+    font-size: 0.92rem;
+}
+
+.theater-refresh {
+    border: 3px solid #2a1826;
+    background: #f4b94f;
+    color: #612f35;
+    box-shadow: inset 0 -5px 0 #c76a43, 0 4px 0 rgba(42,24,38,0.52);
+    font-weight: 900;
+}
+
+.theater-current {
+    border: 4px solid #2a1826;
+    background: #fff4ca;
+    border-radius: 2px;
+    box-shadow: inset 0 -5px 0 rgba(133,78,52,0.15);
+}
+
+.theater-current-item span {
+    color: #9b6042;
+}
+
+.theater-current-item strong {
+    color: #2d2028;
+}
+
+.theater-current-reason {
+    color: #67433a;
+}
+
+.theater-story-head {
+    border-top: 3px solid rgba(102,60,43,0.25);
+}
+
+.theater-story {
+    max-height: 390px;
+}
+
+.theater-event {
+    position: relative;
+    border: 4px solid #2a1826;
+    border-left-width: 4px;
+    background: #fff7dd;
+    border-radius: 2px;
+    padding: 0.7rem 0.78rem;
+    box-shadow: 5px 5px 0 rgba(88,52,44,0.18);
+}
+
+.theater-event::after {
+    content: "";
+    position: absolute;
+    left: 16px;
+    bottom: -13px;
+    width: 16px;
+    height: 16px;
+    background: #fff7dd;
+    border-left: 4px solid #2a1826;
+    border-bottom: 4px solid #2a1826;
+    transform: rotate(-18deg);
+}
+
+.theater-event-top strong {
+    color: #2a1826;
+}
+
+.theater-event-top span {
+    color: #8c5139;
+}
+
+.theater-event p {
+    color: #33262c;
+    font-size: 0.72rem;
+}
+
+.theater-empty {
+    color: #7f5548;
+}
+
+@media (max-width: 1180px) {
+    .theater-layout {
+        grid-template-columns: 1fr;
+    }
+    .theater-stage,
+    .theater-panel {
+        min-height: 560px;
+    }
+}
+
+@media (max-width: 780px) {
+    .theater-stage {
+        min-height: 620px;
+        border-width: 5px;
+    }
+    .theater-stage::after {
+        top: 13px;
+        font-size: 0.86rem;
+        padding: 5px 10px 6px;
+    }
+    .theater-person-card {
+        width: 72px;
+        min-height: 78px;
+    }
+    .theater-person-card[data-theater-agent="USER"] { left: 22% !important; top: 19% !important; }
+    .theater-person-card[data-theater-agent="JARVIS"] { left: 70% !important; top: 19% !important; }
+    .theater-person-card[data-theater-agent="BRIDGE"] { left: 22% !important; top: 39% !important; }
+    .theater-person-card[data-theater-agent="BUILDER"] { left: 70% !important; top: 39% !important; }
+    .theater-person-card[data-theater-agent="TESTER"] { left: 22% !important; top: 59% !important; }
+    .theater-person-card[data-theater-agent="DEPLOYER"] { left: 70% !important; top: 59% !important; }
+    .theater-person-card[data-theater-agent="VAULT"] { left: 22% !important; top: 79% !important; }
+    .theater-person-card[data-theater-agent="GITHUB"] { left: 70% !important; top: 79% !important; }
+    .theater-field,
+    .theater-cloud,
+    .theater-tree {
+        display: none;
+    }
+    .theater-map {
+        opacity: 0.7;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -4432,7 +4900,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-07-04 21:18:29 ICT</span>
+            <span>2026-07-04 21:43:01 ICT</span>
         </div>
     </div>
 </nav>
@@ -4445,7 +4913,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">Agent Theater</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-07-04 21:18:29 ICT</span>
+        <span class="tm-item">2026-07-04 21:43:01 ICT</span>
     </div>
 </div>
 
@@ -4459,21 +4927,26 @@ tr:last-child td { border-bottom: none; }
     <div class="theater-layout">
         <div class="theater-stage" id="theater-stage">
             <svg class="theater-map" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
-                <path class="theater-track theater-track-main" d="M80 280 C160 145 250 125 395 240 S565 160 620 118 S770 150 825 220 S870 325 835 382 S730 460 570 418 S370 420 220 405" />
-                <path class="theater-track theater-track-memory" d="M405 248 C455 360 485 398 512 420" />
-                <path class="theater-track theater-track-git" d="M405 250 C320 360 245 390 205 407" />
-                <path class="theater-track theater-track-deploy" d="M780 225 C850 305 875 355 840 405" />
+                <path class="theater-track theater-track-main" d="M120 310 C210 210 300 190 430 285 S600 210 655 170 S790 195 825 285 S840 370 790 425 S655 462 525 410 S340 410 235 450" />
+                <path class="theater-track theater-track-memory" d="M435 290 C470 360 500 402 535 425" />
+                <path class="theater-track theater-track-git" d="M430 290 C350 380 285 420 235 450" />
+                <path class="theater-track theater-track-deploy" d="M770 285 C845 345 890 392 862 440" />
             </svg>
-            <div class="theater-station theater-station-user" style="--x:7;--y:48">Telegram</div>
-            <div class="theater-station theater-station-core" style="--x:22;--y:24">Jarvis</div>
-            <div class="theater-station theater-station-queue" style="--x:40;--y:42">Bridge</div>
-            <div class="theater-station theater-station-code" style="--x:61;--y:20">Code</div>
-            <div class="theater-station theater-station-test" style="--x:78;--y:38">Tests</div>
-            <div class="theater-station theater-station-prod" style="--x:84;--y:68">Mac Mini</div>
-            <div class="theater-station theater-station-memory" style="--x:48;--y:72">Obsidian</div>
-            <div class="theater-station theater-station-git" style="--x:20;--y:72">GitHub</div>
+            <div class="theater-cloud theater-cloud-a"></div>
+            <div class="theater-cloud theater-cloud-b"></div>
+            <div class="theater-field"></div>
+            <div class="theater-tree theater-tree-a"></div>
+            <div class="theater-tree theater-tree-b"></div>
+            <div class="theater-station theater-station-user" style="--x:12;--y:55">Telegram</div>
+            <div class="theater-station theater-station-core" style="--x:28;--y:34">Jarvis</div>
+            <div class="theater-station theater-station-queue" style="--x:44;--y:50">Bridge</div>
+            <div class="theater-station theater-station-code" style="--x:63;--y:32">Code</div>
+            <div class="theater-station theater-station-test" style="--x:77;--y:48">Tests</div>
+            <div class="theater-station theater-station-prod" style="--x:86;--y:69">Mac Mini</div>
+            <div class="theater-station theater-station-memory" style="--x:52;--y:72">Obsidian</div>
+            <div class="theater-station theater-station-git" style="--x:24;--y:76">GitHub</div>
             
-        <button class="theater-person-card" data-theater-agent="USER" style="--x:7;--y:48" title="You">
+        <button class="theater-person-card" data-theater-agent="USER" style="--x:12;--y:55" title="You">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4486,7 +4959,7 @@ tr:last-child td { border-bottom: none; }
             <span class="theater-person-job">request</span>
             <span class="theater-person-state">idle</span>
         </button>
-        <button class="theater-person-card" data-theater-agent="JARVIS" style="--x:22;--y:24" title="Jarvis">
+        <button class="theater-person-card" data-theater-agent="JARVIS" style="--x:28;--y:34" title="Jarvis">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4499,7 +4972,7 @@ tr:last-child td { border-bottom: none; }
             <span class="theater-person-job">understands</span>
             <span class="theater-person-state">idle</span>
         </button>
-        <button class="theater-person-card" data-theater-agent="BRIDGE" style="--x:40;--y:42" title="Bridge">
+        <button class="theater-person-card" data-theater-agent="BRIDGE" style="--x:44;--y:50" title="Bridge">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4512,7 +4985,7 @@ tr:last-child td { border-bottom: none; }
             <span class="theater-person-job">queues</span>
             <span class="theater-person-state">idle</span>
         </button>
-        <button class="theater-person-card" data-theater-agent="BUILDER" style="--x:61;--y:20" title="Builder">
+        <button class="theater-person-card" data-theater-agent="BUILDER" style="--x:63;--y:32" title="Builder">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4525,7 +4998,7 @@ tr:last-child td { border-bottom: none; }
             <span class="theater-person-job">codes</span>
             <span class="theater-person-state">idle</span>
         </button>
-        <button class="theater-person-card" data-theater-agent="TESTER" style="--x:78;--y:38" title="Tester">
+        <button class="theater-person-card" data-theater-agent="TESTER" style="--x:77;--y:48" title="Tester">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4538,7 +5011,7 @@ tr:last-child td { border-bottom: none; }
             <span class="theater-person-job">checks</span>
             <span class="theater-person-state">idle</span>
         </button>
-        <button class="theater-person-card" data-theater-agent="DEPLOYER" style="--x:84;--y:68" title="Deployer">
+        <button class="theater-person-card" data-theater-agent="DEPLOYER" style="--x:86;--y:69" title="Deployer">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4551,7 +5024,7 @@ tr:last-child td { border-bottom: none; }
             <span class="theater-person-job">ships</span>
             <span class="theater-person-state">idle</span>
         </button>
-        <button class="theater-person-card" data-theater-agent="VAULT" style="--x:48;--y:72" title="Vault">
+        <button class="theater-person-card" data-theater-agent="VAULT" style="--x:52;--y:72" title="Vault">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4564,7 +5037,7 @@ tr:last-child td { border-bottom: none; }
             <span class="theater-person-job">remembers</span>
             <span class="theater-person-state">idle</span>
         </button>
-        <button class="theater-person-card" data-theater-agent="GITHUB" style="--x:20;--y:72" title="GitHub">
+        <button class="theater-person-card" data-theater-agent="GITHUB" style="--x:24;--y:76" title="GitHub">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
                 <span class="theater-person-torso"></span>
@@ -4606,7 +5079,7 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-07-04 21:18:29 ICT</span>
+        <span class="tm-item">2026-07-04 21:43:01 ICT</span>
     </div>
 </div>
 
@@ -5443,7 +5916,7 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">9 sessions</span><span class="ag-pill">0 MCP servers</span><span class="ag-pill">770 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">9 sessions</span><span class="ag-pill">0 MCP servers</span><span class="ag-pill">755 MB RAM</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (9)</summary>
@@ -5451,22 +5924,12 @@ tr:last-child td { border-bottom: none; }
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19214</span>
-                    <span class="ag-sub-detail">CPU 5.7% · 76 MB</span>
+                    <span class="ag-sub-detail">CPU 5.3% · 76 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19331</span>
-                    <span class="ag-sub-detail">CPU 0.5% · 265 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19216</span>
-                    <span class="ag-sub-detail">CPU 0.1% · 48 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19209</span>
-                    <span class="ag-sub-detail">CPU 0.1% · 183 MB</span>
+                    <span class="ag-sub-detail">CPU 0.6% · 269 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
@@ -5490,8 +5953,18 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 19216</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 48 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19213</span>
                     <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 19209</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 164 MB</span>
                 </div></div>
             </details>
             
@@ -5509,7 +5982,7 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">3 processes</span><span class="ag-pill">42 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">3 processes</span><span class="ag-pill">44 MB RAM</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (3)</summary>
@@ -5517,7 +5990,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 82198</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 19 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 20 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
@@ -5527,7 +6000,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 66095</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 8 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 9 MB</span>
                 </div></div>
             </details>
             
@@ -5714,14 +6187,14 @@ tr:last-child td { border-bottom: none; }
             
         </div></div>
     <details class="sys-section" open>
-        <summary class="sys-section-sum">Services (18 running)</summary>
+        <summary class="sys-section-sum">Services (19 running)</summary>
         
     <div class="sys-services">
-        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-tunnel</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-linear-webhook</span></div></div>
+        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-tunnel</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-data-sync</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-linear-webhook</span></div></div>
     </div>
         <details class="sys-idle-toggle">
-            <summary class="sys-expand-sum">Idle/Stopped (13)</summary>
-            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-auto-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-data-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-linear-webhook-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">omniharness</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">obsidian-linear-sync</span><span class="sys-svc-status">idle</span></div></div>
+            <summary class="sys-expand-sum">Idle/Stopped (12)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-auto-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-linear-webhook-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">omniharness</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">obsidian-linear-sync</span><span class="sys-svc-status">idle</span></div></div>
         </details>
     </details>
     <details class="sys-section">
@@ -5831,7 +6304,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v4 // 5 agents // 2026-07-04 21:18:29 ICT</div>
+<div class="footer">command center v4 // 5 agents // 2026-07-04 21:43:01 ICT</div>
 
 </main>
 </div>
@@ -7209,16 +7682,16 @@ setInterval(refreshLocalServices, 15000);
     if (!stage || !runnersEl || !currentEl || !storyEl) return;
 
     const STATIONS = {
-        USER: {x: 7, y: 48},
-        JARVIS: {x: 22, y: 24},
-        BRIDGE: {x: 40, y: 42},
-        ROUTER: {x: 22, y: 24},
-        PLANNER: {x: 40, y: 42},
-        BUILDER: {x: 61, y: 20},
-        TESTER: {x: 78, y: 38},
-        DEPLOYER: {x: 84, y: 68},
-        VAULT: {x: 48, y: 72},
-        GITHUB: {x: 20, y: 72},
+        USER: {x: 12, y: 55},
+        JARVIS: {x: 28, y: 34},
+        BRIDGE: {x: 44, y: 50},
+        ROUTER: {x: 28, y: 34},
+        PLANNER: {x: 44, y: 50},
+        BUILDER: {x: 63, y: 32},
+        TESTER: {x: 77, y: 48},
+        DEPLOYER: {x: 86, y: 69},
+        VAULT: {x: 52, y: 72},
+        GITHUB: {x: 24, y: 76},
     };
     const LABELS = {
         USER: 'You',
@@ -7416,12 +7889,22 @@ setInterval(refreshLocalServices, 15000);
             else if (states.some((s) => s === 'pending')) state = 'pending';
             else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
             el.classList.add('is-active', `is-${state}`);
-            if (label) label.textContent = `${state} · ${states.length}`;
+            if (label) {
+                const neutralAgents = ['USER', 'JARVIS', 'BRIDGE'];
+                if (neutralAgents.includes(agent)) label.textContent = `${states.length} tasks`;
+                else if (state === 'blocked') label.textContent = `check · ${states.length}`;
+                else if (state === 'running') label.textContent = `moving · ${states.length}`;
+                else label.textContent = `${state} · ${states.length}`;
+            }
         });
     }
 
     function renderTheaterRunners(tasks) {
-        const visible = tasks.slice(0, 9);
+        const activeFirst = [...tasks].sort((a, b) => {
+            const rank = {running: 0, pending: 1, failed: 2, blocked: 2, done: 3, cancelled: 4};
+            return (rank[theaterState(a)] ?? 5) - (rank[theaterState(b)] ?? 5);
+        });
+        const visible = activeFirst.slice(0, 5);
         runnersEl.innerHTML = visible.map((task) => {
             const state = theaterState(task);
             const agent = theaterAgent(task);
