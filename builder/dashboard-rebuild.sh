@@ -135,13 +135,15 @@ if [ -d "$REPO_DIR/.git" ]; then
     git fetch origin main >> "$LOG" 2>&1 || log "WARN: git fetch failed"
     git worktree add --detach "$PUBLISH_WT" FETCH_HEAD >> "$LOG" 2>&1 || { log "ERROR: publish worktree failed"; exit 1; }
     cp "$HTML_OUT" "$PUBLISH_WT/index.html"
+    mkdir -p "$PUBLISH_WT/dashboard-assets"
+    cp "$HOME/dashboard-assets/ai-town-32x32folk.png" "$PUBLISH_WT/dashboard-assets/ai-town-32x32folk.png" 2>/dev/null || log "WARN: AI Town sprite asset missing"
     cd "$PUBLISH_WT"
 
     # Only commit+push if there are actual changes
-    if git diff --quiet index.html 2>/dev/null; then
+    if git diff --quiet index.html dashboard-assets 2>/dev/null; then
         log "No changes, skipping push"
     else
-        git add index.html
+        git add index.html dashboard-assets
         git commit -m "auto-update dashboard $(date -u '+%Y-%m-%d %H:%M UTC')" --no-gpg-sign 2>/dev/null || true
         if git push origin HEAD:main >> "$LOG" 2>&1; then
             log "Pushed update to GitHub Pages"

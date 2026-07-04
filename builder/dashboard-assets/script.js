@@ -1601,7 +1601,8 @@ setInterval(refreshLocalServices, 15000);
             const id = String(task.id || '');
             return `
                 <div class="theater-runner theater-runner-${escTheater(state)}" data-task-id="${escTheater(id)}"
-                    data-route="${escTheater(route)}" data-state="${escTheater(state)}" data-seed="${theaterSeed(id)}">
+                    data-route="${escTheater(route)}" data-state="${escTheater(state)}"
+                    data-runner-agent="${escTheater(agent)}" data-seed="${theaterSeed(id)}">
                     <span class="theater-mini-person" aria-hidden="true"></span>
                     <span class="theater-runner-label">${escTheater(LABELS[agent] || agent)} · ${escTheater(state)}</span>
                 </div>`;

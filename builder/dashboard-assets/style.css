@@ -4803,6 +4803,139 @@ tr:last-child td { border-bottom: none; }
     color: #7f5548;
 }
 
+/* AI Town-style sprites: source asset public/assets/32x32folk.png from
+   https://github.com/a16z-infra/ai-town. The sheet is 12x8 frames, 32px each. */
+.theater-person-card .theater-person,
+.theater-runner .theater-mini-person {
+    --sprite-x0: 0px;
+    --sprite-x1: -32px;
+    --sprite-x2: -64px;
+    --sprite-y: 0px;
+    width: 32px;
+    height: 32px;
+    background-image: url("dashboard-assets/ai-town-32x32folk.png");
+    background-repeat: no-repeat;
+    background-size: 384px 256px;
+    background-position: var(--sprite-x0) var(--sprite-y);
+    image-rendering: pixelated;
+}
+
+.theater-person-card .theater-person {
+    margin: 12px 0 13px;
+    transform: scale(1.9);
+    transform-origin: center bottom;
+    filter: drop-shadow(0 10px 7px rgba(49,39,24,0.34));
+}
+
+.theater-person-head,
+.theater-person-torso,
+.theater-person-arm,
+.theater-person-leg,
+.theater-mini-person::before,
+.theater-mini-person::after {
+    display: none !important;
+}
+
+.theater-person-card[data-theater-agent="USER"] .theater-person,
+.theater-runner[data-runner-agent="USER"] .theater-mini-person {
+    --sprite-x0: 0px;
+    --sprite-x1: -32px;
+    --sprite-x2: -64px;
+    --sprite-y: -128px;
+}
+
+.theater-person-card[data-theater-agent="JARVIS"] .theater-person,
+.theater-runner[data-runner-agent="JARVIS"] .theater-mini-person,
+.theater-runner[data-runner-agent="ROUTER"] .theater-mini-person,
+.theater-runner[data-runner-agent="PLANNER"] .theater-mini-person {
+    --sprite-x0: 0px;
+    --sprite-x1: -32px;
+    --sprite-x2: -64px;
+    --sprite-y: 0px;
+}
+
+.theater-person-card[data-theater-agent="BRIDGE"] .theater-person,
+.theater-runner[data-runner-agent="BRIDGE"] .theater-mini-person {
+    --sprite-x0: -96px;
+    --sprite-x1: -128px;
+    --sprite-x2: -160px;
+    --sprite-y: -128px;
+}
+
+.theater-person-card[data-theater-agent="BUILDER"] .theater-person,
+.theater-runner[data-runner-agent="BUILDER"] .theater-mini-person {
+    --sprite-x0: -96px;
+    --sprite-x1: -128px;
+    --sprite-x2: -160px;
+    --sprite-y: 0px;
+}
+
+.theater-person-card[data-theater-agent="TESTER"] .theater-person,
+.theater-runner[data-runner-agent="TESTER"] .theater-mini-person {
+    --sprite-x0: -192px;
+    --sprite-x1: -224px;
+    --sprite-x2: -256px;
+    --sprite-y: -128px;
+}
+
+.theater-person-card[data-theater-agent="DEPLOYER"] .theater-person,
+.theater-runner[data-runner-agent="DEPLOYER"] .theater-mini-person {
+    --sprite-x0: -288px;
+    --sprite-x1: -320px;
+    --sprite-x2: -352px;
+    --sprite-y: -128px;
+}
+
+.theater-person-card[data-theater-agent="VAULT"] .theater-person,
+.theater-runner[data-runner-agent="VAULT"] .theater-mini-person {
+    --sprite-x0: -192px;
+    --sprite-x1: -224px;
+    --sprite-x2: -256px;
+    --sprite-y: 0px;
+}
+
+.theater-person-card[data-theater-agent="GITHUB"] .theater-person,
+.theater-runner[data-runner-agent="GITHUB"] .theater-mini-person {
+    --sprite-x0: -288px;
+    --sprite-x1: -320px;
+    --sprite-x2: -352px;
+    --sprite-y: 0px;
+}
+
+.theater-person-card.is-running .theater-person,
+.theater-runner .theater-mini-person {
+    animation: aiTownWalkDown 0.5s steps(1, end) infinite;
+}
+
+.theater-person-card.is-pending .theater-person {
+    background-position: var(--sprite-x1) var(--sprite-y);
+}
+
+.theater-person-card.is-blocked .theater-person,
+.theater-person-card.is-failed .theater-person,
+.theater-runner-blocked .theater-mini-person,
+.theater-runner-failed .theater-mini-person {
+    animation: none;
+    background-position: var(--sprite-x2) var(--sprite-y);
+    filter: grayscale(0.25) saturate(0.85) drop-shadow(0 7px 8px rgba(91,48,32,0.32));
+}
+
+.theater-person-card.is-done .theater-person {
+    background-position: var(--sprite-x0) var(--sprite-y);
+}
+
+.theater-runner .theater-mini-person {
+    transform: scale(1.45);
+    transform-origin: center bottom;
+    filter: drop-shadow(0 8px 6px rgba(49,39,24,0.34));
+}
+
+@keyframes aiTownWalkDown {
+    0%, 100% { background-position: var(--sprite-x0) var(--sprite-y); }
+    33% { background-position: var(--sprite-x1) var(--sprite-y); }
+    66% { background-position: var(--sprite-x2) var(--sprite-y); }
+}
+
 @media (max-width: 1180px) {
     .theater-layout {
         grid-template-columns: 1fr;

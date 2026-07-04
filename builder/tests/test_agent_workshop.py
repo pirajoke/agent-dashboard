@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
 import unittest
 
 from dashboard_builder.agent_theater import THEATER_AGENTS, build_agent_theater_html
 from dashboard_builder.agent_workshop import AGENT_ROOMS, build_agent_workshop_html
 from dashboard_builder.html_builder import build_html
+
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "dashboard-assets"
 
 
 class AgentTheaterTests(unittest.TestCase):
@@ -29,6 +32,15 @@ class AgentTheaterTests(unittest.TestCase):
         self.assertIn("initAgentTheater", html)
         self.assertIn("theater-runners", html)
         self.assertIn("theaterPersonWalk", html)
+
+    def test_agent_theater_uses_ai_town_sprite_asset(self):
+        css = (ASSETS_DIR / "style.css").read_text()
+        script = (ASSETS_DIR / "script.js").read_text()
+
+        self.assertIn("ai-town-32x32folk.png", css)
+        self.assertIn("data-runner-agent", script)
+        self.assertTrue((ASSETS_DIR / "ai-town-32x32folk.png").exists())
+        self.assertGreater((ASSETS_DIR / "ai-town-32x32folk.png").stat().st_size, 1000)
 
 
 class AgentWorkshopTests(unittest.TestCase):
