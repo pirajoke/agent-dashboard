@@ -31,6 +31,8 @@ class AgentWorkshopTests(unittest.TestCase):
         self.assertIn("Control Room", html)
         self.assertIn("initAgentWorkshop", html)
         self.assertIn("renderCausalView", html)
+        self.assertIn("readMetadata", html)
+        self.assertIn("structured Bridge event", html)
 
 
 if __name__ == "__main__":

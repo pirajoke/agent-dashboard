@@ -368,6 +368,66 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         return String(task?.id ?? '');
     }
 
+    function readMetadata(item) {
+        const raw = item?.metadata ?? item?.meta ?? null;
+        if (!raw) return {};
+        if (typeof raw === 'object') return raw;
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function messageMetadata(task) {
+        return (task.messages || []).map(readMetadata).filter((meta) => Object.keys(meta).length);
+    }
+
+    function firstMetadataValue(task, keys) {
+        const metas = [readMetadata(task), ...messageMetadata(task)];
+        for (const meta of metas) {
+            for (const key of keys) {
+                if (meta[key] != null && meta[key] !== '') return meta[key];
+            }
+        }
+        return '';
+    }
+
+    const TOOL_DETAILS = {
+        telegram: {label: 'Telegram', detail: 'user message and bot reply'},
+        obsidian: {label: 'Obsidian', detail: 'memory, status, project notes'},
+        github: {label: 'GitHub', detail: 'commits, push, issues, source control'},
+        repo: {label: 'Repo', detail: 'local code checkout'},
+        tests: {label: 'Tests', detail: 'unit tests, smoke checks, compile'},
+        macmini: {label: 'Mac Mini', detail: 'production runtime and launchd'},
+        linear: {label: 'Linear', detail: 'project/task tracking'},
+        bridge: {label: 'Bridge', detail: 'task queue and agent messages'},
+        claude: {label: 'Claude', detail: 'worker execution model'},
+    };
+
+    function normalizeToolName(value) {
+        return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    }
+
+    function structuredTools(task) {
+        const names = [];
+        const metas = [readMetadata(task), ...messageMetadata(task)];
+        metas.forEach((meta) => {
+            [...(Array.isArray(meta.tools) ? meta.tools : []), ...(Array.isArray(meta.tool_hints) ? meta.tool_hints : [])]
+                .forEach((tool) => names.push(normalizeToolName(tool)));
+            (Array.isArray(meta.calls) ? meta.calls : []).forEach((call) => {
+                const callName = normalizeToolName(call);
+                if (callName.includes('claude')) names.push('claude');
+                if (callName.includes('bridge')) names.push('bridge');
+                if (callName.includes('test')) names.push('tests');
+            });
+        });
+        return [...new Set(names)]
+            .filter(Boolean)
+            .map((name) => TOOL_DETAILS[name] || {label: name, detail: 'structured Bridge metadata'});
+    }
+
     function normalizedState(task) {
         const raw = String(task.status || task.state || '').toLowerCase();
         const outcome = `${task.error || ''} ${asText(task.result)}`.toLowerCase();
@@ -384,7 +444,8 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
 
     function taskText(task) {
         const msgText = (task.messages || []).map((m) => [m.sender, m.receiver, m.type, m.body].join(' ')).join(' ');
-        return `${task.description || ''} ${task.agent_role || ''} ${task.error || ''} ${asText(task.result)} ${msgText}`.toLowerCase();
+        const metaText = [readMetadata(task), ...messageMetadata(task)].map(asText).join(' ');
+        return `${task.description || ''} ${task.agent_role || ''} ${task.error || ''} ${asText(task.result)} ${msgText} ${metaText}`.toLowerCase();
     }
 
     function deriveAgent(task) {
@@ -408,6 +469,12 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     function agentReason(task, agent) {
         const text = taskText(task);
         const role = String(task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
+        const structuredReason = firstMetadataValue(task, ['route_reason', 'reason']);
+        const routeSource = firstMetadataValue(task, ['route_source', 'entrypoint']);
+        if (structuredReason) {
+            const suffix = routeSource ? ` (${routeSource})` : '';
+            return `${AGENT_LABELS[agent] || agent} selected from structured Bridge event${suffix}: ${structuredReason}.`;
+        }
         if (agent === 'TESTER' && text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) {
             return 'TESTER selected because the task mentions validation, smoke tests, compile checks, or pytest.';
         }
@@ -433,6 +500,8 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     }
 
     function inferTools(task) {
+        const structured = structuredTools(task);
+        if (structured.length) return structured;
         const text = taskText(task);
         const rules = [
             {id: 'telegram', label: 'Telegram', detail: 'user message and bot reply', re: /\b(telegram|bot|intake|reply|message)\b/},
@@ -449,6 +518,8 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     }
 
     function failureReason(task) {
+        const structuredReason = firstMetadataValue(task, ['blocked_reason', 'failure_reason']);
+        if (structuredReason) return compact(structuredReason, 260);
         const candidates = [
             task.error,
             task.result,
@@ -471,15 +542,18 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         const state = normalizedState(task);
         const tools = inferTools(task);
         const failure = failureReason(task);
+        const meta = readMetadata(task);
+        const trigger = firstMetadataValue(task, ['triggered_by']) || 'User';
+        const entrypoint = firstMetadataValue(task, ['entrypoint']) || 'parses request and decides whether to route, remember, answer, or code';
         const nodes = [
-            {label: 'User / Telegram', detail: compact(taskTitle(task), 84), tone: 'user'},
-            {label: 'JARVIS', detail: 'parses request and decides whether to route, remember, answer, or code', tone: 'core'},
+            {label: trigger === 'telegram' ? 'User / Telegram' : compact(trigger, 42), detail: compact(taskTitle(task), 84), tone: 'user'},
+            {label: 'JARVIS', detail: compact(entrypoint, 96), tone: 'core'},
             {label: 'Bridge queue', detail: compact(task.id || 'task dispatch', 84), tone: 'bridge'},
             {label: AGENT_LABELS[agent] || agent, detail: compact(agentReason(task, agent), 96), tone: 'agent'},
             {label: tools.map((tool) => tool.label).join(' + '), detail: tools.map((tool) => tool.detail).join(' / '), tone: 'tool'},
             {label: state === 'failed' ? 'Failed' : state === 'blocked' ? 'Blocked' : state === 'done' ? 'Done' : state === 'running' ? 'Running' : 'Pending', detail: failure || compact(task.result || task.error || 'waiting for next event', 96), tone: state},
         ];
-        return {agent, state, tools, failure, nodes};
+        return {agent, state, tools, failure, nodes, meta};
     }
 
     function timelineEvents(task) {
@@ -493,11 +567,13 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
             });
         }
         (task.messages || []).slice(-10).forEach((message) => {
+            const meta = readMetadata(message);
+            const detail = meta.blocked_reason || meta.route_reason || meta.status || meta.event || message.body || '';
             events.push({
                 time: message.created_at,
                 actor: `${message.sender || '?'} -> ${message.receiver || '?'}`,
-                title: message.type || 'message',
-                body: compact(message.body || '', 280),
+                title: meta.event || message.type || 'message',
+                body: compact(detail === meta.event ? message.body || '' : detail, 280),
             });
         });
         const failure = failureReason(task);
@@ -549,6 +625,10 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
             `Tools inferred: ${model.tools.map((tool) => `${tool.label} (${tool.detail})`).join(', ')}.`,
             `State normalized from Bridge status/result as ${model.state}.`,
         ];
+        if (model.meta.entrypoint) reasons.unshift(`Entrypoint: ${model.meta.entrypoint}.`);
+        if (Array.isArray(model.meta.calls) && model.meta.calls.length) {
+            reasons.push(`Calls planned: ${model.meta.calls.join(' -> ')}.`);
+        }
         if (model.failure) reasons.push(`Blocker: ${model.failure}`);
         causalReasonsEl.innerHTML = reasons.map((reason) => `<div class="workshop-reason">${esc(reason)}</div>`).join('');
 
