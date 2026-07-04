@@ -166,7 +166,6 @@ body {
 .main {
     margin-left: 220px;
     flex: 1;
-    min-width: 0;
     padding: 2rem 2.5rem;
     max-width: 1320px;
 }
@@ -1437,11 +1436,28 @@ body {
     min-width: 55px;
 }
 .linear-title {
+    display: block;
     font-size: 0.78rem;
     color: var(--text);
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.linear-main {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.16rem;
+}
+.linear-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.55rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--dim);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1460,6 +1476,16 @@ body {
     background: rgba(168,85,247,0.1);
     color: var(--purple);
     font-weight: 600;
+    white-space: nowrap;
+}
+.linear-source {
+    font-size: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    background: rgba(6,182,212,0.1);
+    color: var(--cyan);
+    font-weight: 700;
     white-space: nowrap;
 }
 .linear-state {
@@ -1936,8 +1962,6 @@ tr:last-child td { border-bottom: none; }
     .stats { grid-template-columns: repeat(3, 1fr); }
     .caps-grid { grid-template-columns: repeat(2, 1fr); }
     .orch-agents-detail { grid-template-columns: 1fr; }
-    .jpipe-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .jpipe-unsynced { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* ── Phase 3: Sparklines ── */
 .sparklines-row {
@@ -2359,7 +2383,7 @@ tr:last-child td { border-bottom: none; }
 }
 @media (max-width: 768px) {
     .sidebar { display: none; }
-    .main { margin-left: 0; padding: 1rem; width: 100%; max-width: 100%; }
+    .main { margin-left: 0; padding: 1rem; }
     .agents { grid-template-columns: 1fr; }
     .stats { grid-template-columns: repeat(2, 1fr); }
     .caps-grid { grid-template-columns: 1fr; }
@@ -2370,11 +2394,6 @@ tr:last-child td { border-bottom: none; }
     .topbar { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
     .cmd-dialog { width: 95vw; }
     .frac-summary { grid-template-columns: repeat(3, 1fr); }
-    .jpipe-head { flex-direction: column; align-items: flex-start; gap: 0.55rem; }
-    .jpipe-grid { grid-template-columns: 1fr; }
-    .jpipe-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .jpipe-signals,
-    .jpipe-unsynced { grid-template-columns: 1fr; }
 }
 
 /* ── Real Agent sub-items ── */
@@ -2784,201 +2803,6 @@ tr:last-child td { border-bottom: none; }
     background: rgba(249,115,22,0.08); color: var(--accent); border: 1px solid rgba(249,115,22,0.15);
 }
 
-/* ── JARVIS Pipeline ── */
-.jpipe-card {
-    background: rgba(255,255,255,0.02);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 12px;
-}
-.jpipe-card.jpipe-green { border-color: rgba(34,197,94,0.18); }
-.jpipe-card.jpipe-yellow { border-color: rgba(234,179,8,0.22); }
-.jpipe-card.jpipe-red { border-color: rgba(239,68,68,0.24); }
-.jpipe-head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.85rem;
-}
-.jpipe-kicker {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.2rem;
-}
-.jpipe-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: 0;
-}
-.jpipe-state {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--text2);
-    background: rgba(255,255,255,0.05);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0.25rem 0.55rem;
-    white-space: nowrap;
-}
-.jpipe-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.45rem;
-    margin-bottom: 0.8rem;
-}
-.jpipe-check {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.2rem 0.4rem;
-    align-items: center;
-    min-width: 0;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.055);
-    border-radius: 8px;
-    padding: 0.5rem 0.55rem;
-}
-.jpipe-check-label {
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--text);
-}
-.jpipe-check-detail {
-    grid-column: 2;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.jpipe-meta {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.5rem;
-    margin-bottom: 0.8rem;
-}
-.jpipe-meta div {
-    border-top: 1px solid var(--border);
-    padding-top: 0.45rem;
-    min-width: 0;
-}
-.jpipe-meta span,
-.jpipe-latest span {
-    display: block;
-    font-size: 0.55rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    margin-bottom: 0.18rem;
-}
-.jpipe-meta strong,
-.jpipe-latest strong {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--text2);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.jpipe-latest {
-    background: rgba(255,255,255,0.025);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.55rem 0.65rem;
-    margin-bottom: 0.65rem;
-}
-.jpipe-signals {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.55rem;
-    margin-bottom: 0.65rem;
-}
-.jpipe-signal {
-    min-width: 0;
-    background: rgba(255,255,255,0.025);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.55rem 0.65rem;
-}
-.jpipe-signal span,
-.jpipe-unsynced-item span {
-    display: block;
-    font-size: 0.55rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    margin-bottom: 0.18rem;
-}
-.jpipe-signal strong,
-.jpipe-unsynced-item strong {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.67rem;
-    color: var(--text2);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.jpipe-signal em {
-    display: block;
-    margin-top: 0.18rem;
-    font-style: normal;
-    font-size: 0.64rem;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.jpipe-unsynced {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.45rem;
-    margin-bottom: 0.65rem;
-}
-.jpipe-unsynced-item,
-.jpipe-empty {
-    min-width: 0;
-    background: rgba(234,179,8,0.045);
-    border: 1px solid rgba(234,179,8,0.12);
-    border-radius: 8px;
-    padding: 0.48rem 0.55rem;
-}
-.jpipe-empty {
-    grid-column: 1 / -1;
-    font-size: 0.68rem;
-    color: var(--muted);
-}
-.jpipe-warnings {
-    display: grid;
-    gap: 0.35rem;
-    margin-bottom: 0.65rem;
-}
-.jpipe-warnings div {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    min-width: 0;
-    font-size: 0.68rem;
-    color: var(--text2);
-}
-.jpipe-next {
-    font-size: 0.72rem;
-    color: var(--text2);
-    line-height: 1.45;
-}
-
 /* ── System Section ── */
 .sys-m4 {
     padding: 10px 14px; margin-bottom: 12px;
@@ -3103,727 +2927,6 @@ tr:last-child td { border-bottom: none; }
 .cost-sub-cost { color: var(--text2); min-width: 40px; text-align: right; }
 .cost-sub-renew { font-size: 0.68rem; min-width: 50px; text-align: right; }
 
-/* ── Agent Workshop ── */
-.workshop-shell {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    gap: 1rem;
-    align-items: stretch;
-}
-.workshop-main,
-.workshop-side {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    backdrop-filter: var(--glass);
-}
-.workshop-main {
-    min-width: 0;
-    padding: 1rem;
-}
-.workshop-metrics {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.6rem;
-    margin-bottom: 0.85rem;
-}
-.workshop-metrics div {
-    min-width: 0;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.55rem 0.65rem;
-}
-.workshop-metrics span {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--text);
-    line-height: 1.1;
-}
-.workshop-metrics em {
-    display: block;
-    margin-top: 0.2rem;
-    font-size: 0.58rem;
-    color: var(--dim);
-    font-style: normal;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-.workshop-board {
-    position: relative;
-    min-height: 460px;
-    overflow: hidden;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.07);
-    background:
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(135deg, rgba(249,115,22,0.08), rgba(6,182,212,0.05) 42%, rgba(34,197,94,0.04));
-    background-size: 48px 48px, 48px 48px, auto;
-}
-.workshop-routes {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-.workshop-routes path {
-    fill: none;
-    stroke: rgba(255,255,255,0.18);
-    stroke-width: 4;
-    stroke-linecap: round;
-    stroke-dasharray: 12 12;
-}
-.workshop-room {
-    position: absolute;
-    min-width: 106px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 0.65rem;
-    border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 8px;
-    background: rgba(9,9,11,0.72);
-    color: var(--text2);
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-.workshop-room-code { border-color: rgba(249,115,22,0.22); }
-.workshop-room-runtime { border-color: rgba(34,197,94,0.18); }
-.workshop-room-memory { border-color: rgba(6,182,212,0.2); }
-.workshop-room-git { border-color: rgba(168,85,247,0.2); }
-.workshop-agent {
-    position: absolute;
-    width: 134px;
-    min-height: 92px;
-    transform: translate(-50%, -50%);
-    display: grid;
-    grid-template-columns: 34px 1fr;
-    grid-template-rows: auto auto auto;
-    column-gap: 0.55rem;
-    align-items: center;
-    padding: 0.65rem;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    background: rgba(17,17,21,0.92);
-    color: var(--text);
-    cursor: pointer;
-    text-align: left;
-    transition: border-color 0.2s, transform 0.2s, background 0.2s;
-    z-index: 2;
-}
-.workshop-agent:hover {
-    border-color: rgba(249,115,22,0.45);
-    transform: translate(-50%, -52%);
-}
-.workshop-figure {
-    grid-row: 1 / span 3;
-    position: relative;
-    width: 30px;
-    height: 54px;
-    justify-self: center;
-}
-.workshop-head,
-.workshop-body,
-.workshop-leg {
-    position: absolute;
-    display: block;
-    left: 50%;
-    transform: translateX(-50%);
-}
-.workshop-head {
-    top: 3px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: var(--text);
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.22);
-}
-.workshop-body {
-    top: 24px;
-    width: 22px;
-    height: 20px;
-    border-radius: 6px;
-    background: var(--accent);
-}
-.workshop-leg {
-    top: 43px;
-    width: 6px;
-    height: 10px;
-    border-radius: 4px;
-    background: var(--text2);
-    transform-origin: 50% 0;
-}
-.workshop-leg-a { margin-left: -5px; }
-.workshop-leg-b { margin-left: 5px; }
-.workshop-agent-name {
-    min-width: 0;
-    font-size: 0.82rem;
-    font-weight: 800;
-    line-height: 1.1;
-}
-.workshop-agent-room {
-    min-width: 0;
-    margin-top: 0.16rem;
-    font-size: 0.6rem;
-    color: var(--dim);
-    line-height: 1.2;
-}
-.workshop-agent-state {
-    align-self: end;
-    margin-top: 0.35rem;
-    width: fit-content;
-    max-width: 100%;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.56rem;
-    color: var(--muted);
-    background: rgba(255,255,255,0.05);
-    border-radius: 5px;
-    padding: 0.12rem 0.35rem;
-    white-space: nowrap;
-}
-.workshop-agent.is-active {
-    border-color: rgba(59,130,246,0.38);
-}
-.workshop-agent.is-running {
-    background: rgba(17,24,39,0.96);
-    box-shadow: 0 0 0 1px rgba(59,130,246,0.22), 0 12px 28px rgba(0,0,0,0.22);
-}
-.workshop-agent.is-running .workshop-figure {
-    animation: workshopWalk 0.72s ease-in-out infinite;
-}
-.workshop-agent.is-running .workshop-leg-a {
-    animation: workshopLegA 0.72s ease-in-out infinite;
-}
-.workshop-agent.is-running .workshop-leg-b {
-    animation: workshopLegB 0.72s ease-in-out infinite;
-}
-.workshop-agent.is-pending {
-    border-color: rgba(234,179,8,0.34);
-}
-.workshop-agent.is-blocked,
-.workshop-agent.is-failed {
-    border-color: rgba(239,68,68,0.45);
-    box-shadow: 0 0 0 1px rgba(239,68,68,0.14);
-}
-.workshop-agent.is-done {
-    border-color: rgba(34,197,94,0.34);
-}
-@keyframes workshopWalk {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
-}
-@keyframes workshopLegA {
-    0%, 100% { transform: translateX(-50%) rotate(-14deg); }
-    50% { transform: translateX(-50%) rotate(14deg); }
-}
-@keyframes workshopLegB {
-    0%, 100% { transform: translateX(-50%) rotate(14deg); }
-    50% { transform: translateX(-50%) rotate(-14deg); }
-}
-.workshop-marker {
-    position: absolute;
-    width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: translate(-50%, -50%);
-    border: 1px solid rgba(255,255,255,0.18);
-    border-radius: 8px;
-    color: var(--bg);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    font-weight: 900;
-    cursor: pointer;
-    z-index: 4;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
-}
-.workshop-marker-running {
-    background: var(--blue);
-    animation: workshopMarkerMove 1.2s ease-in-out infinite;
-}
-.workshop-marker-pending { background: var(--yellow); }
-.workshop-marker-blocked,
-.workshop-marker-failed { background: var(--red); }
-.workshop-marker-done { background: var(--green); }
-.workshop-marker-cancelled { background: var(--dim); }
-@keyframes workshopMarkerMove {
-    0%, 100% { margin-top: 0; }
-    50% { margin-top: -8px; }
-}
-.workshop-side {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-}
-.workshop-side-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    align-items: center;
-    margin-bottom: 0.8rem;
-}
-.workshop-side-kicker {
-    display: block;
-    font-size: 0.58rem;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    margin-bottom: 0.18rem;
-}
-.workshop-side-head strong {
-    display: block;
-    font-size: 0.95rem;
-}
-.workshop-icon-btn,
-.workshop-drawer-close {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.05);
-    color: var(--text2);
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 800;
-    cursor: pointer;
-}
-.workshop-icon-btn:hover,
-.workshop-drawer-close:hover {
-    border-color: rgba(249,115,22,0.45);
-    color: var(--text);
-}
-.workshop-task-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    overflow: auto;
-    max-height: 560px;
-    padding-right: 0.2rem;
-}
-.workshop-task {
-    width: 100%;
-    display: block;
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--dim);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.035);
-    color: var(--text);
-    padding: 0.65rem;
-    text-align: left;
-    cursor: pointer;
-}
-.workshop-task:hover {
-    border-color: rgba(249,115,22,0.34);
-}
-.workshop-task.is-selected {
-    border-color: rgba(6,182,212,0.48);
-    background: rgba(6,182,212,0.08);
-}
-.workshop-task-running { border-left-color: var(--blue); }
-.workshop-task-pending { border-left-color: var(--yellow); }
-.workshop-task-blocked,
-.workshop-task-failed { border-left-color: var(--red); }
-.workshop-task-done { border-left-color: var(--green); }
-.workshop-task-cancelled { border-left-color: var(--dim); opacity: 0.72; }
-.workshop-task-top {
-    display: grid;
-    grid-template-columns: minmax(70px, 1fr) auto auto;
-    gap: 0.45rem;
-    align-items: center;
-    margin-bottom: 0.42rem;
-}
-.workshop-task-top code {
-    min-width: 0;
-    font-size: 0.58rem;
-    color: var(--muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.workshop-task-top em,
-.workshop-task-top strong {
-    font-size: 0.55rem;
-    font-style: normal;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--dim);
-}
-.workshop-task-top strong {
-    color: var(--text2);
-    text-transform: uppercase;
-}
-.workshop-task-title {
-    display: block;
-    font-size: 0.72rem;
-    line-height: 1.35;
-    color: var(--text);
-}
-.workshop-task-meta {
-    display: block;
-    margin-top: 0.42rem;
-    font-size: 0.58rem;
-    color: var(--dim);
-    font-family: 'JetBrains Mono', monospace;
-}
-.workshop-empty {
-    color: var(--dim);
-    font-size: 0.75rem;
-    line-height: 1.45;
-    padding: 1rem;
-    border: 1px dashed var(--border2);
-    border-radius: 8px;
-}
-.workshop-marker.is-selected {
-    outline: 2px solid var(--cyan);
-    outline-offset: 3px;
-}
-.workshop-control {
-    min-width: 0;
-    margin-top: 1rem;
-    padding: 1rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--card);
-    backdrop-filter: var(--glass);
-}
-.workshop-control-head {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: flex-start;
-    margin-bottom: 0.9rem;
-}
-.workshop-control-head strong {
-    display: block;
-    max-width: 760px;
-    font-size: 1rem;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
-}
-.workshop-control-head > span {
-    flex-shrink: 0;
-    max-width: 360px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.04);
-    padding: 0.45rem 0.6rem;
-    color: var(--text2);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.62rem;
-    line-height: 1.35;
-    overflow-wrap: anywhere;
-}
-.workshop-causal-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
-    gap: 0.85rem;
-}
-.workshop-causal-panel {
-    min-width: 0;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.035);
-    padding: 0.85rem;
-}
-.workshop-causal-panel-wide {
-    grid-row: span 2;
-}
-.workshop-flow {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-}
-.workshop-flow-step {
-    min-width: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 74px;
-    gap: 0.55rem;
-    align-items: stretch;
-}
-.workshop-flow-step:last-child {
-    grid-template-columns: minmax(0, 1fr);
-}
-.workshop-flow-node {
-    min-width: 0;
-    border: 1px solid var(--border2);
-    border-left: 3px solid var(--dim);
-    border-radius: 8px;
-    background: rgba(9,9,11,0.66);
-    padding: 0.7rem;
-}
-.workshop-flow-node strong {
-    display: block;
-    margin-bottom: 0.28rem;
-    font-size: 0.82rem;
-    line-height: 1.2;
-    color: var(--text);
-}
-.workshop-flow-node span {
-    display: block;
-    color: var(--text2);
-    font-size: 0.68rem;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-}
-.workshop-flow-edge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 0;
-    color: var(--dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.56rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-.workshop-flow-edge::before {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--border2);
-}
-.workshop-flow-edge span {
-    border: 1px solid var(--border2);
-    border-radius: 999px;
-    background: rgba(255,255,255,0.04);
-    padding: 0.16rem 0.32rem;
-}
-.workshop-flow-user .workshop-flow-node { border-left-color: var(--blue); }
-.workshop-flow-core .workshop-flow-node { border-left-color: var(--accent); }
-.workshop-flow-bridge .workshop-flow-node { border-left-color: var(--purple); }
-.workshop-flow-agent .workshop-flow-node { border-left-color: var(--cyan); }
-.workshop-flow-tool .workshop-flow-node { border-left-color: var(--yellow); }
-.workshop-flow-running .workshop-flow-node { border-left-color: var(--blue); }
-.workshop-flow-pending .workshop-flow-node { border-left-color: var(--yellow); }
-.workshop-flow-done .workshop-flow-node { border-left-color: var(--green); }
-.workshop-flow-blocked .workshop-flow-node,
-.workshop-flow-failed .workshop-flow-node { border-left-color: var(--red); }
-.workshop-reasons,
-.workshop-causal-timeline {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-}
-.workshop-reason,
-.workshop-time-event {
-    min-width: 0;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: rgba(9,9,11,0.5);
-    padding: 0.65rem;
-    color: var(--text2);
-    font-size: 0.68rem;
-    line-height: 1.45;
-    overflow-wrap: anywhere;
-}
-.workshop-time-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    align-items: center;
-    margin-bottom: 0.42rem;
-    color: var(--dim);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.56rem;
-}
-.workshop-time-meta strong {
-    color: var(--text2);
-}
-.workshop-time-meta em {
-    color: var(--muted);
-    font-style: normal;
-}
-.workshop-time-event p {
-    margin: 0;
-    color: var(--text2);
-}
-.workshop-drawer {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    display: flex;
-    justify-content: flex-end;
-    background: rgba(0,0,0,0.42);
-}
-.workshop-drawer.hidden {
-    display: none;
-}
-.workshop-drawer-panel {
-    width: min(620px, 100vw);
-    height: 100vh;
-    overflow: auto;
-    background: rgba(12,12,16,0.98);
-    border-left: 1px solid var(--border2);
-    padding: 1.2rem;
-    box-shadow: -18px 0 48px rgba(0,0,0,0.35);
-}
-.workshop-drawer-close {
-    position: sticky;
-    top: 0;
-    float: right;
-    z-index: 2;
-}
-.workshop-drawer-head {
-    clear: both;
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    align-items: flex-start;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-}
-.workshop-drawer-head h3 {
-    font-size: 1.05rem;
-    line-height: 1.35;
-    font-weight: 800;
-}
-.workshop-drawer-state {
-    flex-shrink: 0;
-    border-left-width: 0;
-    border-radius: 6px;
-    padding: 0.25rem 0.45rem;
-    font-size: 0.62rem;
-    font-family: 'JetBrains Mono', monospace;
-    text-transform: uppercase;
-    background: rgba(255,255,255,0.06);
-}
-.workshop-drawer-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.65rem;
-    margin: 1rem 0;
-}
-.workshop-drawer-grid div {
-    min-width: 0;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.035);
-    padding: 0.7rem;
-}
-.workshop-drawer-grid span {
-    display: block;
-    margin-bottom: 0.25rem;
-    font-size: 0.56rem;
-    color: var(--dim);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-.workshop-drawer-grid strong {
-    display: block;
-    min-width: 0;
-    overflow-wrap: anywhere;
-    font-size: 0.75rem;
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--text2);
-}
-.workshop-trace {
-    display: flex;
-    flex-direction: column;
-    gap: 0.7rem;
-}
-.workshop-trace-msg {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.035);
-    overflow: hidden;
-}
-.workshop-trace-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.45rem;
-    align-items: center;
-    padding: 0.55rem 0.7rem;
-    border-bottom: 1px solid var(--border);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.56rem;
-    color: var(--dim);
-}
-.workshop-trace-meta strong {
-    color: var(--text2);
-}
-.workshop-trace-meta em {
-    color: var(--muted);
-    font-style: normal;
-}
-.workshop-trace-body {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    padding: 0.7rem;
-    font-size: 0.72rem;
-    line-height: 1.45;
-    color: var(--text2);
-}
-@media (max-width: 1120px) {
-    .workshop-shell {
-        grid-template-columns: 1fr;
-    }
-    .workshop-causal-grid {
-        grid-template-columns: 1fr;
-    }
-    .workshop-causal-panel-wide {
-        grid-row: auto;
-    }
-    .workshop-task-list {
-        max-height: 360px;
-    }
-}
-@media (max-width: 760px) {
-    .workshop-main,
-    .workshop-side {
-        padding: 0.75rem;
-    }
-    .workshop-metrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .workshop-board {
-        min-height: 640px;
-    }
-    .workshop-agent {
-        width: 128px;
-    }
-    .workshop-agent[data-workshop-agent="ROUTER"] { left: 28% !important; top: 13% !important; }
-    .workshop-agent[data-workshop-agent="PLANNER"] { left: 72% !important; top: 13% !important; }
-    .workshop-agent[data-workshop-agent="BUILDER"] { left: 28% !important; top: 36% !important; }
-    .workshop-agent[data-workshop-agent="TESTER"] { left: 72% !important; top: 36% !important; }
-    .workshop-agent[data-workshop-agent="DEPLOYER"] { left: 72% !important; top: 66% !important; }
-    .workshop-agent[data-workshop-agent="VAULT"] { left: 28% !important; top: 66% !important; }
-    .workshop-agent[data-workshop-agent="GITHUB"] { left: 50% !important; top: 88% !important; }
-    .workshop-room {
-        opacity: 0.32;
-    }
-    .workshop-control {
-        padding: 0.75rem;
-    }
-    .workshop-control-head {
-        flex-direction: column;
-    }
-    .workshop-control-head > span {
-        width: 100%;
-        max-width: none;
-    }
-    .workshop-flow-step,
-    .workshop-flow-step:last-child {
-        grid-template-columns: 1fr;
-    }
-    .workshop-flow-edge {
-        min-height: 24px;
-    }
-    .workshop-flow-edge::before {
-        max-width: 42%;
-    }
-    .workshop-drawer-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 </style>
 </head>
 <body>
@@ -3845,19 +2948,19 @@ tr:last-child td { border-bottom: none; }
         </a></li>
         <li><a data-target="#projects" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 4l5-2 5 2v8l-5 2-5-2V4z" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
-            Projects <span class="nav-count">28</span>
+            Projects <span class="nav-count">0</span>
         </a></li>
         <li><a data-target="#system" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="8" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="1"/><line x1="8" y1="10" x2="8" y2="14" stroke="currentColor" stroke-width="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="currentColor" stroke-width="1"/><line x1="10" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1"/></svg>
-            System <span class="nav-count">3/5</span>
+            System <span class="nav-count">1/5</span>
         </a></li>
         <li><a data-target="#builder" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M4 11l-1 3 3-1 7-7-2-2-7 7z" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M10 3l3 3" stroke="currentColor" stroke-width="1.2"/></svg>
             Builder
         </a></li>
-        <li><a data-target="#workshop" href="javascript:void(0)">
-            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M5 10h2M9 10h2M5 7h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            Workshop
+        <li><a data-target="#linear" href="javascript:void(0)">
+            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M3 4.5h10M3 8h10M3 11.5h6" stroke="currentColor" fill="none" stroke-width="1.3" stroke-linecap="round"/></svg>
+            Linear <span class="nav-count">0</span>
         </a></li>
         <li><a data-target="#costs" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -3867,7 +2970,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-07-04 05:31:55 ICT</span>
+            <span>2026-07-04 13:00:12 ICT</span>
         </div>
     </div>
 </nav>
@@ -3880,57 +2983,22 @@ tr:last-child td { border-bottom: none; }
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-07-04 05:31:55 ICT</span>
+        <span class="tm-item">2026-07-04 13:00:12 ICT</span>
     </div>
 </div>
 
 
     <div class="now-status-bar">
-        <div class="now-dots"><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Storage</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Memory</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Database</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Network</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Services</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Backup</span></div><div class="now-dot-item"><span class="status-dot dot-yellow"></span><span class="now-dot-label">Code Sync</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Locks</span></div></div>
-        <div class="now-check-time">checked: 2026-05-08</div>
-    </div><div class="now-alerts"><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Atlas is degraded</div><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Dashboard is degraded</div></div>
-    <div class="jpipe-card jpipe-green">
-        <div class="jpipe-head">
-            <div>
-                <div class="jpipe-kicker">Jarvis Pipeline</div>
-                <div class="jpipe-title">Mac Mini production</div>
-            </div>
-            <div class="jpipe-state"><span class="status-dot dot-green"></span>ready</div>
-        </div>
-        <div class="jpipe-grid"><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Runtime</span><span class="jpipe-check-detail">pid 14797</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Git</span><span class="jpipe-check-detail">main@8bf440e</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">AIOS</span><span class="jpipe-check-detail">green / fresh</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Sources</span><span class="jpipe-check-detail">9 answers</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Contract</span><span class="jpipe-check-detail">status_query → status_query</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Linear Sync</span><span class="jpipe-check-detail">9/9 linked</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Webhook</span><span class="jpipe-check-detail">ok</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Goals</span><span class="jpipe-check-detail">2026-07 / expected 2026-07</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Deploy</span><span class="jpipe-check-detail">git script</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Human Layer</span><span class="jpipe-check-detail">enabled</span></div></div>
-        <div class="jpipe-meta">
-            <div><span>HEAD</span><strong>8bf440e</strong></div>
-            <div><span>AIOS</span><strong>green/fresh</strong></div>
-            <div><span>Sources</span><strong>9 answers</strong></div>
-            <div><span>Started</span><strong>2026-07-03 19:22:28</strong></div>
-        </div>
-        <div class="jpipe-latest">
-            <span>Latest source question</span>
-            <strong>Смотри, что я делал по музыке. Я умею играть на гитаре, я знаю аккорды, я зна...</strong>
-        </div>
-        <div class="jpipe-signals">
-            <div class="jpipe-signal">
-                <span>Last intake contract</span>
-                <strong>status_query → status_query</strong>
-                <em>Что на вечер по делам ? · 0.95 / answer, answer_sources</em>
-            </div>
-            <div class="jpipe-signal">
-                <span>Linear sync</span>
-                <strong>9/9 linked · 0 unsynced</strong>
-                <em>goals.yaml 2026-07</em>
-            </div>
-        </div>
-        <div class="jpipe-unsynced"><div class="jpipe-empty">No local fallback todos.</div></div>
-        
-        <div class="jpipe-next">Use Telegram smoke: что сейчас по Jarvis? → покажи источники.</div>
-    </div>
+        <div class="now-dots"><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Storage</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Memory</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Database</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Network</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Services</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Backup</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Code Sync</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Locks</span></div></div>
+        <div class="now-check-time">checked: 2026-05-07</div>
+    </div><div class="now-alerts"><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> OpenAI Codex is offline</div><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> JARVIS is offline</div><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> Atlas is offline</div><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Dashboard is degraded</div></div>
     <div class="now-stats">
         <div class="now-stat">
-            <span class="now-stat-val">3/5</span>
+            <span class="now-stat-val">1/5</span>
             <span class="now-stat-lbl">agents</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">7/8</span>
+            <span class="now-stat-val">8/8</span>
             <span class="now-stat-lbl">checks</span>
         </div>
         <div class="now-stat">
@@ -3938,38 +3006,38 @@ tr:last-child td { border-bottom: none; }
             <span class="now-stat-lbl">today</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">72.0h</span>
+            <span class="now-stat-val">0.0h</span>
             <span class="now-stat-lbl">week</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">10.3h</span>
+            <span class="now-stat-val">0.0h</span>
             <span class="now-stat-lbl">avg/day</span>
         </div>
     </div>
     <div class="now-pulse">
         <div class="now-pulse-chart"><div class="now-bar-col">
-            <div class="now-bar-val">12.0</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-val">0.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:3%"></div></div>
             <div class="now-bar-day">Su</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">12.0</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-val">0.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:3%"></div></div>
             <div class="now-bar-day">Mo</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">12.0</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-val">0.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:3%"></div></div>
             <div class="now-bar-day">Tu</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">12.0</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-val">0.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:3%"></div></div>
             <div class="now-bar-day">We</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">12.0</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-val">0.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:3%"></div></div>
             <div class="now-bar-day">Th</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">12.0</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
+            <div class="now-bar-val">0.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:3%"></div></div>
             <div class="now-bar-day">Fr</div>
         </div><div class="now-bar-col">
             <div class="now-bar-val">0.0</div>
@@ -3997,162 +3065,14 @@ tr:last-child td { border-bottom: none; }
     </div>
 </div>
 
-
-<div class="section" id="workshop">
+<!-- Linear Section -->
+<div class="section" id="linear">
     <div class="section-head">
-        <div class="section-dot" style="background:var(--cyan)"></div>
-        <div class="section-title">Agent Workshop</div>
-        <div class="section-count" id="workshop-status">loading</div>
+        <div class="section-dot" style="background:var(--purple)"></div>
+        <div class="section-title">Linear</div>
+        <div class="section-count">0 active</div>
     </div>
-    <div class="workshop-shell">
-        <div class="workshop-main">
-            <div class="workshop-metrics">
-                <div><span id="workshop-count-running">0</span><em>running</em></div>
-                <div><span id="workshop-count-pending">0</span><em>pending</em></div>
-                <div><span id="workshop-count-blocked">0</span><em>blocked</em></div>
-                <div><span id="workshop-count-done">0</span><em>done</em></div>
-            </div>
-            <div class="workshop-board" id="workshop-board">
-                <svg class="workshop-routes" viewBox="0 0 1000 520" preserveAspectRatio="none" aria-hidden="true">
-                    <path d="M160 120 C260 70 330 80 410 110 S560 160 650 120 S805 110 885 190" />
-                    <path d="M640 155 C690 245 710 310 760 390" />
-                    <path d="M620 150 C555 260 500 330 455 385" />
-                    <path d="M425 380 C335 395 250 390 190 365" />
-                </svg>
-                <div class="workshop-room workshop-room-intake" style="left:6%;top:8%">Telegram</div>
-                <div class="workshop-room workshop-room-code" style="left:56%;top:10%">Repo</div>
-                <div class="workshop-room workshop-room-runtime" style="left:69%;top:56%">Mac Mini</div>
-                <div class="workshop-room workshop-room-memory" style="left:35%;top:58%">Obsidian</div>
-                <div class="workshop-room workshop-room-git" style="left:8%;top:56%">GitHub</div>
-                
-        <button class="workshop-agent" data-workshop-agent="ROUTER" style="left:15%;top:22%" title="Router">
-            <span class="workshop-figure" aria-hidden="true">
-                <span class="workshop-head"></span>
-                <span class="workshop-body"></span>
-                <span class="workshop-leg workshop-leg-a"></span>
-                <span class="workshop-leg workshop-leg-b"></span>
-            </span>
-            <span class="workshop-agent-name">Router</span>
-            <span class="workshop-agent-room">Telegram intake</span>
-            <span class="workshop-agent-state">idle</span>
-        </button>
-        <button class="workshop-agent" data-workshop-agent="PLANNER" style="left:38%;top:18%" title="Planner">
-            <span class="workshop-figure" aria-hidden="true">
-                <span class="workshop-head"></span>
-                <span class="workshop-body"></span>
-                <span class="workshop-leg workshop-leg-a"></span>
-                <span class="workshop-leg workshop-leg-b"></span>
-            </span>
-            <span class="workshop-agent-name">Planner</span>
-            <span class="workshop-agent-room">Scope and steps</span>
-            <span class="workshop-agent-state">idle</span>
-        </button>
-        <button class="workshop-agent" data-workshop-agent="BUILDER" style="left:63%;top:21%" title="Builder">
-            <span class="workshop-figure" aria-hidden="true">
-                <span class="workshop-head"></span>
-                <span class="workshop-body"></span>
-                <span class="workshop-leg workshop-leg-a"></span>
-                <span class="workshop-leg workshop-leg-b"></span>
-            </span>
-            <span class="workshop-agent-name">Builder</span>
-            <span class="workshop-agent-room">Code changes</span>
-            <span class="workshop-agent-state">idle</span>
-        </button>
-        <button class="workshop-agent" data-workshop-agent="TESTER" style="left:84%;top:34%" title="Tester">
-            <span class="workshop-figure" aria-hidden="true">
-                <span class="workshop-head"></span>
-                <span class="workshop-body"></span>
-                <span class="workshop-leg workshop-leg-a"></span>
-                <span class="workshop-leg workshop-leg-b"></span>
-            </span>
-            <span class="workshop-agent-name">Tester</span>
-            <span class="workshop-agent-room">Tests and smoke</span>
-            <span class="workshop-agent-state">idle</span>
-        </button>
-        <button class="workshop-agent" data-workshop-agent="DEPLOYER" style="left:74%;top:68%" title="Deployer">
-            <span class="workshop-figure" aria-hidden="true">
-                <span class="workshop-head"></span>
-                <span class="workshop-body"></span>
-                <span class="workshop-leg workshop-leg-a"></span>
-                <span class="workshop-leg workshop-leg-b"></span>
-            </span>
-            <span class="workshop-agent-name">Deployer</span>
-            <span class="workshop-agent-room">Mac Mini rollout</span>
-            <span class="workshop-agent-state">idle</span>
-        </button>
-        <button class="workshop-agent" data-workshop-agent="VAULT" style="left:45%;top:72%" title="Vault">
-            <span class="workshop-figure" aria-hidden="true">
-                <span class="workshop-head"></span>
-                <span class="workshop-body"></span>
-                <span class="workshop-leg workshop-leg-a"></span>
-                <span class="workshop-leg workshop-leg-b"></span>
-            </span>
-            <span class="workshop-agent-name">Vault</span>
-            <span class="workshop-agent-room">Obsidian memory</span>
-            <span class="workshop-agent-state">idle</span>
-        </button>
-        <button class="workshop-agent" data-workshop-agent="GITHUB" style="left:20%;top:68%" title="GitHub">
-            <span class="workshop-figure" aria-hidden="true">
-                <span class="workshop-head"></span>
-                <span class="workshop-body"></span>
-                <span class="workshop-leg workshop-leg-a"></span>
-                <span class="workshop-leg workshop-leg-b"></span>
-            </span>
-            <span class="workshop-agent-name">GitHub</span>
-            <span class="workshop-agent-room">Commits and issues</span>
-            <span class="workshop-agent-state">idle</span>
-        </button>
-                <div class="workshop-markers" id="workshop-markers"></div>
-            </div>
-        </div>
-        <aside class="workshop-side">
-            <div class="workshop-side-head">
-                <div>
-                    <span class="workshop-side-kicker">Bridge queue</span>
-                    <strong id="workshop-side-title">Recent work</strong>
-                </div>
-                <button class="workshop-icon-btn" id="workshop-refresh" type="button" title="Refresh workshop">&#8635;</button>
-            </div>
-            <div class="workshop-task-list" id="workshop-task-list">
-                <div class="workshop-empty">Loading live tasks...</div>
-            </div>
-        </aside>
-    </div>
-    <div class="workshop-control" id="workshop-control-room">
-        <div class="workshop-control-head">
-            <div>
-                <span class="workshop-side-kicker">Control Room</span>
-                <strong id="workshop-selected-task">No task selected</strong>
-            </div>
-            <span id="workshop-causal-summary">Waiting for Bridge data</span>
-        </div>
-        <div class="workshop-causal-grid">
-            <div class="workshop-causal-panel workshop-causal-panel-wide">
-                <span class="workshop-side-kicker">Causal graph</span>
-                <div class="workshop-flow" id="workshop-causal-graph">
-                    <div class="workshop-empty">Loading live task graph...</div>
-                </div>
-            </div>
-            <div class="workshop-causal-panel">
-                <span class="workshop-side-kicker">Why this path</span>
-                <div class="workshop-reasons" id="workshop-causal-reasons">
-                    <div class="workshop-empty">No decision data yet.</div>
-                </div>
-            </div>
-            <div class="workshop-causal-panel">
-                <span class="workshop-side-kicker">Timeline</span>
-                <div class="workshop-causal-timeline" id="workshop-causal-timeline">
-                    <div class="workshop-empty">No messages yet.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="workshop-drawer hidden" id="workshop-drawer" aria-live="polite">
-        <div class="workshop-drawer-panel">
-            <button class="workshop-drawer-close" id="workshop-drawer-close" type="button" title="Close">&times;</button>
-            <div id="workshop-drawer-content"></div>
-        </div>
-    </div>
+    <div class="linear-wrap"><div class="linear-empty">No active GitHub task issues.</div></div>
 </div>
 
 <!-- Projects Section -->
@@ -4160,438 +3080,18 @@ tr:last-child td { border-bottom: none; }
     <div class="section-head">
         <div class="section-dot" style="background:var(--green)"></div>
         <div class="section-title">Projects</div>
-        <div class="section-count">28 active</div>
+        <div class="section-count">0 active</div>
     </div>
     <details class="proj-details" open>
         <summary class="proj-summary">
             <span class="section-title">Active</span>
-            <span class="section-count">28</span>
+            <span class="section-count">0</span>
             <span class="proj-chevron"></span>
         </summary>
         <div class="tbl-wrap">
         <table>
         <thead><tr><th>Project</th><th>Status</th><th>Open</th><th>Progress</th><th>Fresh</th><th>Next Action</th><th>Agents</th><th></th></tr></thead>
-        <tbody>
-        <tr>
-            <td class="proj-name">3D-WEB-SITES</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">12</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:40%"></div></div>
-                <span class="ptxt">40%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/3D-WEB-SITES/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">ADVANCE-GROUP-SITE</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">11</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:82%"></div></div>
-                <span class="ptxt">82%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/ADVANCE-GROUP-SITE/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">ADVANCED-GROUP</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">2</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:89%"></div></div>
-                <span class="ptxt">89%</span>
-            </td>
-            <td class="fresh-cold">51d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/ADVANCED-GROUP/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">AI-Consultations</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">3</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">55d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/AI-Consultations/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">AI-DESK-ASSISTANT</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">21</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:62%"></div></div>
-                <span class="ptxt">62%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/AI-DESK-ASSISTANT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">CAREER</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">55d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/CAREER/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">CONTENT-MARKETING</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">55d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/CONTENT-MARKETING/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">DASHBOARD</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:43%"></div></div>
-                <span class="ptxt">43%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/DASHBOARD/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">FRENCH-ICLOUD</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">16</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:20%"></div></div>
-                <span class="ptxt">20%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/FRENCH-ICLOUD/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">GRACHEV-AI-STUDIO</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">24</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:55%"></div></div>
-                <span class="ptxt">55%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/GRACHEV-AI-STUDIO/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">HEALTH</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">6</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">ANALYST</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/HEALTH/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">HIGGSFIELD</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">9</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:55%"></div></div>
-                <span class="ptxt">55%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/HIGGSFIELD/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">JARVIS</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">39</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:78%"></div></div>
-                <span class="ptxt">78%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/JARVIS/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">MY-OBSIDIAN</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">9</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:65%"></div></div>
-                <span class="ptxt">65%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">VAULT, BUILDER</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/MY-OBSIDIAN/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">PAPERCLIP</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:33%"></div></div>
-                <span class="ptxt">33%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/PAPERCLIP/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">POS-DANIEL</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">17</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:72%"></div></div>
-                <span class="ptxt">72%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/POS-DANIEL/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">POS-FOR-BEGINNERS</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">3</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:83%"></div></div>
-                <span class="ptxt">83%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/POS-FOR-BEGINNERS/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">REAL-ESTATE</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">55d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/REAL-ESTATE/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">SECOND-BRAIN</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">5</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:87%"></div></div>
-                <span class="ptxt">87%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">COORDINATOR</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/SECOND-BRAIN/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">SISI-OBSIDIAN-STARTER</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">3</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:83%"></div></div>
-                <span class="ptxt">83%</span>
-            </td>
-            <td class="fresh-cold">30d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/SISI-OBSIDIAN-STARTER/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">STOCK-CONTENT-BOT</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:72%"></div></div>
-                <span class="ptxt">72%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">RESEARCHER, BUILDER</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/STOCK-CONTENT-BOT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">THESIS-SKEMA</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">4</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">55d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/THESIS-SKEMA/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">TRADING-BOT-LAB</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:43%"></div></div>
-                <span class="ptxt">43%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/TRADING-BOT-LAB/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">TURKISH-AI-AGENT</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">8</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:85%"></div></div>
-                <span class="ptxt">85%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/TURKISH-AI-AGENT/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">WORKSHOP-NS</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">11</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-mid" style="width:61%"></div></div>
-                <span class="ptxt">61%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/WORKSHOP-NS/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">Zerkalo-Kommunikacii</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">101</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:86%"></div></div>
-                <span class="ptxt">86%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/Zerkalo-Kommunikacii/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">Zerkalo-Telegram-Bot</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">21</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:82%"></div></div>
-                <span class="ptxt">82%</span>
-            </td>
-            <td class="fresh-warm">11d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/Zerkalo-Telegram-Bot/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr>
-        <tr>
-            <td class="proj-name">ФИНАНСЫ</td>
-            <td><span class="status-pill status-other">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">19</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:14%"></div></div>
-                <span class="ptxt">14%</span>
-            </td>
-            <td class="fresh-cold">50d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/ФИНАНСЫ/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>
-    </tr></tbody>
+        <tbody></tbody>
         </table>
         </div>
     </details>
@@ -4599,78 +3099,13 @@ tr:last-child td { border-bottom: none; }
         <summary class="proj-summary">
             <div class="section-dot" style="background:var(--dim)"></div>
             <span class="section-title">Done</span>
-            <span class="section-count">5</span>
+            <span class="section-count">0</span>
             <span class="proj-chevron"></span>
         </summary>
         <div class="tbl-wrap">
         <table>
         <thead><tr><th>Project</th><th>Status</th><th>Done</th><th>Progress</th><th>Last</th><th>Final State</th><th>Agents</th><th></th></tr></thead>
-        <tbody>
-        <tr>
-            <td class="proj-name">DONE</td>
-            <td><span class="status-pill status-done">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">0</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">—</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col"></td>
-    </tr>
-        <tr>
-            <td class="proj-name">FASTDATA-VOICE-AGENT</td>
-            <td><span class="status-pill status-done">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">0</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">—</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">ANALYST, BUILDER</td>
-            <td class="actions-col"></td>
-    </tr>
-        <tr>
-            <td class="proj-name">MESHLY-V2</td>
-            <td><span class="status-pill status-done">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">49</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-high" style="width:100%"></div></div>
-                <span class="ptxt">100%</span>
-            </td>
-            <td class="fresh-cold">16d</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col"></td>
-    </tr>
-        <tr>
-            <td class="proj-name">PODCAST</td>
-            <td><span class="status-pill status-done">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">0</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">—</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col"></td>
-    </tr>
-        <tr>
-            <td class="proj-name">PPT</td>
-            <td><span class="status-pill status-done">—</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">0</td>
-            <td>
-                <div class="pbar"><div class="pfill pfill-low" style="width:0%"></div></div>
-                <span class="ptxt">0%</span>
-            </td>
-            <td class="fresh-cold">—</td>
-            <td class="next-action">—</td>
-            <td class="agents-col">—</td>
-            <td class="actions-col"></td>
-    </tr></tbody>
+        <tbody></tbody>
         </table>
         </div>
     </details>
@@ -4681,7 +3116,7 @@ tr:last-child td { border-bottom: none; }
     <div class="section-head">
         <div class="section-dot" style="background:var(--accent)"></div>
         <div class="section-title">System</div>
-        <div class="section-count">3/5 agents</div>
+        <div class="section-count">1/5 agents</div>
     </div>
     
     
@@ -4699,8 +3134,8 @@ tr:last-child td { border-bottom: none; }
     
     <div class="topo-map">
         <svg viewBox="0 0 620 290" xmlns="http://www.w3.org/2000/svg" class="topo-svg">
-            <line x1="300" y1="40" x2="520" y2="40" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="100" y2="140" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="300" y2="140" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="500" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="500" y1="140" x2="500" y2="240" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="300" cy="40" r="14" fill="#ff6b35" opacity="1"/><text x="300" y="68" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CLAUDE</text><circle cx="300" cy="40" r="14" fill="none" stroke="#ff6b35" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="140" r="14" fill="#3fb950" opacity="1"/><text x="100" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CODEX</text><circle cx="100" cy="140" r="14" fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="300" cy="140" r="14" fill="#58a6ff" opacity="1"/><text x="300" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">JARVIS</text><circle cx="300" cy="140" r="14" fill="none" stroke="#58a6ff" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="500" cy="140" r="14" fill="#79c0ff" opacity="1"/><text x="500" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">ATLAS</text><circle cx="500" cy="240" r="14" fill="#ffa657" opacity="1"/><text x="500" y="268" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">DASHBOARD</text><circle cx="520" cy="40" r="10" fill="#71717a" opacity="1"/><text x="520" y="64" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="7.5" font-family="JetBrains Mono, monospace" font-weight="600">MCP</text><circle cx="520" cy="40" r="10" fill="none" stroke="#71717a" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="10" to="20" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle>
+            <line x1="300" y1="40" x2="520" y2="40" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="100" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="300" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="500" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="500" y1="140" x2="500" y2="240" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="300" cy="40" r="14" fill="#ff6b35" opacity="1"/><text x="300" y="68" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CLAUDE</text><circle cx="300" cy="40" r="14" fill="none" stroke="#ff6b35" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="140" r="14" fill="#3fb950" opacity="0.35"/><text x="100" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CODEX</text><circle cx="300" cy="140" r="14" fill="#58a6ff" opacity="0.35"/><text x="300" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">JARVIS</text><circle cx="500" cy="140" r="14" fill="#79c0ff" opacity="0.35"/><text x="500" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">ATLAS</text><circle cx="500" cy="240" r="14" fill="#ffa657" opacity="1"/><text x="500" y="268" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">DASHBOARD</text><circle cx="520" cy="40" r="10" fill="#71717a" opacity="1"/><text x="520" y="64" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="7.5" font-family="JetBrains Mono, monospace" font-weight="600">MCP</text><circle cx="520" cy="40" r="10" fill="none" stroke="#71717a" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="10" to="20" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle>
         </svg>
     </div>
     <div class="agents">
@@ -4717,63 +3152,133 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">9 sessions</span><span class="ag-pill">0 MCP servers</span><span class="ag-pill">901 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">15 sessions</span><span class="ag-pill">8 MCP servers</span><span class="ag-pill">217 MB RAM</span></div>
             
             <details class="ag-sub-expand">
-                <summary class="ag-sub-toggle">Running processes (9)</summary>
+                <summary class="ag-sub-toggle">Running processes (23)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19214</span>
-                    <span class="ag-sub-detail">CPU 7.0% · 88 MB</span>
+                    <span class="ag-sub-name">Session PID 52743</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 91 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19331</span>
-                    <span class="ag-sub-detail">CPU 0.8% · 322 MB</span>
+                    <span class="ag-sub-name">Session PID 94754</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 6 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19406</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 46 MB</span>
+                    <span class="ag-sub-name">Session PID 94564</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19405</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 30 MB</span>
+                    <span class="ag-sub-name">Session PID 53834</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 0 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19222</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 70 MB</span>
+                    <span class="ag-sub-name">Session PID 53816</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 0 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19220</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 70 MB</span>
+                    <span class="ag-sub-name">Session PID 52794</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 10 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19216</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 50 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19213</span>
+                    <span class="ag-sub-name">Session PID 52793</span>
                     <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19209</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 218 MB</span>
+                    <span class="ag-sub-name">Session PID 52789</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 0 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 52788</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 0 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 52761</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 24 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 52755</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 52753</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 52750</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 29 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 52748</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 10 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 52747</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 53833 · 4 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 52813 · 4 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 48881 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 16255 · 7 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 85452 · 7 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 85105 · 7 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 68525 · 7 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: Obsidian</span>
+                    <span class="ag-sub-detail">PID 33497 · 7 MB</span>
                 </div></div>
             </details>
             
         </div>
-        <div class="ag ag-active">
-            
+        <div class="ag ag-off">
+            <span class="ag-badge-offline">OFFLINE</span>
             <div class="ag-top">
-                <div class="ag-orb ag-orb-active" style="background:#3fb950">
+                <div class="ag-orb ag-orb-off" style="background:#3fb950">
                     <div class="ag-orb-ring" style="border-color:#3fb950"></div>
                     X
                 </div>
@@ -4781,35 +3286,16 @@ tr:last-child td { border-bottom: none; }
                     <div class="ag-name">OpenAI Codex</div>
                     <div class="ag-zone-inline">AI code execution + task runner</div>
                 </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">3 processes</span><span class="ag-pill">45 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">0 processes</span><span class="ag-pill">0 MB RAM</span></div>
             
-            <details class="ag-sub-expand">
-                <summary class="ag-sub-toggle">Running processes (3)</summary>
-                <div class="ag-sub-items">
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 82198</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 23 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 66096</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 14 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 66095</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 8 MB</span>
-                </div></div>
-            </details>
             
         </div>
-        <div class="ag ag-active">
-            
+        <div class="ag ag-off">
+            <span class="ag-badge-offline">OFFLINE</span>
             <div class="ag-top">
-                <div class="ag-orb ag-orb-active" style="background:#58a6ff">
+                <div class="ag-orb ag-orb-off" style="background:#58a6ff">
                     <div class="ag-orb-ring" style="border-color:#58a6ff"></div>
                     J
                 </div>
@@ -4817,15 +3303,15 @@ tr:last-child td { border-bottom: none; }
                     <div class="ag-name">JARVIS</div>
                     <div class="ag-zone-inline">Voice assistant + bridge infrastructure</div>
                 </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
+                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">4/5 services</span><span class="ag-pill">no heartbeat</span></div>
+            <div class="ag-pills"><span class="ag-pill">0/5 services</span><span class="ag-pill">no heartbeat</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (5)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
+                    <span class="status-dot dot-red"></span>
                     <span class="ag-sub-name">Voice Engine</span>
                     <span class="ag-sub-detail">launchd: jarvis-voice</span>
                 </div>
@@ -4835,27 +3321,27 @@ tr:last-child td { border-bottom: none; }
                     <span class="ag-sub-detail">launchd: jarvis-menubar</span>
                 </div>
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
+                    <span class="status-dot dot-red"></span>
                     <span class="ag-sub-name">Bridge API</span>
                     <span class="ag-sub-detail">launchd: bridge-api</span>
                 </div>
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
+                    <span class="status-dot dot-red"></span>
                     <span class="ag-sub-name">Bridge Worker</span>
                     <span class="ag-sub-detail">launchd: bridge-worker</span>
                 </div>
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
+                    <span class="status-dot dot-red"></span>
                     <span class="ag-sub-name">Bridge Tunnel</span>
                     <span class="ag-sub-detail">launchd: bridge-tunnel</span>
                 </div></div>
             </details>
             
         </div>
-        <div class="ag ag-degraded">
-            <span class="ag-badge-degraded">DEGRADED</span>
+        <div class="ag ag-off">
+            <span class="ag-badge-offline">OFFLINE</span>
             <div class="ag-top">
-                <div class="ag-orb ag-orb-degraded" style="background:#79c0ff">
+                <div class="ag-orb ag-orb-off" style="background:#79c0ff">
                     <div class="ag-orb-ring" style="border-color:#79c0ff"></div>
                     A
                 </div>
@@ -4863,22 +3349,22 @@ tr:last-child td { border-bottom: none; }
                     <div class="ag-name">Atlas</div>
                     <div class="ag-zone-inline">Mac Mini M4 system monitor · daily hygiene</div>
                 </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-blocked"></div></div>
+                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">launchd: idle</span><span class="ag-pill">last report: 57d ago</span></div>
+            <div class="ag-pills"><span class="ag-pill">launchd: off</span><span class="ag-pill">last report: 58d ago</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (1)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
+                    <span class="status-dot dot-red"></span>
                     <span class="ag-sub-name">Daily Hygiene Cron</span>
-                    <span class="ag-sub-detail">09:00 KL time · idle</span>
+                    <span class="ag-sub-detail">09:00 KL time · off</span>
                 </div></div>
             </details>
             
             <details class="sys-atlas-expand">
-                <summary class="sys-expand-sum">Health Checks (7/8)</summary>
+                <summary class="sys-expand-sum">Health Checks (8/8)</summary>
                 <div class="sys-health-grid">
             <div class="sys-health-tile green">
                 <span class="status-dot dot-green"></span>
@@ -4888,7 +3374,7 @@ tr:last-child td { border-bottom: none; }
             <div class="sys-health-tile green">
                 <span class="status-dot dot-green"></span>
                 <span class="sys-tile-name">Memory</span>
-                <span class="sys-tile-detail">6.4GB free</span>
+                <span class="sys-tile-detail">5.7GB free</span>
             </div>
             <div class="sys-health-tile green">
                 <span class="status-dot dot-green"></span>
@@ -4908,12 +3394,12 @@ tr:last-child td { border-bottom: none; }
             <div class="sys-health-tile green">
                 <span class="status-dot dot-green"></span>
                 <span class="sys-tile-name">Backup</span>
-                <span class="sys-tile-detail">pg-20260508-0300.sql.gz (0.6h ago)</span>
+                <span class="sys-tile-detail">pg-20260507-0300.sql.gz (0.1h ago)</span>
             </div>
-            <div class="sys-health-tile yellow">
-                <span class="status-dot dot-yellow"></span>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
                 <span class="sys-tile-name">Code Sync</span>
-                <span class="sys-tile-detail">64 unpushed commits</span>
+                <span class="sys-tile-detail">clean, up to date</span>
             </div>
             <div class="sys-health-tile green">
                 <span class="status-dot dot-green"></span>
@@ -4924,12 +3410,6 @@ tr:last-child td { border-bottom: none; }
             <details class="sys-atlas-expand">
                 <summary class="sys-expand-sum">Daily Reports (7)</summary>
                 <div class="sys-reports-list">
-            <div class="sys-report">
-                <span class="sys-rpt-date">2026-05-08</span>
-                <span class="status-dot dot-yellow"></span>
-                <span class="sys-rpt-score">7/8</span>
-                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
-            </div>
             <div class="sys-report">
                 <span class="sys-rpt-date">2026-05-07</span>
                 <span class="status-dot dot-green"></span>
@@ -4953,6 +3433,12 @@ tr:last-child td { border-bottom: none; }
                 <span class="status-dot dot-green"></span>
                 <span class="sys-rpt-score">8/8</span>
                 <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-04-30</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
             </div></div>
             </details>
         </div>
@@ -4969,18 +3455,18 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-blocked"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">feed: idle</span><span class="ag-pill">rebuild: off</span></div>
+            <div class="ag-pills"><span class="ag-pill">feed: off</span><span class="ag-pill">rebuild: running</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (2)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
+                    <span class="status-dot dot-red"></span>
                     <span class="ag-sub-name">Live Feed Generator</span>
-                    <span class="ag-sub-detail">launchd · idle</span>
+                    <span class="ag-sub-detail">launchd · off</span>
                 </div>
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-red"></span>
+                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Dashboard Rebuild</span>
                     <span class="ag-sub-detail">launchd · 3x/day</span>
                 </div></div>
@@ -4988,14 +3474,14 @@ tr:last-child td { border-bottom: none; }
             
         </div></div>
     <details class="sys-section" open>
-        <summary class="sys-section-sum">Services (18 running)</summary>
+        <summary class="sys-section-sum">Services (5 running)</summary>
         
     <div class="sys-services">
-        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-tunnel</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-linear-webhook</span></div></div>
+        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-rebuild</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tgbot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">github-to-linear-sync</span></div></div>
     </div>
         <details class="sys-idle-toggle">
-            <summary class="sys-expand-sum">Idle/Stopped (13)</summary>
-            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-auto-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-data-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-linear-webhook-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">omniharness</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">obsidian-linear-sync</span><span class="sys-svc-status">idle</span></div></div>
+            <summary class="sys-expand-sum">Idle/Stopped (3)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">codex-session-title-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">log-rotate</span><span class="sys-svc-status">idle</span></div></div>
         </details>
     </details>
     <details class="sys-section">
@@ -5105,7 +3591,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v4 // 5 agents // 2026-07-04 05:31:55 ICT</div>
+<div class="footer">command center v4 // 5 agents // 2026-07-04 13:00:12 ICT</div>
 
 </main>
 </div>
@@ -5153,9 +3639,7 @@ tr:last-child td { border-bottom: none; }
 
 const GH_REPO = 'pirajoke/agent-dashboard';
 const GH_MODE_PATH = 'mode-request.json';
-const LOCAL_API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:7777'
-    : window.location.origin;
+const LOCAL_API = 'http://localhost:7777';
 
 // ══════════════════════════════════════════════════════════════
 // ── Phase 1: Staleness Banner ──
@@ -5370,7 +3854,6 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     async function refreshBuilder() {
         try {
             const res = await fetch('/api/bridge/tasks?limit=12&include_messages=1', {cache: 'no-store'});
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const tasks = data.tasks || [];
             const builderTasks = tasks.filter((t) => !t.agent_role || String(t.agent_role).toUpperCase() === 'BUILDER');
@@ -5407,464 +3890,6 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
 
     refreshBuilder();
     setInterval(refreshBuilder, 5000);
-})();
-
-// ══════════════════════════════════════════════════════════════
-// ── Agent Workshop ──
-// ══════════════════════════════════════════════════════════════
-(function initAgentWorkshop() {
-    const board = document.getElementById('workshop-board');
-    const markersEl = document.getElementById('workshop-markers');
-    const taskList = document.getElementById('workshop-task-list');
-    const statusEl = document.getElementById('workshop-status');
-    const refreshBtn = document.getElementById('workshop-refresh');
-    const drawer = document.getElementById('workshop-drawer');
-    const drawerContent = document.getElementById('workshop-drawer-content');
-    const drawerClose = document.getElementById('workshop-drawer-close');
-    const selectedTaskEl = document.getElementById('workshop-selected-task');
-    const causalSummaryEl = document.getElementById('workshop-causal-summary');
-    const causalGraphEl = document.getElementById('workshop-causal-graph');
-    const causalReasonsEl = document.getElementById('workshop-causal-reasons');
-    const causalTimelineEl = document.getElementById('workshop-causal-timeline');
-    if (!board || !markersEl || !taskList) return;
-
-    const AGENT_POSITIONS = {
-        ROUTER: {x: 15, y: 22},
-        PLANNER: {x: 38, y: 18},
-        BUILDER: {x: 63, y: 21},
-        TESTER: {x: 84, y: 34},
-        DEPLOYER: {x: 74, y: 68},
-        VAULT: {x: 45, y: 72},
-        GITHUB: {x: 20, y: 68},
-    };
-    const AGENT_LABELS = {
-        ROUTER: 'Router',
-        PLANNER: 'Planner',
-        BUILDER: 'Builder',
-        TESTER: 'Tester',
-        DEPLOYER: 'Deployer',
-        VAULT: 'Vault',
-        GITHUB: 'GitHub',
-    };
-    let latestTasks = [];
-    let selectedTaskId = null;
-
-    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[ch]));
-
-    function shortTime(raw) {
-        if (!raw) return '';
-        const d = new Date(raw);
-        if (Number.isNaN(d.getTime())) return String(raw).slice(0, 16);
-        return d.toLocaleString([], {month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit'});
-    }
-
-    function asText(value) {
-        if (value == null) return '';
-        if (typeof value === 'string') return value;
-        try {
-            return JSON.stringify(value);
-        } catch (_) {
-            return String(value);
-        }
-    }
-
-    function compact(value, limit = 160) {
-        const text = asText(value).replace(/\s+/g, ' ').trim();
-        if (!text) return '';
-        return text.length > limit ? text.slice(0, limit - 3).trim() + '...' : text;
-    }
-
-    function taskId(task) {
-        return String(task?.id ?? '');
-    }
-
-    function normalizedState(task) {
-        const raw = String(task.status || task.state || '').toLowerCase();
-        const outcome = `${task.error || ''} ${asText(task.result)}`.toLowerCase();
-        if (outcome.match(/\b(authentication_error|failed|traceback|exception|exit code [1-9]|error: 4\d\d|error: 5\d\d)\b/)) {
-            return 'failed';
-        }
-        if (['done', 'complete', 'completed', 'success', 'succeeded'].includes(raw)) return 'done';
-        if (['failed', 'error'].includes(raw)) return 'failed';
-        if (['blocked', 'waiting', 'needs_input'].includes(raw)) return 'blocked';
-        if (['cancelled', 'canceled'].includes(raw)) return 'cancelled';
-        if (['running', 'in_progress', 'working', 'active'].includes(raw)) return 'running';
-        return 'pending';
-    }
-
-    function taskText(task) {
-        const msgText = (task.messages || []).map((m) => [m.sender, m.receiver, m.type, m.body].join(' ')).join(' ');
-        return `${task.description || ''} ${task.agent_role || ''} ${task.error || ''} ${asText(task.result)} ${msgText}`.toLowerCase();
-    }
-
-    function deriveAgent(task) {
-        const text = taskText(task);
-        const role = String(task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
-        if (['ROUTER', 'PLANNER', 'BUILDER', 'TESTER', 'DEPLOYER', 'VAULT', 'GITHUB'].includes(role)) return role;
-        if (text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) return 'TESTER';
-        if (text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) return 'DEPLOYER';
-        if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) return 'VAULT';
-        if (text.match(/\b(github|git push|commit|pull request|linear|issue)\b/)) return 'GITHUB';
-        if (text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) return 'PLANNER';
-        if (text.match(/\b(route|router|telegram intake|intent)\b/)) return 'ROUTER';
-        return 'BUILDER';
-    }
-
-    function taskTitle(task) {
-        const raw = String(task.description || task.title || 'Untitled task').replace(/\s+/g, ' ').trim();
-        return raw.length > 110 ? raw.slice(0, 107).trim() + '...' : raw;
-    }
-
-    function agentReason(task, agent) {
-        const text = taskText(task);
-        const role = String(task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
-        if (agent === 'TESTER' && text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) {
-            return 'TESTER selected because the task mentions validation, smoke tests, compile checks, or pytest.';
-        }
-        if (agent === 'DEPLOYER' && text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) {
-            return 'DEPLOYER selected because the task touches rollout, launchd, service restart, or Mac Mini runtime.';
-        }
-        if (agent === 'VAULT' && text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) {
-            return 'VAULT selected because the task needs Obsidian memory, status files, or source-aware notes.';
-        }
-        if (agent === 'GITHUB' && text.match(/\b(github|git push|commit|pull request|linear|issue)\b/)) {
-            return 'GITHUB selected because the task mentions commits, GitHub, pull requests, Linear, or issues.';
-        }
-        if (agent === 'PLANNER' && text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) {
-            return 'PLANNER selected because the task asks for planning, scope, breakdown, handoff, or acceptance criteria.';
-        }
-        if (agent === 'ROUTER' && text.match(/\b(route|router|telegram intake|intent)\b/)) {
-            return 'ROUTER selected because the task is about Telegram intake, routing, or intent detection.';
-        }
-        if (role && AGENT_LABELS[role]) {
-            return `${AGENT_LABELS[role]} selected from explicit Bridge role ${role}.`;
-        }
-        return `${AGENT_LABELS[agent] || agent} selected as the default code/problem-solving agent.`;
-    }
-
-    function inferTools(task) {
-        const text = taskText(task);
-        const rules = [
-            {id: 'telegram', label: 'Telegram', detail: 'user message and bot reply', re: /\b(telegram|bot|intake|reply|message)\b/},
-            {id: 'obsidian', label: 'Obsidian', detail: 'memory, status, project notes', re: /\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|claude\.md)\b/},
-            {id: 'github', label: 'GitHub', detail: 'commits, push, issues, source control', re: /\b(github|git push|commit|pull request|pr\b|issue)\b/},
-            {id: 'repo', label: 'Repo', detail: 'local code checkout', re: /\b(repo|code|fix|patch|script|python|javascript|css|html)\b/},
-            {id: 'tests', label: 'Tests', detail: 'unit tests, smoke checks, compile', re: /\b(pytest|unittest|test|smoke|compileall|validation|node --check)\b/},
-            {id: 'macmini', label: 'Mac Mini', detail: 'production runtime and launchd', re: /\b(mac mini|macmini|launchd|deploy|restart|service|runtime)\b/},
-            {id: 'linear', label: 'Linear', detail: 'project/task tracking', re: /\b(linear|issue|dashboard)\b/},
-        ];
-        const tools = rules.filter((rule) => rule.re.test(text));
-        if (tools.length) return tools;
-        return [{id: 'bridge', label: 'Bridge', detail: 'task queue and agent messages'}];
-    }
-
-    function failureReason(task) {
-        const candidates = [
-            task.error,
-            task.result,
-            ...(task.messages || []).map((message) => message.body),
-        ].map(asText).filter(Boolean);
-        const important = /(authentication_error|permission denied|fatal:|traceback|exception|failed|error:|exit code [1-9]|mmap failed|resource deadlock|blocked)/i;
-        const found = candidates
-            .flatMap((text) => text.split(/\n+/))
-            .map((line) => line.trim())
-            .find((line) => important.test(line));
-        if (!found) return '';
-        if (/authentication_error/i.test(found)) return 'authentication_error: credentials are invalid, expired, or unavailable.';
-        if (/permission denied/i.test(found)) return 'Permission denied: the agent could not access the required GitHub/repo resource.';
-        if (/mmap failed|resource deadlock/i.test(found)) return 'Git operation hit a resource/deadlock problem; retry or serialize git sync.';
-        return compact(found, 260);
-    }
-
-    function buildCausalModel(task) {
-        const agent = deriveAgent(task);
-        const state = normalizedState(task);
-        const tools = inferTools(task);
-        const failure = failureReason(task);
-        const nodes = [
-            {label: 'User / Telegram', detail: compact(taskTitle(task), 84), tone: 'user'},
-            {label: 'JARVIS', detail: 'parses request and decides whether to route, remember, answer, or code', tone: 'core'},
-            {label: 'Bridge queue', detail: compact(task.id || 'task dispatch', 84), tone: 'bridge'},
-            {label: AGENT_LABELS[agent] || agent, detail: compact(agentReason(task, agent), 96), tone: 'agent'},
-            {label: tools.map((tool) => tool.label).join(' + '), detail: tools.map((tool) => tool.detail).join(' / '), tone: 'tool'},
-            {label: state === 'failed' ? 'Failed' : state === 'blocked' ? 'Blocked' : state === 'done' ? 'Done' : state === 'running' ? 'Running' : 'Pending', detail: failure || compact(task.result || task.error || 'waiting for next event', 96), tone: state},
-        ];
-        return {agent, state, tools, failure, nodes};
-    }
-
-    function timelineEvents(task) {
-        const events = [];
-        if (task.created_at) {
-            events.push({
-                time: task.created_at,
-                actor: 'Bridge',
-                title: 'Task created',
-                body: taskTitle(task),
-            });
-        }
-        (task.messages || []).slice(-10).forEach((message) => {
-            events.push({
-                time: message.created_at,
-                actor: `${message.sender || '?'} -> ${message.receiver || '?'}`,
-                title: message.type || 'message',
-                body: compact(message.body || '', 280),
-            });
-        });
-        const failure = failureReason(task);
-        if (failure || task.result || task.error) {
-            events.push({
-                time: task.updated_at || task.created_at,
-                actor: 'Result',
-                title: normalizedState(task),
-                body: failure || compact(task.result || task.error, 280),
-            });
-        } else if (task.updated_at && task.updated_at !== task.created_at) {
-            events.push({
-                time: task.updated_at,
-                actor: 'Bridge',
-                title: 'Last update',
-                body: normalizedState(task),
-            });
-        }
-        return events;
-    }
-
-    function renderCausalView(task) {
-        if (!selectedTaskEl || !causalSummaryEl || !causalGraphEl || !causalReasonsEl || !causalTimelineEl) return;
-        if (!task) {
-            selectedTaskEl.textContent = 'No task selected';
-            causalSummaryEl.textContent = 'Waiting for Bridge data';
-            causalGraphEl.innerHTML = '<div class="workshop-empty">No recent Bridge tasks.</div>';
-            causalReasonsEl.innerHTML = '<div class="workshop-empty">No decision data yet.</div>';
-            causalTimelineEl.innerHTML = '<div class="workshop-empty">No messages yet.</div>';
-            return;
-        }
-
-        const model = buildCausalModel(task);
-        const messageCount = (task.messages || []).length;
-        selectedTaskEl.textContent = taskTitle(task);
-        causalSummaryEl.textContent = `${model.state} · ${AGENT_LABELS[model.agent] || model.agent} · ${messageCount} messages · ${shortTime(task.updated_at || task.created_at)}`;
-        causalGraphEl.innerHTML = model.nodes.map((node, idx) => `
-            <div class="workshop-flow-step workshop-flow-${esc(node.tone)}">
-                <div class="workshop-flow-node">
-                    <strong>${esc(node.label)}</strong>
-                    <span>${esc(node.detail)}</span>
-                </div>
-                ${idx < model.nodes.length - 1 ? '<div class="workshop-flow-edge"><span>triggers</span></div>' : ''}
-            </div>
-        `).join('');
-
-        const reasons = [
-            agentReason(task, model.agent),
-            `Tools inferred: ${model.tools.map((tool) => `${tool.label} (${tool.detail})`).join(', ')}.`,
-            `State normalized from Bridge status/result as ${model.state}.`,
-        ];
-        if (model.failure) reasons.push(`Blocker: ${model.failure}`);
-        causalReasonsEl.innerHTML = reasons.map((reason) => `<div class="workshop-reason">${esc(reason)}</div>`).join('');
-
-        const events = timelineEvents(task);
-        causalTimelineEl.innerHTML = events.length ? events.map((event) => `
-            <div class="workshop-time-event">
-                <div class="workshop-time-meta">
-                    <span>${esc(shortTime(event.time))}</span>
-                    <strong>${esc(event.actor)}</strong>
-                    <em>${esc(event.title)}</em>
-                </div>
-                <p>${esc(event.body || '-')}</p>
-            </div>
-        `).join('') : '<div class="workshop-empty">No messages yet.</div>';
-    }
-
-    function markSelectedTask() {
-        document.querySelectorAll('[data-task-id]').forEach((el) => {
-            el.classList.toggle('is-selected', String(el.dataset.taskId) === String(selectedTaskId));
-        });
-    }
-
-    function updateCounters(tasks) {
-        const counts = {running: 0, pending: 0, blocked: 0, done: 0};
-        tasks.forEach((task) => {
-            const state = normalizedState(task);
-            if (state === 'failed' || state === 'blocked') counts.blocked += 1;
-            else if (state === 'done') counts.done += 1;
-            else if (state === 'running') counts.running += 1;
-            else if (state === 'pending') counts.pending += 1;
-        });
-        Object.entries(counts).forEach(([key, value]) => {
-            const el = document.getElementById(`workshop-count-${key}`);
-            if (el) el.textContent = value;
-        });
-    }
-
-    function updateAgents(tasks) {
-        const byAgent = {};
-        document.querySelectorAll('[data-workshop-agent]').forEach((el) => {
-            const id = el.dataset.workshopAgent;
-            byAgent[id] = {el, states: [], count: 0};
-            el.classList.remove('is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed', 'is-active');
-        });
-
-        tasks.forEach((task) => {
-            const agent = deriveAgent(task);
-            if (!byAgent[agent]) return;
-            byAgent[agent].states.push(normalizedState(task));
-            byAgent[agent].count += 1;
-        });
-
-        Object.entries(byAgent).forEach(([agent, entry]) => {
-            const stateEl = entry.el.querySelector('.workshop-agent-state');
-            if (!entry.count) {
-                if (stateEl) stateEl.textContent = 'idle';
-                return;
-            }
-            const states = entry.states;
-            let state = 'pending';
-            if (states.some((s) => s === 'running')) state = 'running';
-            else if (states.some((s) => s === 'blocked' || s === 'failed')) state = 'blocked';
-            else if (states.some((s) => s === 'pending')) state = 'pending';
-            else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
-            entry.el.classList.add('is-active', `is-${state}`);
-            if (stateEl) stateEl.textContent = `${state} · ${entry.count}`;
-        });
-    }
-
-    function renderMarkers(tasks) {
-        const visible = tasks.slice(0, 18);
-        markersEl.innerHTML = visible.map((task, idx) => {
-            const agent = deriveAgent(task);
-            const pos = AGENT_POSITIONS[agent] || AGENT_POSITIONS.BUILDER;
-            const state = normalizedState(task);
-            const selected = String(taskId(task)) === String(selectedTaskId) ? ' is-selected' : '';
-            const dx = ((idx % 3) - 1) * 3.2;
-            const dy = (Math.floor(idx / 3) % 3) * 5.5;
-            return `
-                <button class="workshop-marker workshop-marker-${state}${selected}" data-task-id="${esc(task.id)}"
-                    style="left:${pos.x + dx}%;top:${pos.y + 12 + dy}%"
-                    title="${esc(taskTitle(task))}">
-                    <span>${esc(agent.slice(0, 2))}</span>
-                </button>`;
-        }).join('');
-    }
-
-    function renderTaskList(tasks) {
-        if (!tasks.length) {
-            taskList.innerHTML = '<div class="workshop-empty">No recent Bridge tasks.</div>';
-            return;
-        }
-        taskList.innerHTML = tasks.slice(0, 12).map((task) => {
-            const state = normalizedState(task);
-            const agent = deriveAgent(task);
-            const messageCount = (task.messages || []).length;
-            const selected = String(taskId(task)) === String(selectedTaskId) ? ' is-selected' : '';
-            return `
-                <button class="workshop-task workshop-task-${state}${selected}" data-task-id="${esc(task.id)}">
-                    <span class="workshop-task-top">
-                        <code>${esc(String(task.id || '').slice(0, 12))}</code>
-                        <em>${esc(AGENT_LABELS[agent] || agent)}</em>
-                        <strong>${esc(state)}</strong>
-                    </span>
-                    <span class="workshop-task-title">${esc(taskTitle(task))}</span>
-                    <span class="workshop-task-meta">${esc(shortTime(task.updated_at || task.created_at))} · ${messageCount} messages</span>
-                </button>`;
-        }).join('');
-    }
-
-    function messageTimeline(task) {
-        const messages = (task.messages || []).slice(-12);
-        if (!messages.length) return '<div class="workshop-empty">No Bridge messages yet.</div>';
-        return messages.map((message) => `
-            <div class="workshop-trace-msg">
-                <div class="workshop-trace-meta">
-                    <span>${esc(shortTime(message.created_at))}</span>
-                    <strong>${esc(message.sender || '?')} -> ${esc(message.receiver || '?')}</strong>
-                    <em>${esc(message.type || 'message')}</em>
-                </div>
-                <div class="workshop-trace-body">${esc(message.body || '').slice(0, 2000)}</div>
-            </div>
-        `).join('');
-    }
-
-    function openTask(taskId) {
-        const task = latestTasks.find((item) => String(item.id) === String(taskId));
-        if (!task || !drawer || !drawerContent) return;
-        selectedTaskId = String(task.id || '');
-        renderCausalView(task);
-        markSelectedTask();
-        const state = normalizedState(task);
-        const agent = deriveAgent(task);
-        drawerContent.innerHTML = `
-            <div class="workshop-drawer-head">
-                <div>
-                    <span class="workshop-side-kicker">${esc(AGENT_LABELS[agent] || agent)} trace</span>
-                    <h3>${esc(taskTitle(task))}</h3>
-                </div>
-                <span class="workshop-drawer-state workshop-task-${state}">${esc(state)}</span>
-            </div>
-            <div class="workshop-drawer-grid">
-                <div><span>Task</span><strong>${esc(task.id || '-')}</strong></div>
-                <div><span>Role</span><strong>${esc(task.agent_role || 'AUTO')}</strong></div>
-                <div><span>Created</span><strong>${esc(shortTime(task.created_at))}</strong></div>
-                <div><span>Updated</span><strong>${esc(shortTime(task.updated_at))}</strong></div>
-            </div>
-            <div class="workshop-trace">${messageTimeline(task)}</div>
-        `;
-        drawer.classList.remove('hidden');
-    }
-
-    function bindTaskClicks() {
-        document.querySelectorAll('[data-task-id]').forEach((el) => {
-            el.addEventListener('click', () => openTask(el.dataset.taskId));
-        });
-    }
-
-    async function refreshWorkshop() {
-        if (statusEl) statusEl.textContent = 'loading';
-        try {
-            const res = await fetch('/api/bridge/tasks?limit=40&include_messages=1', {cache: 'no-store'});
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            latestTasks = data.tasks || [];
-            if (!latestTasks.some((task) => String(task.id || '') === String(selectedTaskId))) {
-                selectedTaskId = latestTasks.length ? String(latestTasks[0].id || '') : null;
-            }
-            updateCounters(latestTasks);
-            updateAgents(latestTasks);
-            renderMarkers(latestTasks);
-            renderTaskList(latestTasks);
-            bindTaskClicks();
-            renderCausalView(latestTasks.find((task) => String(task.id || '') === String(selectedTaskId)));
-            markSelectedTask();
-            if (statusEl) statusEl.textContent = `${latestTasks.length} tasks`;
-        } catch (err) {
-            latestTasks = [];
-            selectedTaskId = null;
-            updateCounters([]);
-            updateAgents([]);
-            markersEl.innerHTML = '';
-            taskList.innerHTML = `<div class="workshop-empty">Bridge unavailable: ${esc(err.message)}</div>`;
-            renderCausalView(null);
-            if (statusEl) statusEl.textContent = 'offline';
-        }
-    }
-
-    document.querySelectorAll('[data-workshop-agent]').forEach((el) => {
-        el.addEventListener('click', () => {
-            const agent = el.dataset.workshopAgent;
-            const task = latestTasks.find((item) => deriveAgent(item) === agent);
-            if (task) openTask(task.id);
-        });
-    });
-    if (refreshBtn) refreshBtn.addEventListener('click', refreshWorkshop);
-    if (drawerClose) drawerClose.addEventListener('click', () => drawer.classList.add('hidden'));
-    if (drawer) drawer.addEventListener('click', (event) => {
-        if (event.target === drawer) drawer.classList.add('hidden');
-    });
-
-    window.AgentWorkshopRefresh = refreshWorkshop;
-    refreshWorkshop();
-    setInterval(refreshWorkshop, 5000);
 })();
 
 // ══════════════════════════════════════════════════════════════
@@ -6244,8 +4269,7 @@ document.querySelectorAll('.oslider-item:not(.agent-model-item)').forEach(el => 
 });
 
 // ── Orchestrator ON/OFF toggle — GitHub API + local apply ──
-const orchToggleInput = document.getElementById('orchToggleInput');
-if (orchToggleInput) orchToggleInput.addEventListener('change', async function() {
+document.getElementById('orchToggleInput').addEventListener('change', async function() {
     const cb = this;
     const on = cb.checked;
     const grid = document.querySelector('.orch-grid');
@@ -6312,7 +4336,6 @@ async function ghCommit(path, data, msg, options) {
 
 async function launchAgents() {
     const btn = document.getElementById('launchBtn');
-    if (!btn) return;
     btn.textContent = 'Launching...';
     btn.classList.add('running');
     const localOk = await postLocal('/api/orchestrator/run', {source:'dashboard'});
