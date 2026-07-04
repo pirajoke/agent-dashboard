@@ -54,6 +54,10 @@ def build_agent_theater_html() -> str:
             <strong id="theater-ops-blocker">checking</strong>
         </div>
         <div class="operator-card operator-card-wide">
+            <span class="operator-label">Agent auth</span>
+            <strong id="theater-ops-auth">checking</strong>
+        </div>
+        <div class="operator-card operator-card-wide">
             <span class="operator-label">Next action</span>
             <strong id="theater-ops-next">checking</strong>
         </div>

@@ -10,6 +10,7 @@ mkdir -p "$SCRIPTS_DIR/dashboard_builder" "$SCRIPTS_DIR/dashboard-assets" "$PUBL
 
 cp "$SRC_DIR/build-agent-dashboard.py" "$SCRIPTS_DIR/build-agent-dashboard.py"
 cp "$SRC_DIR/dashboard-rebuild.sh" "$SCRIPTS_DIR/dashboard-rebuild.sh"
+cp "$SRC_DIR/dashboard-server-m4.py" "$SCRIPTS_DIR/dashboard-server-m4.py"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
 cp "$SRC_DIR/dashboard-assets/style.css" "$SCRIPTS_DIR/dashboard-assets/style.css"
 cp "$SRC_DIR/dashboard-assets/script.js" "$SCRIPTS_DIR/dashboard-assets/script.js"
@@ -19,7 +20,7 @@ cp "$SRC_DIR/dashboard-assets/ai-town-32x32folk.png" "$PUBLIC_ASSETS_DIR/ai-town
 chmod +x "$SCRIPTS_DIR/dashboard-rebuild.sh"
 
 cd "$SCRIPTS_DIR"
-python3 -m py_compile build-agent-dashboard.py dashboard_builder/*.py
+python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py dashboard_builder/*.py
 python3 build-agent-dashboard.py
 
 echo "Dashboard builder deployed to $SCRIPTS_DIR"

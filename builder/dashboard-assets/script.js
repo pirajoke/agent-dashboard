@@ -1371,6 +1371,7 @@ setInterval(refreshLocalServices, 15000);
     const opsServicesEl = document.getElementById('theater-ops-services');
     const opsLiveEl = document.getElementById('theater-ops-live');
     const opsBlockerEl = document.getElementById('theater-ops-blocker');
+    const opsAuthEl = document.getElementById('theater-ops-auth');
     const opsNextEl = document.getElementById('theater-ops-next');
     if (!stage || !runnersEl || !currentEl || !storyEl) return;
 
@@ -1539,6 +1540,48 @@ setInterval(refreshLocalServices, 15000);
             return 'Agent auth is broken: Claude/Codex credentials need refresh.';
         }
         return reason;
+    }
+
+    function theaterAuthState(tasks, health) {
+        const direct = health?.agent_auth || health?.runtime_auth || health?.claude_auth || null;
+        if (direct && typeof direct === 'object') {
+            const provider = direct.provider || 'Claude';
+            if (direct.available === false || direct.status === 'missing') {
+                return {
+                    state: 'blocked',
+                    text: `${provider} CLI missing`,
+                    blocker: `${provider} CLI is not available on Mac Mini.`,
+                };
+            }
+            if (direct.logged_in === true || direct.status === 'ok') {
+                return {state: 'ok', text: `${provider} ready`, blocker: ''};
+            }
+            if (direct.logged_in === false || direct.status === 'blocked') {
+                return {
+                    state: 'blocked',
+                    text: `${provider} login required`,
+                    blocker: `${provider} CLI is logged out on Mac Mini.`,
+                };
+            }
+            if (direct.error || direct.status === 'error') {
+                return {
+                    state: 'blocked',
+                    text: `${provider} auth check failed`,
+                    blocker: theaterCompact(direct.error || direct.message || `${provider} auth check failed`, 120),
+                };
+            }
+        }
+        const authTask = [...tasks]
+            .filter((task) => /authentication_error|invalid authentication credentials|failed to authenticate/i.test(theaterTaskText(task)))
+            .sort((a, b) => theaterTaskTime(b) - theaterTaskTime(a))[0];
+        if (authTask) {
+            return {
+                state: 'blocked',
+                text: 'Claude login required',
+                blocker: 'Claude CLI on Mac Mini is not authenticated.',
+            };
+        }
+        return {state: 'unknown', text: 'not checked', blocker: ''};
     }
 
     function theaterRoute(task) {
@@ -1720,8 +1763,9 @@ setInterval(refreshLocalServices, 15000);
     function renderOperatorStatus(tasks, liveTasks, health) {
         const services = Array.isArray(health?.services) ? health.services : [];
         const runningServices = services.filter((svc) => svc.status === 'running' && svc.port_ok !== false).length;
+        const authState = theaterAuthState(tasks, health);
         const blocker = theaterLastBlocker(tasks);
-        const blockerText = theaterHumanBlocker(blocker);
+        const blockerText = authState.blocker || theaterHumanBlocker(blocker);
         if (opsServicesEl) {
             opsServicesEl.textContent = services.length ? `${runningServices}/${services.length} running` : 'health unavailable';
         }
@@ -1732,10 +1776,13 @@ setInterval(refreshLocalServices, 15000);
         if (opsBlockerEl) {
             opsBlockerEl.textContent = blockerText;
         }
+        if (opsAuthEl) {
+            opsAuthEl.textContent = authState.text;
+        }
         if (opsNextEl) {
             if (!services.length) opsNextEl.textContent = 'Fix dashboard health API visibility first.';
-            else if (blocker && /auth|credentials/i.test(blockerText)) {
-                opsNextEl.textContent = 'Refresh agent CLI auth on Mac Mini, then run a real Builder smoke.';
+            else if (authState.state === 'blocked' || /auth|credentials/i.test(blockerText)) {
+                opsNextEl.textContent = 'Run claude auth login on Mac Mini, then send a real Builder smoke.';
             } else if (!liveTasks.length) {
                 opsNextEl.textContent = 'Send a small Builder task from Telegram and watch it appear here.';
             } else {
