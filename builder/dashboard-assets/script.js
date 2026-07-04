@@ -1543,6 +1543,16 @@ setInterval(refreshLocalServices, 15000);
     }
 
     function theaterAuthState(tasks, health) {
+        const authTask = [...tasks]
+            .filter((task) => /authentication_error|invalid authentication credentials|failed to authenticate/i.test(theaterTaskText(task)))
+            .sort((a, b) => theaterTaskTime(b) - theaterTaskTime(a))[0];
+        if (authTask && theaterTaskAgeMs(authTask) <= LIVE_WINDOW_MS) {
+            return {
+                state: 'blocked',
+                text: 'Claude login required',
+                blocker: 'Recent Bridge task failed because Claude CLI credentials are invalid.',
+            };
+        }
         const direct = health?.agent_auth || health?.runtime_auth || health?.claude_auth || null;
         if (direct && typeof direct === 'object') {
             const provider = direct.provider || 'Claude';
@@ -1571,9 +1581,6 @@ setInterval(refreshLocalServices, 15000);
                 };
             }
         }
-        const authTask = [...tasks]
-            .filter((task) => /authentication_error|invalid authentication credentials|failed to authenticate/i.test(theaterTaskText(task)))
-            .sort((a, b) => theaterTaskTime(b) - theaterTaskTime(a))[0];
         if (authTask) {
             return {
                 state: 'blocked',
