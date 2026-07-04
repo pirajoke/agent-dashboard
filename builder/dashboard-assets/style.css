@@ -3836,6 +3836,39 @@ tr:last-child td { border-bottom: none; }
     align-items: stretch;
 }
 
+.operator-status {
+    display: grid;
+    grid-template-columns: 0.9fr 0.9fr 1.35fr 1.35fr;
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+}
+
+.operator-card {
+    min-height: 68px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(17,17,21,0.76);
+    padding: 0.75rem 0.85rem;
+    display: grid;
+    align-content: center;
+    gap: 0.25rem;
+}
+
+.operator-label {
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.operator-card strong {
+    color: var(--text);
+    font-size: 0.78rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
 .theater-stage,
 .theater-panel {
     background: rgba(14,14,18,0.82);
@@ -4971,6 +5004,9 @@ tr:last-child td { border-bottom: none; }
     .theater-layout {
         grid-template-columns: 1fr;
     }
+    .operator-status {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .theater-stage,
     .theater-panel {
         min-height: 560px;
@@ -4978,6 +5014,9 @@ tr:last-child td { border-bottom: none; }
 }
 
 @media (max-width: 780px) {
+    .operator-status {
+        grid-template-columns: 1fr;
+    }
     .theater-stage {
         min-height: 620px;
         border-width: 5px;

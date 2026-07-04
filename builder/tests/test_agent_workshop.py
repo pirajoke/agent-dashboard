@@ -17,6 +17,9 @@ class AgentTheaterTests(unittest.TestCase):
         self.assertIn('id="theater"', html)
         self.assertIn('id="theater-stage"', html)
         self.assertIn('id="theater-runners"', html)
+        self.assertIn('id="theater-operator-status"', html)
+        self.assertIn('id="theater-ops-services"', html)
+        self.assertIn('id="theater-ops-blocker"', html)
         self.assertIn('id="theater-current"', html)
         self.assertIn('id="theater-story"', html)
         self.assertIn('data-theater-agent="JARVIS"', html)
@@ -42,6 +45,8 @@ class AgentTheaterTests(unittest.TestCase):
         self.assertIn("focus task", script)
         self.assertIn("slice(0, 1)", script)
         self.assertNotIn("slice(0, 5)", script)
+        self.assertIn("theaterIsLiveTask", script)
+        self.assertIn("renderOperatorStatus", script)
         self.assertTrue((ASSETS_DIR / "ai-town-32x32folk.png").exists())
         self.assertGreater((ASSETS_DIR / "ai-town-32x32folk.png").stat().st_size, 1000)
 

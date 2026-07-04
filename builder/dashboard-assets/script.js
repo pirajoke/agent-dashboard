@@ -1368,7 +1368,13 @@ setInterval(refreshLocalServices, 15000);
     const storyEl = document.getElementById('theater-story');
     const storyCountEl = document.getElementById('theater-story-count');
     const refreshBtn = document.getElementById('theater-refresh');
+    const opsServicesEl = document.getElementById('theater-ops-services');
+    const opsLiveEl = document.getElementById('theater-ops-live');
+    const opsBlockerEl = document.getElementById('theater-ops-blocker');
+    const opsNextEl = document.getElementById('theater-ops-next');
     if (!stage || !runnersEl || !currentEl || !storyEl) return;
+
+    const LIVE_WINDOW_MS = 6 * 60 * 60 * 1000;
 
     const STATIONS = {
         USER: {x: 12, y: 55},
@@ -1466,6 +1472,30 @@ setInterval(refreshLocalServices, 15000);
         return 'pending';
     }
 
+    function theaterTaskTime(task) {
+        const raw = task?.updated_at || task?.completed_at || task?.claimed_at || task?.created_at || '';
+        const time = new Date(raw).getTime();
+        return Number.isNaN(time) ? 0 : time;
+    }
+
+    function theaterTaskAgeMs(task) {
+        const time = theaterTaskTime(task);
+        return time ? Date.now() - time : Number.POSITIVE_INFINITY;
+    }
+
+    function theaterIsLiveTask(task) {
+        const state = theaterState(task);
+        if (state === 'running' || state === 'pending') return true;
+        if ((state === 'failed' || state === 'blocked') && theaterTaskAgeMs(task) <= LIVE_WINDOW_MS) return true;
+        return false;
+    }
+
+    function theaterLastBlocker(tasks) {
+        return [...tasks]
+            .filter((task) => ['failed', 'blocked'].includes(theaterState(task)))
+            .sort((a, b) => theaterTaskTime(b) - theaterTaskTime(a))[0] || null;
+    }
+
     function theaterTaskText(task) {
         const messages = (task.messages || []).map((m) => `${m.sender} ${m.receiver} ${m.type} ${m.body}`).join(' ');
         const meta = theaterAllMeta(task).map(theaterText).join(' ');
@@ -1500,6 +1530,15 @@ setInterval(refreshLocalServices, 15000);
             if (line) return theaterCompact(line, 190);
         }
         return `${LABELS[agent] || agent} is handling this task from Bridge queue.`;
+    }
+
+    function theaterHumanBlocker(task) {
+        if (!task) return 'none';
+        const reason = theaterReason(task, theaterAgent(task));
+        if (/authentication_error|invalid authentication credentials/i.test(reason)) {
+            return 'Agent auth is broken: Claude/Codex credentials need refresh.';
+        }
+        return reason;
     }
 
     function theaterRoute(task) {
@@ -1672,20 +1711,49 @@ setInterval(refreshLocalServices, 15000);
     }
 
     function chooseTheaterTask(tasks) {
-        if (!tasks.length) return null;
-        const active = tasks.find((task) => ['running', 'pending', 'blocked', 'failed'].includes(theaterState(task)));
-        return active || tasks[0];
+        const liveTasks = tasks.filter(theaterIsLiveTask);
+        if (!liveTasks.length) return null;
+        const active = liveTasks.find((task) => ['running', 'pending'].includes(theaterState(task)));
+        return active || liveTasks[0];
+    }
+
+    function renderOperatorStatus(tasks, liveTasks, health) {
+        const services = Array.isArray(health?.services) ? health.services : [];
+        const runningServices = services.filter((svc) => svc.status === 'running' && svc.port_ok !== false).length;
+        const blocker = theaterLastBlocker(tasks);
+        const blockerText = theaterHumanBlocker(blocker);
+        if (opsServicesEl) {
+            opsServicesEl.textContent = services.length ? `${runningServices}/${services.length} running` : 'health unavailable';
+        }
+        if (opsLiveEl) {
+            const stale = Math.max(0, tasks.length - liveTasks.length);
+            opsLiveEl.textContent = `${liveTasks.length} live · ${stale} historical`;
+        }
+        if (opsBlockerEl) {
+            opsBlockerEl.textContent = blockerText;
+        }
+        if (opsNextEl) {
+            if (!services.length) opsNextEl.textContent = 'Fix dashboard health API visibility first.';
+            else if (blocker && /auth|credentials/i.test(blockerText)) {
+                opsNextEl.textContent = 'Refresh agent CLI auth on Mac Mini, then run a real Builder smoke.';
+            } else if (!liveTasks.length) {
+                opsNextEl.textContent = 'Send a small Builder task from Telegram and watch it appear here.';
+            } else {
+                opsNextEl.textContent = 'Open the focused task and verify result/evidence.';
+            }
+        }
     }
 
     function renderTheater(tasks) {
         theaterTasks = tasks;
-        const selected = tasks.find((task) => String(task.id) === String(theaterSelectedId)) || chooseTheaterTask(tasks);
+        const liveTasks = tasks.filter(theaterIsLiveTask);
+        const selectedCandidate = liveTasks.find((task) => String(task.id) === String(theaterSelectedId));
+        const selected = selectedCandidate || chooseTheaterTask(tasks);
         theaterSelectedId = selected ? String(selected.id || '') : null;
-        const running = tasks.filter((task) => theaterState(task) === 'running').length;
-        const blocked = tasks.filter((task) => ['blocked', 'failed'].includes(theaterState(task))).length;
-        if (statusEl) statusEl.textContent = `focus task · ${tasks.length} total · ${running} moving · ${blocked} blocked`;
-        updateTheaterPeople(tasks, selected);
-        renderTheaterRunners(tasks, selected);
+        const blocked = liveTasks.filter((task) => ['blocked', 'failed'].includes(theaterState(task))).length;
+        if (statusEl) statusEl.textContent = `${liveTasks.length} live · ${tasks.length} total · ${blocked} blocked`;
+        updateTheaterPeople(liveTasks, selected);
+        renderTheaterRunners(liveTasks, selected);
         renderTheaterCurrent(selected);
         renderTheaterStory(selected);
     }
@@ -1693,14 +1761,24 @@ setInterval(refreshLocalServices, 15000);
     async function refreshTheater() {
         if (statusEl) statusEl.textContent = 'loading';
         try {
-            const res = await fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'});
+            const [res, healthRes] = await Promise.all([
+                fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'}),
+                fetch('/api/health', {cache: 'no-store'}).catch(() => null),
+            ]);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            renderTheater(data.tasks || []);
+            const tasks = data.tasks || [];
+            let health = null;
+            if (healthRes && healthRes.ok) {
+                try { health = await healthRes.json(); } catch (_) { health = null; }
+            }
+            renderTheater(tasks);
+            renderOperatorStatus(tasks, tasks.filter(theaterIsLiveTask), health);
         } catch (err) {
             if (statusEl) statusEl.textContent = 'offline';
             currentEl.innerHTML = `<div class="theater-empty">Bridge unavailable: ${escTheater(err.message)}</div>`;
             storyEl.innerHTML = '<div class="theater-empty">No live events.</div>';
+            renderOperatorStatus([], [], null);
         }
     }
 

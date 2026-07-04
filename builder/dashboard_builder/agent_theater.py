@@ -40,6 +40,24 @@ def build_agent_theater_html() -> str:
         <div class="section-title">Agent Theater</div>
         <div class="section-count" id="theater-status">loading</div>
     </div>
+    <div class="operator-status" id="theater-operator-status">
+        <div class="operator-card">
+            <span class="operator-label">Services</span>
+            <strong id="theater-ops-services">checking</strong>
+        </div>
+        <div class="operator-card">
+            <span class="operator-label">Live queue</span>
+            <strong id="theater-ops-live">checking</strong>
+        </div>
+        <div class="operator-card operator-card-wide">
+            <span class="operator-label">Main blocker</span>
+            <strong id="theater-ops-blocker">checking</strong>
+        </div>
+        <div class="operator-card operator-card-wide">
+            <span class="operator-label">Next action</span>
+            <strong id="theater-ops-next">checking</strong>
+        </div>
+    </div>
     <div class="theater-layout">
         <div class="theater-stage" id="theater-stage">
             <svg class="theater-map" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
