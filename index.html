@@ -3824,6 +3824,567 @@ tr:last-child td { border-bottom: none; }
     }
 }
 
+/* ── Agent Theater: human-readable agent scene ── */
+.topbar-secondary {
+    margin-top: 2.75rem;
+}
+
+.theater-section {
+    margin-bottom: 3rem;
+}
+
+.theater-head {
+    border-bottom-color: rgba(34,197,94,0.18);
+}
+
+.theater-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(310px, 0.72fr);
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.theater-stage,
+.theater-panel {
+    background: rgba(14,14,18,0.82);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.theater-stage {
+    min-height: 560px;
+    isolation: isolate;
+    background:
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        rgba(12,12,16,0.92);
+    background-size: 58px 58px;
+}
+
+.theater-stage::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border: 1px solid rgba(255,255,255,0.045);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.theater-map {
+    position: absolute;
+    inset: 16px;
+    width: calc(100% - 32px);
+    height: calc(100% - 32px);
+    z-index: 1;
+}
+
+.theater-track {
+    fill: none;
+    stroke: rgba(255,255,255,0.18);
+    stroke-width: 3;
+    stroke-dasharray: 7 12;
+    stroke-linecap: round;
+}
+
+.theater-track-main { stroke: rgba(6,182,212,0.36); }
+.theater-track-memory { stroke: rgba(34,197,94,0.28); }
+.theater-track-git { stroke: rgba(168,85,247,0.27); }
+.theater-track-deploy { stroke: rgba(249,115,22,0.32); }
+
+.theater-station {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top: calc(var(--y) * 1%);
+    transform: translate(-50%, -50%);
+    min-width: 86px;
+    height: 34px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.055);
+    color: var(--text2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.63rem;
+    letter-spacing: 0.02em;
+    z-index: 2;
+}
+
+.theater-station-user { border-color: rgba(59,130,246,0.24); }
+.theater-station-core { border-color: rgba(249,115,22,0.28); }
+.theater-station-queue { border-color: rgba(168,85,247,0.25); }
+.theater-station-code { border-color: rgba(6,182,212,0.28); }
+.theater-station-test { border-color: rgba(234,179,8,0.28); }
+.theater-station-prod { border-color: rgba(34,197,94,0.28); }
+.theater-station-memory { border-color: rgba(20,184,166,0.28); }
+.theater-station-git { border-color: rgba(236,72,153,0.22); }
+
+.theater-person-card {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top: calc(var(--y) * 1% + 54px);
+    transform: translate(-50%, -50%);
+    width: 96px;
+    min-height: 118px;
+    border: 1px solid rgba(255,255,255,0.095);
+    background: rgba(9,9,11,0.72);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 8px 8px;
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    cursor: pointer;
+    z-index: 5;
+    transition: border-color 0.16s, transform 0.16s, background 0.16s;
+}
+
+.theater-person-card:hover {
+    border-color: rgba(255,255,255,0.18);
+    transform: translate(-50%, calc(-50% - 2px));
+}
+
+.theater-person {
+    position: relative;
+    width: 38px;
+    height: 54px;
+    display: block;
+}
+
+.theater-person-head,
+.theater-person-torso,
+.theater-person-arm,
+.theater-person-leg {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--cyan);
+    box-shadow: 0 0 14px rgba(6,182,212,0.18);
+}
+
+.theater-person-head {
+    top: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f8fafc;
+    box-shadow: inset 0 -4px 0 rgba(6,182,212,0.28), 0 0 18px rgba(255,255,255,0.12);
+}
+
+.theater-person-torso {
+    top: 23px;
+    width: 24px;
+    height: 22px;
+    border-radius: 8px 8px 5px 5px;
+    background: var(--cyan);
+}
+
+.theater-person-arm {
+    top: 26px;
+    width: 5px;
+    height: 20px;
+    border-radius: 999px;
+    transform-origin: top center;
+}
+
+.theater-person-arm-a {
+    margin-left: -17px;
+    transform: rotate(18deg);
+}
+
+.theater-person-arm-b {
+    margin-left: 17px;
+    transform: rotate(-18deg);
+}
+
+.theater-person-leg {
+    top: 43px;
+    width: 6px;
+    height: 17px;
+    border-radius: 999px;
+    transform-origin: top center;
+    background: #93c5fd;
+}
+
+.theater-person-leg-a {
+    margin-left: -6px;
+    transform: rotate(8deg);
+}
+
+.theater-person-leg-b {
+    margin-left: 6px;
+    transform: rotate(-8deg);
+}
+
+.theater-person-name {
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1.05;
+    max-width: 80px;
+    overflow-wrap: anywhere;
+}
+
+.theater-person-job {
+    font-size: 0.56rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.1;
+    max-width: 78px;
+    overflow-wrap: anywhere;
+}
+
+.theater-person-state {
+    min-width: 56px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.055);
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.52rem;
+    white-space: nowrap;
+}
+
+.theater-person-card.is-active {
+    border-color: rgba(6,182,212,0.46);
+    background: rgba(6,182,212,0.08);
+}
+
+.theater-person-card.is-running .theater-person {
+    animation: theaterPersonWalk 0.68s ease-in-out infinite;
+}
+
+.theater-person-card.is-running .theater-person-arm-a,
+.theater-person-card.is-running .theater-person-leg-b {
+    animation: theaterLimbA 0.68s ease-in-out infinite;
+}
+
+.theater-person-card.is-running .theater-person-arm-b,
+.theater-person-card.is-running .theater-person-leg-a {
+    animation: theaterLimbB 0.68s ease-in-out infinite;
+}
+
+.theater-person-card.is-blocked,
+.theater-person-card.is-failed {
+    border-color: rgba(239,68,68,0.48);
+    background: rgba(239,68,68,0.08);
+}
+
+.theater-person-card.is-done {
+    border-color: rgba(34,197,94,0.42);
+    background: rgba(34,197,94,0.075);
+}
+
+.theater-person-card.is-pending {
+    border-color: rgba(234,179,8,0.38);
+    background: rgba(234,179,8,0.07);
+}
+
+@keyframes theaterPersonWalk {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+@keyframes theaterLimbA {
+    0%, 100% { transform: rotate(-18deg); }
+    50% { transform: rotate(22deg); }
+}
+
+@keyframes theaterLimbB {
+    0%, 100% { transform: rotate(18deg); }
+    50% { transform: rotate(-22deg); }
+}
+
+.theater-runners {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+}
+
+.theater-runner {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 74px;
+    min-height: 58px;
+    transform: translate(-50%, -50%);
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    transition: opacity 0.2s;
+}
+
+.theater-runner .theater-mini-person {
+    position: relative;
+    width: 24px;
+    height: 34px;
+    display: block;
+    filter: drop-shadow(0 8px 12px rgba(0,0,0,0.35));
+    animation: theaterRunnerStep 0.55s ease-in-out infinite;
+}
+
+.theater-mini-person::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #f8fafc;
+    box-shadow: inset 0 -3px 0 rgba(249,115,22,0.28);
+}
+
+.theater-mini-person::after {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 4px;
+    width: 16px;
+    height: 18px;
+    border-radius: 7px 7px 4px 4px;
+    background: var(--accent);
+    box-shadow:
+        -7px 5px 0 -4px var(--accent),
+        7px 5px 0 -4px var(--accent),
+        -4px 20px 0 -4px #93c5fd,
+        4px 20px 0 -4px #93c5fd;
+}
+
+.theater-runner-label {
+    max-width: 74px;
+    padding: 3px 5px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(9,9,11,0.82);
+    color: var(--text);
+    font-size: 0.54rem;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.theater-runner-running .theater-runner-label { border-color: rgba(59,130,246,0.34); }
+.theater-runner-pending .theater-runner-label { border-color: rgba(234,179,8,0.34); }
+.theater-runner-done .theater-runner-label { border-color: rgba(34,197,94,0.34); }
+.theater-runner-failed .theater-runner-label,
+.theater-runner-blocked .theater-runner-label { border-color: rgba(239,68,68,0.42); }
+
+@keyframes theaterRunnerStep {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-4px) rotate(2deg); }
+}
+
+.theater-panel {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 560px;
+}
+
+.theater-panel-top,
+.theater-story-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.theater-panel-top strong,
+.theater-story-head span:last-child {
+    display: block;
+    color: var(--text);
+    font-size: 0.88rem;
+    line-height: 1.25;
+}
+
+.theater-kicker {
+    display: block;
+    color: var(--muted);
+    font-size: 0.58rem;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.22rem;
+}
+
+.theater-refresh {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: rgba(255,255,255,0.045);
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.theater-refresh:hover {
+    border-color: rgba(255,255,255,0.18);
+}
+
+.theater-current {
+    margin-top: 0.9rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.035);
+    border-radius: 8px;
+    padding: 0.85rem;
+}
+
+.theater-current-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.theater-current-item {
+    min-width: 0;
+}
+
+.theater-current-item span {
+    display: block;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.18rem;
+}
+
+.theater-current-item strong {
+    display: block;
+    color: var(--text);
+    font-size: 0.72rem;
+    line-height: 1.22;
+    overflow-wrap: anywhere;
+}
+
+.theater-current-reason {
+    margin-top: 0.75rem;
+    color: var(--text2);
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
+.theater-story-head {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.theater-story {
+    margin-top: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    overflow: auto;
+    max-height: 330px;
+    padding-right: 0.2rem;
+}
+
+.theater-event {
+    border-left: 3px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.035);
+    border-radius: 0 8px 8px 0;
+    padding: 0.58rem 0.65rem;
+}
+
+.theater-event-running { border-left-color: var(--blue); }
+.theater-event-pending { border-left-color: var(--yellow); }
+.theater-event-done { border-left-color: var(--green); }
+.theater-event-failed,
+.theater-event-blocked { border-left-color: var(--red); }
+
+.theater-event-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.24rem;
+}
+
+.theater-event-top strong {
+    color: var(--text);
+    font-size: 0.7rem;
+}
+
+.theater-event-top span {
+    color: var(--muted);
+    font-size: 0.56rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.theater-event p {
+    color: var(--text2);
+    font-size: 0.68rem;
+    line-height: 1.35;
+}
+
+.theater-empty {
+    color: var(--muted);
+    font-size: 0.72rem;
+    line-height: 1.35;
+}
+
+@media (max-width: 1180px) {
+    .theater-layout {
+        grid-template-columns: 1fr;
+    }
+    .theater-panel {
+        min-height: 0;
+    }
+    .theater-story {
+        max-height: 260px;
+    }
+}
+
+@media (max-width: 780px) {
+    .theater-stage {
+        min-height: 680px;
+    }
+    .theater-person-card {
+        width: 84px;
+        min-height: 108px;
+    }
+    .theater-person-card[data-theater-agent="USER"] { left: 22% !important; top: 12% !important; }
+    .theater-person-card[data-theater-agent="JARVIS"] { left: 68% !important; top: 12% !important; }
+    .theater-person-card[data-theater-agent="BRIDGE"] { left: 22% !important; top: 34% !important; }
+    .theater-person-card[data-theater-agent="BUILDER"] { left: 68% !important; top: 34% !important; }
+    .theater-person-card[data-theater-agent="TESTER"] { left: 22% !important; top: 56% !important; }
+    .theater-person-card[data-theater-agent="DEPLOYER"] { left: 68% !important; top: 56% !important; }
+    .theater-person-card[data-theater-agent="VAULT"] { left: 22% !important; top: 78% !important; }
+    .theater-person-card[data-theater-agent="GITHUB"] { left: 68% !important; top: 78% !important; }
+    .theater-station {
+        display: none;
+    }
+    .theater-map {
+        opacity: 0.45;
+    }
+    .theater-current-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theater-person-card.is-running .theater-person,
+    .theater-person-card.is-running .theater-person-arm-a,
+    .theater-person-card.is-running .theater-person-arm-b,
+    .theater-person-card.is-running .theater-person-leg-a,
+    .theater-person-card.is-running .theater-person-leg-b,
+    .theater-runner .theater-mini-person {
+        animation: none;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -3839,7 +4400,11 @@ tr:last-child td { border-bottom: none; }
         <div class="sb-sub">agent orchestration</div>
     </div>
     <ul class="sidebar-nav">
-        <li><a data-target="#now" href="javascript:void(0)" class="active">
+        <li><a data-target="#theater" href="javascript:void(0)" class="active">
+            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M3 12c2-4 8-4 10 0" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/><circle cx="5" cy="6" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="11" cy="6" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M8 8v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Theater
+        </a></li>
+        <li><a data-target="#now" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.3"/><line x1="8" y1="4" x2="8" y2="8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="8" y1="8" x2="11" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
             NOW
         </a></li>
@@ -3867,7 +4432,7 @@ tr:last-child td { border-bottom: none; }
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-07-04 18:46:08 ICT</span>
+            <span>2026-07-04 21:18:29 ICT</span>
         </div>
     </div>
 </nav>
@@ -3875,12 +4440,173 @@ tr:last-child td { border-bottom: none; }
 <!-- Main content -->
 <main class="main">
 
+<!-- Theater Section -->
+<div class="topbar" id="theater-top">
+    <div class="topbar-title">Agent Theater</div>
+    <div class="topbar-meta">
+        <span class="tm-item"><span class="live-dot"></span> Live</span>
+        <span class="tm-item">2026-07-04 21:18:29 ICT</span>
+    </div>
+</div>
+
+
+<div class="section theater-section" id="theater">
+    <div class="section-head theater-head">
+        <div class="section-dot" style="background:var(--green)"></div>
+        <div class="section-title">Agent Theater</div>
+        <div class="section-count" id="theater-status">loading</div>
+    </div>
+    <div class="theater-layout">
+        <div class="theater-stage" id="theater-stage">
+            <svg class="theater-map" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
+                <path class="theater-track theater-track-main" d="M80 280 C160 145 250 125 395 240 S565 160 620 118 S770 150 825 220 S870 325 835 382 S730 460 570 418 S370 420 220 405" />
+                <path class="theater-track theater-track-memory" d="M405 248 C455 360 485 398 512 420" />
+                <path class="theater-track theater-track-git" d="M405 250 C320 360 245 390 205 407" />
+                <path class="theater-track theater-track-deploy" d="M780 225 C850 305 875 355 840 405" />
+            </svg>
+            <div class="theater-station theater-station-user" style="--x:7;--y:48">Telegram</div>
+            <div class="theater-station theater-station-core" style="--x:22;--y:24">Jarvis</div>
+            <div class="theater-station theater-station-queue" style="--x:40;--y:42">Bridge</div>
+            <div class="theater-station theater-station-code" style="--x:61;--y:20">Code</div>
+            <div class="theater-station theater-station-test" style="--x:78;--y:38">Tests</div>
+            <div class="theater-station theater-station-prod" style="--x:84;--y:68">Mac Mini</div>
+            <div class="theater-station theater-station-memory" style="--x:48;--y:72">Obsidian</div>
+            <div class="theater-station theater-station-git" style="--x:20;--y:72">GitHub</div>
+            
+        <button class="theater-person-card" data-theater-agent="USER" style="--x:7;--y:48" title="You">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">You</span>
+            <span class="theater-person-job">request</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+        <button class="theater-person-card" data-theater-agent="JARVIS" style="--x:22;--y:24" title="Jarvis">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">Jarvis</span>
+            <span class="theater-person-job">understands</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+        <button class="theater-person-card" data-theater-agent="BRIDGE" style="--x:40;--y:42" title="Bridge">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">Bridge</span>
+            <span class="theater-person-job">queues</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+        <button class="theater-person-card" data-theater-agent="BUILDER" style="--x:61;--y:20" title="Builder">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">Builder</span>
+            <span class="theater-person-job">codes</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+        <button class="theater-person-card" data-theater-agent="TESTER" style="--x:78;--y:38" title="Tester">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">Tester</span>
+            <span class="theater-person-job">checks</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+        <button class="theater-person-card" data-theater-agent="DEPLOYER" style="--x:84;--y:68" title="Deployer">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">Deployer</span>
+            <span class="theater-person-job">ships</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+        <button class="theater-person-card" data-theater-agent="VAULT" style="--x:48;--y:72" title="Vault">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">Vault</span>
+            <span class="theater-person-job">remembers</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+        <button class="theater-person-card" data-theater-agent="GITHUB" style="--x:20;--y:72" title="GitHub">
+            <span class="theater-person" aria-hidden="true">
+                <span class="theater-person-head"></span>
+                <span class="theater-person-torso"></span>
+                <span class="theater-person-arm theater-person-arm-a"></span>
+                <span class="theater-person-arm theater-person-arm-b"></span>
+                <span class="theater-person-leg theater-person-leg-a"></span>
+                <span class="theater-person-leg theater-person-leg-b"></span>
+            </span>
+            <span class="theater-person-name">GitHub</span>
+            <span class="theater-person-job">records</span>
+            <span class="theater-person-state">idle</span>
+        </button>
+            <div class="theater-runners" id="theater-runners"></div>
+        </div>
+        <aside class="theater-panel">
+            <div class="theater-panel-top">
+                <div>
+                    <span class="theater-kicker">Current mission</span>
+                    <strong id="theater-current-title">Waiting for Bridge</strong>
+                </div>
+                <button class="theater-refresh" id="theater-refresh" type="button" title="Refresh">↻</button>
+            </div>
+            <div class="theater-current" id="theater-current">
+                <div class="theater-empty">No live task selected.</div>
+            </div>
+            <div class="theater-story-head">
+                <span class="theater-kicker">Live story</span>
+                <span id="theater-story-count">0 events</span>
+            </div>
+            <div class="theater-story" id="theater-story">
+                <div class="theater-empty">Loading task events...</div>
+            </div>
+        </aside>
+    </div>
+</div>
+
 <!-- NOW Section -->
-<div class="topbar" id="now">
+<div class="topbar topbar-secondary" id="now">
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-07-04 18:46:08 ICT</span>
+        <span class="tm-item">2026-07-04 21:18:29 ICT</span>
     </div>
 </div>
 
@@ -3889,17 +4615,17 @@ tr:last-child td { border-bottom: none; }
         <div class="now-dots"><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Storage</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Memory</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Database</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Network</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Services</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Backup</span></div><div class="now-dot-item"><span class="status-dot dot-yellow"></span><span class="now-dot-label">Code Sync</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Locks</span></div></div>
         <div class="now-check-time">checked: 2026-05-08</div>
     </div><div class="now-alerts"><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Atlas is degraded</div><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Dashboard is degraded</div></div>
-    <div class="jpipe-card jpipe-red">
+    <div class="jpipe-card jpipe-green">
         <div class="jpipe-head">
             <div>
                 <div class="jpipe-kicker">Jarvis Pipeline</div>
                 <div class="jpipe-title">Mac Mini production</div>
             </div>
-            <div class="jpipe-state"><span class="status-dot dot-red"></span>attention</div>
+            <div class="jpipe-state"><span class="status-dot dot-green"></span>ready</div>
         </div>
-        <div class="jpipe-grid"><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Runtime</span><span class="jpipe-check-detail">pid 86429</span></div><div class="jpipe-check"><span class="status-dot dot-red"></span><span class="jpipe-check-label">Git</span><span class="jpipe-check-detail">main@a0967d5</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">AIOS</span><span class="jpipe-check-detail">green / fresh</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Sources</span><span class="jpipe-check-detail">9 answers</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Contract</span><span class="jpipe-check-detail">status_query → status_query</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Linear Sync</span><span class="jpipe-check-detail">9/9 linked</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Webhook</span><span class="jpipe-check-detail">ok</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Goals</span><span class="jpipe-check-detail">2026-07 / expected 2026-07</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Deploy</span><span class="jpipe-check-detail">git script</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Human Layer</span><span class="jpipe-check-detail">enabled</span></div></div>
+        <div class="jpipe-grid"><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Runtime</span><span class="jpipe-check-detail">pid 86429</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Git</span><span class="jpipe-check-detail">main@2fdadb4</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">AIOS</span><span class="jpipe-check-detail">green / fresh</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Sources</span><span class="jpipe-check-detail">9 answers</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Contract</span><span class="jpipe-check-detail">status_query → status_query</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Linear Sync</span><span class="jpipe-check-detail">9/9 linked</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Webhook</span><span class="jpipe-check-detail">ok</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Goals</span><span class="jpipe-check-detail">2026-07 / expected 2026-07</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Deploy</span><span class="jpipe-check-detail">git script</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Human Layer</span><span class="jpipe-check-detail">enabled</span></div></div>
         <div class="jpipe-meta">
-            <div><span>HEAD</span><strong>a0967d5</strong></div>
+            <div><span>HEAD</span><strong>2fdadb4</strong></div>
             <div><span>AIOS</span><strong>green/fresh</strong></div>
             <div><span>Sources</span><strong>9 answers</strong></div>
             <div><span>Started</span><strong>2026-07-04 01:25:56</strong></div>
@@ -3921,8 +4647,8 @@ tr:last-child td { border-bottom: none; }
             </div>
         </div>
         <div class="jpipe-unsynced"><div class="jpipe-empty">No local fallback todos.</div></div>
-        <div class="jpipe-warnings"><div><span class="status-dot dot-yellow"></span>JARVIS runtime checkout is dirty.</div></div>
-        <div class="jpipe-next">Run scripts/deploy_macmini.sh and check launchd logs.</div>
+        
+        <div class="jpipe-next">Use Telegram smoke: что сейчас по Jarvis? → покажи источники.</div>
     </div>
     <div class="now-stats">
         <div class="now-stat">
@@ -4465,7 +5191,7 @@ tr:last-child td { border-bottom: none; }
                 <div class="pbar"><div class="pfill pfill-high" style="width:83%"></div></div>
                 <span class="ptxt">83%</span>
             </td>
-            <td class="fresh-cold">30d</td>
+            <td class="fresh-cold">31d</td>
             <td class="next-action">—</td>
             <td class="agents-col">—</td>
             <td class="actions-col">
@@ -4717,7 +5443,7 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">9 sessions</span><span class="ag-pill">0 MCP servers</span><span class="ag-pill">766 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">9 sessions</span><span class="ag-pill">0 MCP servers</span><span class="ag-pill">770 MB RAM</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (9)</summary>
@@ -4725,17 +5451,27 @@ tr:last-child td { border-bottom: none; }
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19214</span>
-                    <span class="ag-sub-detail">CPU 7.4% · 79 MB</span>
+                    <span class="ag-sub-detail">CPU 5.7% · 76 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19331</span>
-                    <span class="ag-sub-detail">CPU 1.0% · 273 MB</span>
+                    <span class="ag-sub-detail">CPU 0.5% · 265 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 19216</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 48 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Session PID 19209</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 183 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19406</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 43 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 42 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
@@ -4754,18 +5490,8 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19216</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 48 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Session PID 19213</span>
                     <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Session PID 19209</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 167 MB</span>
                 </div></div>
             </details>
             
@@ -4783,7 +5509,7 @@ tr:last-child td { border-bottom: none; }
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">3 processes</span><span class="ag-pill">43 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">3 processes</span><span class="ag-pill">42 MB RAM</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (3)</summary>
@@ -4791,17 +5517,17 @@ tr:last-child td { border-bottom: none; }
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 82198</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 20 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 19 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 66096</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 14 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 15 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 66095</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 9 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 8 MB</span>
                 </div></div>
             </details>
             
@@ -4988,14 +5714,14 @@ tr:last-child td { border-bottom: none; }
             
         </div></div>
     <details class="sys-section" open>
-        <summary class="sys-section-sum">Services (19 running)</summary>
+        <summary class="sys-section-sum">Services (18 running)</summary>
         
     <div class="sys-services">
-        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-tunnel</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-data-sync</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-linear-webhook</span></div></div>
+        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-tunnel</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-linear-webhook</span></div></div>
     </div>
         <details class="sys-idle-toggle">
-            <summary class="sys-expand-sum">Idle/Stopped (12)</summary>
-            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-auto-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-linear-webhook-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">omniharness</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">obsidian-linear-sync</span><span class="sys-svc-status">idle</span></div></div>
+            <summary class="sys-expand-sum">Idle/Stopped (13)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-auto-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">krisp-import</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-data-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-linear-webhook-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">omniharness</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">obsidian-linear-sync</span><span class="sys-svc-status">idle</span></div></div>
         </details>
     </details>
     <details class="sys-section">
@@ -5029,7 +5755,7 @@ tr:last-child td { border-bottom: none; }
     </div>
     
         <div class="cost-orch">
-            <span>Mode: <strong>claude-claude</strong></span>
+            <span>Mode: <strong>claude-codex</strong></span>
             <span>Claude $?/d</span>
             <span>Codex $?/d</span>
         </div>
@@ -5105,7 +5831,7 @@ tr:last-child td { border-bottom: none; }
     </details>
 </div>
 
-<div class="footer">command center v4 // 5 agents // 2026-07-04 18:46:08 ICT</div>
+<div class="footer">command center v4 // 5 agents // 2026-07-04 21:18:29 ICT</div>
 
 </main>
 </div>
@@ -6466,6 +7192,352 @@ setInterval(refreshLocalServices, 15000);
     }
     update();
     setInterval(update, 60000);
+})();
+
+// ══════════════════════════════════════════════════════════════
+// ── Agent Theater: animated human-facing task flow ──
+// ══════════════════════════════════════════════════════════════
+(function initAgentTheater() {
+    const stage = document.getElementById('theater-stage');
+    const runnersEl = document.getElementById('theater-runners');
+    const statusEl = document.getElementById('theater-status');
+    const currentTitleEl = document.getElementById('theater-current-title');
+    const currentEl = document.getElementById('theater-current');
+    const storyEl = document.getElementById('theater-story');
+    const storyCountEl = document.getElementById('theater-story-count');
+    const refreshBtn = document.getElementById('theater-refresh');
+    if (!stage || !runnersEl || !currentEl || !storyEl) return;
+
+    const STATIONS = {
+        USER: {x: 7, y: 48},
+        JARVIS: {x: 22, y: 24},
+        BRIDGE: {x: 40, y: 42},
+        ROUTER: {x: 22, y: 24},
+        PLANNER: {x: 40, y: 42},
+        BUILDER: {x: 61, y: 20},
+        TESTER: {x: 78, y: 38},
+        DEPLOYER: {x: 84, y: 68},
+        VAULT: {x: 48, y: 72},
+        GITHUB: {x: 20, y: 72},
+    };
+    const LABELS = {
+        USER: 'You',
+        JARVIS: 'Jarvis',
+        BRIDGE: 'Bridge',
+        ROUTER: 'Router',
+        PLANNER: 'Planner',
+        BUILDER: 'Builder',
+        TESTER: 'Tester',
+        DEPLOYER: 'Deployer',
+        VAULT: 'Vault',
+        GITHUB: 'GitHub',
+    };
+    const ROUTES = {
+        ROUTER: ['USER', 'JARVIS', 'BRIDGE', 'JARVIS'],
+        PLANNER: ['USER', 'JARVIS', 'BRIDGE', 'PLANNER'],
+        BUILDER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER'],
+        TESTER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'TESTER'],
+        DEPLOYER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'TESTER', 'DEPLOYER'],
+        VAULT: ['USER', 'JARVIS', 'BRIDGE', 'VAULT'],
+        GITHUB: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'GITHUB'],
+    };
+    let theaterTasks = [];
+    let theaterSelectedId = null;
+    let theaterAnimationStarted = false;
+
+    const escTheater = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+
+    function theaterText(value) {
+        if (value == null) return '';
+        if (typeof value === 'string') return value;
+        try { return JSON.stringify(value); } catch (_) { return String(value); }
+    }
+
+    function theaterCompact(value, limit = 120) {
+        const text = theaterText(value).replace(/\s+/g, ' ').trim();
+        return text.length > limit ? text.slice(0, limit - 3).trim() + '...' : text;
+    }
+
+    function theaterTime(raw) {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return String(raw).slice(0, 16);
+        return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    }
+
+    function theaterMeta(item) {
+        const raw = item?.metadata ?? item?.meta ?? null;
+        if (!raw) return {};
+        if (typeof raw === 'object') return raw;
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function theaterAllMeta(task) {
+        return [theaterMeta(task), ...(task.messages || []).map(theaterMeta)];
+    }
+
+    function theaterFirstMeta(task, keys) {
+        for (const meta of theaterAllMeta(task)) {
+            for (const key of keys) {
+                if (meta[key] != null && meta[key] !== '') return meta[key];
+            }
+        }
+        return '';
+    }
+
+    function theaterState(task) {
+        const raw = String(task.status || task.state || '').toLowerCase();
+        const result = `${task.error || ''} ${theaterText(task.result)}`.toLowerCase();
+        if (result.match(/\b(authentication_error|failed|traceback|exception|exit code [1-9]|permission denied|fatal:|error: 4\d\d|error: 5\d\d)\b/)) return 'failed';
+        if (['done', 'complete', 'completed', 'success', 'succeeded'].includes(raw)) return 'done';
+        if (['failed', 'error'].includes(raw)) return 'failed';
+        if (['blocked', 'waiting', 'needs_input'].includes(raw)) return 'blocked';
+        if (['cancelled', 'canceled'].includes(raw)) return 'cancelled';
+        if (['running', 'in_progress', 'working', 'active'].includes(raw)) return 'running';
+        return 'pending';
+    }
+
+    function theaterTaskText(task) {
+        const messages = (task.messages || []).map((m) => `${m.sender} ${m.receiver} ${m.type} ${m.body}`).join(' ');
+        const meta = theaterAllMeta(task).map(theaterText).join(' ');
+        return `${task.description || ''} ${task.agent_role || ''} ${task.error || ''} ${theaterText(task.result)} ${messages} ${meta}`.toLowerCase();
+    }
+
+    function theaterAgent(task) {
+        const explicit = String(theaterFirstMeta(task, ['assigned_agent']) || task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
+        if (LABELS[explicit]) return explicit;
+        const text = theaterTaskText(task);
+        if (text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) return 'TESTER';
+        if (text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) return 'DEPLOYER';
+        if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) return 'VAULT';
+        if (text.match(/\b(github|git push|commit|pull request|pr\b|linear|issue)\b/)) return 'GITHUB';
+        if (text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) return 'PLANNER';
+        if (text.match(/\b(route|router|telegram intake|intent)\b/)) return 'ROUTER';
+        return 'BUILDER';
+    }
+
+    function theaterTitle(task) {
+        return theaterCompact(task?.description || task?.title || 'Untitled task', 116);
+    }
+
+    function theaterReason(task, agent) {
+        const structured = theaterFirstMeta(task, ['route_reason', 'reason']);
+        if (structured) return theaterCompact(structured, 190);
+        const state = theaterState(task);
+        if (state === 'failed' || state === 'blocked') {
+            const text = [task.error, task.result, ...(task.messages || []).map((m) => m.body)]
+                .map(theaterText).join('\n');
+            const line = text.split(/\n+/).map((x) => x.trim()).find((x) => /(permission denied|fatal:|error|failed|blocked|traceback|exception|mmap)/i.test(x));
+            if (line) return theaterCompact(line, 190);
+        }
+        return `${LABELS[agent] || agent} is handling this task from Bridge queue.`;
+    }
+
+    function theaterRoute(task) {
+        const agent = theaterAgent(task);
+        const text = theaterTaskText(task);
+        let route = ROUTES[agent] || ROUTES.BUILDER;
+        if (agent === 'BUILDER' && text.match(/\b(test|selftest|smoke|compileall)\b/)) route = ROUTES.TESTER;
+        if (text.match(/\b(deploy|launchd|restart|mac mini|runtime)\b/)) route = ROUTES.DEPLOYER;
+        if (text.match(/\b(obsidian|vault|memory|status\.md|todo\.md)\b/)) route = [...route, 'VAULT'];
+        if (text.match(/\b(github|commit|push|issue|linear)\b/)) route = [...route, 'GITHUB'];
+        return [...new Set(route)];
+    }
+
+    function theaterSeed(id) {
+        return String(id || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 5000;
+    }
+
+    function routePoint(route, progress) {
+        const points = route.map((name) => STATIONS[name] || STATIONS.BUILDER);
+        if (points.length <= 1) return points[0] || STATIONS.BUILDER;
+        const bounded = Math.max(0, Math.min(0.995, progress));
+        const scaled = bounded * (points.length - 1);
+        const index = Math.floor(scaled);
+        const local = scaled - index;
+        const a = points[index];
+        const b = points[Math.min(index + 1, points.length - 1)];
+        return {
+            x: a.x + (b.x - a.x) * local,
+            y: a.y + (b.y - a.y) * local,
+        };
+    }
+
+    function progressForRunner(runner, now) {
+        const state = runner.dataset.state;
+        const seed = Number(runner.dataset.seed || 0);
+        if (state === 'done' || state === 'cancelled') return 0.985;
+        if (state === 'failed' || state === 'blocked') return 0.72;
+        if (state === 'pending') return 0.16 + ((Math.sin((now + seed) / 900) + 1) * 0.025);
+        const duration = 10500 + seed;
+        return ((now + seed) % duration) / duration;
+    }
+
+    function animateTheater() {
+        const now = Date.now();
+        document.querySelectorAll('.theater-runner').forEach((runner) => {
+            const route = String(runner.dataset.route || 'USER,JARVIS,BRIDGE,BUILDER').split(',');
+            const point = routePoint(route, progressForRunner(runner, now));
+            runner.style.left = `${point.x}%`;
+            runner.style.top = `${point.y}%`;
+            runner.style.transform = 'translate(-50%, -50%)';
+        });
+        requestAnimationFrame(animateTheater);
+    }
+
+    function updateTheaterPeople(tasks) {
+        const personState = {};
+        Object.keys(LABELS).forEach((agent) => { personState[agent] = []; });
+        tasks.slice(0, 16).forEach((task) => {
+            const state = theaterState(task);
+            theaterRoute(task).forEach((agent) => {
+                if (personState[agent]) personState[agent].push(state);
+            });
+        });
+        document.querySelectorAll('[data-theater-agent]').forEach((el) => {
+            const agent = el.dataset.theaterAgent;
+            const states = personState[agent] || [];
+            el.classList.remove('is-active', 'is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed');
+            const label = el.querySelector('.theater-person-state');
+            if (!states.length) {
+                if (label) label.textContent = 'idle';
+                return;
+            }
+            let state = 'pending';
+            if (states.some((s) => s === 'running')) state = 'running';
+            else if (states.some((s) => s === 'failed' || s === 'blocked')) state = 'blocked';
+            else if (states.some((s) => s === 'pending')) state = 'pending';
+            else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
+            el.classList.add('is-active', `is-${state}`);
+            if (label) label.textContent = `${state} · ${states.length}`;
+        });
+    }
+
+    function renderTheaterRunners(tasks) {
+        const visible = tasks.slice(0, 9);
+        runnersEl.innerHTML = visible.map((task) => {
+            const state = theaterState(task);
+            const agent = theaterAgent(task);
+            const route = theaterRoute(task).join(',');
+            const id = String(task.id || '');
+            return `
+                <div class="theater-runner theater-runner-${escTheater(state)}" data-task-id="${escTheater(id)}"
+                    data-route="${escTheater(route)}" data-state="${escTheater(state)}" data-seed="${theaterSeed(id)}">
+                    <span class="theater-mini-person" aria-hidden="true"></span>
+                    <span class="theater-runner-label">${escTheater(LABELS[agent] || agent)} · ${escTheater(state)}</span>
+                </div>`;
+        }).join('');
+        if (!theaterAnimationStarted) {
+            theaterAnimationStarted = true;
+            requestAnimationFrame(animateTheater);
+        }
+    }
+
+    function renderTheaterCurrent(task) {
+        if (!task) {
+            if (currentTitleEl) currentTitleEl.textContent = 'Waiting for Bridge';
+            currentEl.innerHTML = '<div class="theater-empty">No recent Bridge task.</div>';
+            return;
+        }
+        const state = theaterState(task);
+        const agent = theaterAgent(task);
+        const route = theaterRoute(task);
+        const messageCount = (task.messages || []).length;
+        if (currentTitleEl) currentTitleEl.textContent = theaterTitle(task);
+        currentEl.innerHTML = `
+            <div class="theater-current-grid">
+                <div class="theater-current-item"><span>agent</span><strong>${escTheater(LABELS[agent] || agent)}</strong></div>
+                <div class="theater-current-item"><span>state</span><strong>${escTheater(state)}</strong></div>
+                <div class="theater-current-item"><span>route</span><strong>${escTheater(route.map((r) => LABELS[r] || r).join(' -> '))}</strong></div>
+                <div class="theater-current-item"><span>events</span><strong>${messageCount} messages</strong></div>
+            </div>
+            <div class="theater-current-reason">${escTheater(theaterReason(task, agent))}</div>`;
+    }
+
+    function renderTheaterStory(task) {
+        if (!task) {
+            if (storyCountEl) storyCountEl.textContent = '0 events';
+            storyEl.innerHTML = '<div class="theater-empty">No events yet.</div>';
+            return;
+        }
+        const events = [];
+        if (task.created_at) {
+            events.push({time: task.created_at, state: 'pending', actor: 'Bridge', body: `Task created: ${theaterTitle(task)}`});
+        }
+        (task.messages || []).slice(-8).forEach((message) => {
+            const meta = theaterMeta(message);
+            events.push({
+                time: message.created_at,
+                state: theaterState(task),
+                actor: meta.event || message.type || `${message.sender || '?'} -> ${message.receiver || '?'}`,
+                body: theaterCompact(meta.route_reason || meta.blocked_reason || message.body || '', 180),
+            });
+        });
+        if (task.result || task.error) {
+            events.push({time: task.updated_at || task.created_at, state: theaterState(task), actor: 'Result', body: theaterCompact(task.error || task.result, 180)});
+        }
+        if (storyCountEl) storyCountEl.textContent = `${events.length} events`;
+        storyEl.innerHTML = events.length ? events.map((event) => `
+            <div class="theater-event theater-event-${escTheater(event.state)}">
+                <div class="theater-event-top">
+                    <strong>${escTheater(event.actor)}</strong>
+                    <span>${escTheater(theaterTime(event.time))}</span>
+                </div>
+                <p>${escTheater(event.body || '-')}</p>
+            </div>`).join('') : '<div class="theater-empty">No events yet.</div>';
+    }
+
+    function chooseTheaterTask(tasks) {
+        if (!tasks.length) return null;
+        const active = tasks.find((task) => ['running', 'pending', 'blocked', 'failed'].includes(theaterState(task)));
+        return active || tasks[0];
+    }
+
+    function renderTheater(tasks) {
+        theaterTasks = tasks;
+        const selected = tasks.find((task) => String(task.id) === String(theaterSelectedId)) || chooseTheaterTask(tasks);
+        theaterSelectedId = selected ? String(selected.id || '') : null;
+        const running = tasks.filter((task) => theaterState(task) === 'running').length;
+        const blocked = tasks.filter((task) => ['blocked', 'failed'].includes(theaterState(task))).length;
+        if (statusEl) statusEl.textContent = `${tasks.length} tasks · ${running} moving · ${blocked} blocked`;
+        updateTheaterPeople(tasks);
+        renderTheaterRunners(tasks);
+        renderTheaterCurrent(selected);
+        renderTheaterStory(selected);
+    }
+
+    async function refreshTheater() {
+        if (statusEl) statusEl.textContent = 'loading';
+        try {
+            const res = await fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'});
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            renderTheater(data.tasks || []);
+        } catch (err) {
+            if (statusEl) statusEl.textContent = 'offline';
+            currentEl.innerHTML = `<div class="theater-empty">Bridge unavailable: ${escTheater(err.message)}</div>`;
+            storyEl.innerHTML = '<div class="theater-empty">No live events.</div>';
+        }
+    }
+
+    stage.addEventListener('click', (event) => {
+        const runner = event.target.closest?.('.theater-runner');
+        if (!runner) return;
+        theaterSelectedId = runner.dataset.taskId;
+        const selected = theaterTasks.find((task) => String(task.id) === String(theaterSelectedId));
+        renderTheaterCurrent(selected);
+        renderTheaterStory(selected);
+    });
+    if (refreshBtn) refreshBtn.addEventListener('click', refreshTheater);
+    refreshTheater();
+    setInterval(refreshTheater, 5000);
 })();
 
 </script>
