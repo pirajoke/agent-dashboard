@@ -1371,16 +1371,16 @@ setInterval(refreshLocalServices, 15000);
     if (!stage || !runnersEl || !currentEl || !storyEl) return;
 
     const STATIONS = {
-        USER: {x: 7, y: 48},
-        JARVIS: {x: 22, y: 24},
-        BRIDGE: {x: 40, y: 42},
-        ROUTER: {x: 22, y: 24},
-        PLANNER: {x: 40, y: 42},
-        BUILDER: {x: 61, y: 20},
-        TESTER: {x: 78, y: 38},
-        DEPLOYER: {x: 84, y: 68},
-        VAULT: {x: 48, y: 72},
-        GITHUB: {x: 20, y: 72},
+        USER: {x: 12, y: 55},
+        JARVIS: {x: 28, y: 34},
+        BRIDGE: {x: 44, y: 50},
+        ROUTER: {x: 28, y: 34},
+        PLANNER: {x: 44, y: 50},
+        BUILDER: {x: 63, y: 32},
+        TESTER: {x: 77, y: 48},
+        DEPLOYER: {x: 86, y: 69},
+        VAULT: {x: 52, y: 72},
+        GITHUB: {x: 24, y: 76},
     };
     const LABELS = {
         USER: 'You',
@@ -1578,12 +1578,22 @@ setInterval(refreshLocalServices, 15000);
             else if (states.some((s) => s === 'pending')) state = 'pending';
             else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
             el.classList.add('is-active', `is-${state}`);
-            if (label) label.textContent = `${state} · ${states.length}`;
+            if (label) {
+                const neutralAgents = ['USER', 'JARVIS', 'BRIDGE'];
+                if (neutralAgents.includes(agent)) label.textContent = `${states.length} tasks`;
+                else if (state === 'blocked') label.textContent = `check · ${states.length}`;
+                else if (state === 'running') label.textContent = `moving · ${states.length}`;
+                else label.textContent = `${state} · ${states.length}`;
+            }
         });
     }
 
     function renderTheaterRunners(tasks) {
-        const visible = tasks.slice(0, 9);
+        const activeFirst = [...tasks].sort((a, b) => {
+            const rank = {running: 0, pending: 1, failed: 2, blocked: 2, done: 3, cancelled: 4};
+            return (rank[theaterState(a)] ?? 5) - (rank[theaterState(b)] ?? 5);
+        });
+        const visible = activeFirst.slice(0, 5);
         runnersEl.innerHTML = visible.map((task) => {
             const state = theaterState(task);
             const agent = theaterAgent(task);

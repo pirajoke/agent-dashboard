@@ -3,14 +3,14 @@ from __future__ import annotations
 
 
 THEATER_AGENTS = [
-    ("USER", "You", "request", 7, 48),
-    ("JARVIS", "Jarvis", "understands", 22, 24),
-    ("BRIDGE", "Bridge", "queues", 40, 42),
-    ("BUILDER", "Builder", "codes", 61, 20),
-    ("TESTER", "Tester", "checks", 78, 38),
-    ("DEPLOYER", "Deployer", "ships", 84, 68),
-    ("VAULT", "Vault", "remembers", 48, 72),
-    ("GITHUB", "GitHub", "records", 20, 72),
+    ("USER", "You", "request", 12, 55),
+    ("JARVIS", "Jarvis", "understands", 28, 34),
+    ("BRIDGE", "Bridge", "queues", 44, 50),
+    ("BUILDER", "Builder", "codes", 63, 32),
+    ("TESTER", "Tester", "checks", 77, 48),
+    ("DEPLOYER", "Deployer", "ships", 86, 69),
+    ("VAULT", "Vault", "remembers", 52, 72),
+    ("GITHUB", "GitHub", "records", 24, 76),
 ]
 
 
@@ -43,19 +43,24 @@ def build_agent_theater_html() -> str:
     <div class="theater-layout">
         <div class="theater-stage" id="theater-stage">
             <svg class="theater-map" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
-                <path class="theater-track theater-track-main" d="M80 280 C160 145 250 125 395 240 S565 160 620 118 S770 150 825 220 S870 325 835 382 S730 460 570 418 S370 420 220 405" />
-                <path class="theater-track theater-track-memory" d="M405 248 C455 360 485 398 512 420" />
-                <path class="theater-track theater-track-git" d="M405 250 C320 360 245 390 205 407" />
-                <path class="theater-track theater-track-deploy" d="M780 225 C850 305 875 355 840 405" />
+                <path class="theater-track theater-track-main" d="M120 310 C210 210 300 190 430 285 S600 210 655 170 S790 195 825 285 S840 370 790 425 S655 462 525 410 S340 410 235 450" />
+                <path class="theater-track theater-track-memory" d="M435 290 C470 360 500 402 535 425" />
+                <path class="theater-track theater-track-git" d="M430 290 C350 380 285 420 235 450" />
+                <path class="theater-track theater-track-deploy" d="M770 285 C845 345 890 392 862 440" />
             </svg>
-            <div class="theater-station theater-station-user" style="--x:7;--y:48">Telegram</div>
-            <div class="theater-station theater-station-core" style="--x:22;--y:24">Jarvis</div>
-            <div class="theater-station theater-station-queue" style="--x:40;--y:42">Bridge</div>
-            <div class="theater-station theater-station-code" style="--x:61;--y:20">Code</div>
-            <div class="theater-station theater-station-test" style="--x:78;--y:38">Tests</div>
-            <div class="theater-station theater-station-prod" style="--x:84;--y:68">Mac Mini</div>
-            <div class="theater-station theater-station-memory" style="--x:48;--y:72">Obsidian</div>
-            <div class="theater-station theater-station-git" style="--x:20;--y:72">GitHub</div>
+            <div class="theater-cloud theater-cloud-a"></div>
+            <div class="theater-cloud theater-cloud-b"></div>
+            <div class="theater-field"></div>
+            <div class="theater-tree theater-tree-a"></div>
+            <div class="theater-tree theater-tree-b"></div>
+            <div class="theater-station theater-station-user" style="--x:12;--y:55">Telegram</div>
+            <div class="theater-station theater-station-core" style="--x:28;--y:34">Jarvis</div>
+            <div class="theater-station theater-station-queue" style="--x:44;--y:50">Bridge</div>
+            <div class="theater-station theater-station-code" style="--x:63;--y:32">Code</div>
+            <div class="theater-station theater-station-test" style="--x:77;--y:48">Tests</div>
+            <div class="theater-station theater-station-prod" style="--x:86;--y:69">Mac Mini</div>
+            <div class="theater-station theater-station-memory" style="--x:52;--y:72">Obsidian</div>
+            <div class="theater-station theater-station-git" style="--x:24;--y:76">GitHub</div>
             {people}
             <div class="theater-runners" id="theater-runners"></div>
         </div>
