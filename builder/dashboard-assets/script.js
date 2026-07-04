@@ -1355,3 +1355,349 @@ setInterval(refreshLocalServices, 15000);
     update();
     setInterval(update, 60000);
 })();
+
+// ══════════════════════════════════════════════════════════════
+// ── Agent Theater: animated human-facing task flow ──
+// ══════════════════════════════════════════════════════════════
+(function initAgentTheater() {
+    const stage = document.getElementById('theater-stage');
+    const runnersEl = document.getElementById('theater-runners');
+    const statusEl = document.getElementById('theater-status');
+    const currentTitleEl = document.getElementById('theater-current-title');
+    const currentEl = document.getElementById('theater-current');
+    const storyEl = document.getElementById('theater-story');
+    const storyCountEl = document.getElementById('theater-story-count');
+    const refreshBtn = document.getElementById('theater-refresh');
+    if (!stage || !runnersEl || !currentEl || !storyEl) return;
+
+    const STATIONS = {
+        USER: {x: 7, y: 48},
+        JARVIS: {x: 22, y: 24},
+        BRIDGE: {x: 40, y: 42},
+        ROUTER: {x: 22, y: 24},
+        PLANNER: {x: 40, y: 42},
+        BUILDER: {x: 61, y: 20},
+        TESTER: {x: 78, y: 38},
+        DEPLOYER: {x: 84, y: 68},
+        VAULT: {x: 48, y: 72},
+        GITHUB: {x: 20, y: 72},
+    };
+    const LABELS = {
+        USER: 'You',
+        JARVIS: 'Jarvis',
+        BRIDGE: 'Bridge',
+        ROUTER: 'Router',
+        PLANNER: 'Planner',
+        BUILDER: 'Builder',
+        TESTER: 'Tester',
+        DEPLOYER: 'Deployer',
+        VAULT: 'Vault',
+        GITHUB: 'GitHub',
+    };
+    const ROUTES = {
+        ROUTER: ['USER', 'JARVIS', 'BRIDGE', 'JARVIS'],
+        PLANNER: ['USER', 'JARVIS', 'BRIDGE', 'PLANNER'],
+        BUILDER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER'],
+        TESTER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'TESTER'],
+        DEPLOYER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'TESTER', 'DEPLOYER'],
+        VAULT: ['USER', 'JARVIS', 'BRIDGE', 'VAULT'],
+        GITHUB: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'GITHUB'],
+    };
+    let theaterTasks = [];
+    let theaterSelectedId = null;
+    let theaterAnimationStarted = false;
+
+    const escTheater = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+
+    function theaterText(value) {
+        if (value == null) return '';
+        if (typeof value === 'string') return value;
+        try { return JSON.stringify(value); } catch (_) { return String(value); }
+    }
+
+    function theaterCompact(value, limit = 120) {
+        const text = theaterText(value).replace(/\s+/g, ' ').trim();
+        return text.length > limit ? text.slice(0, limit - 3).trim() + '...' : text;
+    }
+
+    function theaterTime(raw) {
+        if (!raw) return '';
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return String(raw).slice(0, 16);
+        return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    }
+
+    function theaterMeta(item) {
+        const raw = item?.metadata ?? item?.meta ?? null;
+        if (!raw) return {};
+        if (typeof raw === 'object') return raw;
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function theaterAllMeta(task) {
+        return [theaterMeta(task), ...(task.messages || []).map(theaterMeta)];
+    }
+
+    function theaterFirstMeta(task, keys) {
+        for (const meta of theaterAllMeta(task)) {
+            for (const key of keys) {
+                if (meta[key] != null && meta[key] !== '') return meta[key];
+            }
+        }
+        return '';
+    }
+
+    function theaterState(task) {
+        const raw = String(task.status || task.state || '').toLowerCase();
+        const result = `${task.error || ''} ${theaterText(task.result)}`.toLowerCase();
+        if (result.match(/\b(authentication_error|failed|traceback|exception|exit code [1-9]|permission denied|fatal:|error: 4\d\d|error: 5\d\d)\b/)) return 'failed';
+        if (['done', 'complete', 'completed', 'success', 'succeeded'].includes(raw)) return 'done';
+        if (['failed', 'error'].includes(raw)) return 'failed';
+        if (['blocked', 'waiting', 'needs_input'].includes(raw)) return 'blocked';
+        if (['cancelled', 'canceled'].includes(raw)) return 'cancelled';
+        if (['running', 'in_progress', 'working', 'active'].includes(raw)) return 'running';
+        return 'pending';
+    }
+
+    function theaterTaskText(task) {
+        const messages = (task.messages || []).map((m) => `${m.sender} ${m.receiver} ${m.type} ${m.body}`).join(' ');
+        const meta = theaterAllMeta(task).map(theaterText).join(' ');
+        return `${task.description || ''} ${task.agent_role || ''} ${task.error || ''} ${theaterText(task.result)} ${messages} ${meta}`.toLowerCase();
+    }
+
+    function theaterAgent(task) {
+        const explicit = String(theaterFirstMeta(task, ['assigned_agent']) || task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
+        if (LABELS[explicit]) return explicit;
+        const text = theaterTaskText(task);
+        if (text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) return 'TESTER';
+        if (text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) return 'DEPLOYER';
+        if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) return 'VAULT';
+        if (text.match(/\b(github|git push|commit|pull request|pr\b|linear|issue)\b/)) return 'GITHUB';
+        if (text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) return 'PLANNER';
+        if (text.match(/\b(route|router|telegram intake|intent)\b/)) return 'ROUTER';
+        return 'BUILDER';
+    }
+
+    function theaterTitle(task) {
+        return theaterCompact(task?.description || task?.title || 'Untitled task', 116);
+    }
+
+    function theaterReason(task, agent) {
+        const structured = theaterFirstMeta(task, ['route_reason', 'reason']);
+        if (structured) return theaterCompact(structured, 190);
+        const state = theaterState(task);
+        if (state === 'failed' || state === 'blocked') {
+            const text = [task.error, task.result, ...(task.messages || []).map((m) => m.body)]
+                .map(theaterText).join('\n');
+            const line = text.split(/\n+/).map((x) => x.trim()).find((x) => /(permission denied|fatal:|error|failed|blocked|traceback|exception|mmap)/i.test(x));
+            if (line) return theaterCompact(line, 190);
+        }
+        return `${LABELS[agent] || agent} is handling this task from Bridge queue.`;
+    }
+
+    function theaterRoute(task) {
+        const agent = theaterAgent(task);
+        const text = theaterTaskText(task);
+        let route = ROUTES[agent] || ROUTES.BUILDER;
+        if (agent === 'BUILDER' && text.match(/\b(test|selftest|smoke|compileall)\b/)) route = ROUTES.TESTER;
+        if (text.match(/\b(deploy|launchd|restart|mac mini|runtime)\b/)) route = ROUTES.DEPLOYER;
+        if (text.match(/\b(obsidian|vault|memory|status\.md|todo\.md)\b/)) route = [...route, 'VAULT'];
+        if (text.match(/\b(github|commit|push|issue|linear)\b/)) route = [...route, 'GITHUB'];
+        return [...new Set(route)];
+    }
+
+    function theaterSeed(id) {
+        return String(id || '').split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % 5000;
+    }
+
+    function routePoint(route, progress) {
+        const points = route.map((name) => STATIONS[name] || STATIONS.BUILDER);
+        if (points.length <= 1) return points[0] || STATIONS.BUILDER;
+        const bounded = Math.max(0, Math.min(0.995, progress));
+        const scaled = bounded * (points.length - 1);
+        const index = Math.floor(scaled);
+        const local = scaled - index;
+        const a = points[index];
+        const b = points[Math.min(index + 1, points.length - 1)];
+        return {
+            x: a.x + (b.x - a.x) * local,
+            y: a.y + (b.y - a.y) * local,
+        };
+    }
+
+    function progressForRunner(runner, now) {
+        const state = runner.dataset.state;
+        const seed = Number(runner.dataset.seed || 0);
+        if (state === 'done' || state === 'cancelled') return 0.985;
+        if (state === 'failed' || state === 'blocked') return 0.72;
+        if (state === 'pending') return 0.16 + ((Math.sin((now + seed) / 900) + 1) * 0.025);
+        const duration = 10500 + seed;
+        return ((now + seed) % duration) / duration;
+    }
+
+    function animateTheater() {
+        const now = Date.now();
+        document.querySelectorAll('.theater-runner').forEach((runner) => {
+            const route = String(runner.dataset.route || 'USER,JARVIS,BRIDGE,BUILDER').split(',');
+            const point = routePoint(route, progressForRunner(runner, now));
+            runner.style.left = `${point.x}%`;
+            runner.style.top = `${point.y}%`;
+            runner.style.transform = 'translate(-50%, -50%)';
+        });
+        requestAnimationFrame(animateTheater);
+    }
+
+    function updateTheaterPeople(tasks) {
+        const personState = {};
+        Object.keys(LABELS).forEach((agent) => { personState[agent] = []; });
+        tasks.slice(0, 16).forEach((task) => {
+            const state = theaterState(task);
+            theaterRoute(task).forEach((agent) => {
+                if (personState[agent]) personState[agent].push(state);
+            });
+        });
+        document.querySelectorAll('[data-theater-agent]').forEach((el) => {
+            const agent = el.dataset.theaterAgent;
+            const states = personState[agent] || [];
+            el.classList.remove('is-active', 'is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed');
+            const label = el.querySelector('.theater-person-state');
+            if (!states.length) {
+                if (label) label.textContent = 'idle';
+                return;
+            }
+            let state = 'pending';
+            if (states.some((s) => s === 'running')) state = 'running';
+            else if (states.some((s) => s === 'failed' || s === 'blocked')) state = 'blocked';
+            else if (states.some((s) => s === 'pending')) state = 'pending';
+            else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
+            el.classList.add('is-active', `is-${state}`);
+            if (label) label.textContent = `${state} · ${states.length}`;
+        });
+    }
+
+    function renderTheaterRunners(tasks) {
+        const visible = tasks.slice(0, 9);
+        runnersEl.innerHTML = visible.map((task) => {
+            const state = theaterState(task);
+            const agent = theaterAgent(task);
+            const route = theaterRoute(task).join(',');
+            const id = String(task.id || '');
+            return `
+                <div class="theater-runner theater-runner-${escTheater(state)}" data-task-id="${escTheater(id)}"
+                    data-route="${escTheater(route)}" data-state="${escTheater(state)}" data-seed="${theaterSeed(id)}">
+                    <span class="theater-mini-person" aria-hidden="true"></span>
+                    <span class="theater-runner-label">${escTheater(LABELS[agent] || agent)} · ${escTheater(state)}</span>
+                </div>`;
+        }).join('');
+        if (!theaterAnimationStarted) {
+            theaterAnimationStarted = true;
+            requestAnimationFrame(animateTheater);
+        }
+    }
+
+    function renderTheaterCurrent(task) {
+        if (!task) {
+            if (currentTitleEl) currentTitleEl.textContent = 'Waiting for Bridge';
+            currentEl.innerHTML = '<div class="theater-empty">No recent Bridge task.</div>';
+            return;
+        }
+        const state = theaterState(task);
+        const agent = theaterAgent(task);
+        const route = theaterRoute(task);
+        const messageCount = (task.messages || []).length;
+        if (currentTitleEl) currentTitleEl.textContent = theaterTitle(task);
+        currentEl.innerHTML = `
+            <div class="theater-current-grid">
+                <div class="theater-current-item"><span>agent</span><strong>${escTheater(LABELS[agent] || agent)}</strong></div>
+                <div class="theater-current-item"><span>state</span><strong>${escTheater(state)}</strong></div>
+                <div class="theater-current-item"><span>route</span><strong>${escTheater(route.map((r) => LABELS[r] || r).join(' -> '))}</strong></div>
+                <div class="theater-current-item"><span>events</span><strong>${messageCount} messages</strong></div>
+            </div>
+            <div class="theater-current-reason">${escTheater(theaterReason(task, agent))}</div>`;
+    }
+
+    function renderTheaterStory(task) {
+        if (!task) {
+            if (storyCountEl) storyCountEl.textContent = '0 events';
+            storyEl.innerHTML = '<div class="theater-empty">No events yet.</div>';
+            return;
+        }
+        const events = [];
+        if (task.created_at) {
+            events.push({time: task.created_at, state: 'pending', actor: 'Bridge', body: `Task created: ${theaterTitle(task)}`});
+        }
+        (task.messages || []).slice(-8).forEach((message) => {
+            const meta = theaterMeta(message);
+            events.push({
+                time: message.created_at,
+                state: theaterState(task),
+                actor: meta.event || message.type || `${message.sender || '?'} -> ${message.receiver || '?'}`,
+                body: theaterCompact(meta.route_reason || meta.blocked_reason || message.body || '', 180),
+            });
+        });
+        if (task.result || task.error) {
+            events.push({time: task.updated_at || task.created_at, state: theaterState(task), actor: 'Result', body: theaterCompact(task.error || task.result, 180)});
+        }
+        if (storyCountEl) storyCountEl.textContent = `${events.length} events`;
+        storyEl.innerHTML = events.length ? events.map((event) => `
+            <div class="theater-event theater-event-${escTheater(event.state)}">
+                <div class="theater-event-top">
+                    <strong>${escTheater(event.actor)}</strong>
+                    <span>${escTheater(theaterTime(event.time))}</span>
+                </div>
+                <p>${escTheater(event.body || '-')}</p>
+            </div>`).join('') : '<div class="theater-empty">No events yet.</div>';
+    }
+
+    function chooseTheaterTask(tasks) {
+        if (!tasks.length) return null;
+        const active = tasks.find((task) => ['running', 'pending', 'blocked', 'failed'].includes(theaterState(task)));
+        return active || tasks[0];
+    }
+
+    function renderTheater(tasks) {
+        theaterTasks = tasks;
+        const selected = tasks.find((task) => String(task.id) === String(theaterSelectedId)) || chooseTheaterTask(tasks);
+        theaterSelectedId = selected ? String(selected.id || '') : null;
+        const running = tasks.filter((task) => theaterState(task) === 'running').length;
+        const blocked = tasks.filter((task) => ['blocked', 'failed'].includes(theaterState(task))).length;
+        if (statusEl) statusEl.textContent = `${tasks.length} tasks · ${running} moving · ${blocked} blocked`;
+        updateTheaterPeople(tasks);
+        renderTheaterRunners(tasks);
+        renderTheaterCurrent(selected);
+        renderTheaterStory(selected);
+    }
+
+    async function refreshTheater() {
+        if (statusEl) statusEl.textContent = 'loading';
+        try {
+            const res = await fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'});
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            renderTheater(data.tasks || []);
+        } catch (err) {
+            if (statusEl) statusEl.textContent = 'offline';
+            currentEl.innerHTML = `<div class="theater-empty">Bridge unavailable: ${escTheater(err.message)}</div>`;
+            storyEl.innerHTML = '<div class="theater-empty">No live events.</div>';
+        }
+    }
+
+    stage.addEventListener('click', (event) => {
+        const runner = event.target.closest?.('.theater-runner');
+        if (!runner) return;
+        theaterSelectedId = runner.dataset.taskId;
+        const selected = theaterTasks.find((task) => String(task.id) === String(theaterSelectedId));
+        renderTheaterCurrent(selected);
+        renderTheaterStory(selected);
+    });
+    if (refreshBtn) refreshBtn.addEventListener('click', refreshTheater);
+    refreshTheater();
+    setInterval(refreshTheater, 5000);
+})();

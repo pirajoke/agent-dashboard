@@ -6,6 +6,7 @@ from .projects import is_project_active
 from .now import collect_now_data, build_now_html
 from .system import collect_system_data, build_system_html
 from .costs import collect_costs_data, build_costs_html
+from .agent_theater import build_agent_theater_html
 from .agent_workshop import build_agent_workshop_html
 
 
@@ -91,6 +92,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
     now_html = build_now_html(now_data)
     system_html = build_system_html(system_data)
     costs_html = build_costs_html(costs_data)
+    theater_html = build_agent_theater_html()
     workshop_html = build_agent_workshop_html()
 
     # Projects
@@ -126,7 +128,11 @@ def build_html(projects: list[dict], timestamp: str) -> str:
         <div class="sb-sub">agent orchestration</div>
     </div>
     <ul class="sidebar-nav">
-        <li><a data-target="#now" href="javascript:void(0)" class="active">
+        <li><a data-target="#theater" href="javascript:void(0)" class="active">
+            <svg class="nav-icon" viewBox="0 0 16 16"><path d="M3 12c2-4 8-4 10 0" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/><circle cx="5" cy="6" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="11" cy="6" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M8 8v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            Theater
+        </a></li>
+        <li><a data-target="#now" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none" stroke-width="1.3"/><line x1="8" y1="4" x2="8" y2="8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="8" y1="8" x2="11" y2="10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
             NOW
         </a></li>
@@ -162,8 +168,19 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 <!-- Main content -->
 <main class="main">
 
+<!-- Theater Section -->
+<div class="topbar" id="theater-top">
+    <div class="topbar-title">Agent Theater</div>
+    <div class="topbar-meta">
+        <span class="tm-item"><span class="live-dot"></span> Live</span>
+        <span class="tm-item">{timestamp}</span>
+    </div>
+</div>
+
+{theater_html}
+
 <!-- NOW Section -->
-<div class="topbar" id="now">
+<div class="topbar topbar-secondary" id="now">
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
