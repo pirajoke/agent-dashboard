@@ -46,6 +46,367 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     : window.location.origin;
 
 // ══════════════════════════════════════════════════════════════
+// ── Systems Command Center: Mac Mini + MacBook Air + agent flow ──
+// ══════════════════════════════════════════════════════════════
+(function initSystemsCommandCenter() {
+    const root = document.getElementById('command-center');
+    if (!root) return;
+
+    const state = {
+        machines: {},
+        tasks: [],
+    };
+    const AGENT_LABELS = {
+        ROUTER: 'Router',
+        PLANNER: 'Planner',
+        BUILDER: 'Builder',
+        TESTER: 'Tester',
+        DEPLOYER: 'Deployer',
+        VAULT: 'Vault',
+        GITHUB: 'GitHub',
+        SUPERVISOR: 'Supervisor',
+    };
+
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+
+    function commandText(value) {
+        if (value == null) return '';
+        if (typeof value === 'string') return value;
+        try { return JSON.stringify(value); } catch (_) { return String(value); }
+    }
+
+    function compact(value, limit = 130) {
+        const text = commandText(value).replace(/\s+/g, ' ').trim();
+        return text.length > limit ? text.slice(0, limit - 3).trim() + '...' : text;
+    }
+
+    function shortTime(raw) {
+        if (!raw) return '-';
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return String(raw).slice(0, 16);
+        return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    }
+
+    async function fetchJson(path, timeoutMs = 4500) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const res = await fetch(path, {cache: 'no-store', signal: controller.signal});
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return await res.json();
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    function readMetadata(item) {
+        const raw = item?.metadata ?? item?.meta ?? null;
+        if (!raw) return {};
+        if (typeof raw === 'object') return raw;
+        try {
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function taskText(task) {
+        const messages = (task.messages || []).map((m) => [m.sender, m.receiver, m.type, m.body, commandText(readMetadata(m))].join(' ')).join(' ');
+        return `${task.description || ''} ${task.agent_role || ''} ${task.error || ''} ${commandText(task.result)} ${commandText(readMetadata(task))} ${messages}`.toLowerCase();
+    }
+
+    function normalizedTaskState(task) {
+        const raw = String(task?.status || task?.state || '').toLowerCase();
+        const outcome = `${task?.error || ''} ${commandText(task?.result)}`.toLowerCase();
+        if (outcome.match(/\b(authentication_error|permission denied|fatal:|traceback|exception|failed|error: 4\d\d|error: 5\d\d|mmap failed|resource deadlock)\b/)) return 'failed';
+        if (['done', 'complete', 'completed', 'success', 'succeeded'].includes(raw)) return 'done';
+        if (['failed', 'error'].includes(raw)) return 'failed';
+        if (['blocked', 'waiting', 'needs_input'].includes(raw)) return 'blocked';
+        if (['running', 'in_progress', 'working', 'active'].includes(raw)) return 'running';
+        return 'pending';
+    }
+
+    function deriveAgent(task) {
+        const role = String(task?.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
+        if (AGENT_LABELS[role]) return role;
+        const text = taskText(task);
+        if (text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) return 'TESTER';
+        if (text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service|runtime)\b/)) return 'DEPLOYER';
+        if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) return 'VAULT';
+        if (text.match(/\b(github|git push|commit|pull request|linear|issue)\b/)) return 'GITHUB';
+        if (text.match(/\b(plan|scope|breakdown|handoff|acceptance)\b/)) return 'PLANNER';
+        if (text.match(/\b(route|router|telegram intake|intent)\b/)) return 'ROUTER';
+        return 'BUILDER';
+    }
+
+    function failureReason(task) {
+        const meta = readMetadata(task);
+        if (meta.blocked_reason || meta.failure_reason) return compact(meta.blocked_reason || meta.failure_reason, 180);
+        const candidates = [task?.error, task?.result, ...(task?.messages || []).map((m) => m.body)]
+            .map(commandText)
+            .filter(Boolean);
+        const found = candidates
+            .flatMap((text) => text.split(/\n+/))
+            .map((line) => line.trim())
+            .find((line) => /(authentication_error|permission denied|fatal:|traceback|exception|failed|error:|exit code [1-9]|mmap failed|resource deadlock|blocked)/i.test(line));
+        return found ? compact(found, 180) : '';
+    }
+
+    function taskTitle(task) {
+        return compact(task?.description || task?.title || 'No recent task', 118);
+    }
+
+    function serviceRows(data) {
+        if (!data || typeof data !== 'object') return [];
+        const rows = [];
+        const sources = [
+            ...(Array.isArray(data.services) ? data.services : []),
+            ...(Array.isArray(data.services_detailed) ? data.services_detailed : []),
+            ...(Array.isArray(data.items) ? data.items : []),
+        ];
+        sources.forEach((item) => {
+            const name = item.name || item.label || item.service || 'service';
+            const running = item.running === true || String(item.status || '').toLowerCase() === 'running' || item.port_ok === true;
+            rows.push({
+                name,
+                status: item.status || (running ? 'running' : 'unknown'),
+                running,
+                detail: item.detail || item.label || (item.port ? `port ${item.port}` : ''),
+            });
+        });
+        return rows;
+    }
+
+    function dedupeServices(groups) {
+        const seen = new Set();
+        const rows = [];
+        groups.flat().forEach((svc) => {
+            const key = String(svc.name || '').toLowerCase();
+            if (!key || seen.has(key)) return;
+            seen.add(key);
+            rows.push(svc);
+        });
+        return rows;
+    }
+
+    function renderServices(el, services) {
+        if (!el) return;
+        if (!services.length) {
+            el.innerHTML = '<div class="command-empty">No service data yet.</div>';
+            return;
+        }
+        const important = services
+            .slice()
+            .sort((a, b) => Number(a.running) - Number(b.running))
+            .slice(0, 9);
+        el.innerHTML = important.map((svc) => `
+            <div class="command-service ${svc.running ? 'is-running' : 'is-stopped'}">
+                <span></span>
+                <strong>${esc(svc.name)}</strong>
+                <em>${esc(compact(svc.detail || svc.status, 48))}</em>
+            </div>
+        `).join('');
+    }
+
+    function authLabel(health) {
+        const auth = health?.agent_auth || health?.runtime_auth || health?.claude_auth || null;
+        if (!auth) return 'n/a';
+        if (auth.status === 'ok' || auth.logged_in === true) return 'ready';
+        if (auth.available === false) return 'missing';
+        return 'blocked';
+    }
+
+    function machineTone(error, health, coreServices) {
+        if (error) return 'offline';
+        const status = String(health?.status || '').toLowerCase();
+        const auth = authLabel(health);
+        const criticalDown = coreServices.some((svc) => !svc.running);
+        if (status && status !== 'ok') return 'warn';
+        if (auth === 'blocked' || auth === 'missing') return 'warn';
+        if (criticalDown) return 'warn';
+        return 'online';
+    }
+
+    function renderMachine(id, label, health, serviceData, error) {
+        const card = document.getElementById(`command-system-${id}`);
+        if (!card) return;
+        const statusEl = document.getElementById(`command-${id}-status`);
+        const summaryEl = document.getElementById(`command-${id}-summary`);
+        const countEl = document.getElementById(`command-${id}-services-count`);
+        const authEl = document.getElementById(`command-${id}-auth`);
+        const updatedEl = document.getElementById(`command-${id}-updated`);
+        const servicesEl = document.getElementById(`command-${id}-services`);
+
+        const coreServices = serviceRows(health);
+        const extraServices = serviceRows(serviceData);
+        const allServices = dedupeServices([coreServices, extraServices]);
+        const running = allServices.filter((svc) => svc.running).length;
+        const total = allServices.length;
+        const tone = machineTone(error, health, coreServices);
+        const auth = authLabel(health);
+
+        card.classList.remove('is-online', 'is-warn', 'is-offline');
+        card.classList.add(`is-${tone}`);
+        if (statusEl) statusEl.textContent = error ? 'offline' : tone;
+        if (countEl) countEl.textContent = total ? `${running}/${total}` : '-';
+        if (authEl) authEl.textContent = auth;
+        if (updatedEl) updatedEl.textContent = shortTime(health?.timestamp || health?.updated_at || serviceData?.updated_at);
+        if (summaryEl) {
+            if (error) {
+                summaryEl.textContent = `${label} health unavailable: ${compact(error.message || error, 110)}`;
+            } else {
+                const down = allServices.filter((svc) => !svc.running).slice(0, 3).map((svc) => svc.name);
+                summaryEl.textContent = down.length
+                    ? `${running}/${total || 0} services running. Check: ${down.join(', ')}.`
+                    : `${label} is reachable. Core services and auth look usable.`;
+            }
+        }
+        renderServices(servicesEl, allServices);
+        state.machines[id] = {tone, running, total, auth, error: error ? String(error.message || error) : ''};
+    }
+
+    function flowRoute(task) {
+        if (!task) return [];
+        const text = taskText(task);
+        const route = ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'AGENT'];
+        if (text.match(/\b(mac mini|macmini|macbook|air|launchd|deploy|runtime|service|health os|health api)\b/)) route.push('SYSTEM');
+        if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|claude\.md)\b/)) route.push('VAULT');
+        if (text.match(/\b(github|git push|commit|pull request|pr\b|issue|linear)\b/)) route.push('GITHUB');
+        if (!route.includes('SYSTEM')) route.push('SYSTEM');
+        return route;
+    }
+
+    function renderFlow(tasks) {
+        const flowTaskEl = document.getElementById('command-flow-task');
+        const routeEl = document.getElementById('command-flow-route');
+        const stateEl = document.getElementById('command-flow-state');
+        const blockerEl = document.getElementById('command-flow-blocker');
+        const logEl = document.getElementById('command-live-log');
+        const task = tasks[0] || null;
+
+        document.querySelectorAll('[data-command-flow-node]').forEach((node) => {
+            node.classList.remove('is-active', 'is-blocked', 'is-done', 'is-running', 'is-pending', 'is-failed');
+        });
+
+        if (!task) {
+            if (flowTaskEl) flowTaskEl.textContent = 'Waiting for Bridge';
+            if (routeEl) routeEl.textContent = '-';
+            if (stateEl) stateEl.textContent = '-';
+            if (blockerEl) blockerEl.textContent = '-';
+            if (logEl) logEl.innerHTML = '<div class="command-empty">No live flow events yet.</div>';
+            return;
+        }
+
+        const agent = deriveAgent(task);
+        const agentLabel = AGENT_LABELS[agent] || agent;
+        const taskState = normalizedTaskState(task);
+        const route = flowRoute(task);
+        const blocker = failureReason(task);
+        const systemNode = document.querySelector('[data-command-flow-node="SYSTEM"] span');
+        const agentNodeTitle = document.querySelector('[data-command-flow-node="AGENT"] strong');
+        const agentNodeDetail = document.querySelector('[data-command-flow-node="AGENT"] span');
+        if (agentNodeTitle) agentNodeTitle.textContent = agentLabel;
+        if (agentNodeDetail) agentNodeDetail.textContent = `${taskState} execution`;
+        if (systemNode) {
+            const text = taskText(task);
+            systemNode.textContent = text.includes('macbook') || text.includes('air') ? 'MacBook Air' : 'Mac Mini / runtime';
+        }
+
+        route.forEach((nodeId) => {
+            const node = document.querySelector(`[data-command-flow-node="${nodeId}"]`);
+            if (node) node.classList.add('is-active', `is-${taskState}`);
+        });
+        if (taskState === 'failed' || taskState === 'blocked') {
+            route.slice(-2).forEach((nodeId) => {
+                document.querySelector(`[data-command-flow-node="${nodeId}"]`)?.classList.add('is-blocked');
+            });
+        }
+
+        if (flowTaskEl) flowTaskEl.textContent = taskTitle(task);
+        if (routeEl) routeEl.textContent = route.map((nodeId) => nodeId === 'AGENT' ? agentLabel : nodeId).join(' -> ');
+        if (stateEl) stateEl.textContent = taskState;
+        if (blockerEl) blockerEl.textContent = blocker || 'none';
+        if (logEl) {
+            const events = [
+                {time: task.created_at, actor: 'Bridge', body: `Task created: ${taskTitle(task)}`},
+                ...(task.messages || []).slice(-5).map((m) => ({
+                    time: m.created_at,
+                    actor: `${m.sender || '?'} -> ${m.receiver || '?'}`,
+                    body: compact(m.body || readMetadata(m).event || m.type, 150),
+                })),
+            ].filter((event) => event.time || event.body);
+            logEl.innerHTML = events.map((event) => `
+                <div class="command-log-row">
+                    <span>${esc(shortTime(event.time))}</span>
+                    <strong>${esc(event.actor)}</strong>
+                    <em>${esc(event.body)}</em>
+                </div>
+            `).join('');
+        }
+    }
+
+    function renderOverallStatus() {
+        const statusEl = document.getElementById('command-status');
+        if (!statusEl) return;
+        const machines = Object.values(state.machines);
+        const offline = machines.filter((machine) => machine.tone === 'offline').length;
+        const warn = machines.filter((machine) => machine.tone === 'warn').length;
+        const activeTasks = state.tasks.filter((task) => ['running', 'pending'].includes(normalizedTaskState(task))).length;
+        if (offline) statusEl.textContent = `${offline} system offline`;
+        else if (warn) statusEl.textContent = `${warn} system warning`;
+        else statusEl.textContent = `green - ${activeTasks} queued`;
+    }
+
+    async function refreshMachines() {
+        const configs = [
+            {id: 'mini', label: 'Mac Mini', health: '/api/health', services: '/api/local-services'},
+            {id: 'air', label: 'MacBook Air', health: '/api/air/health', services: '/api/air/services/detailed'},
+        ];
+        await Promise.all(configs.map(async (cfg) => {
+            const [healthResult, servicesResult] = await Promise.allSettled([
+                fetchJson(cfg.health, cfg.id === 'air' ? 5500 : 4500),
+                fetchJson(cfg.services, cfg.id === 'air' ? 5500 : 4500),
+            ]);
+            const health = healthResult.status === 'fulfilled' ? healthResult.value : null;
+            const serviceData = servicesResult.status === 'fulfilled' ? servicesResult.value : null;
+            const error = healthResult.status === 'rejected'
+                ? healthResult.reason
+                : (servicesResult.status === 'rejected' && !health ? servicesResult.reason : null);
+            renderMachine(cfg.id, cfg.label, health, serviceData, error);
+        }));
+    }
+
+    async function refreshFlow() {
+        try {
+            const data = await fetchJson('/api/bridge/tasks?limit=18&include_messages=1', 4500);
+            state.tasks = data.tasks || [];
+            state.tasks.sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+            renderFlow(state.tasks);
+        } catch (err) {
+            state.tasks = [];
+            renderFlow([]);
+            const blockerEl = document.getElementById('command-flow-blocker');
+            if (blockerEl) blockerEl.textContent = `Bridge unavailable: ${compact(err.message || err, 120)}`;
+        }
+    }
+
+    async function refreshCommandCenter() {
+        const statusEl = document.getElementById('command-status');
+        if (statusEl) statusEl.textContent = 'refreshing';
+        await Promise.all([refreshMachines(), refreshFlow()]);
+        renderOverallStatus();
+    }
+
+    document.getElementById('command-refresh')?.addEventListener('click', refreshCommandCenter);
+    window.SystemsCommandCenterRefresh = refreshCommandCenter;
+    refreshCommandCenter();
+    setInterval(refreshCommandCenter, 7000);
+})();
+
+// ══════════════════════════════════════════════════════════════
 // ── Phase 1: Staleness Banner ──
 // ══════════════════════════════════════════════════════════════
 (function initStaleness() {

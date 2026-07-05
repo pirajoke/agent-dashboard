@@ -5,6 +5,7 @@ import unittest
 
 from dashboard_builder.agent_theater import THEATER_AGENTS, build_agent_theater_html
 from dashboard_builder.agent_workshop import AGENT_ROOMS, build_agent_workshop_html
+from dashboard_builder.command_center import FLOW_NODES, build_command_center_html
 from dashboard_builder.html_builder import build_html
 
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "dashboard-assets"
@@ -90,6 +91,31 @@ class AgentWorkshopTests(unittest.TestCase):
         self.assertIn("renderCausalView", html)
         self.assertIn("readMetadata", html)
         self.assertIn("structured Bridge event", html)
+
+
+class SystemsCommandCenterTests(unittest.TestCase):
+    def test_command_center_html_contains_system_and_flow_hooks(self):
+        html = build_command_center_html()
+
+        self.assertIn('id="command-center"', html)
+        self.assertIn('id="command-system-mini"', html)
+        self.assertIn('id="command-system-air"', html)
+        self.assertIn('id="command-mini-services"', html)
+        self.assertIn('id="command-air-services"', html)
+        self.assertIn('id="command-flow"', html)
+        self.assertIn('data-command-flow-node="SUPERVISOR"', html)
+        self.assertIn('data-command-flow-node="SYSTEM"', html)
+        self.assertGreaterEqual(len(FLOW_NODES), 8)
+
+    def test_full_dashboard_includes_systems_command_center(self):
+        html = build_html([], "2026-07-05 12:00:00 ICT")
+
+        self.assertIn('data-target="#command-center"', html)
+        self.assertIn("Systems Command Center", html)
+        self.assertIn("initSystemsCommandCenter", html)
+        self.assertIn("/api/air/health", html)
+        self.assertIn("/api/local-services", html)
+        self.assertIn("SystemsCommandCenterRefresh", html)
 
 
 if __name__ == "__main__":
