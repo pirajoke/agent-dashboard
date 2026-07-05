@@ -35,10 +35,12 @@ class AgentTheaterTests(unittest.TestCase):
         html = build_html([], "2026-07-04 12:00:00 ICT")
 
         self.assertIn('data-target="#theater"', html)
+        self.assertIn('<li><a data-target="#theater" href="javascript:void(0)" class="active">', html)
         self.assertIn("Agent Theater", html)
         self.assertIn("initAgentTheater", html)
         self.assertIn("theater-runners", html)
         self.assertIn("theaterPersonWalk", html)
+        self.assertLess(html.index("Agent Theater"), html.index("Systems Command Center"))
 
     def test_agent_theater_uses_ai_town_sprite_asset(self):
         css = (ASSETS_DIR / "style.css").read_text()
