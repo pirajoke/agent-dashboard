@@ -968,11 +968,11 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <div class="pixel-agents-shell">
       <div class="pixel-agents-fallback">
         <span>Pixel Agents office is served from Mac Mini and connected through Cloudflare Tunnel.</span>
-        <a href="https://pixel-agents.meshly.fr/?embed=command" target="_blank" rel="noreferrer">Open full screen</a>
+        <a href="https://pixel-agents.meshly.fr/" target="_blank" rel="noreferrer">Open full screen</a>
       </div>
       <iframe
         class="pixel-agents-frame"
-        src="https://pixel-agents.meshly.fr/?embed=command"
+        src="https://pixel-agents.meshly.fr/"
         title="Pixel Agents"
         allow="clipboard-read; clipboard-write"
       ></iframe>
@@ -1215,7 +1215,12 @@ function formatInterval(sec) {
   return `every ${sec}s`;
 }
 
+function visibleRuntimeServices(services) {
+  return (services || []).filter(s => s.cat !== 'scheduled');
+}
+
 function renderSvcTable(tbodyId, services, actionFn) {
+  services = visibleRuntimeServices(services);
   const cats = {core: 'Core Services', scheduled: 'Scheduled Tasks', ondemand: 'On-demand'};
   const hasCats = services.some(s => s.cat);
 
@@ -1330,8 +1335,9 @@ async function refreshMini() {
     // Load service registry (what WILL run on Mac Mini)
     const data = await fetchJSON(LOCAL_API, '/api/services/detailed');
     if (data && data.services) {
-      document.getElementById('mini-svc-count').textContent = `${data.services.length} registered`;
-      renderSvcTable('mini-svc-tbody', data.services, 'miniAction');
+      const svcs = visibleRuntimeServices(data.services);
+      document.getElementById('mini-svc-count').textContent = `${svcs.length} registered`;
+      renderSvcTable('mini-svc-tbody', svcs, 'miniAction');
     }
     return;
   }
@@ -1346,7 +1352,7 @@ async function refreshMini() {
   document.getElementById('mini-online-badge').className = 'machine-badge online';
   const sys = data.system || {};
   document.getElementById('mini-status').textContent = `${sys.hostname || 'mac-mini'} · Uptime: ${sys.uptime || '—'}`;
-  const svcs = data.services_detailed || data.services || [];
+  const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('mini-badge').textContent = `${running}/${svcs.length}`;
   document.getElementById('mini-svc-count').textContent = `${running} running / ${svcs.length} total`;
@@ -1375,7 +1381,7 @@ async function refreshAir() {
   document.getElementById('air-status').textContent = `Uptime: ${sys.uptime}`;
   document.getElementById('air-online-badge').textContent = 'online';
   document.getElementById('air-online-badge').className = 'machine-badge online';
-  const svcs = data.services_detailed || data.services || [];
+  const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('air-badge').textContent = `${running}/${svcs.length}`;
   document.getElementById('air-svc-count').textContent = `${running} running / ${svcs.length} total`;
@@ -1410,7 +1416,7 @@ async function refreshPro() {
   document.getElementById('pro-status').textContent = `Uptime: ${sys.uptime}`;
   document.getElementById('pro-online-badge').textContent = 'online';
   document.getElementById('pro-online-badge').className = 'machine-badge online';
-  const svcs = data.services_detailed || data.services || [];
+  const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('pro-badge').textContent = `${running}/${svcs.length}`;
   document.getElementById('pro-svc-count').textContent = `${running} running / ${svcs.length} total`;
