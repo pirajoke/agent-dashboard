@@ -401,7 +401,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if path == '/live-feed.json' or path == '/scripts/live-feed.json':
             return str(HOME / 'scripts' / 'live-feed.json')
         if path == '/' or path == '/index.html':
-            return str(HOME / 'agent-dashboard.html')
+            return str(HOME / 'mac-mini-dashboard' / 'index.html')
         return str(HOME / path.lstrip('/'))
 
     def do_POST(self):
