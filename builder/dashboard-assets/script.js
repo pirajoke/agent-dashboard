@@ -1546,6 +1546,28 @@ setInterval(refreshLocalServices, 15000);
         return reason;
     }
 
+    function theaterAgentAction(agent, state) {
+        if (state === 'blocked' || state === 'failed') {
+            if (agent === 'SUPERVISOR') return 'fix';
+            if (agent === 'BRIDGE') return 'hold';
+            return 'check';
+        }
+        const actions = {
+            USER: 'ask',
+            JARVIS: 'parse',
+            SUPERVISOR: 'route',
+            BRIDGE: 'queue',
+            ROUTER: 'route',
+            PLANNER: 'plan',
+            BUILDER: 'code',
+            TESTER: 'test',
+            DEPLOYER: 'ship',
+            VAULT: 'write',
+            GITHUB: 'sync',
+        };
+        return actions[agent] || 'work';
+    }
+
     function theaterAuthState(tasks, health) {
         const authTask = [...tasks]
             .filter((task) => /authentication_error|invalid authentication credentials|failed to authenticate/i.test(theaterTaskText(task)))
@@ -1660,7 +1682,8 @@ setInterval(refreshLocalServices, 15000);
         document.querySelectorAll('[data-theater-agent]').forEach((el) => {
             const agent = el.dataset.theaterAgent;
             const states = personState[agent] || [];
-            el.classList.remove('is-active', 'is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed', 'is-focus-route');
+            el.classList.remove('is-active', 'is-running', 'is-pending', 'is-done', 'is-blocked', 'is-failed', 'is-focus-route', 'is-doing');
+            delete el.dataset.action;
             const label = el.querySelector('.theater-person-state');
             if (!states.length) {
                 if (label) label.textContent = 'idle';
@@ -1672,10 +1695,18 @@ setInterval(refreshLocalServices, 15000);
             else if (states.some((s) => s === 'pending')) state = 'pending';
             else if (states.every((s) => s === 'done' || s === 'cancelled')) state = 'done';
             el.classList.add('is-active', `is-${state}`);
-            if (focusRoute.has(agent)) el.classList.add('is-focus-route');
+            const inFocus = focusRoute.has(agent);
+            if (inFocus) {
+                el.classList.add('is-focus-route', 'is-doing');
+                el.dataset.action = theaterAgentAction(agent, state);
+                const agentIndex = Math.max(0, Object.keys(LABELS).indexOf(agent));
+                el.style.setProperty('--walk-delay', `${-0.18 * (agentIndex % 7)}s`);
+            } else {
+                el.style.removeProperty('--walk-delay');
+            }
             if (label) {
                 const neutralAgents = ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE'];
-                if (focusRoute.has(agent)) label.textContent = 'focus';
+                if (inFocus) label.textContent = state === 'blocked' ? 'fixing' : theaterAgentAction(agent, state);
                 else if (neutralAgents.includes(agent)) label.textContent = `${states.length}`;
                 else if (state === 'blocked') label.textContent = `check ${states.length}`;
                 else if (state === 'running') label.textContent = `move ${states.length}`;

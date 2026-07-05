@@ -4703,6 +4703,32 @@ tr:last-child td { border-bottom: none; }
     font-weight: 900;
 }
 
+.theater-person-card.is-doing {
+    animation: theaterAgentPatrol 3.2s ease-in-out var(--walk-delay, 0s) infinite;
+    z-index: 9;
+}
+
+.theater-person-card.is-doing::after {
+    content: attr(data-action);
+    position: absolute;
+    right: 2px;
+    top: 22px;
+    min-width: 30px;
+    height: 17px;
+    padding: 1px 6px 0;
+    border: 2px solid #2a1826;
+    border-radius: 999px;
+    background: #fff7dd;
+    color: #4a2632;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.46rem;
+    font-weight: 900;
+    line-height: 1.2;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 rgba(42,24,38,0.28);
+    animation: theaterActionPulse 1.25s ease-in-out var(--walk-delay, 0s) infinite;
+}
+
 .theater-runners {
     z-index: 8;
     pointer-events: auto;
@@ -4905,6 +4931,8 @@ tr:last-child td { border-bottom: none; }
 
 .theater-person-card[data-theater-agent="JARVIS"] .theater-person,
 .theater-runner[data-runner-agent="JARVIS"] .theater-mini-person,
+.theater-person-card[data-theater-agent="SUPERVISOR"] .theater-person,
+.theater-runner[data-runner-agent="SUPERVISOR"] .theater-mini-person,
 .theater-runner[data-runner-agent="ROUTER"] .theater-mini-person,
 .theater-runner[data-runner-agent="PLANNER"] .theater-mini-person {
     --sprite-x0: 0px;
@@ -4962,6 +4990,7 @@ tr:last-child td { border-bottom: none; }
 }
 
 .theater-person-card.is-running .theater-person,
+.theater-person-card.is-doing .theater-person,
 .theater-runner .theater-mini-person {
     animation: aiTownWalkDown 0.5s steps(1, end) infinite;
 }
@@ -4977,6 +5006,11 @@ tr:last-child td { border-bottom: none; }
     animation: none;
     background-position: var(--sprite-x2) var(--sprite-y);
     filter: grayscale(0.25) saturate(0.85) drop-shadow(0 7px 8px rgba(91,48,32,0.32));
+}
+
+.theater-person-card.is-doing.is-blocked .theater-person,
+.theater-person-card.is-doing.is-failed .theater-person {
+    animation: aiTownWalkDown 0.62s steps(1, end) infinite;
 }
 
 .theater-person-card.is-done .theater-person {
@@ -4998,6 +5032,26 @@ tr:last-child td { border-bottom: none; }
     0%, 100% { background-position: var(--sprite-x0) var(--sprite-y); }
     33% { background-position: var(--sprite-x1) var(--sprite-y); }
     66% { background-position: var(--sprite-x2) var(--sprite-y); }
+}
+
+@keyframes theaterAgentPatrol {
+    0%, 100% { transform: translate(-50%, -50%); }
+    25% { transform: translate(calc(-50% + 8px), calc(-50% - 3px)); }
+    50% { transform: translate(calc(-50% + 3px), calc(-50% + 4px)); }
+    75% { transform: translate(calc(-50% - 7px), calc(-50% + 1px)); }
+}
+
+@keyframes theaterActionPulse {
+    0%, 100% { transform: translateY(0); opacity: 0.92; }
+    50% { transform: translateY(-2px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theater-person-card.is-doing,
+    .theater-person-card.is-doing::after,
+    .theater-person-card.is-doing .theater-person {
+        animation: none !important;
+    }
 }
 
 @media (max-width: 1180px) {
@@ -5032,6 +5086,7 @@ tr:last-child td { border-bottom: none; }
     }
     .theater-person-card[data-theater-agent="USER"] { left: 22% !important; top: 19% !important; }
     .theater-person-card[data-theater-agent="JARVIS"] { left: 70% !important; top: 19% !important; }
+    .theater-person-card[data-theater-agent="SUPERVISOR"] { left: 46% !important; top: 30% !important; }
     .theater-person-card[data-theater-agent="BRIDGE"] { left: 22% !important; top: 39% !important; }
     .theater-person-card[data-theater-agent="BUILDER"] { left: 70% !important; top: 39% !important; }
     .theater-person-card[data-theater-agent="TESTER"] { left: 22% !important; top: 59% !important; }

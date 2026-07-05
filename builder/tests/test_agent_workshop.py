@@ -55,6 +55,10 @@ class AgentTheaterTests(unittest.TestCase):
         self.assertIn("Recent Bridge task failed", script)
         self.assertIn("SUPERVISOR", script)
         self.assertIn("'USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE'", script)
+        self.assertIn("is-doing", script)
+        self.assertIn("theaterAgentAction", script)
+        self.assertIn("data-action", css)
+        self.assertIn("theaterAgentPatrol", css)
         self.assertTrue((ASSETS_DIR / "ai-town-32x32folk.png").exists())
         self.assertGreater((ASSETS_DIR / "ai-town-32x32folk.png").stat().st_size, 1000)
 
