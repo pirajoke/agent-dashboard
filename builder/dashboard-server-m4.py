@@ -397,13 +397,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return "*"
 
     def translate_path(self, path):
-        if path == '/agent-dashboard.html' or path == '/legacy-dashboard.html':
+        clean_path = urlsplit(path).path
+        if clean_path == '/agent-dashboard.html' or clean_path == '/legacy-dashboard.html':
             return str(HOME / 'agent-dashboard.html')
-        if path == '/live-feed.json' or path == '/scripts/live-feed.json':
+        if clean_path == '/live-feed.json' or clean_path == '/scripts/live-feed.json':
             return str(HOME / 'scripts' / 'live-feed.json')
-        if path == '/' or path == '/index.html':
+        if clean_path == '/' or clean_path == '/index.html':
             return str(HOME / 'mac-mini-dashboard' / 'index.html')
-        return str(HOME / path.lstrip('/'))
+        return str(HOME / clean_path.lstrip('/'))
 
     def do_POST(self):
         if self._is_public_request():
@@ -898,7 +899,13 @@ python3 ~/scripts/orchestrator_tokens.py update codex 23 '$46' '200' 'Apr 15'
         self.wfile.write(body)
 
     def end_headers(self):
-        self.send_header('Cache-Control', 'no-cache')
+        parsed = urlsplit(self.path)
+        if parsed.path in {"/", "/index.html", "/agent-dashboard.html", "/legacy-dashboard.html"}:
+            self.send_header("Cache-Control", "no-store, no-cache, max-age=0, must-revalidate")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+        else:
+            self.send_header('Cache-Control', 'no-cache')
         self.send_header('Access-Control-Allow-Origin', self._cors_origin())
         super().end_headers()
 
