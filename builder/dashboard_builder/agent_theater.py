@@ -5,6 +5,7 @@ from __future__ import annotations
 THEATER_AGENTS = [
     ("USER", "You", "request", 12, 55),
     ("JARVIS", "Jarvis", "understands", 28, 34),
+    ("SUPERVISOR", "Supervisor", "decides", 39, 38),
     ("BRIDGE", "Bridge", "queues", 44, 50),
     ("BUILDER", "Builder", "codes", 63, 32),
     ("TESTER", "Tester", "checks", 77, 48),
@@ -77,6 +78,7 @@ def build_agent_theater_html() -> str:
             <div class="theater-tree theater-tree-b"></div>
             <div class="theater-station theater-station-user" style="--x:12;--y:55">Telegram</div>
             <div class="theater-station theater-station-core" style="--x:28;--y:34">Jarvis</div>
+            <div class="theater-station theater-station-supervisor" style="--x:39;--y:38">Supervisor</div>
             <div class="theater-station theater-station-queue" style="--x:44;--y:50">Bridge</div>
             <div class="theater-station theater-station-code" style="--x:63;--y:32">Code</div>
             <div class="theater-station theater-station-test" style="--x:77;--y:48">Tests</div>

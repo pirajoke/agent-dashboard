@@ -24,9 +24,11 @@ class AgentTheaterTests(unittest.TestCase):
         self.assertIn('id="theater-current"', html)
         self.assertIn('id="theater-story"', html)
         self.assertIn('data-theater-agent="JARVIS"', html)
+        self.assertIn('data-theater-agent="SUPERVISOR"', html)
+        self.assertIn('theater-station-supervisor', html)
         self.assertIn('data-theater-agent="BUILDER"', html)
         self.assertIn('data-theater-agent="VAULT"', html)
-        self.assertGreaterEqual(len(THEATER_AGENTS), 8)
+        self.assertGreaterEqual(len(THEATER_AGENTS), 9)
 
     def test_full_dashboard_includes_theater_navigation(self):
         html = build_html([], "2026-07-04 12:00:00 ICT")
@@ -51,6 +53,8 @@ class AgentTheaterTests(unittest.TestCase):
         self.assertIn("theaterAuthState", script)
         self.assertIn("Claude login required", script)
         self.assertIn("Recent Bridge task failed", script)
+        self.assertIn("SUPERVISOR", script)
+        self.assertIn("'USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE'", script)
         self.assertTrue((ASSETS_DIR / "ai-town-32x32folk.png").exists())
         self.assertGreater((ASSETS_DIR / "ai-town-32x32folk.png").stat().st_size, 1000)
 

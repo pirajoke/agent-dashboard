@@ -1380,9 +1380,10 @@ setInterval(refreshLocalServices, 15000);
     const STATIONS = {
         USER: {x: 12, y: 55},
         JARVIS: {x: 28, y: 34},
+        SUPERVISOR: {x: 39, y: 38},
         BRIDGE: {x: 44, y: 50},
-        ROUTER: {x: 28, y: 34},
-        PLANNER: {x: 44, y: 50},
+        ROUTER: {x: 39, y: 38},
+        PLANNER: {x: 39, y: 38},
         BUILDER: {x: 63, y: 32},
         TESTER: {x: 77, y: 48},
         DEPLOYER: {x: 86, y: 69},
@@ -1392,6 +1393,7 @@ setInterval(refreshLocalServices, 15000);
     const LABELS = {
         USER: 'You',
         JARVIS: 'Jarvis',
+        SUPERVISOR: 'Supervisor',
         BRIDGE: 'Bridge',
         ROUTER: 'Router',
         PLANNER: 'Planner',
@@ -1402,13 +1404,14 @@ setInterval(refreshLocalServices, 15000);
         GITHUB: 'GitHub',
     };
     const ROUTES = {
-        ROUTER: ['USER', 'JARVIS', 'BRIDGE', 'JARVIS'],
-        PLANNER: ['USER', 'JARVIS', 'BRIDGE', 'PLANNER'],
-        BUILDER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER'],
-        TESTER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'TESTER'],
-        DEPLOYER: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'TESTER', 'DEPLOYER'],
-        VAULT: ['USER', 'JARVIS', 'BRIDGE', 'VAULT'],
-        GITHUB: ['USER', 'JARVIS', 'BRIDGE', 'BUILDER', 'GITHUB'],
+        SUPERVISOR: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE'],
+        ROUTER: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'JARVIS'],
+        PLANNER: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'PLANNER'],
+        BUILDER: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'BUILDER'],
+        TESTER: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'BUILDER', 'TESTER'],
+        DEPLOYER: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'BUILDER', 'TESTER', 'DEPLOYER'],
+        VAULT: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'VAULT'],
+        GITHUB: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'BUILDER', 'GITHUB'],
     };
     let theaterTasks = [];
     let theaterSelectedId = null;
@@ -1507,6 +1510,7 @@ setInterval(refreshLocalServices, 15000);
         const explicit = String(theaterFirstMeta(task, ['assigned_agent']) || task.agent_role || '').toUpperCase().replace(/[^A-Z_]/g, '');
         if (LABELS[explicit]) return explicit;
         const text = theaterTaskText(task);
+        if (text.match(/\b(supervisor|orchestrator|triage|route decision|who should handle|control room)\b/)) return 'SUPERVISOR';
         if (text.match(/\b(pytest|test|selftest|smoke|compileall|validation)\b/)) return 'TESTER';
         if (text.match(/\b(deploy|launchd|restart|rollout|mac mini|macmini|service)\b/)) return 'DEPLOYER';
         if (text.match(/\b(obsidian|vault|memory\.md|todo\.md|status\.md|changelog\.md|source-aware)\b/)) return 'VAULT';
@@ -1670,7 +1674,7 @@ setInterval(refreshLocalServices, 15000);
             el.classList.add('is-active', `is-${state}`);
             if (focusRoute.has(agent)) el.classList.add('is-focus-route');
             if (label) {
-                const neutralAgents = ['USER', 'JARVIS', 'BRIDGE'];
+                const neutralAgents = ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE'];
                 if (focusRoute.has(agent)) label.textContent = 'focus';
                 else if (neutralAgents.includes(agent)) label.textContent = `${states.length}`;
                 else if (state === 'blocked') label.textContent = `check ${states.length}`;
