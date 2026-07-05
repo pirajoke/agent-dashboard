@@ -636,6 +636,38 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .island-dock-name { font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; }
 .island-dock-value { font-size: 13px; font-weight: 800; margin-top: 4px; }
+.legacy-hidden { display: none !important; }
+.pixel-agents-shell {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.pixel-agents-frame {
+  display: block;
+  width: 100%;
+  min-height: calc(100vh - 270px);
+  height: 760px;
+  border: 0;
+  background: #111;
+}
+.pixel-agents-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+}
+.pixel-agents-fallback a {
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration: none;
+}
 
 /* Responsive */
 @media (max-width: 1024px) {
@@ -669,6 +701,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .island-node.pro { left: 25%; top: 62%; }
   .island-sign { font-size: 18px; padding: 10px 24px 8px; letter-spacing: 3px; }
   .island-docks { grid-template-columns: 1fr; }
+  .pixel-agents-frame { height: 680px; }
 }
 </style>
 </head>
@@ -716,7 +749,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     </button>
     <button class="nav-pill" onclick="showSection('agents')">
       <span class="pill-icon">🤖</span> Agents
-      <span class="pill-badge" id="agents-badge">live</span>
+      <span class="pill-badge" id="agents-badge">pixel</span>
     </button>
     <button class="nav-pill" onclick="showSection('logs')">
       <span class="pill-icon">📋</span> Logs
@@ -932,7 +965,19 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- ═══════════════ AGENTS ═══════════════ -->
   <div id="section-agents" class="section">
-    <div class="ai-island">
+    <div class="pixel-agents-shell">
+      <div class="pixel-agents-fallback">
+        <span>Pixel Agents office is served from Mac Mini and connected through Cloudflare Tunnel.</span>
+        <a href="https://pixel-agents.meshly.fr/" target="_blank" rel="noreferrer">Open full screen</a>
+      </div>
+      <iframe
+        class="pixel-agents-frame"
+        src="https://pixel-agents.meshly.fr/"
+        title="Pixel Agents"
+        allow="clipboard-read; clipboard-write"
+      ></iframe>
+    </div>
+    <div class="ai-island legacy-hidden" aria-hidden="true">
       <div class="ai-island-hero">
         <div>
           <div class="ai-island-kicker">Command Center</div>
@@ -1739,7 +1784,6 @@ function refreshAll() {
   refreshAir();
   refreshMini();
   refreshPro();
-  refreshIsland();
   document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
 }
 
