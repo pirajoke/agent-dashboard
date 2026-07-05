@@ -5493,3 +5493,204 @@ tr:last-child td { border-bottom: none; }
         animation: none !important;
     }
 }
+
+/* ── Light AI Town shell: keep Command Center public page bright ── */
+:root {
+    --bg: #e8f4d2;
+    --bg2: #f5d58f;
+    --card: rgba(255,248,218,0.88);
+    --card-solid: #fff3c8;
+    --card2: #f6dfaa;
+    --border: rgba(92,65,45,0.22);
+    --border2: rgba(92,65,45,0.36);
+    --text: #2d2630;
+    --text2: #5b4b4d;
+    --muted: #765a43;
+    --dim: #98785d;
+    --accent: #e97824;
+    --accent2: #f0ad3f;
+    --green: #22a84b;
+    --green2: #58c95b;
+    --yellow: #d99b18;
+    --red: #d8483e;
+    --blue: #2f75d6;
+    --purple: #8a54d6;
+    --pink: #d54a8b;
+    --cyan: #0098ad;
+}
+
+body {
+    background:
+        linear-gradient(180deg, #9fd9dd 0 170px, #dff1b5 170px 100%),
+        var(--bg);
+    color: var(--text);
+}
+
+.bg-gradient {
+    background:
+        radial-gradient(ellipse 820px 360px at 28% 0%, rgba(255,255,255,0.46), transparent 62%),
+        radial-gradient(ellipse 760px 420px at 86% 22%, rgba(240,173,63,0.18), transparent 64%),
+        linear-gradient(180deg, rgba(107,190,91,0.18), rgba(246,223,170,0.2));
+}
+
+.sidebar {
+    background:
+        linear-gradient(180deg, rgba(255,237,178,0.96), rgba(244,204,132,0.94));
+    border-right: 2px solid rgba(82,49,39,0.24);
+    box-shadow: 8px 0 0 rgba(82,49,39,0.05);
+}
+
+.sidebar-brand h1 {
+    background: none;
+    -webkit-text-fill-color: #9b3a36;
+    color: #9b3a36;
+    text-shadow: 0 2px 0 rgba(255,255,255,0.42);
+}
+
+.sidebar-brand .sb-sub,
+.sidebar-footer .sf-live,
+.topbar-meta .tm-item {
+    color: #7a6048;
+}
+
+.sidebar-nav a {
+    color: #654d43;
+}
+
+.sidebar-nav a:hover {
+    background: rgba(126,83,50,0.1);
+    color: #2d2630;
+}
+
+.sidebar-nav a.active {
+    background: #f0ad3f;
+    color: #5f2f38;
+    box-shadow: inset 0 -4px 0 rgba(172,83,55,0.38), 0 3px 0 rgba(88,52,44,0.14);
+}
+
+.sidebar-nav .nav-count,
+.section-count {
+    background: rgba(101,77,67,0.11);
+    color: #765a43;
+}
+
+.sidebar-footer,
+.section-head {
+    border-color: rgba(92,65,45,0.22);
+}
+
+.main {
+    max-width: none;
+}
+
+.topbar-title {
+    color: #2d2630;
+    text-shadow: 0 2px 0 rgba(255,255,255,0.46);
+}
+
+.section-title {
+    color: #6e5542;
+}
+
+.stat,
+.section-empty,
+.ag,
+.tbl-wrap,
+.proj-details,
+.builder-panel,
+.workshop-main,
+.workshop-side,
+.workshop-control {
+    background: rgba(255,248,218,0.84);
+    border-color: rgba(92,65,45,0.22);
+    color: var(--text);
+}
+
+.operator-card {
+    background: rgba(255,244,202,0.9);
+    border-color: rgba(92,65,45,0.28);
+    box-shadow: inset 0 -4px 0 rgba(190,128,75,0.14);
+}
+
+.operator-card strong {
+    color: #2d2630;
+}
+
+.theater-section {
+    background: transparent;
+}
+
+.theater-head {
+    border-bottom-color: rgba(82,49,39,0.22);
+}
+
+.command-system-card,
+.command-flow-panel {
+    background:
+        linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px),
+        #fff3c8;
+    background-size: 20px 20px;
+    border: 3px solid #6a3c37;
+    color: #2d2630;
+    box-shadow:
+        inset 0 -7px 0 rgba(190,128,75,0.16),
+        0 12px 0 rgba(88,52,44,0.12);
+}
+
+.command-system-top strong,
+.command-flow-head strong,
+.command-system-metrics span,
+.command-flow-meta strong,
+.command-service strong,
+.command-flow-node strong,
+.command-log-row em {
+    color: #2d2630;
+}
+
+.command-system-summary,
+.command-flow-node span,
+.command-service em,
+.command-log-row strong {
+    color: #6b5548;
+}
+
+.command-state,
+.command-system-metrics div,
+.command-flow-meta div,
+.command-service,
+.command-flow-node,
+.command-log-row {
+    background: rgba(255,250,226,0.78);
+    border-color: rgba(92,65,45,0.2);
+}
+
+.command-system-card.is-online .command-state {
+    background: rgba(34,168,75,0.14);
+    color: #146b31;
+}
+
+.command-system-card.is-warn .command-state {
+    background: rgba(217,155,24,0.16);
+    color: #77520b;
+}
+
+.command-system-card.is-offline .command-state {
+    background: rgba(216,72,62,0.12);
+    color: #943028;
+}
+
+.command-flow-node.is-active {
+    border-color: rgba(47,117,214,0.45);
+    background: rgba(191,219,254,0.45);
+}
+
+.command-flow-node.is-done {
+    border-color: rgba(34,168,75,0.36);
+    background: rgba(187,247,208,0.42);
+}
+
+.command-flow-node.is-blocked,
+.command-flow-node.is-failed {
+    border-color: rgba(216,72,62,0.44);
+    background: rgba(254,202,202,0.44);
+}
