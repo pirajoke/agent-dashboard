@@ -238,7 +238,7 @@ def _air_health_request(method: str, path: str, payload: dict | None = None) -> 
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(f"{AIR_HEALTH_API_URL}{path}", data=data, method=method, headers=headers)
-    with urllib.request.urlopen(req, timeout=10) as resp:
+    with urllib.request.urlopen(req, timeout=5) as resp:
         raw = resp.read().decode("utf-8")
     return json.loads(raw) if raw else {}
 
@@ -797,7 +797,11 @@ def _github_commit(token, repo, path, message, data):
     return True
 
 
+class DashboardHTTPServer(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+
+
 if __name__ == '__main__':
-    server = http.server.HTTPServer(('127.0.0.1', PORT), Handler)
+    server = DashboardHTTPServer(('127.0.0.1', PORT), Handler)
     print(f"Dashboard server on http://localhost:{PORT}")
     server.serve_forever()
