@@ -968,11 +968,11 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <div class="pixel-agents-shell">
       <div class="pixel-agents-fallback">
         <span>Pixel Agents office is served from Mac Mini and connected through Cloudflare Tunnel.</span>
-        <a href="https://pixel-agents.meshly.fr/" target="_blank" rel="noreferrer">Open full screen</a>
+        <a href="https://pixel-agents.meshly.fr/?embed=command" target="_blank" rel="noreferrer">Open full screen</a>
       </div>
       <iframe
         class="pixel-agents-frame"
-        src="https://pixel-agents.meshly.fr/"
+        src="https://pixel-agents.meshly.fr/?embed=command"
         title="Pixel Agents"
         allow="clipboard-read; clipboard-write"
       ></iframe>
@@ -1165,8 +1165,17 @@ function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
   document.getElementById('section-' + name).classList.add('active');
-  event.currentTarget.classList.add('active');
+  const trigger = (typeof event !== 'undefined' && event.currentTarget)
+    ? event.currentTarget
+    : Array.from(document.querySelectorAll('.nav-pill'))
+        .find(p => p.getAttribute('onclick') === `showSection('${name}')`);
+  if (trigger) trigger.classList.add('active');
   if (name === 'logs' && !currentLogService) loadLogTabs();
+}
+
+const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
+if (['mac-mini', 'air', 'pro', 'general', 'agents', 'logs'].includes(INITIAL_SECTION)) {
+  showSection(INITIAL_SECTION);
 }
 
 async function fetchJSON(base, path) {

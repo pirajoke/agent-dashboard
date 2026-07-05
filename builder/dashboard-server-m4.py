@@ -396,6 +396,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return f"https://{self._host_name()}"
         return "*"
 
+    def _redirect_legacy_dashboard(self) -> None:
+        self.send_response(302)
+        self.send_header("Location", "/?tab=agents&v=pixel-agents")
+        self.end_headers()
+
     def translate_path(self, path):
         clean_path = urlsplit(path).path
         if clean_path == '/agent-dashboard.html' or clean_path == '/legacy-dashboard.html':
@@ -723,6 +728,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path in {"/agent-dashboard.html", "/legacy-dashboard.html"}:
+            self._redirect_legacy_dashboard()
+            return
+
         air_path = _air_proxy_path(parsed.path)
         pro_path = _pro_proxy_path(parsed.path)
         if self._is_public_request():
@@ -832,6 +841,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._serve_bookmarklets_page()
             return
         super().do_GET()
+
+    def do_HEAD(self):
+        parsed = urlsplit(self.path)
+        if parsed.path in {"/agent-dashboard.html", "/legacy-dashboard.html"}:
+            self._redirect_legacy_dashboard()
+            return
+        super().do_HEAD()
 
     def do_DELETE(self):
         if self._is_public_request():
