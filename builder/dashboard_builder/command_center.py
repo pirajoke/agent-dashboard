@@ -8,7 +8,7 @@ FLOW_NODES = [
     ("SUPERVISOR", "Supervisor", "routing decision"),
     ("BRIDGE", "Bridge", "task queue"),
     ("AGENT", "Agent", "work execution"),
-    ("SYSTEM", "System", "Mac Mini / Air"),
+    ("SYSTEM", "System", "Mac Mini / Air / Pro"),
     ("VAULT", "Vault", "Obsidian memory"),
     ("GITHUB", "GitHub", "source control"),
 ]
@@ -67,6 +67,24 @@ def build_command_center_html() -> str:
                 </div>
                 <div class="command-service-list" id="command-air-services">
                     <div class="command-empty">Loading MacBook Air services...</div>
+                </div>
+            </article>
+            <article class="command-system-card" id="command-system-pro" data-command-system="macbook-pro">
+                <div class="command-system-top">
+                    <div>
+                        <span class="command-kicker">Primary workstation</span>
+                        <strong>MacBook Pro</strong>
+                    </div>
+                    <span class="command-state" id="command-pro-status">checking</span>
+                </div>
+                <div class="command-system-summary" id="command-pro-summary">Waiting for /api/pro/health</div>
+                <div class="command-system-metrics">
+                    <div><span id="command-pro-services-count">-</span><em>services</em></div>
+                    <div><span id="command-pro-auth">-</span><em>agent auth</em></div>
+                    <div><span id="command-pro-updated">-</span><em>updated</em></div>
+                </div>
+                <div class="command-service-list" id="command-pro-services">
+                    <div class="command-empty">Loading MacBook Pro services...</div>
                 </div>
             </article>
         </div>

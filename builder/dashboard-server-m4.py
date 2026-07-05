@@ -27,6 +27,7 @@ GITHUB_REPO = "pirajoke/agent-dashboard"
 BRIDGE_API_URL = os.environ.get("BRIDGE_API_URL", "http://127.0.0.1:8899").rstrip("/")
 HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstrip("/")
 AIR_HEALTH_API_URL = os.environ.get("AIR_HEALTH_API_URL", "http://100.118.34.14:8880").rstrip("/")
+PRO_HEALTH_API_URL = os.environ.get("PRO_HEALTH_API_URL", "http://100.74.94.2:8880").rstrip("/")
 PUBLIC_HOSTS = {"command.meshly.fr"}
 PUBLIC_API_PATHS = {
     "/api/health",
@@ -271,9 +272,26 @@ def _air_health_request(method: str, path: str, payload: dict | None = None) -> 
     return json.loads(raw) if raw else {}
 
 
+def _pro_health_request(method: str, path: str, payload: dict | None = None) -> dict:
+    data = None
+    headers = {"Content-Type": "application/json"}
+    if payload is not None:
+        data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(f"{PRO_HEALTH_API_URL}{path}", data=data, method=method, headers=headers)
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        raw = resp.read().decode("utf-8")
+    return json.loads(raw) if raw else {}
+
+
 def _air_proxy_path(path: str) -> str | None:
     if path.startswith("/api/air/"):
         return "/api/" + path[len("/api/air/"):]
+    return None
+
+
+def _pro_proxy_path(path: str) -> str | None:
+    if path.startswith("/api/pro/"):
+        return "/api/" + path[len("/api/pro/"):]
     return None
 
 
@@ -393,9 +411,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         parsed = urlsplit(self.path)
         air_path = _air_proxy_path(parsed.path)
+        pro_path = _pro_proxy_path(parsed.path)
         if air_path and re.match(r"^/api/service/.+/(start|stop)$", air_path):
             try:
                 self._json_response(200, _air_health_request("POST", air_path))
+            except Exception as e:
+                self._json_response(502, {"error": str(e)})
+            return
+        if pro_path and re.match(r"^/api/service/.+/(start|stop)$", pro_path):
+            try:
+                self._json_response(200, _pro_health_request("POST", pro_path))
             except Exception as e:
                 self._json_response(502, {"error": str(e)})
             return
@@ -697,8 +722,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urlsplit(self.path)
         air_path = _air_proxy_path(parsed.path)
+        pro_path = _pro_proxy_path(parsed.path)
         if self._is_public_request():
-            if parsed.path.startswith("/api/logs/") or (air_path and air_path.startswith("/api/logs/")):
+            if (
+                parsed.path.startswith("/api/logs/")
+                or (air_path and air_path.startswith("/api/logs/"))
+                or (pro_path and pro_path.startswith("/api/logs/"))
+            ):
                 self._json_response(403, {"error": "public_logs_disabled"})
                 return
             if (
@@ -706,6 +736,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 and parsed.path not in PUBLIC_LOCAL_PATHS
                 and parsed.path not in PUBLIC_BRIDGE_PATHS
                 and air_path not in PUBLIC_API_PATHS
+                and pro_path not in PUBLIC_API_PATHS
                 and parsed.path not in PUBLIC_FILE_PATHS
             ):
                 self.send_error(404)
@@ -715,6 +746,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 suffix = f"?{parsed.query}" if parsed.query else ""
                 data = _air_health_request("GET", f"{air_path}{suffix}")
+                if self._is_public_request():
+                    data = _public_dashboard_payload(data)
+                self._json_response(200, data)
+            except Exception as e:
+                self._json_response(502, {"error": str(e)})
+            return
+        if pro_path:
+            try:
+                suffix = f"?{parsed.query}" if parsed.query else ""
+                data = _pro_health_request("GET", f"{pro_path}{suffix}")
                 if self._is_public_request():
                     data = _public_dashboard_payload(data)
                 self._json_response(200, data)

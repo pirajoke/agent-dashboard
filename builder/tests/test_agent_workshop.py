@@ -100,8 +100,10 @@ class SystemsCommandCenterTests(unittest.TestCase):
         self.assertIn('id="command-center"', html)
         self.assertIn('id="command-system-mini"', html)
         self.assertIn('id="command-system-air"', html)
+        self.assertIn('id="command-system-pro"', html)
         self.assertIn('id="command-mini-services"', html)
         self.assertIn('id="command-air-services"', html)
+        self.assertIn('id="command-pro-services"', html)
         self.assertIn('id="command-flow"', html)
         self.assertIn('data-command-flow-node="SUPERVISOR"', html)
         self.assertIn('data-command-flow-node="SYSTEM"', html)
@@ -114,6 +116,7 @@ class SystemsCommandCenterTests(unittest.TestCase):
         self.assertIn("Systems Command Center", html)
         self.assertIn("initSystemsCommandCenter", html)
         self.assertIn("/api/air/health", html)
+        self.assertIn("/api/pro/health", html)
         self.assertIn("/api/local-services", html)
         self.assertIn("SystemsCommandCenterRefresh", html)
 

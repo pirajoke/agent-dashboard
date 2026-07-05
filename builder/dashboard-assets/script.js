@@ -46,7 +46,7 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     : window.location.origin;
 
 // ══════════════════════════════════════════════════════════════
-// ── Systems Command Center: Mac Mini + MacBook Air + agent flow ──
+// ── Systems Command Center: Mac Mini + MacBook Air/Pro + agent flow ──
 // ══════════════════════════════════════════════════════════════
 (function initSystemsCommandCenter() {
     const root = document.getElementById('command-center');
@@ -312,7 +312,13 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         if (agentNodeDetail) agentNodeDetail.textContent = `${taskState} execution`;
         if (systemNode) {
             const text = taskText(task);
-            systemNode.textContent = text.includes('macbook') || text.includes('air') ? 'MacBook Air' : 'Mac Mini / runtime';
+            if (text.includes('macbook pro') || text.includes('100.74.94.2')) {
+                systemNode.textContent = 'MacBook Pro';
+            } else if (text.includes('macbook air') || text.includes('100.118.34.14')) {
+                systemNode.textContent = 'MacBook Air';
+            } else {
+                systemNode.textContent = 'Mac Mini / runtime';
+            }
         }
 
         route.forEach((nodeId) => {
@@ -364,6 +370,7 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         const configs = [
             {id: 'mini', label: 'Mac Mini', health: '/api/health', services: '/api/local-services'},
             {id: 'air', label: 'MacBook Air', health: '/api/air/health', services: '/api/air/services/detailed'},
+            {id: 'pro', label: 'MacBook Pro', health: '/api/pro/health', services: '/api/pro/services/detailed'},
         ];
         await Promise.all(configs.map(async (cfg) => {
             const [healthResult, servicesResult] = await Promise.allSettled([
