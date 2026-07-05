@@ -49,6 +49,7 @@ PUBLIC_FILE_PATHS = {
     "/index.html",
     "/agent-dashboard.html",
     "/legacy-dashboard.html",
+    "/dashboard-assets/ai-town-32x32folk.png",
     "/favicon.ico",
     "/live-feed.json",
     "/scripts/live-feed.json",

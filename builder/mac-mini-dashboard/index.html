@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAF9F6;
+  --bg2: #F5F3EF;
+  --card: #FFFFFF;
+  --border: rgba(0,0,0,0.06);
+  --border2: rgba(0,0,0,0.1);
+  --text: #1A1A1A;
+  --text2: #6B6B6B;
+  --muted: #9CA3AF;
+  --accent: #EAB308;
+  --accent2: #F5C542;
+  --accent-bg: #FEF9E7;
+  --green: #22C55E;
+  --green-bg: #F0FDF4;
+  --red: #EF4444;
+  --red-bg: #FEF2F2;
+  --blue: #3B82F6;
+  --blue-bg: #EFF6FF;
+  --purple: #8B5CF6;
+  --orange: #F97316;
+  --orange-bg: #FFF7ED;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,0.06);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+
+/* Header */
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+.header-left h1 { font-size: 32px; font-weight: 700; }
+.header-left .subtitle { font-size: 14px; color: var(--text2); margin-top: 4px; }
+.header-stats { display: flex; gap: 32px; }
+.stat-box { text-align: center; }
+.stat-box .stat-value { font-size: 36px; font-weight: 800; }
+.stat-box .stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Nav */
+.nav-pills { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); padding: 4px; border-radius: 12px; width: fit-content; }
+.nav-pill { padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+.nav-pill:hover { color: var(--text); }
+.nav-pill.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.nav-pill .pill-icon { font-size: 16px; }
+.nav-pill .pill-badge { font-size: 11px; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+
+/* Cards */
+.card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 24px; transition: box-shadow 0.2s; }
+.card:hover { box-shadow: var(--shadow-lg); }
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+.card-title .refresh-btn { width: 20px; height: 20px; cursor: pointer; opacity: 0.4; transition: opacity 0.2s; background: none; border: none; }
+.card-title .refresh-btn:hover { opacity: 0.8; }
+
+/* Machine header */
+.machine-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.machine-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.machine-icon.mini { background: var(--blue-bg); }
+.machine-icon.air { background: var(--purple); background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+.machine-name { font-size: 18px; font-weight: 700; }
+.machine-status { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.machine-info { flex: 1; }
+.machine-badge { font-size: 11px; padding: 4px 12px; border-radius: 6px; font-weight: 600; }
+.machine-badge.online { background: var(--green-bg); color: var(--green); }
+.machine-badge.offline { background: var(--red-bg); color: var(--red); }
+
+/* Grid layouts */
+.grid { display: grid; gap: 20px; }
+.grid-2col { grid-template-columns: 2fr 1fr; }
+.grid-3col { grid-template-columns: 1fr 1fr 1fr; }
+.grid-full { grid-template-columns: 1fr; }
+
+/* Services — Render-like table */
+.svc-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.svc-table th { text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+.svc-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+.svc-table tr:last-child td { border-bottom: none; }
+.svc-table tr:hover td { background: var(--bg); }
+.svc-table tr { cursor: pointer; }
+.svc-name-cell { display: flex; align-items: center; gap: 10px; }
+.svc-name { font-weight: 600; }
+.svc-desc { font-size: 11px; color: var(--muted); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.status-dot.running { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.4); animation: pulse-green 2s infinite; }
+.status-dot.stopped { background: var(--red); opacity: 0.5; }
+@keyframes pulse-green { 0%,100% { box-shadow: 0 0 6px rgba(34,197,94,0.4); } 50% { box-shadow: 0 0 12px rgba(34,197,94,0.6); } }
+.svc-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.svc-badge.deployed { background: var(--green-bg); color: var(--green); }
+.svc-badge.stopped { background: var(--red-bg); color: var(--red); }
+.svc-badge.scheduled { background: var(--blue-bg); color: var(--blue); }
+.svc-runtime { font-size: 11px; color: var(--text2); background: var(--bg2); padding: 3px 8px; border-radius: 4px; display: inline-block; }
+.svc-port { display: inline-block; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.svc-btn { display: inline-block; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid var(--border2); background: var(--card); cursor: pointer; transition: all 0.15s; }
+.svc-btn:hover { background: var(--bg2); }
+.svc-btn.start { color: var(--green); border-color: var(--green); }
+.svc-btn.stop { color: var(--red); border-color: var(--red); }
+.svc-readonly { font-size: 11px; font-weight: 600; color: var(--muted); }
+.svc-expand { display: none; }
+.svc-expand.open { display: table-row; }
+.svc-expand td { background: var(--bg); padding: 16px 12px 16px 44px; }
+.svc-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+.svc-detail-item { }
+.svc-detail-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.svc-detail-value { font-size: 12px; font-family: 'JetBrains Mono', 'SF Mono', monospace; word-break: break-all; }
+.svc-env-table { width: 100%; margin-top: 8px; }
+.svc-env-table td { padding: 4px 8px; font-size: 12px; font-family: 'JetBrains Mono', 'SF Mono', monospace; border-bottom: 1px solid var(--border); }
+.svc-env-table td:first-child { font-weight: 600; color: var(--text); width: 40%; }
+.svc-env-table td:last-child { color: var(--text2); }
+.svc-cat-header { padding: 16px 12px 8px; font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.svc-cat-header .svc-cat-count { font-size: 11px; font-weight: 500; background: var(--bg2); padding: 2px 8px; border-radius: 4px; }
+/* Legacy grid for Air tab */
+.services-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.service-card { background: var(--bg); border-radius: var(--radius-sm); padding: 16px; border: 1px solid var(--border); transition: all 0.2s; }
+.service-card:hover { border-color: var(--border2); }
+.service-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.service-name { font-size: 13px; font-weight: 600; }
+.service-meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.service-port { display: inline-block; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+.service-btn { display: inline-block; margin-top: 8px; padding: 4px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; border: 1px solid var(--border2); background: var(--card); cursor: pointer; transition: all 0.15s; }
+.service-btn:hover { background: var(--bg2); }
+.service-btn.start { color: var(--green); border-color: var(--green); }
+.service-btn.stop { color: var(--red); border-color: var(--red); }
+
+/* Gauges */
+.gauge-list { display: flex; flex-direction: column; gap: 20px; }
+.gauge-item label { font-size: 13px; font-weight: 500; color: var(--text2); display: flex; justify-content: space-between; margin-bottom: 8px; }
+.gauge-item label span { font-weight: 600; color: var(--text); }
+.gauge-bar { height: 8px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+.gauge-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+.gauge-fill.cpu { background: var(--accent); }
+.gauge-fill.ram { background: var(--blue); }
+.gauge-fill.disk { background: var(--purple); }
+.uptime-badge { display: inline-block; background: var(--green-bg); color: var(--green); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-top: 8px; }
+
+/* Projects */
+.projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.project-card { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; border: 1px solid var(--border); }
+.project-name { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.project-progress { display: flex; align-items: center; gap: 10px; }
+.project-bar { flex: 1; height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+.project-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.project-bar-fill.active { background: var(--accent); }
+.project-bar-fill.done { background: var(--green); }
+.project-bar-fill.paused { background: var(--muted); }
+.project-pct { font-size: 12px; font-weight: 600; color: var(--text2); min-width: 32px; text-align: right; }
+.project-status { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
+/* Costs */
+.cost-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 8px; }
+.cost-row.render { background: var(--red-bg); text-decoration: line-through; color: var(--red); }
+.cost-row.mini { background: var(--green-bg); color: var(--green); }
+.cost-label { font-size: 14px; font-weight: 500; }
+.cost-value { font-size: 20px; font-weight: 700; }
+.savings-box { background: var(--accent-bg); border-radius: var(--radius-sm); padding: 16px; text-align: center; margin-top: 8px; }
+.savings-value { font-size: 28px; font-weight: 800; color: var(--accent); }
+.savings-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* Hooks */
+.hook-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 8px; }
+.hook-icon { font-size: 16px; }
+.hook-info { flex: 1; }
+.hook-name { font-size: 13px; font-weight: 600; }
+.hook-desc { font-size: 11px; color: var(--muted); }
+.hook-event { font-size: 10px; background: var(--blue-bg); color: var(--blue); padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+
+/* Finances */
+.finance-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.finance-row:last-child { border-bottom: none; }
+.finance-project { font-size: 13px; font-weight: 600; }
+.finance-detail { font-size: 11px; color: var(--muted); }
+.finance-amount { font-size: 14px; font-weight: 700; }
+.finance-amount.received { color: var(--green); }
+.finance-amount.pending { color: var(--orange); }
+.finance-total { display: flex; justify-content: space-between; padding: 14px 16px; background: var(--accent-bg); border-radius: var(--radius-sm); margin-top: 12px; font-weight: 700; }
+
+/* Logs */
+.log-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.log-tab { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: all 0.15s; }
+.log-tab:hover { border-color: var(--accent); }
+.log-tab.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+.log-output { background: #1E1E1E; color: #D4D4D4; border-radius: var(--radius-sm); padding: 16px; font-family: 'JetBrains Mono', 'SF Mono', monospace; font-size: 12px; line-height: 1.6; max-height: 300px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+
+/* Section */
+.section { display: none; }
+.section.active { display: block; }
+
+/* Footer */
+.footer { margin-top: 32px; text-align: center; font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse-green 2s infinite; }
+
+/* Drag & Drop Grid */
+.drag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  min-height: 100px;
+}
+.drag-widget {
+  position: relative;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.drag-widget[data-size="wide"] { grid-column: span 2; }
+.drag-widget[data-size="full"] { grid-column: span 3; }
+.drag-widget .card { height: 100%; }
+.drag-handle {
+  position: absolute;
+  top: 12px;
+  left: -20px;
+  width: 20px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.2s;
+  user-select: none;
+  letter-spacing: 2px;
+  z-index: 10;
+}
+.drag-widget:hover .drag-handle { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
+.drag-widget.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  z-index: 100;
+}
+.drag-widget.drag-over {
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+}
+.drag-placeholder {
+  background: var(--accent-bg);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius);
+  min-height: 100px;
+  transition: all 0.2s;
+}
+@media (max-width: 1024px) { .drag-grid { grid-template-columns: 1fr 1fr; } .drag-widget[data-size="wide"] { grid-column: span 2; } .drag-widget[data-size="full"] { grid-column: span 2; } }
+@media (max-width: 640px) { .drag-grid { grid-template-columns: 1fr; } .drag-widget[data-size="wide"], .drag-widget[data-size="full"] { grid-column: span 1; } }
+
+/* Collapsible */
+.collapsible { cursor: pointer; user-select: none; }
+.collapsible::after { content: '▾'; margin-left: 8px; font-size: 12px; transition: transform 0.2s; display: inline-block; }
+.collapsible.collapsed::after { transform: rotate(-90deg); }
+.collapsible-content { overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; max-height: 2000px; opacity: 1; }
+.collapsible-content.hidden { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
+
+/* Agents */
+.agents-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.agent-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; transition: box-shadow 0.2s; }
+.agent-card:hover { box-shadow: var(--shadow-lg); }
+.agent-card-header { padding: 20px 24px; display: flex; align-items: center; gap: 14px; cursor: pointer; user-select: none; }
+.agent-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.agent-avatar.harry { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+.agent-avatar.hygiene { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+.agent-avatar.codex { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+.agent-info { flex: 1; }
+.agent-name { font-size: 15px; font-weight: 700; }
+.agent-role { font-size: 11px; color: var(--muted); }
+.agent-toggle { width: 44px; height: 24px; border-radius: 12px; border: none; cursor: pointer; position: relative; transition: background 0.2s; }
+.agent-toggle.on { background: var(--green); }
+.agent-toggle.off { background: #D1D5DB; }
+.agent-toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 3px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.agent-toggle.on::after { left: 23px; }
+.agent-toggle.off::after { left: 3px; }
+.agent-body { padding: 0 24px 20px; }
+.agent-section-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 8px; }
+.agent-checklist { list-style: none; }
+.agent-checklist li { font-size: 13px; padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+.agent-checklist li .check { color: var(--green); font-weight: 700; }
+.agent-checklist li .pending { color: var(--muted); }
+.agent-summary { font-size: 13px; color: var(--text2); line-height: 1.6; padding: 12px 14px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.agent-stat-row { display: flex; gap: 12px; margin-top: 8px; }
+.agent-stat { flex: 1; text-align: center; padding: 8px; background: var(--bg); border-radius: var(--radius-sm); }
+.agent-stat-val { font-size: 18px; font-weight: 700; }
+.agent-stat-label { font-size: 10px; color: var(--muted); }
+
+/* AI Island */
+.ai-island { display: grid; gap: 20px; }
+.ai-island-hero {
+  background: linear-gradient(135deg, #ECFEFF 0%, #F0FDF4 52%, #FFF7ED 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+.ai-island-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.ai-island-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+.ai-island-subtitle { color: var(--text2); font-size: 13px; margin-top: 4px; }
+.ai-island-health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(15,23,42,0.08);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ai-island-health-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(34,197,94,0.16);
+}
+.ai-island-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(340px, 0.85fr);
+  gap: 20px;
+  align-items: stretch;
+}
+.island-map {
+  position: relative;
+  min-height: 680px;
+  overflow: hidden;
+  border: 1px solid rgba(14,116,144,0.22);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,0.86) 0 6%, transparent 7%),
+    radial-gradient(circle at 78% 14%, rgba(255,255,255,0.74) 0 7%, transparent 8%),
+    linear-gradient(135deg, #BAE6FD 0%, #7DD3FC 45%, #38BDF8 100%);
+}
+.island-map::before {
+  content: '';
+  position: absolute;
+  inset: 44px 36px;
+  border-radius: 48% 52% 43% 57% / 45% 40% 60% 55%;
+  background:
+    radial-gradient(circle at 70% 26%, #A7F3D0 0 11%, transparent 12%),
+    radial-gradient(circle at 32% 74%, #BBF7D0 0 14%, transparent 15%),
+    linear-gradient(135deg, #86EFAC 0%, #4ADE80 100%);
+  box-shadow: inset 0 0 0 10px rgba(255,255,255,0.16), 0 24px 70px rgba(14,116,144,0.24);
+}
+.island-map::after {
+  content: '';
+  position: absolute;
+  inset: 118px 102px;
+  border-radius: 50%;
+  border: 34px solid rgba(245,158,11,0.42);
+  transform: rotate(-11deg);
+  filter: drop-shadow(0 8px 0 rgba(146,64,14,0.08));
+}
+.island-sign {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  z-index: 3;
+  transform: translateX(-50%);
+  background: linear-gradient(#FDE68A, #FDBA74);
+  border: 5px solid #2E1A28;
+  border-bottom-width: 9px;
+  color: #7C2D12;
+  padding: 12px 42px 10px;
+  font-weight: 900;
+  font-size: 24px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  box-shadow: 0 9px 0 rgba(46,26,40,0.2);
+}
+.island-garden {
+  position: absolute;
+  right: 9%;
+  top: 20%;
+  width: 210px;
+  height: 112px;
+  z-index: 2;
+  border-radius: 16px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px) 0 0 / 52px 37px,
+    linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px) 0 0 / 52px 37px,
+    #7C4A2D;
+  border: 8px solid #5B2F1E;
+  box-shadow: 0 10px 0 rgba(92,52,31,0.18);
+}
+.island-garden i {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #84CC16;
+  box-shadow: 13px 9px 0 #FB923C;
+}
+.island-garden i:nth-child(1) { left: 23px; top: 22px; }
+.island-garden i:nth-child(2) { left: 75px; top: 22px; }
+.island-garden i:nth-child(3) { left: 127px; top: 22px; }
+.island-garden i:nth-child(4) { left: 23px; top: 62px; }
+.island-garden i:nth-child(5) { left: 75px; top: 62px; }
+.island-garden i:nth-child(6) { left: 127px; top: 62px; }
+.island-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.island-line {
+  fill: none;
+  stroke: rgba(14,116,144,0.28);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 10 13;
+}
+.island-line.active {
+  stroke: #0EA5E9;
+  stroke-width: 7;
+  animation: islandDash 1s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(14,165,233,0.38));
+}
+@keyframes islandDash { to { stroke-dashoffset: -46; } }
+.island-node {
+  position: absolute;
+  z-index: 4;
+  width: 118px;
+  min-height: 120px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  appearance: none;
+}
+.island-node:focus-visible { outline: 3px solid rgba(14,165,233,0.35); outline-offset: 6px; border-radius: 18px; }
+.island-station {
+  display: inline-block;
+  min-width: 86px;
+  padding: 7px 12px 6px;
+  background: #FDECC8;
+  border: 4px solid #2E1A28;
+  box-shadow: 0 6px 0 rgba(46,26,40,0.18);
+  color: #7C2D12;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+.island-sprite {
+  display: block;
+  width: 48px;
+  height: 48px;
+  margin: -2px auto 0;
+  background-image: url('/dashboard-assets/ai-town-32x32folk.png');
+  background-size: 576px 384px;
+  background-position: var(--sprite-x, 0) var(--sprite-y, 0);
+  image-rendering: pixelated;
+  filter: drop-shadow(0 9px 8px rgba(15,23,42,0.24));
+}
+.island-agent-name {
+  display: inline-block;
+  margin-top: -1px;
+  padding: 4px 10px 5px;
+  border-radius: 10px;
+  background: rgba(17,24,39,0.82);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.2);
+}
+.island-agent-status {
+  display: block;
+  width: fit-content;
+  margin: 4px auto 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+}
+.island-node.active .island-agent-status,
+.island-node.running .island-agent-status { background: var(--blue-bg); color: var(--blue); }
+.island-node.failed .island-agent-status { background: var(--red-bg); color: var(--red); }
+.island-node.done .island-agent-status { background: var(--green-bg); color: var(--green); }
+.island-node.active .island-sprite,
+.island-node.running .island-sprite { animation: islandBob 0.7s ease-in-out infinite alternate; }
+.island-node.failed .island-sprite { filter: grayscale(0.25) drop-shadow(0 9px 8px rgba(239,68,68,0.28)); }
+@keyframes islandBob { from { transform: translateY(0); } to { transform: translateY(-7px); } }
+.island-node.you { left: 5%; top: 55%; }
+.island-node.jarvis { left: 19%; top: 27%; }
+.island-node.supervisor { left: 42%; top: 21%; }
+.island-node.bridge { left: 42%; top: 49%; }
+.island-node.builder { left: 64%; top: 26%; }
+.island-node.tester { left: 76%; top: 52%; }
+.island-node.vault { left: 48%; top: 70%; }
+.island-node.github { left: 20%; top: 73%; }
+.island-node.mini { left: 82%; top: 75%; }
+.island-node.air { left: 64%; top: 71%; }
+.island-node.pro { left: 31%; top: 62%; }
+.island-panel {
+  background: #FFFDF8;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.island-panel-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.island-panel-title { font-size: 16px; font-weight: 800; }
+.island-panel-subtitle { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 2px; }
+.island-refresh {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text2);
+  border-radius: 9px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+.island-refresh:hover { border-color: var(--accent); color: var(--accent); }
+.island-panel-body { padding: 18px 20px 20px; }
+.island-task-title {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.island-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.island-chip {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 700;
+}
+.island-chip.failed { background: var(--red-bg); color: var(--red); border-color: rgba(239,68,68,0.2); }
+.island-chip.done { background: var(--green-bg); color: var(--green); border-color: rgba(34,197,94,0.2); }
+.island-chip.running { background: var(--blue-bg); color: var(--blue); border-color: rgba(59,130,246,0.2); }
+.island-route {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 18px;
+}
+.island-route-step {
+  background: #FDECC8;
+  border: 1px solid #F59E0B;
+  color: #7C2D12;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.island-route-arrow { color: var(--muted); font-weight: 700; }
+.island-section-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin: 16px 0 9px;
+}
+.island-events {
+  display: grid;
+  gap: 9px;
+  max-height: 260px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.island-event {
+  display: grid;
+  gap: 4px;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: #fff;
+}
+.island-event-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.island-event-route { color: var(--text); }
+.island-event-body {
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.island-docks {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+.island-dock {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--bg);
+}
+.island-dock-name { font-size: 11px; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; }
+.island-dock-value { font-size: 13px; font-weight: 800; margin-top: 4px; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .grid-2col { grid-template-columns: 1fr; }
+  .grid-3col { grid-template-columns: 1fr 1fr; }
+  .services-grid { grid-template-columns: 1fr 1fr; }
+  .agents-grid { grid-template-columns: 1fr 1fr; }
+  .ai-island-layout { grid-template-columns: 1fr; }
+  .island-map { min-height: 640px; }
+}
+@media (max-width: 640px) {
+  .container { padding: 16px; }
+  .grid-3col { grid-template-columns: 1fr; }
+  .services-grid { grid-template-columns: 1fr; }
+  .agents-grid { grid-template-columns: 1fr; }
+  .header { flex-direction: column; gap: 16px; }
+  .ai-island-hero { align-items: flex-start; flex-direction: column; }
+  .ai-island-title { font-size: 24px; }
+  .island-map { min-height: 720px; }
+  .island-node { width: 96px; transform: scale(0.9); transform-origin: center; }
+  .island-node.you { left: 2%; top: 52%; }
+  .island-node.jarvis { left: 15%; top: 24%; }
+  .island-node.supervisor { left: 43%; top: 19%; }
+  .island-node.bridge { left: 38%; top: 45%; }
+  .island-node.builder { left: 66%; top: 27%; }
+  .island-node.tester { left: 69%; top: 50%; }
+  .island-node.vault { left: 44%; top: 67%; }
+  .island-node.github { left: 12%; top: 72%; }
+  .island-node.mini { left: 69%; top: 75%; }
+  .island-node.air { left: 51%; top: 78%; }
+  .island-node.pro { left: 25%; top: 62%; }
+  .island-sign { font-size: 18px; padding: 10px 24px 8px; letter-spacing: 3px; }
+  .island-docks { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Hello, Maxim</h1>
+      <div class="subtitle" id="header-subtitle">Loading...</div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-box">
+        <div class="stat-value" id="stat-services">-</div>
+        <div class="stat-label">Services</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="stat-projects">-</div>
+        <div class="stat-label">Projects</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="stat-hooks">5</div>
+        <div class="stat-label">Hooks</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-pills">
+    <button class="nav-pill active" onclick="showSection('mac-mini')">
+      <span class="pill-icon">🖥</span> Mac Mini
+      <span class="pill-badge" id="mini-badge">offline</span>
+    </button>
+    <button class="nav-pill" onclick="showSection('air')">
+      <span class="pill-icon">💻</span> Air
+      <span class="pill-badge" id="air-badge">-</span>
+    </button>
+    <button class="nav-pill" onclick="showSection('pro')">
+      <span class="pill-icon">💼</span> Pro
+      <span class="pill-badge" id="pro-badge">-</span>
+    </button>
+    <button class="nav-pill" onclick="showSection('general')">
+      <span class="pill-icon">📊</span> General
+    </button>
+    <button class="nav-pill" onclick="showSection('agents')">
+      <span class="pill-icon">🤖</span> Agents
+      <span class="pill-badge" id="agents-badge">live</span>
+    </button>
+    <button class="nav-pill" onclick="showSection('logs')">
+      <span class="pill-icon">📋</span> Logs
+    </button>
+  </div>
+
+  <!-- ═══════════════ MAC MINI ═══════════════ -->
+  <div id="section-mac-mini" class="section active">
+    <div class="machine-header">
+      <div class="machine-icon mini">🖥</div>
+      <div class="machine-info">
+        <div class="machine-name">Mac Mini M4</div>
+        <div class="machine-status" id="mini-status">Checking connection...</div>
+      </div>
+      <span class="machine-badge" id="mini-online-badge">checking</span>
+    </div>
+
+    <!-- System gauges row -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">CPU</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="mini-cpu">—</div>
+        <div class="gauge-bar"><div class="gauge-fill cpu" id="mini-cpu-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Memory</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="mini-ram">—</div>
+        <div class="gauge-bar"><div class="gauge-fill ram" id="mini-ram-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Disk</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="mini-disk">—</div>
+        <div class="gauge-bar"><div class="gauge-fill disk" id="mini-disk-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Uptime</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="mini-uptime-val">—</div>
+        <div style="font-size:11px;color:var(--muted);" id="mini-uptime-sub">Connect to see live data</div>
+      </div>
+    </div>
+
+    <!-- Services table -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-size:16px; font-weight:600;">Services <span style="font-size:12px; color:var(--muted); font-weight:400;" id="mini-svc-count"></span></div>
+        <button class="svc-btn" onclick="refreshMini()" style="border:none;">↻ Refresh</button>
+      </div>
+      <div id="mini-services-table" style="padding:8px 8px 0;">
+        <table class="svc-table">
+          <thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th></tr></thead>
+          <tbody id="mini-svc-tbody">
+            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Loading services...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ AIR ═══════════════ -->
+  <div id="section-air" class="section">
+    <div class="machine-header">
+      <div class="machine-icon air">💻</div>
+      <div class="machine-info">
+        <div class="machine-name" id="air-hostname">MacBook Air</div>
+        <div class="machine-status" id="air-status">Loading...</div>
+      </div>
+      <span class="machine-badge online" id="air-online-badge">online</span>
+    </div>
+
+    <!-- System gauges row — same layout as Mac Mini -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">CPU</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="air-cpu">—</div>
+        <div class="gauge-bar"><div class="gauge-fill cpu" id="air-cpu-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Memory</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="air-ram">—</div>
+        <div class="gauge-bar"><div class="gauge-fill ram" id="air-ram-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Disk</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="air-disk">—</div>
+        <div class="gauge-bar"><div class="gauge-fill disk" id="air-disk-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Uptime</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="air-uptime-val">—</div>
+        <div style="font-size:11px;color:var(--muted);" id="air-uptime-sub"></div>
+      </div>
+    </div>
+
+    <!-- Services table — same layout as Mac Mini -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-size:16px; font-weight:600;">Services <span style="font-size:12px; color:var(--muted); font-weight:400;" id="air-svc-count"></span></div>
+        <button class="svc-btn" onclick="refreshAir()" style="border:none;">↻ Refresh</button>
+      </div>
+      <div style="padding:8px 8px 0;">
+        <table class="svc-table">
+          <thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th></tr></thead>
+          <tbody id="air-svc-tbody">
+            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Loading services...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ MACBOOK PRO ═══════════════ -->
+  <div id="section-pro" class="section">
+    <div class="machine-header">
+      <div class="machine-icon air">💼</div>
+      <div class="machine-info">
+        <div class="machine-name" id="pro-hostname">MacBook Pro</div>
+        <div class="machine-status" id="pro-status">Loading...</div>
+      </div>
+      <span class="machine-badge offline" id="pro-online-badge">checking</span>
+    </div>
+
+    <!-- System gauges row — same layout as Mac Mini/Air -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">CPU</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="pro-cpu">—</div>
+        <div class="gauge-bar"><div class="gauge-fill cpu" id="pro-cpu-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Memory</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="pro-ram">—</div>
+        <div class="gauge-bar"><div class="gauge-fill ram" id="pro-ram-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Disk</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="pro-disk">—</div>
+        <div class="gauge-bar"><div class="gauge-fill disk" id="pro-disk-bar" style="width:0%"></div></div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Uptime</div>
+        <div style="font-size:24px;font-weight:700;margin:4px 0;" id="pro-uptime-val">—</div>
+        <div style="font-size:11px;color:var(--muted);" id="pro-uptime-sub"></div>
+      </div>
+    </div>
+
+    <!-- Services table — same layout as Mac Mini/Air -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
+        <div style="font-size:16px; font-weight:600;">Services <span style="font-size:12px; color:var(--muted); font-weight:400;" id="pro-svc-count"></span></div>
+        <button class="svc-btn" onclick="refreshPro()" style="border:none;">↻ Refresh</button>
+      </div>
+      <div style="padding:8px 8px 0;">
+        <table class="svc-table">
+          <thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th></tr></thead>
+          <tbody id="pro-svc-tbody">
+            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Loading services...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ GENERAL ═══════════════ -->
+  <div id="section-general" class="section">
+    <div class="drag-grid" id="general-grid">
+
+      <div class="drag-widget" data-widget="projects" data-size="wide">
+        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+        <div class="card">
+          <div class="card-title collapsible">Projects</div>
+          <div class="projects-grid" id="projects-grid">
+            <div class="project-card"><div class="project-name">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drag-widget" data-widget="finances" data-size="normal">
+        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+        <div class="card">
+          <div class="card-title collapsible">Finances</div>
+          <div id="finances-container">
+            <div class="finance-row">
+              <div><div class="finance-project">FastData Voice Agent</div><div class="finance-detail">Миграция заказчику</div></div>
+              <div><div class="finance-amount received">+850 EUR</div><div class="finance-amount pending">850 EUR pending</div></div>
+            </div>
+            <div class="finance-row">
+              <div><div class="finance-project">Zerkalo</div><div class="finance-detail">MVP ready, waiting</div></div>
+              <div><div class="finance-amount received">+200 EUR</div></div>
+            </div>
+            <div class="finance-total"><span>Total received</span><span>1 050 EUR</span></div>
+            <div class="finance-total" style="background:var(--orange-bg);margin-top:8px"><span>Pending</span><span style="color:var(--orange)">850 EUR</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drag-widget" data-widget="hooks" data-size="wide">
+        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+        <div class="card">
+          <div class="card-title collapsible">Active Hooks</div>
+          <div id="hooks-container">
+            <div class="hook-item"><span class="hook-icon">🔄</span><div class="hook-info"><div class="hook-name">Obsidian auto-pull</div><div class="hook-desc">git pull before reading vault</div></div><span class="hook-event">PreToolUse</span></div>
+            <div class="hook-item"><span class="hook-icon">🔒</span><div class="hook-info"><div class="hook-name">Block secrets</div><div class="hook-desc">.env, credentials, tokens blocked</div></div><span class="hook-event">PreToolUse</span></div>
+            <div class="hook-item"><span class="hook-icon">📤</span><div class="hook-info"><div class="hook-name">Obsidian auto-push</div><div class="hook-desc">git commit+push after MCP writes</div></div><span class="hook-event">PostToolUse</span></div>
+            <div class="hook-item"><span class="hook-icon">🚀</span><div class="hook-info"><div class="hook-name">Maxim-Site auto-deploy</div><div class="hook-desc">git push on file edit (async)</div></div><span class="hook-event">PostToolUse</span></div>
+            <div class="hook-item"><span class="hook-icon">🔁</span><div class="hook-info"><div class="hook-name">Auto-sync all repos</div><div class="hook-desc">Push ObsidianVault, maxim-site, current project</div></div><span class="hook-event">Stop</span></div>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- ═══════════════ AGENTS ═══════════════ -->
+  <div id="section-agents" class="section">
+    <div class="ai-island">
+      <div class="ai-island-hero">
+        <div>
+          <div class="ai-island-kicker">Command Center</div>
+          <div class="ai-island-title">AI Island</div>
+          <div class="ai-island-subtitle">Jarvis routes work through Bridge, Supervisor, builders, memory, GitHub and devices.</div>
+        </div>
+        <div class="ai-island-health">
+          <span class="ai-island-health-dot" id="island-health-dot"></span>
+          <span id="island-status">syncing</span>
+        </div>
+      </div>
+
+      <div class="ai-island-layout">
+        <div class="island-map" id="ai-island-map">
+          <div class="island-sign">AI Island</div>
+          <div class="island-garden" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+          <svg class="island-lines" viewBox="0 0 1000 680" preserveAspectRatio="none" aria-hidden="true">
+            <path class="island-line" data-island-line="you-jarvis" d="M110 430 C180 340 210 260 260 240"></path>
+            <path class="island-line" data-island-line="jarvis-bridge" d="M270 250 C360 310 415 365 470 390"></path>
+            <path class="island-line" data-island-line="bridge-supervisor" d="M500 390 C480 315 500 250 510 210"></path>
+            <path class="island-line" data-island-line="supervisor-builder" d="M540 210 C620 200 660 220 700 250"></path>
+            <path class="island-line" data-island-line="supervisor-tester" d="M540 230 C690 300 760 390 820 440"></path>
+            <path class="island-line" data-island-line="supervisor-vault" d="M520 245 C520 400 530 500 550 550"></path>
+            <path class="island-line" data-island-line="supervisor-github" d="M500 230 C390 310 300 430 250 545"></path>
+            <path class="island-line" data-island-line="bridge-vault" d="M500 430 C525 480 535 525 550 570"></path>
+            <path class="island-line" data-island-line="bridge-pro" d="M470 420 C405 440 370 470 340 500"></path>
+            <path class="island-line" data-island-line="vault-github" d="M520 575 C430 590 315 590 250 580"></path>
+            <path class="island-line" data-island-line="vault-air" d="M575 575 C650 610 720 610 745 570"></path>
+            <path class="island-line" data-island-line="air-mini" d="M765 570 C815 570 860 575 890 592"></path>
+            <path class="island-line" data-island-line="builder-mini" d="M720 290 C840 380 890 510 890 585"></path>
+            <path class="island-line" data-island-line="tester-mini" d="M835 455 C890 500 900 545 895 590"></path>
+          </svg>
+
+          <button class="island-node you" data-island-node="you" onclick="selectIslandNode('you')" title="Telegram input">
+            <span class="island-station">Telegram</span>
+            <span class="island-sprite" style="--sprite-x: -432px; --sprite-y: -96px;"></span>
+            <span class="island-agent-name">You</span>
+            <span class="island-agent-status" id="island-status-you">idle</span>
+          </button>
+          <button class="island-node jarvis" data-island-node="jarvis" onclick="selectIslandNode('jarvis')" title="Jarvis intake and reasoning">
+            <span class="island-station">Jarvis</span>
+            <span class="island-sprite" style="--sprite-x: 0px; --sprite-y: 0px;"></span>
+            <span class="island-agent-name">Jarvis</span>
+            <span class="island-agent-status" id="island-status-jarvis">idle</span>
+          </button>
+          <button class="island-node supervisor" data-island-node="supervisor" onclick="selectIslandNode('supervisor')" title="Supervisor routes and checks work">
+            <span class="island-station">Supervisor</span>
+            <span class="island-sprite" style="--sprite-x: -288px; --sprite-y: 0px;"></span>
+            <span class="island-agent-name">Supervisor</span>
+            <span class="island-agent-status" id="island-status-supervisor">idle</span>
+          </button>
+          <button class="island-node bridge" data-island-node="bridge" onclick="selectIslandNode('bridge')" title="Bridge queue">
+            <span class="island-station">Bridge</span>
+            <span class="island-sprite" style="--sprite-x: -144px; --sprite-y: -96px;"></span>
+            <span class="island-agent-name">Bridge</span>
+            <span class="island-agent-status" id="island-status-bridge">idle</span>
+          </button>
+          <button class="island-node builder" data-island-node="builder" onclick="selectIslandNode('builder')" title="Builder writes code">
+            <span class="island-station">Code</span>
+            <span class="island-sprite" style="--sprite-x: -144px; --sprite-y: 0px;"></span>
+            <span class="island-agent-name">Builder</span>
+            <span class="island-agent-status" id="island-status-builder">idle</span>
+          </button>
+          <button class="island-node tester" data-island-node="tester" onclick="selectIslandNode('tester')" title="Tester verifies changes">
+            <span class="island-station">Tests</span>
+            <span class="island-sprite" style="--sprite-x: -288px; --sprite-y: -128px;"></span>
+            <span class="island-agent-name">Tester</span>
+            <span class="island-agent-status" id="island-status-tester">idle</span>
+          </button>
+          <button class="island-node vault" data-island-node="vault" onclick="selectIslandNode('vault')" title="Obsidian memory">
+            <span class="island-station">Obsidian</span>
+            <span class="island-sprite" style="--sprite-x: 0px; --sprite-y: -32px;"></span>
+            <span class="island-agent-name">Vault</span>
+            <span class="island-agent-status" id="island-status-vault">idle</span>
+          </button>
+          <button class="island-node github" data-island-node="github" onclick="selectIslandNode('github')" title="GitHub records">
+            <span class="island-station">GitHub</span>
+            <span class="island-sprite" style="--sprite-x: -288px; --sprite-y: -96px;"></span>
+            <span class="island-agent-name">GitHub</span>
+            <span class="island-agent-status" id="island-status-github">idle</span>
+          </button>
+          <button class="island-node mini" data-island-node="mini" onclick="selectIslandNode('mini')" title="Mac Mini runtime">
+            <span class="island-station">Mac Mini</span>
+            <span class="island-sprite" style="--sprite-x: -432px; --sprite-y: -128px;"></span>
+            <span class="island-agent-name">Mini</span>
+            <span class="island-agent-status" id="island-status-mini">idle</span>
+          </button>
+          <button class="island-node air" data-island-node="air" onclick="selectIslandNode('air')" title="MacBook Air">
+            <span class="island-station">Air</span>
+            <span class="island-sprite" style="--sprite-x: -432px; --sprite-y: 0px;"></span>
+            <span class="island-agent-name">Air</span>
+            <span class="island-agent-status" id="island-status-air">idle</span>
+          </button>
+          <button class="island-node pro" data-island-node="pro" onclick="selectIslandNode('pro')" title="MacBook Pro">
+            <span class="island-station">Pro</span>
+            <span class="island-sprite" style="--sprite-x: -144px; --sprite-y: -128px;"></span>
+            <span class="island-agent-name">Pro</span>
+            <span class="island-agent-status" id="island-status-pro">idle</span>
+          </button>
+        </div>
+
+        <div class="island-panel">
+          <div class="island-panel-header">
+            <div>
+              <div class="island-panel-title">Live Flow</div>
+              <div class="island-panel-subtitle" id="island-flow-updated">waiting</div>
+            </div>
+            <button class="island-refresh" onclick="refreshIsland()">Refresh</button>
+          </div>
+          <div class="island-panel-body">
+            <div class="island-task-title" id="island-current-task">Loading bridge tasks...</div>
+            <div class="island-task-meta">
+              <span class="island-chip" id="island-current-state">syncing</span>
+              <span class="island-chip" id="island-current-project">JARVIS</span>
+              <span class="island-chip" id="island-current-agent">agent</span>
+            </div>
+            <div class="island-section-label">Route</div>
+            <div class="island-route" id="island-route">-</div>
+            <div class="island-section-label">Live events</div>
+            <div class="island-events" id="island-events">
+              <div class="island-event">
+                <div class="island-event-top"><span>Bridge</span><span>sync</span></div>
+                <div class="island-event-body">Waiting for live data.</div>
+              </div>
+            </div>
+            <div class="island-section-label">Systems</div>
+            <div class="island-docks">
+              <div class="island-dock"><div class="island-dock-name">Mac Mini</div><div class="island-dock-value" id="island-dock-mini">-</div></div>
+              <div class="island-dock"><div class="island-dock-name">MacBook Air</div><div class="island-dock-value" id="island-dock-air">-</div></div>
+              <div class="island-dock"><div class="island-dock-name">MacBook Pro</div><div class="island-dock-value" id="island-dock-pro">-</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ LOGS ═══════════════ -->
+  <div id="section-logs" class="section">
+    <div class="card">
+      <div class="card-title">Service Logs</div>
+      <div class="log-tabs" id="log-tabs"></div>
+      <div class="log-output" id="log-output">Select a service to view logs...</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="live-dot"></div>
+    <span>Live</span>
+    <span id="last-update">—</span>
+  </div>
+</div>
+
+<script>
+// Keep machine telemetry separate. Remote dashboards proxy Air via Tailscale so
+// public HTTPS pages do not depend on browser access to http://localhost:8880.
+const IS_FILE_DASHBOARD = window.location.protocol === 'file:';
+const IS_LOCALHOST_PAGE = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+const DASHBOARD_API = IS_FILE_DASHBOARD ? null : window.location.origin;
+const LOCAL_API = 'http://localhost:8880';
+const AIR_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
+  ? `${DASHBOARD_API}/api/air`
+  : LOCAL_API;
+const AIR_API_PATH_PREFIX = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE) ? '' : '/api';
+const PRO_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
+  ? `${DASHBOARD_API}/api/pro`
+  : 'http://100.74.94.2:8880';
+const PRO_API_PATH_PREFIX = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE) ? '' : '/api';
+const MAC_MINI_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
+  ? DASHBOARD_API
+  : 'http://100.77.209.73:8880';
+const BRIDGE_TASKS_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
+  ? `${DASHBOARD_API}/api/bridge/tasks`
+  : 'http://100.77.209.73:7777/api/bridge/tasks';
+const BRIDGE_STATUS_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
+  ? `${DASHBOARD_API}/api/bridge/status`
+  : 'http://100.77.209.73:7777/api/bridge/status';
+const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
+let currentLogService = null;
+
+// Navigation
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'logs' && !currentLogService) loadLogTabs();
+}
+
+async function fetchJSON(base, path) {
+  try {
+    const r = await fetch(base + path, { signal: AbortSignal.timeout(3000) });
+    return await r.json();
+  } catch { return null; }
+}
+
+async function fetchURLJSON(url) {
+  try {
+    const r = await fetch(url, { signal: AbortSignal.timeout(3500) });
+    return await r.json();
+  } catch { return null; }
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function compactText(value, maxLen = 170) {
+  const text = String(value ?? '').replace(/\s+/g, ' ').trim();
+  return text.length > maxLen ? text.slice(0, maxLen - 3) + '...' : text;
+}
+
+// ─── Shared: render service table (used by both Mac Mini and Air) ───
+function formatInterval(sec) {
+  if (!sec) return '';
+  if (sec >= 3600) return `every ${sec/3600}h`;
+  if (sec >= 60) return `every ${sec/60}m`;
+  return `every ${sec}s`;
+}
+
+function renderSvcTable(tbodyId, services, actionFn) {
+  const cats = {core: 'Core Services', scheduled: 'Scheduled Tasks', ondemand: 'On-demand'};
+  const hasCats = services.some(s => s.cat);
+
+  let html = '';
+  if (hasCats) {
+    const grouped = {};
+    for (const cat of Object.keys(cats)) grouped[cat] = [];
+    services.forEach(s => {
+      const c = s.cat || 'core';
+      if (!grouped[c]) grouped[c] = [];
+      grouped[c].push(s);
+    });
+    for (const [cat, label] of Object.entries(cats)) {
+      const list = grouped[cat] || [];
+      if (!list.length) continue;
+      const runCount = list.filter(s => s.status === 'running').length;
+      html += `<tr><td colspan="6"><div class="svc-cat-header" onclick="toggleCat('${tbodyId}-${cat}')">${label} <span class="svc-cat-count">${runCount}/${list.length}</span></div></td></tr>`;
+      list.forEach(s => { html += renderSvcRow(s, `${tbodyId}-${cat}`, actionFn); });
+    }
+  } else {
+    services.forEach(s => { html += renderSvcRow(s, 'all', actionFn); });
+  }
+  document.getElementById(tbodyId).innerHTML = html;
+}
+
+function renderSvcRow(s, catClass, actionFn) {
+  const statusClass = s.status === 'running' ? 'deployed' : 'stopped';
+  const statusLabel = s.status === 'running' ? 'Deployed' : 'Stopped';
+  const badgeClass = s.cat === 'scheduled' && s.status !== 'running' ? 'scheduled' : statusClass;
+  const badgeLabel = s.cat === 'scheduled' && s.status !== 'running' ? 'Scheduled' : statusLabel;
+  const uid = (s.label || s.name).replace(/[\.\s]/g, '-');
+  const actionCell = IS_PUBLIC_DASHBOARD
+    ? '<span class="svc-readonly">Live</span>'
+    : (s.status === 'running'
+        ? `<button class="svc-btn stop" onclick="event.stopPropagation(); ${actionFn}('${s.label}','stop')">Stop</button>`
+        : `<button class="svc-btn start" onclick="event.stopPropagation(); ${actionFn}('${s.label}','start')">Start</button>`);
+  let html = `<tr class="svc-row cat-${catClass}" onclick="toggleSvcDetail('${uid}')">
+    <td><span class="status-dot ${s.status}"></span></td>
+    <td><div class="svc-name-cell"><div><div class="svc-name">${s.name}</div><div class="svc-desc">${s.desc || ''}</div></div></div></td>
+    <td><span class="svc-badge ${badgeClass}">${badgeLabel}</span></td>
+    <td><span class="svc-runtime">${s.runtime || 'Python'}</span></td>
+    <td>${s.port ? `<span class="svc-port">:${s.port} ${s.port_ok ? '✓' : '✗'}</span>` : (s.interval ? `<span style="font-size:11px;color:var(--muted)">${formatInterval(s.interval)}</span>` : '—')}</td>
+    <td>${actionCell}</td>
+  </tr>`;
+  html += `<tr class="svc-expand" id="svc-detail-${uid}"><td colspan="6">
+    <div class="svc-detail-grid">
+      <div class="svc-detail-item"><div class="svc-detail-label">Label</div><div class="svc-detail-value">${s.label || '—'}</div></div>
+      <div class="svc-detail-item"><div class="svc-detail-label">PID</div><div class="svc-detail-value">${s.pid || '—'}</div></div>
+      <div class="svc-detail-item"><div class="svc-detail-label">Project</div><div class="svc-detail-value">${s.project || '—'}</div></div>
+      <div class="svc-detail-item"><div class="svc-detail-label">Exit Code</div><div class="svc-detail-value">${s.exit_code !== null && s.exit_code !== undefined ? s.exit_code : '—'}</div></div>
+      <div class="svc-detail-item"><div class="svc-detail-label">Plist</div><div class="svc-detail-value">${s.plist || '—'}</div></div>
+      <div class="svc-detail-item"><div class="svc-detail-label">Log</div><div class="svc-detail-value">${s.log || '—'}</div></div>
+      ${s.config ? `<div class="svc-detail-item"><div class="svc-detail-label">Config</div><div class="svc-detail-value">${s.config}</div></div>` : ''}
+      ${s.env_file ? `<div class="svc-detail-item"><div class="svc-detail-label">Env File</div><div class="svc-detail-value">${s.env_file}</div></div>` : ''}
+    </div>
+    ${s.env_vars ? renderEnvVars(s.env_vars) : ''}
+  </td></tr>`;
+  return html;
+}
+
+function renderEnvVars(vars) {
+  if (!vars || !Object.keys(vars).length) return '';
+  let html = '<div style="margin-top:12px;"><div class="svc-detail-label" style="margin-bottom:6px;">Environment Variables</div><table class="svc-env-table">';
+  for (const [k, v] of Object.entries(vars)) {
+    html += `<tr><td>${k}</td><td>${v}</td></tr>`;
+  }
+  return html + '</table></div>';
+}
+
+function toggleSvcDetail(uid) {
+  const el = document.getElementById('svc-detail-' + uid);
+  if (el) el.classList.toggle('open');
+}
+
+function toggleCat(catId) {
+  document.querySelectorAll(`.cat-${catId}`).forEach(r => {
+    r.style.display = r.style.display === 'none' ? '' : 'none';
+  });
+}
+
+function renderGauges(prefix, sys) {
+  if (!sys) return;
+  const cpuPct = sys.cpu_percent || 0;
+  const ramPct = sys.memory_total_gb ? Math.round(sys.memory_used_gb / sys.memory_total_gb * 100) : 0;
+  const diskPct = sys.disk_total_gb ? Math.round(sys.disk_used_gb / sys.disk_total_gb * 100) : 0;
+  document.getElementById(prefix + '-cpu').textContent = cpuPct + '%';
+  document.getElementById(prefix + '-cpu-bar').style.width = cpuPct + '%';
+  document.getElementById(prefix + '-ram').textContent = `${sys.memory_used_gb}/${sys.memory_total_gb} GB`;
+  document.getElementById(prefix + '-ram-bar').style.width = ramPct + '%';
+  document.getElementById(prefix + '-disk').textContent = `${sys.disk_used_gb}/${sys.disk_total_gb} GB`;
+  document.getElementById(prefix + '-disk-bar').style.width = diskPct + '%';
+  const uptimeVal = document.getElementById(prefix + '-uptime-val');
+  if (uptimeVal) uptimeVal.textContent = sys.uptime || '—';
+  const uptimeSub = document.getElementById(prefix + '-uptime-sub');
+  if (uptimeSub) uptimeSub.textContent = sys.hostname || '';
+  document.getElementById('header-subtitle').textContent =
+    `${new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'})}`;
+}
+
+// ─── Mac Mini ───
+async function refreshMini() {
+  if (!MAC_MINI_API) {
+    document.getElementById('mini-status').textContent = 'Offline — set MAC_MINI_API after Tailscale';
+    document.getElementById('mini-online-badge').textContent = 'offline';
+    document.getElementById('mini-online-badge').className = 'machine-badge offline';
+    document.getElementById('mini-badge').textContent = 'offline';
+    document.getElementById('mini-cpu').textContent = '—';
+    document.getElementById('mini-ram').textContent = '— / 16 GB';
+    document.getElementById('mini-disk').textContent = '—';
+    document.getElementById('mini-uptime-val').textContent = '—';
+    document.getElementById('mini-uptime-sub').textContent = 'M4 · 16 GB · 256 GB';
+    // Load service registry (what WILL run on Mac Mini)
+    const data = await fetchJSON(LOCAL_API, '/api/services/detailed');
+    if (data && data.services) {
+      document.getElementById('mini-svc-count').textContent = `${data.services.length} registered`;
+      renderSvcTable('mini-svc-tbody', data.services, 'miniAction');
+    }
+    return;
+  }
+  const data = await fetchJSON(MAC_MINI_API, '/api/all');
+  if (!data) {
+    document.getElementById('mini-online-badge').textContent = 'offline';
+    document.getElementById('mini-online-badge').className = 'machine-badge offline';
+    document.getElementById('mini-badge').textContent = 'offline';
+    return;
+  }
+  document.getElementById('mini-online-badge').textContent = 'online';
+  document.getElementById('mini-online-badge').className = 'machine-badge online';
+  const sys = data.system || {};
+  document.getElementById('mini-status').textContent = `${sys.hostname || 'mac-mini'} · Uptime: ${sys.uptime || '—'}`;
+  const svcs = data.services_detailed || data.services || [];
+  const running = svcs.filter(s => s.status === 'running').length;
+  document.getElementById('mini-badge').textContent = `${running}/${svcs.length}`;
+  document.getElementById('mini-svc-count').textContent = `${running} running / ${svcs.length} total`;
+  renderSvcTable('mini-svc-tbody', svcs, 'miniAction');
+  renderGauges('mini', sys);
+}
+
+async function miniAction(label, action) {
+  const base = MAC_MINI_API || LOCAL_API;
+  await fetch(`${base}/api/service/${label}/${action}`, { method: 'POST' });
+  setTimeout(refreshMini, 1500);
+}
+
+// ─── Air (local) ───
+async function refreshAir() {
+  const data = await fetchJSON(AIR_API, `${AIR_API_PATH_PREFIX}/all`);
+  if (!data) {
+    document.getElementById('air-status').textContent = 'Health API offline — run mac-mini-health.py';
+    document.getElementById('air-online-badge').textContent = 'offline';
+    document.getElementById('air-online-badge').className = 'machine-badge offline';
+    document.getElementById('air-badge').textContent = 'off';
+    return;
+  }
+  const sys = data.system;
+  document.getElementById('air-hostname').textContent = sys.hostname || 'MacBook Air';
+  document.getElementById('air-status').textContent = `Uptime: ${sys.uptime}`;
+  document.getElementById('air-online-badge').textContent = 'online';
+  document.getElementById('air-online-badge').className = 'machine-badge online';
+  const svcs = data.services_detailed || data.services || [];
+  const running = svcs.filter(s => s.status === 'running').length;
+  document.getElementById('air-badge').textContent = `${running}/${svcs.length}`;
+  document.getElementById('air-svc-count').textContent = `${running} running / ${svcs.length} total`;
+  document.getElementById('stat-services').textContent = `${running}/${svcs.length}`;
+  renderSvcTable('air-svc-tbody', svcs, 'airAction');
+  renderGauges('air', sys);
+  renderProjects(data.projects);
+}
+
+async function airAction(label, action) {
+  await fetch(`${AIR_API}${AIR_API_PATH_PREFIX}/service/${label}/${action}`, { method: 'POST' });
+  setTimeout(refreshAir, 1500);
+}
+
+// ─── MacBook Pro ───
+async function refreshPro() {
+  const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`);
+  if (!data) {
+    document.getElementById('pro-status').textContent = 'Health API offline — run mac-mini-health.py on MacBook Pro';
+    document.getElementById('pro-online-badge').textContent = 'offline';
+    document.getElementById('pro-online-badge').className = 'machine-badge offline';
+    document.getElementById('pro-badge').textContent = 'off';
+    document.getElementById('pro-cpu').textContent = '—';
+    document.getElementById('pro-ram').textContent = '—';
+    document.getElementById('pro-disk').textContent = '—';
+    document.getElementById('pro-uptime-val').textContent = '—';
+    document.getElementById('pro-uptime-sub').textContent = '100.74.94.2 · Health API :8880';
+    return;
+  }
+  const sys = data.system;
+  document.getElementById('pro-hostname').textContent = sys.hostname || 'MacBook Pro';
+  document.getElementById('pro-status').textContent = `Uptime: ${sys.uptime}`;
+  document.getElementById('pro-online-badge').textContent = 'online';
+  document.getElementById('pro-online-badge').className = 'machine-badge online';
+  const svcs = data.services_detailed || data.services || [];
+  const running = svcs.filter(s => s.status === 'running').length;
+  document.getElementById('pro-badge').textContent = `${running}/${svcs.length}`;
+  document.getElementById('pro-svc-count').textContent = `${running} running / ${svcs.length} total`;
+  renderSvcTable('pro-svc-tbody', svcs, 'proAction');
+  renderGauges('pro', sys);
+}
+
+async function proAction(label, action) {
+  await fetch(`${PRO_API}${PRO_API_PATH_PREFIX}/service/${label}/${action}`, { method: 'POST' });
+  setTimeout(refreshPro, 1500);
+}
+
+function renderProjects(projects) {
+  if (!projects || !projects.length) return;
+  document.getElementById('stat-projects').textContent = projects.length;
+  document.getElementById('projects-grid').innerHTML = projects.map(p => `
+    <div class="project-card">
+      <div class="project-name">${p.name}</div>
+      <div class="project-progress">
+        <div class="project-bar"><div class="project-bar-fill ${p.status}" style="width:${p.progress}%"></div></div>
+        <span class="project-pct">${p.progress}%</span>
+      </div>
+      <div class="project-status">${p.done}/${p.total} tasks · ${p.status}</div>
+    </div>
+  `).join('');
+}
+
+// ─── Logs ───
+async function loadLogTabs() {
+  if (IS_PUBLIC_DASHBOARD) {
+    document.getElementById('log-tabs').innerHTML = '';
+    document.getElementById('log-output').textContent = 'Logs are available from the private/local dashboard only.';
+    return;
+  }
+  const data = await fetchJSON(LOCAL_API, '/api/all');
+  if (!data) return;
+  const svcs = data.services_detailed || data.services || [];
+  document.getElementById('log-tabs').innerHTML = svcs
+    .filter(s => s.log)
+    .map(s => `<button class="log-tab" onclick="loadLogs('${s.label}', this)">${s.name}</button>`)
+    .join('');
+}
+
+async function loadLogs(label, btn) {
+  currentLogService = label;
+  document.querySelectorAll('.log-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const data = await fetchJSON(LOCAL_API, '/api/logs/' + label);
+  const el = document.getElementById('log-output');
+  el.textContent = data ? data.log : 'Failed to load logs';
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─── AI Island ───
+const ISLAND_NODE_LABELS = {
+  you: 'You',
+  jarvis: 'Jarvis',
+  bridge: 'Bridge',
+  supervisor: 'Supervisor',
+  builder: 'Builder',
+  tester: 'Tester',
+  vault: 'Vault',
+  github: 'GitHub',
+  mini: 'Mini',
+  air: 'Air',
+  pro: 'Pro'
+};
+
+function nodeForActor(actor) {
+  const text = String(actor || '').toLowerCase();
+  if (!text) return null;
+  if (text.includes('telegram') || text === 'user' || text === 'you') return 'you';
+  if (text.includes('jarvis')) return 'jarvis';
+  if (text.includes('router') || text.includes('supervisor')) return 'supervisor';
+  if (text.includes('bridge') || text.includes('worker') || text.includes('queue')) return 'bridge';
+  if (text.includes('builder') || text.includes('codex') || text.includes('claude')) return 'builder';
+  if (text.includes('tester') || text.includes('test')) return 'tester';
+  if (text.includes('vault') || text.includes('obsidian') || text.includes('memory')) return 'vault';
+  if (text.includes('github') || text === 'git') return 'github';
+  if (text.includes('mini') || text.includes('deployer')) return 'mini';
+  if (text.includes('air')) return 'air';
+  if (text.includes('pro')) return 'pro';
+  return null;
+}
+
+function normalizeIslandStatus(status, error) {
+  const s = String(status || '').toLowerCase();
+  if (error || ['failed', 'error', 'blocked'].includes(s)) return 'failed';
+  if (['running', 'claimed', 'pending', 'queued', 'working'].includes(s)) return 'running';
+  if (['done', 'completed', 'success', 'succeeded'].includes(s)) return 'done';
+  if (['cancelled', 'canceled'].includes(s)) return 'failed';
+  return s || 'idle';
+}
+
+function islandRouteForTask(task) {
+  if (!task) return ['you', 'jarvis', 'bridge', 'supervisor'];
+  const route = ['you', 'jarvis', 'bridge', 'supervisor'];
+  const roleNode = nodeForActor(task.agent_role || task.metadata?.assigned_agent);
+  if (roleNode && !route.includes(roleNode)) route.push(roleNode);
+  const text = [
+    task.description,
+    task.project,
+    task.result,
+    task.error,
+    ...(task.messages || []).flatMap(m => [m.sender, m.receiver, m.type, m.body])
+  ].join(' ').toLowerCase();
+  const keywordNodes = [
+    ['tester', ['test', 'pytest', 'smoke', 'verify']],
+    ['vault', ['obsidian', 'vault', 'memory', 'source']],
+    ['github', ['github', 'git ', 'commit', 'push', 'pull request']],
+    ['mini', ['mac mini', 'deploy', 'launchd', 'server']],
+    ['air', ['macbook air']],
+    ['pro', ['macbook pro']]
+  ];
+  for (const [node, words] of keywordNodes) {
+    if (words.some(word => text.includes(word)) && !route.includes(node)) route.push(node);
+  }
+  return route.filter(Boolean);
+}
+
+function activateIslandLine(from, to) {
+  const direct = document.querySelector(`[data-island-line="${from}-${to}"]`);
+  const reverse = document.querySelector(`[data-island-line="${to}-${from}"]`);
+  const line = direct || reverse;
+  if (line) line.classList.add('active');
+}
+
+function renderIslandRoute(route) {
+  const el = document.getElementById('island-route');
+  el.innerHTML = route.map((node, idx) => {
+    const label = escapeHtml(ISLAND_NODE_LABELS[node] || node);
+    const arrow = idx < route.length - 1 ? '<span class="island-route-arrow">→</span>' : '';
+    return `<span class="island-route-step">${label}</span>${arrow}`;
+  }).join('');
+}
+
+function renderIslandEvents(task) {
+  const el = document.getElementById('island-events');
+  const messages = (task?.messages || []).slice(-8).reverse();
+  if (!messages.length) {
+    el.innerHTML = `<div class="island-event">
+      <div class="island-event-top"><span class="island-event-route">Bridge</span><span>idle</span></div>
+      <div class="island-event-body">No bridge messages for this task yet.</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = messages.map(m => {
+    const when = m.created_at ? new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '';
+    const route = `${m.sender || 'System'} → ${m.receiver || 'System'}`;
+    return `<div class="island-event">
+      <div class="island-event-top">
+        <span class="island-event-route">${escapeHtml(route)}</span>
+        <span>${escapeHtml(m.type || when || 'event')}</span>
+      </div>
+      <div class="island-event-body">${escapeHtml(compactText(m.body || JSON.stringify(m.metadata || {})))}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateIslandDocks() {
+  const mini = document.getElementById('mini-badge')?.textContent || '-';
+  const air = document.getElementById('air-badge')?.textContent || '-';
+  const pro = document.getElementById('pro-badge')?.textContent || '-';
+  document.getElementById('island-dock-mini').textContent = mini;
+  document.getElementById('island-dock-air').textContent = air;
+  document.getElementById('island-dock-pro').textContent = pro;
+  document.getElementById('island-status-mini').textContent = mini === 'offline' ? 'offline' : mini;
+  document.getElementById('island-status-air').textContent = air === 'off' ? 'offline' : air;
+  document.getElementById('island-status-pro').textContent = pro === 'off' ? 'offline' : pro;
+}
+
+function renderIslandTask(task, statusData) {
+  document.querySelectorAll('[data-island-node]').forEach(node => {
+    node.classList.remove('active', 'running', 'failed', 'done');
+    const id = node.dataset.islandNode;
+    const status = document.getElementById(`island-status-${id}`);
+    if (status) status.textContent = 'idle';
+  });
+  document.querySelectorAll('[data-island-line]').forEach(line => line.classList.remove('active'));
+
+  if (!task) {
+    document.getElementById('island-status').textContent = 'Bridge idle';
+    document.getElementById('island-current-task').textContent = 'No bridge tasks found';
+    document.getElementById('island-current-state').textContent = 'idle';
+    document.getElementById('island-current-state').className = 'island-chip';
+    document.getElementById('island-current-project').textContent = 'JARVIS';
+    document.getElementById('island-current-agent').textContent = 'none';
+    renderIslandRoute(['you', 'jarvis', 'bridge', 'supervisor']);
+    renderIslandEvents(null);
+    updateIslandDocks();
+    return;
+  }
+
+  const visualStatus = normalizeIslandStatus(task.status, task.error);
+  const route = islandRouteForTask(task);
+  for (let idx = 0; idx < route.length; idx++) {
+    const nodeId = route[idx];
+    const node = document.querySelector(`[data-island-node="${nodeId}"]`);
+    const badge = document.getElementById(`island-status-${nodeId}`);
+    if (!node) continue;
+    if (idx === route.length - 1) {
+      node.classList.add(visualStatus === 'idle' ? 'active' : visualStatus);
+      if (badge) badge.textContent = visualStatus;
+    } else {
+      node.classList.add('active');
+      if (badge) badge.textContent = 'handoff';
+    }
+    if (idx < route.length - 1) activateIslandLine(route[idx], route[idx + 1]);
+  }
+
+  const title = compactText(task.description || task.result || task.error || task.id || 'Bridge task', 120);
+  const agent = task.agent_role || task.metadata?.assigned_agent || route[route.length - 1] || 'agent';
+  const project = task.project || task.metadata?.project || 'JARVIS';
+  const stateEl = document.getElementById('island-current-state');
+  document.getElementById('island-status').textContent = `Bridge ${visualStatus}`;
+  document.getElementById('island-current-task').textContent = title;
+  document.getElementById('island-current-project').textContent = project;
+  document.getElementById('island-current-agent').textContent = agent;
+  stateEl.textContent = visualStatus;
+  stateEl.className = `island-chip ${visualStatus}`;
+  renderIslandRoute(route);
+  renderIslandEvents(task);
+
+  const counts = statusData?.tasks || {};
+  const countText = Object.entries(counts).map(([k, v]) => `${k}: ${v}`).join(' · ') || 'live';
+  document.getElementById('island-flow-updated').textContent = countText;
+  document.getElementById('agents-badge').textContent = counts.running ? `${counts.running} run` : (counts.failed ? `${counts.failed} failed` : 'live');
+  updateIslandDocks();
+}
+
+async function refreshIsland() {
+  const [tasksData, statusData] = await Promise.all([
+    fetchURLJSON(BRIDGE_TASKS_API),
+    fetchURLJSON(BRIDGE_STATUS_API)
+  ]);
+  const tasks = Array.isArray(tasksData?.tasks) ? tasksData.tasks : [];
+  const active = tasks.find(t => ['pending', 'queued', 'claimed', 'running'].includes(String(t.status || '').toLowerCase()));
+  const task = active || tasks[0] || null;
+  const hasError = tasksData?.error || statusData?.error;
+  const healthDot = document.getElementById('island-health-dot');
+  if (healthDot) {
+    healthDot.style.background = hasError ? 'var(--red)' : 'var(--green)';
+    healthDot.style.boxShadow = hasError ? '0 0 0 4px rgba(239,68,68,0.16)' : '0 0 0 4px rgba(34,197,94,0.16)';
+  }
+  renderIslandTask(task, statusData);
+  if (hasError) {
+    document.getElementById('island-status').textContent = 'Bridge API error';
+    document.getElementById('island-flow-updated').textContent = compactText(hasError, 80);
+  }
+}
+
+function selectIslandNode(name) {
+  const label = ISLAND_NODE_LABELS[name] || name;
+  document.getElementById('island-current-agent').textContent = label;
+}
+
+// Make all card titles collapsible
+document.querySelectorAll('.card-title').forEach(title => {
+  title.classList.add('collapsible');
+  title.addEventListener('click', (e) => {
+    if (e.target.closest('.refresh-btn')) return;
+    title.classList.toggle('collapsed');
+    const content = title.nextElementSibling;
+    if (content) content.classList.toggle('hidden');
+  });
+});
+
+// ─── Drag & Drop ───
+function initDragDrop() {
+  document.querySelectorAll('.drag-grid').forEach(grid => {
+    const widgets = grid.querySelectorAll('.drag-widget');
+    let dragEl = null;
+    let longPressTimer = null;
+
+    widgets.forEach(w => {
+      const handle = w.querySelector('.drag-handle');
+
+      // Drag via handle
+      handle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startDrag(w, grid);
+      });
+
+      // Long press on card to drag
+      w.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button, .service-btn, .agent-toggle, .log-tab, .refresh-btn')) return;
+        longPressTimer = setTimeout(() => {
+          startDrag(w, grid);
+        }, 400);
+      });
+      w.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+      w.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+
+      // Touch support
+      w.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button, .service-btn, .agent-toggle')) return;
+        longPressTimer = setTimeout(() => {
+          startDrag(w, grid);
+          w.dispatchEvent(new Event('dragstart'));
+        }, 400);
+      }, { passive: true });
+      w.addEventListener('touchend', () => clearTimeout(longPressTimer));
+
+      // Native drag events
+      w.addEventListener('dragstart', (e) => {
+        dragEl = w;
+        w.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', w.dataset.widget);
+      });
+
+      w.addEventListener('dragend', () => {
+        w.classList.remove('dragging');
+        grid.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        dragEl = null;
+        saveLayout(grid);
+      });
+
+      w.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (w !== dragEl) w.classList.add('drag-over');
+      });
+
+      w.addEventListener('dragleave', () => {
+        w.classList.remove('drag-over');
+      });
+
+      w.addEventListener('drop', (e) => {
+        e.preventDefault();
+        w.classList.remove('drag-over');
+        if (dragEl && dragEl !== w) {
+          // Swap positions
+          const allWidgets = [...grid.querySelectorAll('.drag-widget')];
+          const fromIdx = allWidgets.indexOf(dragEl);
+          const toIdx = allWidgets.indexOf(w);
+          if (fromIdx < toIdx) {
+            grid.insertBefore(dragEl, w.nextSibling);
+          } else {
+            grid.insertBefore(dragEl, w);
+          }
+        }
+      });
+    });
+
+    // Restore saved layout
+    restoreLayout(grid);
+  });
+}
+
+function startDrag(widget, grid) {
+  widget.setAttribute('draggable', 'true');
+  widget.addEventListener('dragend', () => {
+    widget.removeAttribute('draggable');
+  }, { once: true });
+}
+
+function saveLayout(grid) {
+  const gridId = grid.id;
+  const order = [...grid.querySelectorAll('.drag-widget')].map(w => w.dataset.widget);
+  const layouts = JSON.parse(localStorage.getItem('dashboard-layouts') || '{}');
+  layouts[gridId] = order;
+  localStorage.setItem('dashboard-layouts', JSON.stringify(layouts));
+}
+
+function restoreLayout(grid) {
+  const gridId = grid.id;
+  const layouts = JSON.parse(localStorage.getItem('dashboard-layouts') || '{}');
+  const order = layouts[gridId];
+  if (!order) return;
+  const widgets = {};
+  grid.querySelectorAll('.drag-widget').forEach(w => { widgets[w.dataset.widget] = w; });
+  order.forEach(name => {
+    if (widgets[name]) grid.appendChild(widgets[name]);
+  });
+}
+
+// ─── Init ───
+function refreshAll() {
+  refreshAir();
+  refreshMini();
+  refreshPro();
+  refreshIsland();
+  document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+}
+
+refreshAll();
+initDragDrop();
+setInterval(refreshAll, 5000);
+setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000);
+</script>
+
+</body>
+</html>
