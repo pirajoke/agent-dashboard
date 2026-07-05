@@ -39,7 +39,35 @@ PUBLIC_API_PATHS = {
 PUBLIC_LOCAL_PATHS = {
     "/api/local-services",
 }
+PUBLIC_BRIDGE_PATHS = {
+    "/api/bridge/tasks",
+    "/api/bridge/status",
+}
+PUBLIC_FILE_PATHS = {
+    "/",
+    "/index.html",
+    "/agent-dashboard.html",
+    "/legacy-dashboard.html",
+    "/favicon.ico",
+    "/live-feed.json",
+    "/scripts/live-feed.json",
+}
 SENSITIVE_SERVICE_FIELDS = {"config", "env_file", "env_vars", "log", "plist"}
+PUBLIC_TASK_METADATA_FIELDS = {
+    "assigned_agent",
+    "blocked_reason",
+    "calls",
+    "duration_s",
+    "entrypoint",
+    "event",
+    "failure_reason",
+    "project",
+    "route_reason",
+    "route_source",
+    "status",
+    "tools",
+    "triggered_by",
+}
 
 # Services that the orchestrator toggle controls
 MANAGED_SERVICES = [
@@ -266,6 +294,77 @@ def _public_dashboard_payload(data: dict) -> dict:
     return cleaned
 
 
+def _clip_public_text(value, limit: int = 280) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        try:
+            value = json.dumps(value, ensure_ascii=False)
+        except Exception:
+            value = str(value)
+    value = re.sub(r"\s+", " ", value).strip()
+    if "authentication_error" in value.lower():
+        return "authentication_error: credentials are invalid, expired, or unavailable."
+    return value[:limit]
+
+
+def _public_task_metadata(metadata) -> dict:
+    if not isinstance(metadata, dict):
+        return {}
+    return {
+        key: metadata[key]
+        for key in PUBLIC_TASK_METADATA_FIELDS
+        if key in metadata
+    }
+
+
+def _public_bridge_message(message: dict) -> dict:
+    return {
+        "id": message.get("id"),
+        "task_id": message.get("task_id"),
+        "sender": message.get("sender"),
+        "receiver": message.get("receiver"),
+        "type": message.get("type"),
+        "body": _clip_public_text(message.get("body"), 360),
+        "created_at": message.get("created_at"),
+        "metadata": _public_task_metadata(message.get("metadata")),
+    }
+
+
+def _public_bridge_task(task: dict) -> dict:
+    return {
+        "id": task.get("id"),
+        "status": task.get("status"),
+        "agent_role": task.get("agent_role"),
+        "project": task.get("project"),
+        "description": _clip_public_text(task.get("description"), 260),
+        "result": _clip_public_text(task.get("result"), 260) if task.get("result") else None,
+        "error": _clip_public_text(task.get("error"), 260) if task.get("error") else None,
+        "created_at": task.get("created_at"),
+        "claimed_at": task.get("claimed_at"),
+        "completed_at": task.get("completed_at"),
+        "updated_at": task.get("updated_at"),
+        "metadata": _public_task_metadata(task.get("metadata")),
+        "messages": [
+            _public_bridge_message(message)
+            for message in (task.get("messages") or [])[-6:]
+            if isinstance(message, dict)
+        ],
+    }
+
+
+def _public_bridge_payload(data: dict) -> dict:
+    if not isinstance(data, dict):
+        return data
+    cleaned = dict(data)
+    if isinstance(cleaned.get("tasks"), list):
+        cleaned["tasks"] = [
+            _public_bridge_task(task) if isinstance(task, dict) else task
+            for task in cleaned["tasks"][:12]
+        ]
+    return cleaned
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def _host_name(self) -> str:
         return self.headers.get("Host", "").split(":", 1)[0].lower()
@@ -284,7 +383,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if path == '/live-feed.json' or path == '/scripts/live-feed.json':
             return str(HOME / 'scripts' / 'live-feed.json')
         if path == '/' or path == '/index.html':
-            return str(HOME / 'mac-mini-dashboard' / 'index.html')
+            return str(HOME / 'agent-dashboard.html')
         return str(HOME / path.lstrip('/'))
 
     def do_POST(self):
@@ -605,8 +704,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if (
                 parsed.path not in PUBLIC_API_PATHS
                 and parsed.path not in PUBLIC_LOCAL_PATHS
+                and parsed.path not in PUBLIC_BRIDGE_PATHS
                 and air_path not in PUBLIC_API_PATHS
-                and parsed.path not in ("/", "/index.html", "/favicon.ico")
+                and parsed.path not in PUBLIC_FILE_PATHS
             ):
                 self.send_error(404)
                 return
@@ -651,14 +751,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             suffix = parsed.query or "limit=12&include_messages=1"
             if "include_messages" not in suffix:
                 suffix += "&include_messages=1"
+            if self._is_public_request():
+                suffix = "limit=12&include_messages=1"
             try:
-                self._json_response(200, _bridge_request("GET", f"/api/tasks?{suffix}"))
+                data = _bridge_request("GET", f"/api/tasks?{suffix}")
+                if self._is_public_request():
+                    data = _public_bridge_payload(data)
+                self._json_response(200, data)
             except Exception as e:
                 self._json_response(502, {"error": str(e), "tasks": []})
             return
         if parsed.path == '/api/bridge/status':
             try:
-                self._json_response(200, _bridge_request("GET", "/api/status"))
+                data = _bridge_request("GET", "/api/status")
+                if self._is_public_request():
+                    data = _public_bridge_payload(data)
+                self._json_response(200, data)
             except Exception as e:
                 self._json_response(502, {"error": str(e), "tasks": {}})
             return
