@@ -273,7 +273,13 @@ def _dashboard_run_token() -> str:
 def _parse_pipeline_status(report_text: str) -> str:
     match = re.search(r"(?im)^-\s*Status:\s*([a-z_ -]+)\s*$", report_text)
     if match:
-        return match.group(1).strip().lower().replace(" ", "_")
+        status = match.group(1).strip().lower().replace(" ", "_")
+        if status == "done":
+            if re.search(r"(?i)\bNEEDS_APPROVAL\b", report_text):
+                return "needs_approval"
+            if re.search(r"(?m)^##\s+FAIL\s*$", report_text):
+                return "failed"
+        return status
     if re.search(r"(?m)^ROLE_FAILED=", report_text):
         return "failed"
     if "\n## Tester\n" in report_text:
@@ -299,13 +305,17 @@ def _compact_report_text(value: str, limit: int = 720) -> str:
 
 def _pipeline_sections(report_text: str) -> dict:
     sections = {}
-    matches = list(re.finditer(r"(?m)^##\s+(.+?)\s*$", report_text))
+    pipeline_titles = {"Supervisor", "Builder", "Tester", "Result"}
+    matches = [
+        match
+        for match in re.finditer(r"(?m)^##\s+(.+?)\s*$", report_text)
+        if match.group(1).strip() in pipeline_titles
+    ]
     for idx, match in enumerate(matches):
         title = match.group(1).strip()
         start = match.end()
         end = matches[idx + 1].start() if idx + 1 < len(matches) else len(report_text)
-        if title in {"Supervisor", "Builder", "Tester", "Result"}:
-            sections[title] = _compact_report_text(report_text[start:end])
+        sections[title] = _compact_report_text(report_text[start:end])
     return sections
 
 
@@ -340,6 +350,14 @@ def _pipeline_steps(status: str, sections: dict) -> list[dict]:
     elif status == "done":
         for step in steps:
             step["state"] = "done"
+    elif status == "needs_approval":
+        for step in steps:
+            if "NEEDS_APPROVAL" in sections.get(step["label"], ""):
+                step["state"] = "failed"
+            elif step["label"] in sections:
+                step["state"] = "done"
+            else:
+                step["state"] = "pending"
     elif status == "failed":
         failed_role = ""
         for title, text in sections.items():
