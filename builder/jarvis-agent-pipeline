@@ -110,13 +110,13 @@ append_section() {
 }
 
 append_result() {
-  local status="$1"
+  local result_status="$1"
   local detail="${2:-}"
   {
     echo
     echo "## Result"
     echo
-    echo "- Status: $status"
+    echo "- Status: $result_status"
     echo "- Completed: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
     if [[ -n "$detail" ]]; then
       echo "- Detail: $detail"

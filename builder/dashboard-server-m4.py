@@ -274,6 +274,8 @@ def _parse_pipeline_status(report_text: str) -> str:
     match = re.search(r"(?im)^-\s*Status:\s*([a-z_ -]+)\s*$", report_text)
     if match:
         return match.group(1).strip().lower().replace(" ", "_")
+    if re.search(r"(?m)^ROLE_FAILED=", report_text):
+        return "failed"
     if "\n## Tester\n" in report_text:
         return "tester_running"
     if "\n## Builder\n" in report_text:
@@ -339,6 +341,19 @@ def _pipeline_steps(status: str, sections: dict) -> list[dict]:
         for step in steps:
             step["state"] = "done"
     elif status == "failed":
+        failed_role = ""
+        for title, text in sections.items():
+            role_match = re.search(r"(?m)^ROLE_FAILED=([a-z_-]+)", text)
+            if role_match:
+                failed_role = role_match.group(1).lower()
+                break
+        if failed_role:
+            for step in steps:
+                if step["role"] == failed_role:
+                    step["state"] = "failed"
+                elif step["state"] == "pending":
+                    step["state"] = "pending"
+            return steps
         failed = False
         for step in steps:
             if step["state"] != "done" and not failed:
