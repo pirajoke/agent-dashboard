@@ -16,6 +16,8 @@ RUN_ID="${JARVIS_AGENT_RUN_ID:-$(date '+%Y%m%d-%H%M%S')}"
 REPORT="$REPORT_DIR/$RUN_ID.md"
 PIXEL_EVENT="$HOME/scripts/jarvis-pixel-agent-event"
 PIXEL_CLEANUP="$HOME/scripts/jarvis-pixel-agent-cleanup"
+OMNI_APPROVAL_ENABLED="${JARVIS_OMNI_APPROVAL_ENABLED:-1}"
+OMNI_APPROVAL_LEDGER="${JARVIS_OMNI_APPROVAL_LEDGER:-$HOME/omniharness/.omniharness/jarvis-approval-ledger.jsonl}"
 
 SUPERVISOR_PERMISSION="${JARVIS_SUPERVISOR_PERMISSION:-dontAsk}"
 BUILDER_PERMISSION="${JARVIS_BUILDER_PERMISSION:-auto}"
@@ -27,6 +29,106 @@ if print -r -- "$TASK" | grep -Eiq 'не меняй файлы|do not (edit|chan
 fi
 
 mkdir -p "$REPORT_DIR"
+
+omni_risk_level() {
+  local text="${1:l}"
+  if print -r -- "$text" | grep -Eiq 'rm -rf|drop database|delete database|truncate table|order_send|payment|wire transfer|private key|secret key|api key|парол|секрет|приватн|удали баз|снести|форматир'; then
+    echo "high"
+    return 0
+  fi
+  echo "normal"
+}
+
+omni_allowed_tools_for_role() {
+  local role="$1"
+  local risk="$2"
+  if [[ "$OMNI_APPROVAL_ENABLED" != "1" || "$risk" == "high" || "$TASK_MODE_HINT" == read_only_smoke:* ]]; then
+    echo ""
+    return 0
+  fi
+  case "$role" in
+    builder)
+      echo "Read Grep Glob LS Edit MultiEdit Write Bash(git status*) Bash(git diff*) Bash(git add*) Bash(git commit*) Bash(git push*) Bash(python3 -m pytest*) Bash(pytest*) Bash(python3 -m py_compile*) Bash(zsh -n*) Bash(./scripts/deploy_macmini.sh*)"
+      ;;
+    tester)
+      echo "Read Grep Glob LS Bash(git status*) Bash(git diff*) Bash(python3 -m pytest*) Bash(pytest*) Bash(python3 -m py_compile*) Bash(zsh -n*) Bash(launchctl print*) Bash(curl -s*)"
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+omni_resolved_permission() {
+  local role="$1"
+  local requested="$2"
+  local risk="$3"
+  if [[ "$OMNI_APPROVAL_ENABLED" != "1" || "$TASK_MODE_HINT" == read_only_smoke:* ]]; then
+    echo "$requested"
+    return 0
+  fi
+  if [[ "$risk" == "high" ]]; then
+    echo "dontAsk"
+    return 0
+  fi
+  case "$role" in
+    supervisor) echo "dontAsk" ;;
+    builder|tester) echo "auto" ;;
+    *) echo "$requested" ;;
+  esac
+}
+
+omni_audit() {
+  local role="$1"
+  local requested="$2"
+  local resolved="$3"
+  local risk="$4"
+  local tools="$5"
+  local decision="auto"
+  local reason="safe project-scoped Jarvis pipeline action"
+  if [[ "$risk" == "high" ]]; then
+    decision="manual"
+    reason="high-risk operation requires explicit human approval"
+  elif [[ "$TASK_MODE_HINT" == read_only_smoke:* ]]; then
+    decision="read_only"
+    reason="read-only smoke task"
+  elif [[ "$role" == "supervisor" ]]; then
+    decision="read_only"
+    reason="Supervisor only plans and checks acceptance criteria"
+  fi
+
+  mkdir -p "${OMNI_APPROVAL_LEDGER:h}"
+  JARVIS_OMNI_AUDIT_ROLE="$role" \
+  JARVIS_OMNI_AUDIT_REQUESTED="$requested" \
+  JARVIS_OMNI_AUDIT_RESOLVED="$resolved" \
+  JARVIS_OMNI_AUDIT_RISK="$risk" \
+  JARVIS_OMNI_AUDIT_TOOLS="$tools" \
+  JARVIS_OMNI_AUDIT_DECISION="$decision" \
+  JARVIS_OMNI_AUDIT_REASON="$reason" \
+  JARVIS_OMNI_AUDIT_RUN="$RUN_ID" \
+  JARVIS_OMNI_AUDIT_PROJECT="$PROJECT_DIR" \
+  JARVIS_OMNI_AUDIT_TASK="$TASK" \
+  python3 - <<'PY' >> "$OMNI_APPROVAL_LEDGER" 2>/dev/null || true
+import json, os
+from datetime import datetime, timezone
+
+keys = {
+    "run_id": "JARVIS_OMNI_AUDIT_RUN",
+    "role": "JARVIS_OMNI_AUDIT_ROLE",
+    "project": "JARVIS_OMNI_AUDIT_PROJECT",
+    "task": "JARVIS_OMNI_AUDIT_TASK",
+    "requested_permission": "JARVIS_OMNI_AUDIT_REQUESTED",
+    "resolved_permission": "JARVIS_OMNI_AUDIT_RESOLVED",
+    "risk": "JARVIS_OMNI_AUDIT_RISK",
+    "decision": "JARVIS_OMNI_AUDIT_DECISION",
+    "reason": "JARVIS_OMNI_AUDIT_REASON",
+    "allowed_tools": "JARVIS_OMNI_AUDIT_TOOLS",
+}
+event = {"ts": datetime.now(timezone.utc).isoformat()}
+event.update({out: os.environ.get(env, "") for out, env in keys.items()})
+print(json.dumps(event, ensure_ascii=False))
+PY
+}
 
 pixel_event() {
   if [[ ! -x "$PIXEL_EVENT" ]]; then
@@ -70,17 +172,30 @@ run_claude_role() {
   local user_prompt="$4"
   local output=""
   local code=0
+  local risk=""
+  local resolved_permission=""
+  local allowed_tools=""
+  local -a claude_cmd
 
   cd "$PROJECT_DIR"
+  risk="$(omni_risk_level "$TASK $user_prompt")"
+  resolved_permission="$(omni_resolved_permission "$role" "$permission" "$risk")"
+  allowed_tools="$(omni_allowed_tools_for_role "$role" "$risk")"
+  omni_audit "$role" "$permission" "$resolved_permission" "$risk" "$allowed_tools"
+
+  claude_cmd=(claude -p
+    --model "$MODEL"
+    --name "jarvis-${role}-${RUN_ID}"
+    --permission-mode "$resolved_permission"
+    --output-format text
+    --append-system-prompt "$system_prompt")
+  if [[ -n "$allowed_tools" ]]; then
+    claude_cmd+=(--allowedTools "$allowed_tools")
+  fi
+  claude_cmd+=("$user_prompt")
 
   set +e
-  output="$(claude -p \
-    --model "$MODEL" \
-    --name "jarvis-${role}-${RUN_ID}" \
-    --permission-mode "$permission" \
-    --output-format text \
-    --append-system-prompt "$system_prompt" \
-    "$user_prompt" 2>&1)"
+  output="$("${claude_cmd[@]}" 2>&1)"
   code=$?
   set -e
 
@@ -133,12 +248,37 @@ cat > "$REPORT" <<EOF
 - Task: $TASK
 - Task mode: $TASK_MODE_HINT
 - Route: Supervisor -> Builder -> Tester
+- Omni approval:
+  - Enabled: $OMNI_APPROVAL_ENABLED
+  - Ledger: $OMNI_APPROVAL_LEDGER
+  - Policy: Supervisor read-only; Builder/Tester auto for project-scoped safe tools; high-risk actions require manual approval
 - Permissions:
   - Supervisor: $SUPERVISOR_PERMISSION
   - Builder: $BUILDER_PERMISSION
   - Tester: $TESTER_PERMISSION
 
 EOF
+
+if [[ "${JARVIS_AGENT_POLICY_ONLY:-0}" == "1" ]]; then
+  POLICY_BODY=""
+  for spec in "supervisor:$SUPERVISOR_PERMISSION" "builder:$BUILDER_PERMISSION" "tester:$TESTER_PERMISSION"; do
+    role="${spec%%:*}"
+    requested="${spec#*:}"
+    risk="$(omni_risk_level "$TASK")"
+    resolved="$(omni_resolved_permission "$role" "$requested" "$risk")"
+    tools="$(omni_allowed_tools_for_role "$role" "$risk")"
+    omni_audit "$role" "$requested" "$resolved" "$risk" "$tools"
+    POLICY_BODY+="- $role: requested=$requested resolved=$resolved risk=$risk"$'\n'
+    if [[ -n "$tools" ]]; then
+      POLICY_BODY+="  allowedTools=$tools"$'\n'
+    fi
+  done
+  append_section "Omni Approval Policy" "$POLICY_BODY"
+  append_result "done" "Policy-only check complete"
+  echo "report $REPORT"
+  echo "policy-only"
+  exit 0
+fi
 
 SUPERVISOR_SYSTEM="Ты JARVIS Supervisor. Ты не меняешь файлы. Твоя задача: понять буквальную задачу пользователя, разложить её на Builder/Tester handoff, определить риски, критерии готовности и короткий следующий шаг. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Пиши по-русски, кратко, структурно."
 SUPERVISOR_PROMPT="Задача пользователя: $TASK

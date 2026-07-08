@@ -1751,7 +1751,7 @@ function renderJarvisHumanSummary(data) {
     tone = 'needs approval';
     if (/don'?t ask|dontAsk/i.test(sectionsText)) {
       title = 'Старый запуск остановился до изменений';
-      body = 'Builder был в старом режиме dontAsk: он не мог редактировать файлы и запускать команды. Ничего не было изменено. Новые запуски уже идут с рабочим режимом для Builder/Tester.';
+      body = 'Builder был в старом режиме dontAsk: он не мог редактировать файлы и запускать команды. Ничего не было изменено. Новые запуски идут через Omni approval policy: безопасные project-scoped действия проходят автоматически, рискованные остаются ручными.';
     } else {
       title = 'Нужно ручное подтверждение';
       body = 'Supervisor понял задачу, но Builder или Tester не продолжили без явного разрешения. Проверь suggested action ниже и перезапусти задачу.';
