@@ -7,13 +7,14 @@ import http.server
 import json
 import os
 import re
+import secrets
 import shutil
 import subprocess
 import sys
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 PORT = 7777
 HOME = Path.home()
@@ -23,6 +24,10 @@ BUILD_SCRIPT = HOME / "scripts" / "build-agent-dashboard.py"
 SCRIPTS_DIR = HOME / "scripts"
 LAUNCH_AGENTS_DIR = HOME / "Library" / "LaunchAgents"
 GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
+JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
+JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
+JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
+JARVIS_PIPELINE_LOG_FILE = HOME / "Library" / "Logs" / "dashboard-jarvis-pipeline-run.log"
 GITHUB_REPO = "pirajoke/agent-dashboard"
 BRIDGE_API_URL = os.environ.get("BRIDGE_API_URL", "http://127.0.0.1:8899").rstrip("/")
 HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstrip("/")
@@ -53,6 +58,9 @@ PUBLIC_FILE_PATHS = {
     "/favicon.ico",
     "/live-feed.json",
     "/scripts/live-feed.json",
+}
+JARVIS_PROJECTS = {
+    "jarvis": HOME / "jarvis",
 }
 SENSITIVE_SERVICE_FIELDS = {"config", "env_file", "env_vars", "log", "plist"}
 PUBLIC_TASK_METADATA_FIELDS = {
@@ -251,6 +259,30 @@ def _bridge_request(method: str, path: str, payload: dict | None = None) -> dict
     return json.loads(raw) if raw else {}
 
 
+def _dashboard_run_token() -> str:
+    token = os.environ.get("DASHBOARD_RUN_TOKEN", "").strip()
+    if token:
+        return token
+    JARVIS_DASHBOARD_RUN_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    if not JARVIS_DASHBOARD_RUN_TOKEN_FILE.exists() or not JARVIS_DASHBOARD_RUN_TOKEN_FILE.read_text().strip():
+        JARVIS_DASHBOARD_RUN_TOKEN_FILE.write_text(secrets.token_urlsafe(24) + "\n")
+        JARVIS_DASHBOARD_RUN_TOKEN_FILE.chmod(0o600)
+    return JARVIS_DASHBOARD_RUN_TOKEN_FILE.read_text().strip()
+
+
+def _parse_pipeline_status(report_text: str) -> str:
+    match = re.search(r"(?im)^-\s*Status:\s*([a-z_ -]+)\s*$", report_text)
+    if match:
+        return match.group(1).strip().lower().replace(" ", "_")
+    if "\n## Tester\n" in report_text:
+        return "tester_running"
+    if "\n## Builder\n" in report_text:
+        return "builder_running"
+    if "\n## Supervisor\n" in report_text:
+        return "supervisor_running"
+    return "starting"
+
+
 def _health_request(method: str, path: str, payload: dict | None = None) -> dict:
     data = None
     headers = {"Content-Type": "application/json"}
@@ -396,6 +428,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return f"https://{self._host_name()}"
         return "*"
 
+    def _read_json_body(self, max_bytes: int = 4096) -> dict:
+        length = int(self.headers.get("Content-Length", 0))
+        if length > max_bytes:
+            raise ValueError(f"request body too large; max {max_bytes} bytes")
+        return json.loads(self.rfile.read(length)) if length else {}
+
+    def _dashboard_run_authorized(self) -> bool:
+        if not self._is_public_request():
+            return True
+        expected = _dashboard_run_token()
+        provided = self.headers.get("X-Dashboard-Run-Token", "").strip()
+        return bool(provided) and secrets.compare_digest(provided, expected)
+
+    def _require_dashboard_run_auth(self) -> bool:
+        if self._dashboard_run_authorized():
+            return True
+        self._json_response(
+            401,
+            {
+                "error": "dashboard_run_token_required",
+                "message": "Public task launch is locked by dashboard token.",
+            },
+        )
+        return False
+
     def _redirect_legacy_dashboard(self) -> None:
         self.send_response(302)
         self.send_header("Location", "/?tab=agents&v=pixel-agents")
@@ -412,11 +469,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return str(HOME / clean_path.lstrip('/'))
 
     def do_POST(self):
+        parsed = urlsplit(self.path)
+        if parsed.path == '/api/jarvis/pipeline/run':
+            self._handle_jarvis_pipeline_run()
+            return
+
         if self._is_public_request():
             self._json_response(403, {"error": "public_dashboard_read_only"})
             return
 
-        parsed = urlsplit(self.path)
         air_path = _air_proxy_path(parsed.path)
         pro_path = _pro_proxy_path(parsed.path)
         if air_path and re.match(r"^/api/service/.+/(start|stop)$", air_path):
@@ -719,17 +780,157 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         else:
             self._json_response(404, {"error": "not found"})
 
+    def _handle_jarvis_pipeline_run(self):
+        if not self._require_dashboard_run_auth():
+            return
+        try:
+            body = self._read_json_body(max_bytes=8192)
+        except Exception as exc:
+            self._json_response(400, {"error": str(exc)})
+            return
+
+        task = str(body.get("task", "")).strip()
+        if not task:
+            self._json_response(400, {"error": "task is required"})
+            return
+        if len(task) > 1200:
+            self._json_response(400, {"error": "task is too long; max 1200 chars"})
+            return
+
+        project_key = str(body.get("project") or "jarvis").strip().lower()
+        project_dir = JARVIS_PROJECTS.get(project_key)
+        if not project_dir:
+            self._json_response(400, {"error": "unknown project", "projects": sorted(JARVIS_PROJECTS)})
+            return
+        if not project_dir.exists():
+            self._json_response(500, {"error": "project directory missing", "path": str(project_dir)})
+            return
+        if not JARVIS_PIPELINE_SCRIPT.exists():
+            self._json_response(500, {"error": "pipeline script missing", "path": str(JARVIS_PIPELINE_SCRIPT)})
+            return
+
+        run_id = f"{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(3)}"
+        report_path = JARVIS_PIPELINE_REPORT_DIR / f"{run_id}.md"
+
+        if bool(body.get("dry_run")):
+            self._json_response(
+                200,
+                {
+                    "status": "dry_run",
+                    "run_id": run_id,
+                    "project": project_key,
+                    "project_dir": str(project_dir),
+                    "report_path": str(report_path),
+                    "task": task,
+                },
+            )
+            return
+
+        JARVIS_PIPELINE_REPORT_DIR.mkdir(parents=True, exist_ok=True)
+        JARVIS_PIPELINE_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+        env = os.environ.copy()
+        env.update(
+            {
+                "JARVIS_PROJECT_DIR": str(project_dir),
+                "JARVIS_PROJECT_NAME": project_key,
+                "JARVIS_AGENT_RUN_ID": run_id,
+                "JARVIS_AGENT_REPORT_DIR": str(JARVIS_PIPELINE_REPORT_DIR),
+            }
+        )
+        try:
+            log_file = JARVIS_PIPELINE_LOG_FILE.open("a", encoding="utf-8")
+            proc = subprocess.Popen(
+                [str(JARVIS_PIPELINE_SCRIPT), task],
+                cwd=str(project_dir),
+                env=env,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+            log_file.close()
+        except Exception as exc:
+            self._json_response(500, {"error": str(exc)})
+            return
+
+        self._json_response(
+            202,
+            {
+                "status": "started",
+                "pid": proc.pid,
+                "run_id": run_id,
+                "project": project_key,
+                "project_dir": str(project_dir),
+                "report_path": str(report_path),
+                "task": task,
+            },
+        )
+
+    def _handle_jarvis_pipeline_status(self, parsed):
+        if not self._require_dashboard_run_auth():
+            return
+
+        query = parse_qs(parsed.query)
+        run_id = (query.get("run_id") or [""])[0].strip()
+        report_path = None
+        if run_id:
+            if not re.match(r"^[A-Za-z0-9._-]+$", run_id):
+                self._json_response(400, {"error": "invalid run_id"})
+                return
+            report_path = JARVIS_PIPELINE_REPORT_DIR / f"{run_id}.md"
+        else:
+            reports = sorted(JARVIS_PIPELINE_REPORT_DIR.glob("*.md"), key=lambda item: item.stat().st_mtime)
+            if reports:
+                report_path = reports[-1]
+                run_id = report_path.stem
+
+        if not report_path or not report_path.exists():
+            self._json_response(
+                200,
+                {
+                    "exists": False,
+                    "run_id": run_id or None,
+                    "status": "waiting",
+                    "report_path": str(report_path) if report_path else None,
+                    "report_tail": "",
+                },
+            )
+            return
+
+        try:
+            report_text = report_path.read_text(errors="replace")
+        except Exception as exc:
+            self._json_response(500, {"error": str(exc), "run_id": run_id})
+            return
+
+        lines = report_text.splitlines()
+        stat = report_path.stat()
+        self._json_response(
+            200,
+            {
+                "exists": True,
+                "run_id": run_id,
+                "status": _parse_pipeline_status(report_text),
+                "report_path": str(report_path),
+                "updated_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "bytes": stat.st_size,
+                "report_tail": "\n".join(lines[-80:]),
+            },
+        )
+
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header('Access-Control-Allow-Origin', self._cors_origin())
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Dashboard-Run-Token')
         self.end_headers()
 
     def do_GET(self):
         parsed = urlsplit(self.path)
         if parsed.path in {"/agent-dashboard.html", "/legacy-dashboard.html"}:
             self._redirect_legacy_dashboard()
+            return
+        if parsed.path == '/api/jarvis/pipeline/status':
+            self._handle_jarvis_pipeline_status(parsed)
             return
 
         air_path = _air_proxy_path(parsed.path)
@@ -911,6 +1112,7 @@ python3 ~/scripts/orchestrator_tokens.py update codex 23 '$46' '200' 'Apr 15'
         self.send_header('Content-Length', len(body))
         self.send_header('Cache-Control', 'no-cache')
         self.send_header('Access-Control-Allow-Origin', self._cors_origin())
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Dashboard-Run-Token')
         self.end_headers()
         self.wfile.write(body)
 
@@ -923,6 +1125,7 @@ python3 ~/scripts/orchestrator_tokens.py update codex 23 '$46' '200' 'Apr 15'
         else:
             self.send_header('Cache-Control', 'no-cache')
         self.send_header('Access-Control-Allow-Origin', self._cors_origin())
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Dashboard-Run-Token')
         super().end_headers()
 
     def log_message(self, format, *args):

@@ -644,6 +644,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   box-shadow: var(--shadow);
   overflow: hidden;
 }
+.pixel-agents-shell.is-pinned {
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(234,179,8,0.36);
+}
 .pixel-agents-frame {
   display: block;
   width: 100%;
@@ -663,10 +667,179 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   color: var(--text2);
   font-size: 12px;
 }
+.pixel-agents-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.pixel-pin-btn {
+  border: 1px solid var(--border2);
+  background: var(--card);
+  color: var(--text2);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+.pixel-pin-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.pixel-pin-btn.active {
+  background: var(--accent-bg);
+  border-color: rgba(234,179,8,0.35);
+  color: var(--accent);
+}
 .pixel-agents-fallback a {
   color: var(--accent);
   font-weight: 800;
   text-decoration: none;
+}
+.jarvis-run-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.jarvis-run-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.jarvis-run-title { font-size: 17px; font-weight: 800; }
+.jarvis-run-subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.jarvis-run-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  background: var(--green-bg);
+  color: var(--green);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.jarvis-run-mode.locked { background: var(--accent-bg); color: var(--accent); }
+.jarvis-run-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 128px 86px;
+  gap: 10px;
+  align-items: stretch;
+}
+.jarvis-run-input {
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  background: var(--bg);
+  color: var(--text);
+}
+.jarvis-run-input:focus {
+  outline: none;
+  border-color: rgba(234,179,8,0.7);
+  box-shadow: 0 0 0 3px rgba(234,179,8,0.14);
+}
+.jarvis-run-select,
+.jarvis-run-btn {
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  background: var(--card);
+  color: var(--text);
+}
+.jarvis-run-btn {
+  cursor: pointer;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  min-width: 128px;
+}
+.jarvis-run-btn.secondary {
+  background: var(--card);
+  color: var(--text2);
+  min-width: 86px;
+}
+.jarvis-run-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.jarvis-token-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+.jarvis-token-box.hidden { display: none; }
+.jarvis-token-input {
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 12px;
+}
+.jarvis-run-status {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 12px;
+  color: var(--text2);
+  font-size: 12px;
+}
+.jarvis-run-status strong { color: var(--text); }
+.jarvis-run-status.started,
+.jarvis-run-status.starting,
+.jarvis-run-status.supervisor_running,
+.jarvis-run-status.builder_running,
+.jarvis-run-status.tester_running { border-color: rgba(59,130,246,0.24); background: var(--blue-bg); }
+.jarvis-run-status.done { border-color: rgba(34,197,94,0.24); background: var(--green-bg); }
+.jarvis-run-status.failed,
+.jarvis-run-status.error { border-color: rgba(239,68,68,0.24); background: var(--red-bg); }
+.jarvis-run-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.jarvis-run-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.72);
+  padding: 4px 8px;
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 800;
+}
+.jarvis-run-tail {
+  margin-top: 10px;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 10px;
+  background: #1F2937;
+  color: #E5E7EB;
+  padding: 10px;
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 /* Responsive */
@@ -677,6 +850,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .agents-grid { grid-template-columns: 1fr 1fr; }
   .ai-island-layout { grid-template-columns: 1fr; }
   .island-map { min-height: 640px; }
+  .jarvis-run-form { grid-template-columns: 1fr; }
+  .jarvis-run-select,
+  .jarvis-run-btn { min-height: 42px; }
 }
 @media (max-width: 640px) {
   .container { padding: 16px; }
@@ -965,10 +1141,48 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- ═══════════════ AGENTS ═══════════════ -->
   <div id="section-agents" class="section">
+    <div class="jarvis-run-card">
+      <div class="jarvis-run-header">
+        <div>
+          <div class="jarvis-run-title">Agent Pipeline</div>
+          <div class="jarvis-run-subtitle">Supervisor → Builder → Tester</div>
+        </div>
+        <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
+      </div>
+      <div class="jarvis-run-form">
+        <textarea
+          class="jarvis-run-input"
+          id="jarvis-task-input"
+          placeholder="Задача для Jarvis..."
+        ></textarea>
+        <select class="jarvis-run-select" id="jarvis-project-select" aria-label="Project">
+          <option value="jarvis">Jarvis</option>
+        </select>
+        <button class="jarvis-run-btn" id="jarvis-run-button" type="button" onclick="runJarvisPipeline()">Run</button>
+        <button class="jarvis-run-btn secondary" type="button" onclick="refreshJarvisRunStatus()">Status</button>
+      </div>
+      <div class="jarvis-token-box hidden" id="jarvis-token-box">
+        <input class="jarvis-token-input" id="jarvis-token-input" type="password" placeholder="dashboard token">
+        <button class="jarvis-run-btn secondary" type="button" onclick="saveDashboardRunToken()">Save</button>
+      </div>
+      <div class="jarvis-run-status" id="jarvis-run-status">
+        Ready. Start a task to see run id, report and evidence here.
+      </div>
+    </div>
     <div class="pixel-agents-shell">
       <div class="pixel-agents-fallback">
         <span>Pixel Agents office is served from Mac Mini and connected through Cloudflare Tunnel.</span>
-        <a href="https://pixel-agents.meshly.fr/" target="_blank" rel="noreferrer">Open full screen</a>
+        <div class="pixel-agents-actions">
+          <button
+            class="pixel-pin-btn"
+            id="pixel-agents-pin"
+            type="button"
+            onclick="togglePixelAgentsPin()"
+            aria-pressed="false"
+            title="Fix dashboard height and keep it pinned while scrolling"
+          >📌 Pin</button>
+          <a href="https://pixel-agents.meshly.fr/" target="_blank" rel="noreferrer">Open full screen</a>
+        </div>
       </div>
       <iframe
         class="pixel-agents-frame"
@@ -1157,8 +1371,20 @@ const BRIDGE_TASKS_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
 const BRIDGE_STATUS_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
   ? `${DASHBOARD_API}/api/bridge/status`
   : 'http://100.77.209.73:7777/api/bridge/status';
+const JARVIS_PIPELINE_RUN_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/jarvis/pipeline/run`
+  : 'http://100.77.209.73:7777/api/jarvis/pipeline/run';
+const JARVIS_PIPELINE_STATUS_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/jarvis/pipeline/status`
+  : 'http://100.77.209.73:7777/api/jarvis/pipeline/status';
 const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
 let currentLogService = null;
+const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
+const PIXEL_AGENTS_ORIGIN = 'https://pixel-agents.meshly.fr';
+const JARVIS_RUN_TOKEN_KEY = 'command-center.jarvis-run-token';
+const JARVIS_LAST_RUN_KEY = 'command-center.jarvis-last-run';
+let currentJarvisRunId = localStorage.getItem(JARVIS_LAST_RUN_KEY) || '';
+let jarvisRunTimer = null;
 
 // Navigation
 function showSection(name) {
@@ -1176,6 +1402,62 @@ function showSection(name) {
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
 if (['mac-mini', 'air', 'pro', 'general', 'agents', 'logs'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
+}
+
+function applyPixelAgentsPin(isPinned) {
+  const shell = document.querySelector('.pixel-agents-shell');
+  const button = document.getElementById('pixel-agents-pin');
+  const frame = shell ? shell.querySelector('.pixel-agents-frame') : null;
+  if (!shell || !button) return;
+
+  const scrollY = window.scrollY;
+  const scrollX = window.scrollX;
+  if (frame) {
+    if (isPinned) {
+      const currentHeight = Math.round(frame.getBoundingClientRect().height);
+      frame.style.height = `${currentHeight}px`;
+      frame.style.minHeight = `${currentHeight}px`;
+    } else {
+      frame.style.height = '';
+      frame.style.minHeight = '';
+    }
+  }
+
+  shell.classList.toggle('is-pinned', isPinned);
+  button.classList.toggle('active', isPinned);
+  button.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
+  button.textContent = isPinned ? '📌 Locked' : '📌 Pin';
+  button.title = isPinned
+    ? 'Current dashboard size is locked. Click to unlock.'
+    : 'Lock current dashboard size without moving it';
+
+  requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
+  notifyPixelAgentsPin(isPinned);
+}
+
+function notifyPixelAgentsPin(isPinned) {
+  const frame = document.querySelector('.pixel-agents-frame');
+  if (!frame || !frame.contentWindow) return;
+  frame.contentWindow.postMessage(
+    { type: 'pixelAgentsViewportLock', locked: isPinned },
+    PIXEL_AGENTS_ORIGIN,
+  );
+}
+
+function togglePixelAgentsPin() {
+  const current = localStorage.getItem(PIXEL_AGENTS_PIN_KEY) === '1';
+  const next = !current;
+  localStorage.setItem(PIXEL_AGENTS_PIN_KEY, next ? '1' : '0');
+  applyPixelAgentsPin(next);
+}
+
+function initPixelAgentsPin() {
+  const isPinned = localStorage.getItem(PIXEL_AGENTS_PIN_KEY) === '1';
+  const frame = document.querySelector('.pixel-agents-frame');
+  if (frame) {
+    frame.addEventListener('load', () => notifyPixelAgentsPin(isPinned));
+  }
+  applyPixelAgentsPin(isPinned);
 }
 
 async function fetchJSON(base, path) {
@@ -1205,6 +1487,141 @@ function escapeHtml(value) {
 function compactText(value, maxLen = 170) {
   const text = String(value ?? '').replace(/\s+/g, ' ').trim();
   return text.length > maxLen ? text.slice(0, maxLen - 3) + '...' : text;
+}
+
+function jarvisRunHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem(JARVIS_RUN_TOKEN_KEY);
+  if (token) headers['X-Dashboard-Run-Token'] = token;
+  return headers;
+}
+
+function setJarvisRunStatus(html, status = '') {
+  const el = document.getElementById('jarvis-run-status');
+  if (!el) return;
+  el.className = `jarvis-run-status ${status || ''}`;
+  el.innerHTML = html;
+}
+
+function showJarvisTokenBox(show) {
+  const box = document.getElementById('jarvis-token-box');
+  const mode = document.getElementById('jarvis-run-mode');
+  if (box) box.classList.toggle('hidden', !show);
+  if (mode) {
+    const hasToken = Boolean(localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
+    if (IS_PUBLIC_DASHBOARD) {
+      mode.textContent = hasToken && !show ? 'token saved' : 'token required';
+    } else {
+      mode.textContent = 'private';
+    }
+    mode.classList.toggle('locked', show || IS_PUBLIC_DASHBOARD);
+  }
+}
+
+function saveDashboardRunToken() {
+  const input = document.getElementById('jarvis-token-input');
+  const token = input ? input.value.trim() : '';
+  if (!token) {
+    setJarvisRunStatus('Paste dashboard token first.', 'error');
+    return;
+  }
+  localStorage.setItem(JARVIS_RUN_TOKEN_KEY, token);
+  if (input) input.value = '';
+  showJarvisTokenBox(false);
+  setJarvisRunStatus('Token saved. Run the task again.', 'done');
+}
+
+function renderJarvisRunStatus(data) {
+  const status = data?.status || 'waiting';
+  const runId = data?.run_id || currentJarvisRunId || '-';
+  const reportPath = data?.report_path || '-';
+  const project = data?.project || 'jarvis';
+  const tail = data?.report_tail ? `<pre class="jarvis-run-tail">${escapeHtml(data.report_tail)}</pre>` : '';
+  setJarvisRunStatus(`
+    <strong>${escapeHtml(status)}</strong>
+    <div class="jarvis-run-meta">
+      <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
+      <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
+      <span class="jarvis-run-chip">${escapeHtml(reportPath)}</span>
+    </div>
+    ${tail}
+  `, status);
+}
+
+async function runJarvisPipeline() {
+  const input = document.getElementById('jarvis-task-input');
+  const project = document.getElementById('jarvis-project-select')?.value || 'jarvis';
+  const button = document.getElementById('jarvis-run-button');
+  const task = input ? input.value.trim() : '';
+  if (!task) {
+    setJarvisRunStatus('Write a task first.', 'error');
+    return;
+  }
+  if (button) button.disabled = true;
+  setJarvisRunStatus('Starting Supervisor → Builder → Tester...', 'starting');
+  try {
+    const response = await fetch(JARVIS_PIPELINE_RUN_API, {
+      method: 'POST',
+      headers: jarvisRunHeaders(),
+      body: JSON.stringify({ task, project }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      showJarvisTokenBox(true);
+      setJarvisRunStatus('Public launch is locked. Save the dashboard token once.', 'error');
+      return;
+    }
+    if (!response.ok) {
+      setJarvisRunStatus(`Launch failed: ${escapeHtml(data.error || response.statusText)}`, 'error');
+      return;
+    }
+    currentJarvisRunId = data.run_id;
+    localStorage.setItem(JARVIS_LAST_RUN_KEY, currentJarvisRunId);
+    renderJarvisRunStatus(data);
+    scheduleJarvisRunPoll();
+  } catch (error) {
+    setJarvisRunStatus(`Launch failed: ${escapeHtml(error.message || error)}`, 'error');
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function refreshJarvisRunStatus(runId = currentJarvisRunId) {
+  if (!runId) {
+    setJarvisRunStatus('No pipeline run yet.', 'waiting');
+    return;
+  }
+  try {
+    const response = await fetch(`${JARVIS_PIPELINE_STATUS_API}?run_id=${encodeURIComponent(runId)}`, {
+      headers: jarvisRunHeaders(),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      showJarvisTokenBox(true);
+      setJarvisRunStatus('Public status is locked. Save the dashboard token once.', 'error');
+      return;
+    }
+    if (!response.ok) {
+      setJarvisRunStatus(`Status failed: ${escapeHtml(data.error || response.statusText)}`, 'error');
+      return;
+    }
+    renderJarvisRunStatus(data);
+    if (!['done', 'failed'].includes(String(data.status || '').toLowerCase())) {
+      scheduleJarvisRunPoll();
+    }
+  } catch (error) {
+    setJarvisRunStatus(`Status failed: ${escapeHtml(error.message || error)}`, 'error');
+  }
+}
+
+function scheduleJarvisRunPoll() {
+  if (jarvisRunTimer) clearTimeout(jarvisRunTimer);
+  jarvisRunTimer = setTimeout(() => refreshJarvisRunStatus(), 3500);
+}
+
+function initJarvisRunPanel() {
+  showJarvisTokenBox(false);
+  if (currentJarvisRunId) refreshJarvisRunStatus(currentJarvisRunId);
 }
 
 // ─── Shared: render service table (used by both Mac Mini and Air) ───
@@ -1803,6 +2220,8 @@ function refreshAll() {
 }
 
 refreshAll();
+initJarvisRunPanel();
+initPixelAgentsPin();
 initDragDrop();
 setInterval(refreshAll, 5000);
 setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000);
