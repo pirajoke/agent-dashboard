@@ -700,6 +700,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-weight: 800;
   text-decoration: none;
 }
+#section-agents.active {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#section-agents .pixel-agents-shell { order: 1; }
+#section-agents .jarvis-run-card { order: 2; }
 .jarvis-run-card {
   position: relative;
   overflow: hidden;
@@ -709,8 +716,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   border: 1px solid rgba(0,0,0,0.07);
   border-radius: 20px;
   box-shadow: 0 12px 34px rgba(17,24,39,0.08);
-  padding: 20px;
-  margin-bottom: 16px;
+  padding: 16px;
+  margin-bottom: 0;
 }
 .jarvis-run-card::before {
   content: '';
@@ -724,7 +731,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 .jarvis-run-title { font-size: 20px; font-weight: 850; letter-spacing: -0.02em; }
 .jarvis-run-subtitle { color: var(--text2); font-size: 12px; margin-top: 3px; font-weight: 600; }
@@ -747,7 +754,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin: 12px 0 14px;
+  margin: 10px 0;
 }
 .jarvis-flow-step {
   display: grid;
@@ -801,7 +808,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .jarvis-run-input {
   width: 100%;
-  min-height: 52px;
+  min-height: 46px;
   resize: vertical;
   border: 1px solid var(--border2);
   border-radius: 12px;
@@ -898,11 +905,11 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-size: 12px;
 }
 .jarvis-run-status {
-  margin-top: 12px;
+  margin-top: 10px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: rgba(255,255,255,0.72);
-  padding: 13px;
+  padding: 11px;
   color: var(--text2);
   font-size: 12px;
 }
@@ -933,6 +940,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .jarvis-run-summary {
   display: grid;
+  gap: 8px;
+}
+.jarvis-run-compact-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
 }
 .jarvis-human-summary {
@@ -968,6 +982,26 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .jarvis-inline-btn:hover {
   background: var(--accent-bg);
+}
+.jarvis-run-details {
+  margin-top: 2px;
+}
+.jarvis-run-details > summary {
+  cursor: pointer;
+  color: var(--text2);
+  font-weight: 850;
+  list-style: none;
+  width: fit-content;
+}
+.jarvis-run-details > summary::-webkit-details-marker { display: none; }
+.jarvis-run-details > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 0.15s ease;
+}
+.jarvis-run-details[open] > summary::before {
+  transform: rotate(90deg);
 }
 .jarvis-agent-grid {
   display: grid;
@@ -1854,6 +1888,11 @@ function saveDashboardRunToken() {
 
 function updateJarvisFlow(status = 'waiting', steps = null) {
   const roles = ['supervisor', 'builder', 'tester'];
+  const defaultDetails = {
+    supervisor: 'turns task into criteria',
+    builder: 'does scoped work',
+    tester: 'checks result and evidence',
+  };
   const normalized = String(status || '').toLowerCase();
   const fallback = roles.map(role => ({ role, state: 'pending' }));
   if (normalized === 'starting') fallback[0].state = 'working';
@@ -1888,7 +1927,7 @@ function updateJarvisFlow(status = 'waiting', steps = null) {
     el.classList.remove('working', 'done', 'failed', 'pending');
     el.classList.add(['working', 'done', 'failed'].includes(state) ? state : 'pending');
     const detail = el.querySelector('.jarvis-flow-step-detail');
-    if (detail && step.detail) detail.textContent = step.detail;
+    if (detail) detail.textContent = reportPreviewText(step.detail || defaultDetails[role] || '', 76);
   }
 }
 
@@ -1934,16 +1973,21 @@ function renderJarvisRunStatus(data) {
   updateJarvisFlow(status, data?.steps || null);
   setJarvisRunStatus(`
     <div class="jarvis-run-summary">
-    <strong>${escapeHtml(statusLabel(status))}</strong>
-    <div class="jarvis-run-meta">
-      <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
-      <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
-      ${reportChip}
-      ${task}
-    </div>
-    ${humanSummary}
-    <div class="jarvis-agent-grid">${agents}</div>
-    ${tail}
+      <div class="jarvis-run-compact-top">
+        <strong>${escapeHtml(statusLabel(status))}</strong>
+        <div class="jarvis-run-meta">
+          <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
+          <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
+          ${reportChip}
+          ${task}
+        </div>
+      </div>
+      ${humanSummary}
+      <details class="jarvis-run-details">
+        <summary>Details and evidence</summary>
+        <div class="jarvis-agent-grid">${agents}</div>
+        ${tail}
+      </details>
     </div>
   `, status);
 }
