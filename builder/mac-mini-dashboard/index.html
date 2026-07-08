@@ -935,6 +935,40 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   display: grid;
   gap: 10px;
 }
+.jarvis-human-summary {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.78);
+  padding: 10px 12px;
+  color: var(--text2);
+  line-height: 1.45;
+}
+.jarvis-human-title {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 900;
+}
+.jarvis-summary-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.jarvis-inline-btn {
+  border: 1px solid rgba(234,179,8,0.45);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.86);
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 10px;
+}
+.jarvis-inline-btn:hover {
+  background: var(--accent-bg);
+}
 .jarvis-agent-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1563,6 +1597,7 @@ const PIXEL_AGENTS_ORIGIN = 'https://pixel-agents.meshly.fr';
 const JARVIS_RUN_TOKEN_KEY = 'command-center.jarvis-run-token';
 const JARVIS_LAST_RUN_KEY = 'command-center.jarvis-last-run';
 let currentJarvisRunId = localStorage.getItem(JARVIS_LAST_RUN_KEY) || '';
+let lastJarvisTaskText = '';
 let jarvisRunTimer = null;
 
 // Navigation
@@ -1696,6 +1731,62 @@ function reportPreviewText(value, maxLen = 360) {
   return compactText(cleaned, maxLen);
 }
 
+function loadLastJarvisTask() {
+  const input = document.getElementById('jarvis-task-input');
+  if (!input || !lastJarvisTaskText) return;
+  input.value = lastJarvisTaskText;
+  input.focus();
+  input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function renderJarvisHumanSummary(data) {
+  const status = String(data?.status || 'waiting').toLowerCase();
+  const sectionsText = `${Object.values(data?.sections || {}).join('\n')}\n${data?.report_tail || ''}`;
+  const hasTask = Boolean(data?.task);
+  let title = 'Pipeline status';
+  let body = 'Read the agent cards below for details.';
+  let tone = '';
+
+  if (status === 'needs_approval') {
+    tone = 'needs approval';
+    if (/don'?t ask|dontAsk/i.test(sectionsText)) {
+      title = 'Старый запуск остановился до изменений';
+      body = 'Builder был в старом режиме dontAsk: он не мог редактировать файлы и запускать команды. Ничего не было изменено. Новые запуски уже идут с рабочим режимом для Builder/Tester.';
+    } else {
+      title = 'Нужно ручное подтверждение';
+      body = 'Supervisor понял задачу, но Builder или Tester не продолжили без явного разрешения. Проверь suggested action ниже и перезапусти задачу.';
+    }
+  } else if (status === 'failed' && /out of extra usage|usage/i.test(sectionsText)) {
+    tone = 'failed';
+    title = 'Claude лимит, работа не стартовала';
+    body = 'Агенты не дошли до задачи: Claude вернул лимит usage. Повтори запуск после reset времени или переключи модель/аккаунт.';
+  } else if (status === 'failed') {
+    tone = 'failed';
+    title = 'Pipeline упал';
+    body = 'Один из агентов завершился ошибкой. Смотри карточку FAILED и Raw report tail: там причина и следующий шаг.';
+  } else if (status === 'done') {
+    tone = 'done';
+    title = 'Pipeline завершён';
+    body = 'Supervisor, Builder и Tester прошли маршрут. Смотри карточки и Raw report tail для evidence.';
+  } else if (status.includes('running') || status === 'starting' || status === 'started') {
+    tone = 'running';
+    title = 'Агенты работают';
+    body = 'Jarvis сейчас проходит маршрут Supervisor → Builder → Tester. Статус обновляется автоматически.';
+  }
+
+  const actions = hasTask
+    ? `<div class="jarvis-summary-actions"><button class="jarvis-inline-btn" type="button" onclick="loadLastJarvisTask()">Load same task</button><button class="jarvis-inline-btn" type="button" onclick="refreshJarvisRunStatus()">Refresh status</button></div>`
+    : `<div class="jarvis-summary-actions"><button class="jarvis-inline-btn" type="button" onclick="refreshJarvisRunStatus()">Refresh status</button></div>`;
+
+  return `
+    <div class="jarvis-human-summary ${escapeHtml(tone)}">
+      <div class="jarvis-human-title">${escapeHtml(title)}</div>
+      <div>${escapeHtml(body)}</div>
+      ${actions}
+    </div>
+  `;
+}
+
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
   const token = localStorage.getItem(JARVIS_RUN_TOKEN_KEY);
@@ -1817,8 +1908,13 @@ function renderJarvisRunStatus(data) {
   const runId = data?.run_id || currentJarvisRunId || '-';
   const reportPath = data?.report_path || '-';
   const project = data?.project || 'jarvis';
+  if (data?.task) lastJarvisTaskText = data.task;
   const task = data?.task ? `<span class="jarvis-run-chip">task ${escapeHtml(compactText(data.task, 90))}</span>` : '';
+  const reportChip = reportPath && reportPath !== '-'
+    ? `<span class="jarvis-run-chip" title="${escapeHtml(reportPath)}">report md</span>`
+    : '';
   const sections = data?.sections || {};
+  const humanSummary = renderJarvisHumanSummary(data);
   const agents = ['Supervisor', 'Builder', 'Tester'].map(role => {
     const key = role.toLowerCase();
     const step = (data?.steps || []).find(item => String(item.role || '').toLowerCase() === key) || {};
@@ -1842,9 +1938,10 @@ function renderJarvisRunStatus(data) {
     <div class="jarvis-run-meta">
       <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
       <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
-      <span class="jarvis-run-chip">${escapeHtml(reportPath)}</span>
+      ${reportChip}
       ${task}
     </div>
+    ${humanSummary}
     <div class="jarvis-agent-grid">${agents}</div>
     ${tail}
     </div>
