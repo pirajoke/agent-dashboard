@@ -1668,6 +1668,34 @@ function compactText(value, maxLen = 170) {
   return text.length > maxLen ? text.slice(0, maxLen - 3) + '...' : text;
 }
 
+function statusLabel(value) {
+  const normalized = String(value || '').toLowerCase();
+  const labels = {
+    dry_run: 'ready',
+    needs_approval: 'needs approval',
+    supervisor_running: 'supervisor running',
+    builder_running: 'builder running',
+    tester_running: 'tester running',
+  };
+  return labels[normalized] || normalized.replace(/_/g, ' ') || 'waiting';
+}
+
+function reportPreviewText(value, maxLen = 360) {
+  const cleaned = String(value || '')
+    .replace(/```[\s\S]*?```/g, '')
+    .split('\n')
+    .map(line => line
+      .replace(/^#{1,6}\s+/, '')
+      .replace(/\*\*/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/^\s*[-*]\s+/, '• ')
+      .trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  return compactText(cleaned, maxLen);
+}
+
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
   const token = localStorage.getItem(JARVIS_RUN_TOKEN_KEY);
@@ -1752,6 +1780,11 @@ function updateJarvisFlow(status = 'waiting', steps = null) {
   if (normalized === 'failed') {
     fallback.forEach(step => { if (step.state === 'pending') step.state = 'failed'; });
   }
+  if (normalized === 'needs_approval') {
+    fallback[0].state = 'done';
+    fallback[1].state = 'failed';
+    fallback[2].state = 'failed';
+  }
   const byRole = {};
   for (const step of (steps && steps.length ? steps : fallback)) {
     byRole[String(step.role || '').toLowerCase()] = step;
@@ -1795,9 +1828,9 @@ function renderJarvisRunStatus(data) {
       <div class="jarvis-agent-card">
         <div class="jarvis-agent-card-head">
           <div class="jarvis-agent-card-role">${escapeHtml(role)}</div>
-          <div class="jarvis-agent-card-state ${escapeHtml(state)}">${escapeHtml(state)}</div>
+          <div class="jarvis-agent-card-state ${escapeHtml(state)}">${escapeHtml(statusLabel(state))}</div>
         </div>
-        <div class="jarvis-agent-card-body">${escapeHtml(compactText(body, 360))}</div>
+        <div class="jarvis-agent-card-body">${escapeHtml(reportPreviewText(body, 360))}</div>
       </div>
     `;
   }).join('');
@@ -1805,7 +1838,7 @@ function renderJarvisRunStatus(data) {
   updateJarvisFlow(status, data?.steps || null);
   setJarvisRunStatus(`
     <div class="jarvis-run-summary">
-    <strong>${escapeHtml(status)}</strong>
+    <strong>${escapeHtml(statusLabel(status))}</strong>
     <div class="jarvis-run-meta">
       <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
       <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
@@ -1828,6 +1861,7 @@ async function verifyDashboardRunToken() {
     const response = await fetch(`${JARVIS_PIPELINE_RUN_API}`, {
       method: 'POST',
       headers: jarvisRunHeaders(),
+      cache: 'no-store',
       body: JSON.stringify({
         task: 'Dashboard token check. Dry run only. Do not launch agents.',
         project: 'jarvis',
@@ -1869,6 +1903,7 @@ async function runJarvisPipeline() {
     const response = await fetch(JARVIS_PIPELINE_RUN_API, {
       method: 'POST',
       headers: jarvisRunHeaders(),
+      cache: 'no-store',
       body: JSON.stringify({ task, project }),
     });
     const data = await response.json().catch(() => ({}));
@@ -1897,8 +1932,10 @@ async function refreshJarvisRunStatus(runId = currentJarvisRunId) {
     return;
   }
   try {
-    const response = await fetch(`${JARVIS_PIPELINE_STATUS_API}?run_id=${encodeURIComponent(runId)}`, {
+    const statusUrl = `${JARVIS_PIPELINE_STATUS_API}?run_id=${encodeURIComponent(runId)}&_=${Date.now()}`;
+    const response = await fetch(statusUrl, {
       headers: jarvisRunHeaders(),
+      cache: 'no-store',
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
@@ -1910,7 +1947,7 @@ async function refreshJarvisRunStatus(runId = currentJarvisRunId) {
       return;
     }
     renderJarvisRunStatus(data);
-    if (!['done', 'failed'].includes(String(data.status || '').toLowerCase())) {
+    if (!['done', 'failed', 'needs_approval'].includes(String(data.status || '').toLowerCase())) {
       scheduleJarvisRunPoll();
     }
   } catch (error) {

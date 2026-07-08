@@ -18,8 +18,8 @@ PIXEL_EVENT="$HOME/scripts/jarvis-pixel-agent-event"
 PIXEL_CLEANUP="$HOME/scripts/jarvis-pixel-agent-cleanup"
 
 SUPERVISOR_PERMISSION="${JARVIS_SUPERVISOR_PERMISSION:-dontAsk}"
-BUILDER_PERMISSION="${JARVIS_BUILDER_PERMISSION:-dontAsk}"
-TESTER_PERMISSION="${JARVIS_TESTER_PERMISSION:-dontAsk}"
+BUILDER_PERMISSION="${JARVIS_BUILDER_PERMISSION:-auto}"
+TESTER_PERMISSION="${JARVIS_TESTER_PERMISSION:-auto}"
 MODEL="${JARVIS_AGENT_MODEL:-sonnet}"
 TASK_MODE_HINT="normal"
 if print -r -- "$TASK" | grep -Eiq 'не меняй файлы|do not (edit|change) files|no files|read-only|smoke|ack only'; then

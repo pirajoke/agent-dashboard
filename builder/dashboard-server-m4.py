@@ -297,7 +297,9 @@ def _pipeline_report_field(report_text: str, field: str) -> str:
 
 
 def _compact_report_text(value: str, limit: int = 720) -> str:
-    value = re.sub(r"\n{3,}", "\n\n", (value or "").strip())
+    value = (value or "").strip()
+    value = re.sub(r"(?m)^\s*---\s*$\n?", "", value).strip()
+    value = re.sub(r"\n{3,}", "\n\n", value)
     if len(value) <= limit:
         return value
     return value[: limit - 3].rstrip() + "..."
@@ -1222,7 +1224,9 @@ python3 ~/scripts/orchestrator_tokens.py update codex 23 '$46' '200' 'Apr 15'
         self.send_response(code)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', len(body))
-        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         self.send_header('Access-Control-Allow-Origin', self._cors_origin())
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-Dashboard-Run-Token')
         self.end_headers()
