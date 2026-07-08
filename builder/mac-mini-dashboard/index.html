@@ -701,22 +701,33 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   text-decoration: none;
 }
 .jarvis-run-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 9% 0%, rgba(234,179,8,0.16), transparent 30%),
+    linear-gradient(135deg, #FFFFFF 0%, #FFFDF7 48%, #F8FBFF 100%);
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 20px;
+  box-shadow: 0 12px 34px rgba(17,24,39,0.08);
+  padding: 20px;
   margin-bottom: 16px;
+}
+.jarvis-run-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--green), var(--blue));
 }
 .jarvis-run-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
-.jarvis-run-title { font-size: 17px; font-weight: 800; }
-.jarvis-run-subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.jarvis-run-title { font-size: 20px; font-weight: 850; letter-spacing: -0.02em; }
+.jarvis-run-subtitle { color: var(--text2); font-size: 12px; margin-top: 3px; font-weight: 600; }
 .jarvis-run-mode {
   display: inline-flex;
   align-items: center;
@@ -730,6 +741,58 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   white-space: nowrap;
 }
 .jarvis-run-mode.locked { background: var(--accent-bg); color: var(--accent); }
+.jarvis-run-mode.ready { background: var(--green-bg); color: var(--green); }
+.jarvis-run-mode.error { background: var(--red-bg); color: var(--red); }
+.jarvis-run-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 14px;
+}
+.jarvis-flow-step {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.72);
+  padding: 10px 12px;
+}
+.jarvis-flow-step-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--text);
+}
+.jarvis-flow-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.jarvis-flow-step.working .jarvis-flow-dot {
+  background: var(--blue);
+  box-shadow: 0 0 0 5px rgba(59,130,246,0.12);
+  animation: pulse-blue 1.8s infinite;
+}
+.jarvis-flow-step.done .jarvis-flow-dot {
+  background: var(--green);
+  box-shadow: 0 0 0 5px rgba(34,197,94,0.12);
+}
+.jarvis-flow-step.failed .jarvis-flow-dot {
+  background: var(--red);
+  box-shadow: 0 0 0 5px rgba(239,68,68,0.12);
+}
+.jarvis-flow-step-detail {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes pulse-blue { 0%,100% { box-shadow: 0 0 0 4px rgba(59,130,246,0.10); } 50% { box-shadow: 0 0 0 7px rgba(59,130,246,0.16); } }
 .jarvis-run-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 120px 128px 86px;
@@ -777,17 +840,56 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   color: var(--text2);
   min-width: 86px;
 }
+.jarvis-run-btn.ghost {
+  background: rgba(255,255,255,0.68);
+  color: var(--text2);
+  border-color: rgba(0,0,0,0.08);
+  min-width: 96px;
+}
 .jarvis-run-btn:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
 .jarvis-token-box {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 12px;
+  border: 1px solid rgba(234,179,8,0.26);
+  border-radius: 14px;
+  background: rgba(254,249,231,0.78);
+  padding: 12px;
 }
 .jarvis-token-box.hidden { display: none; }
+.jarvis-token-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--text);
+}
+.jarvis-token-help {
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.jarvis-token-command {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.75);
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.jarvis-token-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
 .jarvis-token-input {
   border: 1px solid var(--border2);
   border-radius: 10px;
@@ -798,9 +900,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-run-status {
   margin-top: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg);
-  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.72);
+  padding: 13px;
   color: var(--text2);
   font-size: 12px;
 }
@@ -828,6 +930,53 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-size: 11px;
   font-weight: 800;
 }
+.jarvis-run-summary {
+  display: grid;
+  gap: 10px;
+}
+.jarvis-agent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.jarvis-agent-card {
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 13px;
+  background: #fff;
+  padding: 10px;
+  min-height: 118px;
+}
+.jarvis-agent-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.jarvis-agent-card-role {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 850;
+}
+.jarvis-agent-card-state {
+  border-radius: 999px;
+  background: var(--bg2);
+  color: var(--text2);
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.jarvis-agent-card-state.working { background: var(--blue-bg); color: var(--blue); }
+.jarvis-agent-card-state.done { background: var(--green-bg); color: var(--green); }
+.jarvis-agent-card-state.failed { background: var(--red-bg); color: var(--red); }
+.jarvis-agent-card-body {
+  color: var(--text2);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
 .jarvis-run-tail {
   margin-top: 10px;
   max-height: 220px;
@@ -853,6 +1002,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .jarvis-run-form { grid-template-columns: 1fr; }
   .jarvis-run-select,
   .jarvis-run-btn { min-height: 42px; }
+  .jarvis-run-flow,
+  .jarvis-agent-grid { grid-template-columns: 1fr; }
+  .jarvis-token-row { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .container { padding: 16px; }
@@ -1145,9 +1297,23 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="jarvis-run-header">
         <div>
           <div class="jarvis-run-title">Agent Pipeline</div>
-          <div class="jarvis-run-subtitle">Supervisor → Builder → Tester</div>
+          <div class="jarvis-run-subtitle">Launch real Jarvis work: Supervisor → Builder → Tester, with report and evidence.</div>
         </div>
         <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
+      </div>
+      <div class="jarvis-run-flow" id="jarvis-run-flow">
+        <div class="jarvis-flow-step" data-role="supervisor">
+          <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Supervisor</div>
+          <div class="jarvis-flow-step-detail">turns your request into criteria</div>
+        </div>
+        <div class="jarvis-flow-step" data-role="builder">
+          <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Builder</div>
+          <div class="jarvis-flow-step-detail">does the scoped work</div>
+        </div>
+        <div class="jarvis-flow-step" data-role="tester">
+          <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Tester</div>
+          <div class="jarvis-flow-step-detail">checks request vs result</div>
+        </div>
       </div>
       <div class="jarvis-run-form">
         <textarea
@@ -1162,8 +1328,20 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <button class="jarvis-run-btn secondary" type="button" onclick="refreshJarvisRunStatus()">Status</button>
       </div>
       <div class="jarvis-token-box hidden" id="jarvis-token-box">
-        <input class="jarvis-token-input" id="jarvis-token-input" type="password" placeholder="dashboard token">
-        <button class="jarvis-run-btn secondary" type="button" onclick="saveDashboardRunToken()">Save</button>
+        <div class="jarvis-token-title">
+          <span>Private launch token</span>
+          <button class="jarvis-run-btn ghost" type="button" onclick="hideJarvisTokenBox()">Hide</button>
+        </div>
+        <div class="jarvis-token-help">
+          Public Command Center can read system status, but launching agents on Mac Mini needs a private token once.
+          From your MacBook Pro run this helper, then this page will save the token automatically:
+        </div>
+        <div class="jarvis-token-command">~/.local/bin/mm-command-center-auth</div>
+        <div class="jarvis-token-row">
+          <input class="jarvis-token-input" id="jarvis-token-input" type="password" placeholder="or paste dashboard token manually">
+          <button class="jarvis-run-btn secondary" type="button" onclick="saveDashboardRunToken()">Save</button>
+          <button class="jarvis-run-btn secondary" type="button" onclick="verifyDashboardRunToken()">Check</button>
+        </div>
       </div>
       <div class="jarvis-run-status" id="jarvis-run-status">
         Ready. Start a task to see run id, report and evidence here.
@@ -1496,6 +1674,22 @@ function jarvisRunHeaders() {
   return headers;
 }
 
+function initJarvisRunTokenFromHash() {
+  if (!window.location.hash) return false;
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const token = (
+    params.get('dashboard_run_token') ||
+    params.get('run_token') ||
+    params.get('token') ||
+    ''
+  ).trim();
+  if (!token) return false;
+  localStorage.setItem(JARVIS_RUN_TOKEN_KEY, token);
+  const cleanUrl = `${window.location.pathname}${window.location.search || ''}`;
+  window.history.replaceState(null, '', cleanUrl);
+  return true;
+}
+
 function setJarvisRunStatus(html, status = '') {
   const el = document.getElementById('jarvis-run-status');
   if (!el) return;
@@ -1510,25 +1704,78 @@ function showJarvisTokenBox(show) {
   if (mode) {
     const hasToken = Boolean(localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
     if (IS_PUBLIC_DASHBOARD) {
-      mode.textContent = hasToken && !show ? 'token saved' : 'token required';
+      mode.textContent = hasToken ? 'ready to launch' : 'token required';
     } else {
       mode.textContent = 'private';
     }
-    mode.classList.toggle('locked', show || IS_PUBLIC_DASHBOARD);
+    mode.classList.toggle('locked', IS_PUBLIC_DASHBOARD && !hasToken);
+    mode.classList.toggle('ready', hasToken || !IS_PUBLIC_DASHBOARD);
+    mode.classList.toggle('error', false);
   }
+}
+
+function hideJarvisTokenBox() {
+  showJarvisTokenBox(false);
 }
 
 function saveDashboardRunToken() {
   const input = document.getElementById('jarvis-token-input');
   const token = input ? input.value.trim() : '';
   if (!token) {
-    setJarvisRunStatus('Paste dashboard token first.', 'error');
+    setJarvisRunStatus('Paste dashboard token first, or run the helper command shown above.', 'error');
     return;
   }
   localStorage.setItem(JARVIS_RUN_TOKEN_KEY, token);
   if (input) input.value = '';
   showJarvisTokenBox(false);
-  setJarvisRunStatus('Token saved. Run the task again.', 'done');
+  setJarvisRunStatus('Token saved. Checking access...', 'starting');
+  verifyDashboardRunToken();
+}
+
+function updateJarvisFlow(status = 'waiting', steps = null) {
+  const roles = ['supervisor', 'builder', 'tester'];
+  const normalized = String(status || '').toLowerCase();
+  const fallback = roles.map(role => ({ role, state: 'pending' }));
+  if (normalized === 'starting') fallback[0].state = 'working';
+  if (normalized === 'supervisor_running') fallback[0].state = 'working';
+  if (normalized === 'builder_running') {
+    fallback[0].state = 'done';
+    fallback[1].state = 'working';
+  }
+  if (normalized === 'tester_running') {
+    fallback[0].state = 'done';
+    fallback[1].state = 'done';
+    fallback[2].state = 'working';
+  }
+  if (normalized === 'done') fallback.forEach(step => { step.state = 'done'; });
+  if (normalized === 'failed') {
+    fallback.forEach(step => { if (step.state === 'pending') step.state = 'failed'; });
+  }
+  const byRole = {};
+  for (const step of (steps && steps.length ? steps : fallback)) {
+    byRole[String(step.role || '').toLowerCase()] = step;
+  }
+  for (const role of roles) {
+    const el = document.querySelector(`.jarvis-flow-step[data-role="${role}"]`);
+    if (!el) continue;
+    const step = byRole[role] || { state: 'pending', detail: '' };
+    const state = String(step.state || 'pending').toLowerCase();
+    el.classList.remove('working', 'done', 'failed', 'pending');
+    el.classList.add(['working', 'done', 'failed'].includes(state) ? state : 'pending');
+    const detail = el.querySelector('.jarvis-flow-step-detail');
+    if (detail && step.detail) detail.textContent = step.detail;
+  }
+}
+
+function renderPipelineAccessHelp(message = 'Public launch is locked. Save the dashboard token once.') {
+  showJarvisTokenBox(true);
+  updateJarvisFlow('waiting');
+  setJarvisRunStatus(`
+    <div class="jarvis-run-summary">
+      <strong>${escapeHtml(message)}</strong>
+      <div>Run <span class="jarvis-run-chip">~/.local/bin/mm-command-center-auth</span> on your MacBook Pro. It opens this dashboard with a private URL fragment and saves the token locally in this browser.</div>
+    </div>
+  `, 'error');
 }
 
 function renderJarvisRunStatus(data) {
@@ -1536,16 +1783,73 @@ function renderJarvisRunStatus(data) {
   const runId = data?.run_id || currentJarvisRunId || '-';
   const reportPath = data?.report_path || '-';
   const project = data?.project || 'jarvis';
-  const tail = data?.report_tail ? `<pre class="jarvis-run-tail">${escapeHtml(data.report_tail)}</pre>` : '';
+  const task = data?.task ? `<span class="jarvis-run-chip">task ${escapeHtml(compactText(data.task, 90))}</span>` : '';
+  const sections = data?.sections || {};
+  const agents = ['Supervisor', 'Builder', 'Tester'].map(role => {
+    const key = role.toLowerCase();
+    const step = (data?.steps || []).find(item => String(item.role || '').toLowerCase() === key) || {};
+    const state = String(step.state || 'pending').toLowerCase();
+    const body = sections[role] || step.detail || 'Waiting for report.';
+    return `
+      <div class="jarvis-agent-card">
+        <div class="jarvis-agent-card-head">
+          <div class="jarvis-agent-card-role">${escapeHtml(role)}</div>
+          <div class="jarvis-agent-card-state ${escapeHtml(state)}">${escapeHtml(state)}</div>
+        </div>
+        <div class="jarvis-agent-card-body">${escapeHtml(compactText(body, 360))}</div>
+      </div>
+    `;
+  }).join('');
+  const tail = data?.report_tail ? `<details><summary>Raw report tail</summary><pre class="jarvis-run-tail">${escapeHtml(data.report_tail)}</pre></details>` : '';
+  updateJarvisFlow(status, data?.steps || null);
   setJarvisRunStatus(`
+    <div class="jarvis-run-summary">
     <strong>${escapeHtml(status)}</strong>
     <div class="jarvis-run-meta">
       <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
       <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
       <span class="jarvis-run-chip">${escapeHtml(reportPath)}</span>
+      ${task}
     </div>
+    <div class="jarvis-agent-grid">${agents}</div>
     ${tail}
+    </div>
   `, status);
+}
+
+async function verifyDashboardRunToken() {
+  const hasToken = Boolean(localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
+  if (!hasToken && IS_PUBLIC_DASHBOARD) {
+    renderPipelineAccessHelp('No token saved yet.');
+    return;
+  }
+  try {
+    const response = await fetch(`${JARVIS_PIPELINE_RUN_API}`, {
+      method: 'POST',
+      headers: jarvisRunHeaders(),
+      body: JSON.stringify({
+        task: 'Dashboard token check. Dry run only. Do not launch agents.',
+        project: 'jarvis',
+        dry_run: true,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      localStorage.removeItem(JARVIS_RUN_TOKEN_KEY);
+      showJarvisTokenBox(true);
+      setJarvisRunStatus('Token is missing or wrong. Run the auth helper again.', 'error');
+      return;
+    }
+    if (!response.ok) {
+      setJarvisRunStatus(`Token check failed: ${escapeHtml(data.error || response.statusText)}`, 'error');
+      return;
+    }
+    showJarvisTokenBox(false);
+    updateJarvisFlow('waiting');
+    setJarvisRunStatus('Token works. You can launch Supervisor → Builder → Tester now.', 'done');
+  } catch (error) {
+    setJarvisRunStatus(`Token check failed: ${escapeHtml(error.message || error)}`, 'error');
+  }
 }
 
 async function runJarvisPipeline() {
@@ -1558,6 +1862,7 @@ async function runJarvisPipeline() {
     return;
   }
   if (button) button.disabled = true;
+  updateJarvisFlow('starting');
   setJarvisRunStatus('Starting Supervisor → Builder → Tester...', 'starting');
   try {
     const response = await fetch(JARVIS_PIPELINE_RUN_API, {
@@ -1567,8 +1872,7 @@ async function runJarvisPipeline() {
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      showJarvisTokenBox(true);
-      setJarvisRunStatus('Public launch is locked. Save the dashboard token once.', 'error');
+      renderPipelineAccessHelp(data.message || 'Public launch is locked. Save the dashboard token once.');
       return;
     }
     if (!response.ok) {
@@ -1588,7 +1892,7 @@ async function runJarvisPipeline() {
 
 async function refreshJarvisRunStatus(runId = currentJarvisRunId) {
   if (!runId) {
-    setJarvisRunStatus('No pipeline run yet.', 'waiting');
+    setJarvisRunStatus('No pipeline run yet. Write a task and click Run.', 'waiting');
     return;
   }
   try {
@@ -1597,8 +1901,7 @@ async function refreshJarvisRunStatus(runId = currentJarvisRunId) {
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      showJarvisTokenBox(true);
-      setJarvisRunStatus('Public status is locked. Save the dashboard token once.', 'error');
+      renderPipelineAccessHelp(data.message || 'Public status is locked. Save the dashboard token once.');
       return;
     }
     if (!response.ok) {
@@ -1620,7 +1923,13 @@ function scheduleJarvisRunPoll() {
 }
 
 function initJarvisRunPanel() {
-  showJarvisTokenBox(false);
+  const savedFromHash = initJarvisRunTokenFromHash();
+  showJarvisTokenBox(IS_PUBLIC_DASHBOARD && !localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
+  updateJarvisFlow('waiting');
+  if (savedFromHash) {
+    verifyDashboardRunToken();
+    return;
+  }
   if (currentJarvisRunId) refreshJarvisRunStatus(currentJarvisRunId);
 }
 

@@ -283,6 +283,71 @@ def _parse_pipeline_status(report_text: str) -> str:
     return "starting"
 
 
+def _pipeline_report_field(report_text: str, field: str) -> str:
+    match = re.search(rf"(?im)^-\s*{re.escape(field)}:\s*(.+?)\s*$", report_text)
+    return match.group(1).strip() if match else ""
+
+
+def _compact_report_text(value: str, limit: int = 720) -> str:
+    value = re.sub(r"\n{3,}", "\n\n", (value or "").strip())
+    if len(value) <= limit:
+        return value
+    return value[: limit - 3].rstrip() + "..."
+
+
+def _pipeline_sections(report_text: str) -> dict:
+    sections = {}
+    matches = list(re.finditer(r"(?m)^##\s+(.+?)\s*$", report_text))
+    for idx, match in enumerate(matches):
+        title = match.group(1).strip()
+        start = match.end()
+        end = matches[idx + 1].start() if idx + 1 < len(matches) else len(report_text)
+        if title in {"Supervisor", "Builder", "Tester", "Result"}:
+            sections[title] = _compact_report_text(report_text[start:end])
+    return sections
+
+
+def _pipeline_steps(status: str, sections: dict) -> list[dict]:
+    status = (status or "waiting").lower()
+    roles = [
+        ("supervisor", "Supervisor", "turns request into acceptance criteria"),
+        ("builder", "Builder", "implements scoped work or returns exact handoff"),
+        ("tester", "Tester", "checks request vs result and evidence"),
+    ]
+    steps = []
+    for key, title, default_detail in roles:
+        if title in sections:
+            state = "done"
+            detail = _compact_report_text(sections[title], 220)
+        else:
+            state = "pending"
+            detail = default_detail
+        steps.append({"role": key, "label": title, "state": state, "detail": detail})
+
+    if status == "starting":
+        steps[0]["state"] = "working"
+    elif status == "supervisor_running":
+        steps[0]["state"] = "working"
+    elif status == "builder_running":
+        steps[0]["state"] = "done"
+        steps[1]["state"] = "working"
+    elif status == "tester_running":
+        steps[0]["state"] = "done"
+        steps[1]["state"] = "done"
+        steps[2]["state"] = "working"
+    elif status == "done":
+        for step in steps:
+            step["state"] = "done"
+    elif status == "failed":
+        failed = False
+        for step in steps:
+            if step["state"] != "done" and not failed:
+                step["state"] = "failed"
+                failed = True
+
+    return steps
+
+
 def _health_request(method: str, path: str, payload: dict | None = None) -> dict:
     data = None
     headers = {"Content-Type": "application/json"}
@@ -822,6 +887,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "project_dir": str(project_dir),
                     "report_path": str(report_path),
                     "task": task,
+                    "steps": _pipeline_steps("starting", {}),
                 },
             )
             return
@@ -862,6 +928,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "project_dir": str(project_dir),
                 "report_path": str(report_path),
                 "task": task,
+                "steps": _pipeline_steps("starting", {}),
             },
         )
 
@@ -891,6 +958,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "run_id": run_id or None,
                     "status": "waiting",
                     "report_path": str(report_path) if report_path else None,
+                    "steps": _pipeline_steps("waiting", {}),
                     "report_tail": "",
                 },
             )
@@ -903,14 +971,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
 
         lines = report_text.splitlines()
+        status = _parse_pipeline_status(report_text)
+        sections = _pipeline_sections(report_text)
         stat = report_path.stat()
         self._json_response(
             200,
             {
                 "exists": True,
                 "run_id": run_id,
-                "status": _parse_pipeline_status(report_text),
+                "status": status,
                 "report_path": str(report_path),
+                "project_dir": _pipeline_report_field(report_text, "Project"),
+                "project": Path(_pipeline_report_field(report_text, "Project")).name
+                if _pipeline_report_field(report_text, "Project")
+                else None,
+                "task": _pipeline_report_field(report_text, "Task"),
+                "route": _pipeline_report_field(report_text, "Route"),
+                "model": _pipeline_report_field(report_text, "Model"),
+                "sections": sections,
+                "steps": _pipeline_steps(status, sections),
                 "updated_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "bytes": stat.st_size,
                 "report_tail": "\n".join(lines[-80:]),
