@@ -1394,6 +1394,11 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           id="jarvis-task-input"
           placeholder="Задача для Jarvis..."
         ></textarea>
+        <select class="jarvis-run-select" id="jarvis-provider-select" aria-label="Agent provider">
+          <option value="auto">Auto</option>
+          <option value="codex">Codex</option>
+          <option value="claude">Claude</option>
+        </select>
         <select class="jarvis-run-select" id="jarvis-project-select" aria-label="Project">
           <option value="jarvis">Jarvis</option>
         </select>
@@ -1975,6 +1980,7 @@ function renderJarvisRunStatus(data) {
   const runId = data?.run_id || currentJarvisRunId || '-';
   const reportPath = data?.report_path || '-';
   const project = data?.project || 'jarvis';
+  const provider = data?.provider || 'auto';
   if (data?.task) lastJarvisTaskText = data.task;
   const task = data?.task ? `<span class="jarvis-run-chip">task ${escapeHtml(compactText(data.task, 90))}</span>` : '';
   const reportChip = reportPath && reportPath !== '-'
@@ -2006,6 +2012,7 @@ function renderJarvisRunStatus(data) {
         <div class="jarvis-run-meta">
           <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
           <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
+          <span class="jarvis-run-chip">provider ${escapeHtml(provider)}</span>
           ${reportChip}
           ${task}
         </div>
@@ -2059,6 +2066,7 @@ async function verifyDashboardRunToken() {
 async function runJarvisPipeline() {
   const input = document.getElementById('jarvis-task-input');
   const project = document.getElementById('jarvis-project-select')?.value || 'jarvis';
+  const provider = document.getElementById('jarvis-provider-select')?.value || 'auto';
   const button = document.getElementById('jarvis-run-button');
   const task = input ? input.value.trim() : '';
   if (!task) {
@@ -2073,7 +2081,7 @@ async function runJarvisPipeline() {
       method: 'POST',
       headers: jarvisRunHeaders(),
       cache: 'no-store',
-      body: JSON.stringify({ task, project }),
+      body: JSON.stringify({ task, project, provider }),
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {

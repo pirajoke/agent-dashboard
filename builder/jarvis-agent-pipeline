@@ -3,6 +3,15 @@ set -euo pipefail
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.local/bin:$PATH"
 
+AGENT_ENV_FILE="${JARVIS_AGENT_ENV_FILE:-$HOME/.secrets/jarvis-agent.env}"
+AGENT_ENV_LOADED="0"
+if [[ -f "$AGENT_ENV_FILE" ]]; then
+  set -a
+  source "$AGENT_ENV_FILE"
+  set +a
+  AGENT_ENV_LOADED="1"
+fi
+
 TASK="${*:-}"
 if [[ -z "$TASK" ]]; then
   echo "usage: jarvis-agent-pipeline '<task text>'" >&2
@@ -21,6 +30,11 @@ OMNI_APPROVAL_LEDGER="${JARVIS_OMNI_APPROVAL_LEDGER:-$HOME/omniharness/.omniharn
 SELF_HEAL_ENABLED="${JARVIS_AGENT_SELF_HEAL_ENABLED:-1}"
 SELF_HEAL_MAX_RETRIES="${JARVIS_AGENT_SELF_HEAL_MAX_RETRIES:-1}"
 SELF_LEARNING_LEDGER="${JARVIS_AGENT_SELF_LEARNING_LEDGER:-$HOME/omniharness/.omniharness/jarvis-self-learning.jsonl}"
+AGENT_PROVIDER="${JARVIS_AGENT_PROVIDER:-auto}"
+CODEX_BIN="${JARVIS_CODEX_BIN:-/Applications/Codex.app/Contents/Resources/codex}"
+CODEX_MODEL="${JARVIS_CODEX_MODEL:-}"
+CODEX_REASONING_EFFORT="${JARVIS_CODEX_REASONING_EFFORT:-low}"
+CODEX_APPROVAL_POLICY="${JARVIS_CODEX_APPROVAL_POLICY:-never}"
 
 SUPERVISOR_PERMISSION="${JARVIS_SUPERVISOR_PERMISSION:-dontAsk}"
 BUILDER_PERMISSION="${JARVIS_BUILDER_PERMISSION:-auto}"
@@ -214,6 +228,155 @@ run_claude_role() {
   print -r -- "$output"
 }
 
+codex_sandbox_for_role() {
+  local role="$1"
+  local risk="$2"
+  if [[ "$risk" == "high" || "$TASK_MODE_HINT" == read_only_smoke:* ]]; then
+    echo "read-only"
+    return 0
+  fi
+  case "$role" in
+    builder) echo "workspace-write" ;;
+    *) echo "read-only" ;;
+  esac
+}
+
+run_codex_role() {
+  local role="$1"
+  local permission="$2"
+  local system_prompt="$3"
+  local user_prompt="$4"
+  local output=""
+  local final_output=""
+  local code=0
+  local risk=""
+  local sandbox=""
+  local final_file=""
+  local -a codex_cmd
+
+  cd "$PROJECT_DIR"
+  if [[ ! -x "$CODEX_BIN" ]]; then
+    echo "ROLE_FAILED=$role"
+    echo "PROVIDER_FAILED=codex"
+    echo "EXIT_CODE=127"
+    echo
+    echo "Codex binary is not executable: $CODEX_BIN"
+    return 127
+  fi
+
+  risk="$(omni_risk_level "$TASK $user_prompt")"
+  sandbox="$(codex_sandbox_for_role "$role" "$risk")"
+  omni_audit "$role" "codex:$sandbox" "codex:$sandbox" "$risk" "codex exec --sandbox $sandbox --approval $CODEX_APPROVAL_POLICY"
+
+  final_file="$REPORT_DIR/$RUN_ID.$role.codex.final.txt"
+  rm -f "$final_file" 2>/dev/null || true
+
+  codex_cmd=("$CODEX_BIN" exec
+    --cd "$PROJECT_DIR"
+    --sandbox "$sandbox"
+    --skip-git-repo-check
+    -c "approval_policy=\"$CODEX_APPROVAL_POLICY\""
+    -c "model_reasoning_effort=\"$CODEX_REASONING_EFFORT\""
+    -c 'model_verbosity="low"'
+    --output-last-message "$final_file")
+  if [[ -n "$CODEX_MODEL" ]]; then
+    codex_cmd+=(-m "$CODEX_MODEL")
+  fi
+
+  set +e
+  output="$(print -r -- "$system_prompt\n\n$user_prompt" | "${codex_cmd[@]}" - 2>&1)"
+  code=$?
+  set -e
+
+  if [[ -f "$final_file" ]]; then
+    final_output="$(cat "$final_file" 2>/dev/null || true)"
+  fi
+  if [[ -z "$final_output" ]]; then
+    final_output="$output"
+  fi
+
+  if (( code != 0 )); then
+    {
+      echo "ROLE_FAILED=$role"
+      echo "PROVIDER_FAILED=codex"
+      echo "EXIT_CODE=$code"
+      echo
+      print -r -- "$output"
+    }
+    return "$code"
+  fi
+
+  echo "Provider: codex"
+  echo "Sandbox: $sandbox"
+  if [[ -n "$CODEX_MODEL" ]]; then
+    echo "Codex model: $CODEX_MODEL"
+  fi
+  echo
+  print -r -- "$final_output"
+}
+
+run_agent_role() {
+  local role="$1"
+  local permission="$2"
+  local system_prompt="$3"
+  local user_prompt="$4"
+  local provider="${AGENT_PROVIDER:l}"
+  local output=""
+  local codex_output=""
+  local diagnosis=""
+
+  case "$provider" in
+    claude)
+      run_claude_role "$role" "$permission" "$system_prompt" "$user_prompt"
+      return $?
+      ;;
+    codex)
+      run_codex_role "$role" "$permission" "$system_prompt" "$user_prompt"
+      return $?
+      ;;
+    auto|"")
+      output="$(run_claude_role "$role" "$permission" "$system_prompt" "$user_prompt" || true)"
+      if ! role_output_failed "$output"; then
+        print -r -- "$output"
+        return 0
+      fi
+
+      diagnosis="$(classify_role_failure "$output")"
+      append_section "Provider Fallback" "- Role: $role
+- Primary provider: claude
+- Diagnosis: $diagnosis
+- Fallback provider: codex
+- Codex sandbox: $(codex_sandbox_for_role "$role" "$(omni_risk_level "$TASK $user_prompt")")"
+      record_self_learning "$role" "claude_$diagnosis" "fallback_to_codex" "$(print -r -- "$output" | tail -60)"
+      pixel_event start "$role" "Claude failed ($diagnosis); trying Codex" "Provider fallback" "Codex returns result or explicit blocker"
+
+      codex_output="$(run_codex_role "$role" "$permission" "$system_prompt" "$user_prompt" || true)"
+      if role_output_failed "$codex_output"; then
+        {
+          print -r -- "$output"
+          echo
+          echo "--- CODEX FALLBACK ---"
+          print -r -- "$codex_output"
+        }
+        return 1
+      fi
+
+      record_self_learning "$role" "claude_$diagnosis" "codex_recovered" "$codex_output"
+      echo "Provider fallback: claude -> codex"
+      echo
+      print -r -- "$codex_output"
+      return 0
+      ;;
+    *)
+      echo "ROLE_FAILED=$role"
+      echo "EXIT_CODE=2"
+      echo
+      echo "Unknown JARVIS_AGENT_PROVIDER: $AGENT_PROVIDER. Use auto, claude, or codex."
+      return 2
+      ;;
+  esac
+}
+
 role_output_failed() {
   local output="$1"
   print -r -- "$output" | grep -q '^ROLE_FAILED='
@@ -322,7 +485,7 @@ $failure_tail
 Original role prompt:
 $user_prompt"
 
-  retry_output="$(run_claude_role "$role" "$permission" "$retry_system" "$retry_prompt" || true)"
+  retry_output="$(run_agent_role "$role" "$permission" "$retry_system" "$retry_prompt" || true)"
   append_section "$role Self-Heal Retry" "$retry_output"
 
   if role_output_failed "$retry_output"; then
@@ -412,6 +575,7 @@ cat > "$REPORT" <<EOF
 - Run: $RUN_ID
 - Project: $PROJECT_DIR
 - Model: $MODEL
+- Provider mode: $AGENT_PROVIDER
 - Task: $TASK
 - Task mode: $TASK_MODE_HINT
 - Route: Supervisor -> Builder -> Tester
@@ -423,6 +587,12 @@ cat > "$REPORT" <<EOF
   - Enabled: $SELF_HEAL_ENABLED
   - Max retries per role: $SELF_HEAL_MAX_RETRIES
   - Learning ledger: $SELF_LEARNING_LEDGER
+- Provider:
+  - Mode: $AGENT_PROVIDER
+  - Codex binary: $CODEX_BIN
+  - Codex model: ${CODEX_MODEL:-default}
+  - Codex reasoning effort: $CODEX_REASONING_EFFORT
+  - Secure env loaded: $AGENT_ENV_LOADED
 - Permissions:
   - Supervisor: $SUPERVISOR_PERMISSION
   - Builder: $BUILDER_PERMISSION
@@ -480,7 +650,7 @@ Task mode: $TASK_MODE_HINT
 5. Критерии готовности"
 
 pixel_event start supervisor "Request: $TASK" "Defining acceptance criteria and routing plan" "Builder receives scope, risks, and checks"
-SUPERVISOR_OUTPUT="$(run_claude_role supervisor "$SUPERVISOR_PERMISSION" "$SUPERVISOR_SYSTEM" "$SUPERVISOR_PROMPT" || true)"
+SUPERVISOR_OUTPUT="$(run_agent_role supervisor "$SUPERVISOR_PERMISSION" "$SUPERVISOR_SYSTEM" "$SUPERVISOR_PROMPT" || true)"
 append_section "Supervisor" "$SUPERVISOR_OUTPUT"
 pixel_event done supervisor "Acceptance criteria ready for Builder" "Handoff ready" "Builder receives Supervisor section from report" "Report: $REPORT"
 
@@ -521,7 +691,7 @@ $SUPERVISOR_OUTPUT
 4. Handoff для Tester"
 
 pixel_event start builder "Build/check: $TASK" "Reading context and producing implementation handoff" "Tester receives files, commands, and result"
-BUILDER_OUTPUT="$(run_claude_role builder "$BUILDER_PERMISSION" "$BUILDER_SYSTEM" "$BUILDER_PROMPT" || true)"
+BUILDER_OUTPUT="$(run_agent_role builder "$BUILDER_PERMISSION" "$BUILDER_SYSTEM" "$BUILDER_PROMPT" || true)"
 append_section "Builder" "$BUILDER_OUTPUT"
 pixel_event done builder "Builder result ready for Tester" "Implementation/check complete" "Tester receives Builder section from report" "Report: $REPORT"
 
@@ -557,7 +727,7 @@ $BUILDER_OUTPUT
 4. Следующий шаг"
 
 pixel_event start tester "Verify: $TASK" "Checking request vs result and evidence" "Supervisor receives pass/fail verdict"
-TESTER_OUTPUT="$(run_claude_role tester "$TESTER_PERMISSION" "$TESTER_SYSTEM" "$TESTER_PROMPT" || true)"
+TESTER_OUTPUT="$(run_agent_role tester "$TESTER_PERMISSION" "$TESTER_SYSTEM" "$TESTER_PROMPT" || true)"
 append_section "Tester" "$TESTER_OUTPUT"
 pixel_event done tester "Tester verdict ready" "Verification complete" "Supervisor receives Tester section from report" "Report: $REPORT"
 

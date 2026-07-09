@@ -309,7 +309,7 @@ def _compact_report_text(value: str, limit: int = 720) -> str:
 
 def _pipeline_sections(report_text: str) -> dict:
     sections = {}
-    pipeline_titles = {"Supervisor", "Builder", "Tester", "Result"}
+    pipeline_titles = {"Supervisor", "Builder", "Tester", "Provider Fallback", "Self-Healing", "Result"}
     matches = [
         match
         for match in re.finditer(r"(?m)^##\s+(.+?)\s*$", report_text)
@@ -926,6 +926,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if not project_dir:
             self._json_response(400, {"error": "unknown project", "projects": sorted(JARVIS_PROJECTS)})
             return
+        provider = str(body.get("provider") or "auto").strip().lower()
+        if provider not in {"auto", "claude", "codex"}:
+            self._json_response(400, {"error": "unknown provider", "providers": ["auto", "claude", "codex"]})
+            return
         if not project_dir.exists():
             self._json_response(500, {"error": "project directory missing", "path": str(project_dir)})
             return
@@ -943,6 +947,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "status": "dry_run",
                     "run_id": run_id,
                     "project": project_key,
+                    "provider": provider,
                     "project_dir": str(project_dir),
                     "report_path": str(report_path),
                     "task": task,
@@ -960,6 +965,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "JARVIS_PROJECT_NAME": project_key,
                 "JARVIS_AGENT_RUN_ID": run_id,
                 "JARVIS_AGENT_REPORT_DIR": str(JARVIS_PIPELINE_REPORT_DIR),
+                "JARVIS_AGENT_PROVIDER": provider,
             }
         )
         try:
@@ -984,6 +990,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "pid": proc.pid,
                 "run_id": run_id,
                 "project": project_key,
+                "provider": provider,
                 "project_dir": str(project_dir),
                 "report_path": str(report_path),
                 "task": task,
@@ -1044,6 +1051,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "project": Path(_pipeline_report_field(report_text, "Project")).name
                 if _pipeline_report_field(report_text, "Project")
                 else None,
+                "provider": _pipeline_report_field(report_text, "Provider mode"),
                 "task": _pipeline_report_field(report_text, "Task"),
                 "route": _pipeline_report_field(report_text, "Route"),
                 "model": _pipeline_report_field(report_text, "Model"),
