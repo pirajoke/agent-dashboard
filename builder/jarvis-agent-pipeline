@@ -506,6 +506,9 @@ supervisor_needs_input() {
 
 task_preflight_needs_input() {
   local text="${TASK:l}"
+  if print -r -- "$text" | grep -Eiq 'подготов|состав|сделай|создай|проверь|почини|исправ|запусти|проанализ|напиши|разбери|обнови|задеплой|deploy|check|fix|create|analy[sz]e|prepare|write|run'; then
+    return 1
+  fi
   print -r -- "$text" | grep -Eiq 'над чем работаем|что сейчас делать|что дальше\s*\??$|^погнали\s*\??$|^go\s*\??$'
 }
 

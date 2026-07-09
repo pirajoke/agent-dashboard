@@ -711,12 +711,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at 9% 0%, rgba(234,179,8,0.16), transparent 30%),
-    linear-gradient(135deg, #FFFFFF 0%, #FFFDF7 48%, #F8FBFF 100%);
+    radial-gradient(circle at 8% 0%, rgba(234,179,8,0.10), transparent 28%),
+    linear-gradient(135deg, #FFFFFF 0%, #FFFDFB 54%, #F8FBFF 100%);
   border: 1px solid rgba(0,0,0,0.07);
-  border-radius: 20px;
-  box-shadow: 0 12px 34px rgba(17,24,39,0.08);
-  padding: 16px;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(17,24,39,0.07);
+  padding: 18px;
   margin-bottom: 0;
 }
 .jarvis-run-card::before {
@@ -733,7 +733,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   gap: 16px;
   margin-bottom: 10px;
 }
-.jarvis-run-title { font-size: 20px; font-weight: 850; letter-spacing: -0.02em; }
+.jarvis-run-title { font-size: 20px; font-weight: 850; letter-spacing: 0; }
 .jarvis-run-subtitle { color: var(--text2); font-size: 12px; margin-top: 3px; font-weight: 600; }
 .jarvis-run-mode {
   display: inline-flex;
@@ -754,15 +754,16 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin: 10px 0;
+  margin: 12px 0;
 }
 .jarvis-flow-step {
   display: grid;
   gap: 4px;
   border: 1px solid rgba(0,0,0,0.07);
-  border-radius: 14px;
-  background: rgba(255,255,255,0.72);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.82);
   padding: 10px 12px;
+  min-height: 58px;
 }
 .jarvis-flow-step-name {
   display: flex;
@@ -802,13 +803,14 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 @keyframes pulse-blue { 0%,100% { box-shadow: 0 0 0 4px rgba(59,130,246,0.10); } 50% { box-shadow: 0 0 0 7px rgba(59,130,246,0.16); } }
 .jarvis-run-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 120px 128px 86px;
+  grid-template-columns: minmax(260px, 1fr) 132px 132px 128px 104px;
   gap: 10px;
   align-items: stretch;
 }
 .jarvis-run-input {
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
+  max-height: 130px;
   resize: vertical;
   border: 1px solid var(--border2);
   border-radius: 12px;
@@ -840,12 +842,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
-  min-width: 128px;
+  min-width: 0;
+  min-height: 48px;
 }
 .jarvis-run-btn.secondary {
   background: var(--card);
   color: var(--text2);
-  min-width: 86px;
+  min-width: 0;
 }
 .jarvis-run-btn.ghost {
   background: rgba(255,255,255,0.68);
@@ -856,6 +859,28 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-run-btn:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+.jarvis-run-examples {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.jarvis-task-chip {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.82);
+  color: var(--text2);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 850;
+  padding: 6px 10px;
+}
+.jarvis-task-chip:hover {
+  border-color: rgba(234,179,8,0.42);
+  color: var(--text);
+  background: var(--accent-bg);
 }
 .jarvis-token-box {
   display: grid;
@@ -906,10 +931,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .jarvis-run-status {
   margin-top: 10px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(255,255,255,0.72);
-  padding: 11px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
   color: var(--text2);
   font-size: 12px;
 }
@@ -919,14 +944,14 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-run-status.self_healing,
 .jarvis-run-status.supervisor_running,
 .jarvis-run-status.builder_running,
-.jarvis-run-status.tester_running { border-color: rgba(59,130,246,0.24); background: var(--blue-bg); }
-.jarvis-run-status.needs_approval { border-color: rgba(234,179,8,0.30); background: var(--accent-bg); }
-.jarvis-run-status.needs_input { border-color: rgba(234,179,8,0.30); background: var(--accent-bg); }
+.jarvis-run-status.tester_running { background: transparent; }
+.jarvis-run-status.needs_approval { background: transparent; }
+.jarvis-run-status.needs_input { background: transparent; }
 .jarvis-run-status.blocked_usage_limit,
-.jarvis-run-status.blocked_auth { border-color: rgba(234,179,8,0.30); background: var(--accent-bg); }
-.jarvis-run-status.done { border-color: rgba(34,197,94,0.24); background: var(--green-bg); }
+.jarvis-run-status.blocked_auth { background: transparent; }
+.jarvis-run-status.done { background: transparent; }
 .jarvis-run-status.failed,
-.jarvis-run-status.error { border-color: rgba(239,68,68,0.24); background: var(--red-bg); }
+.jarvis-run-status.error { background: transparent; }
 .jarvis-run-meta {
   display: flex;
   gap: 8px;
@@ -945,6 +970,35 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-run-summary {
   display: grid;
   gap: 8px;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.78);
+  padding: 12px;
+}
+.jarvis-run-status.started .jarvis-run-summary,
+.jarvis-run-status.starting .jarvis-run-summary,
+.jarvis-run-status.self_healing .jarvis-run-summary,
+.jarvis-run-status.supervisor_running .jarvis-run-summary,
+.jarvis-run-status.builder_running .jarvis-run-summary,
+.jarvis-run-status.tester_running .jarvis-run-summary {
+  border-color: rgba(59,130,246,0.20);
+  background: linear-gradient(135deg, rgba(239,246,255,0.78), rgba(255,255,255,0.88));
+}
+.jarvis-run-status.needs_approval .jarvis-run-summary,
+.jarvis-run-status.needs_input .jarvis-run-summary,
+.jarvis-run-status.blocked_usage_limit .jarvis-run-summary,
+.jarvis-run-status.blocked_auth .jarvis-run-summary {
+  border-color: rgba(234,179,8,0.24);
+  background: linear-gradient(135deg, rgba(254,249,231,0.78), rgba(255,255,255,0.9));
+}
+.jarvis-run-status.done .jarvis-run-summary {
+  border-color: rgba(34,197,94,0.20);
+  background: linear-gradient(135deg, rgba(240,253,244,0.78), rgba(255,255,255,0.9));
+}
+.jarvis-run-status.failed .jarvis-run-summary,
+.jarvis-run-status.error .jarvis-run-summary {
+  border-color: rgba(239,68,68,0.20);
+  background: linear-gradient(135deg, rgba(254,242,242,0.80), rgba(255,255,255,0.9));
 }
 .jarvis-run-compact-top {
   display: flex;
@@ -956,9 +1010,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-human-summary {
   display: grid;
   gap: 8px;
-  border: 1px solid rgba(0,0,0,0.07);
+  border: 1px solid rgba(0,0,0,0.06);
   border-radius: 12px;
-  background: rgba(255,255,255,0.78);
+  background: rgba(255,255,255,0.86);
   padding: 10px 12px;
   color: var(--text2);
   line-height: 1.45;
@@ -1072,7 +1126,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .agents-grid { grid-template-columns: 1fr 1fr; }
   .ai-island-layout { grid-template-columns: 1fr; }
   .island-map { min-height: 640px; }
-  .jarvis-run-form { grid-template-columns: 1fr; }
+  .jarvis-run-form { grid-template-columns: 1fr 1fr; }
+  .jarvis-run-input { grid-column: 1 / -1; }
   .jarvis-run-select,
   .jarvis-run-btn { min-height: 42px; }
   .jarvis-run-flow,
@@ -1086,6 +1141,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .agents-grid { grid-template-columns: 1fr; }
   .header { flex-direction: column; gap: 16px; }
   .ai-island-hero { align-items: flex-start; flex-direction: column; }
+  .jarvis-run-form { grid-template-columns: 1fr; }
+  .jarvis-run-input { grid-column: auto; }
   .ai-island-title { font-size: 24px; }
   .island-map { min-height: 720px; }
   .island-node { width: 96px; transform: scale(0.9); transform-origin: center; }
@@ -1370,7 +1427,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="jarvis-run-header">
         <div>
           <div class="jarvis-run-title">Agent Pipeline</div>
-          <div class="jarvis-run-subtitle">Launch real Jarvis work: Supervisor → Builder → Tester, with report and evidence.</div>
+          <div class="jarvis-run-subtitle">Jarvis routes real work through Supervisor → Builder → Tester, then shows evidence below.</div>
         </div>
         <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
       </div>
@@ -1392,7 +1449,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <textarea
           class="jarvis-run-input"
           id="jarvis-task-input"
-          placeholder="Задача для Jarvis..."
+          placeholder="Например: подготовь план работы по Jarvis на сегодня"
         ></textarea>
         <select class="jarvis-run-select" id="jarvis-provider-select" aria-label="Agent provider">
           <option value="auto">Auto</option>
@@ -1403,7 +1460,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           <option value="jarvis">Jarvis</option>
         </select>
         <button class="jarvis-run-btn" id="jarvis-run-button" type="button" onclick="runJarvisPipeline()">Run</button>
-        <button class="jarvis-run-btn secondary" type="button" onclick="refreshJarvisRunStatus()">Status</button>
+        <button class="jarvis-run-btn secondary" type="button" onclick="refreshJarvisRunStatus()">Refresh</button>
+      </div>
+      <div class="jarvis-run-examples">
+        <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Подготовь план работы по Jarvis на сегодня: что важно, что заблокировано, следующий шаг.')">План по Jarvis</button>
+        <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Проверь статус агентов и Command Center. Не меняй файлы, дай короткий отчёт и следующий шаг.')">Проверить агентов</button>
+        <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Запусти read-only smoke для Jarvis pipeline. Не меняй файлы. Supervisor: handoff, Builder: ACK, Tester: PASS.')">Smoke без правок</button>
       </div>
       <div class="jarvis-token-box hidden" id="jarvis-token-box">
         <div class="jarvis-token-title">
@@ -1786,6 +1848,13 @@ function loadLastJarvisTask() {
   input.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+function fillJarvisTask(text) {
+  const input = document.getElementById('jarvis-task-input');
+  if (!input) return;
+  input.value = text;
+  input.focus();
+}
+
 function renderJarvisHumanSummary(data) {
   const status = String(data?.status || 'waiting').toLowerCase();
   const sectionsText = `${Object.values(data?.sections || {}).join('\n')}\n${data?.report_tail || ''}`;
@@ -1825,8 +1894,8 @@ function renderJarvisHumanSummary(data) {
     body = 'Supervisor, Builder и Tester прошли маршрут. Смотри карточки и Raw report tail для evidence.';
   } else if (status === 'needs_input') {
     tone = 'needs approval';
-    title = 'Нужна конкретная задача';
-    body = 'Supervisor понял контекст, но не стал запускать Builder без явного запроса. Напиши, что именно сделать: проверить, исправить, задеплоить или подготовить план.';
+    title = 'Нужно выбрать действие';
+    body = 'Напиши задачу как команду: подготовь план, проверь систему, исправь баг, запусти smoke или задеплой. Фразы без действия Jarvis не отдаёт Builder.';
   } else if (status === 'self_healing') {
     tone = 'running';
     title = 'Агенты чинят ошибку';
@@ -1834,7 +1903,7 @@ function renderJarvisHumanSummary(data) {
   } else if (status.includes('running') || status === 'starting' || status === 'started') {
     tone = 'running';
     title = 'Агенты работают';
-    body = 'Jarvis сейчас проходит маршрут Supervisor → Builder → Tester. Статус обновляется автоматически.';
+    body = 'Jarvis сейчас проходит маршрут Supervisor → Builder → Tester. Ниже видно, кто уже закончил и кто работает сейчас.';
   }
 
   const actions = hasTask
