@@ -916,10 +916,14 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-run-status strong { color: var(--text); }
 .jarvis-run-status.started,
 .jarvis-run-status.starting,
+.jarvis-run-status.self_healing,
 .jarvis-run-status.supervisor_running,
 .jarvis-run-status.builder_running,
 .jarvis-run-status.tester_running { border-color: rgba(59,130,246,0.24); background: var(--blue-bg); }
 .jarvis-run-status.needs_approval { border-color: rgba(234,179,8,0.30); background: var(--accent-bg); }
+.jarvis-run-status.needs_input { border-color: rgba(234,179,8,0.30); background: var(--accent-bg); }
+.jarvis-run-status.blocked_usage_limit,
+.jarvis-run-status.blocked_auth { border-color: rgba(234,179,8,0.30); background: var(--accent-bg); }
 .jarvis-run-status.done { border-color: rgba(34,197,94,0.24); background: var(--green-bg); }
 .jarvis-run-status.failed,
 .jarvis-run-status.error { border-color: rgba(239,68,68,0.24); background: var(--red-bg); }
@@ -1742,6 +1746,10 @@ function statusLabel(value) {
   const labels = {
     dry_run: 'ready',
     needs_approval: 'needs approval',
+    needs_input: 'needs input',
+    blocked_usage_limit: 'usage limit',
+    blocked_auth: 'auth blocked',
+    self_healing: 'self healing',
     supervisor_running: 'supervisor running',
     builder_running: 'builder running',
     tester_running: 'tester running',
@@ -1794,6 +1802,14 @@ function renderJarvisHumanSummary(data) {
     tone = 'failed';
     title = 'Claude лимит, работа не стартовала';
     body = 'Агенты не дошли до задачи: Claude вернул лимит usage. Повтори запуск после reset времени или переключи модель/аккаунт.';
+  } else if (status === 'blocked_usage_limit') {
+    tone = 'needs approval';
+    title = 'Claude лимит';
+    body = 'Self-healing записал причину и остановил retry. Это не ошибка задачи: нужно дождаться reset quota или подключить fallback-модель.';
+  } else if (status === 'blocked_auth') {
+    tone = 'needs approval';
+    title = 'Нужна авторизация Claude';
+    body = 'Агенты не могут стартовать без Claude auth на Mac Mini. После логина pipeline продолжит работать автоматически.';
   } else if (status === 'failed') {
     tone = 'failed';
     title = 'Pipeline упал';
@@ -1802,6 +1818,14 @@ function renderJarvisHumanSummary(data) {
     tone = 'done';
     title = 'Pipeline завершён';
     body = 'Supervisor, Builder и Tester прошли маршрут. Смотри карточки и Raw report tail для evidence.';
+  } else if (status === 'needs_input') {
+    tone = 'needs approval';
+    title = 'Нужна конкретная задача';
+    body = 'Supervisor понял контекст, но не стал запускать Builder без явного запроса. Напиши, что именно сделать: проверить, исправить, задеплоить или подготовить план.';
+  } else if (status === 'self_healing') {
+    tone = 'running';
+    title = 'Агенты чинят ошибку';
+    body = 'Pipeline нашёл сбой, записал lesson и делает один безопасный repair-pass. Статус обновляется автоматически.';
   } else if (status.includes('running') || status === 'starting' || status === 'started') {
     tone = 'running';
     title = 'Агенты работают';
@@ -1896,6 +1920,7 @@ function updateJarvisFlow(status = 'waiting', steps = null) {
   const normalized = String(status || '').toLowerCase();
   const fallback = roles.map(role => ({ role, state: 'pending' }));
   if (normalized === 'starting') fallback[0].state = 'working';
+  if (normalized === 'self_healing') fallback[1].state = 'working';
   if (normalized === 'supervisor_running') fallback[0].state = 'working';
   if (normalized === 'builder_running') {
     fallback[0].state = 'done';
@@ -1914,6 +1939,9 @@ function updateJarvisFlow(status = 'waiting', steps = null) {
     fallback[0].state = 'done';
     fallback[1].state = 'failed';
     fallback[2].state = 'failed';
+  }
+  if (normalized === 'needs_input') {
+    fallback[0].state = 'done';
   }
   const byRole = {};
   for (const step of (steps && steps.length ? steps : fallback)) {
@@ -2088,7 +2116,7 @@ async function refreshJarvisRunStatus(runId = currentJarvisRunId) {
       return;
     }
     renderJarvisRunStatus(data);
-    if (!['done', 'failed', 'needs_approval'].includes(String(data.status || '').toLowerCase())) {
+    if (!['done', 'failed', 'needs_approval', 'needs_input', 'blocked_usage_limit', 'blocked_auth'].includes(String(data.status || '').toLowerCase())) {
       scheduleJarvisRunPoll();
     }
   } catch (error) {

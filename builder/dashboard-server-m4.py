@@ -280,6 +280,8 @@ def _parse_pipeline_status(report_text: str) -> str:
             if re.search(r"(?m)^##\s+FAIL\s*$", report_text):
                 return "failed"
         return status
+    if "\n## Self-Healing\n" in report_text:
+        return "self_healing"
     if re.search(r"(?m)^ROLE_FAILED=", report_text):
         return "failed"
     if "\n## Tester\n" in report_text:
@@ -349,9 +351,31 @@ def _pipeline_steps(status: str, sections: dict) -> list[dict]:
         steps[0]["state"] = "done"
         steps[1]["state"] = "done"
         steps[2]["state"] = "working"
+    elif status == "self_healing":
+        for step in steps:
+            if "ROLE_FAILED=" in sections.get(step["label"], ""):
+                step["state"] = "working"
+            elif step["label"] in sections:
+                step["state"] = "done"
     elif status == "done":
         for step in steps:
             step["state"] = "done"
+    elif status == "needs_input":
+        steps[0]["state"] = "done"
+        steps[1]["state"] = "pending"
+        steps[2]["state"] = "pending"
+    elif status in {"blocked_usage_limit", "blocked_auth"}:
+        failed_role = ""
+        for title, text in sections.items():
+            role_match = re.search(r"(?m)^ROLE_FAILED=([a-z_-]+)", text)
+            if role_match:
+                failed_role = role_match.group(1).lower()
+                break
+        for step in steps:
+            if step["role"] == failed_role:
+                step["state"] = "failed"
+            elif step["label"] in sections:
+                step["state"] = "done"
     elif status == "needs_approval":
         for step in steps:
             if "NEEDS_APPROVAL" in sections.get(step["label"], ""):
