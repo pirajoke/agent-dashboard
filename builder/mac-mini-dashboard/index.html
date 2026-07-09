@@ -640,41 +640,96 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .island-dock-value { font-size: 13px; font-weight: 800; margin-top: 4px; }
 .legacy-hidden { display: none !important; }
 .pixel-agents-shell {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  position: relative;
+  min-height: 720px;
+  background: #171624;
+  border: 1px solid rgba(17,24,39,0.14);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
+  isolation: isolate;
 }
 .pixel-agents-shell.is-pinned {
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(234,179,8,0.36);
+  border-color: rgba(234,179,8,0.42);
+}
+.pixel-agents-shell.is-moving .pixel-agents-viewport {
+  cursor: grab;
+  touch-action: none;
+}
+.pixel-agents-shell.is-moving .pixel-agents-viewport.is-dragging {
+  cursor: grabbing;
+}
+.pixel-agents-shell.is-moving .pixel-agents-frame {
+  pointer-events: none;
+}
+.pixel-agents-shell.is-moving .jarvis-hud-card {
+  pointer-events: none;
+  opacity: 0.82;
+}
+.pixel-agents-viewport {
+  position: relative;
+  width: 100%;
+  height: min(78vh, 880px);
+  min-height: 680px;
+  overflow: hidden;
+  background: #171624;
+  touch-action: pan-y;
+}
+.pixel-agents-stage {
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0,0,0) scale(1);
+  transform-origin: 0 0;
+  will-change: transform;
 }
 .pixel-agents-frame {
   display: block;
   width: 100%;
-  min-height: calc(100vh - 270px);
-  height: 760px;
+  height: 100%;
+  min-height: 0;
   border: 0;
   background: #111;
 }
-.pixel-agents-fallback {
+.pixel-agents-gamebar {
+  position: absolute;
+  z-index: 8;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-  color: var(--text2);
+  padding: 9px 10px;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 14px;
+  background: rgba(31,30,45,0.96);
+  color: #F8FAFC;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.28);
+}
+.pixel-agents-gamebar-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
   font-size: 12px;
+  font-weight: 900;
+}
+.pixel-agents-gamebar-title span {
+  color: rgba(248,250,252,0.72);
+  font-size: 11px;
+  font-weight: 750;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .pixel-agents-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 7px;
   flex-shrink: 0;
 }
+.pixel-control-btn,
 .pixel-pin-btn {
   border: 1px solid var(--border2);
   background: var(--card);
@@ -687,6 +742,27 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
 }
+.pixel-control-btn {
+  min-width: 36px;
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.08);
+  color: #F8FAFC;
+  border-radius: 10px;
+  padding: 7px 9px;
+}
+.pixel-control-btn.mode {
+  min-width: 74px;
+}
+.pixel-control-btn:hover {
+  border-color: rgba(255,255,255,0.32);
+  background: rgba(255,255,255,0.14);
+  transform: translateY(-1px);
+}
+.pixel-control-btn.active {
+  background: rgba(234,179,8,0.18);
+  border-color: rgba(234,179,8,0.55);
+  color: #FDE68A;
+}
 .pixel-pin-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
@@ -697,18 +773,15 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   border-color: rgba(234,179,8,0.35);
   color: var(--accent);
 }
-.pixel-agents-fallback a {
+.pixel-agents-actions a {
   color: var(--accent);
   font-weight: 800;
   text-decoration: none;
+  white-space: nowrap;
 }
 #section-agents.active {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: block;
 }
-#section-agents .jarvis-run-card { order: 1; }
-#section-agents .pixel-agents-shell { order: 2; }
 .jarvis-run-card {
   position: relative;
   overflow: hidden;
@@ -720,6 +793,52 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   box-shadow: 0 10px 28px rgba(17,24,39,0.07);
   padding: 18px;
   margin-bottom: 0;
+}
+.jarvis-hud-card {
+  position: absolute;
+  z-index: 7;
+  top: 72px;
+  left: 14px;
+  width: min(640px, calc(100% - 28px));
+  max-height: calc(100% - 92px);
+  overflow: auto;
+  background:
+    radial-gradient(circle at 6% 0%, rgba(234,179,8,0.14), transparent 31%),
+    linear-gradient(135deg, rgba(255,255,255,0.97), rgba(248,251,255,0.97));
+  box-shadow: 0 16px 36px rgba(0,0,0,0.20);
+}
+.jarvis-hud-card.hud-collapsed {
+  width: min(380px, calc(100% - 28px));
+  max-height: 88px;
+  padding-bottom: 14px;
+}
+.jarvis-hud-card.hud-collapsed .jarvis-run-flow,
+.jarvis-hud-card.hud-collapsed .jarvis-run-form,
+.jarvis-hud-card.hud-collapsed .jarvis-run-examples,
+.jarvis-hud-card.hud-collapsed .jarvis-token-box,
+.jarvis-hud-card.hud-collapsed .jarvis-run-status {
+  display: none !important;
+}
+.jarvis-run-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.jarvis-hud-toggle {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  color: var(--text2);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  padding: 6px 10px;
+}
+.jarvis-hud-toggle:hover {
+  border-color: rgba(234,179,8,0.42);
+  color: var(--text);
 }
 .jarvis-run-card::before {
   content: '';
@@ -1306,22 +1425,54 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     width: 100%;
     max-width: 100%;
     border-radius: 14px;
+    min-height: 620px;
   }
-  .pixel-agents-fallback {
+  .pixel-agents-gamebar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 8px;
+    border-radius: 12px;
+  }
+  .pixel-agents-gamebar-title {
+    justify-content: space-between;
     font-size: 11px;
+  }
+  .pixel-agents-gamebar-title span {
+    max-width: 54vw;
   }
   .pixel-agents-actions {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 1px;
   }
-  .pixel-agents-frame {
-    width: 100%;
+  .pixel-control-btn,
+  .pixel-pin-btn {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+  .pixel-agents-viewport {
+    height: 660px;
     min-height: 560px;
-    height: 620px;
+  }
+  .jarvis-hud-card {
+    top: 96px;
+    left: 8px;
+    width: calc(100% - 16px);
+    max-height: 50vh;
+    border-radius: 14px;
+  }
+  .jarvis-hud-card.hud-collapsed {
+    width: calc(100% - 16px);
+    max-height: 76px;
   }
 }
 @media (max-width: 640px) {
@@ -1349,7 +1500,14 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .island-node.pro { left: 25%; top: 62%; }
   .island-sign { font-size: 18px; padding: 10px 24px 8px; letter-spacing: 3px; }
   .island-docks { grid-template-columns: 1fr; }
-  .pixel-agents-frame { height: 680px; }
+  .pixel-agents-viewport {
+    height: 650px;
+    min-height: 540px;
+  }
+  .jarvis-hud-card {
+    top: 94px;
+    max-height: 46vh;
+  }
 }
 </style>
 </head>
@@ -1613,13 +1771,45 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- ═══════════════ AGENTS ═══════════════ -->
   <div id="section-agents" class="section">
-    <div class="jarvis-run-card">
+    <div class="pixel-agents-shell">
+      <div class="pixel-agents-gamebar">
+        <div class="pixel-agents-gamebar-title">
+          <strong>Pixel Agents</strong>
+          <span>game view, live agents and Jarvis pipeline in one place</span>
+        </div>
+        <div class="pixel-agents-actions">
+          <button
+            class="pixel-control-btn mode"
+            id="pixel-agents-move"
+            type="button"
+            onclick="togglePixelAgentsMove()"
+            aria-pressed="false"
+            title="Switch between interacting with Pixel Agents and moving the map"
+          >Move</button>
+          <button class="pixel-control-btn" type="button" onclick="zoomPixelAgents(-0.12)" title="Zoom out">−</button>
+          <button class="pixel-control-btn" type="button" onclick="resetPixelAgentsView()" title="Reset view">Reset</button>
+          <button class="pixel-control-btn" type="button" onclick="zoomPixelAgents(0.12)" title="Zoom in">+</button>
+          <button
+            class="pixel-pin-btn"
+            id="pixel-agents-pin"
+            type="button"
+            onclick="togglePixelAgentsPin()"
+            aria-pressed="false"
+            title="Lock dashboard size without changing current view"
+          >📌 Pin</button>
+          <a href="https://pixel-agents.meshly.fr/" target="_blank" rel="noreferrer">Full screen</a>
+        </div>
+      </div>
+    <div class="jarvis-run-card jarvis-hud-card" id="jarvis-hud-card">
       <div class="jarvis-run-header">
         <div>
           <div class="jarvis-run-title">Agent Pipeline</div>
           <div class="jarvis-run-subtitle">Jarvis routes real work through Supervisor → Builder → Tester, then shows evidence below.</div>
         </div>
-        <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
+        <div class="jarvis-run-header-actions">
+          <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
+          <button class="jarvis-hud-toggle" id="jarvis-hud-toggle" type="button" onclick="toggleJarvisHud()">Hide</button>
+        </div>
       </div>
       <div class="jarvis-run-flow" id="jarvis-run-flow">
         <div class="jarvis-flow-step" data-role="supervisor">
@@ -1676,28 +1866,17 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="jarvis-run-status" id="jarvis-run-status">
         Ready. Start a task to see run id, report and evidence here.
       </div>
-    </div>
-    <div class="pixel-agents-shell">
-      <div class="pixel-agents-fallback">
-        <span>Pixel Agents office is served from Mac Mini and connected through Cloudflare Tunnel.</span>
-        <div class="pixel-agents-actions">
-          <button
-            class="pixel-pin-btn"
-            id="pixel-agents-pin"
-            type="button"
-            onclick="togglePixelAgentsPin()"
-            aria-pressed="false"
-            title="Fix dashboard height and keep it pinned while scrolling"
-          >📌 Pin</button>
-          <a href="https://pixel-agents.meshly.fr/" target="_blank" rel="noreferrer">Open full screen</a>
+      </div>
+      <div class="pixel-agents-viewport" id="pixel-agents-viewport" aria-label="Moveable Pixel Agents view">
+        <div class="pixel-agents-stage" id="pixel-agents-stage">
+          <iframe
+            class="pixel-agents-frame"
+            src="https://pixel-agents.meshly.fr/"
+            title="Pixel Agents"
+            allow="clipboard-read; clipboard-write"
+          ></iframe>
         </div>
       </div>
-      <iframe
-        class="pixel-agents-frame"
-        src="https://pixel-agents.meshly.fr/"
-        title="Pixel Agents"
-        allow="clipboard-read; clipboard-write"
-      ></iframe>
     </div>
     <div class="ai-island legacy-hidden" aria-hidden="true">
       <div class="ai-island-hero">
@@ -1888,12 +2067,25 @@ const JARVIS_PIPELINE_STATUS_API = (!IS_FILE_DASHBOARD)
 const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
 let currentLogService = null;
 const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
+const PIXEL_AGENTS_VIEW_KEY = 'command-center.pixel-agents.view';
 const PIXEL_AGENTS_ORIGIN = 'https://pixel-agents.meshly.fr';
+const JARVIS_HUD_COLLAPSED_KEY = 'command-center.jarvis-hud-collapsed';
 const JARVIS_RUN_TOKEN_KEY = 'command-center.jarvis-run-token';
 const JARVIS_LAST_RUN_KEY = 'command-center.jarvis-last-run';
 let currentJarvisRunId = localStorage.getItem(JARVIS_LAST_RUN_KEY) || '';
 let lastJarvisTaskText = '';
 let jarvisRunTimer = null;
+const pixelAgentsView = {
+  x: 0,
+  y: 0,
+  scale: 1,
+  moving: false,
+  dragging: false,
+  startX: 0,
+  startY: 0,
+  baseX: 0,
+  baseY: 0,
+};
 
 // Navigation
 function showSection(name) {
@@ -1913,22 +2105,164 @@ if (['mac-mini', 'air', 'pro', 'general', 'agents', 'logs'].includes(INITIAL_SEC
   showSection(INITIAL_SECTION);
 }
 
+function clampNumber(value, min, max, fallback = min) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, number));
+}
+
+function loadPixelAgentsView() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PIXEL_AGENTS_VIEW_KEY) || '{}');
+    pixelAgentsView.x = clampNumber(saved.x, -3000, 3000, 0);
+    pixelAgentsView.y = clampNumber(saved.y, -3000, 3000, 0);
+    pixelAgentsView.scale = clampNumber(saved.scale, 0.65, 1.85, 1);
+  } catch {
+    pixelAgentsView.x = 0;
+    pixelAgentsView.y = 0;
+    pixelAgentsView.scale = 1;
+  }
+}
+
+function savePixelAgentsView() {
+  localStorage.setItem(PIXEL_AGENTS_VIEW_KEY, JSON.stringify({
+    x: Math.round(pixelAgentsView.x),
+    y: Math.round(pixelAgentsView.y),
+    scale: Number(pixelAgentsView.scale.toFixed(2)),
+  }));
+}
+
+function applyPixelAgentsView(shouldSave = true) {
+  const stage = document.getElementById('pixel-agents-stage');
+  if (!stage) return;
+  stage.style.transform = `translate3d(${pixelAgentsView.x}px, ${pixelAgentsView.y}px, 0) scale(${pixelAgentsView.scale})`;
+  if (shouldSave) savePixelAgentsView();
+}
+
+function setPixelAgentsMove(enabled) {
+  const shell = document.querySelector('.pixel-agents-shell');
+  const button = document.getElementById('pixel-agents-move');
+  pixelAgentsView.moving = Boolean(enabled);
+  if (shell) shell.classList.toggle('is-moving', pixelAgentsView.moving);
+  if (button) {
+    button.classList.toggle('active', pixelAgentsView.moving);
+    button.setAttribute('aria-pressed', pixelAgentsView.moving ? 'true' : 'false');
+    button.textContent = pixelAgentsView.moving ? 'Move on' : 'Move';
+    button.title = pixelAgentsView.moving
+      ? 'Drag the Pixel Agents screen. Click again to interact with agents.'
+      : 'Turn on map dragging. This helps inside Telegram.';
+  }
+}
+
+function togglePixelAgentsMove() {
+  setPixelAgentsMove(!pixelAgentsView.moving);
+}
+
+function zoomPixelAgents(delta) {
+  const viewport = document.getElementById('pixel-agents-viewport');
+  const previous = pixelAgentsView.scale;
+  const next = clampNumber(previous + delta, 0.65, 1.85, 1);
+  if (next === previous) return;
+  if (viewport) {
+    const rect = viewport.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const ratio = next / previous;
+    pixelAgentsView.x = centerX - (centerX - pixelAgentsView.x) * ratio;
+    pixelAgentsView.y = centerY - (centerY - pixelAgentsView.y) * ratio;
+  }
+  pixelAgentsView.scale = next;
+  applyPixelAgentsView();
+}
+
+function resetPixelAgentsView() {
+  pixelAgentsView.x = 0;
+  pixelAgentsView.y = 0;
+  pixelAgentsView.scale = 1;
+  applyPixelAgentsView();
+}
+
+function initPixelAgentsView() {
+  const viewport = document.getElementById('pixel-agents-viewport');
+  loadPixelAgentsView();
+  applyPixelAgentsView(false);
+  setPixelAgentsMove(false);
+  if (!viewport) return;
+
+  viewport.addEventListener('pointerdown', event => {
+    if (!pixelAgentsView.moving) return;
+    if (event.button && event.button !== 0) return;
+    pixelAgentsView.dragging = true;
+    pixelAgentsView.startX = event.clientX;
+    pixelAgentsView.startY = event.clientY;
+    pixelAgentsView.baseX = pixelAgentsView.x;
+    pixelAgentsView.baseY = pixelAgentsView.y;
+    viewport.classList.add('is-dragging');
+    viewport.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+
+  viewport.addEventListener('pointermove', event => {
+    if (!pixelAgentsView.dragging) return;
+    pixelAgentsView.x = pixelAgentsView.baseX + event.clientX - pixelAgentsView.startX;
+    pixelAgentsView.y = pixelAgentsView.baseY + event.clientY - pixelAgentsView.startY;
+    applyPixelAgentsView(false);
+    event.preventDefault();
+  });
+
+  const stopDrag = event => {
+    if (!pixelAgentsView.dragging) return;
+    pixelAgentsView.dragging = false;
+    viewport.classList.remove('is-dragging');
+    try { viewport.releasePointerCapture(event.pointerId); } catch {}
+    savePixelAgentsView();
+  };
+  viewport.addEventListener('pointerup', stopDrag);
+  viewport.addEventListener('pointercancel', stopDrag);
+  viewport.addEventListener('pointerleave', stopDrag);
+
+  viewport.addEventListener('wheel', event => {
+    if (!pixelAgentsView.moving) return;
+    event.preventDefault();
+    zoomPixelAgents(event.deltaY > 0 ? -0.08 : 0.08);
+  }, { passive: false });
+}
+
+function applyJarvisHudState(collapsed) {
+  const card = document.getElementById('jarvis-hud-card');
+  const button = document.getElementById('jarvis-hud-toggle');
+  if (!card || !button) return;
+  card.classList.toggle('hud-collapsed', collapsed);
+  button.textContent = collapsed ? 'Show' : 'Hide';
+  button.title = collapsed ? 'Show pipeline controls' : 'Hide pipeline controls';
+  localStorage.setItem(JARVIS_HUD_COLLAPSED_KEY, collapsed ? '1' : '0');
+}
+
+function toggleJarvisHud() {
+  const collapsed = document.getElementById('jarvis-hud-card')?.classList.contains('hud-collapsed');
+  applyJarvisHudState(!collapsed);
+}
+
+function initJarvisHud() {
+  applyJarvisHudState(localStorage.getItem(JARVIS_HUD_COLLAPSED_KEY) === '1');
+}
+
 function applyPixelAgentsPin(isPinned) {
   const shell = document.querySelector('.pixel-agents-shell');
   const button = document.getElementById('pixel-agents-pin');
-  const frame = shell ? shell.querySelector('.pixel-agents-frame') : null;
+  const viewport = document.getElementById('pixel-agents-viewport');
   if (!shell || !button) return;
 
   const scrollY = window.scrollY;
   const scrollX = window.scrollX;
-  if (frame) {
+  if (viewport) {
     if (isPinned) {
-      const currentHeight = Math.round(frame.getBoundingClientRect().height);
-      frame.style.height = `${currentHeight}px`;
-      frame.style.minHeight = `${currentHeight}px`;
+      const currentHeight = Math.round(viewport.getBoundingClientRect().height);
+      viewport.style.height = `${currentHeight}px`;
+      viewport.style.minHeight = `${currentHeight}px`;
     } else {
-      frame.style.height = '';
-      frame.style.minHeight = '';
+      viewport.style.height = '';
+      viewport.style.minHeight = '';
     }
   }
 
@@ -3004,6 +3338,8 @@ function refreshAll() {
 
 refreshAll();
 initJarvisRunPanel();
+initJarvisHud();
+initPixelAgentsView();
 initPixelAgentsPin();
 initDragDrop();
 setInterval(refreshAll, 5000);
