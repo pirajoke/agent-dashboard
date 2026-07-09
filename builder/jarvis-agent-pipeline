@@ -31,6 +31,12 @@ SELF_HEAL_ENABLED="${JARVIS_AGENT_SELF_HEAL_ENABLED:-1}"
 SELF_HEAL_MAX_RETRIES="${JARVIS_AGENT_SELF_HEAL_MAX_RETRIES:-1}"
 SELF_LEARNING_LEDGER="${JARVIS_AGENT_SELF_LEARNING_LEDGER:-$HOME/omniharness/.omniharness/jarvis-self-learning.jsonl}"
 AGENT_PROVIDER="${JARVIS_AGENT_PROVIDER:-auto}"
+AGENT_BUDGET="${JARVIS_AGENT_BUDGET:-normal}"
+AGENT_BUDGET="${AGENT_BUDGET:l}"
+case "$AGENT_BUDGET" in
+  cheap|normal|deep) ;;
+  *) AGENT_BUDGET="normal" ;;
+esac
 CODEX_BIN="${JARVIS_CODEX_BIN:-/Applications/Codex.app/Contents/Resources/codex}"
 CODEX_MODEL="${JARVIS_CODEX_MODEL:-}"
 CODEX_REASONING_EFFORT="${JARVIS_CODEX_REASONING_EFFORT:-low}"
@@ -44,6 +50,24 @@ TASK_MODE_HINT="normal"
 if print -r -- "$TASK" | grep -Eiq 'не меняй файлы|do not (edit|change) files|no files|read-only|smoke|ack only'; then
   TASK_MODE_HINT="read_only_smoke: use only the literal user task, do not infer unrelated backlog work, do not propose or make file changes, Builder should ACK only, Tester should verify logically."
 fi
+BUDGET_POLICY=""
+case "$AGENT_BUDGET" in
+  cheap)
+    BUDGET_POLICY="Cheap mode: minimize model calls and context. Prefer status/plan/read-only answers. Do not do broad repo/vault searches. Do not edit files unless the user explicitly asked for a small fix. Keep each role concise and stop with a clear next step instead of expanding scope."
+    if [[ -z "${JARVIS_AGENT_SELF_HEAL_MAX_RETRIES:-}" ]]; then
+      SELF_HEAL_MAX_RETRIES="0"
+    fi
+    ;;
+  deep)
+    BUDGET_POLICY="Deep mode: allowed to inspect broader context, implement a scoped fix, run verification, and include evidence. Still avoid unrelated backlog and stop after one complete Supervisor -> Builder -> Tester loop with a concrete report."
+    if [[ -z "${JARVIS_AGENT_SELF_HEAL_MAX_RETRIES:-}" ]]; then
+      SELF_HEAL_MAX_RETRIES="2"
+    fi
+    ;;
+  *)
+    BUDGET_POLICY="Normal mode: use enough context for the explicit task, keep changes scoped, run relevant checks, and avoid broad unrelated exploration."
+    ;;
+esac
 
 mkdir -p "$REPORT_DIR"
 
@@ -579,6 +603,8 @@ cat > "$REPORT" <<EOF
 - Project: $PROJECT_DIR
 - Model: $MODEL
 - Provider mode: $AGENT_PROVIDER
+- Budget: $AGENT_BUDGET
+- Budget policy: $BUDGET_POLICY
 - Task: $TASK
 - Task mode: $TASK_MODE_HINT
 - Route: Supervisor -> Builder -> Tester
@@ -641,9 +667,11 @@ if task_preflight_needs_input; then
   exit 0
 fi
 
-SUPERVISOR_SYSTEM="Ты JARVIS Supervisor. Ты не меняешь файлы. Твоя задача: понять буквальную задачу пользователя, разложить её на Builder/Tester handoff, определить риски, критерии готовности и короткий следующий шаг. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Пиши по-русски, кратко, структурно."
+SUPERVISOR_SYSTEM="Ты JARVIS Supervisor. Ты не меняешь файлы. Твоя задача: понять буквальную задачу пользователя, разложить её на Builder/Tester handoff, определить риски, критерии готовности и короткий следующий шаг. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Budget: $AGENT_BUDGET. Budget policy: $BUDGET_POLICY. Пиши по-русски, кратко, структурно."
 SUPERVISOR_PROMPT="Задача пользователя: $TASK
 Task mode: $TASK_MODE_HINT
+Budget: $AGENT_BUDGET
+Budget policy: $BUDGET_POLICY
 
 Верни:
 1. Цель
@@ -678,11 +706,15 @@ if supervisor_needs_input "$SUPERVISOR_OUTPUT"; then
   exit 0
 fi
 
-BUILDER_SYSTEM="Ты JARVIS Builder. Ты работаешь в проекте $PROJECT_DIR. Если permission-mode не позволяет менять файлы или запускать команды, не зависай и не проси пользователя: верни NEEDS_APPROVAL с точным действием. Если задача явно dry-run/read-only/smoke/ACK only, не меняй файлы, не запускай команды, верни ACK и handoff для Tester. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Пиши по-русски, кратко, с файлами и командами проверки."
+BUILDER_SYSTEM="Ты JARVIS Builder. Ты работаешь в проекте $PROJECT_DIR. Если permission-mode не позволяет менять файлы или запускать команды, не зависай и не проси пользователя: верни NEEDS_APPROVAL с точным действием. Если задача явно dry-run/read-only/smoke/ACK only, не меняй файлы, не запускай команды, верни ACK и handoff для Tester. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Budget: $AGENT_BUDGET. Budget policy: $BUDGET_POLICY. Пиши по-русски, кратко, с файлами и командами проверки."
 BUILDER_PROMPT="Оригинальная задача:
 $TASK
 Task mode:
 $TASK_MODE_HINT
+Budget:
+$AGENT_BUDGET
+Budget policy:
+$BUDGET_POLICY
 
 Supervisor handoff:
 $SUPERVISOR_OUTPUT
@@ -711,11 +743,15 @@ if role_output_failed "$BUILDER_OUTPUT"; then
   append_role_failure_result "Builder" "$BUILDER_OUTPUT" || exit 4
 fi
 
-TESTER_SYSTEM="Ты JARVIS Tester. Ты проверяешь результат Builder. Если permission-mode не позволяет запускать команды, не зависай и не проси пользователя: верни NEEDS_APPROVAL с точной командой. Если задача read-only/dry-run/smoke/ACK only, проверяй логически и не запускай команды. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Пиши PASS/FAIL, что проверено, риски и следующий шаг."
+TESTER_SYSTEM="Ты JARVIS Tester. Ты проверяешь результат Builder. Если permission-mode не позволяет запускать команды, не зависай и не проси пользователя: верни NEEDS_APPROVAL с точной командой. Если задача read-only/dry-run/smoke/ACK only, проверяй логически и не запускай команды. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Budget: $AGENT_BUDGET. Budget policy: $BUDGET_POLICY. Пиши PASS/FAIL, что проверено, риски и следующий шаг."
 TESTER_PROMPT="Оригинальная задача:
 $TASK
 Task mode:
 $TASK_MODE_HINT
+Budget:
+$AGENT_BUDGET
+Budget policy:
+$BUDGET_POLICY
 
 Supervisor output:
 $SUPERVISOR_OUTPUT
