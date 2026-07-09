@@ -274,11 +274,6 @@ def _parse_pipeline_status(report_text: str) -> str:
     match = re.search(r"(?im)^-\s*Status:\s*([a-z_ -]+)\s*$", report_text)
     if match:
         status = match.group(1).strip().lower().replace(" ", "_")
-        if status == "done":
-            if re.search(r"(?i)\bNEEDS_APPROVAL\b", report_text):
-                return "needs_approval"
-            if re.search(r"(?m)^##\s+FAIL\s*$", report_text):
-                return "failed"
         return status
     if "\n## Self-Healing\n" in report_text:
         return "self_healing"
@@ -403,6 +398,14 @@ def _pipeline_steps(status: str, sections: dict) -> list[dict]:
             if step["state"] != "done" and not failed:
                 step["state"] = "failed"
                 failed = True
+
+    if status == "done":
+        for step in steps:
+            if "NEEDS_APPROVAL" in step.get("detail", ""):
+                step["detail"] = (
+                    "Final result is done. Earlier approval text in this report was superseded by "
+                    "the completed route; open Details and evidence for the raw report."
+                )
 
     return steps
 

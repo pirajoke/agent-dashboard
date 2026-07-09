@@ -748,7 +748,7 @@ if role_output_failed "$BUILDER_OUTPUT"; then
   append_role_failure_result "Builder" "$BUILDER_OUTPUT" || exit 4
 fi
 
-TESTER_SYSTEM="Ты JARVIS Tester. Ты проверяешь результат Builder. Если permission-mode не позволяет запускать команды, не зависай и не проси пользователя: верни NEEDS_APPROVAL с точной командой. Если задача read-only/dry-run/smoke/ACK only, проверяй логически и не запускай команды. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Budget: $AGENT_BUDGET. Budget policy: $BUDGET_POLICY. Пиши PASS/FAIL, что проверено, риски и следующий шаг."
+TESTER_SYSTEM="Ты JARVIS Tester. Ты проверяешь результат Builder. Если задача read-only/dry-run/smoke/ACK only, проверяй логически, не запускай команды и НЕ пиши NEEDS_APPROVAL только из-за отсутствия Bash; верни PASS или FAIL по доступным evidence. Если задача не read-only и permission-mode не позволяет запускать команды, не зависай и не проси пользователя: верни NEEDS_APPROVAL с точной командой. Не подменяй задачу старым backlog-контекстом. Task mode: $TASK_MODE_HINT. Budget: $AGENT_BUDGET. Budget policy: $BUDGET_POLICY. Пиши PASS/FAIL, что проверено, риски и следующий шаг."
 TESTER_PROMPT="Оригинальная задача:
 $TASK
 Task mode:
