@@ -33,9 +33,10 @@
   --radius-sm: 10px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+html { width: 100%; overflow-x: hidden; }
+body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; overflow-x: hidden; }
 
-.container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+.container { width: 100%; max-width: 1400px; min-width: 0; margin: 0 auto; padding: 32px 40px; }
 
 /* Header */
 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
@@ -47,8 +48,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .stat-box .stat-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* Nav */
-.nav-pills { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); padding: 4px; border-radius: 12px; width: fit-content; }
-.nav-pill { padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+.nav-pills { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); padding: 4px; border-radius: 12px; width: fit-content; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.nav-pills::-webkit-scrollbar { display: none; }
+.nav-pill { flex: 0 0 auto; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; transition: all 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .nav-pill:hover { color: var(--text); }
 .nav-pill.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .nav-pill .pill-icon { font-size: 16px; }
@@ -1133,6 +1135,194 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .jarvis-run-flow,
   .jarvis-agent-grid { grid-template-columns: 1fr; }
   .jarvis-token-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  body { background: #FBFAF7; }
+  .container {
+    padding: 10px;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .header-left h1 {
+    font-size: 24px;
+    line-height: 1.15;
+  }
+  .header-left .subtitle {
+    font-size: 12px;
+  }
+  .header-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 6px;
+    box-shadow: var(--shadow);
+  }
+  .stat-box .stat-value {
+    font-size: 22px;
+  }
+  .stat-box .stat-label {
+    font-size: 10px;
+  }
+  .nav-pills {
+    width: 100%;
+    margin-bottom: 14px;
+    border-radius: 14px;
+    padding: 5px;
+  }
+  .nav-pill {
+    padding: 9px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .nav-pill .pill-icon { font-size: 15px; }
+  .nav-pill .pill-badge {
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+  .section,
+  .section.active,
+  #section-agents.active {
+    width: 100%;
+    min-width: 0;
+  }
+  .machine-header {
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+  }
+  .machine-name { font-size: 16px; }
+  .machine-badge { padding: 4px 8px; }
+  .card {
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .svc-table {
+    min-width: 620px;
+  }
+  .card:has(.svc-table) {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #section-mac-mini > div[style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  #section-air > div[style*="grid-template-columns:1fr 1fr 1fr 1fr"],
+  #section-pro > div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .jarvis-run-card {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 8px 22px rgba(17,24,39,0.06);
+  }
+  .jarvis-run-header {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .jarvis-run-title {
+    font-size: 19px;
+  }
+  .jarvis-run-subtitle {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .jarvis-run-mode {
+    align-self: flex-start;
+    padding: 5px 9px;
+    font-size: 11px;
+  }
+  .jarvis-run-flow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 10px 0;
+  }
+  .jarvis-flow-step {
+    min-height: 0;
+    padding: 9px 10px;
+  }
+  .jarvis-flow-step-detail {
+    white-space: normal;
+    line-height: 1.3;
+  }
+  .jarvis-run-form {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .jarvis-run-input {
+    grid-column: auto;
+    min-height: 74px;
+    font-size: 14px;
+  }
+  .jarvis-run-select,
+  .jarvis-run-btn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 13px;
+  }
+  .jarvis-run-examples {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .jarvis-task-chip {
+    width: 100%;
+    text-align: left;
+    border-radius: 12px;
+    padding: 9px 10px;
+  }
+  .jarvis-run-summary,
+  .jarvis-human-summary,
+  .jarvis-agent-card {
+    border-radius: 12px;
+  }
+  .jarvis-run-compact-top {
+    align-items: flex-start;
+  }
+  .jarvis-run-meta {
+    gap: 6px;
+  }
+  .jarvis-run-chip {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .jarvis-agent-grid {
+    grid-template-columns: 1fr;
+  }
+  .pixel-agents-shell {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 14px;
+  }
+  .pixel-agents-fallback {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  .pixel-agents-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .pixel-agents-frame {
+    width: 100%;
+    min-height: 560px;
+    height: 620px;
+  }
 }
 @media (max-width: 640px) {
   .container { padding: 16px; }
