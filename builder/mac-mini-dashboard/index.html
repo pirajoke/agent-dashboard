@@ -2147,7 +2147,7 @@ function setPixelAgentsMove(enabled) {
   if (button) {
     button.classList.toggle('active', pixelAgentsView.moving);
     button.setAttribute('aria-pressed', pixelAgentsView.moving ? 'true' : 'false');
-    button.textContent = pixelAgentsView.moving ? 'Move on' : 'Move';
+    button.textContent = pixelAgentsView.moving ? 'Interact' : 'Move';
     button.title = pixelAgentsView.moving
       ? 'Drag the Pixel Agents screen. Click again to interact with agents.'
       : 'Turn on map dragging. This helps inside Telegram.';
