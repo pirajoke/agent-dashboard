@@ -407,6 +407,48 @@ def _pipeline_steps(status: str, sections: dict) -> list[dict]:
     return steps
 
 
+def _estimate_tokens_from_text(value: str) -> int:
+    """Rough visible-token estimate from report text; provider billing can be higher."""
+    text = value or ""
+    if not text.strip():
+        return 0
+    return max(1, (len(text) + 3) // 4)
+
+
+def _pipeline_usage_estimate(report_text: str, sections: dict, fallback_budget: str = "normal") -> dict:
+    budget = (_pipeline_report_field(report_text, "Budget") or fallback_budget or "normal").strip().lower()
+    envelopes = {
+        "cheap": {"label": "Cheap", "range": "5k-30k", "upper": 30000, "note": "short status/planning, no broad search"},
+        "normal": {"label": "Normal", "range": "20k-80k", "upper": 80000, "note": "scoped work with checks"},
+        "deep": {"label": "Deep", "range": "80k-300k+", "upper": 300000, "note": "broader context and verification"},
+    }
+    envelope = envelopes.get(budget, envelopes["normal"])
+    role_tokens = {
+        role.lower(): _estimate_tokens_from_text(sections.get(role, ""))
+        for role in ("Supervisor", "Builder", "Tester")
+    }
+    visible_tokens = _estimate_tokens_from_text(report_text)
+    role_calls = sum(1 for role in ("Supervisor", "Builder", "Tester") if role in sections)
+    extra_calls = sum(1 for title in ("Provider Fallback", "Self-Healing") if title in sections)
+    pressure = 0
+    if envelope["upper"]:
+        pressure = min(100, round((visible_tokens / envelope["upper"]) * 100))
+    return {
+        "budget": budget,
+        "budget_label": envelope["label"],
+        "budget_range": envelope["range"],
+        "budget_note": envelope["note"],
+        "visible_tokens": visible_tokens,
+        "role_tokens": role_tokens,
+        "role_calls": role_calls,
+        "extra_calls": extra_calls,
+        "pressure_percent": pressure,
+        "confidence": "rough",
+        "basis": "visible_report_chars",
+        "disclaimer": "Estimate is based on visible report/output text only; actual provider billing may be higher because prompts and hidden context are not exposed.",
+    }
+
+
 def _health_request(method: str, path: str, payload: dict | None = None) -> dict:
     data = None
     headers = {"Content-Type": "application/json"}
@@ -956,6 +998,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "project_dir": str(project_dir),
                     "report_path": str(report_path),
                     "task": task,
+                    "usage_estimate": _pipeline_usage_estimate("", {}, budget),
                     "steps": _pipeline_steps("starting", {}),
                 },
             )
@@ -1001,6 +1044,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "project_dir": str(project_dir),
                 "report_path": str(report_path),
                 "task": task,
+                "usage_estimate": _pipeline_usage_estimate("", {}, budget),
                 "steps": _pipeline_steps("starting", {}),
             },
         )
@@ -1031,6 +1075,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "run_id": run_id or None,
                     "status": "waiting",
                     "report_path": str(report_path) if report_path else None,
+                    "usage_estimate": _pipeline_usage_estimate("", {}),
                     "steps": _pipeline_steps("waiting", {}),
                     "report_tail": "",
                 },
@@ -1064,6 +1109,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "route": _pipeline_report_field(report_text, "Route"),
                 "model": _pipeline_report_field(report_text, "Model"),
                 "sections": sections,
+                "usage_estimate": _pipeline_usage_estimate(report_text, sections),
                 "steps": _pipeline_steps(status, sections),
                 "updated_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "bytes": stat.st_size,

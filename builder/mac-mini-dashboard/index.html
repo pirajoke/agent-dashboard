@@ -1116,6 +1116,59 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-run-chip.budget-cheap { color: var(--green); background: var(--green-bg); }
 .jarvis-run-chip.budget-normal { color: var(--blue); background: var(--blue-bg); }
 .jarvis-run-chip.budget-deep { color: var(--accent); background: var(--accent-bg); }
+.jarvis-cost-meter {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 96px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.78);
+  padding: 8px 10px;
+}
+.jarvis-cost-stat {
+  min-width: 0;
+}
+.jarvis-cost-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.35px;
+}
+.jarvis-cost-value {
+  margin-top: 1px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jarvis-cost-note {
+  margin-top: 1px;
+  color: var(--text2);
+  font-size: 10px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jarvis-cost-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.18);
+}
+.jarvis-cost-bar span {
+  display: block;
+  width: var(--usage-pressure, 0%);
+  min-width: 5px;
+  max-width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--green), var(--blue), var(--accent));
+}
 .jarvis-run-summary {
   display: grid;
   gap: 8px;
@@ -1719,6 +1772,24 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     gap: 7px;
     padding: 9px;
     border-radius: 14px;
+  }
+  .jarvis-cost-meter {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 7px;
+  }
+  .jarvis-cost-label {
+    font-size: 8px;
+  }
+  .jarvis-cost-value {
+    font-size: 10px;
+  }
+  .jarvis-cost-note {
+    display: none;
+  }
+  .jarvis-cost-bar {
+    height: 5px;
+    margin-top: 3px;
   }
   .jarvis-human-summary {
     display: none;
@@ -2836,6 +2907,45 @@ function renderPipelineAccessHelp(message = 'Public launch is locked. Save the d
   `, 'error');
 }
 
+function formatTokenEstimate(value) {
+  const tokens = Number(value || 0);
+  if (!Number.isFinite(tokens) || tokens <= 0) return 'collecting';
+  if (tokens >= 1000000) return `~${(tokens / 1000000).toFixed(1)}M`;
+  if (tokens >= 1000) return `~${(tokens / 1000).toFixed(tokens >= 10000 ? 0 : 1)}k`;
+  return `~${Math.round(tokens)}`;
+}
+
+function renderJarvisUsageMeter(data, budget) {
+  const usage = data?.usage_estimate || {};
+  const visibleTokens = Number(usage.visible_tokens || 0);
+  const budgetLabel = usage.budget_label || (budget ? budget[0].toUpperCase() + budget.slice(1) : 'Normal');
+  const budgetRange = usage.budget_range || (budget === 'cheap' ? '5k-30k' : budget === 'deep' ? '80k-300k+' : '20k-80k');
+  const pressure = Math.max(0, Math.min(100, Number(usage.pressure_percent || 0)));
+  const calls = Number(usage.role_calls || 0);
+  const extraCalls = Number(usage.extra_calls || 0);
+  const callText = calls ? `${calls}/3 agents${extraCalls ? ` +${extraCalls}` : ''}` : 'waiting';
+  const note = usage.disclaimer || 'Visible report estimate only; actual provider billing can be higher.';
+  return `
+    <div class="jarvis-cost-meter" title="${escapeHtml(note)}" style="--usage-pressure:${escapeHtml(pressure)}%;">
+      <div class="jarvis-cost-stat">
+        <div class="jarvis-cost-label">Visible tokens</div>
+        <div class="jarvis-cost-value">${escapeHtml(formatTokenEstimate(visibleTokens))}</div>
+        <div class="jarvis-cost-note">actual can be higher</div>
+      </div>
+      <div class="jarvis-cost-stat">
+        <div class="jarvis-cost-label">Budget</div>
+        <div class="jarvis-cost-value">${escapeHtml(budgetLabel)}</div>
+        <div class="jarvis-cost-note">${escapeHtml(budgetRange)} guardrail</div>
+      </div>
+      <div class="jarvis-cost-stat">
+        <div class="jarvis-cost-label">Calls</div>
+        <div class="jarvis-cost-value">${escapeHtml(callText)}</div>
+        <div class="jarvis-cost-bar"><span></span></div>
+      </div>
+    </div>
+  `;
+}
+
 function renderJarvisRunStatus(data) {
   const status = data?.status || 'waiting';
   const runId = data?.run_id || currentJarvisRunId || '-';
@@ -2851,6 +2961,7 @@ function renderJarvisRunStatus(data) {
     : '';
   const sections = data?.sections || {};
   const humanSummary = renderJarvisHumanSummary(data);
+  const usageMeter = renderJarvisUsageMeter(data, budget);
   const agents = ['Supervisor', 'Builder', 'Tester'].map(role => {
     const key = role.toLowerCase();
     const step = (data?.steps || []).find(item => String(item.role || '').toLowerCase() === key) || {};
@@ -2881,6 +2992,7 @@ function renderJarvisRunStatus(data) {
           ${task}
         </div>
       </div>
+      ${usageMeter}
       ${humanSummary}
       <details class="jarvis-run-details">
         <summary>Details and evidence</summary>

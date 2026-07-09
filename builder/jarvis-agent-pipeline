@@ -51,21 +51,25 @@ if print -r -- "$TASK" | grep -Eiq 'не меняй файлы|do not (edit|chan
   TASK_MODE_HINT="read_only_smoke: use only the literal user task, do not infer unrelated backlog work, do not propose or make file changes, Builder should ACK only, Tester should verify logically."
 fi
 BUDGET_POLICY=""
+BUDGET_ENVELOPE=""
 case "$AGENT_BUDGET" in
   cheap)
     BUDGET_POLICY="Cheap mode: minimize model calls and context. Prefer status/plan/read-only answers. Do not do broad repo/vault searches. Do not edit files unless the user explicitly asked for a small fix. Keep each role concise and stop with a clear next step instead of expanding scope."
+    BUDGET_ENVELOPE="5k-30k rough target; no self-heal retries unless explicitly enabled"
     if [[ -z "${JARVIS_AGENT_SELF_HEAL_MAX_RETRIES:-}" ]]; then
       SELF_HEAL_MAX_RETRIES="0"
     fi
     ;;
   deep)
     BUDGET_POLICY="Deep mode: allowed to inspect broader context, implement a scoped fix, run verification, and include evidence. Still avoid unrelated backlog and stop after one complete Supervisor -> Builder -> Tester loop with a concrete report."
+    BUDGET_ENVELOPE="80k-300k+ rough target; broader context and up to two self-heal retries"
     if [[ -z "${JARVIS_AGENT_SELF_HEAL_MAX_RETRIES:-}" ]]; then
       SELF_HEAL_MAX_RETRIES="2"
     fi
     ;;
   *)
     BUDGET_POLICY="Normal mode: use enough context for the explicit task, keep changes scoped, run relevant checks, and avoid broad unrelated exploration."
+    BUDGET_ENVELOPE="20k-80k rough target; scoped context and one self-heal retry"
     ;;
 esac
 
@@ -604,6 +608,7 @@ cat > "$REPORT" <<EOF
 - Model: $MODEL
 - Provider mode: $AGENT_PROVIDER
 - Budget: $AGENT_BUDGET
+- Budget envelope: $BUDGET_ENVELOPE
 - Budget policy: $BUDGET_POLICY
 - Task: $TASK
 - Task mode: $TASK_MODE_HINT
