@@ -930,6 +930,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if provider not in {"auto", "claude", "codex"}:
             self._json_response(400, {"error": "unknown provider", "providers": ["auto", "claude", "codex"]})
             return
+        budget = str(body.get("budget") or "normal").strip().lower()
+        if budget not in {"cheap", "normal", "deep"}:
+            self._json_response(400, {"error": "unknown budget", "budgets": ["cheap", "normal", "deep"]})
+            return
         if not project_dir.exists():
             self._json_response(500, {"error": "project directory missing", "path": str(project_dir)})
             return
@@ -948,6 +952,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "run_id": run_id,
                     "project": project_key,
                     "provider": provider,
+                    "budget": budget,
                     "project_dir": str(project_dir),
                     "report_path": str(report_path),
                     "task": task,
@@ -966,6 +971,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "JARVIS_AGENT_RUN_ID": run_id,
                 "JARVIS_AGENT_REPORT_DIR": str(JARVIS_PIPELINE_REPORT_DIR),
                 "JARVIS_AGENT_PROVIDER": provider,
+                "JARVIS_AGENT_BUDGET": budget,
             }
         )
         try:
@@ -991,6 +997,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "run_id": run_id,
                 "project": project_key,
                 "provider": provider,
+                "budget": budget,
                 "project_dir": str(project_dir),
                 "report_path": str(report_path),
                 "task": task,
@@ -1052,6 +1059,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if _pipeline_report_field(report_text, "Project")
                 else None,
                 "provider": _pipeline_report_field(report_text, "Provider mode"),
+                "budget": _pipeline_report_field(report_text, "Budget") or "normal",
                 "task": _pipeline_report_field(report_text, "Task"),
                 "route": _pipeline_report_field(report_text, "Route"),
                 "model": _pipeline_report_field(report_text, "Model"),

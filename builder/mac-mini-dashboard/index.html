@@ -825,6 +825,31 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   gap: 8px;
   flex-shrink: 0;
 }
+.jarvis-budget-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.72);
+  padding: 4px 8px;
+}
+.jarvis-budget-control span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.jarvis-budget-select {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  outline: none;
+}
 .jarvis-hud-toggle {
   border: 1px solid rgba(0,0,0,0.08);
   border-radius: 999px;
@@ -1088,6 +1113,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-size: 11px;
   font-weight: 800;
 }
+.jarvis-run-chip.budget-cheap { color: var(--green); background: var(--green-bg); }
+.jarvis-run-chip.budget-normal { color: var(--blue); background: var(--blue-bg); }
+.jarvis-run-chip.budget-deep { color: var(--accent); background: var(--accent-bg); }
 .jarvis-run-summary {
   display: grid;
   gap: 8px;
@@ -1589,9 +1617,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   }
   .jarvis-run-header {
     flex-direction: row;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: 8px;
     margin-bottom: 8px;
+  }
+  .jarvis-run-header > div:first-child {
+    min-width: 100%;
   }
   .jarvis-run-title {
     font-size: 16px;
@@ -1601,6 +1633,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     display: none;
   }
   .jarvis-run-header-actions {
+    width: 100%;
+    justify-content: space-between;
     gap: 6px;
   }
   .jarvis-run-mode {
@@ -1612,6 +1646,17 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   }
   .jarvis-hud-toggle {
     padding: 5px 8px;
+    font-size: 11px;
+  }
+  .jarvis-budget-control {
+    padding: 5px 7px;
+    gap: 4px;
+  }
+  .jarvis-budget-control span {
+    display: none;
+  }
+  .jarvis-budget-select {
+    width: 74px;
     font-size: 11px;
   }
   .jarvis-run-flow {
@@ -2007,6 +2052,14 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
         <div class="jarvis-run-header-actions">
           <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
+          <label class="jarvis-budget-control" title="Controls how much context and work agents may spend">
+            <span>Budget</span>
+            <select class="jarvis-budget-select" id="jarvis-budget-select" aria-label="Token budget">
+              <option value="cheap">Cheap</option>
+              <option value="normal" selected>Normal</option>
+              <option value="deep">Deep</option>
+            </select>
+          </label>
           <button class="jarvis-hud-toggle" id="jarvis-hud-toggle" type="button" onclick="toggleJarvisHud()">Hide</button>
         </div>
       </div>
@@ -2269,6 +2322,7 @@ const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
 const PIXEL_AGENTS_VIEW_KEY = 'command-center.pixel-agents.view';
 const PIXEL_AGENTS_ORIGIN = 'https://pixel-agents.meshly.fr';
 const JARVIS_HUD_COLLAPSED_KEY = 'command-center.jarvis-hud-collapsed';
+const JARVIS_BUDGET_KEY = 'command-center.jarvis-budget';
 const JARVIS_RUN_TOKEN_KEY = 'command-center.jarvis-run-token';
 const JARVIS_LAST_RUN_KEY = 'command-center.jarvis-last-run';
 let currentJarvisRunId = localStorage.getItem(JARVIS_LAST_RUN_KEY) || '';
@@ -2444,6 +2498,21 @@ function toggleJarvisHud() {
 
 function initJarvisHud() {
   applyJarvisHudState(localStorage.getItem(JARVIS_HUD_COLLAPSED_KEY) === '1');
+}
+
+function getJarvisBudget() {
+  const value = document.getElementById('jarvis-budget-select')?.value || localStorage.getItem(JARVIS_BUDGET_KEY) || 'normal';
+  return ['cheap', 'normal', 'deep'].includes(value) ? value : 'normal';
+}
+
+function initJarvisBudget() {
+  const select = document.getElementById('jarvis-budget-select');
+  if (!select) return;
+  const saved = localStorage.getItem(JARVIS_BUDGET_KEY);
+  if (['cheap', 'normal', 'deep'].includes(saved)) select.value = saved;
+  select.addEventListener('change', () => {
+    localStorage.setItem(JARVIS_BUDGET_KEY, getJarvisBudget());
+  });
 }
 
 function applyPixelAgentsPin(isPinned) {
@@ -2773,8 +2842,10 @@ function renderJarvisRunStatus(data) {
   const reportPath = data?.report_path || '-';
   const project = data?.project || 'jarvis';
   const provider = data?.provider || 'auto';
+  const budget = ['cheap', 'normal', 'deep'].includes(data?.budget) ? data.budget : getJarvisBudget();
   if (data?.task) lastJarvisTaskText = data.task;
   const task = data?.task ? `<span class="jarvis-run-chip">task ${escapeHtml(compactText(data.task, 90))}</span>` : '';
+  const budgetChip = `<span class="jarvis-run-chip budget-${escapeHtml(budget)}">budget ${escapeHtml(budget)}</span>`;
   const reportChip = reportPath && reportPath !== '-'
     ? `<span class="jarvis-run-chip" title="${escapeHtml(reportPath)}">report md</span>`
     : '';
@@ -2805,6 +2876,7 @@ function renderJarvisRunStatus(data) {
           <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
           <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
           <span class="jarvis-run-chip">provider ${escapeHtml(provider)}</span>
+          ${budgetChip}
           ${reportChip}
           ${task}
         </div>
@@ -2833,6 +2905,7 @@ async function verifyDashboardRunToken() {
       body: JSON.stringify({
         task: 'Dashboard token check. Dry run only. Do not launch agents.',
         project: 'jarvis',
+        budget: 'cheap',
         dry_run: true,
       }),
     });
@@ -2859,6 +2932,7 @@ async function runJarvisPipeline() {
   const input = document.getElementById('jarvis-task-input');
   const project = document.getElementById('jarvis-project-select')?.value || 'jarvis';
   const provider = document.getElementById('jarvis-provider-select')?.value || 'auto';
+  const budget = getJarvisBudget();
   const button = document.getElementById('jarvis-run-button');
   const task = input ? input.value.trim() : '';
   if (!task) {
@@ -2873,7 +2947,7 @@ async function runJarvisPipeline() {
       method: 'POST',
       headers: jarvisRunHeaders(),
       cache: 'no-store',
-      body: JSON.stringify({ task, project, provider }),
+      body: JSON.stringify({ task, project, provider, budget }),
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
@@ -3536,8 +3610,9 @@ function refreshAll() {
 }
 
 refreshAll();
-initJarvisRunPanel();
 initJarvisHud();
+initJarvisBudget();
+initJarvisRunPanel();
 initPixelAgentsView();
 initPixelAgentsPin();
 initDragDrop();
