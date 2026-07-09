@@ -1,0 +1,296 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const [,, command, roleArg, ...messageParts] = process.argv;
+const role = roleArg || 'supervisor';
+const message = messageParts.join(' ').trim();
+const cwd =
+  process.env.JARVIS_PIXEL_AGENT_CWD ||
+  process.env.JARVIS_PROJECT_DIR ||
+  '/Users/pirajoke/pixel-agents';
+const sessionPrefix = process.env.JARVIS_PIXEL_SESSION_PREFIX || 'jarvis-visual';
+const sessionId = `${sessionPrefix}-${role}`;
+const serverPath = path.join(os.homedir(), '.pixel-agents', 'server.json');
+const detailsPath = path.join(os.homedir(), '.pixel-agents', 'jarvis-agent-details.json');
+const envProjectName = process.env.JARVIS_PIXEL_PROJECT_NAME || path.basename(cwd);
+const envProjectDir = process.env.JARVIS_PIXEL_PROJECT_DIR || process.env.JARVIS_PROJECT_DIR || cwd;
+const envTask = process.env.JARVIS_PIXEL_TASK || '';
+const envPhase = process.env.JARVIS_PIXEL_PHASE || '';
+const envHandoff = process.env.JARVIS_PIXEL_HANDOFF || '';
+const envReport = process.env.JARVIS_PIXEL_REPORT || '';
+const envAcceptance = process.env.JARVIS_PIXEL_ACCEPTANCE || '';
+const envEvidence = process.env.JARVIS_PIXEL_EVIDENCE || '';
+
+function usage() {
+  console.error('usage: jarvis-pixel-agent-event <spawn|start|done|wait|end|permission> <role> [message]');
+  process.exit(2);
+}
+
+if (!command || !roleArg) usage();
+
+function readConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(serverPath, 'utf8'));
+  } catch (error) {
+    console.error(`Pixel Agents server config not found: ${serverPath}`);
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  }
+}
+
+function readJson(filePath, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return fallback;
+  }
+}
+
+function stateForCommand(eventCommand) {
+  switch (eventCommand) {
+    case 'start':
+      return 'working';
+    case 'permission':
+      return 'approval';
+    case 'wait':
+      return 'waiting';
+    case 'end':
+      return 'offline';
+    case 'spawn':
+    case 'done':
+    default:
+      return 'idle';
+  }
+}
+
+function waitingForCommand(eventCommand, eventRole) {
+  if (eventCommand === 'permission') return 'approval in Claude Code';
+  if (eventCommand === 'wait') {
+    if (eventRole === 'supervisor') return 'Max task / acceptance criteria';
+    if (eventRole === 'builder') return 'Supervisor handoff';
+    if (eventRole === 'tester') return 'Builder result / test command';
+    return 'user input or next command';
+  }
+  if (eventCommand === 'start') return 'tool/result';
+  if (eventCommand === 'done') {
+    if (eventRole === 'supervisor') return 'Builder';
+    if (eventRole === 'builder') return 'Tester';
+    if (eventRole === 'tester') return 'new task';
+  }
+  if (eventCommand === 'end') return 'restart';
+  return 'new task';
+}
+
+function currentForCommand(eventCommand, label) {
+  if (eventCommand === 'spawn') return label || `${role}: online`;
+  if (eventCommand === 'wait') return label || 'Waiting';
+  if (eventCommand === 'permission') return label || 'Needs approval';
+  if (eventCommand === 'end') return label || 'Session ended';
+  return label;
+}
+
+function splitList(value) {
+  return value
+    .split('||')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function cleanTask(label) {
+  if (envTask) return envTask;
+  return (label || '')
+    .replace(/^(planning|building\/checking|testing\/verifying):\s*/i, '')
+    .trim();
+}
+
+function defaultPhase(eventCommand, eventRole) {
+  if (eventCommand === 'spawn') return 'online';
+  if (eventCommand === 'wait') return 'waiting for next input';
+  if (eventCommand === 'permission') return 'waiting for approval';
+  if (eventCommand === 'done') {
+    if (eventRole === 'supervisor') return 'handoff ready';
+    if (eventRole === 'builder') return 'implementation/check complete';
+    if (eventRole === 'tester') return 'verification complete';
+    return 'done';
+  }
+  if (eventCommand === 'start') {
+    if (eventRole === 'supervisor') return 'turning request into acceptance criteria';
+    if (eventRole === 'builder') return 'building or checking requested change';
+    if (eventRole === 'tester') return 'verifying result and evidence';
+    return 'working';
+  }
+  return eventCommand;
+}
+
+function defaultHandoff(eventCommand, eventRole) {
+  if (envHandoff) return envHandoff;
+  if (eventCommand === 'done') {
+    if (eventRole === 'supervisor') return 'Builder receives acceptance criteria';
+    if (eventRole === 'builder') return 'Tester receives result and commands';
+    if (eventRole === 'tester') return 'Supervisor receives verification verdict';
+  }
+  if (eventRole === 'supervisor') return 'Supervisor -> Builder -> Tester';
+  if (eventRole === 'builder') return 'Builder -> Tester';
+  if (eventRole === 'tester') return 'Tester -> Supervisor';
+  return '';
+}
+
+function writeDetails(eventCommand, label) {
+  const now = new Date().toISOString();
+  const details = readJson(detailsPath, { updatedAt: null, agents: {} });
+  const agents = details.agents && typeof details.agents === 'object' ? details.agents : {};
+  const previous = agents[role] || {};
+  const history = Array.isArray(previous.history) ? previous.history : [];
+  const task = cleanTask(label) || previous.task || '';
+  const phase = envPhase || defaultPhase(eventCommand, role);
+  const project = envProjectName || previous.project || path.basename(envProjectDir);
+  const projectDir = envProjectDir || previous.projectDir || cwd;
+  const handoff = defaultHandoff(eventCommand, role) || previous.handoff || '';
+  const reportPath = envReport || previous.reportPath || '';
+  const acceptanceCriteria = splitList(envAcceptance);
+  const evidence = splitList(envEvidence);
+  const shouldResetRunContext = eventCommand === 'spawn' || eventCommand === 'start';
+  const event = {
+    at: now,
+    type: eventCommand,
+    message: currentForCommand(eventCommand, label),
+    project,
+    task,
+    phase,
+    handoff,
+    ...(reportPath ? { reportPath } : {}),
+    ...(evidence.length > 0 ? { evidence } : {}),
+  };
+
+  agents[role] = {
+    role,
+    sessionId,
+    updatedAt: now,
+    state: stateForCommand(eventCommand),
+    current: currentForCommand(eventCommand, label),
+    waitingOn: waitingForCommand(eventCommand, role),
+    project,
+    projectDir,
+    task,
+    phase,
+    handoff,
+    reportPath,
+    acceptanceCriteria:
+      acceptanceCriteria.length > 0
+        ? acceptanceCriteria
+        : shouldResetRunContext
+          ? []
+          : Array.isArray(previous.acceptanceCriteria)
+          ? previous.acceptanceCriteria
+          : [],
+    evidence: evidence.length > 0 ? evidence : shouldResetRunContext ? [] : Array.isArray(previous.evidence) ? previous.evidence : [],
+    history: [...history, event].slice(-30),
+  };
+
+  const next = {
+    updatedAt: now,
+    agents,
+  };
+
+  fs.mkdirSync(path.dirname(detailsPath), { recursive: true });
+  const tmpPath = `${detailsPath}.tmp`;
+  fs.writeFileSync(tmpPath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+  fs.renameSync(tmpPath, detailsPath);
+}
+
+async function post(config, payload) {
+  const response = await fetch(`http://127.0.0.1:${config.port}/api/hooks/claude`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${config.token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Pixel Agents hook failed: HTTP ${response.status} ${text}`);
+  }
+}
+
+function base(eventName) {
+  return {
+    session_id: sessionId,
+    hook_event_name: eventName,
+  };
+}
+
+async function ensureSession(config) {
+  await post(config, {
+    ...base('SessionStart'),
+    source: 'startup',
+    cwd,
+  });
+}
+
+async function toolStart(config, label) {
+  await ensureSession(config);
+  await post(config, {
+    ...base('PreToolUse'),
+    tool_name: 'Bash',
+    tool_input: {
+      command: label,
+    },
+  });
+}
+
+async function toolDone(config) {
+  await post(config, base('PostToolUse'));
+}
+
+async function wait(config) {
+  await post(config, {
+    ...base('Notification'),
+    notification_type: 'idle_prompt',
+  });
+}
+
+async function main() {
+  const config = readConfig();
+  const label = message || `${role}: ${command}`;
+
+  switch (command) {
+    case 'spawn':
+      await toolStart(config, `${role}: online`);
+      await toolDone(config);
+      await wait(config);
+      break;
+    case 'start':
+      await toolStart(config, `${role}: ${label}`);
+      break;
+    case 'done':
+      await toolDone(config);
+      await post(config, base('Stop'));
+      break;
+    case 'wait':
+      await wait(config);
+      break;
+    case 'permission':
+      await post(config, base('PermissionRequest'));
+      break;
+    case 'end':
+      await post(config, {
+        ...base('SessionEnd'),
+        reason: 'exit',
+      });
+      break;
+    default:
+      usage();
+  }
+
+  writeDetails(command, label);
+  console.log(`${command} ${role} ${sessionId}`);
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});

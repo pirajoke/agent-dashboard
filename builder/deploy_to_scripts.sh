@@ -13,6 +13,7 @@ cp "$SRC_DIR/build-agent-dashboard.py" "$SCRIPTS_DIR/build-agent-dashboard.py"
 cp "$SRC_DIR/dashboard-rebuild.sh" "$SCRIPTS_DIR/dashboard-rebuild.sh"
 cp "$SRC_DIR/dashboard-server-m4.py" "$SCRIPTS_DIR/dashboard-server-m4.py"
 cp "$SRC_DIR/jarvis-agent-pipeline" "$SCRIPTS_DIR/jarvis-agent-pipeline"
+cp "$SRC_DIR/jarvis-pixel-agent-event" "$SCRIPTS_DIR/jarvis-pixel-agent-event"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
 cp "$SRC_DIR/dashboard-assets/style.css" "$SCRIPTS_DIR/dashboard-assets/style.css"
 cp "$SRC_DIR/dashboard-assets/script.js" "$SCRIPTS_DIR/dashboard-assets/script.js"
@@ -25,6 +26,7 @@ fi
 
 chmod +x "$SCRIPTS_DIR/dashboard-rebuild.sh"
 chmod +x "$SCRIPTS_DIR/jarvis-agent-pipeline"
+chmod +x "$SCRIPTS_DIR/jarvis-pixel-agent-event"
 
 cd "$SCRIPTS_DIR"
 python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py dashboard_builder/*.py
