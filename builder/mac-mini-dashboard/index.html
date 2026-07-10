@@ -1825,6 +1825,332 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     margin-bottom: 0;
   }
 }
+
+/* Agent Mini App v2: game-first, compact pipeline console */
+.pixel-agents-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
+  grid-template-rows: auto minmax(620px, 1fr);
+  grid-template-areas:
+    "bar bar"
+    "stage console";
+  gap: 12px;
+  padding: 12px;
+  min-height: 760px;
+  height: auto;
+}
+.pixel-agents-shell.is-pinned {
+  height: var(--pinned-shell-height, auto);
+  min-height: var(--pinned-shell-height, 760px);
+}
+.pixel-agents-gamebar {
+  position: relative;
+  grid-area: bar;
+  top: auto;
+  left: auto;
+  right: auto;
+}
+.pixel-agents-viewport {
+  grid-area: stage;
+  height: min(74vh, 780px);
+  min-height: 620px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.jarvis-hud-card {
+  position: relative;
+  grid-area: console;
+  top: auto;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  width: auto;
+  max-height: min(74vh, 780px);
+  min-height: 0;
+  overflow: auto;
+  align-self: stretch;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+}
+.jarvis-hud-card.hud-collapsed {
+  width: auto;
+  max-height: 96px;
+}
+.jarvis-run-header {
+  gap: 10px;
+}
+.jarvis-run-title {
+  font-size: 22px;
+}
+.jarvis-run-subtitle {
+  max-width: 520px;
+  line-height: 1.35;
+}
+.jarvis-run-header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.jarvis-run-form {
+  grid-template-columns: minmax(0, 1fr) 92px;
+}
+.jarvis-run-input {
+  grid-column: 1 / -1;
+  min-height: 92px;
+}
+.jarvis-run-select {
+  min-height: 42px;
+}
+.jarvis-run-btn {
+  min-height: 42px;
+}
+.jarvis-run-examples {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.jarvis-task-chip {
+  text-align: left;
+}
+.jarvis-mission-panel {
+  display: grid;
+  gap: 10px;
+}
+.jarvis-mission-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.jarvis-mission-title {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+.jarvis-mission-status {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: var(--bg2);
+  color: var(--text2);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.jarvis-mission-status.working,
+.jarvis-mission-status.starting,
+.jarvis-mission-status.running {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+.jarvis-mission-status.done {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.jarvis-mission-status.failed,
+.jarvis-mission-status.error {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.jarvis-mission-status.needs_approval,
+.jarvis-mission-status.needs_input,
+.jarvis-mission-status.blocked_usage_limit,
+.jarvis-mission-status.blocked_auth,
+.jarvis-mission-status.blocked_secret {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.jarvis-mission-body {
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.jarvis-agent-strip {
+  display: grid;
+  gap: 7px;
+}
+.jarvis-agent-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.84);
+  padding: 9px;
+}
+.jarvis-agent-row-role {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 900;
+}
+.jarvis-agent-row-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--muted);
+}
+.jarvis-agent-row.working .jarvis-agent-row-dot {
+  background: var(--blue);
+  animation: pulse-blue 1.8s infinite;
+}
+.jarvis-agent-row.done .jarvis-agent-row-dot { background: var(--green); }
+.jarvis-agent-row.failed .jarvis-agent-row-dot { background: var(--red); }
+.jarvis-agent-row-detail {
+  min-width: 0;
+  color: var(--text2);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.jarvis-agent-row-detail strong {
+  color: var(--text);
+}
+.jarvis-evidence-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.jarvis-evidence-chip {
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.86);
+  color: var(--text2);
+  font-size: 10px;
+  font-weight: 900;
+  padding: 5px 8px;
+}
+.jarvis-run-details {
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 8px;
+}
+.jarvis-agent-grid {
+  grid-template-columns: 1fr;
+}
+.jarvis-agent-card {
+  min-height: 0;
+}
+
+@media (max-width: 1100px) {
+  .pixel-agents-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(520px, 1fr);
+    grid-template-areas:
+      "bar"
+      "console"
+      "stage";
+    min-height: 0;
+  }
+  .jarvis-hud-card {
+    max-height: none;
+  }
+  .pixel-agents-viewport {
+    height: min(66vh, 680px);
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 760px) {
+  .container {
+    padding: 10px;
+  }
+  .pixel-agents-shell {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 8px;
+    gap: 8px;
+    border-radius: 18px;
+    min-height: 0;
+    height: auto;
+  }
+  .pixel-agents-gamebar {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+  }
+  .pixel-agents-gamebar-title span {
+    display: none;
+  }
+  .pixel-agents-actions {
+    justify-content: flex-start;
+    overflow-x: auto;
+    gap: 6px;
+  }
+  .pixel-agents-actions a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+  }
+  .jarvis-hud-card {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    max-height: none;
+    padding: 12px;
+    border-radius: 16px;
+  }
+  .jarvis-hud-card.hud-collapsed {
+    max-height: 82px;
+  }
+  .jarvis-run-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .jarvis-run-header > div:first-child {
+    min-width: 0;
+  }
+  .jarvis-run-subtitle {
+    display: block;
+  }
+  .jarvis-run-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .jarvis-run-flow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .jarvis-run-form {
+    grid-template-columns: minmax(0, 1fr) 86px;
+  }
+  .jarvis-run-input {
+    grid-column: 1 / -1;
+    min-height: 68px;
+  }
+  .jarvis-run-select {
+    display: block;
+  }
+  .jarvis-run-btn.secondary {
+    display: none;
+  }
+  .jarvis-human-summary {
+    display: grid;
+  }
+  .jarvis-agent-row {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+  .pixel-agents-viewport {
+    height: min(58dvh, 620px);
+    min-height: 420px;
+  }
+  body.telegram-miniapp .header,
+  body.telegram-miniapp .footer {
+    display: none;
+  }
+  body.telegram-miniapp .nav-pills {
+    margin-bottom: 8px;
+  }
+  body.telegram-miniapp .pixel-agents-viewport {
+    height: min(54dvh, 560px);
+    min-height: 380px;
+  }
+}
 </style>
 </head>
 <body>
@@ -2412,6 +2738,17 @@ const pixelAgentsView = {
   baseY: 0,
 };
 
+function initTelegramMiniApp() {
+  const webApp = window.Telegram?.WebApp;
+  if (!webApp) return;
+  document.body.classList.add('telegram-miniapp');
+  try {
+    webApp.ready();
+    webApp.expand();
+    webApp.disableVerticalSwipes?.();
+  } catch {}
+}
+
 // Navigation
 function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -2595,6 +2932,12 @@ function applyPixelAgentsPin(isPinned) {
 
   const scrollY = window.scrollY;
   const scrollX = window.scrollX;
+  if (isPinned) {
+    const currentShellHeight = Math.round(shell.getBoundingClientRect().height);
+    shell.style.setProperty('--pinned-shell-height', `${currentShellHeight}px`);
+  } else {
+    shell.style.removeProperty('--pinned-shell-height');
+  }
   if (viewport) {
     if (isPinned) {
       const currentHeight = Math.round(viewport.getBoundingClientRect().height);
@@ -2955,6 +3298,112 @@ function renderJarvisUsageMeter(data, budget) {
   `;
 }
 
+function jarvisMissionCopy(status, sectionsText) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'done') {
+    return {
+      title: 'Задача выполнена и проверена',
+      body: 'Supervisor поставил критерии, Builder сделал работу, Tester проверил evidence. Итог также должен прийти в Jarvis в Telegram.',
+    };
+  }
+  if (normalized === 'needs_approval') {
+    if (/don'?t ask|dontAsk/i.test(sectionsText)) {
+      return {
+        title: 'Старый запуск остановился до изменений',
+        body: 'Этот run был создан в старом режиме без прав на edit/bash. Ничего не изменено. Перезапусти ту же задачу: новые runs идут через Omni approval policy.',
+      };
+    }
+    return {
+      title: 'Нужно подтверждение',
+      body: 'Агент остановился перед действием, которое не проходит автоматически. Открой details: там указан конкретный next action.',
+    };
+  }
+  if (normalized === 'needs_input') {
+    return {
+      title: 'Нужна конкретная команда',
+      body: 'Jarvis понял контекст, но не получил действие для Builder. Напиши: проверить, исправить, задеплоить, подготовить план или запустить smoke.',
+    };
+  }
+  if (normalized === 'blocked_usage_limit') {
+    return {
+      title: 'Лимит модели',
+      body: 'Агенты остановлены не из-за задачи, а из-за provider quota. Подожди reset или переключи provider.',
+    };
+  }
+  if (normalized === 'blocked_auth') {
+    return {
+      title: 'Нужна авторизация',
+      body: 'Mac Mini не может запустить агента без активной авторизации provider. После логина можно перезапустить задачу.',
+    };
+  }
+  if (normalized === 'blocked_secret') {
+    return {
+      title: 'Секрет заблокирован',
+      body: 'Jarvis остановил запуск, потому что задача похожа на ключ или token. Секреты нужно передавать через env/secret storage.',
+    };
+  }
+  if (normalized === 'failed') {
+    return {
+      title: 'Pipeline упал',
+      body: 'Один агент завершился ошибкой. В карточках ниже видно, кто упал и что надо исправить перед повторным запуском.',
+    };
+  }
+  if (normalized === 'self_healing') {
+    return {
+      title: 'Агенты чинят сбой',
+      body: 'Pipeline сделал repair-pass: сохраняет lesson, затем пробует безопасный повтор.',
+    };
+  }
+  if (normalized.includes('running') || ['starting', 'started'].includes(normalized)) {
+    return {
+      title: 'Агенты работают',
+      body: 'Jarvis идёт по маршруту Supervisor → Builder → Tester. Статус обновляется автоматически.',
+    };
+  }
+  return {
+    title: 'Готов к запуску',
+    body: 'Напиши задачу для Jarvis. Лучше формулировать как действие: “проверь”, “исправь”, “задеплой”, “подготовь план”.',
+  };
+}
+
+function jarvisRoleAction(role, state) {
+  const normalized = String(state || 'pending').toLowerCase();
+  const roleKey = String(role || '').toLowerCase();
+  if (normalized === 'working') {
+    if (roleKey === 'supervisor') return 'разбирает запрос и критерии';
+    if (roleKey === 'builder') return 'выполняет задачу';
+    if (roleKey === 'tester') return 'проверяет результат';
+  }
+  if (normalized === 'done') return 'готово';
+  if (normalized === 'failed') return 'нужен следующий шаг';
+  if (roleKey === 'supervisor') return 'ждёт задачу';
+  if (roleKey === 'builder') return 'ждёт handoff';
+  return 'ждёт результат';
+}
+
+function jarvisAgentRows(data, sections) {
+  const roles = ['Supervisor', 'Builder', 'Tester'];
+  const steps = data?.steps || [];
+  return roles.map(role => {
+    const key = role.toLowerCase();
+    const step = steps.find(item => String(item.role || '').toLowerCase() === key) || {};
+    const state = String(step.state || 'pending').toLowerCase();
+    const detail = reportPreviewText(sections[role] || step.detail || '', 220) || 'Нет событий по этому агенту.';
+    return `
+      <div class="jarvis-agent-row ${escapeHtml(state)}">
+        <div class="jarvis-agent-row-role">
+          <span class="jarvis-agent-row-dot"></span>
+          ${escapeHtml(role)}
+        </div>
+        <div class="jarvis-agent-row-detail">
+          <strong>${escapeHtml(jarvisRoleAction(role, state))}</strong><br>
+          ${escapeHtml(detail)}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function renderJarvisRunStatus(data) {
   const status = data?.status || 'waiting';
   const runId = data?.run_id || currentJarvisRunId || '-';
@@ -2969,8 +3418,10 @@ function renderJarvisRunStatus(data) {
     ? `<span class="jarvis-run-chip" title="${escapeHtml(reportPath)}">report md</span>`
     : '';
   const sections = data?.sections || {};
-  const humanSummary = renderJarvisHumanSummary(data);
+  const sectionsText = `${Object.values(sections).join('\n')}\n${data?.report_tail || ''}`;
+  const mission = jarvisMissionCopy(status, sectionsText);
   const usageMeter = renderJarvisUsageMeter(data, budget);
+  const agentRows = jarvisAgentRows(data, sections);
   const agents = ['Supervisor', 'Builder', 'Tester'].map(role => {
     const key = role.toLowerCase();
     const step = (data?.steps || []).find(item => String(item.role || '').toLowerCase() === key) || {};
@@ -2990,8 +3441,14 @@ function renderJarvisRunStatus(data) {
   updateJarvisFlow(status, data?.steps || null);
   setJarvisRunStatus(`
     <div class="jarvis-run-summary">
-      <div class="jarvis-run-compact-top">
-        <strong>${escapeHtml(statusLabel(status))}</strong>
+      <div class="jarvis-mission-panel">
+        <div class="jarvis-mission-top">
+          <div>
+            <div class="jarvis-mission-title">${escapeHtml(mission.title)}</div>
+            <div class="jarvis-mission-body">${escapeHtml(mission.body)}</div>
+          </div>
+          <div class="jarvis-mission-status ${escapeHtml(status)}">${escapeHtml(statusLabel(status))}</div>
+        </div>
         <div class="jarvis-run-meta">
           <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
           <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
@@ -3000,9 +3457,14 @@ function renderJarvisRunStatus(data) {
           ${reportChip}
           ${task}
         </div>
+        <div class="jarvis-agent-strip">${agentRows}</div>
+        <div class="jarvis-evidence-links">
+          <span class="jarvis-evidence-chip">Telegram result: auto</span>
+          <span class="jarvis-evidence-chip">Route: Supervisor → Builder → Tester</span>
+          ${reportChip ? '<span class="jarvis-evidence-chip">Report: saved</span>' : ''}
+        </div>
       </div>
       ${usageMeter}
-      ${humanSummary}
       <details class="jarvis-run-details">
         <summary>Details and evidence</summary>
         <div class="jarvis-agent-grid">${agents}</div>
@@ -3731,6 +4193,7 @@ function refreshAll() {
 }
 
 refreshAll();
+initTelegramMiniApp();
 initJarvisHud();
 initJarvisBudget();
 initJarvisRunPanel();
