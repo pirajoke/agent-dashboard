@@ -52,6 +52,8 @@ RUN_ID="${JARVIS_AGENT_RUN_ID:-$(date '+%Y%m%d-%H%M%S')}"
 REPORT="$REPORT_DIR/$RUN_ID.md"
 PIXEL_EVENT="$HOME/scripts/jarvis-pixel-agent-event"
 PIXEL_CLEANUP="$HOME/scripts/jarvis-pixel-agent-cleanup"
+BRIDGE_DB="${JARVIS_BRIDGE_DB:-$HOME/.agent-bridge/bridge.db}"
+COMMAND_CENTER_URL="${JARVIS_COMMAND_CENTER_URL:-https://command.meshly.fr/?tab=agents}"
 OMNI_APPROVAL_ENABLED="${JARVIS_OMNI_APPROVAL_ENABLED:-1}"
 OMNI_APPROVAL_LEDGER="${JARVIS_OMNI_APPROVAL_LEDGER:-$HOME/omniharness/.omniharness/jarvis-approval-ledger.jsonl}"
 SELF_HEAL_ENABLED="${JARVIS_AGENT_SELF_HEAL_ENABLED:-1}"
@@ -575,24 +577,28 @@ append_role_failure_result() {
   case "$diagnosis" in
     usage_limit)
       append_result "blocked_usage_limit" "$role blocked by Claude usage limit"
+      publish_bridge_result "blocked_usage_limit" "$role blocked by Claude usage limit"
       echo "blocked by Claude usage limit in $role"
       echo "report $REPORT"
       exit 0
       ;;
     auth_required)
       append_result "blocked_auth" "$role blocked by Claude auth"
+      publish_bridge_result "blocked_auth" "$role blocked by Claude auth"
       echo "blocked by Claude auth in $role"
       echo "report $REPORT"
       exit 0
       ;;
     manual_approval_required)
       append_result "needs_approval" "$role needs manual approval"
+      publish_bridge_result "needs_approval" "$role needs manual approval"
       echo "needs approval in $role"
       echo "report $REPORT"
       exit 0
       ;;
     *)
       append_result "failed" "$role failed"
+      publish_bridge_result "failed" "$role failed"
       echo "failed in $role"
       echo "report $REPORT"
       return 1
@@ -625,6 +631,198 @@ append_result() {
       echo "- Detail: $detail"
     fi
   } >> "$REPORT"
+}
+
+publish_bridge_result() {
+  local result_status="$1"
+  local detail="${2:-}"
+
+  JARVIS_PIPELINE_STATUS="$result_status" \
+  JARVIS_PIPELINE_DETAIL="$detail" \
+  JARVIS_PIPELINE_RUN_ID="$RUN_ID" \
+  JARVIS_PIPELINE_REPORT="$REPORT" \
+  JARVIS_PIPELINE_PROJECT_NAME="$PROJECT_NAME" \
+  JARVIS_PIPELINE_PROJECT_DIR="$PROJECT_DIR" \
+  JARVIS_PIPELINE_TASK="$TASK_REDACTED" \
+  JARVIS_PIPELINE_PROVIDER="$AGENT_PROVIDER" \
+  JARVIS_PIPELINE_BUDGET="$AGENT_BUDGET" \
+  JARVIS_PIPELINE_BRIDGE_DB="$BRIDGE_DB" \
+  JARVIS_PIPELINE_DASHBOARD_URL="$COMMAND_CENTER_URL" \
+  python3 - <<'PY' >/dev/null 2>&1 || true
+import json
+import os
+import re
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+def now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def clean(text: str, limit: int = 900) -> str:
+    text = re.sub(r"\s+", " ", text or "").strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1].rstrip() + "…"
+
+
+def section(report_text: str, title: str) -> str:
+    match = re.search(rf"\n## {re.escape(title)}\n\n(.*?)(?=\n## |\Z)", report_text, re.S)
+    return clean(match.group(1), 1000) if match else ""
+
+
+status = os.environ.get("JARVIS_PIPELINE_STATUS", "")
+detail = os.environ.get("JARVIS_PIPELINE_DETAIL", "")
+run_id = os.environ.get("JARVIS_PIPELINE_RUN_ID", "")
+report_path = os.environ.get("JARVIS_PIPELINE_REPORT", "")
+project_name = os.environ.get("JARVIS_PIPELINE_PROJECT_NAME", "jarvis")
+project_dir = os.environ.get("JARVIS_PIPELINE_PROJECT_DIR", "")
+task = os.environ.get("JARVIS_PIPELINE_TASK", "")
+provider = os.environ.get("JARVIS_PIPELINE_PROVIDER", "")
+budget = os.environ.get("JARVIS_PIPELINE_BUDGET", "")
+db_path = Path(os.environ.get("JARVIS_PIPELINE_BRIDGE_DB", "~/.agent-bridge/bridge.db")).expanduser()
+dashboard_url = os.environ.get("JARVIS_PIPELINE_DASHBOARD_URL", "")
+
+report_text = ""
+try:
+    report_text = Path(report_path).read_text(encoding="utf-8", errors="replace")
+except OSError:
+    report_text = ""
+
+tester = section(report_text, "Tester") or section(report_text, "Tester Self-Heal Retry")
+builder = section(report_text, "Builder") or section(report_text, "Builder Self-Heal Retry")
+supervisor = section(report_text, "Supervisor") or section(report_text, "Supervisor Self-Heal Retry")
+
+bridge_status = "done"
+if status.startswith("blocked_") or status in {"failed", "needs_approval"}:
+    bridge_status = "failed"
+
+if status == "done":
+    result = "Готово: Agent Pipeline завершил маршрут Supervisor -> Builder -> Tester."
+    if tester:
+        result += f"\n\nTester: {tester}"
+elif status == "needs_input":
+    result = f"Нужно уточнить задачу: {detail or 'Supervisor не получил достаточно конкретный запрос.'}"
+elif status == "blocked_secret":
+    result = "Задача остановлена: в тексте найден похожий на секрет фрагмент. Ключ нужно отозвать/перевыпустить и передавать через env/secret storage."
+else:
+    result = f"Pipeline остановился со статусом {status}."
+    if detail:
+        result += f" Деталь: {detail}"
+    if tester:
+        result += f"\n\nTester: {tester}"
+    elif builder:
+        result += f"\n\nBuilder: {builder}"
+
+error = "" if bridge_status == "done" else result
+metadata = {
+    "event": "agent_pipeline_result",
+    "triggered_by": "command_center",
+    "entrypoint": "command_center.agent_pipeline",
+    "assigned_agent": "SUPERVISOR_BUILDER_TESTER",
+    "route": "Supervisor -> Builder -> Tester",
+    "route_reason": "Command Center pipeline completed a real Jarvis task",
+    "project": project_name,
+    "project_dir": project_dir,
+    "run_id": run_id,
+    "report_path": report_path,
+    "dashboard_url": dashboard_url,
+    "provider": provider,
+    "budget": budget,
+    "pipeline_status": status,
+    "detail": detail,
+    "supervisor_preview": supervisor,
+    "builder_preview": builder,
+    "tester_preview": tester,
+}
+task_id = "pipeline-" + re.sub(r"[^A-Za-z0-9_.-]", "-", run_id)[:80]
+created_at = now()
+completed_at = created_at
+description = f"Agent Pipeline: {task}" if task else "Agent Pipeline run"
+
+db_path.parent.mkdir(parents=True, exist_ok=True)
+conn = sqlite3.connect(str(db_path))
+try:
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS tasks (
+            id TEXT PRIMARY KEY,
+            status TEXT NOT NULL DEFAULT 'pending',
+            agent_role TEXT,
+            project TEXT,
+            description TEXT NOT NULL,
+            result TEXT,
+            error TEXT,
+            callback_url TEXT,
+            metadata TEXT,
+            created_at TEXT NOT NULL,
+            claimed_at TEXT,
+            completed_at TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id TEXT NOT NULL REFERENCES tasks(id),
+            sender TEXT NOT NULL,
+            receiver TEXT NOT NULL,
+            type TEXT NOT NULL,
+            body TEXT NOT NULL,
+            metadata TEXT,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_messages_task ON messages(task_id);
+    """)
+    existing = conn.execute("SELECT id FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    payload = (
+        bridge_status,
+        "SUPERVISOR_BUILDER_TESTER",
+        project_name,
+        description,
+        result if bridge_status == "done" else None,
+        error if bridge_status != "done" else None,
+        json.dumps(metadata, ensure_ascii=False, sort_keys=True),
+        completed_at,
+        task_id,
+    )
+    if existing:
+        conn.execute(
+            "UPDATE tasks SET status=?, agent_role=?, project=?, description=?, result=?, error=?, metadata=?, completed_at=? WHERE id=?",
+            payload,
+        )
+    else:
+        conn.execute(
+            "INSERT INTO tasks (status, agent_role, project, description, result, error, metadata, created_at, completed_at, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                bridge_status,
+                "SUPERVISOR_BUILDER_TESTER",
+                project_name,
+                description,
+                result if bridge_status == "done" else None,
+                error if bridge_status != "done" else None,
+                json.dumps(metadata, ensure_ascii=False, sort_keys=True),
+                created_at,
+                completed_at,
+                task_id,
+            ),
+        )
+    conn.execute(
+        "INSERT INTO messages (task_id, sender, receiver, type, body, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            task_id,
+            "AGENT_PIPELINE",
+            "JARVIS",
+            "result" if bridge_status == "done" else "error",
+            result,
+            json.dumps(metadata, ensure_ascii=False, sort_keys=True),
+            completed_at,
+        ),
+    )
+    conn.commit()
+finally:
+    conn.close()
+PY
 }
 
 cat > "$REPORT" <<EOF
@@ -669,6 +867,7 @@ if [[ "$TASK_HAS_SECRET" == "1" ]]; then
 - не вставляй ключи в задачу;
 - если нужно подключить секрет, положи его в защищённый env/secret storage и передай только имя переменной."
   append_result "blocked_secret" "Secret-like text detected; agents were not started"
+  publish_bridge_result "blocked_secret" "Secret-like text detected; agents were not started"
   pixel_event done supervisor "Secret-like task blocked" "Security gate stopped before agents" "Rotate key and pass secret via env/secret storage" "Report: $REPORT"
   echo "blocked secret"
   echo "report $REPORT"
@@ -691,6 +890,7 @@ if [[ "${JARVIS_AGENT_POLICY_ONLY:-0}" == "1" ]]; then
   done
   append_section "Omni Approval Policy" "$POLICY_BODY"
   append_result "done" "Policy-only check complete"
+  publish_bridge_result "done" "Policy-only check complete"
   echo "report $REPORT"
   echo "policy-only"
   exit 0
@@ -707,6 +907,7 @@ if task_preflight_needs_input; then
 - запусти тесты Jarvis
 - подготовь план по проекту X"
   append_result "needs_input" "Preflight stopped vague task before launching Claude"
+  publish_bridge_result "needs_input" "Preflight stopped vague task before launching Claude"
   pixel_event done supervisor "Needs a concrete task from Max" "Preflight stopped vague task" "No Builder run until task is explicit" "Report: $REPORT"
   echo "needs input"
   echo "report $REPORT"
@@ -746,6 +947,7 @@ fi
 
 if supervisor_needs_input "$SUPERVISOR_OUTPUT"; then
   append_result "needs_input" "Supervisor needs a concrete task before Builder can act"
+  publish_bridge_result "needs_input" "Supervisor needs a concrete task before Builder can act"
   pixel_event done supervisor "Needs a concrete task from Max" "Waiting for clearer task" "No Builder run until task is explicit" "Report: $REPORT"
   echo "needs input"
   echo "report $REPORT"
@@ -830,6 +1032,7 @@ if role_output_failed "$TESTER_OUTPUT"; then
 fi
 
 append_result "done" "Route complete"
+publish_bridge_result "done" "Route complete"
 
 echo "report $REPORT"
 echo "route Supervisor -> Builder -> Tester"
