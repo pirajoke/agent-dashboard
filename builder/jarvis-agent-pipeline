@@ -18,6 +18,33 @@ if [[ -z "$TASK" ]]; then
   exit 2
 fi
 
+redact_sensitive_text() {
+  JARVIS_REDACT_INPUT="$1" python3 - <<'PY'
+import os, re
+
+text = os.environ.get("JARVIS_REDACT_INPUT", "")
+patterns = [
+    r"sk-proj-[A-Za-z0-9_-]{20,}",
+    r"sk-[A-Za-z0-9_-]{20,}",
+    r"gh[pousr]_[A-Za-z0-9_]{20,}",
+    r"xox[baprs]-[A-Za-z0-9-]{20,}",
+    r"AIza[0-9A-Za-z_-]{20,}",
+    r"AKIA[0-9A-Z]{16}",
+    r"(?is)-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----",
+    r"(?i)\b(api[_ -]?key|token|secret|password|passwd|пароль|секрет)\s*[:=]\s*['\"]?[^'\"\s]{8,}",
+]
+for pattern in patterns:
+    text = re.sub(pattern, "[REDACTED_SECRET]", text)
+print(text, end="")
+PY
+}
+
+TASK_REDACTED="$(redact_sensitive_text "$TASK")"
+TASK_HAS_SECRET="0"
+if [[ "$TASK_REDACTED" != "$TASK" ]]; then
+  TASK_HAS_SECRET="1"
+fi
+
 PROJECT_DIR="${JARVIS_PROJECT_DIR:-/Users/pirajoke/jarvis}"
 PROJECT_NAME="${JARVIS_PROJECT_NAME:-${PROJECT_DIR:t}}"
 REPORT_DIR="${JARVIS_AGENT_REPORT_DIR:-$HOME/Library/Logs/jarvis-agent-pipeline}"
@@ -152,7 +179,7 @@ omni_audit() {
   JARVIS_OMNI_AUDIT_REASON="$reason" \
   JARVIS_OMNI_AUDIT_RUN="$RUN_ID" \
   JARVIS_OMNI_AUDIT_PROJECT="$PROJECT_DIR" \
-  JARVIS_OMNI_AUDIT_TASK="$TASK" \
+  JARVIS_OMNI_AUDIT_TASK="$TASK_REDACTED" \
   python3 - <<'PY' >> "$OMNI_APPROVAL_LEDGER" 2>/dev/null || true
 import json, os
 from datetime import datetime, timezone
@@ -188,7 +215,7 @@ pixel_event() {
 
   JARVIS_PIXEL_PROJECT_NAME="$PROJECT_NAME" \
     JARVIS_PIXEL_PROJECT_DIR="$PROJECT_DIR" \
-    JARVIS_PIXEL_TASK="$TASK" \
+    JARVIS_PIXEL_TASK="$TASK_REDACTED" \
     JARVIS_PIXEL_PHASE="$event_phase" \
     JARVIS_PIXEL_HANDOFF="$event_handoff" \
     JARVIS_PIXEL_REPORT="$REPORT" \
@@ -529,7 +556,7 @@ $user_prompt"
 
 supervisor_needs_input() {
   local output="${1:l}"
-  print -r -- "$output" | grep -Eiq 'нет явной задачи|нет конкретной задачи|скажи, что конкретно|что конкретно хочешь|нужно уточн|уточни|need(s)? input|needs_input'
+  print -r -- "$output" | grep -Eiq '(^|[[:space:]])needs_input([[:space:][:punct:]]|$)|(^|[[:space:]])need(s)? input([[:space:][:punct:]]|$)|^[[:space:]>#*-]*(нет явной задачи|нет конкретной задачи|нужна конкретная задача|скажи, что конкретно|что конкретно хочешь|нужно уточнить|уточни задачу)'
 }
 
 task_preflight_needs_input() {
@@ -610,7 +637,7 @@ cat > "$REPORT" <<EOF
 - Budget: $AGENT_BUDGET
 - Budget envelope: $BUDGET_ENVELOPE
 - Budget policy: $BUDGET_POLICY
-- Task: $TASK
+- Task: $TASK_REDACTED
 - Task mode: $TASK_MODE_HINT
 - Route: Supervisor -> Builder -> Tester
 - Omni approval:
@@ -633,6 +660,20 @@ cat > "$REPORT" <<EOF
   - Tester: $TESTER_PERMISSION
 
 EOF
+
+if [[ "$TASK_HAS_SECRET" == "1" ]]; then
+  append_section "Security Gate" "Задача содержит похожий на секрет фрагмент. Я остановил запуск до отправки в Supervisor/Builder/Tester.
+
+Что сделать:
+- перевыпусти/отзови раскрытый ключ;
+- не вставляй ключи в задачу;
+- если нужно подключить секрет, положи его в защищённый env/secret storage и передай только имя переменной."
+  append_result "blocked_secret" "Secret-like text detected; agents were not started"
+  pixel_event done supervisor "Secret-like task blocked" "Security gate stopped before agents" "Rotate key and pass secret via env/secret storage" "Report: $REPORT"
+  echo "blocked secret"
+  echo "report $REPORT"
+  exit 0
+fi
 
 if [[ "${JARVIS_AGENT_POLICY_ONLY:-0}" == "1" ]]; then
   POLICY_BODY=""
@@ -685,7 +726,7 @@ Budget policy: $BUDGET_POLICY
 4. Риски
 5. Критерии готовности"
 
-pixel_event start supervisor "Request: $TASK" "Defining acceptance criteria and routing plan" "Builder receives scope, risks, and checks"
+pixel_event start supervisor "Request: $TASK_REDACTED" "Defining acceptance criteria and routing plan" "Builder receives scope, risks, and checks"
 SUPERVISOR_OUTPUT="$(run_agent_role supervisor "$SUPERVISOR_PERMISSION" "$SUPERVISOR_SYSTEM" "$SUPERVISOR_PROMPT" || true)"
 append_section "Supervisor" "$SUPERVISOR_OUTPUT"
 pixel_event done supervisor "Acceptance criteria ready for Builder" "Handoff ready" "Builder receives Supervisor section from report" "Report: $REPORT"
@@ -730,7 +771,7 @@ $SUPERVISOR_OUTPUT
 3. Команды проверки, если нужны
 4. Handoff для Tester"
 
-pixel_event start builder "Build/check: $TASK" "Reading context and producing implementation handoff" "Tester receives files, commands, and result"
+pixel_event start builder "Build/check: $TASK_REDACTED" "Reading context and producing implementation handoff" "Tester receives files, commands, and result"
 BUILDER_OUTPUT="$(run_agent_role builder "$BUILDER_PERMISSION" "$BUILDER_SYSTEM" "$BUILDER_PROMPT" || true)"
 append_section "Builder" "$BUILDER_OUTPUT"
 pixel_event done builder "Builder result ready for Tester" "Implementation/check complete" "Tester receives Builder section from report" "Report: $REPORT"
@@ -770,7 +811,7 @@ $BUILDER_OUTPUT
 3. Остаточные риски
 4. Следующий шаг"
 
-pixel_event start tester "Verify: $TASK" "Checking request vs result and evidence" "Supervisor receives pass/fail verdict"
+pixel_event start tester "Verify: $TASK_REDACTED" "Checking request vs result and evidence" "Supervisor receives pass/fail verdict"
 TESTER_OUTPUT="$(run_agent_role tester "$TESTER_PERMISSION" "$TESTER_SYSTEM" "$TESTER_PROMPT" || true)"
 append_section "Tester" "$TESTER_OUTPUT"
 pixel_event done tester "Tester verdict ready" "Verification complete" "Supervisor receives Tester section from report" "Report: $REPORT"

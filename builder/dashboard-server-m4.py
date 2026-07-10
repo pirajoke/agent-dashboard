@@ -78,6 +78,22 @@ PUBLIC_TASK_METADATA_FIELDS = {
     "tools",
     "triggered_by",
 }
+SECRET_TEXT_PATTERNS = [
+    re.compile(r"sk-proj-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
+    re.compile(r"xox[baprs]-[A-Za-z0-9-]{20,}"),
+    re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(
+        r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    re.compile(
+        r"\b(api[_ -]?key|token|secret|password|passwd|пароль|секрет)\s*[:=]\s*['\"]?[^'\"\s]{8,}",
+        re.IGNORECASE,
+    ),
+]
 
 # Services that the orchestrator toggle controls
 MANAGED_SERVICES = [
@@ -522,10 +538,24 @@ def _clip_public_text(value, limit: int = 280) -> str:
             value = json.dumps(value, ensure_ascii=False)
         except Exception:
             value = str(value)
+    value = _redact_sensitive_text(value)
     value = re.sub(r"\s+", " ", value).strip()
     if "authentication_error" in value.lower():
         return "authentication_error: credentials are invalid, expired, or unavailable."
     return value[:limit]
+
+
+def _redact_sensitive_text(value) -> str:
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        try:
+            value = json.dumps(value, ensure_ascii=False)
+        except Exception:
+            value = str(value)
+    for pattern in SECRET_TEXT_PATTERNS:
+        value = pattern.sub("[REDACTED_SECRET]", value)
+    return value
 
 
 def _public_task_metadata(metadata) -> dict:
@@ -965,6 +995,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if len(task) > 1200:
             self._json_response(400, {"error": "task is too long; max 1200 chars"})
             return
+        task_redacted = _redact_sensitive_text(task)
 
         project_key = str(body.get("project") or "jarvis").strip().lower()
         project_dir = JARVIS_PROJECTS.get(project_key)
@@ -1000,7 +1031,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "budget": budget,
                     "project_dir": str(project_dir),
                     "report_path": str(report_path),
-                    "task": task,
+                    "task": task_redacted,
                     "usage_estimate": _pipeline_usage_estimate("", {}, budget),
                     "steps": _pipeline_steps("starting", {}),
                 },
@@ -1046,7 +1077,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "budget": budget,
                 "project_dir": str(project_dir),
                 "report_path": str(report_path),
-                "task": task,
+                "task": task_redacted,
                 "usage_estimate": _pipeline_usage_estimate("", {}, budget),
                 "steps": _pipeline_steps("starting", {}),
             },
@@ -1090,10 +1121,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as exc:
             self._json_response(500, {"error": str(exc), "run_id": run_id})
             return
+        safe_report_text = _redact_sensitive_text(report_text)
 
-        lines = report_text.splitlines()
-        status = _parse_pipeline_status(report_text)
-        sections = _pipeline_sections(report_text)
+        lines = safe_report_text.splitlines()
+        status = _parse_pipeline_status(safe_report_text)
+        sections = _pipeline_sections(safe_report_text)
         stat = report_path.stat()
         self._json_response(
             200,
@@ -1102,17 +1134,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 "run_id": run_id,
                 "status": status,
                 "report_path": str(report_path),
-                "project_dir": _pipeline_report_field(report_text, "Project"),
-                "project": Path(_pipeline_report_field(report_text, "Project")).name
-                if _pipeline_report_field(report_text, "Project")
+                "project_dir": _pipeline_report_field(safe_report_text, "Project"),
+                "project": Path(_pipeline_report_field(safe_report_text, "Project")).name
+                if _pipeline_report_field(safe_report_text, "Project")
                 else None,
-                "provider": _pipeline_report_field(report_text, "Provider mode"),
-                "budget": _pipeline_report_field(report_text, "Budget") or "normal",
-                "task": _pipeline_report_field(report_text, "Task"),
-                "route": _pipeline_report_field(report_text, "Route"),
-                "model": _pipeline_report_field(report_text, "Model"),
+                "provider": _pipeline_report_field(safe_report_text, "Provider mode"),
+                "budget": _pipeline_report_field(safe_report_text, "Budget") or "normal",
+                "task": _pipeline_report_field(safe_report_text, "Task"),
+                "route": _pipeline_report_field(safe_report_text, "Route"),
+                "model": _pipeline_report_field(safe_report_text, "Model"),
                 "sections": sections,
-                "usage_estimate": _pipeline_usage_estimate(report_text, sections),
+                "usage_estimate": _pipeline_usage_estimate(safe_report_text, sections),
                 "steps": _pipeline_steps(status, sections),
                 "updated_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "bytes": stat.st_size,
