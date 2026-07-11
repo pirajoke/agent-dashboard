@@ -468,6 +468,71 @@ def _pipeline_usage_estimate(report_text: str, sections: dict, fallback_budget: 
     }
 
 
+def _pipeline_result_summary(status: str, sections: dict, report_text: str) -> str:
+    result = sections.get("Result", "")
+    for field in ("Detail", "Summary", "Result", "Next"):
+        value = _pipeline_report_field(result, field) or _pipeline_report_field(report_text, field)
+        if value:
+            return _compact_report_text(value, 360)
+
+    if result:
+        cleaned = re.sub(r"(?im)^-\s*Status:\s*.+$", "", result).strip()
+        cleaned = re.sub(r"(?im)^-\s*Completed:\s*.+$", "", cleaned).strip()
+        if cleaned:
+            return _compact_report_text(cleaned, 360)
+
+    status = (status or "waiting").lower()
+    fallback_by_status = {
+        "done": "Задача завершена. Детали проверки сохранены в report.",
+        "failed": "Pipeline упал. Открой details: там указан агент, ошибка и следующий шаг.",
+        "needs_input": "Supervisor ждёт более конкретную задачу для Builder.",
+        "needs_approval": "Нужно подтверждение или перезапуск с разрешённой approval policy.",
+        "blocked_usage_limit": "Запуск остановлен лимитом provider.",
+        "blocked_auth": "Запуск остановлен из-за авторизации provider.",
+        "blocked_secret": "Запуск остановлен защитой от передачи секретов.",
+        "self_healing": "Pipeline пытается сам исправить предыдущий сбой.",
+    }
+    if status in fallback_by_status:
+        return fallback_by_status[status]
+
+    for title in ("Tester", "Builder", "Supervisor", "Self-Healing"):
+        if sections.get(title):
+            return _compact_report_text(sections[title], 360)
+    return "Отчёт ещё собирается."
+
+
+def _pipeline_report_payload(report_path: Path, include_tail: bool = False) -> dict:
+    report_text = report_path.read_text(encoding="utf-8", errors="replace")
+    safe_report_text = _redact_sensitive_text(report_text)
+    lines = safe_report_text.splitlines()
+    status = _parse_pipeline_status(safe_report_text)
+    sections = _pipeline_sections(safe_report_text)
+    stat = report_path.stat()
+    project_dir = _pipeline_report_field(safe_report_text, "Project")
+    payload = {
+        "exists": True,
+        "run_id": report_path.stem,
+        "status": status,
+        "report_path": str(report_path),
+        "project_dir": project_dir,
+        "project": Path(project_dir).name if project_dir else None,
+        "provider": _pipeline_report_field(safe_report_text, "Provider mode"),
+        "budget": _pipeline_report_field(safe_report_text, "Budget") or "normal",
+        "task": _pipeline_report_field(safe_report_text, "Task"),
+        "route": _pipeline_report_field(safe_report_text, "Route"),
+        "model": _pipeline_report_field(safe_report_text, "Model"),
+        "sections": sections,
+        "result_summary": _pipeline_result_summary(status, sections, safe_report_text),
+        "usage_estimate": _pipeline_usage_estimate(safe_report_text, sections),
+        "steps": _pipeline_steps(status, sections),
+        "updated_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "bytes": stat.st_size,
+    }
+    if include_tail:
+        payload["report_tail"] = "\n".join(lines[-80:])
+    return payload
+
+
 def _health_request(method: str, path: str, payload: dict | None = None) -> dict:
     data = None
     headers = {"Content-Type": "application/json"}
@@ -1117,38 +1182,61 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
 
         try:
-            report_text = report_path.read_text(errors="replace")
+            payload = _pipeline_report_payload(report_path, include_tail=True)
         except Exception as exc:
             self._json_response(500, {"error": str(exc), "run_id": run_id})
             return
-        safe_report_text = _redact_sensitive_text(report_text)
+        payload["run_id"] = run_id
+        self._json_response(200, payload)
 
-        lines = safe_report_text.splitlines()
-        status = _parse_pipeline_status(safe_report_text)
-        sections = _pipeline_sections(safe_report_text)
-        stat = report_path.stat()
+    def _handle_jarvis_pipeline_history(self, parsed):
+        if not self._require_dashboard_run_auth():
+            return
+
+        query = parse_qs(parsed.query)
+        try:
+            limit = int((query.get("limit") or ["12"])[0])
+        except ValueError:
+            limit = 12
+        limit = max(1, min(50, limit))
+
+        reports = []
+        if JARVIS_PIPELINE_REPORT_DIR.exists():
+            reports = sorted(
+                JARVIS_PIPELINE_REPORT_DIR.glob("*.md"),
+                key=lambda item: item.stat().st_mtime,
+                reverse=True,
+            )
+
+        items = []
+        for report_path in reports[:limit]:
+            try:
+                payload = _pipeline_report_payload(report_path, include_tail=False)
+                payload.pop("sections", None)
+                payload.pop("usage_estimate", None)
+                payload.pop("steps", None)
+                items.append(payload)
+            except Exception as exc:
+                items.append(
+                    {
+                        "exists": False,
+                        "run_id": report_path.stem,
+                        "status": "error",
+                        "report_path": str(report_path),
+                        "result_summary": str(exc),
+                        "updated_at": datetime.fromtimestamp(
+                            report_path.stat().st_mtime,
+                            timezone.utc,
+                        ).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    }
+                )
+
         self._json_response(
             200,
             {
-                "exists": True,
-                "run_id": run_id,
-                "status": status,
-                "report_path": str(report_path),
-                "project_dir": _pipeline_report_field(safe_report_text, "Project"),
-                "project": Path(_pipeline_report_field(safe_report_text, "Project")).name
-                if _pipeline_report_field(safe_report_text, "Project")
-                else None,
-                "provider": _pipeline_report_field(safe_report_text, "Provider mode"),
-                "budget": _pipeline_report_field(safe_report_text, "Budget") or "normal",
-                "task": _pipeline_report_field(safe_report_text, "Task"),
-                "route": _pipeline_report_field(safe_report_text, "Route"),
-                "model": _pipeline_report_field(safe_report_text, "Model"),
-                "sections": sections,
-                "usage_estimate": _pipeline_usage_estimate(safe_report_text, sections),
-                "steps": _pipeline_steps(status, sections),
-                "updated_at": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "bytes": stat.st_size,
-                "report_tail": "\n".join(lines[-80:]),
+                "items": items,
+                "count": len(items),
+                "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             },
         )
 
@@ -1166,6 +1254,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/jarvis/pipeline/status':
             self._handle_jarvis_pipeline_status(parsed)
+            return
+        if parsed.path == '/api/jarvis/pipeline/history':
+            self._handle_jarvis_pipeline_history(parsed)
             return
 
         air_path = _air_proxy_path(parsed.path)

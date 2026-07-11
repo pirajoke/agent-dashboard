@@ -1116,6 +1116,28 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-run-chip.budget-cheap { color: var(--green); background: var(--green-bg); }
 .jarvis-run-chip.budget-normal { color: var(--blue); background: var(--blue-bg); }
 .jarvis-run-chip.budget-deep { color: var(--accent); background: var(--accent-bg); }
+.jarvis-outcome {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.86);
+  padding: 10px 12px;
+  color: var(--text2);
+  line-height: 1.42;
+}
+.jarvis-outcome-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+}
+.jarvis-outcome-text {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 760;
+}
 .jarvis-cost-meter {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) 96px;
@@ -1229,6 +1251,109 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+.jarvis-history-panel {
+  margin-top: 10px;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.84);
+  padding: 10px 12px;
+}
+.jarvis-history-panel > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 900;
+  list-style: none;
+}
+.jarvis-history-panel > summary::-webkit-details-marker { display: none; }
+.jarvis-history-count {
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 900;
+}
+.jarvis-history-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  max-height: 210px;
+  overflow: auto;
+  padding-right: 2px;
+}
+.jarvis-history-empty {
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 650;
+}
+.jarvis-history-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.76);
+  padding: 9px 10px;
+}
+.jarvis-history-main {
+  min-width: 0;
+}
+.jarvis-history-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.jarvis-history-status {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.jarvis-history-status.done { background: var(--green); }
+.jarvis-history-status.failed,
+.jarvis-history-status.error,
+.jarvis-history-status.blocked_secret,
+.jarvis-history-status.blocked_auth,
+.jarvis-history-status.blocked_usage_limit { background: var(--red); }
+.jarvis-history-status.needs_input,
+.jarvis-history-status.needs_approval { background: var(--accent); }
+.jarvis-history-status.starting,
+.jarvis-history-status.started,
+.jarvis-history-status.supervisor_running,
+.jarvis-history-status.builder_running,
+.jarvis-history-status.tester_running,
+.jarvis-history-status.self_healing { background: var(--blue); }
+.jarvis-history-task {
+  min-width: 0;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 860;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jarvis-history-meta,
+.jarvis-history-result {
+  margin-top: 3px;
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jarvis-history-result {
+  color: var(--text);
+  opacity: 0.82;
 }
 .jarvis-inline-btn {
   border: 1px solid rgba(234,179,8,0.45);
@@ -1487,7 +1612,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   }
   .jarvis-run-summary,
   .jarvis-human-summary,
-  .jarvis-agent-card {
+  .jarvis-agent-card,
+  .jarvis-history-panel {
     border-radius: 12px;
   }
   .jarvis-run-compact-top {
@@ -1800,6 +1926,34 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   }
   .jarvis-run-details > summary {
     font-size: 11px;
+  }
+  .jarvis-outcome {
+    padding: 8px 9px;
+  }
+  .jarvis-outcome-label {
+    font-size: 9px;
+  }
+  .jarvis-outcome-text {
+    font-size: 11px;
+  }
+  .jarvis-history-panel {
+    margin-top: 8px;
+    padding: 8px 9px;
+  }
+  .jarvis-history-list {
+    max-height: 140px;
+    gap: 6px;
+  }
+  .jarvis-history-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 8px;
+  }
+  .jarvis-history-result {
+    display: none;
+  }
+  .jarvis-history-task,
+  .jarvis-history-meta {
+    font-size: 10px;
   }
   .jarvis-agent-grid {
     grid-template-columns: 1fr;
@@ -2516,6 +2670,15 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="jarvis-run-status" id="jarvis-run-status">
         Ready. Start a task to see run id, report and evidence here.
       </div>
+      <details class="jarvis-history-panel" id="jarvis-history-panel" open>
+        <summary>
+          <span>History</span>
+          <span class="jarvis-history-count" id="jarvis-history-count">0</span>
+        </summary>
+        <div class="jarvis-history-list" id="jarvis-history-list">
+          <div class="jarvis-history-empty">Run a task to build history.</div>
+        </div>
+      </details>
       </div>
       <div class="pixel-agents-viewport" id="pixel-agents-viewport" aria-label="Moveable Pixel Agents view">
         <div class="pixel-agents-stage" id="pixel-agents-stage">
@@ -2714,6 +2877,9 @@ const JARVIS_PIPELINE_RUN_API = (!IS_FILE_DASHBOARD)
 const JARVIS_PIPELINE_STATUS_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/jarvis/pipeline/status`
   : 'http://100.77.209.73:7777/api/jarvis/pipeline/status';
+const JARVIS_PIPELINE_HISTORY_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/jarvis/pipeline/history`
+  : 'http://100.77.209.73:7777/api/jarvis/pipeline/history';
 const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
 let currentLogService = null;
 const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
@@ -3257,6 +3423,7 @@ function renderPipelineAccessHelp(message = 'Public launch is locked. Save the d
       <div>Run <span class="jarvis-run-chip">~/.local/bin/mm-command-center-auth</span> on your MacBook Pro. It opens this dashboard with a private URL fragment and saves the token locally in this browser.</div>
     </div>
   `, 'error');
+  renderJarvisHistoryLocked();
 }
 
 function formatTokenEstimate(value) {
@@ -3265,6 +3432,97 @@ function formatTokenEstimate(value) {
   if (tokens >= 1000000) return `~${(tokens / 1000000).toFixed(1)}M`;
   if (tokens >= 1000) return `~${(tokens / 1000).toFixed(tokens >= 10000 ? 0 : 1)}k`;
   return `~${Math.round(tokens)}`;
+}
+
+function formatJarvisRunTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function renderJarvisHistoryLocked() {
+  const count = document.getElementById('jarvis-history-count');
+  const list = document.getElementById('jarvis-history-list');
+  if (count) count.textContent = 'locked';
+  if (list) {
+    list.innerHTML = '<div class="jarvis-history-empty">History needs the dashboard token. Save token once, then refresh.</div>';
+  }
+}
+
+function renderJarvisHistory(data) {
+  const list = document.getElementById('jarvis-history-list');
+  const count = document.getElementById('jarvis-history-count');
+  if (!list) return;
+  const items = Array.isArray(data?.items) ? data.items : [];
+  if (count) count.textContent = String(items.length);
+  if (!items.length) {
+    list.innerHTML = '<div class="jarvis-history-empty">No agent runs yet.</div>';
+    return;
+  }
+  list.innerHTML = items.slice(0, 12).map(item => {
+    const status = String(item.status || 'waiting').toLowerCase();
+    const task = item.task || item.run_id || 'Untitled run';
+    const result = item.result_summary || statusLabel(status);
+    const meta = [
+      statusLabel(status),
+      item.project ? `project ${item.project}` : '',
+      item.provider ? `provider ${item.provider}` : '',
+      formatJarvisRunTime(item.updated_at),
+    ].filter(Boolean).join(' · ');
+    return `
+      <div class="jarvis-history-item">
+        <div class="jarvis-history-main">
+          <div class="jarvis-history-top">
+            <span class="jarvis-history-status ${escapeHtml(status)}"></span>
+            <div class="jarvis-history-task">${escapeHtml(compactText(task, 96))}</div>
+          </div>
+          <div class="jarvis-history-result">${escapeHtml(compactText(result, 128))}</div>
+          <div class="jarvis-history-meta">${escapeHtml(meta)}</div>
+        </div>
+        <button class="jarvis-inline-btn" type="button" onclick="loadJarvisHistoryRun('${escapeHtml(item.run_id || '')}')">Open</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function refreshJarvisHistory() {
+  if (IS_PUBLIC_DASHBOARD && !localStorage.getItem(JARVIS_RUN_TOKEN_KEY)) {
+    renderJarvisHistoryLocked();
+    return;
+  }
+  try {
+    const response = await fetch(`${JARVIS_PIPELINE_HISTORY_API}?limit=12&_=${Date.now()}`, {
+      headers: jarvisRunHeaders(),
+      cache: 'no-store',
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      renderJarvisHistoryLocked();
+      return;
+    }
+    if (!response.ok) {
+      const list = document.getElementById('jarvis-history-list');
+      if (list) list.innerHTML = `<div class="jarvis-history-empty">History failed: ${escapeHtml(data.error || response.statusText)}</div>`;
+      return;
+    }
+    renderJarvisHistory(data);
+  } catch (error) {
+    const list = document.getElementById('jarvis-history-list');
+    if (list) list.innerHTML = `<div class="jarvis-history-empty">History failed: ${escapeHtml(error.message || error)}</div>`;
+  }
+}
+
+function loadJarvisHistoryRun(runId) {
+  if (!runId) return;
+  currentJarvisRunId = runId;
+  localStorage.setItem(JARVIS_LAST_RUN_KEY, runId);
+  refreshJarvisRunStatus(runId);
 }
 
 function renderJarvisUsageMeter(data, budget) {
@@ -3420,6 +3678,13 @@ function renderJarvisRunStatus(data) {
   const sections = data?.sections || {};
   const sectionsText = `${Object.values(sections).join('\n')}\n${data?.report_tail || ''}`;
   const mission = jarvisMissionCopy(status, sectionsText);
+  const resultSummary = data?.result_summary || '';
+  const outcome = resultSummary ? `
+    <div class="jarvis-outcome">
+      <div class="jarvis-outcome-label">Result</div>
+      <div class="jarvis-outcome-text">${escapeHtml(resultSummary)}</div>
+    </div>
+  ` : '';
   const usageMeter = renderJarvisUsageMeter(data, budget);
   const agentRows = jarvisAgentRows(data, sections);
   const agents = ['Supervisor', 'Builder', 'Tester'].map(role => {
@@ -3449,6 +3714,7 @@ function renderJarvisRunStatus(data) {
           </div>
           <div class="jarvis-mission-status ${escapeHtml(status)}">${escapeHtml(statusLabel(status))}</div>
         </div>
+        ${outcome}
         <div class="jarvis-run-meta">
           <span class="jarvis-run-chip">run ${escapeHtml(runId)}</span>
           <span class="jarvis-run-chip">project ${escapeHtml(project)}</span>
@@ -3506,6 +3772,7 @@ async function verifyDashboardRunToken() {
     showJarvisTokenBox(false);
     updateJarvisFlow('waiting');
     setJarvisRunStatus('Token works. You can launch Supervisor → Builder → Tester now.', 'done');
+    refreshJarvisHistory();
   } catch (error) {
     setJarvisRunStatus(`Token check failed: ${escapeHtml(error.message || error)}`, 'error');
   }
@@ -3544,6 +3811,7 @@ async function runJarvisPipeline() {
     currentJarvisRunId = data.run_id;
     localStorage.setItem(JARVIS_LAST_RUN_KEY, currentJarvisRunId);
     renderJarvisRunStatus(data);
+    refreshJarvisHistory();
     scheduleJarvisRunPoll();
   } catch (error) {
     setJarvisRunStatus(`Launch failed: ${escapeHtml(error.message || error)}`, 'error');
@@ -3573,7 +3841,10 @@ async function refreshJarvisRunStatus(runId = currentJarvisRunId) {
       return;
     }
     renderJarvisRunStatus(data);
-    if (!['done', 'failed', 'needs_approval', 'needs_input', 'blocked_usage_limit', 'blocked_auth', 'blocked_secret'].includes(String(data.status || '').toLowerCase())) {
+    const normalizedStatus = String(data.status || '').toLowerCase();
+    if (['done', 'failed', 'needs_approval', 'needs_input', 'blocked_usage_limit', 'blocked_auth', 'blocked_secret'].includes(normalizedStatus)) {
+      refreshJarvisHistory();
+    } else {
       scheduleJarvisRunPoll();
     }
   } catch (error) {
@@ -3595,6 +3866,7 @@ function initJarvisRunPanel() {
     return;
   }
   if (currentJarvisRunId) refreshJarvisRunStatus(currentJarvisRunId);
+  refreshJarvisHistory();
 }
 
 // ─── Shared: render service table (used by both Mac Mini and Air) ───
