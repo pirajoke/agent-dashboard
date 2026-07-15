@@ -2298,6 +2298,20 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .jarvis-run-btn.secondary {
     display: none;
   }
+  .jarvis-token-box {
+    max-height: none;
+    overflow: visible;
+  }
+  .jarvis-token-row {
+    grid-template-columns: minmax(0, 1fr) 56px 56px;
+    gap: 6px;
+  }
+  .jarvis-token-row .jarvis-run-btn.secondary {
+    display: block;
+    width: auto;
+    padding: 0 6px;
+    font-size: 11px;
+  }
   .jarvis-human-summary {
     display: grid;
   }
