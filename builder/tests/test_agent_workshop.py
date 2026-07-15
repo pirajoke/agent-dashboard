@@ -9,6 +9,7 @@ from dashboard_builder.command_center import FLOW_NODES, build_command_center_ht
 from dashboard_builder.html_builder import build_html
 
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "dashboard-assets"
+BUILDER_DIR = Path(__file__).resolve().parents[1]
 
 
 class AgentTheaterTests(unittest.TestCase):
@@ -121,6 +122,34 @@ class SystemsCommandCenterTests(unittest.TestCase):
         self.assertIn("/api/pro/health", html)
         self.assertIn("/api/local-services", html)
         self.assertIn("SystemsCommandCenterRefresh", html)
+
+
+class JarvisPipelineLaunchTests(unittest.TestCase):
+    def test_public_dashboard_locks_run_until_token_is_present(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text()
+
+        self.assertLess(html.index('id="jarvis-token-box"'), html.index('class="jarvis-run-form"'))
+        self.assertIn("runButton.disabled = locked", html)
+        self.assertIn("locked ? 'Token required' : 'Create draft'", html)
+        self.assertIn("Unlock this browser before launching agents.", html)
+        self.assertIn("JARVIS_TASK_DRAFT_API", html)
+        self.assertIn("GitHub draft created", html)
+        self.assertIn("@media (max-width: 1100px)", html)
+        self.assertIn("grid-template-columns: minmax(0, 1fr);", html)
+
+    def test_unlock_helper_and_server_restart_are_deployable(self):
+        helper = (BUILDER_DIR / "mm-command-center-auth").read_text()
+        deploy = (BUILDER_DIR / "deploy_to_scripts.sh").read_text()
+        server = (BUILDER_DIR / "dashboard-server-m4.py").read_text()
+
+        self.assertIn("dashboard_run_token", helper)
+        self.assertIn('ssh "$MAC_MINI_HOST"', helper)
+        self.assertIn('open "${COMMAND_CENTER_URL}#dashboard_run_token=${token}"', helper)
+        self.assertIn('mm-command-center-auth"', deploy)
+        self.assertIn("launchctl kickstart -k", deploy)
+        self.assertIn("/api/jarvis/tasks/draft", server)
+        self.assertIn("jarvis.dashboard_task_intake", server)
+        self.assertIn("task contains secret-like text", server)
 
 
 if __name__ == "__main__":
