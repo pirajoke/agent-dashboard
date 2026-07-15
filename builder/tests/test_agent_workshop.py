@@ -136,6 +136,8 @@ class JarvisPipelineLaunchTests(unittest.TestCase):
         self.assertIn("GitHub draft created", html)
         self.assertIn("@media (max-width: 1100px)", html)
         self.assertIn("grid-template-columns: minmax(0, 1fr);", html)
+        self.assertIn(".jarvis-token-row .jarvis-run-btn.secondary", html)
+        self.assertIn("max-height: none;\n    overflow: visible;", html)
 
     def test_unlock_helper_and_server_restart_are_deployable(self):
         helper = (BUILDER_DIR / "mm-command-center-auth").read_text()
