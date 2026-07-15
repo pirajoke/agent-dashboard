@@ -1,0 +1,16 @@
+#!/bin/zsh
+set -euo pipefail
+
+MAC_MINI_HOST="${JARVIS_MACMINI_HOST:-maxx@100.77.209.73}"
+COMMAND_CENTER_URL="${JARVIS_COMMAND_CENTER_URL:-https://command.meshly.fr/?tab=agents}"
+TOKEN_PATH="${JARVIS_DASHBOARD_RUN_TOKEN_PATH:-/Users/pirajoke/.agent-bridge/dashboard_run_token}"
+
+token="$(ssh "$MAC_MINI_HOST" /bin/cat "$TOKEN_PATH")"
+token="${token//$'\n'/}"
+if [[ -z "$token" ]]; then
+  print -u2 "Dashboard token is empty on $MAC_MINI_HOST"
+  exit 1
+fi
+
+open "${COMMAND_CENTER_URL}#dashboard_run_token=${token}"
+print "Command Center opened with a private browser-only token fragment."

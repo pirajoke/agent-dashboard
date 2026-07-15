@@ -2198,6 +2198,21 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .jarvis-hud-card {
     max-height: none;
   }
+  .jarvis-run-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .jarvis-run-header > div:first-child {
+    width: 100%;
+    min-width: 0;
+  }
+  .jarvis-run-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .jarvis-run-subtitle {
+    max-width: 68ch;
+  }
   .pixel-agents-viewport {
     height: min(66vh, 680px);
     min-height: 520px;
@@ -2600,7 +2615,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="jarvis-run-header">
         <div>
           <div class="jarvis-run-title">Agent Pipeline</div>
-          <div class="jarvis-run-subtitle">Jarvis routes real work through Supervisor → Builder → Tester, then shows evidence below.</div>
+          <div class="jarvis-run-subtitle">GitHub owns the task. Create a draft here, then approve and run it in JARVIS Telegram.</div>
         </div>
         <div class="jarvis-run-header-actions">
           <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
@@ -2629,6 +2644,22 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           <div class="jarvis-flow-step-detail">checks request vs result</div>
         </div>
       </div>
+      <div class="jarvis-token-box hidden" id="jarvis-token-box">
+        <div class="jarvis-token-title">
+          <span>Private launch token</span>
+          <button class="jarvis-run-btn ghost" type="button" onclick="hideJarvisTokenBox()">Hide</button>
+        </div>
+        <div class="jarvis-token-help">
+          Public Command Center is read-only until this browser is unlocked once.
+          Run the helper on your MacBook Pro; it opens this page with the token in a private URL fragment:
+        </div>
+        <div class="jarvis-token-command">~/.local/bin/mm-command-center-auth</div>
+        <div class="jarvis-token-row">
+          <input class="jarvis-token-input" id="jarvis-token-input" type="password" placeholder="or paste dashboard token manually">
+          <button class="jarvis-run-btn secondary" type="button" onclick="saveDashboardRunToken()">Save</button>
+          <button class="jarvis-run-btn secondary" type="button" onclick="verifyDashboardRunToken()">Check</button>
+        </div>
+      </div>
       <div class="jarvis-run-form">
         <textarea
           class="jarvis-run-input"
@@ -2643,29 +2674,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <select class="jarvis-run-select" id="jarvis-project-select" aria-label="Project">
           <option value="jarvis">Jarvis</option>
         </select>
-        <button class="jarvis-run-btn" id="jarvis-run-button" type="button" onclick="runJarvisPipeline()">Run</button>
+        <button class="jarvis-run-btn" id="jarvis-run-button" type="button" onclick="runJarvisPipeline()">Create draft</button>
         <button class="jarvis-run-btn secondary" type="button" onclick="refreshJarvisRunStatus()">Refresh</button>
       </div>
       <div class="jarvis-run-examples">
         <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Подготовь план работы по Jarvis на сегодня: что важно, что заблокировано, следующий шаг.')">План по Jarvis</button>
         <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Проверь статус агентов и Command Center. Не меняй файлы, дай короткий отчёт и следующий шаг.')">Проверить агентов</button>
         <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Запусти read-only smoke для Jarvis pipeline. Не меняй файлы. Supervisor: handoff, Builder: ACK, Tester: PASS.')">Smoke без правок</button>
-      </div>
-      <div class="jarvis-token-box hidden" id="jarvis-token-box">
-        <div class="jarvis-token-title">
-          <span>Private launch token</span>
-          <button class="jarvis-run-btn ghost" type="button" onclick="hideJarvisTokenBox()">Hide</button>
-        </div>
-        <div class="jarvis-token-help">
-          Public Command Center can read system status, but launching agents on Mac Mini needs a private token once.
-          From your MacBook Pro run this helper, then this page will save the token automatically:
-        </div>
-        <div class="jarvis-token-command">~/.local/bin/mm-command-center-auth</div>
-        <div class="jarvis-token-row">
-          <input class="jarvis-token-input" id="jarvis-token-input" type="password" placeholder="or paste dashboard token manually">
-          <button class="jarvis-run-btn secondary" type="button" onclick="saveDashboardRunToken()">Save</button>
-          <button class="jarvis-run-btn secondary" type="button" onclick="verifyDashboardRunToken()">Check</button>
-        </div>
       </div>
       <div class="jarvis-run-status" id="jarvis-run-status">
         Ready. Start a task to see run id, report and evidence here.
@@ -2871,6 +2886,9 @@ const BRIDGE_TASKS_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
 const BRIDGE_STATUS_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
   ? `${DASHBOARD_API}/api/bridge/status`
   : 'http://100.77.209.73:7777/api/bridge/status';
+const JARVIS_TASK_DRAFT_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/jarvis/tasks/draft`
+  : 'http://100.77.209.73:7777/api/jarvis/tasks/draft';
 const JARVIS_PIPELINE_RUN_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/jarvis/pipeline/run`
   : 'http://100.77.209.73:7777/api/jarvis/pipeline/run';
@@ -3330,9 +3348,11 @@ function setJarvisRunStatus(html, status = '') {
 function showJarvisTokenBox(show) {
   const box = document.getElementById('jarvis-token-box');
   const mode = document.getElementById('jarvis-run-mode');
+  const runButton = document.getElementById('jarvis-run-button');
+  const hasToken = Boolean(localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
+  const locked = IS_PUBLIC_DASHBOARD && !hasToken;
   if (box) box.classList.toggle('hidden', !show);
   if (mode) {
-    const hasToken = Boolean(localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
     if (IS_PUBLIC_DASHBOARD) {
       mode.textContent = hasToken ? 'ready to launch' : 'token required';
     } else {
@@ -3341,6 +3361,13 @@ function showJarvisTokenBox(show) {
     mode.classList.toggle('locked', IS_PUBLIC_DASHBOARD && !hasToken);
     mode.classList.toggle('ready', hasToken || !IS_PUBLIC_DASHBOARD);
     mode.classList.toggle('error', false);
+  }
+  if (runButton) {
+    runButton.disabled = locked;
+    runButton.textContent = locked ? 'Token required' : 'Create draft';
+    runButton.title = locked
+      ? 'Unlock this browser before creating a task'
+      : 'Create a GitHub draft for approval in JARVIS Telegram';
   }
 }
 
@@ -3747,7 +3774,7 @@ async function verifyDashboardRunToken() {
     return;
   }
   try {
-    const response = await fetch(`${JARVIS_PIPELINE_RUN_API}`, {
+    const response = await fetch(`${JARVIS_TASK_DRAFT_API}`, {
       method: 'POST',
       headers: jarvisRunHeaders(),
       cache: 'no-store',
@@ -3778,6 +3805,22 @@ async function verifyDashboardRunToken() {
   }
 }
 
+function renderGitHubTaskDraft(data) {
+  const issueUrl = String(data?.issue_url || '');
+  const repo = String(data?.repo || 'GitHub');
+  const issueNumber = String(data?.issue_number || '');
+  const commit = String(data?.obsidian_commit || '').slice(0, 12);
+  updateJarvisFlow('waiting');
+  setJarvisRunStatus(`
+    <div class="jarvis-run-summary">
+      <strong>GitHub draft created</strong>
+      <div><a href="${escapeHtml(issueUrl)}" target="_blank" rel="noreferrer">${escapeHtml(repo)}#${escapeHtml(issueNumber)}</a></div>
+      <div>Open JARVIS in Telegram and press Approve top, then Run approved.</div>
+      ${commit ? `<div>Obsidian context: <span class="jarvis-run-chip">${escapeHtml(commit)}</span></div>` : ''}
+    </div>
+  `, 'done');
+}
+
 async function runJarvisPipeline() {
   const input = document.getElementById('jarvis-task-input');
   const project = document.getElementById('jarvis-project-select')?.value || 'jarvis';
@@ -3789,11 +3832,16 @@ async function runJarvisPipeline() {
     setJarvisRunStatus('Write a task first.', 'error');
     return;
   }
+  if (IS_PUBLIC_DASHBOARD && !localStorage.getItem(JARVIS_RUN_TOKEN_KEY)) {
+    renderPipelineAccessHelp('Unlock this browser before launching agents.');
+    document.getElementById('jarvis-token-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   if (button) button.disabled = true;
-  updateJarvisFlow('starting');
-  setJarvisRunStatus('Starting Supervisor → Builder → Tester...', 'starting');
+  updateJarvisFlow('waiting');
+  setJarvisRunStatus('Creating GitHub draft with frozen Obsidian context...', 'starting');
   try {
-    const response = await fetch(JARVIS_PIPELINE_RUN_API, {
+    const response = await fetch(JARVIS_TASK_DRAFT_API, {
       method: 'POST',
       headers: jarvisRunHeaders(),
       cache: 'no-store',
@@ -3801,11 +3849,16 @@ async function runJarvisPipeline() {
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
+      localStorage.removeItem(JARVIS_RUN_TOKEN_KEY);
       renderPipelineAccessHelp(data.message || 'Public launch is locked. Save the dashboard token once.');
       return;
     }
     if (!response.ok) {
       setJarvisRunStatus(`Launch failed: ${escapeHtml(data.error || response.statusText)}`, 'error');
+      return;
+    }
+    if (String(data.status || '').toLowerCase() === 'draft') {
+      renderGitHubTaskDraft(data);
       return;
     }
     currentJarvisRunId = data.run_id;

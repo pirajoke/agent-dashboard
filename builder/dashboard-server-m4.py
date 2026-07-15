@@ -28,6 +28,11 @@ JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_LOG_FILE = HOME / "Library" / "Logs" / "dashboard-jarvis-pipeline-run.log"
+JARVIS_REPO = HOME / "jarvis"
+JARVIS_PYTHON = JARVIS_REPO / ".venv" / "bin" / "python"
+JARVIS_VAULT_ROOT = Path(
+    os.environ.get("JARVIS_VAULT_PATH", str(HOME / "jarvis-context-vault"))
+).expanduser()
 GITHUB_REPO = "pirajoke/agent-dashboard"
 BRIDGE_API_URL = os.environ.get("BRIDGE_API_URL", "http://127.0.0.1:8899").rstrip("/")
 HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstrip("/")
@@ -734,6 +739,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/jarvis/tasks/draft':
+            self._handle_jarvis_task_draft()
+            return
         if parsed.path == '/api/jarvis/pipeline/run':
             self._handle_jarvis_pipeline_run()
             return
@@ -1043,6 +1051,67 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
         else:
             self._json_response(404, {"error": "not found"})
+
+    def _handle_jarvis_task_draft(self):
+        if not self._require_dashboard_run_auth():
+            return
+        try:
+            body = self._read_json_body(max_bytes=8192)
+        except Exception as exc:
+            self._json_response(400, {"error": str(exc)})
+            return
+
+        task = str(body.get("task", "")).strip()
+        if not task:
+            self._json_response(400, {"error": "task is required"})
+            return
+        if len(task) > 1200:
+            self._json_response(400, {"error": "task is too long; max 1200 chars"})
+            return
+        if _redact_sensitive_text(task) != task:
+            self._json_response(400, {"error": "task contains secret-like text"})
+            return
+        project = str(body.get("project") or "jarvis").strip()
+        source_id = f"dashboard:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}:{secrets.token_hex(4)}"
+        if bool(body.get("dry_run")):
+            self._json_response(200, {"status": "dry_run", "project": project})
+            return
+        if not JARVIS_PYTHON.is_file():
+            self._json_response(500, {"error": "JARVIS Python runtime is missing"})
+            return
+
+        env = os.environ.copy()
+        env.update(
+            {
+                "PYTHONPATH": str(JARVIS_REPO / "src"),
+                "JARVIS_PROJECT_REGISTRY_PATH": str(JARVIS_REPO / "project-registry.yaml"),
+                "JARVIS_VAULT_PATH": str(JARVIS_VAULT_ROOT),
+            }
+        )
+        try:
+            result = subprocess.run(
+                (str(JARVIS_PYTHON), "-m", "jarvis.dashboard_task_intake"),
+                input=json.dumps(
+                    {"task": task, "project": project, "source_id": source_id},
+                    ensure_ascii=False,
+                ),
+                capture_output=True,
+                text=True,
+                cwd=str(JARVIS_REPO),
+                env=env,
+                timeout=45,
+            )
+            payload = json.loads((result.stdout or "{}").strip() or "{}")
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+            self._json_response(500, {"error": f"GitHub draft intake failed: {exc}"})
+            return
+        if result.returncode != 0:
+            self._json_response(
+                502,
+                {"error": str(payload.get("error") or result.stderr or "GitHub draft intake failed")[:500]},
+            )
+            return
+        self._json_response(201, payload)
 
     def _handle_jarvis_pipeline_run(self):
         if not self._require_dashboard_run_auth():
