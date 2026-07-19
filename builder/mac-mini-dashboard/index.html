@@ -1294,8 +1294,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .jarvis-history-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
   align-items: center;
   border: 1px solid rgba(0,0,0,0.06);
   border-radius: 12px;
@@ -1337,9 +1337,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   color: var(--text);
   font-size: 12px;
   font-weight: 860;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
 }
 .jarvis-history-meta,
 .jarvis-history-result {
@@ -1347,9 +1345,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   color: var(--text2);
   font-size: 11px;
   font-weight: 650;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
 }
 .jarvis-history-result {
   color: var(--text);
@@ -1945,11 +1941,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     gap: 6px;
   }
   .jarvis-history-item {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     padding: 8px;
-  }
-  .jarvis-history-result {
-    display: none;
   }
   .jarvis-history-task,
   .jarvis-history-meta {
@@ -2022,7 +2015,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   max-height: min(74vh, 780px);
   min-height: 0;
   overflow: auto;
-  align-self: stretch;
+  align-self: start;
   box-shadow: 0 14px 34px rgba(0,0,0,0.18);
 }
 .jarvis-hud-card.hud-collapsed {
@@ -2253,6 +2246,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     display: inline-flex;
     align-items: center;
     min-height: 34px;
+  }
+  .pixel-pin-btn {
+    display: none;
   }
   .jarvis-hud-card {
     position: relative;
@@ -2629,83 +2625,30 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="jarvis-run-header">
         <div>
           <div class="jarvis-run-title">Agent Pipeline</div>
-          <div class="jarvis-run-subtitle">GitHub owns the task. Create a draft here, then approve and run it in JARVIS Telegram.</div>
-        </div>
-        <div class="jarvis-run-header-actions">
-          <div class="jarvis-run-mode" id="jarvis-run-mode">private</div>
-          <label class="jarvis-budget-control" title="Controls how much context and work agents may spend">
-            <span>Budget</span>
-            <select class="jarvis-budget-select" id="jarvis-budget-select" aria-label="Token budget">
-              <option value="cheap">Cheap</option>
-              <option value="normal" selected>Normal</option>
-              <option value="deep">Deep</option>
-            </select>
-          </label>
-          <button class="jarvis-hud-toggle" id="jarvis-hud-toggle" type="button" onclick="toggleJarvisHud()">Hide</button>
+          <div class="jarvis-run-subtitle">Агенты выполняют задачи из JARVIS. Здесь видны их роли и завершённая работа.</div>
         </div>
       </div>
       <div class="jarvis-run-flow" id="jarvis-run-flow">
         <div class="jarvis-flow-step" data-role="supervisor">
           <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Supervisor</div>
-          <div class="jarvis-flow-step-detail">turns your request into criteria</div>
+          <div class="jarvis-flow-step-detail">формирует план и критерии</div>
         </div>
         <div class="jarvis-flow-step" data-role="builder">
           <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Builder</div>
-          <div class="jarvis-flow-step-detail">does the scoped work</div>
+          <div class="jarvis-flow-step-detail">выполняет задачу</div>
         </div>
         <div class="jarvis-flow-step" data-role="tester">
           <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Tester</div>
-          <div class="jarvis-flow-step-detail">checks request vs result</div>
+          <div class="jarvis-flow-step-detail">проверяет результат</div>
         </div>
-      </div>
-      <div class="jarvis-token-box hidden" id="jarvis-token-box">
-        <div class="jarvis-token-title">
-          <span>Private launch token</span>
-          <button class="jarvis-run-btn ghost" type="button" onclick="hideJarvisTokenBox()">Hide</button>
-        </div>
-        <div class="jarvis-token-help">
-          Public Command Center is read-only until this browser is unlocked once.
-          Run the helper on your MacBook Pro; it opens this page with the token in a private URL fragment:
-        </div>
-        <div class="jarvis-token-command">~/.local/bin/mm-command-center-auth</div>
-        <div class="jarvis-token-row">
-          <input class="jarvis-token-input" id="jarvis-token-input" type="password" placeholder="or paste dashboard token manually">
-          <button class="jarvis-run-btn secondary" type="button" onclick="saveDashboardRunToken()">Save</button>
-          <button class="jarvis-run-btn secondary" type="button" onclick="verifyDashboardRunToken()">Check</button>
-        </div>
-      </div>
-      <div class="jarvis-run-form">
-        <textarea
-          class="jarvis-run-input"
-          id="jarvis-task-input"
-          placeholder="Например: подготовь план работы по Jarvis на сегодня"
-        ></textarea>
-        <select class="jarvis-run-select" id="jarvis-provider-select" aria-label="Agent provider">
-          <option value="auto">Auto</option>
-          <option value="codex">Codex</option>
-          <option value="claude">Claude</option>
-        </select>
-        <select class="jarvis-run-select" id="jarvis-project-select" aria-label="Project">
-          <option value="jarvis">Jarvis</option>
-        </select>
-        <button class="jarvis-run-btn" id="jarvis-run-button" type="button" onclick="runJarvisPipeline()">Create draft</button>
-        <button class="jarvis-run-btn secondary" type="button" onclick="refreshJarvisRunStatus()">Refresh</button>
-      </div>
-      <div class="jarvis-run-examples">
-        <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Подготовь план работы по Jarvis на сегодня: что важно, что заблокировано, следующий шаг.')">План по Jarvis</button>
-        <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Проверь статус агентов и Command Center. Не меняй файлы, дай короткий отчёт и следующий шаг.')">Проверить агентов</button>
-        <button class="jarvis-task-chip" type="button" onclick="fillJarvisTask('Запусти read-only smoke для Jarvis pipeline. Не меняй файлы. Supervisor: handoff, Builder: ACK, Tester: PASS.')">Smoke без правок</button>
-      </div>
-      <div class="jarvis-run-status" id="jarvis-run-status">
-        Ready. Start a task to see run id, report and evidence here.
       </div>
       <details class="jarvis-history-panel" id="jarvis-history-panel" open>
         <summary>
-          <span>History</span>
+          <span>Выполненные задачи</span>
           <span class="jarvis-history-count" id="jarvis-history-count">0</span>
         </summary>
         <div class="jarvis-history-list" id="jarvis-history-list">
-          <div class="jarvis-history-empty">Run a task to build history.</div>
+          <div class="jarvis-history-empty">Завершённых задач пока нет.</div>
         </div>
       </details>
       </div>
@@ -3406,9 +3349,9 @@ function saveDashboardRunToken() {
 function updateJarvisFlow(status = 'waiting', steps = null) {
   const roles = ['supervisor', 'builder', 'tester'];
   const defaultDetails = {
-    supervisor: 'turns task into criteria',
-    builder: 'does scoped work',
-    tester: 'checks result and evidence',
+    supervisor: 'формирует план и критерии',
+    builder: 'выполняет задачу',
+    tester: 'проверяет результат',
   };
   const normalized = String(status || '').toLowerCase();
   const fallback = roles.map(role => ({ role, state: 'pending' }));
@@ -3464,7 +3407,7 @@ function renderPipelineAccessHelp(message = 'Public launch is locked. Save the d
       <div>Run <span class="jarvis-run-chip">~/.local/bin/mm-command-center-auth</span> on your MacBook Pro. It opens this dashboard with a private URL fragment and saves the token locally in this browser.</div>
     </div>
   `, 'error');
-  renderJarvisHistoryLocked();
+  refreshJarvisHistory();
 }
 
 function formatTokenEstimate(value) {
@@ -3487,83 +3430,52 @@ function formatJarvisRunTime(value) {
   });
 }
 
-function renderJarvisHistoryLocked() {
-  const count = document.getElementById('jarvis-history-count');
-  const list = document.getElementById('jarvis-history-list');
-  if (count) count.textContent = 'locked';
-  if (list) {
-    list.innerHTML = '<div class="jarvis-history-empty">History needs the dashboard token. Save token once, then refresh.</div>';
-  }
-}
-
 function renderJarvisHistory(data) {
   const list = document.getElementById('jarvis-history-list');
   const count = document.getElementById('jarvis-history-count');
   if (!list) return;
-  const items = Array.isArray(data?.items) ? data.items : [];
+  const items = (Array.isArray(data?.items) ? data.items : [])
+    .filter(item => String(item.status || '').toLowerCase() === 'done');
   if (count) count.textContent = String(items.length);
   if (!items.length) {
-    list.innerHTML = '<div class="jarvis-history-empty">No agent runs yet.</div>';
+    list.innerHTML = '<div class="jarvis-history-empty">Завершённых задач пока нет.</div>';
     return;
   }
   list.innerHTML = items.slice(0, 12).map(item => {
-    const status = String(item.status || 'waiting').toLowerCase();
-    const task = item.task || item.run_id || 'Untitled run';
-    const result = item.result_summary || statusLabel(status);
-    const meta = [
-      statusLabel(status),
-      item.project ? `project ${item.project}` : '',
-      item.provider ? `provider ${item.provider}` : '',
-      formatJarvisRunTime(item.updated_at),
-    ].filter(Boolean).join(' · ');
+    const task = item.task || 'Задача без названия';
+    const result = item.result_summary || 'Задача завершена.';
+    const completedAt = formatJarvisRunTime(item.updated_at);
     return `
       <div class="jarvis-history-item">
         <div class="jarvis-history-main">
           <div class="jarvis-history-top">
-            <span class="jarvis-history-status ${escapeHtml(status)}"></span>
-            <div class="jarvis-history-task">${escapeHtml(compactText(task, 96))}</div>
+            <span class="jarvis-history-status done"></span>
+            <div class="jarvis-history-task">${escapeHtml(compactText(task, 140))}</div>
           </div>
-          <div class="jarvis-history-result">${escapeHtml(compactText(result, 128))}</div>
-          <div class="jarvis-history-meta">${escapeHtml(meta)}</div>
+          <div class="jarvis-history-result">${escapeHtml(compactText(result, 220))}</div>
+          ${completedAt ? `<div class="jarvis-history-meta">${escapeHtml(completedAt)}</div>` : ''}
         </div>
-        <button class="jarvis-inline-btn" type="button" onclick="loadJarvisHistoryRun('${escapeHtml(item.run_id || '')}')">Open</button>
       </div>
     `;
   }).join('');
 }
 
 async function refreshJarvisHistory() {
-  if (IS_PUBLIC_DASHBOARD && !localStorage.getItem(JARVIS_RUN_TOKEN_KEY)) {
-    renderJarvisHistoryLocked();
-    return;
-  }
   try {
     const response = await fetch(`${JARVIS_PIPELINE_HISTORY_API}?limit=12&_=${Date.now()}`, {
-      headers: jarvisRunHeaders(),
       cache: 'no-store',
     });
     const data = await response.json().catch(() => ({}));
-    if (response.status === 401) {
-      renderJarvisHistoryLocked();
-      return;
-    }
     if (!response.ok) {
       const list = document.getElementById('jarvis-history-list');
-      if (list) list.innerHTML = `<div class="jarvis-history-empty">History failed: ${escapeHtml(data.error || response.statusText)}</div>`;
+      if (list) list.innerHTML = '<div class="jarvis-history-empty">Не удалось загрузить историю.</div>';
       return;
     }
     renderJarvisHistory(data);
   } catch (error) {
     const list = document.getElementById('jarvis-history-list');
-    if (list) list.innerHTML = `<div class="jarvis-history-empty">History failed: ${escapeHtml(error.message || error)}</div>`;
+    if (list) list.innerHTML = '<div class="jarvis-history-empty">Не удалось загрузить историю.</div>';
   }
-}
-
-function loadJarvisHistoryRun(runId) {
-  if (!runId) return;
-  currentJarvisRunId = runId;
-  localStorage.setItem(JARVIS_LAST_RUN_KEY, runId);
-  refreshJarvisRunStatus(runId);
 }
 
 function renderJarvisUsageMeter(data, budget) {
@@ -3925,14 +3837,7 @@ function scheduleJarvisRunPoll() {
 }
 
 function initJarvisRunPanel() {
-  const savedFromHash = initJarvisRunTokenFromHash();
-  showJarvisTokenBox(IS_PUBLIC_DASHBOARD && !localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
   updateJarvisFlow('waiting');
-  if (savedFromHash) {
-    verifyDashboardRunToken();
-    return;
-  }
-  if (currentJarvisRunId) refreshJarvisRunStatus(currentJarvisRunId);
   refreshJarvisHistory();
 }
 

@@ -125,19 +125,25 @@ class SystemsCommandCenterTests(unittest.TestCase):
 
 
 class JarvisPipelineLaunchTests(unittest.TestCase):
-    def test_public_dashboard_locks_run_until_token_is_present(self):
+    def test_agent_pipeline_is_read_only_and_shows_completed_history(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text()
 
-        self.assertLess(html.index('id="jarvis-token-box"'), html.index('class="jarvis-run-form"'))
-        self.assertIn("runButton.disabled = locked", html)
-        self.assertIn("locked ? 'Token required' : 'Create draft'", html)
-        self.assertIn("Unlock this browser before launching agents.", html)
-        self.assertIn("JARVIS_TASK_DRAFT_API", html)
-        self.assertIn("GitHub draft created", html)
+        self.assertIn("Agent Pipeline", html)
+        self.assertIn("Агенты выполняют задачи из JARVIS", html)
+        self.assertIn("Supervisor", html)
+        self.assertIn("Builder", html)
+        self.assertIn("Tester", html)
+        self.assertIn("Выполненные задачи", html)
+        self.assertNotIn('id="jarvis-token-box"', html)
+        self.assertNotIn('id="jarvis-task-input"', html)
+        self.assertNotIn('id="jarvis-provider-select"', html)
+        self.assertNotIn('id="jarvis-project-select"', html)
+        self.assertNotIn('id="jarvis-budget-select"', html)
+        self.assertNotIn('id="jarvis-run-button"', html)
+        self.assertNotIn('class="jarvis-run-form"', html)
+        self.assertNotIn("loadJarvisHistoryRun", html)
         self.assertIn("@media (max-width: 1100px)", html)
         self.assertIn("grid-template-columns: minmax(0, 1fr);", html)
-        self.assertIn(".jarvis-token-row .jarvis-run-btn.secondary", html)
-        self.assertIn("max-height: none;\n    overflow: visible;", html)
 
     def test_unlock_helper_and_server_restart_are_deployable(self):
         helper = (BUILDER_DIR / "mm-command-center-auth").read_text()

@@ -1259,9 +1259,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._json_response(200, payload)
 
     def _handle_jarvis_pipeline_history(self, parsed):
-        if not self._require_dashboard_run_auth():
-            return
-
         query = parse_qs(parsed.query)
         try:
             limit = int((query.get("limit") or ["12"])[0])
@@ -1278,27 +1275,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             )
 
         items = []
-        for report_path in reports[:limit]:
+        for report_path in reports:
             try:
                 payload = _pipeline_report_payload(report_path, include_tail=False)
-                payload.pop("sections", None)
-                payload.pop("usage_estimate", None)
-                payload.pop("steps", None)
-                items.append(payload)
-            except Exception as exc:
+                if payload.get("status") != "done":
+                    continue
                 items.append(
                     {
-                        "exists": False,
-                        "run_id": report_path.stem,
-                        "status": "error",
-                        "report_path": str(report_path),
-                        "result_summary": str(exc),
-                        "updated_at": datetime.fromtimestamp(
-                            report_path.stat().st_mtime,
-                            timezone.utc,
-                        ).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "status": "done",
+                        "task": _clip_public_text(payload.get("task"), 160),
+                        "result_summary": _clip_public_text(
+                            payload.get("result_summary"),
+                            240,
+                        ),
+                        "updated_at": payload.get("updated_at"),
                     }
                 )
+                if len(items) >= limit:
+                    break
+            except Exception:
+                continue
 
         self._json_response(
             200,
