@@ -1620,7 +1620,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     data = _public_bridge_payload(data)
                 self._json_response(200, data)
             except Exception as e:
-                self._json_response(502, {"error": str(e), "tasks": []})
+                error = "bridge_unavailable" if self._is_public_request() else str(e)
+                self._json_response(502, {"error": error, "tasks": []})
             return
         if parsed.path == '/api/bridge/status':
             try:
@@ -1629,7 +1630,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     data = _public_bridge_payload(data)
                 self._json_response(200, data)
             except Exception as e:
-                self._json_response(502, {"error": str(e), "tasks": {}})
+                error = "bridge_unavailable" if self._is_public_request() else str(e)
+                self._json_response(502, {"error": error, "tasks": {}})
             return
         if self.path == '/api/github/token':
             has_token = GITHUB_TOKEN_FILE.exists() and bool(GITHUB_TOKEN_FILE.read_text().strip())
