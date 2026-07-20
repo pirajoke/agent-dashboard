@@ -203,6 +203,27 @@ class BridgeTaskPrivacyTests(unittest.TestCase):
         self.assertEqual(len(payload["tasks"]), 1)
         self.assertNotIn("Секрет", str(payload))
 
+    def test_public_bridge_failure_hides_internal_error(self):
+        response = {}
+        handler = SERVER.Handler.__new__(SERVER.Handler)
+        handler.path = "/api/bridge/tasks"
+        handler.headers = {"Host": "command.meshly.fr"}
+        handler._dashboard_run_authorized = lambda: False
+        handler._json_response = lambda status, payload: response.update(
+            status=status,
+            payload=payload,
+        )
+        with patch.object(
+            SERVER,
+            "_bridge_request",
+            side_effect=RuntimeError("Секретная внутренняя ошибка"),
+        ):
+            handler.do_GET()
+
+        self.assertEqual(response["status"], 502)
+        self.assertEqual(response["payload"]["error"], "bridge_unavailable")
+        self.assertNotIn("Секрет", str(response["payload"]))
+
 
 class DashboardOwnerAuthTests(unittest.TestCase):
     def _authorized(self, provided: str | None) -> bool:
@@ -219,6 +240,23 @@ class DashboardOwnerAuthTests(unittest.TestCase):
 
     def test_public_detail_accepts_owner_token(self):
         self.assertTrue(self._authorized("owner-token"))
+
+
+class CommandCenterClientPrivacyTests(unittest.TestCase):
+    def test_owner_token_is_sent_for_history_and_bridge_detail(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(
+            "headers: jarvisRunHeaders(),\n      cache: 'no-store'",
+            html,
+        )
+        self.assertIn(
+            "fetchURLJSON(BRIDGE_TASKS_API, { headers: jarvisRunHeaders() })",
+            html,
+        )
+        self.assertIn("task.detail_access === 'owner_required'", html)
 
 
 if __name__ == "__main__":
