@@ -3134,9 +3134,12 @@ async function fetchJSON(base, path) {
   } catch { return null; }
 }
 
-async function fetchURLJSON(url) {
+async function fetchURLJSON(url, options = {}) {
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(3500) });
+    const r = await fetch(url, {
+      ...options,
+      signal: AbortSignal.timeout(3500),
+    });
     return await r.json();
   } catch { return null; }
 }
@@ -3441,19 +3444,32 @@ function renderJarvisHistory(data) {
     list.innerHTML = '<div class="jarvis-history-empty">Завершённых задач пока нет.</div>';
     return;
   }
-  list.innerHTML = items.slice(0, 12).map(item => {
+  const mismatchCount = Number(data?.reconciliation?.mismatch_count || 0);
+  const reconciliation = mismatchCount > 0
+    ? `<div class="jarvis-history-empty">Требуют сверки: ${escapeHtml(mismatchCount)}.</div>`
+    : '';
+  list.innerHTML = reconciliation + items.slice(0, 12).map(item => {
     const task = item.task || 'Задача без названия';
     const result = item.result_summary || 'Задача завершена.';
     const completedAt = formatJarvisRunTime(item.updated_at);
+    const freshness = item.freshness === 'fresh'
+      ? 'свежие данные'
+      : item.freshness === 'stale' ? 'данные устарели' : 'свежесть неизвестна';
+    const taskLabel = item.url
+      ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${escapeHtml(compactText(task, 140))}</a>`
+      : escapeHtml(compactText(task, 140));
+    const meta = [completedAt, item.source === 'github' ? 'GitHub' : '', freshness]
+      .filter(Boolean)
+      .join(' · ');
     return `
       <div class="jarvis-history-item">
         <div class="jarvis-history-main">
           <div class="jarvis-history-top">
             <span class="jarvis-history-status done"></span>
-            <div class="jarvis-history-task">${escapeHtml(compactText(task, 140))}</div>
+            <div class="jarvis-history-task">${taskLabel}</div>
           </div>
           <div class="jarvis-history-result">${escapeHtml(compactText(result, 220))}</div>
-          ${completedAt ? `<div class="jarvis-history-meta">${escapeHtml(completedAt)}</div>` : ''}
+          ${meta ? `<div class="jarvis-history-meta">${escapeHtml(meta)}</div>` : ''}
         </div>
       </div>
     `;
@@ -3463,6 +3479,7 @@ function renderJarvisHistory(data) {
 async function refreshJarvisHistory() {
   try {
     const response = await fetch(`${JARVIS_PIPELINE_HISTORY_API}?limit=12&_=${Date.now()}`, {
+      headers: jarvisRunHeaders(),
       cache: 'no-store',
     });
     const data = await response.json().catch(() => ({}));
@@ -4261,7 +4278,9 @@ function renderIslandTask(task, statusData) {
     if (idx < route.length - 1) activateIslandLine(route[idx], route[idx + 1]);
   }
 
-  const title = compactText(task.description || task.result || task.error || task.id || 'Bridge task', 120);
+  const title = task.detail_access === 'owner_required'
+    ? 'Приватная задача'
+    : compactText(task.description || task.result || task.error || task.id || 'Bridge task', 120);
   const agent = task.agent_role || task.metadata?.assigned_agent || route[route.length - 1] || 'agent';
   const project = task.project || task.metadata?.project || 'JARVIS';
   const stateEl = document.getElementById('island-current-state');
@@ -4283,8 +4302,8 @@ function renderIslandTask(task, statusData) {
 
 async function refreshIsland() {
   const [tasksData, statusData] = await Promise.all([
-    fetchURLJSON(BRIDGE_TASKS_API),
-    fetchURLJSON(BRIDGE_STATUS_API)
+    fetchURLJSON(BRIDGE_TASKS_API, { headers: jarvisRunHeaders() }),
+    fetchURLJSON(BRIDGE_STATUS_API, { headers: jarvisRunHeaders() })
   ]);
   const tasks = Array.isArray(tasksData?.tasks) ? tasksData.tasks : [];
   const active = tasks.find(t => ['pending', 'queued', 'claimed', 'running'].includes(String(t.status || '').toLowerCase()));

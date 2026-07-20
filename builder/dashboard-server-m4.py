@@ -9,12 +9,14 @@ import os
 import re
 import secrets
 import shutil
+import ssl
 import subprocess
 import sys
+import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 PORT = 7777
 HOME = Path.home()
@@ -34,6 +36,9 @@ JARVIS_VAULT_ROOT = Path(
     os.environ.get("JARVIS_VAULT_PATH", str(HOME / "jarvis-context-vault"))
 ).expanduser()
 GITHUB_REPO = "pirajoke/agent-dashboard"
+JARVIS_GITHUB_REPO = os.environ.get("JARVIS_GITHUB_REPO", "pirajoke/jarvis").strip()
+GITHUB_ISSUES_CACHE_TTL_SECONDS = 120
+HOMEBREW_CA_BUNDLE = Path("/opt/homebrew/etc/openssl@3/cert.pem")
 BRIDGE_API_URL = os.environ.get("BRIDGE_API_URL", "http://127.0.0.1:8899").rstrip("/")
 HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstrip("/")
 AIR_HEALTH_API_URL = os.environ.get("AIR_HEALTH_API_URL", "http://100.118.34.14:8880").rstrip("/")
@@ -68,21 +73,15 @@ JARVIS_PROJECTS = {
     "jarvis": HOME / "jarvis",
 }
 SENSITIVE_SERVICE_FIELDS = {"config", "env_file", "env_vars", "log", "plist"}
-PUBLIC_TASK_METADATA_FIELDS = {
-    "assigned_agent",
-    "blocked_reason",
-    "calls",
-    "duration_s",
-    "entrypoint",
-    "event",
-    "failure_reason",
-    "project",
-    "route_reason",
-    "route_source",
-    "status",
-    "tools",
-    "triggered_by",
+JARVIS_STAGE_TO_BRIDGE_STATUS = {
+    "jarvis:draft": "pending",
+    "jarvis:approved": "pending",
+    "jarvis:running": "running",
+    "jarvis:done": "done",
+    "jarvis:failed": "failed",
+    "jarvis:cancelled": "cancelled",
 }
+_GITHUB_ISSUES_CACHE: dict[str, object] = {"loaded_at": 0.0, "items": []}
 SECRET_TEXT_PATTERNS = [
     re.compile(r"sk-proj-[A-Za-z0-9_-]{20,}"),
     re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
@@ -278,6 +277,201 @@ def _bridge_request(method: str, path: str, payload: dict | None = None) -> dict
     with urllib.request.urlopen(req, timeout=10) as resp:
         raw = resp.read().decode("utf-8")
     return json.loads(raw) if raw else {}
+
+
+def _github_read_token() -> str:
+    for name in ("JARVIS_GITHUB_TOKEN", "GITHUB_TOKEN", "GH_TOKEN"):
+        token = os.environ.get(name, "").strip()
+        if token:
+            return token
+    if GITHUB_TOKEN_FILE.exists():
+        token = GITHUB_TOKEN_FILE.read_text().strip()
+        if token:
+            return token
+    try:
+        result = subprocess.run(
+            ("/usr/bin/git", "credential", "fill"),
+            input="protocol=https\nhost=github.com\n\n",
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    if result.returncode != 0:
+        return ""
+    credentials = {}
+    for line in result.stdout.splitlines():
+        key, separator, value = line.partition("=")
+        if separator:
+            credentials[key.strip()] = value.strip()
+    return credentials.get("password", "")
+
+
+def _github_task_issues(*, force: bool = False) -> list[dict]:
+    """Return recent JARVIS task issues without relying on launchd shell credentials."""
+    now = time.monotonic()
+    loaded_at = float(_GITHUB_ISSUES_CACHE.get("loaded_at") or 0.0)
+    cached = _GITHUB_ISSUES_CACHE.get("items")
+    if not force and isinstance(cached, list) and cached and now - loaded_at < GITHUB_ISSUES_CACHE_TTL_SECONDS:
+        return list(cached)
+
+    query = urlencode(
+        {
+            "state": "all",
+            "labels": "ai-task",
+            "sort": "updated",
+            "direction": "desc",
+            "per_page": "100",
+        }
+    )
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "jarvis-command-center",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    token = _github_read_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(
+        f"https://api.github.com/repos/{JARVIS_GITHUB_REPO}/issues?{query}",
+        method="GET",
+        headers=headers,
+    )
+    ca_file = os.environ.get("SSL_CERT_FILE", "").strip()
+    if not ca_file and HOMEBREW_CA_BUNDLE.exists():
+        ca_file = str(HOMEBREW_CA_BUNDLE)
+    ssl_context = ssl.create_default_context(cafile=ca_file or None)
+    try:
+        with urllib.request.urlopen(req, timeout=10, context=ssl_context) as resp:
+            raw = resp.read().decode("utf-8")
+        payload = json.loads(raw) if raw else []
+    except Exception:
+        if isinstance(cached, list) and cached:
+            return list(cached)
+        raise
+    issues = [item for item in payload if isinstance(item, dict) and "pull_request" not in item]
+    _GITHUB_ISSUES_CACHE["loaded_at"] = now
+    _GITHUB_ISSUES_CACHE["items"] = issues
+    return list(issues)
+
+
+def _github_issue_labels(issue: dict) -> set[str]:
+    labels: set[str] = set()
+    for label in issue.get("labels") or []:
+        if isinstance(label, dict):
+            value = label.get("name")
+        else:
+            value = label
+        if value:
+            labels.add(str(value))
+    return labels
+
+
+def _github_issue_stage(issue: dict) -> str:
+    labels = _github_issue_labels(issue)
+    for stage in JARVIS_STAGE_TO_BRIDGE_STATUS:
+        if stage in labels:
+            return stage
+    return ""
+
+
+def _normalized_bridge_status(value) -> str:
+    status = str(value or "").strip().lower()
+    if status in {"claimed", "in_progress", "working"}:
+        return "running"
+    return status
+
+
+def _timestamp_age_seconds(value: str | None) -> int | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return max(0, int((datetime.now(timezone.utc) - parsed).total_seconds()))
+    except (TypeError, ValueError):
+        return None
+
+
+def _bridge_task_issue_ref(task: dict) -> tuple[str, int] | None:
+    metadata = task.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    repo = str(metadata.get("github_repo") or "").strip()
+    try:
+        issue_number = int(metadata.get("github_issue_number") or 0)
+    except (TypeError, ValueError):
+        return None
+    if not repo or issue_number <= 0:
+        return None
+    return repo, issue_number
+
+
+def _github_bridge_reconciliation(issues: list[dict], bridge_tasks: list[dict]) -> dict:
+    issue_map = {
+        (JARVIS_GITHUB_REPO, int(issue.get("number") or 0)): issue
+        for issue in issues
+        if int(issue.get("number") or 0) > 0
+    }
+    latest_tasks: dict[tuple[str, int], dict] = {}
+    for task in bridge_tasks:
+        if not isinstance(task, dict):
+            continue
+        ref = _bridge_task_issue_ref(task)
+        if not ref or ref[0] != JARVIS_GITHUB_REPO:
+            continue
+        previous = latest_tasks.get(ref)
+        current_time = str(task.get("updated_at") or task.get("completed_at") or task.get("created_at") or "")
+        previous_time = str(
+            (previous or {}).get("updated_at")
+            or (previous or {}).get("completed_at")
+            or (previous or {}).get("created_at")
+            or ""
+        )
+        if previous is None or current_time >= previous_time:
+            latest_tasks[ref] = task
+
+    mismatches = []
+    checked = 0
+    for ref, task in sorted(latest_tasks.items(), key=lambda item: item[0][1], reverse=True):
+        issue = issue_map.get(ref)
+        bridge_status = _normalized_bridge_status(task.get("status"))
+        if issue is None:
+            mismatches.append(
+                {
+                    "issue_number": ref[1],
+                    "github_url": f"https://github.com/{ref[0]}/issues/{ref[1]}",
+                    "github_status": "missing",
+                    "bridge_status": bridge_status or "unknown",
+                    "reason": "github_issue_missing",
+                }
+            )
+            continue
+        stage = _github_issue_stage(issue)
+        expected = JARVIS_STAGE_TO_BRIDGE_STATUS.get(stage)
+        if expected is None:
+            continue
+        checked += 1
+        if bridge_status != expected:
+            mismatches.append(
+                {
+                    "issue_number": ref[1],
+                    "github_url": issue.get("html_url") or f"https://github.com/{ref[0]}/issues/{ref[1]}",
+                    "github_status": expected,
+                    "bridge_status": bridge_status or "unknown",
+                    "reason": "status_mismatch",
+                }
+            )
+    return {
+        "checked_count": checked,
+        "mismatch_count": len(mismatches),
+        "status": "ok" if not mismatches else "degraded",
+        "mismatches": mismatches[:20],
+    }
 
 
 def _dashboard_run_token() -> str:
@@ -628,61 +822,47 @@ def _redact_sensitive_text(value) -> str:
     return value
 
 
-def _public_task_metadata(metadata) -> dict:
-    if not isinstance(metadata, dict):
-        return {}
-    return {
-        key: metadata[key]
-        for key in PUBLIC_TASK_METADATA_FIELDS
-        if key in metadata
-    }
-
-
-def _public_bridge_message(message: dict) -> dict:
-    return {
-        "id": message.get("id"),
-        "task_id": message.get("task_id"),
-        "sender": message.get("sender"),
-        "receiver": message.get("receiver"),
-        "type": message.get("type"),
-        "body": _clip_public_text(message.get("body"), 360),
-        "created_at": message.get("created_at"),
-        "metadata": _public_task_metadata(message.get("metadata")),
-    }
-
-
 def _public_bridge_task(task: dict) -> dict:
     return {
-        "id": task.get("id"),
         "status": task.get("status"),
         "agent_role": task.get("agent_role"),
-        "project": task.get("project"),
-        "description": _clip_public_text(task.get("description"), 260),
-        "result": _clip_public_text(task.get("result"), 260) if task.get("result") else None,
-        "error": _clip_public_text(task.get("error"), 260) if task.get("error") else None,
         "created_at": task.get("created_at"),
         "claimed_at": task.get("claimed_at"),
         "completed_at": task.get("completed_at"),
         "updated_at": task.get("updated_at"),
-        "metadata": _public_task_metadata(task.get("metadata")),
-        "messages": [
-            _public_bridge_message(message)
-            for message in (task.get("messages") or [])[-6:]
-            if isinstance(message, dict)
-        ],
+        "detail_access": "owner_required",
+    }
+
+
+def _public_bridge_counts(counts: dict) -> dict:
+    allowed_statuses = {"pending", "running", "done", "failed", "cancelled"}
+    return {
+        key: value
+        for key, value in counts.items()
+        if key in allowed_statuses and isinstance(value, int) and not isinstance(value, bool)
     }
 
 
 def _public_bridge_payload(data: dict) -> dict:
     if not isinstance(data, dict):
-        return data
-    cleaned = dict(data)
-    if isinstance(cleaned.get("tasks"), list):
-        cleaned["tasks"] = [
-            _public_bridge_task(task) if isinstance(task, dict) else task
-            for task in cleaned["tasks"][:12]
-        ]
-    return cleaned
+        return {"privacy": "anonymous_summary"}
+    tasks = data.get("tasks")
+    if isinstance(tasks, list):
+        return {
+            "tasks": [
+                _public_bridge_task(task)
+                for task in tasks[:12]
+                if isinstance(task, dict)
+            ],
+            "privacy": "anonymous_summary",
+        }
+    if isinstance(tasks, dict):
+        return {
+            "status": "ok" if data.get("status") == "ok" else "degraded",
+            "tasks": _public_bridge_counts(tasks),
+            "privacy": "anonymous_summary",
+        }
+    return {"privacy": "anonymous_summary"}
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -1266,41 +1446,77 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             limit = 12
         limit = max(1, min(50, limit))
 
-        reports = []
-        if JARVIS_PIPELINE_REPORT_DIR.exists():
-            reports = sorted(
-                JARVIS_PIPELINE_REPORT_DIR.glob("*.md"),
-                key=lambda item: item.stat().st_mtime,
-                reverse=True,
+        try:
+            issues = _github_task_issues()
+        except Exception:
+            self._json_response(
+                502,
+                {
+                    "error": "github_history_unavailable",
+                    "items": [],
+                    "count": 0,
+                    "source": "github",
+                },
             )
+            return
 
+        owner_view = self._dashboard_run_authorized()
         items = []
-        for report_path in reports:
-            try:
-                payload = _pipeline_report_payload(report_path, include_tail=False)
-                if payload.get("status") != "done":
-                    continue
-                items.append(
-                    {
-                        "status": "done",
-                        "task": _clip_public_text(payload.get("task"), 160),
-                        "result_summary": _clip_public_text(
-                            payload.get("result_summary"),
-                            240,
-                        ),
-                        "updated_at": payload.get("updated_at"),
-                    }
-                )
-                if len(items) >= limit:
-                    break
-            except Exception:
+        for issue in issues:
+            if _github_issue_stage(issue) != "jarvis:done":
                 continue
+            number = int(issue.get("number") or 0)
+            if number <= 0:
+                continue
+            issue_updated_at = issue.get("closed_at") or issue.get("updated_at")
+            age_seconds = _timestamp_age_seconds(issue_updated_at)
+            items.append(
+                {
+                    "status": "done",
+                    "task": (
+                        _clip_public_text(issue.get("title"), 160)
+                        if owner_view
+                        else f"GitHub #{number}"
+                    ),
+                    "result_summary": "Выполнено и подтверждено в GitHub.",
+                    "updated_at": issue_updated_at,
+                    "url": issue.get("html_url")
+                    or f"https://github.com/{JARVIS_GITHUB_REPO}/issues/{number}",
+                    "source": "github",
+                    "freshness": (
+                        "unknown"
+                        if age_seconds is None
+                        else "fresh" if age_seconds <= 7 * 24 * 60 * 60 else "stale"
+                    ),
+                    "age_seconds": age_seconds,
+                }
+            )
+            if len(items) >= limit:
+                break
+
+        try:
+            bridge_payload = _bridge_request("GET", "/api/tasks?limit=100&include_messages=0")
+            bridge_tasks = bridge_payload.get("tasks") if isinstance(bridge_payload, dict) else []
+            reconciliation = _github_bridge_reconciliation(
+                issues,
+                bridge_tasks if isinstance(bridge_tasks, list) else [],
+            )
+        except Exception:
+            reconciliation = {
+                "checked_count": 0,
+                "mismatch_count": 0,
+                "status": "unavailable",
+                "mismatches": [],
+            }
 
         self._json_response(
             200,
             {
                 "items": items,
                 "count": len(items),
+                "source": "github",
+                "privacy": "owner" if owner_view else "anonymous_summary",
+                "reconciliation": reconciliation,
                 "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             },
         )
@@ -1395,11 +1611,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             suffix = parsed.query or "limit=12&include_messages=1"
             if "include_messages" not in suffix:
                 suffix += "&include_messages=1"
-            if self._is_public_request():
-                suffix = "limit=12&include_messages=1"
+            anonymous_public = self._is_public_request() and not self._dashboard_run_authorized()
+            if anonymous_public:
+                suffix = "limit=12&include_messages=0"
             try:
                 data = _bridge_request("GET", f"/api/tasks?{suffix}")
-                if self._is_public_request():
+                if anonymous_public:
                     data = _public_bridge_payload(data)
                 self._json_response(200, data)
             except Exception as e:
