@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
 from urllib.parse import urlsplit
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 BUILDER_DIR = Path(__file__).resolve().parents[1]
@@ -223,6 +224,34 @@ class BridgeTaskPrivacyTests(unittest.TestCase):
         self.assertEqual(response["status"], 502)
         self.assertEqual(response["payload"]["error"], "bridge_unavailable")
         self.assertNotIn("Секрет", str(response["payload"]))
+
+
+class BridgeAuthenticationTests(unittest.TestCase):
+    def test_bridge_token_file_must_be_owner_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "bridge-token"
+            path.write_text("x" * 48, encoding="utf-8")
+            path.chmod(0o600)
+            with patch.object(SERVER, "BRIDGE_API_TOKEN_FILE", path):
+                self.assertEqual(SERVER._bridge_api_token(), "x" * 48)
+                path.chmod(0o644)
+                with self.assertRaisesRegex(RuntimeError, "owner-only"):
+                    SERVER._bridge_api_token()
+
+    def test_bridge_request_adds_bearer_token_without_exposing_it(self):
+        response = MagicMock()
+        response.read.return_value = b'{"status":"ok"}'
+        response.__enter__.return_value = response
+        response.__exit__.return_value = False
+        with (
+            patch.object(SERVER, "_bridge_api_token", return_value="x" * 48),
+            patch.object(SERVER.urllib.request, "urlopen", return_value=response) as open_url,
+        ):
+            payload = SERVER._bridge_request("GET", "/api/status")
+
+        request = open_url.call_args.args[0]
+        self.assertEqual(request.get_header("Authorization"), "Bearer " + "x" * 48)
+        self.assertEqual(payload, {"status": "ok"})
 
 
 class DashboardOwnerAuthTests(unittest.TestCase):
