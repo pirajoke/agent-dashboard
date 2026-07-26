@@ -10,6 +10,7 @@ import re
 import secrets
 import shutil
 import ssl
+import stat
 import subprocess
 import sys
 import time
@@ -40,6 +41,12 @@ JARVIS_GITHUB_REPO = os.environ.get("JARVIS_GITHUB_REPO", "pirajoke/jarvis").str
 GITHUB_ISSUES_CACHE_TTL_SECONDS = 120
 HOMEBREW_CA_BUNDLE = Path("/opt/homebrew/etc/openssl@3/cert.pem")
 BRIDGE_API_URL = os.environ.get("BRIDGE_API_URL", "http://127.0.0.1:8899").rstrip("/")
+BRIDGE_API_TOKEN_FILE = Path(
+    os.environ.get(
+        "BRIDGE_API_TOKEN_FILE",
+        str(HOME / "jarvis" / ".secrets" / "bridge_api_token"),
+    )
+).expanduser()
 HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstrip("/")
 AIR_HEALTH_API_URL = os.environ.get("AIR_HEALTH_API_URL", "http://100.118.34.14:8880").rstrip("/")
 PRO_HEALTH_API_URL = os.environ.get("PRO_HEALTH_API_URL", "http://100.74.94.2:8880").rstrip("/")
@@ -271,12 +278,33 @@ def _local_service_snapshot() -> dict:
 def _bridge_request(method: str, path: str, payload: dict | None = None) -> dict:
     data = None
     headers = {"Content-Type": "application/json"}
+    token = _bridge_api_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(f"{BRIDGE_API_URL}{path}", data=data, method=method, headers=headers)
     with urllib.request.urlopen(req, timeout=10) as resp:
         raw = resp.read().decode("utf-8")
     return json.loads(raw) if raw else {}
+
+
+def _bridge_api_token() -> str:
+    try:
+        info = BRIDGE_API_TOKEN_FILE.lstat()
+    except FileNotFoundError:
+        return ""
+    if (
+        stat.S_ISLNK(info.st_mode)
+        or not stat.S_ISREG(info.st_mode)
+        or info.st_uid != os.getuid()
+        or stat.S_IMODE(info.st_mode) & 0o077
+    ):
+        raise RuntimeError("Bridge API token file must be an owner-only regular file")
+    token = BRIDGE_API_TOKEN_FILE.read_text(encoding="utf-8").strip()
+    if len(token) < 32:
+        raise RuntimeError("Bridge API token file is empty or too short")
+    return token
 
 
 def _github_read_token() -> str:
