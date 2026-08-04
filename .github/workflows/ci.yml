@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Run unit tests
+        run: PYTHONPATH=builder python3 -m unittest discover -s builder/tests -v
+      - name: Compile builder
+        run: python3 -m compileall -q builder
+      - name: Validate generated feed
+        run: python3 -m json.tool live-feed.json >/dev/null
