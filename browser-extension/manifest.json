@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Command Center — Pixel Agents",
+  "short_name": "Pixel Agents",
+  "version": "0.1.0",
+  "description": "Read-only window into the Pixel Agents office and Command Center.",
+  "action": {
+    "default_title": "Open Pixel Agents",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://pixel-agents.meshly.fr https://command.meshly.fr"
+  }
+}
