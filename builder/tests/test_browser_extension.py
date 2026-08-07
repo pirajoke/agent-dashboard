@@ -34,6 +34,7 @@ class BrowserExtensionTests(unittest.TestCase):
         self.assertIn("https://pixel-agents.meshly.fr/", html)
         self.assertIn("https://command.meshly.fr/?tab=agents", html)
         self.assertIn("read-only-shield", html)
+        self.assertRegex(html, r'<iframe[\s\S]*?tabindex="-1"')
         self.assertIn("officefallback", script.lower())
 
         forbidden = ("/api/bridge", "x-dashboard-run-token", "bearer ", "websocket")
