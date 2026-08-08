@@ -909,26 +909,41 @@ def _manager_metadata(item: dict) -> dict:
     return {}
 
 
+_ALLOWED_MANAGER_SOURCE_MARKERS = {"mainmanager"}
+
+
+def _manager_event_metadata(task: dict) -> tuple[str, dict]:
+    # source_agent is the only producer marker; punctuation/case are normalized.
+    candidates = [_manager_metadata(task)]
+    messages = task.get("messages") if isinstance(task.get("messages"), list) else []
+    candidates.extend(
+        _manager_metadata(message)
+        for message in reversed(messages)
+        if isinstance(message, dict)
+    )
+    for metadata in candidates:
+        event_type = str(metadata.get("event") or "").strip().lower()
+        source_agent = re.sub(
+            r"[^a-z0-9]+",
+            "",
+            str(metadata.get("source_agent") or "").lower(),
+        )
+        if (
+            event_type in {"handoff", "status"}
+            and source_agent in _ALLOWED_MANAGER_SOURCE_MARKERS
+        ):
+            return event_type, metadata
+    return "", {}
+
+
 def _manager_event_candidate(task: dict) -> dict:
-    metadata = _manager_metadata(task)
-    event_type = str(metadata.get("event") or "").strip().lower()
-    if event_type not in {"handoff", "status"}:
-        event_type = ""
-        messages = task.get("messages") if isinstance(task.get("messages"), list) else []
-        for message in reversed(messages):
-            message_meta = _manager_metadata(message) if isinstance(message, dict) else {}
-            candidate = str(message_meta.get("event") or message.get("type") or "").lower()
-            if candidate in {"handoff", "status"}:
-                event_type = candidate
-                break
-    if not event_type and task.get("status"):
-        event_type = "status"
+    event_type, event_metadata = _manager_event_metadata(task)
     safe_metadata = {}
-    if "next_safe_step" in metadata:
-        safe_metadata["next_safe_step"] = metadata.get("next_safe_step")
+    if "next_safe_step" in event_metadata:
+        safe_metadata["next_safe_step"] = event_metadata.get("next_safe_step")
     return {
         "event_type": event_type,
-        "project": task.get("project") or metadata.get("project"),
+        "project": task.get("project") or event_metadata.get("project"),
         "status": task.get("status"),
         "updated_at": (
             task.get("updated_at")

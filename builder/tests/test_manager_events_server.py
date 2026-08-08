@@ -15,7 +15,7 @@ assert SERVER_SPEC and SERVER_SPEC.loader
 SERVER_SPEC.loader.exec_module(SERVER)
 
 
-def bridge_task(*, updated_at: str) -> dict:
+def bridge_task(*, updated_at: str, source_agent: str = "main-manager") -> dict:
     return {
         "id": "task-private-fixture",
         "status": "running",
@@ -26,6 +26,7 @@ def bridge_task(*, updated_at: str) -> dict:
         "updated_at": updated_at,
         "metadata": {
             "event": "status",
+            "source_agent": source_agent,
             "project": "ai_studio",
             "next_safe_step": "verify_evidence",
             "repo_path": "<client-vault-path>",
@@ -35,6 +36,58 @@ def bridge_task(*, updated_at: str) -> dict:
 
 
 class ManagerEventServerProjectionTests(unittest.TestCase):
+    def test_normal_task_without_explicit_manager_source_is_idle(self):
+        now = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
+        task = bridge_task(updated_at="2026-08-08T11:59:00Z")
+        task["metadata"].pop("source_agent")
+
+        projected = SERVER._manager_event_payload({"tasks": [task]}, now=now)
+
+        self.assertEqual(
+            projected,
+            {"active": False, "state": "idle", "station": None, "details": None},
+        )
+        other_agent = bridge_task(
+            updated_at="2026-08-08T11:59:00Z",
+            source_agent="project-agent",
+        )
+        self.assertFalse(
+            SERVER._manager_event_payload({"tasks": [other_agent]}, now=now)["active"]
+        )
+
+    def test_explicit_manager_marker_must_share_the_event_metadata(self):
+        now = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
+        for source_agent in ("main-manager", "MAIN MANAGER"):
+            with self.subTest(source_agent=source_agent):
+                task = bridge_task(
+                    updated_at="2026-08-08T11:59:00Z",
+                    source_agent=source_agent,
+                )
+                projected = SERVER._manager_event_payload({"tasks": [task]}, now=now)
+                self.assertTrue(projected["active"])
+
+        split_metadata = bridge_task(updated_at="2026-08-08T11:59:00Z")
+        split_metadata["metadata"].pop("event")
+        split_metadata["messages"] = [{"metadata": {"event": "handoff"}}]
+
+        projected = SERVER._manager_event_payload(
+            {"tasks": [split_metadata]},
+            now=now,
+        )
+        self.assertFalse(projected["active"])
+
+    def test_message_event_accepts_same_metadata_manager_marker(self):
+        now = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
+        task = bridge_task(updated_at="2026-08-08T11:59:00Z")
+        task["metadata"] = {"project": "ai_studio"}
+        task["messages"] = [
+            {"metadata": {"event": "handoff", "source_agent": "MAIN MANAGER"}}
+        ]
+
+        projected = SERVER._manager_event_payload({"tasks": [task]}, now=now)
+
+        self.assertTrue(projected["active"])
+
     def test_projection_payload_returns_only_allowlisted_event_shape(self):
         now = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
         projected = SERVER._manager_event_payload(
