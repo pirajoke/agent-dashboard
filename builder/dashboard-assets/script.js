@@ -1741,6 +1741,11 @@ setInterval(refreshLocalServices, 15000);
     const opsBlockerEl = document.getElementById('theater-ops-blocker');
     const opsAuthEl = document.getElementById('theater-ops-auth');
     const opsNextEl = document.getElementById('theater-ops-next');
+    const managerSprite = document.getElementById('manager-sprite');
+    const managerDetails = document.getElementById('manager-details');
+    const managerFields = Object.fromEntries(
+        [...document.querySelectorAll('[data-manager-field]')].map((el) => [el.dataset.managerField, el])
+    );
     if (!stage || !runnersEl || !currentEl || !storyEl) return;
 
     const LIVE_WINDOW_MS = 6 * 60 * 60 * 1000;
@@ -1781,6 +1786,14 @@ setInterval(refreshLocalServices, 15000);
         VAULT: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'VAULT'],
         GITHUB: ['USER', 'JARVIS', 'SUPERVISOR', 'BRIDGE', 'BUILDER', 'GITHUB'],
     };
+    const MANAGER_STATE_CLASSES = {
+        'в очереди': 'queued',
+        'работает': 'working',
+        'готово': 'done',
+        'нужно решение Марка': 'decision',
+        'ошибка': 'error',
+    };
+    const MANAGER_VISUAL_CLASSES = ['is-idle', 'is-queued', 'is-working', 'is-done', 'is-decision', 'is-error'];
     let theaterTasks = [];
     let theaterSelectedId = null;
     let theaterAnimationStarted = false;
@@ -1805,6 +1818,31 @@ setInterval(refreshLocalServices, 15000);
         const d = new Date(raw);
         if (Number.isNaN(d.getTime())) return String(raw).slice(0, 16);
         return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    }
+
+    function renderManagerEvent(projection) {
+        if (!managerSprite || !managerDetails) return;
+        const active = projection?.active === true
+            && projection.details && projection.station
+            && MANAGER_STATE_CLASSES[projection.state];
+        const details = active ? projection.details : {
+            project: '—',
+            time: '—',
+            status: 'idle',
+            next_step: 'Нет свежего события.',
+        };
+
+        managerSprite.classList.remove(...MANAGER_VISUAL_CLASSES);
+        managerSprite.classList.add(active ? `is-${MANAGER_STATE_CLASSES[projection.state]}` : 'is-idle');
+        managerSprite.dataset.managerState = active ? projection.state : 'idle';
+        managerSprite.style.setProperty('--manager-x', active ? String(projection.station.x) : '50');
+        managerSprite.style.setProperty('--manager-y', active ? String(projection.station.y) : '52');
+        managerSprite.title = active ? `${details.project} · ${details.status}` : 'MAIN MANAGER · idle';
+        const stateLabel = managerSprite.querySelector('.manager-state');
+        if (stateLabel) stateLabel.textContent = details.status;
+        for (const field of ['project', 'time', 'status', 'next_step']) {
+            if (managerFields[field]) managerFields[field].textContent = String(details[field] ?? '—');
+        }
     }
 
     function theaterMeta(item) {
@@ -2218,9 +2256,10 @@ setInterval(refreshLocalServices, 15000);
     async function refreshTheater() {
         if (statusEl) statusEl.textContent = 'loading';
         try {
-            const [res, healthRes] = await Promise.all([
+            const [res, healthRes, managerRes] = await Promise.all([
                 fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'}),
                 fetch('/api/health', {cache: 'no-store'}).catch(() => null),
+                fetch('/api/manager/events?limit=24', {cache: 'no-store'}).catch(() => null),
             ]);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
@@ -2229,6 +2268,11 @@ setInterval(refreshLocalServices, 15000);
             if (healthRes && healthRes.ok) {
                 try { health = await healthRes.json(); } catch (_) { health = null; }
             }
+            let managerProjection = null;
+            if (managerRes && managerRes.ok) {
+                try { managerProjection = await managerRes.json(); } catch (_) { managerProjection = null; }
+            }
+            renderManagerEvent(managerProjection);
             renderTheater(tasks);
             renderOperatorStatus(tasks, tasks.filter(theaterIsLiveTask), health);
         } catch (err) {
@@ -2236,6 +2280,7 @@ setInterval(refreshLocalServices, 15000);
             currentEl.innerHTML = `<div class="theater-empty">Bridge unavailable: ${escTheater(err.message)}</div>`;
             storyEl.innerHTML = '<div class="theater-empty">No live events.</div>';
             renderOperatorStatus([], [], null);
+            renderManagerEvent(null);
         }
     }
 
@@ -2247,6 +2292,13 @@ setInterval(refreshLocalServices, 15000);
         renderTheaterCurrent(selected);
         renderTheaterStory(selected);
     });
+    if (managerSprite && managerDetails) {
+        managerSprite.addEventListener('click', () => {
+            const shouldOpen = managerDetails.hidden;
+            managerDetails.hidden = !shouldOpen;
+            managerSprite.setAttribute('aria-expanded', String(shouldOpen));
+        });
+    }
     if (refreshBtn) refreshBtn.addEventListener('click', refreshTheater);
     refreshTheater();
     setInterval(refreshTheater, 5000);
