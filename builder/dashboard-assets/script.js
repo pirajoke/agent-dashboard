@@ -39,6 +39,349 @@
     });
 })();
 
+// ── Department Campus ──
+(function initDepartmentCampus() {
+    const campus = document.getElementById('department-campus');
+    if (!campus) return;
+    if (campus.dataset.campusRefreshBound === 'true') return;
+    campus.dataset.campusRefreshBound = 'true';
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    campus.dataset.reducedMotion = String(reducedMotion.matches);
+
+    const stateEl = campus.querySelector('[data-campus-state]');
+    const countEl = campus.querySelector('[data-campus-count]');
+    const detailEl = campus.querySelector('#campus-agent-details');
+    const closeEl = campus.querySelector('[data-campus-detail-close]');
+    const refreshEl = campus.querySelector('[data-campus-refresh]');
+    const taskLanesEl = campus.querySelector('[data-campus-task-lanes]');
+    const routeLayerEl = campus.querySelector('[data-campus-route-layer]');
+    const managerMarkerEl = campus.querySelector('[data-campus-static-manager]');
+    const boulevardEl = campus.querySelector('.campus-boulevard');
+    const detailFields = {};
+    campus.querySelectorAll('[data-campus-detail-field]').forEach((el) => {
+        detailFields[el.dataset.campusDetailField] = el;
+    });
+
+    const statusLabels = {
+        queued: 'в очереди',
+        active: 'работает',
+        testing: 'проверяет',
+        waiting: 'ждёт решения',
+        done: 'готово',
+        failed: 'ошибка',
+    };
+    const resultLabels = {
+        queued: 'Ожидает выполнения',
+        active: 'В работе',
+        testing: 'На проверке',
+        waiting: 'Ожидает решения',
+        done: 'Завершено',
+        failed: 'Завершено с ошибкой',
+    };
+    const destinationByStatus = {
+        active: 'department',
+        testing: 'test-lab',
+        done: 'github-station',
+        queued: 'department',
+        waiting: 'department',
+        failed: 'department',
+    };
+    const movingStatuses = ['active', 'testing'];
+    const stateMessages = {
+        loading: 'Загрузка кампуса…',
+        empty: 'Нет активных задач',
+        stale: 'Нет свежих данных',
+        unavailable: 'Данные временно недоступны',
+        active: 'Показаны свежие подтверждённые события',
+    };
+    let lastTrigger = null;
+    let intervalId = null;
+    let refreshInFlight = false;
+    let refreshController = null;
+    let refreshGeneration = 0;
+    const journeySignatures = new Set();
+
+    function closeCampusDetails(returnFocus) {
+        if (!detailEl) return;
+        detailEl.hidden = true;
+        campus.querySelectorAll('[data-campus-agent-trigger]').forEach((button) => {
+            button.setAttribute('aria-expanded', 'false');
+        });
+        if (returnFocus && lastTrigger?.isConnected) lastTrigger.focus();
+    }
+
+    function clearCampusAgents() {
+        campus.querySelectorAll('[data-campus-zone-agents], [data-campus-waypoint-agents]').forEach((destination) => {
+            destination.replaceChildren();
+        });
+        if (taskLanesEl) taskLanesEl.replaceChildren();
+        if (routeLayerEl) routeLayerEl.replaceChildren();
+        closeCampusDetails(false);
+        lastTrigger = null;
+    }
+
+    function setCampusState(state, visibleTasks, agentCount, omittedTasks) {
+        if (stateEl) stateEl.textContent = stateMessages[state] || stateMessages.unavailable;
+        if (countEl) {
+            const omitted = omittedTasks > 0 ? ` · +${omittedTasks} hidden` : '';
+            countEl.textContent = `${visibleTasks} tasks · ${agentCount} agents${omitted}`;
+        }
+        campus.dataset.campusState = state;
+    }
+
+    function openCampusDetails(button, event) {
+        if (!detailEl) return;
+        if (lastTrigger && lastTrigger !== button) {
+            lastTrigger.setAttribute('aria-expanded', 'false');
+        }
+        lastTrigger = button;
+        button.setAttribute('aria-expanded', 'true');
+        detailFields.task_id.textContent = event.task_id;
+        detailFields.department.textContent = event.department_label;
+        detailFields.project.textContent = event.project;
+        detailFields.role.textContent = event.role;
+        detailFields.status.textContent = statusLabels[event.status] || '—';
+        detailFields.updated_at.textContent = event.updated_at;
+        detailFields.next_step.textContent = event.next_step;
+        detailFields.result.textContent = resultLabels[event.status] || '—';
+        detailFields.evidence_count.textContent = String(event.evidence_count);
+        detailEl.hidden = false;
+    }
+
+    function journeySignature(event) {
+        return JSON.stringify([event.task_id, event.agent_id, event.status]);
+    }
+
+    function animateCampusJourney(button, shouldAnimate) {
+        if (reducedMotion.matches || !shouldAnimate) return;
+        if (!managerMarkerEl || !boulevardEl || typeof button.animate !== 'function') return;
+        const managerRect = managerMarkerEl.getBoundingClientRect();
+        const boulevardRect = boulevardEl.getBoundingClientRect();
+        const destinationRect = button.getBoundingClientRect();
+        const destinationX = destinationRect.left + (destinationRect.width / 2);
+        const destinationY = destinationRect.top + (destinationRect.height / 2);
+        const startX = managerRect.left + (managerRect.width / 2) - destinationX;
+        const startY = managerRect.top + (managerRect.height / 2) - destinationY;
+        const boulevardX = boulevardRect.left + (boulevardRect.width / 2) - destinationX;
+        const boulevardY = boulevardRect.top + (boulevardRect.height / 2) - destinationY;
+        button.animate(
+            [
+                {transform: `translate(${startX}px, ${startY}px)`, opacity: 0.35},
+                {transform: `translate(${boulevardX}px, ${boulevardY}px)`, opacity: 0.8, offset: 0.55},
+                {transform: 'translate(0px, 0px)', opacity: 1},
+            ],
+            {duration: 900, easing: 'ease-out'},
+        );
+    }
+
+    function createCampusAgent(event, shouldAnimate) {
+        const destination = destinationByStatus[event.status] || 'department';
+        const moving = shouldAnimate && !reducedMotion.matches;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `campus-agent is-${event.status}`;
+        button.dataset.campusAgentTrigger = '';
+        button.setAttribute('data-campus-destination', destination);
+        button.setAttribute('data-campus-moving', String(moving));
+        button.setAttribute('aria-label', `${event.role}, ${statusLabels[event.status] || event.status}`);
+        button.setAttribute('aria-controls', 'campus-agent-details');
+        button.setAttribute('aria-expanded', 'false');
+
+        const sprite = document.createElement('span');
+        sprite.className = 'campus-agent-sprite';
+        sprite.setAttribute('aria-hidden', 'true');
+        const name = document.createElement('strong');
+        name.textContent = event.role;
+        const status = document.createElement('span');
+        status.className = 'campus-agent-status';
+        status.textContent = statusLabels[event.status] || '—';
+        button.append(sprite, name, status);
+        button.addEventListener('click', () => openCampusDetails(button, event));
+        button.addEventListener('keydown', (keyEvent) => {
+            if (
+                !keyEvent.repeat
+                && (keyEvent.key === 'Enter' || keyEvent.key === ' ' || keyEvent.key === 'Spacebar')
+            ) {
+                keyEvent.preventDefault();
+                openCampusDetails(button, event);
+            }
+        });
+        return button;
+    }
+
+    function renderCampusTaskLanes(events) {
+        if (!taskLanesEl) return;
+        const taskIds = [];
+        events.forEach((event) => {
+            if (taskIds.length < 3 && !taskIds.includes(event.task_id)) {
+                taskIds.push(event.task_id);
+                const lane = document.createElement('span');
+                lane.className = 'campus-task-lane';
+                lane.textContent = event.task_id;
+                taskLanesEl.append(lane);
+            }
+        });
+    }
+
+    function renderCampusRoutes(events, newJourneySignatures) {
+        if (!routeLayerEl) return;
+        const route_status_precedence = ['testing', 'active', 'done', 'queued', 'waiting', 'failed'];
+        const routedTasks = new Set();
+        events.forEach((event) => {
+            if (routedTasks.size >= 3 || routedTasks.has(event.task_id)) return;
+            routedTasks.add(event.task_id);
+            const routeEvent = route_status_precedence
+                .map((status) => events.find((candidate) => (
+                    candidate.task_id === event.task_id && candidate.status === status
+                )))
+                .find(Boolean) || event;
+            const destination = destinationByStatus[routeEvent.status];
+            const moving = !reducedMotion.matches
+                && newJourneySignatures.has(journeySignature(routeEvent));
+            const route = document.createElement('span');
+            route.className = 'campus-route';
+            route.setAttribute('data-campus-destination', destination);
+            route.setAttribute('data-campus-moving', String(moving));
+            route.setAttribute('data-campus-route-task-id', event.task_id);
+            route.setAttribute('data-campus-route-status', routeEvent.status);
+            route.style.setProperty('--campus-route-index', String(routedTasks.size - 1));
+            routeLayerEl.append(route);
+        });
+    }
+
+    function destinationForEvent(event) {
+        const destination = destinationByStatus[event.status] || 'department';
+        if (destination === 'test-lab' || destination === 'github-station') {
+            return campus.querySelector(
+                `[data-campus-waypoint="${destination}"] [data-campus-waypoint-agents]`,
+            );
+        }
+        return campus.querySelector(
+            `[data-department-id="${event.department_id}"] [data-campus-zone-agents]`,
+        );
+    }
+
+    function renderDepartmentCampus(payload) {
+        const state = payload && typeof payload.state === 'string' ? payload.state : 'unavailable';
+        const events = state === 'active' && Array.isArray(payload.events) ? payload.events : [];
+        if (
+            state === 'empty'
+            || state === 'stale'
+            || state === 'unavailable'
+            || (state === 'active' && !events.length)
+        ) {
+            journeySignatures.clear();
+        }
+        clearCampusAgents();
+        if (state !== 'active' || !events.length) {
+            setCampusState(
+                state === 'active' ? 'empty' : state,
+                0,
+                0,
+                Number(payload?.omitted_task_count) || 0,
+            );
+            return;
+        }
+        const newJourneySignatures = new Set();
+        events.forEach((event) => {
+            const signature = journeySignature(event);
+            const unseen = !journeySignatures.has(signature);
+            if (unseen) journeySignatures.add(signature);
+            if (unseen && movingStatuses.includes(event.status)) {
+                newJourneySignatures.add(signature);
+            }
+        });
+        renderCampusTaskLanes(events);
+        renderCampusRoutes(events, newJourneySignatures);
+        events.forEach((event) => {
+            const destination = destinationForEvent(event);
+            if (!destination) return;
+            const shouldAnimate = newJourneySignatures.has(journeySignature(event));
+            const button = createCampusAgent(event, shouldAnimate);
+            destination.append(button);
+            animateCampusJourney(button, shouldAnimate);
+        });
+        setCampusState(
+            'active',
+            Number(payload.visible_task_count) || 0,
+            events.length,
+            Number(payload.omitted_task_count) || 0,
+        );
+    }
+
+    async function refreshDepartmentCampus(force = false) {
+        if (document.hidden) return;
+        if (refreshInFlight && !force) return;
+        const generation = ++refreshGeneration;
+        if (refreshController) refreshController.abort();
+        const controller = new AbortController();
+        refreshController = controller;
+        refreshInFlight = true;
+        clearCampusAgents();
+        setCampusState('loading', 0, 0, 0);
+        try {
+            const response = await fetch('/api/manager/departments', {
+                cache: 'no-store',
+                signal: controller.signal,
+            });
+            if (!response.ok) throw new Error('unavailable');
+            const payload = await response.json();
+            if (generation !== refreshGeneration || document.hidden) return;
+            renderDepartmentCampus(payload);
+        } catch (error) {
+            if (generation !== refreshGeneration || document.hidden || error.name === 'AbortError') return;
+            renderDepartmentCampus({state: 'unavailable', events: []});
+        } finally {
+            if (generation === refreshGeneration) {
+                refreshInFlight = false;
+                refreshController = null;
+            }
+        }
+    }
+
+    function startCampusRefresh() {
+        if (intervalId || document.hidden) return;
+        intervalId = window.setInterval(() => {
+            if (!document.hidden) refreshDepartmentCampus();
+        }, 15000);
+    }
+
+    function stopCampusRefresh() {
+        if (!intervalId) return;
+        window.clearInterval(intervalId);
+        intervalId = null;
+    }
+
+    if (closeEl) closeEl.addEventListener('click', () => closeCampusDetails(true));
+    if (refreshEl) refreshEl.addEventListener('click', () => refreshDepartmentCampus());
+    campus.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && detailEl && !detailEl.hidden) {
+            event.preventDefault();
+            closeCampusDetails(true);
+        }
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            refreshGeneration += 1;
+            if (refreshController) refreshController.abort();
+            refreshController = null;
+            refreshInFlight = false;
+            stopCampusRefresh();
+            return;
+        }
+        if (!document.hidden) {
+            refreshDepartmentCampus(true);
+            startCampusRefresh();
+        }
+    });
+    if (!document.hidden) {
+        refreshDepartmentCampus();
+        startCampusRefresh();
+    }
+})();
+// ── End Department Campus ──
+
 const GH_REPO = 'pirajoke/agent-dashboard';
 const GH_MODE_PATH = 'mode-request.json';
 const LOCAL_API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'

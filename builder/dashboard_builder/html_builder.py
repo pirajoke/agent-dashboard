@@ -9,6 +9,7 @@ from .costs import collect_costs_data, build_costs_html
 from .command_center import build_command_center_html
 from .agent_theater import build_agent_theater_html
 from .agent_workshop import build_agent_workshop_html
+from .department_campus import build_department_campus_html
 
 
 def _build_project_row(p: dict, completed: bool = False) -> str:
@@ -96,6 +97,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
     command_html = build_command_center_html()
     theater_html = build_agent_theater_html()
     workshop_html = build_agent_workshop_html()
+    campus_html = build_department_campus_html()
 
     # Projects
     active_projs = [p for p in projects if is_project_active(p)]
@@ -184,6 +186,9 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 </div>
 
 {theater_html}
+
+<!-- Department Campus -->
+{campus_html}
 
 <!-- Command Center Section -->
 <div class="topbar topbar-secondary" id="command-top">
