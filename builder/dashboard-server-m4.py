@@ -20,6 +20,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 from dashboard_builder.manager_events import project_manager_event
+from dashboard_builder.department_campus import department_campus_projection
 
 PORT = 7777
 HOME = Path.home()
@@ -68,6 +69,7 @@ PUBLIC_BRIDGE_PATHS = {
     "/api/bridge/tasks",
     "/api/bridge/status",
     "/api/manager/events",
+    "/api/manager/departments",
 }
 PUBLIC_FILE_PATHS = {
     "/",
@@ -923,10 +925,13 @@ def _manager_event_metadata(task: dict) -> tuple[str, dict]:
     )
     for metadata in candidates:
         event_type = str(metadata.get("event") or "").strip().lower()
+        raw_source_agent = metadata.get("source_agent")
+        if not isinstance(raw_source_agent, str):
+            continue
         source_agent = re.sub(
             r"[^a-z0-9]+",
             "",
-            str(metadata.get("source_agent") or "").lower(),
+            raw_source_agent.lower(),
         )
         if (
             event_type in {"handoff", "status"}
@@ -976,6 +981,69 @@ def _manager_event_payload(data: dict, *, now: datetime | None = None) -> dict:
         if projected["active"]:
             return projected
     return idle
+
+
+def _department_snapshot_time(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _department_campus_state(state: str, *, now: datetime) -> dict:
+    payload = department_campus_projection([], now=now)
+    payload["state"] = state
+    return payload
+
+
+def _department_campus_payload(data: object, *, now: datetime | None = None) -> dict:
+    """Project the newest verified same-metadata MAIN MANAGER snapshot."""
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    current = current.astimezone(timezone.utc)
+    if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
+        return department_campus_projection(None, now=current)
+
+    candidates: list[tuple[int, datetime, list]] = []
+    malformed_verified_snapshot = False
+    for index, task in enumerate(data["tasks"]):
+        if not isinstance(task, dict):
+            continue
+        metadata = _manager_metadata(task)
+        event_marker = str(metadata.get("event") or "").strip().lower()
+        source_agent = metadata.get("source_agent")
+        if not isinstance(source_agent, str):
+            continue
+        source_marker = re.sub(
+            r"[^a-z0-9]+", "", source_agent.lower()
+        )
+        if event_marker not in {"handoff", "status"} or source_marker != "mainmanager":
+            continue
+        pixel_events = metadata.get("pixel_events")
+        if not isinstance(pixel_events, list):
+            malformed_verified_snapshot = True
+            continue
+        updated = _department_snapshot_time(task.get("updated_at"))
+        if updated is None or updated > current:
+            continue
+        candidates.append((index, updated, pixel_events))
+
+    if not candidates:
+        if malformed_verified_snapshot:
+            return department_campus_projection(None, now=current)
+        return department_campus_projection([], now=current)
+
+    # max() preserves the first source item when timestamps tie.
+    _, snapshot_time, events = max(candidates, key=lambda item: item[1])
+    if (current - snapshot_time).total_seconds() > 30 * 60:
+        return _department_campus_state("stale", now=current)
+    return department_campus_projection(events, now=current, max_tasks=3)
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -1719,6 +1787,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, data)
             except Exception as e:
                 self._json_response(502, {"error": str(e)})
+            return
+        if parsed.path == '/api/manager/departments':
+            try:
+                data = _bridge_request("GET", "/api/tasks?limit=24&include_messages=1")
+                self._json_response(200, _department_campus_payload(data))
+            except Exception:
+                self._json_response(
+                    200,
+                    department_campus_projection(None, now=datetime.now(timezone.utc)),
+                )
             return
         if parsed.path == '/api/manager/events':
             try:
