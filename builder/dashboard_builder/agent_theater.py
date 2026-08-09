@@ -1,6 +1,8 @@
 """Human-facing animated agent scene for Jarvis/Bridge work."""
 from __future__ import annotations
 
+from .manager_events import PROJECT_STATIONS
+
 
 THEATER_AGENTS = [
     ("USER", "You", "request", 12, 55),
@@ -32,8 +34,20 @@ def _person(agent_id: str, name: str, label: str, x: int, y: int) -> str:
         </button>"""
 
 
+def _project_station(name: str, station: dict) -> str:
+    return f"""
+            <div class="manager-project-station" data-manager-station="{station['id']}"
+                style="--manager-x:{station['x']};--manager-y:{station['y']}">
+                <span aria-hidden="true"></span>
+                <strong>{name}</strong>
+            </div>"""
+
+
 def build_agent_theater_html() -> str:
     people = "".join(_person(*agent) for agent in THEATER_AGENTS)
+    project_stations = "".join(
+        _project_station(name, station) for name, station in PROJECT_STATIONS.items()
+    )
     return f"""
 <div class="section theater-section" id="theater">
     <div class="section-head theater-head">
@@ -76,6 +90,28 @@ def build_agent_theater_html() -> str:
             <div class="theater-field"></div>
             <div class="theater-tree theater-tree-a"></div>
             <div class="theater-tree theater-tree-b"></div>
+            <div class="manager-project-stations" aria-label="Project stations">
+                {project_stations}
+            </div>
+            <button class="manager-sprite is-idle" id="manager-sprite" type="button"
+                data-manager-state="idle" aria-controls="manager-details" aria-expanded="false"
+                style="--manager-x:50;--manager-y:52">
+                <span class="manager-person" aria-hidden="true"></span>
+                <span class="manager-name">MAIN MANAGER</span>
+                <span class="manager-state">idle</span>
+            </button>
+            <div class="manager-details" id="manager-details" hidden>
+                <div class="manager-details-head">
+                    <strong>MAIN MANAGER</strong>
+                    <span>безопасная сводка</span>
+                </div>
+                <dl>
+                    <div><dt>Проект</dt><dd data-manager-field="project">—</dd></div>
+                    <div><dt>Время</dt><dd data-manager-field="time">—</dd></div>
+                    <div><dt>Статус</dt><dd data-manager-field="status">idle</dd></div>
+                    <div><dt>Следующий шаг</dt><dd data-manager-field="next_step">Нет свежего события.</dd></div>
+                </dl>
+            </div>
             <div class="theater-station theater-station-user" style="--x:12;--y:55">Telegram</div>
             <div class="theater-station theater-station-core" style="--x:28;--y:34">Jarvis</div>
             <div class="theater-station theater-station-supervisor" style="--x:39;--y:38">Supervisor</div>

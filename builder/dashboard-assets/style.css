@@ -5694,3 +5694,230 @@ body {
     border-color: rgba(216,72,62,0.44);
     background: rgba(254,202,202,0.44);
 }
+/* ── Pixel MAIN MANAGER: privacy-safe project handoff projection ── */
+.manager-project-stations {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.manager-project-station {
+    position: absolute;
+    left: calc(var(--manager-x) * 1%);
+    top: calc(var(--manager-y) * 1%);
+    transform: translate(-50%, -50%);
+    width: 66px;
+    min-height: 50px;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 2px;
+    color: #402b2f;
+    text-align: center;
+    filter: drop-shadow(0 4px 0 rgba(67, 43, 31, 0.22));
+}
+
+.manager-project-station > span {
+    width: 28px;
+    height: 22px;
+    border: 3px solid #462b32;
+    background: #ffe4a3;
+    box-shadow: inset 0 -5px 0 rgba(195, 105, 62, 0.28);
+}
+
+.manager-project-station > strong {
+    max-width: 72px;
+    padding: 2px 4px;
+    background: rgba(255, 246, 207, 0.92);
+    color: #523438;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.45rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.manager-sprite {
+    position: absolute;
+    left: calc(var(--manager-x) * 1%);
+    top: calc(var(--manager-y) * 1%);
+    z-index: 14;
+    width: 104px;
+    min-height: 76px;
+    border: 0;
+    background: transparent;
+    color: #fff8dd;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition:
+        left 640ms cubic-bezier(0.16, 1, 0.3, 1),
+        top 640ms cubic-bezier(0.16, 1, 0.3, 1);
+    filter: drop-shadow(0 9px 7px rgba(41, 31, 25, 0.36));
+}
+
+.manager-person {
+    --sprite-x0: -192px;
+    --sprite-x1: -224px;
+    --sprite-x2: -256px;
+    --sprite-y: -192px;
+    width: 32px;
+    height: 32px;
+    margin: 0 0 8px;
+    background-image: url("dashboard-assets/ai-town-32x32folk.png");
+    background-repeat: no-repeat;
+    background-size: 384px 256px;
+    background-position: var(--sprite-x0) var(--sprite-y);
+    image-rendering: pixelated;
+    transform: scale(2);
+    transform-origin: center bottom;
+}
+
+.manager-name,
+.manager-state {
+    max-width: 104px;
+    padding: 3px 6px 2px;
+    background: rgba(42, 24, 38, 0.9);
+    color: #fff8dd;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 900;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.manager-name {
+    font-size: 0.55rem;
+}
+
+.manager-state {
+    font-size: 0.48rem;
+    font-weight: 700;
+}
+
+.manager-sprite:focus-visible {
+    outline: 3px solid #fff8dd;
+    outline-offset: 4px;
+}
+
+.manager-sprite.is-queued {
+    animation: managerQueue 1.4s ease-in-out infinite;
+}
+
+.manager-sprite.is-working .manager-person {
+    animation: managerWalk 0.48s steps(1, end) infinite;
+}
+
+.manager-sprite.is-done .manager-state {
+    background: #226f3d;
+}
+
+.manager-sprite.is-decision .manager-state {
+    background: #a86612;
+    animation: managerDecision 1.1s ease-in-out infinite;
+}
+
+.manager-sprite.is-error .manager-state {
+    background: #a33c37;
+}
+
+.manager-sprite.is-error .manager-person {
+    animation: managerError 0.42s steps(2, end) 2;
+}
+
+.manager-sprite.is-idle {
+    opacity: 0.78;
+}
+
+.manager-details {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    z-index: 18;
+    width: min(310px, calc(100% - 36px));
+    transform: translateX(-50%);
+    border: 4px solid #2a1826;
+    background: #fff4ca;
+    color: #33262c;
+    padding: 0.72rem;
+    box-shadow: 6px 6px 0 rgba(67, 43, 31, 0.26);
+}
+
+.manager-details[hidden] {
+    display: none;
+}
+
+.manager-details-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.55rem;
+}
+
+.manager-details-head strong {
+    font-size: 0.72rem;
+}
+
+.manager-details-head span {
+    color: #80523f;
+    font-size: 0.55rem;
+}
+
+.manager-details dl {
+    display: grid;
+    gap: 0.42rem;
+}
+
+.manager-details dl > div {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 0.55rem;
+    align-items: start;
+}
+
+.manager-details dt {
+    color: #8c5b42;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.54rem;
+}
+
+.manager-details dd {
+    color: #33262c;
+    font-size: 0.65rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+@keyframes managerWalk {
+    0%, 100% { background-position: var(--sprite-x0) var(--sprite-y); }
+    33% { background-position: var(--sprite-x1) var(--sprite-y); }
+    66% { background-position: var(--sprite-x2) var(--sprite-y); }
+}
+
+@keyframes managerQueue {
+    0%, 100% { transform: translate(-50%, -50%); }
+    50% { transform: translate(-50%, calc(-50% - 3px)); }
+}
+
+@keyframes managerDecision {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.2); }
+}
+
+@keyframes managerError {
+    0%, 100% { transform: scale(2) translateX(0); }
+    50% { transform: scale(2) translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .manager-sprite,
+    .manager-sprite.is-queued,
+    .manager-sprite.is-working .manager-person,
+    .manager-sprite.is-decision .manager-state,
+    .manager-sprite.is-error .manager-person {
+        animation: none !important;
+        transition: none !important;
+    }
+}

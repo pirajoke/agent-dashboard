@@ -19,6 +19,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
+from dashboard_builder.manager_events import project_manager_event
+
 PORT = 7777
 HOME = Path.home()
 ORCH_FILE = HOME / ".agent-bridge" / "orchestrator.json"
@@ -65,6 +67,7 @@ PUBLIC_LOCAL_PATHS = {
 PUBLIC_BRIDGE_PATHS = {
     "/api/bridge/tasks",
     "/api/bridge/status",
+    "/api/manager/events",
 }
 PUBLIC_FILE_PATHS = {
     "/",
@@ -893,6 +896,88 @@ def _public_bridge_payload(data: dict) -> dict:
     return {"privacy": "anonymous_summary"}
 
 
+def _manager_metadata(item: dict) -> dict:
+    raw = item.get("metadata") if isinstance(item, dict) else None
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str):
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
+_ALLOWED_MANAGER_SOURCE_MARKERS = {"mainmanager"}
+
+
+def _manager_event_metadata(task: dict) -> tuple[str, dict]:
+    # source_agent is the only producer marker; punctuation/case are normalized.
+    candidates = [_manager_metadata(task)]
+    messages = task.get("messages") if isinstance(task.get("messages"), list) else []
+    candidates.extend(
+        _manager_metadata(message)
+        for message in reversed(messages)
+        if isinstance(message, dict)
+    )
+    for metadata in candidates:
+        event_type = str(metadata.get("event") or "").strip().lower()
+        source_agent = re.sub(
+            r"[^a-z0-9]+",
+            "",
+            str(metadata.get("source_agent") or "").lower(),
+        )
+        if (
+            event_type in {"handoff", "status"}
+            and source_agent in _ALLOWED_MANAGER_SOURCE_MARKERS
+        ):
+            return event_type, metadata
+    return "", {}
+
+
+def _manager_event_candidate(task: dict) -> dict:
+    event_type, event_metadata = _manager_event_metadata(task)
+    safe_metadata = {}
+    if "next_safe_step" in event_metadata:
+        safe_metadata["next_safe_step"] = event_metadata.get("next_safe_step")
+    return {
+        "event_type": event_type,
+        "project": task.get("project") or event_metadata.get("project"),
+        "status": task.get("status"),
+        "updated_at": (
+            task.get("updated_at")
+            or task.get("completed_at")
+            or task.get("claimed_at")
+            or task.get("created_at")
+        ),
+        "metadata": safe_metadata,
+    }
+
+
+def _manager_event_payload(data: dict, *, now: datetime | None = None) -> dict:
+    current = now or datetime.now(timezone.utc)
+    idle = project_manager_event(None, now=current)
+    if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
+        return idle
+    tasks = [task for task in data["tasks"] if isinstance(task, dict)]
+    tasks.sort(
+        key=lambda task: str(
+            task.get("updated_at")
+            or task.get("completed_at")
+            or task.get("claimed_at")
+            or task.get("created_at")
+            or ""
+        ),
+        reverse=True,
+    )
+    for task in tasks:
+        projected = project_manager_event(_manager_event_candidate(task), now=current)
+        if projected["active"]:
+            return projected
+    return idle
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def _host_name(self) -> str:
         return self.headers.get("Host", "").split(":", 1)[0].lower()
@@ -1634,6 +1719,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, data)
             except Exception as e:
                 self._json_response(502, {"error": str(e)})
+            return
+        if parsed.path == '/api/manager/events':
+            try:
+                data = _bridge_request("GET", "/api/tasks?limit=24&include_messages=1")
+                self._json_response(200, _manager_event_payload(data))
+            except Exception:
+                self._json_response(502, _manager_event_payload({}))
             return
         if parsed.path == '/api/bridge/tasks':
             suffix = parsed.query or "limit=12&include_messages=1"
