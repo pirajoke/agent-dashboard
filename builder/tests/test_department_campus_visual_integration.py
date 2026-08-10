@@ -420,6 +420,8 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             "COORDINATOR": "hq",
             "RESEARCHER": "sales",
             "BUILDER": "development",
+            "DESIGNER": "design",
+            "INFRASTRUCTURE": "infrastructure",
             "VAULT": "internal",
             "ANALYST": "finance",
         }

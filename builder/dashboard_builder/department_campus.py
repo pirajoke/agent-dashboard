@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from html import escape
 import re
+from types import MappingProxyType
 from typing import Any
 import unicodedata
-
-from .config import AGENTS
 
 
 DEPARTMENT_ZONES = {
@@ -54,6 +54,103 @@ DEPARTMENT_ZONES = {
     },
 }
 
+_CAMPUS_AGENT_DEPARTMENTS = {
+    "COORDINATOR": "hq",
+    "RESEARCHER": "sales",
+    "BUILDER": "development",
+    "DESIGNER": "design",
+    "INFRASTRUCTURE": "infrastructure",
+    "VAULT": "internal",
+    "ANALYST": "finance",
+}
+_SAFE_CAMPUS_PROJECT_NAME = re.compile(r"^[A-Z0-9][A-Z0-9 &+.'-]{0,119}$")
+_UNSAFE_CAMPUS_PROJECT_NAME = re.compile(
+    r"\b(?:TOKEN|SECRET|CREDENTIAL|PASSWORD|PRIVATE|PROMPT|BODY|TOOL OUTPUT|RAW METADATA)\b"
+)
+_CAMPUS_PROJECT_RECORDS = (
+    {"project": "MAIN MANAGER", "department_id": "hq", "agent_id": "COORDINATOR"},
+    {"project": "AI STUDIO", "department_id": "sales", "agent_id": "RESEARCHER"},
+    {"project": "MY DICTIONARY", "department_id": "development", "agent_id": "BUILDER"},
+    {"project": "ACCOUNTABLE OS", "department_id": "development", "agent_id": "BUILDER"},
+    {"project": "HEALTH OS", "department_id": "development", "agent_id": "BUILDER"},
+    {"project": "CONTEXT NEWS", "department_id": "development", "agent_id": "BUILDER"},
+    {"project": "PIXELVERSE DASHBOARD", "department_id": "design", "agent_id": "DESIGNER"},
+    {"project": "JARVIS", "department_id": "infrastructure", "agent_id": "INFRASTRUCTURE"},
+    {"project": "GITHUB HYGIENE", "department_id": "infrastructure", "agent_id": "INFRASTRUCTURE"},
+    {"project": "SKILLS LIBRARY", "department_id": "internal", "agent_id": "VAULT"},
+    {"project": "UNFINISHED STUFF", "department_id": "internal", "agent_id": "VAULT"},
+    {"project": "FINANCIAL OS", "department_id": "finance", "agent_id": "ANALYST"},
+)
+
+
+def validate_campus_project_registry(projects: object) -> tuple[MappingProxyType, ...]:
+    """Validate and freeze a public project registry without retaining caller data."""
+    if not isinstance(projects, (list, tuple)) or not projects:
+        raise ValueError("campus project registry must be a non-empty sequence")
+
+    validated: list[MappingProxyType] = []
+    seen_projects: set[str] = set()
+    expected_fields = ("project", "department_id", "agent_id")
+    for record in projects:
+        if not isinstance(record, dict) or set(record) != set(expected_fields):
+            raise ValueError("campus project records must contain only public identity fields")
+        project = record.get("project")
+        department_id = record.get("department_id")
+        agent_id = record.get("agent_id")
+        normalized_project = (
+            unicodedata.normalize("NFKC", project)
+            if isinstance(project, str)
+            else None
+        )
+        if (
+            not isinstance(project, str)
+            or not project
+            or project != project.strip()
+            or normalized_project != project
+            or not _SAFE_CAMPUS_PROJECT_NAME.fullmatch(project)
+            or _UNSAFE_CAMPUS_PROJECT_NAME.search(project)
+            or any(unicodedata.category(character).startswith("C") for character in project)
+            or project in seen_projects
+            or department_id not in DEPARTMENT_ZONES
+            or agent_id not in _CAMPUS_AGENT_DEPARTMENTS
+            or _CAMPUS_AGENT_DEPARTMENTS.get(agent_id) != department_id
+        ):
+            raise ValueError("invalid campus project identity")
+        seen_projects.add(project)
+        validated.append(
+            MappingProxyType(
+                {
+                    "project": project,
+                    "department_id": department_id,
+                    "agent_id": agent_id,
+                }
+            )
+        )
+    return tuple(validated)
+
+
+CAMPUS_PROJECTS = validate_campus_project_registry(_CAMPUS_PROJECT_RECORDS)
+_CAMPUS_PROJECT_BY_IDENTITY = MappingProxyType(
+    {
+        (record["project"], record["department_id"], record["agent_id"]): record
+        for record in CAMPUS_PROJECTS
+    }
+)
+
+
+def campus_project_for_event(event: object) -> MappingProxyType | None:
+    """Return the exact registered project identity for a public event, if any."""
+    if not isinstance(event, dict):
+        return None
+    identity = (
+        event.get("project"),
+        event.get("department_id"),
+        event.get("agent_id"),
+    )
+    if not all(isinstance(value, str) for value in identity):
+        return None
+    return _CAMPUS_PROJECT_BY_IDENTITY.get(identity)
+
 _CAMPUS_RESIDENT_PROFILES = {
     "COORDINATOR": {
         "name": "Главный координатор",
@@ -85,9 +182,6 @@ _CAMPUS_RESIDENT_PROFILES = {
             "developer",
             "tester",
             "devops",
-            "infrastructure engineer",
-            "reliability analyst",
-            "operator",
         ),
         "sprite_x": "-288px",
         "sprite_step_x": "-320px",
@@ -95,6 +189,28 @@ _CAMPUS_RESIDENT_PROFILES = {
         "wandering": True,
         "walk_duration": "13s",
         "walk_delay": "-7s",
+    },
+    "DESIGNER": {
+        "name": "Дизайнер",
+        "department_id": "design",
+        "aliases": ("designer", "design reviewer", "ux researcher"),
+        "sprite_x": "-192px",
+        "sprite_step_x": "-224px",
+        "sprite_y": "-64px",
+        "wandering": True,
+        "walk_duration": "14s",
+        "walk_delay": "-5s",
+    },
+    "INFRASTRUCTURE": {
+        "name": "Инженер инфраструктуры",
+        "department_id": "infrastructure",
+        "aliases": ("infrastructure", "infrastructure engineer", "reliability analyst", "operator"),
+        "sprite_x": "-288px",
+        "sprite_step_x": "-320px",
+        "sprite_y": "-64px",
+        "wandering": True,
+        "walk_duration": "15s",
+        "walk_delay": "-9s",
     },
     "VAULT": {
         "name": "Хранитель знаний",
@@ -122,11 +238,10 @@ _CAMPUS_RESIDENT_PROFILES = {
 
 CAMPUS_RESIDENTS = tuple(
     {
-        "agent_id": agent["id"],
-        **_CAMPUS_RESIDENT_PROFILES[agent["id"]],
+        "agent_id": agent_id,
+        **profile,
     }
-    for agent in AGENTS
-    if agent["id"] in _CAMPUS_RESIDENT_PROFILES
+    for agent_id, profile in _CAMPUS_RESIDENT_PROFILES.items()
 )
 
 STATUS_LABELS = {
@@ -468,11 +583,45 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
             </div>"""
         )
     residents_html = "".join(residents)
+    project_folders = []
+    for project in CAMPUS_PROJECTS:
+        if project["department_id"] != department_id:
+            continue
+        project_name = project["project"]
+        agent_name = _CAMPUS_RESIDENT_PROFILES[project["agent_id"]]["name"]
+        visible_name = (
+            "Координация"
+            if project_name == "MAIN MANAGER"
+            else project_name
+        )
+        project_folders.append(
+            f"""
+            <button class="campus-project-folder" type="button"
+                data-campus-project-folder data-campus-project="{escape(project_name)}"
+                data-campus-project-agent="{escape(project['agent_id'])}"
+                data-campus-project-department="{escape(department_id)}"
+                data-campus-project-agent-label="{escape(agent_name)}"
+                data-campus-project-department-label="{escape(zone['label'])}"
+                data-campus-project-status="idle"
+                aria-controls="campus-project-details" aria-haspopup="dialog"
+                aria-expanded="false"
+                aria-label="Проект {escape(visible_name)}, {escape(agent_name)}, {escape(zone['label'])}">
+                <span class="campus-project-folder-icon" aria-hidden="true"></span>
+                <strong>{escape(visible_name)}</strong>
+                <span data-campus-project-folder-status>нет активных задач</span>
+            </button>"""
+        )
+    project_folders_html = (
+        '<div class="campus-project-shelf" aria-label="Проекты отдела">'
+        + "".join(project_folders)
+        + "</div>"
+    )
     return f"""
         <section class="campus-zone campus-zone-{department_id}" id="{zone['zone_id']}"
             data-department-id="{department_id}" aria-labelledby="{zone['zone_id']}-label">
             <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{boundary}</header>
             {residents_html}
+            {project_folders_html}
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
         </section>"""
@@ -495,6 +644,23 @@ def build_department_campus_html() -> str:
     detail_rows = "".join(
         f'<div><dt>{label}</dt><dd data-campus-detail-field="{field}">—</dd></div>'
         for field, label in details
+    )
+    project_details = (
+        ("project", "Проект", False),
+        ("department_id", "Отдел", False),
+        ("agent_id", "Ответственный агент", False),
+        ("status", "Статус", False),
+        ("next_step", "Следующий безопасный шаг", True),
+        ("evidence_count", "Подтверждения", True),
+    )
+    project_detail_rows = "".join(
+        (
+            '<div data-campus-project-live-only hidden>'
+            if live_only
+            else "<div>"
+        )
+        + f'<dt>{label}</dt><dd data-campus-project-detail-field="{field}">—</dd></div>'
+        for field, label, live_only in project_details
     )
     return f"""
 <section class="section department-campus" id="department-campus" aria-labelledby="department-campus-title">
@@ -531,6 +697,14 @@ def build_department_campus_html() -> str:
             <header><div><span>Selected specialist</span><h3 id="campus-detail-title">Read-only details</h3></div>
             <button type="button" data-campus-detail-close aria-label="Закрыть сведения">×</button></header>
             <dl>{detail_rows}</dl>
+        </aside>
+        <aside class="campus-details campus-project-detail" data-campus-project-detail
+            id="campus-project-details" role="dialog" hidden
+            aria-labelledby="campus-project-detail-title">
+            <header><div><span>Папка проекта</span>
+            <h3 id="campus-project-detail-title">Сведения о проекте · только просмотр</h3></div>
+            <button type="button" data-campus-project-detail-close aria-label="Закрыть сведения о проекте">×</button></header>
+            <dl>{project_detail_rows}</dl>
         </aside>
     </div>
     <span class="campus-status-vocabulary" hidden>
