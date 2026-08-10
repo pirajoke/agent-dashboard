@@ -15,6 +15,7 @@ import importlib.util
 BUILDER_DIR = Path(__file__).resolve().parents[1]
 SERVER_PATH = BUILDER_DIR / "dashboard-server-m4.py"
 SURFACE_PATH = "/department-campus.html"
+CAMPUS_ASSET_PATH = "/dashboard-assets/pixel-verse-campus-bg.webp"
 
 SERVER_SPEC = importlib.util.spec_from_file_location(
     "dashboard_server_active_department_campus",
@@ -108,6 +109,32 @@ class ActiveDepartmentCampusSurfaceTests(unittest.TestCase):
         post_status, _post_content_type, post_body = self._public_request(method="POST")
         self.assertEqual(post_status, 403)
         self.assertIn("public_dashboard_read_only", post_body)
+
+    def test_ac_active_4_approved_campus_is_primary_and_uses_reviewed_art(self):
+        root_html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(
+            encoding="utf-8"
+        )
+        status, _content_type, campus_html = self._public_request()
+        deploy_script = (BUILDER_DIR / "deploy_to_scripts.sh").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertEqual(status, 200)
+        self.assertLess(
+            root_html.index('class="pixel-agents-viewport"'),
+            root_html.index('id="jarvis-hud-card"'),
+            "the approved campus must precede the secondary pipeline console",
+        )
+        self.assertIn(
+            'grid-template-areas:\n    "bar"\n    "stage"\n    "console";',
+            root_html,
+        )
+        self.assertIn(CAMPUS_ASSET_PATH, campus_html)
+        self.assertIn(CAMPUS_ASSET_PATH, SERVER.PUBLIC_FILE_PATHS)
+        self.assertIn("pixel-verse-campus-bg.webp", deploy_script)
+        self.assertTrue(
+            (BUILDER_DIR / "dashboard-assets" / "pixel-verse-campus-bg.webp").is_file()
+        )
 
 
 if __name__ == "__main__":
