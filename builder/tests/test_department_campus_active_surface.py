@@ -136,6 +136,32 @@ class ActiveDepartmentCampusSurfaceTests(unittest.TestCase):
             (BUILDER_DIR / "dashboard-assets" / "pixel-verse-campus-bg.webp").is_file()
         )
 
+    def test_ac_active_5_file_dashboard_routes_campus_to_mac_mini(self):
+        root_html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(
+            "const PIXEL_AGENTS_BASE = IS_FILE_DASHBOARD "
+            "? 'https://command.meshly.fr' : window.location.origin;",
+            root_html,
+        )
+        self.assertIn(
+            "const PIXEL_AGENTS_URL = `${PIXEL_AGENTS_BASE}/department-campus.html`;",
+            root_html,
+        )
+        self.assertIn(
+            "const PIXEL_AGENTS_ORIGIN = new URL(PIXEL_AGENTS_URL).origin;",
+            root_html,
+        )
+        self.assertIn("frame.src = PIXEL_AGENTS_URL;", root_html)
+        self.assertIn("fullScreen.href = PIXEL_AGENTS_URL;", root_html)
+        self.assertLess(
+            root_html.index("initPixelAgentsFrame();"),
+            root_html.index("initPixelAgentsPin();"),
+            "the file:// iframe URL must be fixed before pin messaging starts",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
