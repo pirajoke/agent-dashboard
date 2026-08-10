@@ -53,6 +53,8 @@
     const countEl = campus.querySelector('[data-campus-count]');
     const detailEl = campus.querySelector('#campus-agent-details');
     const closeEl = campus.querySelector('[data-campus-detail-close]');
+    const projectDetailEl = campus.querySelector('[data-campus-project-detail]');
+    const projectDetailCloseEl = campus.querySelector('[data-campus-project-detail-close]');
     const refreshEl = campus.querySelector('[data-campus-refresh]');
     const taskLanesEl = campus.querySelector('[data-campus-task-lanes]');
     const taskPanelEl = campus.querySelector('[data-campus-task-panel]');
@@ -60,11 +62,20 @@
     const managerMarkerEl = campus.querySelector('[data-campus-static-manager]');
     const boulevardEl = campus.querySelector('.campus-boulevard');
     const rosterEls = Array.from(campus.querySelectorAll('[data-campus-roster-agent]'));
+    const projectFolderEls = Array.from(campus.querySelectorAll('[data-campus-project-folder]'));
     const rosterCount = rosterEls.length;
     const detailFields = {};
     campus.querySelectorAll('[data-campus-detail-field]').forEach((el) => {
         detailFields[el.dataset.campusDetailField] = el;
     });
+    const projectDetailFields = {};
+    campus.querySelectorAll('[data-campus-project-detail-field]').forEach((el) => {
+        projectDetailFields[el.dataset.campusProjectDetailField] = el;
+    });
+    const projectLiveOnlyEls = Array.from(
+        campus.querySelectorAll('[data-campus-project-live-only]'),
+    );
+    const projectEventByFolder = new WeakMap();
 
     const statusLabels = {
         queued: 'в очереди',
@@ -127,6 +138,33 @@
         notifyCampusContentHeight();
     }
 
+    function closeCampusProjectDetails(returnFocus) {
+        if (!projectDetailEl) return;
+        projectDetailEl.hidden = true;
+        projectFolderEls.forEach((folder) => folder.setAttribute('aria-expanded', 'false'));
+        if (returnFocus && lastTrigger?.isConnected) lastTrigger.focus();
+        notifyCampusContentHeight();
+    }
+
+    function resetCampusProjectFolders() {
+        projectFolderEls.forEach((folder) => {
+            folder.classList.remove(
+                'is-live',
+                'is-queued',
+                'is-active',
+                'is-testing',
+                'is-waiting',
+                'is-done',
+                'is-failed',
+            );
+            folder.dataset.campusProjectStatus = 'idle';
+            folder.setAttribute('aria-expanded', 'false');
+            const status = folder.querySelector('[data-campus-project-folder-status]');
+            if (status) status.textContent = 'нет активных задач';
+            projectEventByFolder.delete(folder);
+        });
+    }
+
     function clearCampusAgents() {
         campus.querySelectorAll('[data-campus-live-agent]').forEach((agent) => agent.remove());
         campus.querySelectorAll('[data-campus-waypoint-agents]').forEach((destination) => {
@@ -139,6 +177,8 @@
         if (taskPanelEl) taskPanelEl.hidden = true;
         if (routeLayerEl) routeLayerEl.replaceChildren();
         closeCampusDetails(false);
+        closeCampusProjectDetails(false);
+        resetCampusProjectFolders();
         lastTrigger = null;
     }
 
@@ -157,6 +197,7 @@
 
     function openCampusDetails(button, event) {
         if (!detailEl) return;
+        closeCampusProjectDetails(false);
         if (lastTrigger && lastTrigger !== button) {
             lastTrigger.setAttribute('aria-expanded', 'false');
         }
@@ -175,23 +216,67 @@
         notifyCampusContentHeight();
     }
 
+    function openCampusProjectDetails(folder) {
+        if (!projectDetailEl) return;
+        closeCampusDetails(false);
+        if (lastTrigger && lastTrigger !== folder) {
+            lastTrigger.setAttribute('aria-expanded', 'false');
+        }
+        lastTrigger = folder;
+        folder.setAttribute('aria-expanded', 'true');
+        const event = projectEventByFolder.get(folder) || null;
+        const nextStep = typeof event?.next_step === 'string' && event.next_step.trim()
+            ? event.next_step
+            : null;
+        const hasEvidence = Number.isInteger(event?.evidence_count) && event.evidence_count >= 0;
+        projectDetailFields.project.textContent = folder.dataset.campusProject || '—';
+        projectDetailFields.department_id.textContent = (
+            folder.dataset.campusProjectDepartmentLabel || '—'
+        );
+        projectDetailFields.agent_id.textContent = folder.dataset.campusProjectAgentLabel || '—';
+        projectDetailFields.status.textContent = event
+            ? (statusLabels[event.status] || '—')
+            : 'нет активных задач';
+        projectDetailFields.next_step.textContent = nextStep || '—';
+        projectDetailFields.evidence_count.textContent = hasEvidence
+            ? String(event.evidence_count)
+            : '—';
+        projectLiveOnlyEls.forEach((row) => {
+            const field = row.querySelector('[data-campus-project-detail-field]')
+                ?.dataset.campusProjectDetailField;
+            row.hidden = field === 'next_step' ? !nextStep : !hasEvidence;
+        });
+        projectDetailEl.hidden = false;
+        projectDetailCloseEl?.focus();
+        notifyCampusContentHeight();
+    }
+
     function journeySignature(event) {
         return JSON.stringify([event.task_id, event.agent_id, event.status]);
     }
 
     function residentForEvent(event) {
-        const candidates = [event?.agent_id, event?.role]
-            .map((value) => String(value || '').trim().toLowerCase())
-            .filter(Boolean);
-        if (!candidates.length) return null;
-        return rosterEls.find((resident) => {
-            const aliases = String(resident.dataset.campusRosterAliases || '')
-                .split('|')
-                .map((value) => value.trim().toLowerCase())
-                .filter(Boolean);
-            aliases.push(String(resident.dataset.campusRosterAgent || '').toLowerCase());
-            return candidates.some((candidate) => aliases.includes(candidate));
-        }) || null;
+        return rosterEls.find((resident) => (
+            resident.dataset.campusRosterAgent === String(event?.agent_id || '')
+            && resident.dataset.campusResidentDepartment === String(event?.department_id || '')
+        )) || null;
+    }
+
+    function projectFolderForEvent(event) {
+        if (!event || typeof event !== 'object') return null;
+        return projectFolderEls.find((folder) => (
+            folder.dataset.campusProject === String(event.project || '')
+            && folder.dataset.campusProjectAgent === String(event.agent_id || '')
+            && folder.dataset.campusProjectDepartment === String(event.department_id || '')
+        )) || null;
+    }
+
+    function activateCampusProjectFolder(folder, event) {
+        folder.classList.add('is-live', `is-${event.status}`);
+        folder.dataset.campusProjectStatus = event.status;
+        const status = folder.querySelector('[data-campus-project-folder-status]');
+        if (status) status.textContent = statusLabels[event.status] || '—';
+        projectEventByFolder.set(folder, event);
     }
 
     function animateCampusJourney(button, shouldAnimate, managerOriginRect) {
@@ -333,9 +418,21 @@
             );
             return;
         }
+        const matchedEvents = [];
+        events.forEach((event) => {
+            if (!Object.prototype.hasOwnProperty.call(statusLabels, event?.status)) return;
+            const folder = projectFolderForEvent(event);
+            if (!folder) return;
+            matchedEvents.push(event);
+        });
+        if (!matchedEvents.length) {
+            journeySignatures.clear();
+            setCampusState('empty', 0, 0, Number(payload?.omitted_task_count) || 0);
+            return;
+        }
         const newJourneySignatures = new Set();
         const managerOriginRect = managerMarkerEl?.getBoundingClientRect() || null;
-        events.forEach((event) => {
+        matchedEvents.forEach((event) => {
             const signature = journeySignature(event);
             const unseen = !journeySignatures.has(signature);
             if (unseen) journeySignatures.add(signature);
@@ -343,9 +440,12 @@
                 newJourneySignatures.add(signature);
             }
         });
-        renderCampusTaskLanes(events);
-        renderCampusRoutes(events, newJourneySignatures);
-        events.forEach((event) => {
+        renderCampusTaskLanes(matchedEvents);
+        renderCampusRoutes(matchedEvents, newJourneySignatures);
+        matchedEvents.forEach((event) => {
+            const folder = projectFolderForEvent(event);
+            if (!folder) return;
+            activateCampusProjectFolder(folder, event);
             const destination = destinationForEvent(event);
             if (!destination) return;
             const shouldAnimate = newJourneySignatures.has(journeySignature(event));
@@ -356,11 +456,11 @@
             animateCampusJourney(button, shouldAnimate, managerOriginRect);
         });
         const activeAgentCount = new Set(
-            events.map((event) => String(event.agent_id || '')).filter(Boolean),
+            matchedEvents.map((event) => String(event.agent_id || '')).filter(Boolean),
         ).size;
         setCampusState(
             'active',
-            Number(payload.visible_task_count) || 0,
+            new Set(matchedEvents.map((event) => event.task_id)).size,
             activeAgentCount,
             Number(payload.omitted_task_count) || 0,
         );
@@ -410,8 +510,26 @@
     }
 
     if (closeEl) closeEl.addEventListener('click', () => closeCampusDetails(true));
+    if (projectDetailCloseEl) {
+        projectDetailCloseEl.addEventListener('click', () => closeCampusProjectDetails(true));
+    }
     if (refreshEl) refreshEl.addEventListener('click', () => refreshDepartmentCampus());
+    campus.querySelectorAll('[data-campus-project-folder]').forEach((folder) => {
+        folder.addEventListener('click', () => openCampusProjectDetails(folder));
+        folder.addEventListener('keydown', (event) => {
+            if (!event.repeat && (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar')) {
+                event.preventDefault();
+                openCampusProjectDetails(folder);
+            }
+        });
+    });
     campus.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && projectDetailEl && !projectDetailEl.hidden) {
+            event.preventDefault();
+            closeCampusProjectDetails(false);
+            if (lastTrigger?.isConnected) lastTrigger.focus();
+            return;
+        }
         if (event.key === 'Escape' && detailEl && !detailEl.hidden) {
             event.preventDefault();
             closeCampusDetails(true);
