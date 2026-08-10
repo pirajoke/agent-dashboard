@@ -4607,44 +4607,6 @@ tr:last-child td { border-bottom: none; }
     box-shadow: inset 0 1px 0 rgba(255, 225, 169, 0.16), 0 3px 0 rgba(30, 20, 14, 0.58);
 }
 
-.campus-zone-presence {
-    min-width: 0;
-    max-width: 9rem;
-    padding: 0.28rem 0.42rem;
-    border: 1px solid rgba(209, 159, 91, 0.58);
-    background: linear-gradient(180deg, rgba(74, 50, 32, 0.94), rgba(44, 31, 23, 0.96));
-    color: #f7e2b8;
-    display: grid;
-    gap: 0.12rem;
-    font-family: 'JetBrains Mono', monospace;
-    line-height: 1.15;
-    text-shadow: 0 1px 0 #291b12;
-    box-shadow: inset 0 1px 0 rgba(255, 225, 169, 0.14), 0 3px 0 rgba(30, 20, 14, 0.52);
-}
-
-.campus-zone-presence strong {
-    font-size: 0.55rem;
-    font-weight: 700;
-}
-
-.campus-zone-presence > span {
-    color: #d8c49f;
-    display: flex;
-    align-items: center;
-    gap: 0.26rem;
-    font-size: 0.46rem;
-}
-
-.campus-zone-presence i {
-    width: 0.38rem;
-    height: 0.38rem;
-    flex: 0 0 auto;
-    border: 1px solid rgba(255, 225, 169, 0.4);
-    border-radius: 50%;
-    background: #b98b43;
-    box-shadow: 0 0 0 1px rgba(43, 31, 21, 0.7), 0 0 0.35rem rgba(185, 139, 67, 0.34);
-}
-
 .campus-owner-boundary {
     max-width: 104px;
     padding: 0.25rem 0.35rem;
@@ -4710,13 +4672,14 @@ tr:last-child td { border-bottom: none; }
 .campus-agent.is-failed { --campus-status: #d25b50; border-width: 3px; }
 
 .campus-agent-sprite,
-.campus-manager-sprite {
+.campus-manager-sprite,
+.campus-resident-sprite {
     width: 32px;
     height: 32px;
     background-image: url("dashboard-assets/ai-town-32x32folk.png");
     background-repeat: no-repeat;
     background-size: 384px 256px;
-    background-position: -192px -192px;
+    background-position: var(--campus-sprite-x, -192px) var(--campus-sprite-y, -192px);
     image-rendering: pixelated;
 }
 
@@ -4740,27 +4703,112 @@ tr:last-child td { border-bottom: none; }
     color: var(--campus-status);
 }
 
-.campus-static-manager {
+.campus-resident {
+    --campus-walk-x: 13px;
+    --campus-walk-y: -3px;
+    --campus-walk-return-x: -8px;
     position: absolute;
     z-index: 5;
+    left: calc(50% - 16px);
+    bottom: 20%;
+    width: 32px;
+    height: 32px;
+    pointer-events: none;
+    transform-origin: center bottom;
+}
+
+.campus-resident[hidden] { display: none; }
+
+.campus-resident.is-wandering {
+    animation: campusResidentWander var(--campus-walk-duration, 12s) steps(12, end)
+        var(--campus-walk-delay, 0s) infinite;
+}
+
+.campus-resident.is-wandering .campus-resident-sprite {
+    animation: campusSpriteStep 0.58s steps(1, end) infinite;
+}
+
+.campus-resident[data-campus-roster-agent="RESEARCHER"] {
+    --campus-walk-x: 15px;
+    --campus-walk-y: -4px;
+    --campus-walk-return-x: -7px;
+}
+
+.campus-resident[data-campus-roster-agent="BUILDER"] {
+    --campus-walk-x: -12px;
+    --campus-walk-y: 3px;
+    --campus-walk-return-x: 10px;
+}
+
+.campus-resident[data-campus-roster-agent="VAULT"] {
+    --campus-walk-x: 10px;
+    --campus-walk-y: 4px;
+    --campus-walk-return-x: -11px;
+}
+
+.campus-resident[data-campus-roster-agent="ANALYST"] {
+    --campus-walk-x: -14px;
+    --campus-walk-y: -2px;
+    --campus-walk-return-x: 7px;
+}
+
+.campus-resident-sprite {
+    display: block;
+    filter: sepia(0.1) saturate(0.9)
+        drop-shadow(0 3px 1px rgba(43, 31, 21, 0.78));
+}
+
+.campus-resident-caption {
+    position: absolute;
+    left: 50%;
+    bottom: 35px;
+    width: max-content;
+    max-width: 98px;
+    padding: 0.22rem 0.3rem;
+    border: 1px solid rgba(209, 159, 91, 0.66);
+    background: linear-gradient(180deg, rgba(82, 56, 36, 0.96), rgba(47, 33, 24, 0.96));
+    color: #f7e2b8;
+    display: grid;
+    gap: 0.08rem;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.1;
+    text-align: center;
+    text-shadow: 0 1px 0 #291b12;
+    box-shadow: inset 0 1px 0 rgba(255, 225, 169, 0.14), 0 2px 0 rgba(30, 20, 14, 0.58);
+}
+
+.campus-resident-caption strong {
+    font-size: 0.5rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.campus-resident-caption > span {
+    color: #d8c49f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    font-size: 0.42rem;
+    white-space: nowrap;
+}
+
+.campus-resident-caption i {
+    width: 0.32rem;
+    height: 0.32rem;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #b98b43;
+    box-shadow: 0 0 0 1px rgba(43, 31, 21, 0.72);
+}
+
+.campus-static-manager {
+    position: absolute;
     left: 31%;
     bottom: 30%;
     width: 32px;
     height: 32px;
-    pointer-events: none;
-}
-
-.campus-manager-text {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    overflow: hidden;
 }
 
 .campus-manager-sprite {
@@ -4891,8 +4939,19 @@ tr:last-child td { border-bottom: none; }
 }
 
 @keyframes campusSpriteStep {
-    0%, 100% { background-position: -192px -192px; }
-    50% { background-position: -224px -192px; }
+    0%, 100% {
+        background-position: var(--campus-sprite-x, -192px) var(--campus-sprite-y, -192px);
+    }
+    50% {
+        background-position: var(--campus-sprite-step-x, -224px) var(--campus-sprite-y, -192px);
+    }
+}
+
+@keyframes campusResidentWander {
+    0%, 16%, 100% { transform: translate(0, 0); }
+    30%, 45% { transform: translate(var(--campus-walk-x), var(--campus-walk-y)); }
+    58%, 72% { transform: translate(var(--campus-walk-return-x), 2px); }
+    84%, 92% { transform: translate(5px, -1px); }
 }
 
 @media (max-width: 900px) {
@@ -4915,44 +4974,32 @@ tr:last-child td { border-bottom: none; }
         font-size: clamp(0.34rem, 1.7vw, 0.55rem);
         box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
     }
-    .campus-zone-hq > header {
-        width: 100%;
-        max-width: 100%;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: 0.08rem;
-    }
-    .campus-zone-hq > header > h3,
-    .campus-zone-hq .campus-zone-presence {
-        box-sizing: border-box;
-        width: 100%;
-        max-width: 100%;
-    }
     .campus-zone-hq > header > h3 {
         font-size: clamp(0.32rem, 1.35vw, 0.42rem);
         white-space: nowrap;
     }
-    .campus-zone-presence {
-        padding: 0.12rem 0.18rem;
-        gap: 0.06rem;
-        box-shadow: inset 0 1px 0 rgba(255, 225, 169, 0.12), 0 1px 0 rgba(30, 20, 14, 0.52);
-    }
-    .campus-zone-presence strong {
-        font-size: clamp(0.32rem, 1.35vw, 0.42rem);
-        white-space: nowrap;
-    }
-    .campus-zone-presence > span {
-        gap: 0.12rem;
-        font-size: clamp(0.3rem, 1.2vw, 0.38rem);
-        white-space: nowrap;
-    }
-    .campus-zone-presence i { width: 0.28rem; height: 0.28rem; }
     .campus-owner-boundary { display: none; }
     .campus-zone-agents { padding: 1.1rem 0.1rem 0.1rem; }
     .campus-agent { transform: scale(0.62); }
     .campus-waypoint { transform: translateY(-50%) scale(0.62); }
+    .campus-resident { bottom: 10%; }
+    .campus-resident-caption {
+        bottom: 30px;
+        max-width: 78px;
+        padding: 0.1rem 0.16rem;
+    }
+    .campus-resident-caption strong {
+        max-width: 74px;
+        font-size: clamp(0.3rem, 1.3vw, 0.4rem);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .campus-resident-caption > span {
+        gap: 0.1rem;
+        font-size: clamp(0.28rem, 1.1vw, 0.35rem);
+    }
     .campus-static-manager {
-        left: 31%;
+        left: calc(50% - 16px);
         top: auto;
         bottom: 8%;
     }
@@ -4971,6 +5018,8 @@ tr:last-child td { border-bottom: none; }
     .campus-agent.is-active,
     .campus-agent.is-testing,
     .campus-agent-sprite,
+    .campus-resident,
+    .campus-resident-sprite,
     .campus-route,
     .campus-details {
         animation: none !important;
@@ -6546,7 +6595,7 @@ body {
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-08-10 17:18:45 ICT</span>
+            <span>2026-08-10 17:43:45 ICT</span>
         </div>
     </div>
 </nav>
@@ -6559,7 +6608,7 @@ body {
     <div class="topbar-title">Agent Theater</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-08-10 17:18:45 ICT</span>
+        <span class="tm-item">2026-08-10 17:43:45 ICT</span>
     </div>
 </div>
 
@@ -6830,7 +6879,7 @@ body {
         <div class="section-dot" style="background:#e6a23c"></div>
         <div><div class="section-title" id="department-campus-title">Pixel Verse · Кампус отделов</div>
         <div class="campus-subtitle">Проверенные события Главного координатора · только просмотр</div></div>
-        <div class="section-count" data-campus-count>0 tasks · 0 agents</div>
+        <div class="section-count" data-campus-count>5 в команде · все ожидают задач</div>
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
     </div>
     <div class="campus-state" data-campus-state aria-live="polite">Загрузка кампуса…</div>
@@ -6840,17 +6889,18 @@ body {
         
         <section class="campus-zone campus-zone-hq" id="campus-zone-hq"
             data-department-id="hq" aria-labelledby="campus-zone-hq-label">
-            <header><h3 id="campus-zone-hq-label">Центр управления</h3>
-            <span class="campus-zone-presence" aria-hidden="true">
-                <strong>Главный координатор</strong>
-                <span><i></i>ожидает задач</span>
-            </span></header>
+            <header><h3 id="campus-zone-hq-label">Центр управления</h3></header>
             
-            <div class="campus-static-manager" data-campus-static-manager="true"
-                aria-label="Главный координатор, ожидает задач">
-                <span class="campus-manager-sprite" aria-hidden="true"></span>
-                <strong class="campus-manager-text">Главный координатор</strong>
-                <span class="campus-manager-text">ожидает задач</span>
+            <div class="campus-resident campus-static-manager" data-campus-roster-agent="COORDINATOR"
+                data-campus-resident-department="hq"
+                data-campus-roster-aliases="coordinator|main manager|supervisor|главный координатор" data-campus-static-manager="true"
+                style="--campus-sprite-x:-192px;--campus-sprite-step-x:-224px;--campus-sprite-y:-192px;--campus-walk-duration:0s;--campus-walk-delay:0s"
+                aria-labelledby="campus-resident-coordinator-name campus-resident-coordinator-status">
+                <span class="campus-resident-sprite campus-manager-sprite" aria-hidden="true"></span>
+                <span class="campus-resident-caption">
+                    <strong id="campus-resident-coordinator-name">Главный координатор</strong>
+                    <span id="campus-resident-coordinator-status"><i></i>ожидает задач</span>
+                </span>
             </div>
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
@@ -6859,6 +6909,17 @@ body {
             data-department-id="sales" aria-labelledby="campus-zone-sales-label">
             <header><h3 id="campus-zone-sales-label">Sales</h3></header>
             
+            <div class="campus-resident is-wandering" data-campus-roster-agent="RESEARCHER"
+                data-campus-resident-department="sales"
+                data-campus-roster-aliases="researcher|editor|sales researcher|market analyst|sales operator"
+                style="--campus-sprite-x:-96px;--campus-sprite-step-x:-128px;--campus-sprite-y:-192px;--campus-walk-duration:11s;--campus-walk-delay:-4s"
+                aria-labelledby="campus-resident-researcher-name campus-resident-researcher-status">
+                <span class="campus-resident-sprite" aria-hidden="true"></span>
+                <span class="campus-resident-caption">
+                    <strong id="campus-resident-researcher-name">Исследователь</strong>
+                    <span id="campus-resident-researcher-status"><i></i>ожидает задач</span>
+                </span>
+            </div>
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
         </section>
@@ -6866,6 +6927,17 @@ body {
             data-department-id="development" aria-labelledby="campus-zone-development-label">
             <header><h3 id="campus-zone-development-label">Development</h3></header>
             
+            <div class="campus-resident is-wandering" data-campus-roster-agent="BUILDER"
+                data-campus-resident-department="development"
+                data-campus-roster-aliases="builder|developer|tester|devops|infrastructure engineer|reliability analyst|operator"
+                style="--campus-sprite-x:-288px;--campus-sprite-step-x:-320px;--campus-sprite-y:-192px;--campus-walk-duration:13s;--campus-walk-delay:-7s"
+                aria-labelledby="campus-resident-builder-name campus-resident-builder-status">
+                <span class="campus-resident-sprite" aria-hidden="true"></span>
+                <span class="campus-resident-caption">
+                    <strong id="campus-resident-builder-name">Разработчик</strong>
+                    <span id="campus-resident-builder-status"><i></i>ожидает задач</span>
+                </span>
+            </div>
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
         </section>
@@ -6887,6 +6959,17 @@ body {
             data-department-id="internal" aria-labelledby="campus-zone-internal-label">
             <header><h3 id="campus-zone-internal-label">Internal</h3></header>
             
+            <div class="campus-resident is-wandering" data-campus-roster-agent="VAULT"
+                data-campus-resident-department="internal"
+                data-campus-roster-aliases="vault|vault keeper|internal analyst|knowledge curator|auditor"
+                style="--campus-sprite-x:0px;--campus-sprite-step-x:-32px;--campus-sprite-y:-64px;--campus-walk-duration:12s;--campus-walk-delay:-2s"
+                aria-labelledby="campus-resident-vault-name campus-resident-vault-status">
+                <span class="campus-resident-sprite" aria-hidden="true"></span>
+                <span class="campus-resident-caption">
+                    <strong id="campus-resident-vault-name">Хранитель знаний</strong>
+                    <span id="campus-resident-vault-status"><i></i>ожидает задач</span>
+                </span>
+            </div>
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
         </section>
@@ -6894,6 +6977,17 @@ body {
             data-department-id="finance" aria-labelledby="campus-zone-finance-label">
             <header><h3 id="campus-zone-finance-label">Finance</h3><span class="campus-owner-boundary" aria-label="Требуется разрешение владельца">🔒 owner permission</span></header>
             
+            <div class="campus-resident is-wandering" data-campus-roster-agent="ANALYST"
+                data-campus-resident-department="finance"
+                data-campus-roster-aliases="analyst|finance analyst|revenue analyst|bookkeeper"
+                style="--campus-sprite-x:-96px;--campus-sprite-step-x:-128px;--campus-sprite-y:-64px;--campus-walk-duration:10s;--campus-walk-delay:-6s"
+                aria-labelledby="campus-resident-analyst-name campus-resident-analyst-status">
+                <span class="campus-resident-sprite" aria-hidden="true"></span>
+                <span class="campus-resident-caption">
+                    <strong id="campus-resident-analyst-name">Аналитик</strong>
+                    <span id="campus-resident-analyst-status"><i></i>ожидает задач</span>
+                </span>
+            </div>
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
         </section>
@@ -6931,7 +7025,7 @@ body {
     <div class="topbar-title">Systems Command Center</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-08-10 17:18:45 ICT</span>
+        <span class="tm-item">2026-08-10 17:43:45 ICT</span>
     </div>
 </div>
 
@@ -7068,7 +7162,7 @@ body {
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-08-10 17:18:45 ICT</span>
+        <span class="tm-item">2026-08-10 17:43:45 ICT</span>
     </div>
 </div>
 
@@ -7126,11 +7220,11 @@ body {
             <span class="now-stat-lbl">today</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">23.4h</span>
+            <span class="now-stat-val">23.8h</span>
             <span class="now-stat-lbl">week</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">3.3h</span>
+            <span class="now-stat-val">3.4h</span>
             <span class="now-stat-lbl">avg/day</span>
         </div>
     </div>
@@ -7148,16 +7242,16 @@ body {
             <div class="now-bar"><div class="now-bar-fill" style="height:6%"></div></div>
             <div class="now-bar-day">Th</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">5.1</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:47%"></div></div>
+            <div class="now-bar-val">5.4</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:50%"></div></div>
             <div class="now-bar-day">Fr</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">2.2</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:20%"></div></div>
+            <div class="now-bar-val">1.8</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:17%"></div></div>
             <div class="now-bar-day">Sa</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">2.6</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:24%"></div></div>
+            <div class="now-bar-val">3.1</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:29%"></div></div>
             <div class="now-bar-day">Su</div>
         </div><div class="now-bar-col">
             <div class="now-bar-val">0.0</div>
@@ -7928,62 +8022,62 @@ body {
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 71690 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 71690 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 71675 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 71675 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: /Users/pirajoke/.nvm/versions/</span>
-                    <span class="ag-sub-detail">PID 71473 · 36 MB</span>
+                    <span class="ag-sub-detail">PID 71473 · 35 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 67684 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 67684 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 67670 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 67670 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: /Users/pirajoke/.nvm/versions/</span>
-                    <span class="ag-sub-detail">PID 67655 · 36 MB</span>
+                    <span class="ag-sub-detail">PID 67655 · 35 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 57972 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 57972 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 57958 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 57958 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: /Users/pirajoke/.nvm/versions/</span>
-                    <span class="ag-sub-detail">PID 57941 · 36 MB</span>
+                    <span class="ag-sub-detail">PID 57941 · 35 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 49888 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 49888 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: node /Users/pirajoke/.npm/_npx</span>
-                    <span class="ag-sub-detail">PID 49874 · 26 MB</span>
+                    <span class="ag-sub-detail">PID 49874 · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">MCP: /Users/pirajoke/.nvm/versions/</span>
-                    <span class="ag-sub-detail">PID 49857 · 36 MB</span>
+                    <span class="ag-sub-detail">PID 49857 · 35 MB</span>
                 </div></div>
             </details>
             
@@ -8001,30 +8095,25 @@ body {
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">12 processes</span><span class="ag-pill">1841 MB RAM</span></div>
+            <div class="ag-pills"><span class="ag-pill">12 processes</span><span class="ag-pill">1314 MB RAM</span></div>
             
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (12)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 33087</span>
-                    <span class="ag-sub-detail">CPU 7.6% · 336 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 44472</span>
-                    <span class="ag-sub-detail">CPU 4.8% · 877 MB</span>
+                    <span class="ag-sub-detail">CPU 2.5% · 405 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 32824</span>
-                    <span class="ag-sub-detail">CPU 0.1% · 38 MB</span>
+                    <span class="ag-sub-name">Codex PID 33087</span>
+                    <span class="ag-sub-detail">CPU 1.4% · 310 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 10306</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 12 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 11 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
@@ -8034,7 +8123,7 @@ body {
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 33193</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 37 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 33 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
@@ -8044,27 +8133,32 @@ body {
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 33085</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 304 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 272 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 33056</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 46 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 44 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Codex PID 32824</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 41 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 32821</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 57 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 56 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 48694</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 40 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 44 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Codex PID 34170</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 21 MB</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 25 MB</span>
                 </div></div>
             </details>
             
@@ -8257,8 +8351,8 @@ body {
         <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness-restart</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-github-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice-menubar</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">meshly-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-voice</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">ai-singularity-news-web</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">fastdata-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">krisp-import</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">obsidian-tg-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">max-context-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">accountable-os</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker-2</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">stock-content-bot</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">project-update-webhook</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker-3</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">tag-website</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mydictionary-admin</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">omniharness</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">grachev-lead-system</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">ai-singularity-news-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">pixel-agents</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">turkish-ai-agent</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div></div>
     </div>
         <details class="sys-idle-toggle">
-            <summary class="sys-expand-sum">Idle/Stopped (11)</summary>
-            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-data-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">m4-healthcheck</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">main-manager-dispatcher</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">codex-remote-host</span><span class="sys-svc-status">idle</span></div></div>
+            <summary class="sys-expand-sum">Idle/Stopped (12)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">linear-bot</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-data-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">m4-pg-backup</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">m4-healthcheck</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">main-manager-portfolio-continuation</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">alert-monitor</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">main-manager-dispatcher</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">codex-remote-host</span><span class="sys-svc-status">idle</span></div></div>
         </details>
     </details>
     <details class="sys-section">
@@ -8332,7 +8426,7 @@ body {
                     <div class="cost-token-lbl">API-eq</div>
                 </div>
                 <div class="cost-token-stat">
-                    <div class="cost-token-val">3692.9x</div>
+                    <div class="cost-token-val">3698.2x</div>
                     <div class="cost-token-lbl">savings</div>
                 </div>
             </div>
@@ -8368,7 +8462,7 @@ body {
     </details>
 </div>
 
-<div class="footer">command center v4 // 5 agents // 2026-08-10 17:18:45 ICT</div>
+<div class="footer">command center v4 // 5 agents // 2026-08-10 17:43:45 ICT</div>
 
 </main>
 </div>
@@ -8434,6 +8528,8 @@ body {
     const routeLayerEl = campus.querySelector('[data-campus-route-layer]');
     const managerMarkerEl = campus.querySelector('[data-campus-static-manager]');
     const boulevardEl = campus.querySelector('.campus-boulevard');
+    const rosterEls = Array.from(campus.querySelectorAll('[data-campus-roster-agent]'));
+    const rosterCount = rosterEls.length;
     const detailFields = {};
     campus.querySelectorAll('[data-campus-detail-field]').forEach((el) => {
         detailFields[el.dataset.campusDetailField] = el;
@@ -8466,9 +8562,9 @@ body {
     const movingStatuses = ['active', 'testing'];
     const stateMessages = {
         loading: 'Загрузка кампуса…',
-        empty: 'Нет активных задач',
-        stale: 'Нет свежих данных',
-        unavailable: 'Данные временно недоступны',
+        empty: 'Команда на местах · ждёт задачи',
+        stale: 'Команда на местах · свежих событий пока нет',
+        unavailable: 'Команда на местах · live-данные временно недоступны',
         active: 'Показаны свежие подтверждённые события',
     };
     let lastTrigger = null;
@@ -8501,8 +8597,12 @@ body {
     }
 
     function clearCampusAgents() {
-        campus.querySelectorAll('[data-campus-zone-agents], [data-campus-waypoint-agents]').forEach((destination) => {
+        campus.querySelectorAll('[data-campus-live-agent]').forEach((agent) => agent.remove());
+        campus.querySelectorAll('[data-campus-waypoint-agents]').forEach((destination) => {
             destination.replaceChildren();
+        });
+        campus.querySelectorAll('[data-campus-roster-agent]').forEach((resident) => {
+            resident.hidden = false;
         });
         if (taskLanesEl) taskLanesEl.replaceChildren();
         if (taskPanelEl) taskPanelEl.hidden = true;
@@ -8514,8 +8614,11 @@ body {
     function setCampusState(state, visibleTasks, agentCount, omittedTasks) {
         if (stateEl) stateEl.textContent = stateMessages[state] || stateMessages.unavailable;
         if (countEl) {
-            const omitted = omittedTasks > 0 ? ` · +${omittedTasks} hidden` : '';
-            countEl.textContent = `${visibleTasks} tasks · ${agentCount} agents${omitted}`;
+            const omitted = omittedTasks > 0 ? ` · скрыто задач: ${omittedTasks}` : '';
+            const live = agentCount > 0
+                ? `активных агентов: ${agentCount} · задач: ${visibleTasks}`
+                : 'все ожидают задач';
+            countEl.textContent = `${rosterCount} в команде · ${live}${omitted}`;
         }
         campus.dataset.campusState = state;
         notifyCampusContentHeight();
@@ -8545,10 +8648,25 @@ body {
         return JSON.stringify([event.task_id, event.agent_id, event.status]);
     }
 
-    function animateCampusJourney(button, shouldAnimate) {
+    function residentForEvent(event) {
+        const candidates = [event?.agent_id, event?.role]
+            .map((value) => String(value || '').trim().toLowerCase())
+            .filter(Boolean);
+        if (!candidates.length) return null;
+        return rosterEls.find((resident) => {
+            const aliases = String(resident.dataset.campusRosterAliases || '')
+                .split('|')
+                .map((value) => value.trim().toLowerCase())
+                .filter(Boolean);
+            aliases.push(String(resident.dataset.campusRosterAgent || '').toLowerCase());
+            return candidates.some((candidate) => aliases.includes(candidate));
+        }) || null;
+    }
+
+    function animateCampusJourney(button, shouldAnimate, managerOriginRect) {
         if (reducedMotion.matches || !shouldAnimate) return;
         if (!managerMarkerEl || !boulevardEl || typeof button.animate !== 'function') return;
-        const managerRect = managerMarkerEl.getBoundingClientRect();
+        const managerRect = managerOriginRect || managerMarkerEl.getBoundingClientRect();
         const boulevardRect = boulevardEl.getBoundingClientRect();
         const destinationRect = button.getBoundingClientRect();
         const destinationX = destinationRect.left + (destinationRect.width / 2);
@@ -8567,12 +8685,13 @@ body {
         );
     }
 
-    function createCampusAgent(event, shouldAnimate) {
+    function createCampusAgent(event, shouldAnimate, resident) {
         const destination = destinationByStatus[event.status] || 'department';
         const moving = shouldAnimate && !reducedMotion.matches;
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `campus-agent is-${event.status}`;
+        button.dataset.campusLiveAgent = '';
         button.dataset.campusAgentTrigger = '';
         button.setAttribute('data-campus-destination', destination);
         button.setAttribute('data-campus-moving', String(moving));
@@ -8583,6 +8702,13 @@ body {
         const sprite = document.createElement('span');
         sprite.className = 'campus-agent-sprite';
         sprite.setAttribute('aria-hidden', 'true');
+        if (resident) {
+            for (const property of (
+                ['--campus-sprite-x', '--campus-sprite-step-x', '--campus-sprite-y']
+            )) {
+                sprite.style.setProperty(property, resident.style.getPropertyValue(property));
+            }
+        }
         const name = document.createElement('strong');
         name.textContent = event.role;
         const status = document.createElement('span');
@@ -8677,6 +8803,7 @@ body {
             return;
         }
         const newJourneySignatures = new Set();
+        const managerOriginRect = managerMarkerEl?.getBoundingClientRect() || null;
         events.forEach((event) => {
             const signature = journeySignature(event);
             const unseen = !journeySignatures.has(signature);
@@ -8691,14 +8818,19 @@ body {
             const destination = destinationForEvent(event);
             if (!destination) return;
             const shouldAnimate = newJourneySignatures.has(journeySignature(event));
-            const button = createCampusAgent(event, shouldAnimate);
+            const resident = residentForEvent(event);
+            if (resident) resident.hidden = true;
+            const button = createCampusAgent(event, shouldAnimate, resident);
             destination.append(button);
-            animateCampusJourney(button, shouldAnimate);
+            animateCampusJourney(button, shouldAnimate, managerOriginRect);
         });
+        const activeAgentCount = new Set(
+            events.map((event) => String(event.agent_id || '')).filter(Boolean),
+        ).size;
         setCampusState(
             'active',
             Number(payload.visible_task_count) || 0,
-            events.length,
+            activeAgentCount,
             Number(payload.omitted_task_count) || 0,
         );
     }
