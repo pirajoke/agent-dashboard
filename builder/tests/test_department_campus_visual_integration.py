@@ -358,6 +358,63 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             "the file:// iframe URL must be selected before postMessage pin setup",
         )
 
+    def test_ac_6_unavailable_project_summary_is_removed_instead_of_left_loading(self):
+        self.assertNotIn('id="stat-projects"', self.dashboard_html)
+        self.assertNotIn('data-widget="projects"', self.dashboard_html)
+        self.assertNotIn('id="projects-grid"', self.dashboard_html)
+        self.assertNotIn("renderProjects(", self.dashboard_html)
+        self.assertNotIn('id="header-subtitle">Loading...</div>', self.dashboard_html)
+        self.assertIn("function renderHeaderDate()", self.dashboard_html)
+        self.assertLess(
+            self.dashboard_html.index("renderHeaderDate();"),
+            self.dashboard_html.index("refreshAll();"),
+        )
+
+    def test_ac_7_empty_task_lanes_are_hidden_until_verified_routes_exist(self):
+        task_panel = re.search(
+            r'<section\s+class="campus-task-panel"(?P<attrs>[^>]*)>',
+            self.campus_html,
+        )
+        self.assertIsNotNone(task_panel)
+        self.assertIn("data-campus-task-panel", task_panel.group("attrs"))
+        self.assertRegex(task_panel.group("attrs"), r"(?:^|\s)hidden(?:\s|$)")
+
+        for contract in (
+            "const taskPanelEl = campus.querySelector('[data-campus-task-panel]');",
+            "if (taskPanelEl) taskPanelEl.hidden = true;",
+            "taskPanelEl.hidden = taskIds.length === 0;",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, self.script)
+        self.assertIn(
+            ".campus-bottom-grid:not(:has(.campus-task-panel:not([hidden]), .campus-details:not([hidden])))",
+            self.css,
+        )
+
+    def test_ac_8_mobile_viewport_fits_the_real_campus_height_without_data_leakage(self):
+        for contract in (
+            "function notifyCampusContentHeight()",
+            "type: 'pixelAgentsContentHeight'",
+            "const height = Math.ceil(campus.getBoundingClientRect().height);",
+        ):
+            with self.subTest(campus_contract=contract):
+                self.assertIn(contract, self.script)
+
+        for contract in (
+            "event.origin !== PIXEL_AGENTS_ORIGIN",
+            "event.source !== frame.contentWindow",
+            "event.data?.type !== 'pixelAgentsContentHeight'",
+            "viewport.classList.add('has-content-height')",
+            "--pixel-agents-content-height",
+        ):
+            with self.subTest(dashboard_contract=contract):
+                self.assertIn(contract, self.dashboard_html)
+
+        self.assertRegex(
+            self.dashboard_html,
+            r"@media\s*\(max-width:\s*760px\)[\s\S]*?\.pixel-agents-viewport\.has-content-height",
+        )
+
     def test_ec_1_seven_zone_public_shell_stays_read_only_and_unsynthesized(self):
         structure = self._campus_structure()
 

@@ -425,7 +425,7 @@ def build_department_campus_html() -> str:
         </section>
     </div>
     <div class="campus-bottom-grid">
-        <section class="campus-task-panel" aria-labelledby="campus-task-title">
+        <section class="campus-task-panel" data-campus-task-panel hidden aria-labelledby="campus-task-title">
             <header class="campus-task-head">
                 <strong id="campus-task-title">Task lanes</strong>
                 <span>up to 3 verified live routes</span>

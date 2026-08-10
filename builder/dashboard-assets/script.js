@@ -55,6 +55,7 @@
     const closeEl = campus.querySelector('[data-campus-detail-close]');
     const refreshEl = campus.querySelector('[data-campus-refresh]');
     const taskLanesEl = campus.querySelector('[data-campus-task-lanes]');
+    const taskPanelEl = campus.querySelector('[data-campus-task-panel]');
     const routeLayerEl = campus.querySelector('[data-campus-route-layer]');
     const managerMarkerEl = campus.querySelector('[data-campus-static-manager]');
     const boulevardEl = campus.querySelector('.campus-boulevard');
@@ -102,6 +103,18 @@
     let refreshGeneration = 0;
     const journeySignatures = new Set();
 
+    function notifyCampusContentHeight() {
+        if (window.parent === window) return;
+        window.queueMicrotask(() => {
+            const height = Math.ceil(campus.getBoundingClientRect().height);
+            if (!Number.isFinite(height) || height <= 0) return;
+            window.parent.postMessage(
+                {type: 'pixelAgentsContentHeight', height},
+                '*',
+            );
+        });
+    }
+
     function closeCampusDetails(returnFocus) {
         if (!detailEl) return;
         detailEl.hidden = true;
@@ -109,6 +122,7 @@
             button.setAttribute('aria-expanded', 'false');
         });
         if (returnFocus && lastTrigger?.isConnected) lastTrigger.focus();
+        notifyCampusContentHeight();
     }
 
     function clearCampusAgents() {
@@ -116,6 +130,7 @@
             destination.replaceChildren();
         });
         if (taskLanesEl) taskLanesEl.replaceChildren();
+        if (taskPanelEl) taskPanelEl.hidden = true;
         if (routeLayerEl) routeLayerEl.replaceChildren();
         closeCampusDetails(false);
         lastTrigger = null;
@@ -128,6 +143,7 @@
             countEl.textContent = `${visibleTasks} tasks · ${agentCount} agents${omitted}`;
         }
         campus.dataset.campusState = state;
+        notifyCampusContentHeight();
     }
 
     function openCampusDetails(button, event) {
@@ -147,6 +163,7 @@
         detailFields.result.textContent = resultLabels[event.status] || '—';
         detailFields.evidence_count.textContent = String(event.evidence_count);
         detailEl.hidden = false;
+        notifyCampusContentHeight();
     }
 
     function journeySignature(event) {
@@ -222,6 +239,7 @@
                 taskLanesEl.append(lane);
             }
         });
+        if (taskPanelEl) taskPanelEl.hidden = taskIds.length === 0;
     }
 
     function renderCampusRoutes(events, newJourneySignatures) {
@@ -375,6 +393,7 @@
             startCampusRefresh();
         }
     });
+    window.addEventListener('resize', notifyCampusContentHeight);
     if (!document.hidden) {
         refreshDepartmentCampus();
         startCampusRefresh();

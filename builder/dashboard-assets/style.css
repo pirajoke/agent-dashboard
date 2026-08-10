@@ -4790,6 +4790,10 @@ tr:last-child td { border-bottom: none; }
     background: #09090b;
 }
 
+.campus-bottom-grid:not(:has(.campus-task-panel:not([hidden]), .campus-details:not([hidden]))) {
+    display: none;
+}
+
 .campus-bottom-grid:not(:has(.campus-details:not([hidden]))) .campus-task-panel {
     grid-column: 1 / -1;
 }

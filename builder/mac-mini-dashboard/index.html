@@ -143,19 +143,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .gauge-fill.disk { background: var(--purple); }
 .uptime-badge { display: inline-block; background: var(--green-bg); color: var(--green); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-top: 8px; }
 
-/* Projects */
-.projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-.project-card { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; border: 1px solid var(--border); }
-.project-name { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-.project-progress { display: flex; align-items: center; gap: 10px; }
-.project-bar { flex: 1; height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
-.project-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
-.project-bar-fill.active { background: var(--accent); }
-.project-bar-fill.done { background: var(--green); }
-.project-bar-fill.paused { background: var(--muted); }
-.project-pct { font-size: 12px; font-weight: 600; color: var(--text2); min-width: 32px; text-align: right; }
-.project-status { font-size: 10px; color: var(--muted); margin-top: 4px; }
-
 /* Costs */
 .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 8px; }
 .cost-row.render { background: var(--red-bg); text-decoration: line-through; color: var(--red); }
@@ -2319,6 +2306,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     height: min(58dvh, 620px);
     min-height: 420px;
   }
+  .pixel-agents-viewport.has-content-height {
+    height: min(var(--pixel-agents-content-height), 58dvh);
+    min-height: min(var(--pixel-agents-content-height), 420px);
+  }
   body.telegram-miniapp .header,
   body.telegram-miniapp .footer {
     display: none;
@@ -2340,16 +2331,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <div class="header">
     <div class="header-left">
       <h1>Hello, Maxim</h1>
-      <div class="subtitle" id="header-subtitle">Loading...</div>
+      <div class="subtitle" id="header-subtitle"></div>
     </div>
     <div class="header-stats">
       <div class="stat-box">
         <div class="stat-value" id="stat-services">-</div>
         <div class="stat-label">Services</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-value" id="stat-projects">-</div>
-        <div class="stat-label">Projects</div>
       </div>
       <div class="stat-box">
         <div class="stat-value" id="stat-hooks">5</div>
@@ -2537,16 +2524,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <!-- ═══════════════ GENERAL ═══════════════ -->
   <div id="section-general" class="section">
     <div class="drag-grid" id="general-grid">
-
-      <div class="drag-widget" data-widget="projects" data-size="wide">
-        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
-        <div class="card">
-          <div class="card-title collapsible">Projects</div>
-          <div class="projects-grid" id="projects-grid">
-            <div class="project-card"><div class="project-name">Loading...</div></div>
-          </div>
-        </div>
-      </div>
 
       <div class="drag-widget" data-widget="finances" data-size="normal">
         <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
@@ -2907,7 +2884,18 @@ if (['mac-mini', 'air', 'pro', 'agents'].includes(INITIAL_SECTION)) {
 function initPixelAgentsFrame() {
   const frame = document.querySelector('.pixel-agents-frame');
   const fullScreen = document.getElementById('pixel-agents-fullscreen');
-  if (frame) frame.src = PIXEL_AGENTS_URL;
+  const viewport = document.getElementById('pixel-agents-viewport');
+  if (frame) {
+    frame.src = PIXEL_AGENTS_URL;
+    window.addEventListener('message', (event) => {
+      if (event.origin !== PIXEL_AGENTS_ORIGIN || event.source !== frame.contentWindow) return;
+      if (event.data?.type !== 'pixelAgentsContentHeight') return;
+      const height = clampNumber(event.data.height, 320, 960, 0);
+      if (!height || !viewport) return;
+      viewport.style.setProperty('--pixel-agents-content-height', `${height}px`);
+      viewport.classList.add('has-content-height');
+    });
+  }
   if (fullScreen) fullScreen.href = PIXEL_AGENTS_URL;
 }
 
@@ -3955,6 +3943,11 @@ function toggleCat(catId) {
   });
 }
 
+function renderHeaderDate() {
+  document.getElementById('header-subtitle').textContent =
+    new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+}
+
 function renderGauges(prefix, sys) {
   if (!sys) return;
   const cpuPct = sys.cpu_percent || 0;
@@ -3970,8 +3963,7 @@ function renderGauges(prefix, sys) {
   if (uptimeVal) uptimeVal.textContent = sys.uptime || '—';
   const uptimeSub = document.getElementById(prefix + '-uptime-sub');
   if (uptimeSub) uptimeSub.textContent = sys.hostname || '';
-  document.getElementById('header-subtitle').textContent =
-    `${new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'})}`;
+  renderHeaderDate();
 }
 
 // ─── Mac Mini ───
@@ -4042,7 +4034,6 @@ async function refreshAir() {
   document.getElementById('stat-services').textContent = `${running}/${svcs.length}`;
   renderSvcTable('air-svc-tbody', svcs, 'airAction');
   renderGauges('air', sys);
-  renderProjects(data.projects);
 }
 
 async function airAction(label, action) {
@@ -4081,21 +4072,6 @@ async function refreshPro() {
 async function proAction(label, action) {
   await fetch(`${PRO_API}${PRO_API_PATH_PREFIX}/service/${label}/${action}`, { method: 'POST' });
   setTimeout(refreshPro, 1500);
-}
-
-function renderProjects(projects) {
-  if (!projects || !projects.length) return;
-  document.getElementById('stat-projects').textContent = projects.length;
-  document.getElementById('projects-grid').innerHTML = projects.map(p => `
-    <div class="project-card">
-      <div class="project-name">${p.name}</div>
-      <div class="project-progress">
-        <div class="project-bar"><div class="project-bar-fill ${p.status}" style="width:${p.progress}%"></div></div>
-        <span class="project-pct">${p.progress}%</span>
-      </div>
-      <div class="project-status">${p.done}/${p.total} tasks · ${p.status}</div>
-    </div>
-  `).join('');
 }
 
 // ─── Logs ───
@@ -4458,6 +4434,7 @@ function refreshAll() {
   document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
 }
 
+renderHeaderDate();
 refreshAll();
 initTelegramMiniApp();
 initJarvisHud();
