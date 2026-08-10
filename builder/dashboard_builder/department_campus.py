@@ -9,7 +9,7 @@ import unicodedata
 
 DEPARTMENT_ZONES = {
     "hq": {
-        "label": "HQ",
+        "label": "Центр управления",
         "zone_id": "campus-zone-hq",
         "roles": ("Main Manager", "Coordinator", "Supervisor"),
         "owner_permission_boundary": False,
@@ -353,10 +353,31 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
         if zone["owner_permission_boundary"]
         else ""
     )
+    coordinator = (
+        """
+            <div class="campus-static-manager" data-campus-static-manager="true"
+                aria-label="Главный координатор, ожидает задач">
+                <span class="campus-manager-sprite" aria-hidden="true"></span>
+                <strong class="campus-manager-text">Главный координатор</strong>
+                <span class="campus-manager-text">ожидает задач</span>
+            </div>"""
+        if department_id == "hq"
+        else ""
+    )
+    coordinator_presence = (
+        """
+            <span class="campus-zone-presence" aria-hidden="true">
+                <strong>Главный координатор</strong>
+                <span><i></i>ожидает задач</span>
+            </span>"""
+        if department_id == "hq"
+        else ""
+    )
     return f"""
         <section class="campus-zone campus-zone-{department_id}" id="{zone['zone_id']}"
             data-department-id="{department_id}" aria-labelledby="{zone['zone_id']}-label">
-            <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{boundary}</header>
+            <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{coordinator_presence}{boundary}</header>
+            {coordinator}
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
         </section>"""
@@ -384,8 +405,8 @@ def build_department_campus_html() -> str:
 <section class="section department-campus" id="department-campus" aria-labelledby="department-campus-title">
     <div class="section-head campus-head">
         <div class="section-dot" style="background:#e6a23c"></div>
-        <div><div class="section-title" id="department-campus-title">Pixel Verse · Department Boulevard</div>
-        <div class="campus-subtitle">Verified MAIN MANAGER events · public read-only view</div></div>
+        <div><div class="section-title" id="department-campus-title">Pixel Verse · Кампус отделов</div>
+        <div class="campus-subtitle">Проверенные события Главного координатора · только просмотр</div></div>
         <div class="section-count" data-campus-count>0 tasks · 0 agents</div>
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
     </div>
@@ -402,13 +423,9 @@ def build_department_campus_html() -> str:
             <strong>GitHub Station</strong><span>completed work waypoint</span>
             <div class="campus-waypoint-agents" data-campus-waypoint-agents></div>
         </section>
-        <div class="campus-static-manager" data-campus-static-manager="true" aria-label="MAIN MANAGER, HQ, постоянно на месте">
-            <span class="campus-manager-sprite" aria-hidden="true"></span>
-            <strong>MAIN MANAGER</strong><span>HQ · idle</span>
-        </div>
     </div>
     <div class="campus-bottom-grid">
-        <section class="campus-task-panel" aria-labelledby="campus-task-title">
+        <section class="campus-task-panel" data-campus-task-panel hidden aria-labelledby="campus-task-title">
             <header class="campus-task-head">
                 <strong id="campus-task-title">Task lanes</strong>
                 <span>up to 3 verified live routes</span>
