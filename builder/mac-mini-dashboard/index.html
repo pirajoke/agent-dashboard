@@ -2360,7 +2360,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- Navigation -->
   <div class="nav-pills">
-    <button class="nav-pill active" onclick="showSection('mac-mini')">
+    <button class="nav-pill" onclick="showSection('mac-mini')">
       <span class="pill-icon">🖥</span> Mac Mini
       <span class="pill-badge" id="mini-badge">offline</span>
     </button>
@@ -2372,20 +2372,14 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <span class="pill-icon">💼</span> Pro
       <span class="pill-badge" id="pro-badge">-</span>
     </button>
-    <button class="nav-pill" onclick="showSection('general')">
-      <span class="pill-icon">📊</span> General
-    </button>
-    <button class="nav-pill" onclick="showSection('agents')">
+    <button class="nav-pill active" onclick="showSection('agents')">
       <span class="pill-icon">🤖</span> Agents
       <span class="pill-badge" id="agents-badge">pixel</span>
-    </button>
-    <button class="nav-pill" onclick="showSection('logs')">
-      <span class="pill-icon">📋</span> Logs
     </button>
   </div>
 
   <!-- ═══════════════ MAC MINI ═══════════════ -->
-  <div id="section-mac-mini" class="section active">
+  <div id="section-mac-mini" class="section">
     <div class="machine-header">
       <div class="machine-icon mini">🖥</div>
       <div class="machine-info">
@@ -2592,12 +2586,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   </div>
 
   <!-- ═══════════════ AGENTS ═══════════════ -->
-  <div id="section-agents" class="section">
+  <div id="section-agents" class="section active">
     <div class="pixel-agents-shell">
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
           <strong>Pixel Verse</strong>
-          <span>live MAIN MANAGER handoffs across the department campus</span>
+          <span>живые передачи задач между отделами</span>
         </div>
         <div class="pixel-agents-actions">
           <button
@@ -2619,7 +2613,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
             aria-pressed="false"
             title="Lock dashboard size without changing current view"
           >📌 Pin</button>
-          <a href="/department-campus.html" target="_blank" rel="noreferrer">Full screen</a>
+          <a id="pixel-agents-fullscreen" target="_blank" rel="noreferrer">Full screen</a>
         </div>
       </div>
       <div class="pixel-agents-viewport" id="pixel-agents-viewport" aria-label="Moveable Pixel Agents view">
@@ -2859,7 +2853,9 @@ const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
 let currentLogService = null;
 const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
 const PIXEL_AGENTS_VIEW_KEY = 'command-center.pixel-agents.view';
-const PIXEL_AGENTS_ORIGIN = window.location.origin;
+const PIXEL_AGENTS_BASE = IS_FILE_DASHBOARD ? 'https://command.meshly.fr' : window.location.origin;
+const PIXEL_AGENTS_URL = `${PIXEL_AGENTS_BASE}/department-campus.html`;
+const PIXEL_AGENTS_ORIGIN = new URL(PIXEL_AGENTS_URL).origin;
 const JARVIS_HUD_COLLAPSED_KEY = 'command-center.jarvis-hud-collapsed';
 const JARVIS_BUDGET_KEY = 'command-center.jarvis-budget';
 const JARVIS_RUN_TOKEN_KEY = 'command-center.jarvis-run-token';
@@ -2904,8 +2900,15 @@ function showSection(name) {
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['mac-mini', 'air', 'pro', 'general', 'agents', 'logs'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'agents'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
+}
+
+function initPixelAgentsFrame() {
+  const frame = document.querySelector('.pixel-agents-frame');
+  const fullScreen = document.getElementById('pixel-agents-fullscreen');
+  if (frame) frame.src = PIXEL_AGENTS_URL;
+  if (fullScreen) fullScreen.href = PIXEL_AGENTS_URL;
 }
 
 function clampNumber(value, min, max, fallback = min) {
@@ -4460,6 +4463,7 @@ initTelegramMiniApp();
 initJarvisHud();
 initJarvisBudget();
 initJarvisRunPanel();
+initPixelAgentsFrame();
 initPixelAgentsView();
 initPixelAgentsPin();
 initDragDrop();
