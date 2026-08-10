@@ -4519,6 +4519,8 @@ tr:last-child td { border-bottom: none; }
 }
 
 .campus-zone {
+    --campus-project-rail-height: 66px;
+    --campus-project-rail-gap: 0.55rem;
     position: relative;
     z-index: 3;
     min-width: 0;
@@ -4617,35 +4619,52 @@ tr:last-child td { border-bottom: none; }
     z-index: 4;
     right: 0.4rem;
     bottom: 0.35rem;
-    width: min(62%, 180px);
+    width: calc(100% - 0.8rem);
+    min-height: var(--campus-project-rail-height);
     padding: 0.32rem;
     border: 2px solid #3f291f;
-    background:
-        linear-gradient(90deg, transparent 49%, rgba(55, 33, 24, 0.7) 49% 51%, transparent 51%),
-        repeating-linear-gradient(180deg, #765038 0 16px, #65432f 16px 18px);
+    background: #7b4f32;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--campus-project-count), minmax(0, 1fr));
+    align-items: stretch;
     gap: 0.28rem;
     box-shadow: inset 0 2px 0 rgba(223, 173, 102, 0.18), 0 4px 0 rgba(28, 18, 14, 0.72);
 }
 
+.campus-project-shelf[data-campus-project-count="1"] {
+    width: min(152px, calc(100% - 0.8rem));
+}
+
+.campus-project-shelf[data-campus-project-count="2"] {
+    width: min(300px, calc(100% - 0.8rem));
+}
+
+.campus-project-shelf[data-campus-project-count="4"] {
+    width: calc(100% - 0.8rem);
+}
+
 .campus-project-folder {
     --campus-project-color: #d39a43;
+    position: relative;
+    width: 100%;
     min-width: 44px;
+    max-width: 144px;
     min-height: 44px;
-    padding: 0.24rem 0.2rem 0.2rem;
+    padding: 0.94rem 0.16rem 0.16rem;
     border: 2px solid #5b3928;
     border-radius: 1px;
     background: linear-gradient(180deg, #f2bd5e 0 28%, #cc833b 28% 100%);
     color: #3d2925;
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    grid-template-rows: auto auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 0.08rem 0.2rem;
+    justify-self: center;
+    justify-items: center;
+    gap: 0.08rem;
     cursor: pointer;
     font-family: 'JetBrains Mono', monospace;
-    text-align: left;
+    text-align: center;
     box-shadow: inset 0 -4px 0 rgba(101, 55, 36, 0.2), 0 3px 0 rgba(43, 28, 22, 0.58);
     transition: transform 140ms steps(2, end), filter 140ms linear;
 }
@@ -4678,11 +4697,12 @@ tr:last-child td { border-bottom: none; }
 .campus-project-folder.is-failed { --campus-project-color: #c7554c; }
 
 .campus-project-folder-icon {
-    position: relative;
-    width: 18px;
-    height: 13px;
-    grid-row: 1 / -1;
-    border: 2px solid #5b3928;
+    position: absolute;
+    top: 0.3rem;
+    left: 0.3rem;
+    width: 12px;
+    height: 8px;
+    border: 1px solid #5b3928;
     background: #ffd27a;
     box-shadow: inset 0 -3px 0 rgba(125, 70, 38, 0.2);
     image-rendering: pixelated;
@@ -4691,21 +4711,24 @@ tr:last-child td { border-bottom: none; }
 .campus-project-folder-icon::before {
     content: "";
     position: absolute;
-    left: -2px;
-    top: -6px;
-    width: 9px;
-    height: 5px;
-    border: 2px solid #5b3928;
+    left: -1px;
+    top: -4px;
+    width: 7px;
+    height: 3px;
+    border: 1px solid #5b3928;
     border-bottom: 0;
     background: #ffd27a;
 }
 
 .campus-project-folder strong {
     min-width: 0;
+    max-width: 100%;
+    max-height: 2.16em;
     font-size: 0.4rem;
     line-height: 1.08;
-    overflow: visible;
+    overflow: hidden;
     overflow-wrap: anywhere;
+    word-break: break-word;
     text-overflow: clip;
     white-space: normal;
 }
@@ -4820,7 +4843,7 @@ tr:last-child td { border-bottom: none; }
     position: absolute;
     z-index: 5;
     left: calc(50% - 16px);
-    bottom: 20%;
+    bottom: calc(var(--campus-project-rail-height) + var(--campus-project-rail-gap));
     width: 32px;
     height: 32px;
     pointer-events: none;
@@ -4916,7 +4939,7 @@ tr:last-child td { border-bottom: none; }
 .campus-static-manager {
     position: absolute;
     left: 31%;
-    bottom: 30%;
+    bottom: calc(var(--campus-project-rail-height) + var(--campus-project-rail-gap));
     width: 32px;
     height: 32px;
 }
@@ -5080,46 +5103,46 @@ tr:last-child td { border-bottom: none; }
 @media (max-width: 900px) {
     .campus-map {
         min-height: 0;
-        aspect-ratio: 3 / 2;
-        padding: 5.2% 3.2% 7.4%;
-        gap: 0.25rem;
-        background: #09090b url("/dashboard-assets/pixel-verse-campus-bg.webp") center / 100% 100% no-repeat;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-        grid-template-rows: minmax(0, 1fr) minmax(36px, 0.44fr) minmax(0, 1.05fr);
+        aspect-ratio: auto;
+        padding: 0.75rem;
+        gap: 0.75rem;
+        background: #09090b url("/dashboard-assets/pixel-verse-campus-bg.webp") center / cover no-repeat;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(4, minmax(190px, auto));
         grid-template-areas:
-            ". sales sales sales development development development design design design design ."
-            "boulevard boulevard boulevard boulevard boulevard boulevard boulevard boulevard boulevard boulevard boulevard boulevard"
-            "hq hq hq infrastructure infrastructure infrastructure internal internal internal finance finance finance";
+            "hq sales"
+            "development design"
+            "infrastructure internal"
+            "finance finance";
     }
-    .campus-zone { padding: 0.18rem; }
+    .campus-zone {
+        min-height: 190px;
+        padding: 0.55rem;
+        border: 2px solid rgba(91, 57, 40, 0.78);
+        background: linear-gradient(180deg, rgba(52, 36, 27, 0.72), rgba(27, 21, 19, 0.62));
+        box-shadow: inset 0 0 0 1px rgba(223, 173, 102, 0.12);
+    }
     .campus-zone h3 {
-        padding: 0.12rem 0.18rem;
-        font-size: clamp(0.34rem, 1.7vw, 0.55rem);
+        padding: 0.24rem 0.32rem;
+        font-size: clamp(0.48rem, 1.7vw, 0.62rem);
         box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
     }
     .campus-zone-hq > header > h3 {
-        font-size: clamp(0.32rem, 1.35vw, 0.42rem);
+        font-size: clamp(0.44rem, 1.35vw, 0.58rem);
         white-space: nowrap;
     }
     .campus-owner-boundary { display: none; }
     .campus-project-shelf {
-        left: 0.1rem;
-        right: 0.1rem;
-        bottom: 0.1rem;
-        width: auto;
-        display: flex;
-        gap: 0.1rem;
-        overflow-x: auto;
-        overscroll-behavior-inline: contain;
-        scrollbar-width: none;
+        right: 0.35rem;
+        bottom: 0.3rem;
+        gap: 0.2rem;
     }
     .campus-project-folder {
         min-width: 44px;
         min-height: 44px;
-        flex: 0 0 44px;
-        padding: 0.12rem;
-        grid-template-columns: 10px minmax(0, 1fr);
-        gap: 0.04rem 0.1rem;
+        padding: 0.94rem 0.14rem 0.14rem;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.06rem;
         border-width: 1px;
         box-shadow: 0 1px 0 rgba(43, 28, 22, 0.58);
     }
@@ -5136,16 +5159,20 @@ tr:last-child td { border-bottom: none; }
         border-width: 1px;
     }
     .campus-project-folder strong {
-        font-size: clamp(0.26rem, 1vw, 0.36rem);
+        font-size: clamp(0.34rem, 1vw, 0.4rem);
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        text-overflow: clip;
+        white-space: normal;
     }
     .campus-project-folder [data-campus-project-folder-status] { display: none; }
-    .campus-zone-agents { padding: 1.1rem 0.1rem 0.1rem; }
+    .campus-zone-agents { padding: 2rem 0.1rem var(--campus-project-rail-height); }
     .campus-agent { transform: scale(0.62); }
     .campus-waypoint { transform: translateY(-50%) scale(0.62); }
-    .campus-resident { bottom: 10%; }
+    .campus-resident {
+        bottom: calc(var(--campus-project-rail-height) + var(--campus-project-rail-gap));
+    }
     .campus-resident-caption {
         bottom: 30px;
         max-width: 78px;
@@ -5164,7 +5191,7 @@ tr:last-child td { border-bottom: none; }
     .campus-static-manager {
         left: calc(50% - 16px);
         top: auto;
-        bottom: 8%;
+        bottom: calc(var(--campus-project-rail-height) + var(--campus-project-rail-gap));
     }
     .campus-bottom-grid { grid-template-columns: minmax(0, 1fr); }
     .campus-task-panel { grid-column: 1; }
@@ -5172,6 +5199,20 @@ tr:last-child td { border-bottom: none; }
 
 @media (max-width: 560px) {
     .campus-head { flex-wrap: wrap; }
+    .campus-map {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(7, minmax(190px, auto));
+        grid-template-areas:
+            "hq"
+            "sales"
+            "development"
+            "design"
+            "infrastructure"
+            "internal"
+            "finance";
+        gap: 0.55rem;
+        padding: 0.5rem;
+    }
     .campus-task-lanes { grid-template-columns: minmax(0, 1fr); }
     .campus-details dl > div { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
     .campus-project-detail { max-width: 100%; }
