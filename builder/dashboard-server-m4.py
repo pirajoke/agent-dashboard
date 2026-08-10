@@ -20,7 +20,10 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 from dashboard_builder.manager_events import project_manager_event
-from dashboard_builder.department_campus import department_campus_projection
+from dashboard_builder.department_campus import (
+    build_department_campus_html,
+    department_campus_projection,
+)
 
 PORT = 7777
 HOME = Path.home()
@@ -74,6 +77,7 @@ PUBLIC_BRIDGE_PATHS = {
 PUBLIC_FILE_PATHS = {
     "/",
     "/index.html",
+    "/department-campus.html",
     "/agent-dashboard.html",
     "/legacy-dashboard.html",
     "/dashboard-assets/ai-town-32x32folk.png",
@@ -1046,6 +1050,53 @@ def _department_campus_payload(data: object, *, now: datetime | None = None) -> 
     return department_campus_projection(events, now=current, max_tasks=3)
 
 
+def _runtime_asset_block(filename: str, start_marker: str, end_marker: str) -> str:
+    asset_path = Path(__file__).resolve().parent / "dashboard-assets" / filename
+    source = asset_path.read_text(encoding="utf-8")
+    start = source.index(start_marker)
+    end = source.index(end_marker, start + len(start_marker))
+    return source[start:end].strip()
+
+
+def _department_campus_document() -> str:
+    campus_css = _runtime_asset_block(
+        "style.css",
+        "/* ── Pixel Verse Department Boulevard ── */",
+        "/* ── Agent Theater v2: AI Town-inspired town map ── */",
+    )
+    campus_script = _runtime_asset_block(
+        "script.js",
+        "// ── Department Campus ──",
+        "// ── End Department Campus ──",
+    )
+    return f"""<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Verse · Department Campus</title>
+<style>
+:root {{ color-scheme: dark; }}
+* {{ box-sizing: border-box; }}
+html, body {{ margin: 0; min-height: 100%; background: #09090b; color: #f2f0ea; }}
+body {{ font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+button {{ font: inherit; }}
+.section {{ margin: 0; }}
+.section-head {{ display: flex; align-items: center; gap: 0.6rem; padding: 0.8rem; }}
+.section-dot {{ width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }}
+.section-title {{ color: #f2f0ea; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }}
+.section-count {{ color: #d3d0ca; font: 0.58rem ui-monospace, SFMono-Regular, Menlo, monospace; }}
+{campus_css}
+</style>
+</head>
+<body>
+{build_department_campus_html()}
+<script>{campus_script}</script>
+</body>
+</html>
+"""
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def _host_name(self) -> str:
         return self.headers.get("Host", "").split(":", 1)[0].lower()
@@ -1713,6 +1764,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         parsed = urlsplit(self.path)
         if parsed.path in {"/agent-dashboard.html", "/legacy-dashboard.html"}:
             self._redirect_legacy_dashboard()
+            return
+        if parsed.path == "/department-campus.html":
+            body = _department_campus_document().encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", len(body))
+            self.end_headers()
+            self.wfile.write(body)
             return
         if parsed.path == '/api/jarvis/pipeline/status':
             self._handle_jarvis_pipeline_status(parsed)
