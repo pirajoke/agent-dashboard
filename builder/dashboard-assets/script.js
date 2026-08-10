@@ -1741,6 +1741,13 @@ setInterval(refreshLocalServices, 15000);
     const opsBlockerEl = document.getElementById('theater-ops-blocker');
     const opsAuthEl = document.getElementById('theater-ops-auth');
     const opsNextEl = document.getElementById('theater-ops-next');
+    const mainManagerEl = document.getElementById('theater-main-manager');
+    const managerStationEl = document.getElementById('theater-project-station');
+    const managerDetailEl = document.getElementById('theater-manager-detail');
+    const managerProjectEl = document.getElementById('theater-manager-project');
+    const managerTimeEl = document.getElementById('theater-manager-time');
+    const managerStatusEl = document.getElementById('theater-manager-status');
+    const managerNextEl = document.getElementById('theater-manager-next');
     if (!stage || !runnersEl || !currentEl || !storyEl) return;
 
     const LIVE_WINDOW_MS = 6 * 60 * 60 * 1000;
@@ -1784,6 +1791,15 @@ setInterval(refreshLocalServices, 15000);
     let theaterTasks = [];
     let theaterSelectedId = null;
     let theaterAnimationStarted = false;
+    let currentManagerEvent = null;
+
+    const MANAGER_STATUS_CLASSES = {
+        'в очереди': 'is-queued',
+        'работает': 'is-working',
+        'готово': 'is-ready',
+        'нужно решение Марка': 'is-decision',
+        'ошибка': 'is-error',
+    };
 
     const escTheater = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -2215,26 +2231,93 @@ setInterval(refreshLocalServices, 15000);
         renderTheaterStory(selected);
     }
 
+    function renderMainManager(candidate) {
+        if (!mainManagerEl || !managerStationEl || !managerDetailEl) return;
+        const valid = candidate
+            && typeof candidate === 'object'
+            && typeof candidate.project === 'string'
+            && typeof candidate.time === 'string'
+            && typeof candidate.status === 'string'
+            && typeof candidate.next_safe_step === 'string'
+            && Object.hasOwn(MANAGER_STATUS_CLASSES, candidate.status);
+        currentManagerEvent = valid ? candidate : null;
+        mainManagerEl.classList.remove(
+            'is-idle',
+            'is-queued',
+            'is-working',
+            'is-ready',
+            'is-decision',
+            'is-error',
+        );
+
+        if (!currentManagerEvent) {
+            mainManagerEl.classList.add('is-idle');
+            mainManagerEl.style.setProperty('--manager-x', '10');
+            mainManagerEl.style.setProperty('--manager-y', '17');
+            mainManagerEl.querySelector('.theater-main-manager-state').textContent = 'нет текущего события';
+            mainManagerEl.setAttribute('aria-label', 'MAIN MANAGER: нет текущего события');
+            mainManagerEl.setAttribute('aria-expanded', 'false');
+            mainManagerEl.disabled = true;
+            managerStationEl.hidden = true;
+            managerDetailEl.hidden = true;
+            if (managerProjectEl) managerProjectEl.textContent = '—';
+            if (managerTimeEl) managerTimeEl.textContent = '—';
+            if (managerStatusEl) managerStatusEl.textContent = '—';
+            if (managerNextEl) managerNextEl.textContent = '—';
+            return;
+        }
+
+        mainManagerEl.classList.add(MANAGER_STATUS_CLASSES[currentManagerEvent.status]);
+        mainManagerEl.style.setProperty('--manager-x', '87');
+        mainManagerEl.style.setProperty('--manager-y', '17');
+        mainManagerEl.querySelector('.theater-main-manager-state').textContent = currentManagerEvent.status;
+        mainManagerEl.setAttribute(
+            'aria-label',
+            `MAIN MANAGER, ${currentManagerEvent.project}: ${currentManagerEvent.status}`,
+        );
+        mainManagerEl.disabled = false;
+        managerStationEl.style.setProperty('--x', '87');
+        managerStationEl.style.setProperty('--y', '17');
+        managerStationEl.textContent = currentManagerEvent.project;
+        managerStationEl.hidden = false;
+        if (managerProjectEl) managerProjectEl.textContent = currentManagerEvent.project;
+        if (managerTimeEl) managerTimeEl.textContent = theaterTime(currentManagerEvent.time);
+        if (managerStatusEl) managerStatusEl.textContent = currentManagerEvent.status;
+        if (managerNextEl) managerNextEl.textContent = currentManagerEvent.next_safe_step;
+    }
+
     async function refreshTheater() {
         if (statusEl) statusEl.textContent = 'loading';
         try {
-            const [res, healthRes] = await Promise.all([
+            const [res, healthRes, managerRes] = await Promise.all([
                 fetch('/api/bridge/tasks?limit=24&include_messages=1', {cache: 'no-store'}),
                 fetch('/api/health', {cache: 'no-store'}).catch(() => null),
+                fetch('/api/bridge/main-manager', {cache: 'no-store'}).catch(() => null),
             ]);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const tasks = data.tasks || [];
             let health = null;
+            let managerEvent = null;
             if (healthRes && healthRes.ok) {
                 try { health = await healthRes.json(); } catch (_) { health = null; }
             }
+            if (managerRes && managerRes.ok) {
+                try {
+                    const managerData = await managerRes.json();
+                    managerEvent = managerData?.event || null;
+                } catch (_) {
+                    managerEvent = null;
+                }
+            }
             renderTheater(tasks);
+            renderMainManager(managerEvent);
             renderOperatorStatus(tasks, tasks.filter(theaterIsLiveTask), health);
         } catch (err) {
             if (statusEl) statusEl.textContent = 'offline';
             currentEl.innerHTML = `<div class="theater-empty">Bridge unavailable: ${escTheater(err.message)}</div>`;
             storyEl.innerHTML = '<div class="theater-empty">No live events.</div>';
+            renderMainManager(null);
             renderOperatorStatus([], [], null);
         }
     }
@@ -2247,6 +2330,14 @@ setInterval(refreshLocalServices, 15000);
         renderTheaterCurrent(selected);
         renderTheaterStory(selected);
     });
+    if (mainManagerEl) {
+        mainManagerEl.addEventListener('click', () => {
+            if (!currentManagerEvent || !managerDetailEl) return;
+            const willOpen = managerDetailEl.hidden;
+            managerDetailEl.hidden = !willOpen;
+            mainManagerEl.setAttribute('aria-expanded', String(willOpen));
+        });
+    }
     if (refreshBtn) refreshBtn.addEventListener('click', refreshTheater);
     refreshTheater();
     setInterval(refreshTheater, 5000);

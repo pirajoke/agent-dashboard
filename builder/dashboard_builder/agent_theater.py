@@ -85,6 +85,21 @@ def build_agent_theater_html() -> str:
             <div class="theater-station theater-station-prod" style="--x:86;--y:69">Mac Mini</div>
             <div class="theater-station theater-station-memory" style="--x:52;--y:72">Obsidian</div>
             <div class="theater-station theater-station-git" style="--x:24;--y:76">GitHub</div>
+            <div class="theater-manager-home" id="theater-main-manager-home" aria-hidden="true">Manager desk</div>
+            <div class="theater-station theater-project-station" id="theater-project-station" hidden>Project</div>
+            <button
+                class="theater-main-manager is-idle"
+                id="theater-main-manager"
+                type="button"
+                aria-label="MAIN MANAGER: нет текущего события"
+                aria-controls="theater-manager-detail"
+                aria-expanded="false"
+                disabled
+            >
+                <span class="theater-main-manager-sprite" aria-hidden="true"></span>
+                <span class="theater-main-manager-name">MAIN MANAGER</span>
+                <span class="theater-main-manager-state">нет текущего события</span>
+            </button>
             {people}
             <div class="theater-runners" id="theater-runners"></div>
         </div>
@@ -96,6 +111,21 @@ def build_agent_theater_html() -> str:
                 </div>
                 <button class="theater-refresh" id="theater-refresh" type="button" title="Refresh">↻</button>
             </div>
+            <section
+                class="theater-manager-detail"
+                id="theater-manager-detail"
+                aria-label="MAIN MANAGER event details"
+                aria-live="polite"
+                hidden
+            >
+                <span class="theater-kicker">MAIN MANAGER ↔ project agent</span>
+                <dl>
+                    <div><dt>Project</dt><dd id="theater-manager-project">—</dd></div>
+                    <div><dt>Time</dt><dd id="theater-manager-time">—</dd></div>
+                    <div><dt>Status</dt><dd id="theater-manager-status">—</dd></div>
+                    <div><dt>Next safe step</dt><dd id="theater-manager-next">—</dd></div>
+                </dl>
+            </section>
             <div class="theater-current" id="theater-current">
                 <div class="theater-empty">No live task selected.</div>
             </div>

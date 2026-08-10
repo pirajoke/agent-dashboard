@@ -19,6 +19,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
+from dashboard_builder.manager_visualization import (
+    project_main_manager_event as _project_main_manager_event,
+)
+
 PORT = 7777
 HOME = Path.home()
 ORCH_FILE = HOME / ".agent-bridge" / "orchestrator.json"
@@ -63,6 +67,7 @@ PUBLIC_LOCAL_PATHS = {
     "/api/local-services",
 }
 PUBLIC_BRIDGE_PATHS = {
+    "/api/bridge/main-manager",
     "/api/bridge/tasks",
     "/api/bridge/status",
 }
@@ -1650,6 +1655,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 error = "bridge_unavailable" if self._is_public_request() else str(e)
                 self._json_response(502, {"error": error, "tasks": []})
+            return
+        if parsed.path == '/api/bridge/main-manager':
+            try:
+                data = _bridge_request("GET", "/api/tasks?limit=40&include_messages=1")
+                tasks = data.get("tasks", []) if isinstance(data, dict) else []
+                events = [
+                    event
+                    for task in tasks
+                    if isinstance(task, dict)
+                    and (event := _project_main_manager_event(task)) is not None
+                ]
+                newest = max(events, key=lambda event: event["time"], default=None)
+                self._json_response(200, {"event": newest})
+            except Exception:
+                self._json_response(
+                    502,
+                    {"error": "bridge_unavailable", "event": None},
+                )
             return
         if parsed.path == '/api/bridge/status':
             try:

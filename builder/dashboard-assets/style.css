@@ -5694,3 +5694,232 @@ body {
     border-color: rgba(216,72,62,0.44);
     background: rgba(254,202,202,0.44);
 }
+
+/* MAIN MANAGER uses only the privacy-safe bridge projection. */
+.theater-manager-home {
+    position: absolute;
+    left: 10%;
+    top: 9%;
+    z-index: 6;
+    transform: translateX(-50%);
+    padding: 4px 7px 3px;
+    border: 3px solid #2a1826;
+    border-radius: 2px;
+    background: #f4b94f;
+    color: #5f3040;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    box-shadow: 0 4px 0 rgba(42,24,38,0.42);
+}
+
+.theater-project-station {
+    min-width: 126px;
+    max-width: 170px;
+    height: auto;
+    min-height: 34px;
+    padding: 5px 8px;
+    z-index: 8;
+    transform: translate(-50%, -180%);
+    overflow-wrap: anywhere;
+    text-align: center;
+    text-transform: none;
+    background: #fff0b9;
+    border-color: #63384b;
+}
+
+.theater-project-station[hidden],
+.theater-manager-detail[hidden] {
+    display: none;
+}
+
+.theater-main-manager {
+    --manager-x: 10;
+    --manager-y: 17;
+    position: absolute;
+    left: calc(var(--manager-x) * 1%);
+    top: calc(var(--manager-y) * 1%);
+    z-index: 12;
+    width: 124px;
+    min-height: 84px;
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 3px 5px 5px;
+    transform: translate(-50%, -50%);
+    border: 0;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    filter: drop-shadow(0 8px 7px rgba(49,39,24,0.32));
+    transition:
+        left 0.9s steps(12, end),
+        top 0.9s steps(12, end),
+        filter 0.18s ease;
+}
+
+.theater-main-manager:not(:disabled):hover,
+.theater-main-manager:focus-visible {
+    filter: drop-shadow(0 8px 7px rgba(49,39,24,0.32)) brightness(1.08);
+}
+
+.theater-main-manager:disabled {
+    cursor: default;
+}
+
+.theater-main-manager:focus-visible {
+    outline: 3px solid #fff8d8;
+    outline-offset: 3px;
+}
+
+.theater-main-manager-sprite {
+    --sprite-x0: -96px;
+    --sprite-x1: -128px;
+    --sprite-x2: -160px;
+    --sprite-y: -64px;
+    width: 32px;
+    height: 32px;
+    margin: 9px 0 8px;
+    background-image: url("dashboard-assets/ai-town-32x32folk.png");
+    background-repeat: no-repeat;
+    background-size: 384px 256px;
+    background-position: var(--sprite-x0) var(--sprite-y);
+    image-rendering: pixelated;
+    transform: scale(1.9);
+    transform-origin: center bottom;
+}
+
+.theater-main-manager-name,
+.theater-main-manager-state {
+    max-width: 122px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 5px;
+    font-family: 'JetBrains Mono', monospace;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+}
+
+.theater-main-manager-name {
+    padding: 3px 6px 2px;
+    background: rgba(58,34,28,0.94);
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 900;
+}
+
+.theater-main-manager-state {
+    padding: 2px 6px;
+    background: rgba(31,24,34,0.76);
+    color: #fff8d8;
+    font-size: 0.49rem;
+}
+
+.theater-main-manager.is-queued .theater-main-manager-sprite {
+    background-position: var(--sprite-x1) var(--sprite-y);
+}
+
+.theater-main-manager.is-queued .theater-main-manager-state {
+    background: rgba(161,105,18,0.9);
+}
+
+.theater-main-manager.is-working .theater-main-manager-sprite {
+    animation: aiTownWalkDown 0.5s steps(1, end) infinite;
+}
+
+.theater-main-manager.is-working .theater-main-manager-state {
+    background: rgba(19,88,127,0.9);
+}
+
+.theater-main-manager.is-ready .theater-main-manager-state {
+    background: rgba(35,103,55,0.9);
+}
+
+.theater-main-manager.is-decision {
+    animation: theaterManagerDecision 1.35s ease-in-out infinite;
+}
+
+.theater-main-manager.is-decision .theater-main-manager-state {
+    background: #f4b94f;
+    color: #4a2632;
+    font-weight: 900;
+}
+
+.theater-main-manager.is-error .theater-main-manager-sprite {
+    background-position: var(--sprite-x2) var(--sprite-y);
+    filter: grayscale(0.35) saturate(0.8);
+}
+
+.theater-main-manager.is-error .theater-main-manager-state {
+    background: rgba(146,48,40,0.92);
+}
+
+.theater-manager-detail {
+    margin-bottom: 0.9rem;
+    padding: 0.85rem;
+    border: 4px solid #2a1826;
+    border-radius: 2px;
+    background: #fff4ca;
+    box-shadow: inset 0 -5px 0 rgba(133,78,52,0.15);
+}
+
+.theater-manager-detail dl {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.65rem 0 0;
+}
+
+.theater-manager-detail dl > div {
+    display: grid;
+    grid-template-columns: minmax(76px, 0.42fr) minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: start;
+}
+
+.theater-manager-detail dt {
+    color: #9b6042;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+}
+
+.theater-manager-detail dd {
+    min-width: 0;
+    margin: 0;
+    color: #2d2028;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+@keyframes theaterManagerDecision {
+    0%, 100% { filter: drop-shadow(0 8px 7px rgba(49,39,24,0.32)); }
+    50% { filter: drop-shadow(0 0 9px rgba(244,185,79,0.95)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theater-main-manager {
+        transition: none !important;
+    }
+    .theater-main-manager.is-working .theater-main-manager-sprite,
+    .theater-main-manager.is-decision {
+        animation: none !important;
+    }
+}
+
+@media (max-width: 780px) {
+    .theater-main-manager {
+        width: 94px;
+    }
+    .theater-project-station:not([hidden]) {
+        display: flex;
+        min-width: 92px;
+        max-width: 112px;
+        font-size: 0.54rem;
+    }
+    .theater-main-manager-name,
+    .theater-main-manager-state {
+        max-width: 92px;
+    }
+}
