@@ -59,6 +59,8 @@
     const routeLayerEl = campus.querySelector('[data-campus-route-layer]');
     const managerMarkerEl = campus.querySelector('[data-campus-static-manager]');
     const boulevardEl = campus.querySelector('.campus-boulevard');
+    const rosterEls = Array.from(campus.querySelectorAll('[data-campus-roster-agent]'));
+    const rosterCount = rosterEls.length;
     const detailFields = {};
     campus.querySelectorAll('[data-campus-detail-field]').forEach((el) => {
         detailFields[el.dataset.campusDetailField] = el;
@@ -91,9 +93,9 @@
     const movingStatuses = ['active', 'testing'];
     const stateMessages = {
         loading: 'Загрузка кампуса…',
-        empty: 'Нет активных задач',
-        stale: 'Нет свежих данных',
-        unavailable: 'Данные временно недоступны',
+        empty: 'Команда на местах · ждёт задачи',
+        stale: 'Команда на местах · свежих событий пока нет',
+        unavailable: 'Команда на местах · live-данные временно недоступны',
         active: 'Показаны свежие подтверждённые события',
     };
     let lastTrigger = null;
@@ -126,8 +128,12 @@
     }
 
     function clearCampusAgents() {
-        campus.querySelectorAll('[data-campus-zone-agents], [data-campus-waypoint-agents]').forEach((destination) => {
+        campus.querySelectorAll('[data-campus-live-agent]').forEach((agent) => agent.remove());
+        campus.querySelectorAll('[data-campus-waypoint-agents]').forEach((destination) => {
             destination.replaceChildren();
+        });
+        campus.querySelectorAll('[data-campus-roster-agent]').forEach((resident) => {
+            resident.hidden = false;
         });
         if (taskLanesEl) taskLanesEl.replaceChildren();
         if (taskPanelEl) taskPanelEl.hidden = true;
@@ -139,8 +145,11 @@
     function setCampusState(state, visibleTasks, agentCount, omittedTasks) {
         if (stateEl) stateEl.textContent = stateMessages[state] || stateMessages.unavailable;
         if (countEl) {
-            const omitted = omittedTasks > 0 ? ` · +${omittedTasks} hidden` : '';
-            countEl.textContent = `${visibleTasks} tasks · ${agentCount} agents${omitted}`;
+            const omitted = omittedTasks > 0 ? ` · скрыто задач: ${omittedTasks}` : '';
+            const live = agentCount > 0
+                ? `активных агентов: ${agentCount} · задач: ${visibleTasks}`
+                : 'все ожидают задач';
+            countEl.textContent = `${rosterCount} в команде · ${live}${omitted}`;
         }
         campus.dataset.campusState = state;
         notifyCampusContentHeight();
@@ -170,10 +179,25 @@
         return JSON.stringify([event.task_id, event.agent_id, event.status]);
     }
 
-    function animateCampusJourney(button, shouldAnimate) {
+    function residentForEvent(event) {
+        const candidates = [event?.agent_id, event?.role]
+            .map((value) => String(value || '').trim().toLowerCase())
+            .filter(Boolean);
+        if (!candidates.length) return null;
+        return rosterEls.find((resident) => {
+            const aliases = String(resident.dataset.campusRosterAliases || '')
+                .split('|')
+                .map((value) => value.trim().toLowerCase())
+                .filter(Boolean);
+            aliases.push(String(resident.dataset.campusRosterAgent || '').toLowerCase());
+            return candidates.some((candidate) => aliases.includes(candidate));
+        }) || null;
+    }
+
+    function animateCampusJourney(button, shouldAnimate, managerOriginRect) {
         if (reducedMotion.matches || !shouldAnimate) return;
         if (!managerMarkerEl || !boulevardEl || typeof button.animate !== 'function') return;
-        const managerRect = managerMarkerEl.getBoundingClientRect();
+        const managerRect = managerOriginRect || managerMarkerEl.getBoundingClientRect();
         const boulevardRect = boulevardEl.getBoundingClientRect();
         const destinationRect = button.getBoundingClientRect();
         const destinationX = destinationRect.left + (destinationRect.width / 2);
@@ -192,12 +216,13 @@
         );
     }
 
-    function createCampusAgent(event, shouldAnimate) {
+    function createCampusAgent(event, shouldAnimate, resident) {
         const destination = destinationByStatus[event.status] || 'department';
         const moving = shouldAnimate && !reducedMotion.matches;
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `campus-agent is-${event.status}`;
+        button.dataset.campusLiveAgent = '';
         button.dataset.campusAgentTrigger = '';
         button.setAttribute('data-campus-destination', destination);
         button.setAttribute('data-campus-moving', String(moving));
@@ -208,6 +233,13 @@
         const sprite = document.createElement('span');
         sprite.className = 'campus-agent-sprite';
         sprite.setAttribute('aria-hidden', 'true');
+        if (resident) {
+            for (const property of (
+                ['--campus-sprite-x', '--campus-sprite-step-x', '--campus-sprite-y']
+            )) {
+                sprite.style.setProperty(property, resident.style.getPropertyValue(property));
+            }
+        }
         const name = document.createElement('strong');
         name.textContent = event.role;
         const status = document.createElement('span');
@@ -302,6 +334,7 @@
             return;
         }
         const newJourneySignatures = new Set();
+        const managerOriginRect = managerMarkerEl?.getBoundingClientRect() || null;
         events.forEach((event) => {
             const signature = journeySignature(event);
             const unseen = !journeySignatures.has(signature);
@@ -316,14 +349,19 @@
             const destination = destinationForEvent(event);
             if (!destination) return;
             const shouldAnimate = newJourneySignatures.has(journeySignature(event));
-            const button = createCampusAgent(event, shouldAnimate);
+            const resident = residentForEvent(event);
+            if (resident) resident.hidden = true;
+            const button = createCampusAgent(event, shouldAnimate, resident);
             destination.append(button);
-            animateCampusJourney(button, shouldAnimate);
+            animateCampusJourney(button, shouldAnimate, managerOriginRect);
         });
+        const activeAgentCount = new Set(
+            events.map((event) => String(event.agent_id || '')).filter(Boolean),
+        ).size;
         setCampusState(
             'active',
             Number(payload.visible_task_count) || 0,
-            events.length,
+            activeAgentCount,
             Number(payload.omitted_task_count) || 0,
         );
     }

@@ -6,6 +6,8 @@ import re
 from typing import Any
 import unicodedata
 
+from .config import AGENTS
+
 
 DEPARTMENT_ZONES = {
     "hq": {
@@ -51,6 +53,81 @@ DEPARTMENT_ZONES = {
         "owner_permission_boundary": True,
     },
 }
+
+_CAMPUS_RESIDENT_PROFILES = {
+    "COORDINATOR": {
+        "name": "Главный координатор",
+        "department_id": "hq",
+        "aliases": ("coordinator", "main manager", "supervisor", "главный координатор"),
+        "sprite_x": "-192px",
+        "sprite_step_x": "-224px",
+        "sprite_y": "-192px",
+        "wandering": False,
+        "walk_duration": "0s",
+        "walk_delay": "0s",
+    },
+    "RESEARCHER": {
+        "name": "Исследователь",
+        "department_id": "sales",
+        "aliases": ("researcher", "editor", "sales researcher", "market analyst", "sales operator"),
+        "sprite_x": "-96px",
+        "sprite_step_x": "-128px",
+        "sprite_y": "-192px",
+        "wandering": True,
+        "walk_duration": "11s",
+        "walk_delay": "-4s",
+    },
+    "BUILDER": {
+        "name": "Разработчик",
+        "department_id": "development",
+        "aliases": (
+            "builder",
+            "developer",
+            "tester",
+            "devops",
+            "infrastructure engineer",
+            "reliability analyst",
+            "operator",
+        ),
+        "sprite_x": "-288px",
+        "sprite_step_x": "-320px",
+        "sprite_y": "-192px",
+        "wandering": True,
+        "walk_duration": "13s",
+        "walk_delay": "-7s",
+    },
+    "VAULT": {
+        "name": "Хранитель знаний",
+        "department_id": "internal",
+        "aliases": ("vault", "vault keeper", "internal analyst", "knowledge curator", "auditor"),
+        "sprite_x": "0px",
+        "sprite_step_x": "-32px",
+        "sprite_y": "-64px",
+        "wandering": True,
+        "walk_duration": "12s",
+        "walk_delay": "-2s",
+    },
+    "ANALYST": {
+        "name": "Аналитик",
+        "department_id": "finance",
+        "aliases": ("analyst", "finance analyst", "revenue analyst", "bookkeeper"),
+        "sprite_x": "-96px",
+        "sprite_step_x": "-128px",
+        "sprite_y": "-64px",
+        "wandering": True,
+        "walk_duration": "10s",
+        "walk_delay": "-6s",
+    },
+}
+
+CAMPUS_RESIDENTS = tuple(
+    {
+        "agent_id": agent["id"],
+        **_CAMPUS_RESIDENT_PROFILES[agent["id"]],
+    }
+    for agent in AGENTS
+    if agent["id"] in _CAMPUS_RESIDENT_PROFILES
+)
 
 STATUS_LABELS = {
     "queued": "в очереди",
@@ -353,38 +430,56 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
         if zone["owner_permission_boundary"]
         else ""
     )
-    coordinator = (
-        """
-            <div class="campus-static-manager" data-campus-static-manager="true"
-                aria-label="Главный координатор, ожидает задач">
-                <span class="campus-manager-sprite" aria-hidden="true"></span>
-                <strong class="campus-manager-text">Главный координатор</strong>
-                <span class="campus-manager-text">ожидает задач</span>
+    residents = []
+    for resident in CAMPUS_RESIDENTS:
+        if resident["department_id"] != department_id:
+            continue
+        is_coordinator = resident["agent_id"] == "COORDINATOR"
+        classes = "campus-resident"
+        if resident["wandering"]:
+            classes += " is-wandering"
+        if is_coordinator:
+            classes += " campus-static-manager"
+        manager_contract = ' data-campus-static-manager="true"' if is_coordinator else ""
+        sprite_class = "campus-resident-sprite"
+        if is_coordinator:
+            sprite_class += " campus-manager-sprite"
+        aliases = "|".join(resident["aliases"])
+        resident_dom_id = f"campus-resident-{resident['agent_id'].lower()}"
+        style = (
+            f"--campus-sprite-x:{resident['sprite_x']};"
+            f"--campus-sprite-step-x:{resident['sprite_step_x']};"
+            f"--campus-sprite-y:{resident['sprite_y']};"
+            f"--campus-walk-duration:{resident['walk_duration']};"
+            f"--campus-walk-delay:{resident['walk_delay']}"
+        )
+        residents.append(
+            f"""
+            <div class="{classes}" data-campus-roster-agent="{resident['agent_id']}"
+                data-campus-resident-department="{department_id}"
+                data-campus-roster-aliases="{aliases}"{manager_contract}
+                style="{style}"
+                aria-labelledby="{resident_dom_id}-name {resident_dom_id}-status">
+                <span class="{sprite_class}" aria-hidden="true"></span>
+                <span class="campus-resident-caption">
+                    <strong id="{resident_dom_id}-name">{resident['name']}</strong>
+                    <span id="{resident_dom_id}-status"><i></i>ожидает задач</span>
+                </span>
             </div>"""
-        if department_id == "hq"
-        else ""
-    )
-    coordinator_presence = (
-        """
-            <span class="campus-zone-presence" aria-hidden="true">
-                <strong>Главный координатор</strong>
-                <span><i></i>ожидает задач</span>
-            </span>"""
-        if department_id == "hq"
-        else ""
-    )
+        )
+    residents_html = "".join(residents)
     return f"""
         <section class="campus-zone campus-zone-{department_id}" id="{zone['zone_id']}"
             data-department-id="{department_id}" aria-labelledby="{zone['zone_id']}-label">
-            <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{coordinator_presence}{boundary}</header>
-            {coordinator}
+            <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{boundary}</header>
+            {residents_html}
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
             <div class="campus-zone-agents" data-campus-zone-agents></div>
         </section>"""
 
 
 def build_department_campus_html() -> str:
-    """Build the static seven-zone campus shell; specialists arrive by safe GET."""
+    """Build the known roster plus privacy-safe live-event destinations."""
     zones = "".join(_zone_html(department_id, zone) for department_id, zone in DEPARTMENT_ZONES.items())
     details = (
         ("task_id", "Task"),
@@ -407,7 +502,7 @@ def build_department_campus_html() -> str:
         <div class="section-dot" style="background:#e6a23c"></div>
         <div><div class="section-title" id="department-campus-title">Pixel Verse · Кампус отделов</div>
         <div class="campus-subtitle">Проверенные события Главного координатора · только просмотр</div></div>
-        <div class="section-count" data-campus-count>0 tasks · 0 agents</div>
+        <div class="section-count" data-campus-count>{len(CAMPUS_RESIDENTS)} в команде · все ожидают задач</div>
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
     </div>
     <div class="campus-state" data-campus-state aria-live="polite">Загрузка кампуса…</div>

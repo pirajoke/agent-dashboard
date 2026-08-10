@@ -415,6 +415,76 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             r"@media\s*\(max-width:\s*760px\)[\s\S]*?\.pixel-agents-viewport\.has-content-height",
         )
 
+    def test_ac_9_configured_roster_is_visible_without_claiming_live_work(self):
+        expected = {
+            "COORDINATOR": "hq",
+            "RESEARCHER": "sales",
+            "BUILDER": "development",
+            "VAULT": "internal",
+            "ANALYST": "finance",
+        }
+        residents = re.findall(
+            r'data-campus-roster-agent="([A-Z]+)"[^>]*data-campus-resident-department="([a-z]+)"',
+            self.campus_html,
+        )
+
+        self.assertEqual(dict(residents), expected)
+        self.assertEqual(self.campus_html.count("ожидает задач"), len(expected))
+        self.assertNotIn("data-campus-live-agent", self.campus_html)
+        self.assertIn("const rosterCount", self.script)
+        self.assertIn("const activeAgentCount = new Set", self.script)
+        self.assertIn("в команде", self.script)
+
+    def test_ac_10_idle_residents_walk_inside_rooms_and_reduced_motion_stops_them(self):
+        self.assertIn("@keyframes campusResidentWander", self.css)
+        self.assertRegex(
+            self.css,
+            r"\.campus-resident\.is-wandering[^{]*\{[^}]*animation:",
+        )
+        self.assertRegex(
+            self.css,
+            r"\.campus-resident-sprite[^{]*\{[^}]*width:\s*32px[^}]*height:\s*32px",
+        )
+
+        self.assertRegex(
+            self.css,
+            r"@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{"
+            r"[\s\S]*?\.campus-resident[\s\S]*?animation:\s*none\s*!important",
+        )
+
+    def test_ac_11_live_event_replaces_matching_resident_without_duplication(self):
+        for contract in (
+            "function residentForEvent(event)",
+            "button.dataset.campusLiveAgent = ''",
+            "resident.hidden = true",
+            "[data-campus-live-agent]",
+            "[data-campus-roster-agent]",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, self.script)
+
+        self.assertNotIn(
+            "[data-campus-zone-agents], [data-campus-waypoint-agents]",
+            self.script,
+            "clearing live routes must not erase the persistent team roster",
+        )
+
+    def test_ac_12_coordinator_plaque_moves_with_the_room_local_character(self):
+        hq = re.search(
+            r'<section class="campus-zone campus-zone-hq"[\s\S]*?</section>',
+            self.campus_html,
+        )
+        self.assertIsNotNone(hq)
+        self.assertNotIn("campus-zone-presence", hq.group(0))
+        self.assertRegex(
+            hq.group(0),
+            r'data-campus-static-manager="true"[\s\S]*campus-resident-caption',
+        )
+        self.assertLess(
+            hq.group(0).index("campus-manager-sprite"),
+            hq.group(0).index("Главный координатор"),
+        )
+
     def test_ec_1_seven_zone_public_shell_stays_read_only_and_unsynthesized(self):
         structure = self._campus_structure()
 
