@@ -583,10 +583,13 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
             </div>"""
         )
     residents_html = "".join(residents)
+    department_projects = tuple(
+        project
+        for project in CAMPUS_PROJECTS
+        if project["department_id"] == department_id
+    )
     project_folders = []
-    for project in CAMPUS_PROJECTS:
-        if project["department_id"] != department_id:
-            continue
+    for project in department_projects:
         project_name = project["project"]
         agent_name = _CAMPUS_RESIDENT_PROFILES[project["agent_id"]]["name"]
         visible_name = (
@@ -612,7 +615,11 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
             </button>"""
         )
     project_folders_html = (
-        '<div class="campus-project-shelf" aria-label="Проекты отдела">'
+        '<div class="campus-project-shelf campus-project-rail" '
+        'data-campus-project-rail '
+        f'data-campus-project-count="{len(department_projects)}" '
+        f'style="--campus-project-count:{len(department_projects)};" '
+        'aria-label="Проекты отдела">'
         + "".join(project_folders)
         + "</div>"
     )
