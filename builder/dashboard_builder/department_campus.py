@@ -407,12 +407,20 @@ def build_department_campus_html() -> str:
             <strong>MAIN MANAGER</strong><span>HQ · idle</span>
         </div>
     </div>
-    <div class="campus-task-lanes" data-campus-task-lanes aria-label="До трёх активных маршрутов задач"></div>
-    <aside class="campus-details" id="campus-agent-details" hidden aria-labelledby="campus-detail-title">
-        <header><div><span>Selected specialist</span><h3 id="campus-detail-title">Read-only details</h3></div>
-        <button type="button" data-campus-detail-close aria-label="Закрыть сведения">×</button></header>
-        <dl>{detail_rows}</dl>
-    </aside>
+    <div class="campus-bottom-grid">
+        <section class="campus-task-panel" aria-labelledby="campus-task-title">
+            <header class="campus-task-head">
+                <strong id="campus-task-title">Task lanes</strong>
+                <span>up to 3 verified live routes</span>
+            </header>
+            <div class="campus-task-lanes" data-campus-task-lanes aria-label="До трёх активных маршрутов задач"></div>
+        </section>
+        <aside class="campus-details" id="campus-agent-details" hidden aria-labelledby="campus-detail-title">
+            <header><div><span>Selected specialist</span><h3 id="campus-detail-title">Read-only details</h3></div>
+            <button type="button" data-campus-detail-close aria-label="Закрыть сведения">×</button></header>
+            <dl>{detail_rows}</dl>
+        </aside>
+    </div>
     <span class="campus-status-vocabulary" hidden>
         в очереди · работает · проверяет · ждёт решения · готово · ошибка
         Нет активных задач · Нет свежих данных · Данные временно недоступны

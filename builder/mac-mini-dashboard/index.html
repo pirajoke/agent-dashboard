@@ -1976,11 +1976,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 /* Agent Mini App v2: game-first, compact pipeline console */
 .pixel-agents-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 430px);
-  grid-template-rows: auto minmax(620px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(760px, 1fr) auto;
   grid-template-areas:
-    "bar bar"
-    "stage console";
+    "bar"
+    "stage"
+    "console";
   gap: 12px;
   padding: 12px;
   min-height: 760px;
@@ -1999,8 +2000,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .pixel-agents-viewport {
   grid-area: stage;
-  height: min(74vh, 780px);
-  min-height: 620px;
+  height: min(88vh, 960px);
+  min-height: 760px;
   border-radius: 14px;
   overflow: hidden;
 }
@@ -2012,7 +2013,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   right: auto;
   bottom: auto;
   width: auto;
-  max-height: min(74vh, 780px);
+  max-height: 340px;
   min-height: 0;
   overflow: auto;
   align-self: start;
@@ -2184,8 +2185,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     grid-template-rows: auto auto minmax(520px, 1fr);
     grid-template-areas:
       "bar"
-      "console"
-      "stage";
+      "stage"
+      "console";
     min-height: 0;
   }
   .jarvis-hud-card {
@@ -2621,37 +2622,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           <a href="/department-campus.html" target="_blank" rel="noreferrer">Full screen</a>
         </div>
       </div>
-    <div class="jarvis-run-card jarvis-hud-card" id="jarvis-hud-card">
-      <div class="jarvis-run-header">
-        <div>
-          <div class="jarvis-run-title">Agent Pipeline</div>
-          <div class="jarvis-run-subtitle">Агенты выполняют задачи из JARVIS. Здесь видны их роли и завершённая работа.</div>
-        </div>
-      </div>
-      <div class="jarvis-run-flow" id="jarvis-run-flow">
-        <div class="jarvis-flow-step" data-role="supervisor">
-          <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Supervisor</div>
-          <div class="jarvis-flow-step-detail">формирует план и критерии</div>
-        </div>
-        <div class="jarvis-flow-step" data-role="builder">
-          <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Builder</div>
-          <div class="jarvis-flow-step-detail">выполняет задачу</div>
-        </div>
-        <div class="jarvis-flow-step" data-role="tester">
-          <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Tester</div>
-          <div class="jarvis-flow-step-detail">проверяет результат</div>
-        </div>
-      </div>
-      <details class="jarvis-history-panel" id="jarvis-history-panel" open>
-        <summary>
-          <span>Выполненные задачи</span>
-          <span class="jarvis-history-count" id="jarvis-history-count">0</span>
-        </summary>
-        <div class="jarvis-history-list" id="jarvis-history-list">
-          <div class="jarvis-history-empty">Завершённых задач пока нет.</div>
-        </div>
-      </details>
-      </div>
       <div class="pixel-agents-viewport" id="pixel-agents-viewport" aria-label="Moveable Pixel Agents view">
         <div class="pixel-agents-stage" id="pixel-agents-stage">
           <iframe
@@ -2660,6 +2630,37 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
             title="Pixel Verse Department Campus"
           ></iframe>
         </div>
+      </div>
+      <div class="jarvis-run-card jarvis-hud-card" id="jarvis-hud-card">
+        <div class="jarvis-run-header">
+          <div>
+            <div class="jarvis-run-title">Agent Pipeline</div>
+            <div class="jarvis-run-subtitle">Агенты выполняют задачи из JARVIS. Здесь видны их роли и завершённая работа.</div>
+          </div>
+        </div>
+        <div class="jarvis-run-flow" id="jarvis-run-flow">
+          <div class="jarvis-flow-step" data-role="supervisor">
+            <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Supervisor</div>
+            <div class="jarvis-flow-step-detail">формирует план и критерии</div>
+          </div>
+          <div class="jarvis-flow-step" data-role="builder">
+            <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Builder</div>
+            <div class="jarvis-flow-step-detail">выполняет задачу</div>
+          </div>
+          <div class="jarvis-flow-step" data-role="tester">
+            <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Tester</div>
+            <div class="jarvis-flow-step-detail">проверяет результат</div>
+          </div>
+        </div>
+        <details class="jarvis-history-panel" id="jarvis-history-panel" open>
+          <summary>
+            <span>Выполненные задачи</span>
+            <span class="jarvis-history-count" id="jarvis-history-count">0</span>
+          </summary>
+          <div class="jarvis-history-list" id="jarvis-history-list">
+            <div class="jarvis-history-empty">Завершённых задач пока нет.</div>
+          </div>
+        </details>
       </div>
     </div>
     <div class="ai-island legacy-hidden" aria-hidden="true">
