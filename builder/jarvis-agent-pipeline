@@ -75,7 +75,13 @@ case "$AGENT_BUDGET" in
   cheap|normal|deep) ;;
   *) AGENT_BUDGET="normal" ;;
 esac
-CODEX_BIN="${JARVIS_CODEX_BIN:-/Applications/Codex.app/Contents/Resources/codex}"
+if [[ -n "${JARVIS_CODEX_BIN:-}" ]]; then
+  CODEX_BIN="$JARVIS_CODEX_BIN"
+elif [[ -x "$HOME/.local/bin/codex" ]]; then
+  CODEX_BIN="$HOME/.local/bin/codex"
+else
+  CODEX_BIN="/Applications/Codex.app/Contents/Resources/codex"
+fi
 CODEX_MODEL="${JARVIS_CODEX_MODEL:-}"
 CODEX_REASONING_EFFORT="${JARVIS_CODEX_REASONING_EFFORT:-low}"
 CODEX_APPROVAL_POLICY="${JARVIS_CODEX_APPROVAL_POLICY:-never}"
