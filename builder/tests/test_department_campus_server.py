@@ -157,6 +157,29 @@ class DepartmentCampusServerTests(unittest.TestCase):
                 self.assertEqual(projected["events"], [])
                 self.assertNotIn("FORGED", repr(projected))
 
+    def test_live_bridge_snapshot_uses_terminal_or_claimed_timestamp_when_updated_at_is_absent(self):
+        """Bridge task rows expose lifecycle timestamps, not an updated_at field."""
+        for lifecycle_field in ("completed_at", "claimed_at", "created_at"):
+            with self.subTest(lifecycle_field=lifecycle_field):
+                snapshot = self._snapshot(
+                    [self._event(project="MY DICTIONARY")],
+                    updated_at="2026-08-08T11:59:30Z",
+                )
+                snapshot.pop("updated_at")
+                snapshot[lifecycle_field] = "2026-08-08T11:59:30Z"
+
+                projected = self.server._department_campus_payload(
+                    {"tasks": [snapshot]},
+                    now=NOW,
+                )
+
+                self.assertEqual(projected["state"], "active")
+                self.assertEqual(projected["visible_task_count"], 1)
+                self.assertEqual(
+                    [event["project"] for event in projected["events"]],
+                    ["MY DICTIONARY"],
+                )
+
     def test_err_1_non_object_bridge_or_non_list_pixel_events_is_unavailable_without_partial_data(self):
         malformed_sources = (None, [], "bad", 7, True)
         for bridge_data in malformed_sources:
