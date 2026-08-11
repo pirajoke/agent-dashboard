@@ -92,7 +92,17 @@ PUBLIC_FILE_PATHS = {
 JARVIS_PROJECTS = {
     "jarvis": HOME / "jarvis",
 }
-JARVIS_PING_ROLES = frozenset({"supervisor", "builder", "tester"})
+JARVIS_PING_ROLES = frozenset(
+    {
+        "coordinator",
+        "researcher",
+        "builder",
+        "designer",
+        "infrastructure",
+        "vault",
+        "analyst",
+    }
+)
 JARVIS_PING_TASK = (
     "Read-only ping: do not change files or run tools. "
     "Reply only with PONG and a short confirmation that the selected agent is available."

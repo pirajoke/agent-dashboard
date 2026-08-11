@@ -2360,7 +2360,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .jarvis-pipeline-role-strip {
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 7px;
   margin: 0;
 }
@@ -2378,10 +2378,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
 }
 .jarvis-role-sprite {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   background-image: url('/dashboard-assets/ai-town-32x32folk.png');
-  background-size: 432px 288px;
+  background-size: 384px 256px;
   background-position: var(--sprite-x, 0) var(--sprite-y, 0);
   image-rendering: pixelated;
   filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.38));
@@ -2391,6 +2391,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   color: #fff1d0;
   gap: 6px;
   font: 900 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .jarvis-pipeline-compact .jarvis-flow-dot {
   width: 6px;
@@ -2498,15 +2500,33 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   line-height: 1.25;
 }
 
+@media (max-width: 1100px) {
+  .jarvis-pipeline-role-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 840px) {
+  .jarvis-pipeline-role-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .jarvis-pipeline-compact.jarvis-hud-card {
-    max-height: 340px;
+    max-height: 620px;
   }
   .jarvis-pipeline-role-strip {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .jarvis-pipeline-role {
-    grid-template-columns: 38px minmax(0, 1fr) 52px;
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+  .jarvis-ping-button {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 44px;
+    min-height: 44px;
   }
   .jarvis-pipeline-compact .jarvis-run-subtitle { display: none; }
 }
@@ -2806,36 +2826,72 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <div class="jarvis-run-header">
           <div>
             <div class="jarvis-run-title">Agent Pipeline</div>
-            <div class="jarvis-run-subtitle">Агенты выполняют задачи из JARVIS · ручной пинг ничего не меняет</div>
+            <div class="jarvis-run-subtitle">Агенты выполняют задачи из JARVIS · 7 постоянных ролей · ручной пинг ничего не меняет</div>
           </div>
         </div>
         <div class="jarvis-run-flow jarvis-pipeline-role-strip" id="jarvis-run-flow">
-          <div class="jarvis-flow-step jarvis-pipeline-role" data-role="supervisor">
-            <span class="jarvis-role-sprite" style="--sprite-x: -216px; --sprite-y: 0px;" aria-hidden="true"></span>
+          <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="COORDINATOR" data-role="coordinator" data-jarvis-agent-department="Центр управления">
+            <span class="jarvis-role-sprite" style="--sprite-x: -192px; --sprite-y: -192px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
-              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Supervisor</div>
-              <div class="jarvis-flow-step-detail">формирует план и критерии</div>
-              <span class="jarvis-role-status" id="jarvis-supervisor-status" role="status" aria-live="polite">ожидает пинг</span>
+              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Главный координатор</div>
+              <div class="jarvis-flow-step-detail">Центр управления</div>
+              <span class="jarvis-role-status" id="jarvis-coordinator-status" role="status" aria-live="polite">ожидает задач</span>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="supervisor" aria-describedby="jarvis-supervisor-status" onclick="pingJarvisAgent('supervisor')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="coordinator" aria-describedby="jarvis-coordinator-status" onclick="pingJarvisAgent('coordinator')">Пинг</button>
           </div>
-          <div class="jarvis-flow-step jarvis-pipeline-role" data-role="builder">
-            <span class="jarvis-role-sprite" style="--sprite-x: -108px; --sprite-y: 0px;" aria-hidden="true"></span>
+          <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="RESEARCHER" data-role="researcher" data-jarvis-agent-department="Sales">
+            <span class="jarvis-role-sprite" style="--sprite-x: -96px; --sprite-y: -192px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
-              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Builder</div>
-              <div class="jarvis-flow-step-detail">выполняет задачу</div>
-              <span class="jarvis-role-status" id="jarvis-builder-status" role="status" aria-live="polite">ожидает пинг</span>
+              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Исследователь</div>
+              <div class="jarvis-flow-step-detail">Sales</div>
+              <span class="jarvis-role-status" id="jarvis-researcher-status" role="status" aria-live="polite">ожидает задач</span>
+            </div>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="researcher" aria-describedby="jarvis-researcher-status" onclick="pingJarvisAgent('researcher')">Пинг</button>
+          </div>
+          <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="BUILDER" data-role="builder" data-jarvis-agent-department="Development">
+            <span class="jarvis-role-sprite" style="--sprite-x: -288px; --sprite-y: -192px;" aria-hidden="true"></span>
+            <div class="jarvis-role-copy">
+              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Разработчик</div>
+              <div class="jarvis-flow-step-detail">Development</div>
+              <span class="jarvis-role-status" id="jarvis-builder-status" role="status" aria-live="polite">ожидает задач</span>
             </div>
             <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="builder" aria-describedby="jarvis-builder-status" onclick="pingJarvisAgent('builder')">Пинг</button>
           </div>
-          <div class="jarvis-flow-step jarvis-pipeline-role" data-role="tester">
-            <span class="jarvis-role-sprite" style="--sprite-x: -216px; --sprite-y: -96px;" aria-hidden="true"></span>
+          <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="DESIGNER" data-role="designer" data-jarvis-agent-department="Design">
+            <span class="jarvis-role-sprite" style="--sprite-x: -192px; --sprite-y: -64px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
-              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Tester</div>
-              <div class="jarvis-flow-step-detail">проверяет результат</div>
-              <span class="jarvis-role-status" id="jarvis-tester-status" role="status" aria-live="polite">ожидает пинг</span>
+              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Дизайнер</div>
+              <div class="jarvis-flow-step-detail">Design</div>
+              <span class="jarvis-role-status" id="jarvis-designer-status" role="status" aria-live="polite">ожидает задач</span>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="tester" aria-describedby="jarvis-tester-status" onclick="pingJarvisAgent('tester')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="designer" aria-describedby="jarvis-designer-status" onclick="pingJarvisAgent('designer')">Пинг</button>
+          </div>
+          <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="INFRASTRUCTURE" data-role="infrastructure" data-jarvis-agent-department="Infrastructure">
+            <span class="jarvis-role-sprite" style="--sprite-x: -288px; --sprite-y: -64px;" aria-hidden="true"></span>
+            <div class="jarvis-role-copy">
+              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Инженер инфраструктуры</div>
+              <div class="jarvis-flow-step-detail">Infrastructure</div>
+              <span class="jarvis-role-status" id="jarvis-infrastructure-status" role="status" aria-live="polite">ожидает задач</span>
+            </div>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="infrastructure" aria-describedby="jarvis-infrastructure-status" onclick="pingJarvisAgent('infrastructure')">Пинг</button>
+          </div>
+          <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="VAULT" data-role="vault" data-jarvis-agent-department="Internal">
+            <span class="jarvis-role-sprite" style="--sprite-x: 0px; --sprite-y: -64px;" aria-hidden="true"></span>
+            <div class="jarvis-role-copy">
+              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Хранитель знаний</div>
+              <div class="jarvis-flow-step-detail">Internal</div>
+              <span class="jarvis-role-status" id="jarvis-vault-status" role="status" aria-live="polite">ожидает задач</span>
+            </div>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="vault" aria-describedby="jarvis-vault-status" onclick="pingJarvisAgent('vault')">Пинг</button>
+          </div>
+          <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="ANALYST" data-role="analyst" data-jarvis-agent-department="Finance">
+            <span class="jarvis-role-sprite" style="--sprite-x: -96px; --sprite-y: -64px;" aria-hidden="true"></span>
+            <div class="jarvis-role-copy">
+              <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Аналитик</div>
+              <div class="jarvis-flow-step-detail">Finance</div>
+              <span class="jarvis-role-status" id="jarvis-analyst-status" role="status" aria-live="polite">ожидает&#32;задач</span>
+            </div>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="analyst" aria-describedby="jarvis-analyst-status" onclick="pingJarvisAgent('analyst')">Пинг</button>
           </div>
         </div>
         <details class="jarvis-history-panel" id="jarvis-history-panel">
@@ -3044,6 +3100,9 @@ const JARVIS_PIPELINE_STATUS_API = (!IS_FILE_DASHBOARD)
 const JARVIS_PIPELINE_HISTORY_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/jarvis/pipeline/history`
   : 'http://100.77.209.73:7777/api/jarvis/pipeline/history';
+const JARVIS_DEPARTMENTS_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/manager/departments`
+  : 'https://command.meshly.fr/api/manager/departments';
 const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
 let currentLogService = null;
 const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
@@ -3599,7 +3658,7 @@ function updateJarvisFlow(status = 'waiting', steps = null) {
     byRole[String(step.role || '').toLowerCase()] = step;
   }
   for (const role of roles) {
-    const el = document.querySelector(`.jarvis-flow-step[data-role="${role}"]`);
+    const el = document.querySelector(`.jarvis-flow-step[data-jarvis-stage-role="${role}"]`);
     if (!el) continue;
     const step = byRole[role] || { state: 'pending', detail: '' };
     const state = String(step.state || 'pending').toLowerCase();
@@ -3733,6 +3792,77 @@ function setJarvisPingState(role, state, message) {
   }
 }
 
+function resetJarvisAgentRoster() {
+  const idleCopy = 'ожидает задач';
+  for (const card of document.querySelectorAll('.jarvis-pipeline-role[data-jarvis-agent-id]')) {
+    if (card.getAttribute('aria-busy') === 'true') continue;
+    card.classList.remove('working', 'done', 'failed');
+    card.classList.add('pending');
+    card.setAttribute('aria-busy', 'false');
+    const statusNode = card.querySelector('.jarvis-role-status');
+    if (statusNode) statusNode.textContent = idleCopy;
+  }
+}
+
+function renderJarvisAgentRoster(payload) {
+  resetJarvisAgentRoster();
+  if (!payload || payload.state !== 'active' || !Array.isArray(payload.events)) return;
+
+  const publicStatuses = new Map([
+    ['queued', 'в очереди'],
+    ['active', 'работает'],
+    ['testing', 'проверяет'],
+    ['waiting', 'ждёт решения'],
+    ['done', 'готово'],
+    ['failed', 'ошибка'],
+  ]);
+  const agentCards = new Map(
+    Array.from(
+      document.querySelectorAll('.jarvis-pipeline-role[data-jarvis-agent-id]'),
+      card => [card.getAttribute('data-jarvis-agent-id'), card],
+    ),
+  );
+  const seenAgentIds = new Set();
+  const updates = [];
+
+  for (const event of payload.events) {
+    if (!event || typeof event !== 'object') return;
+    const agentId = typeof event.agent_id === 'string' ? event.agent_id : '';
+    const status = typeof event.status === 'string' ? event.status.toLowerCase() : '';
+    const card = agentCards.get(agentId);
+    if (!card) return;
+    if (seenAgentIds.has(agentId)) return;
+    seenAgentIds.add(agentId);
+    if (!publicStatuses.has(status)) return;
+    updates.push({ card, status, copy: publicStatuses.get(status) });
+  }
+
+  for (const update of updates) {
+    if (update.card.getAttribute('aria-busy') === 'true') continue;
+    update.card.classList.remove('working', 'done', 'failed', 'pending');
+    const stateClass = update.status === 'done'
+      ? 'done'
+      : update.status === 'failed' ? 'failed' : update.status === 'queued' || update.status === 'waiting' ? 'pending' : 'working';
+    update.card.classList.add(stateClass);
+    const statusNode = update.card.querySelector('.jarvis-role-status');
+    if (statusNode) statusNode.textContent = update.copy;
+  }
+}
+
+async function refreshJarvisAgentRoster() {
+  try {
+    const response = await fetch(JARVIS_DEPARTMENTS_API, { cache: 'no-store' });
+    if (!response.ok) {
+      renderJarvisAgentRoster(null);
+      return;
+    }
+    const payload = await response.json().catch(() => null);
+    renderJarvisAgentRoster(payload);
+  } catch (error) {
+    renderJarvisAgentRoster(null);
+  }
+}
+
 function waitForJarvisPing(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -3766,7 +3896,7 @@ async function pollJarvisAgentPing(role, runId) {
 }
 
 async function pingJarvisAgent(role) {
-  if (!['supervisor', 'builder', 'tester'].includes(role)) return;
+  if (!['coordinator', 'researcher', 'builder', 'designer', 'infrastructure', 'vault', 'analyst'].includes(role)) return;
   try {
     const response = await fetch(JARVIS_PIPELINE_PING_API, {
       method: 'POST',
@@ -4154,6 +4284,11 @@ function scheduleJarvisRunPoll() {
 function initJarvisRunPanel() {
   initJarvisRunTokenFromHash();
   updateJarvisFlow('waiting');
+  resetJarvisAgentRoster();
+  refreshJarvisAgentRoster();
+  window.setInterval(() => {
+    if (document.visibilityState === 'visible') refreshJarvisAgentRoster();
+  }, 15000);
   refreshJarvisHistory();
 }
 

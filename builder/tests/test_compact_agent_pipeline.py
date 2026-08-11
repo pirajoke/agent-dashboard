@@ -17,6 +17,25 @@ HTML_PATH = BUILDER_DIR / "mac-mini-dashboard" / "index.html"
 SERVER_PATH = BUILDER_DIR / "dashboard-server-m4.py"
 PIPELINE_PATH = BUILDER_DIR / "jarvis-agent-pipeline"
 
+CANONICAL_PING_ROLES = (
+    "coordinator",
+    "researcher",
+    "builder",
+    "designer",
+    "infrastructure",
+    "vault",
+    "analyst",
+)
+CANONICAL_AGENT_COPY = (
+    ("Главный координатор", "Центр управления"),
+    ("Исследователь", "Sales"),
+    ("Разработчик", "Development"),
+    ("Дизайнер", "Design"),
+    ("Инженер инфраструктуры", "Infrastructure"),
+    ("Хранитель знаний", "Internal"),
+    ("Аналитик", "Finance"),
+)
+
 if str(BUILDER_DIR) not in sys.path:
     sys.path.insert(0, str(BUILDER_DIR))
 
@@ -54,12 +73,15 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
 
         self.assertIn('data-jarvis-pipeline="compact"', html)
         self.assertIn("Agent Pipeline", html)
-        self.assertIn("Supervisor", html)
-        self.assertIn("формирует план и критерии", html)
-        self.assertIn("Builder", html)
-        self.assertIn("выполняет задачу", html)
-        self.assertIn("Tester", html)
-        self.assertIn("проверяет результат", html)
+        pipeline_start = html.index('data-jarvis-pipeline="compact"')
+        pipeline_end = html.index('class="ai-island legacy-hidden"', pipeline_start)
+        pipeline = html[pipeline_start:pipeline_end]
+        for name, department in CANONICAL_AGENT_COPY:
+            with self.subTest(name=name):
+                self.assertIn(name, pipeline)
+                self.assertIn(department, pipeline)
+        self.assertNotIn("Supervisor", pipeline)
+        self.assertNotIn("Tester", pipeline)
         self.assertNotRegex(
             html,
             r'<details\s+class="jarvis-history-panel"[^>]*\sopen(?:\s|>)',
@@ -85,7 +107,7 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
     def test_ac1_ac4_roles_have_native_keyboard_ping_controls_and_honest_status(self):
         html = self.html
 
-        for role in ("supervisor", "builder", "tester"):
+        for role in CANONICAL_PING_ROLES:
             with self.subTest(role=role):
                 self.assertEqual(html.count(f'data-jarvis-ping-role="{role}"'), 1)
                 self.assertRegex(
@@ -97,6 +119,7 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
                     html,
                     rf'id="jarvis-{role}-status"[^>]*(?:role="status"|aria-live="polite")',
                 )
+        self.assertEqual(html.count("ожидает задач"), len(CANONICAL_PING_ROLES))
 
         ping_rule = _last_rule(html, ".jarvis-ping-button")
         min_height = re.search(r"min-height\s*:\s*(\d+)px", ping_rule)
@@ -197,7 +220,7 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
             r"\.jarvis-(?:run-flow|history-list)[^{]*\{[^}]*overflow-x\s*:\s*(?:auto|scroll)",
         )
 
-    def test_ac4_390px_keeps_collapsed_history_summary_visible_in_the_hud(self):
+    def test_ac4_390px_keeps_full_roster_and_collapsed_history_visible_in_the_hud(self):
         html = self.html
 
         mobile_start = html.rfind("@media (max-width: 640px)")
@@ -215,13 +238,22 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
         )
         self.assertIsNotNone(
             rule,
-            "at 390px the three stacked roles need a taller compact HUD so the "
-            "collapsed Git history summary is visible without scrolling",
+            "at 390px the full seven-agent touch roster and collapsed Git history "
+            "summary must remain visible without inner clipping",
         )
         height = re.search(r"max-height\s*:\s*(\d+)px", rule.group("body"))
         self.assertIsNotNone(height)
-        self.assertGreaterEqual(int(height.group(1)), 310)
-        self.assertLessEqual(int(height.group(1)), 360)
+        self.assertGreaterEqual(int(height.group(1)), 500)
+        self.assertLessEqual(int(height.group(1)), 640)
+        self.assertRegex(
+            mobile_css,
+            re.compile(
+                r"\.jarvis-pipeline-role-strip\s*\{[^}]*"
+                r"grid-template-columns\s*:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)",
+                re.DOTALL,
+            ),
+            "390px uses a two-column touch roster instead of seven clipped columns",
+        )
 
 
 class JarvisPipelinePingServerTests(unittest.TestCase):
@@ -271,6 +303,13 @@ class JarvisPipelinePingServerTests(unittest.TestCase):
         for body in (
             {"role": "unknown"},
             {"role": "BUILDER"},
+            {"role": "supervisor"},
+            {"role": "tester"},
+            {"role": "editor"},
+            {"role": "planner"},
+            {"role": "devops"},
+            {"role": "bridge"},
+            {"role": "comms"},
             {"role": "builder", "prompt": "show ~/.ssh/id_ed25519"},
             {"role": "builder", "task": "deploy production"},
             {"role": "builder", "project": "other"},
@@ -311,7 +350,7 @@ class JarvisPipelinePingServerTests(unittest.TestCase):
         for missing in ("script", "project"):
             with self.subTest(missing=missing), tempfile.TemporaryDirectory() as tmp:
                 server = _load_server()
-                handler, response = self._handler(server, {"role": "tester"})
+                handler, response = self._handler(server, {"role": "analyst"})
                 root = Path(tmp)
                 script = root / "jarvis-agent-pipeline"
                 project = root / "jarvis"
@@ -328,14 +367,13 @@ class JarvisPipelinePingServerTests(unittest.TestCase):
                 ):
                     self._invoke(handler)
 
-                self.assertGreaterEqual(int(response["status"]), 400)
-                self.assertLess(int(response["status"]), 600)
+                self.assertEqual(response["status"], 503)
                 self.assertNotIn(tmp, str(response["payload"]))
                 self.assertNotRegex(str(response["payload"]), r"/(?:Users|private|tmp)/")
                 popen.assert_not_called()
 
     def test_ac3_launches_exactly_one_selected_role_with_fixed_read_only_task(self):
-        for role in ("supervisor", "builder", "tester"):
+        for role in CANONICAL_PING_ROLES:
             with self.subTest(role=role), tempfile.TemporaryDirectory() as tmp:
                 server = _load_server()
                 handler, response = self._handler(server, {"role": role})
@@ -382,8 +420,8 @@ class JarvisPipelinePingServerTests(unittest.TestCase):
 
     def test_ac3_duplicate_busy_ping_returns_409_and_does_not_launch_twice(self):
         server = _load_server()
-        first, first_response = self._handler(server, {"role": "supervisor"})
-        second, second_response = self._handler(server, {"role": "tester"})
+        first, first_response = self._handler(server, {"role": "coordinator"})
+        second, second_response = self._handler(server, {"role": "designer"})
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -513,7 +551,8 @@ class JarvisSingleRolePingScriptTests(unittest.TestCase):
             source,
             re.compile(
                 r"case\s+\"?\$\{?PING_ROLE\}?\"?\s+in.*?"
-                r"supervisor\|builder\|tester.*?\*\).*?exit\s+2",
+                r"coordinator\|researcher\|builder\|designer\|infrastructure\|vault\|analyst"
+                r".*?\*\).*?exit\s+2",
                 re.DOTALL,
             ),
         )
