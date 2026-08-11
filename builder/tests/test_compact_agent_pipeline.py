@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -408,6 +411,96 @@ class JarvisPipelinePingServerTests(unittest.TestCase):
 
 
 class JarvisSingleRolePingScriptTests(unittest.TestCase):
+    def test_codex_binary_prefers_explicit_override_then_executable_user_install(self):
+        source = PIPELINE_PATH.read_text(encoding="utf-8")
+        self.assertRegex(
+            source,
+            re.compile(
+                r'if\s+\[\[\s+-n\s+"\$\{JARVIS_CODEX_BIN:-\}"\s+\]\];\s*then\s*'
+                r'CODEX_BIN="\$JARVIS_CODEX_BIN"\s*'
+                r'elif\s+\[\[\s+-x\s+"\$HOME/\.local/bin/codex"\s+\]\];\s*then\s*'
+                r'CODEX_BIN="\$HOME/\.local/bin/codex"\s*'
+                r'else\s*'
+                r'CODEX_BIN="/Applications/Codex\.app/Contents/Resources/codex"\s*'
+                r'fi',
+                re.DOTALL,
+            ),
+            "Codex resolution must prefer an explicit override, then an executable "
+            "user install, before the bundled app fallback",
+        )
+        self.assertRegex(
+            source,
+            re.compile(
+                r'if\s+\[\[\s+!\s+-x\s+"\$CODEX_BIN"\s+\]\].*?'
+                r'PROVIDER_FAILED=codex.*?return\s+127',
+                re.DOTALL,
+            ),
+            "an unavailable selected binary must still fail closed before execution",
+        )
+
+        zsh_bin = shutil.which("zsh")
+        if zsh_bin is None:
+            return
+
+        config_end = source.index('CODEX_APPROVAL_POLICY="')
+        config_end = source.index("\n", config_end) + 1
+        config_script = source[:config_end] + '\nprint -r -- "$CODEX_BIN"\n'
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            home = root / "home"
+            user_codex = home / ".local" / "bin" / "codex"
+            override_codex = root / "explicit-codex"
+            report_dir = root / "reports"
+            project_dir = root / "project"
+            script = root / "resolve-codex.zsh"
+            for executable in (user_codex, override_codex):
+                executable.parent.mkdir(parents=True, exist_ok=True)
+                executable.write_text(f"#!{zsh_bin}\nexit 0\n", encoding="utf-8")
+                executable.chmod(0o700)
+            project_dir.mkdir()
+            script.write_text(config_script, encoding="utf-8")
+
+            base_env = os.environ.copy()
+            base_env.pop("JARVIS_CODEX_BIN", None)
+            base_env.update(
+                HOME=str(home),
+                JARVIS_AGENT_ENV_FILE=str(root / "missing-agent.env"),
+                JARVIS_AGENT_REPORT_DIR=str(report_dir),
+                JARVIS_PROJECT_DIR=str(project_dir),
+            )
+
+            default_result = subprocess.run(
+                [zsh_bin, str(script), "read-only ping"],
+                env=base_env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(default_result.stdout.strip(), str(user_codex))
+
+            override_result = subprocess.run(
+                [zsh_bin, str(script), "read-only ping"],
+                env={**base_env, "JARVIS_CODEX_BIN": str(override_codex)},
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(override_result.stdout.strip(), str(override_codex))
+
+            user_codex.chmod(0o600)
+            fallback_result = subprocess.run(
+                [zsh_bin, str(script), "read-only ping"],
+                env=base_env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(
+                fallback_result.stdout.strip(),
+                "/Applications/Codex.app/Contents/Resources/codex",
+            )
+
     def test_ac3_script_has_fail_closed_single_role_ping_path_before_full_route(self):
         source = PIPELINE_PATH.read_text(encoding="utf-8")
 
