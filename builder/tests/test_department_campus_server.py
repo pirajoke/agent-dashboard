@@ -157,6 +157,96 @@ class DepartmentCampusServerTests(unittest.TestCase):
                 self.assertEqual(projected["events"], [])
                 self.assertNotIn("FORGED", repr(projected))
 
+    def test_ac_fresh_canonical_bridge_dispatch_projects_one_safe_active_owner(self):
+        task = {
+            "id": "bridge-task-23",
+            "status": "running",
+            "agent_role": "BUILDER",
+            "project": "JARVIS",
+            "created_at": "2026-08-08T11:55:00Z",
+            "claimed_at": "2026-08-08T11:59:00Z",
+            "completed_at": None,
+            "description": "<private-description>",
+            "result": "<private-result>",
+            "error": "<private-error>",
+            "messages": [{"body": "<private-message>"}],
+            "metadata": {
+                "event": "dispatch",
+                "objective": "<private-objective>",
+            },
+        }
+
+        projected = self.server._department_campus_payload({"tasks": [task]}, now=NOW)
+
+        self.assertEqual(tuple(projected), TOP_LEVEL_FIELDS)
+        self.assertEqual(projected["state"], "active")
+        self.assertEqual(projected["visible_task_count"], 1)
+        self.assertEqual(projected["omitted_task_count"], 0)
+        self.assertEqual(projected["privacy"], "public_projection")
+        self.assertEqual(len(projected["events"]), 1)
+        event = projected["events"][0]
+        self.assertEqual(tuple(event), PUBLIC_EVENT_FIELDS)
+        self.assertEqual(event["task_id"], "bridge-task-23")
+        self.assertEqual(event["department_id"], "infrastructure")
+        self.assertEqual(event["department_label"], "Infrastructure")
+        self.assertEqual(event["project"], "JARVIS")
+        self.assertEqual(event["agent_id"], "INFRASTRUCTURE")
+        self.assertEqual(event["role"], "Infrastructure Engineer")
+        self.assertEqual(event["status"], "active")
+        self.assertEqual(event["updated_at"], "2026-08-08T11:59:00Z")
+        self.assertTrue(event["ephemeral"])
+        self.assertEqual(event["zone_id"], "campus-zone-infrastructure")
+        rendered = repr(projected)
+        for private_value in (
+            "<private-description>",
+            "<private-result>",
+            "<private-error>",
+            "<private-message>",
+            "<private-objective>",
+        ):
+            self.assertNotIn(private_value, rendered)
+
+    def test_bridge_fallback_maps_lifecycle_timestamps_and_fails_closed(self):
+        base = {
+            "id": "bridge-lifecycle",
+            "agent_role": "TESTER",
+            "project": "jarvis",
+            "created_at": "2026-08-08T11:57:00Z",
+            "claimed_at": "2026-08-08T11:58:00Z",
+            "completed_at": "2026-08-08T11:59:00Z",
+        }
+        cases = (
+            ("pending", "queued", "2026-08-08T11:57:00Z"),
+            ("claimed", "active", "2026-08-08T11:58:00Z"),
+            ("done", "done", "2026-08-08T11:59:00Z"),
+            ("failed", "failed", "2026-08-08T11:59:00Z"),
+        )
+        for status, expected_status, expected_time in cases:
+            with self.subTest(status=status):
+                task = {**base, "id": f"bridge-{status}", "status": status}
+                projected = self.server._department_campus_payload(
+                    {"tasks": [task]},
+                    now=NOW,
+                )
+                self.assertEqual(projected["state"], "active")
+                self.assertEqual(projected["events"][0]["status"], expected_status)
+                self.assertEqual(projected["events"][0]["updated_at"], expected_time)
+
+        rejected = (
+            {**base, "status": "cancelled"},
+            {**base, "status": "unknown"},
+            {**base, "status": "running", "agent_role": "UNREGISTERED"},
+            {**base, "status": "running", "project": "PRIVATE PROJECT"},
+        )
+        for task in rejected:
+            with self.subTest(rejected=task):
+                projected = self.server._department_campus_payload(
+                    {"tasks": [task]},
+                    now=NOW,
+                )
+                self.assertEqual(projected["state"], "empty")
+                self.assertEqual(projected["events"], [])
+
     def test_err_1_non_object_bridge_or_non_list_pixel_events_is_unavailable_without_partial_data(self):
         malformed_sources = (None, [], "bad", 7, True)
         for bridge_data in malformed_sources:

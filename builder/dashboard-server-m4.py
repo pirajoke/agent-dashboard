@@ -21,6 +21,8 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 
 from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.department_campus import (
+    CAMPUS_PROJECTS,
+    DEPARTMENT_ZONES,
     build_department_campus_html,
     department_campus_projection,
 )
@@ -1006,8 +1008,82 @@ def _department_campus_state(state: str, *, now: datetime) -> dict:
     return payload
 
 
+_CAMPUS_BRIDGE_PROJECTS = {
+    record["project"]: record
+    for record in CAMPUS_PROJECTS
+}
+_ALLOWED_CAMPUS_BRIDGE_ROLES = frozenset(
+    {"SUPERVISOR", "TESTER"}
+    | {record["agent_id"] for record in CAMPUS_PROJECTS}
+)
+_BRIDGE_CAMPUS_STATUSES = {
+    "pending": "queued",
+    "running": "active",
+    "done": "done",
+    "failed": "failed",
+}
+
+
+def _campus_bridge_identity(value: object, *, separator: str) -> str | None:
+    if not isinstance(value, str):
+        return None
+    identity = value.strip()
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,119}", identity):
+        return None
+    return re.sub(r"[ _-]+", separator, identity).upper()
+
+
+def _campus_bridge_timestamp(task: dict, status: str) -> object:
+    if status in {"done", "failed"}:
+        return (
+            task.get("completed_at")
+            or task.get("claimed_at")
+            or task.get("created_at")
+        )
+    if status == "running":
+        return task.get("claimed_at") or task.get("created_at")
+    return task.get("created_at")
+
+
+def _campus_bridge_event(task: dict) -> dict | None:
+    """Adapt only canonical Bridge identity and lifecycle fields."""
+    source_role = _campus_bridge_identity(task.get("agent_role"), separator="_")
+    if source_role not in _ALLOWED_CAMPUS_BRIDGE_ROLES:
+        return None
+    project_id = _campus_bridge_identity(task.get("project"), separator=" ")
+    project = _CAMPUS_BRIDGE_PROJECTS.get(project_id)
+    if project is None:
+        return None
+    bridge_status = task.get("status")
+    if not isinstance(bridge_status, str):
+        return None
+    bridge_status = _normalized_bridge_status(bridge_status)
+    campus_status = _BRIDGE_CAMPUS_STATUSES.get(bridge_status)
+    if campus_status is None:
+        return None
+    task_id = task.get("id")
+    if not isinstance(task_id, str):
+        return None
+    zone = DEPARTMENT_ZONES[project["department_id"]]
+    return {
+        "event_id": task_id,
+        "task_id": task_id,
+        "department_id": project["department_id"],
+        "department_label": zone["label"],
+        "project": project["project"],
+        "agent_id": project["agent_id"],
+        "role": zone["roles"][0],
+        "status": campus_status,
+        "updated_at": _campus_bridge_timestamp(task, bridge_status),
+        "next_step": "",
+        "evidence_count": 0,
+        "ephemeral": True,
+        "zone_id": zone["zone_id"],
+    }
+
+
 def _department_campus_payload(data: object, *, now: datetime | None = None) -> dict:
-    """Project the newest verified same-metadata MAIN MANAGER snapshot."""
+    """Project a verified manager snapshot or safe canonical Bridge tasks."""
     current = now or datetime.now(timezone.utc)
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
@@ -1042,7 +1118,14 @@ def _department_campus_payload(data: object, *, now: datetime | None = None) -> 
     if not candidates:
         if malformed_verified_snapshot:
             return department_campus_projection(None, now=current)
-        return department_campus_projection([], now=current)
+        events = [
+            event
+            for task in data["tasks"]
+            if isinstance(task, dict)
+            for event in [_campus_bridge_event(task)]
+            if event is not None
+        ]
+        return department_campus_projection(events, now=current, max_tasks=3)
 
     # max() preserves the first source item when timestamps tie.
     _, snapshot_time, events = max(candidates, key=lambda item: item[1])
