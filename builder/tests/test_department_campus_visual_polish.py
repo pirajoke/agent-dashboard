@@ -277,6 +277,36 @@ class DepartmentCampusVisualPolishTests(unittest.TestCase):
         self.assertRegex(caption_css, r"position:\s*absolute")
         self.assertIn("campus-resident-caption", self.html)
 
+    def test_ac_2_live_wander_cycle_keeps_a_physical_gap_above_the_rail(self):
+        zone_css = _selector_declarations(self.css, ".campus-zone")
+        rail_css = _selector_declarations(self.css, ".campus-project-shelf")
+
+        gap = re.search(
+            r"--campus-project-rail-gap:\s*(\d+(?:\.\d+)?)(px|rem)\b",
+            zone_css,
+        )
+        rail_bottom = re.search(
+            r"bottom:\s*(\d+(?:\.\d+)?)(px|rem)\b",
+            rail_css,
+        )
+        self.assertIsNotNone(gap)
+        self.assertIsNotNone(rail_bottom)
+
+        downward_wander_px = max(
+            float(value)
+            for value in re.findall(r"--campus-walk-y:\s*(\d+(?:\.\d+)?)px\b", self.css)
+        )
+        physical_clearance_px = (
+            _absolute_css_length_px(gap.group(1), gap.group(2))
+            - _absolute_css_length_px(rail_bottom.group(1), rail_bottom.group(2))
+            - downward_wander_px
+        )
+        self.assertGreaterEqual(
+            physical_clearance_px,
+            2,
+            "the lowest wander frame must retain at least 2px between the resident and project rail",
+        )
+
     def test_ac_3_ec_2_canonical_names_wrap_to_two_lines_without_ellipsis(self):
         canonical_identities = tuple(
             folder["attrs"].get("data-campus-project")

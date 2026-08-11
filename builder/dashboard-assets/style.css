@@ -4520,7 +4520,7 @@ tr:last-child td { border-bottom: none; }
 
 .campus-zone {
     --campus-project-rail-height: 66px;
-    --campus-project-rail-gap: 0.55rem;
+    --campus-project-rail-gap: 0.75rem;
     position: relative;
     z-index: 3;
     min-width: 0;
