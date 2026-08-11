@@ -1126,7 +1126,12 @@ def _department_campus_payload(data: object, *, now: datetime | None = None) -> 
         if not isinstance(pixel_events, list):
             malformed_verified_snapshot = True
             continue
-        updated = _department_snapshot_time(task.get("updated_at"))
+        updated = _department_snapshot_time(
+            task.get("updated_at")
+            or task.get("completed_at")
+            or task.get("claimed_at")
+            or task.get("created_at")
+        )
         if updated is None or updated > current:
             continue
         candidates.append((index, updated, pixel_events))
