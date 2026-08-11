@@ -325,6 +325,88 @@ _BIDI_CONTROLS = frozenset(
     )
 )
 
+_QUEUE_TOP_LEVEL_FIELDS = frozenset({"version", "items"})
+_QUEUE_ITEM_FIELDS = frozenset(
+    {
+        "queue_id",
+        "dedupe_key",
+        "project",
+        "repository",
+        "source_task_id",
+        "completed_at",
+        "evidence_fingerprint",
+        "decision",
+        "owner_gate",
+        "next_step",
+        "next_task",
+        "status",
+        "claim",
+        "ack",
+    }
+)
+_QUEUE_ID_FIELDS = (
+    "dedupe_key",
+    "project",
+    "repository",
+    "source_task_id",
+    "completed_at",
+    "evidence_fingerprint",
+    "decision",
+    "owner_gate",
+    "next_step",
+    "next_task",
+)
+_CLAIM_FIELDS = frozenset(
+    {"claim_id", "claimer", "claimed_at", "lease_expires_at"}
+)
+_DISPATCH_FIELDS = frozenset(
+    {
+        "route_id",
+        "hostId",
+        "threadId",
+        "registry_sha256",
+        "message_fingerprint",
+        "prepared_at",
+        "delivery_reason",
+        "observed_at",
+    }
+)
+_ACK_BASE_FIELDS = frozenset({"reason", "acked_at", "thread_id"})
+_ACK_TERMINAL_FIELDS = _ACK_BASE_FIELDS | {"terminal_status", "terminal_at"}
+_NEXT_TASK_FIELDS = frozenset({"description", "agent_role", "project", "metadata"})
+_NEXT_TASK_METADATA_FIELDS = frozenset({"allowed_side_effects"})
+_ROUTES_TOP_LEVEL_FIELDS = frozenset({"schema", "version", "routes"})
+_ROUTE_FIELDS = frozenset(
+    {
+        "hostId",
+        "threadId",
+        "project",
+        "repository",
+        "departmentId",
+        "zoneId",
+        "agentRole",
+        "enabled",
+    }
+)
+_QUEUE_STATUSES = frozenset(
+    {"queued", "claimed", "sending", "delivery_unknown", "active", "acked"}
+)
+_QUEUE_DECISIONS = frozenset({"auto_continue", "owner_gate", "stop"})
+_DELIVERY_UNKNOWN_REASONS = frozenset(
+    {
+        "tool_timeout",
+        "tool_exception",
+        "send_tool_timeout",
+        "send_tool_error",
+        "delivery_unconfirmed",
+    }
+)
+_REPOSITORY_ID = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$"
+)
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_QUEUE_ID = re.compile(r"^mmq_[0-9a-f]{64}$")
+
 
 def _utc_now(now: datetime) -> datetime:
     return (now if now.tzinfo else now.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
@@ -410,6 +492,414 @@ def _safe_text(value: object, *, limit: int = 180) -> str:
     if not value or _UNSAFE_TEXT.search(value):
         return _NEUTRAL_TEXT
     return _bounded_grapheme_text(value, limit)
+
+
+def _strict_object(value: object, fields: frozenset[str], label: str) -> dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != fields:
+        raise ValueError(f"invalid {label} fields")
+    return value
+
+
+def _strict_version(value: object) -> bool:
+    return type(value) is int and value == 1
+
+
+def _strict_time(value: object, label: str) -> datetime:
+    parsed = _parse_time(value)
+    if parsed is None:
+        raise ValueError(f"invalid {label} timestamp")
+    return parsed
+
+
+def _strict_private_id(value: object, label: str) -> str:
+    safe = _safe_id(value)
+    if safe is None or safe != value:
+        raise ValueError(f"invalid {label}")
+    return safe
+
+
+def _strict_repository(value: object) -> str:
+    if not isinstance(value, str) or _REPOSITORY_ID.fullmatch(value) is None:
+        raise ValueError("invalid repository identity")
+    return value
+
+
+def _strict_sha256(value: object, label: str) -> str:
+    if not isinstance(value, str) or _SHA256.fullmatch(value) is None:
+        raise ValueError(f"invalid {label}")
+    return value
+
+
+def _strict_public_text(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"invalid {label}")
+    normalized = _strip_unsafe_formatting(value)
+    if normalized != unicodedata.normalize("NFKC", value) or _UNSAFE_TEXT.search(normalized):
+        raise ValueError(f"unsafe {label}")
+    public = _safe_text(normalized, limit=240)
+    if public == _NEUTRAL_TEXT:
+        raise ValueError(f"unsafe {label}")
+    return public
+
+
+def _validated_route_registry(routes_data: object) -> dict[str, dict[str, Any]]:
+    root = _strict_object(routes_data, _ROUTES_TOP_LEVEL_FIELDS, "route registry")
+    if (
+        root.get("schema") != "main_manager_agent_routes_v1"
+        or not _strict_version(root.get("version"))
+        or not isinstance(root.get("routes"), dict)
+    ):
+        raise ValueError("invalid route registry schema")
+
+    validated: dict[str, dict[str, Any]] = {}
+    destinations: set[tuple[str, str]] = set()
+    project_roles: set[tuple[str, str]] = set()
+    for raw_route_id, raw_route in root["routes"].items():
+        route_id = _strict_private_id(raw_route_id, "route id")
+        route = _strict_object(raw_route, _ROUTE_FIELDS, "route")
+        if route.get("enabled") is not True:
+            raise ValueError("disabled route is not a live destination")
+        host_id = _strict_private_id(route.get("hostId"), "route host")
+        thread_id = _strict_private_id(route.get("threadId"), "route thread")
+        project = route.get("project")
+        repository = _strict_repository(route.get("repository"))
+        department_id = route.get("departmentId")
+        agent_role = route.get("agentRole")
+        zone_id = route.get("zoneId")
+        project_record = _CAMPUS_PROJECT_BY_IDENTITY.get(
+            (project, department_id, agent_role)
+        )
+        if project_record is None or zone_id != f"zone-{department_id}":
+            raise ValueError("route does not match the canonical campus identity")
+
+        destination = (host_id, thread_id)
+        project_role = (project, agent_role)
+        if destination in destinations or project_role in project_roles:
+            raise ValueError("ambiguous route registry")
+        destinations.add(destination)
+        project_roles.add(project_role)
+        validated[route_id] = {
+            "route_id": route_id,
+            "hostId": host_id,
+            "threadId": thread_id,
+            "project": project,
+            "repository": repository,
+            "departmentId": department_id,
+            "agentRole": agent_role,
+        }
+    return validated
+
+
+def _validated_next_task(value: object, *, project: str) -> dict[str, Any]:
+    task = _strict_object(value, _NEXT_TASK_FIELDS, "next task")
+    if task.get("project") != project:
+        raise ValueError("next task project mismatch")
+    description = task.get("description")
+    if not isinstance(description, str) or not description.strip() or len(description) > 4000:
+        raise ValueError("invalid task description")
+    role = _strict_private_id(task.get("agent_role"), "agent role")
+    if role not in _CAMPUS_AGENT_DEPARTMENTS:
+        raise ValueError("unknown agent role")
+    metadata = _strict_object(
+        task.get("metadata"), _NEXT_TASK_METADATA_FIELDS, "next task metadata"
+    )
+    side_effects = metadata.get("allowed_side_effects")
+    if not isinstance(side_effects, list) or not side_effects:
+        raise ValueError("invalid allowed side effects")
+    seen: set[str] = set()
+    for side_effect in side_effects:
+        checked = _strict_private_id(side_effect, "allowed side effect")
+        if checked in seen:
+            raise ValueError("duplicate allowed side effect")
+        seen.add(checked)
+    return task
+
+
+def _validated_claim(value: object, *, now: datetime) -> dict[str, Any]:
+    claim = _strict_object(value, _CLAIM_FIELDS, "claim")
+    _strict_private_id(claim.get("claim_id"), "claim id")
+    _strict_private_id(claim.get("claimer"), "claimer")
+    claimed_at = _strict_time(claim.get("claimed_at"), "claim")
+    lease_expires_at = _strict_time(claim.get("lease_expires_at"), "lease")
+    if claimed_at > now or lease_expires_at < claimed_at:
+        raise ValueError("invalid claim interval")
+    return claim
+
+
+def _validated_dispatch(
+    value: object,
+    *,
+    status: str,
+    now: datetime,
+) -> dict[str, Any]:
+    dispatch = _strict_object(value, _DISPATCH_FIELDS, "dispatch")
+    _strict_private_id(dispatch.get("route_id"), "dispatch route id")
+    _strict_private_id(dispatch.get("hostId"), "dispatch host")
+    _strict_private_id(dispatch.get("threadId"), "dispatch thread")
+    _strict_sha256(dispatch.get("registry_sha256"), "registry digest")
+    _strict_sha256(dispatch.get("message_fingerprint"), "message fingerprint")
+    prepared_at = _strict_time(dispatch.get("prepared_at"), "dispatch preparation")
+    if prepared_at > now:
+        raise ValueError("future dispatch preparation")
+    reason = dispatch.get("delivery_reason")
+    observed = dispatch.get("observed_at")
+    if status == "delivery_unknown":
+        if reason not in _DELIVERY_UNKNOWN_REASONS:
+            raise ValueError("invalid delivery-unknown reason")
+        observed_at = _strict_time(observed, "delivery observation")
+        if observed_at > now or observed_at < prepared_at:
+            raise ValueError("invalid delivery observation")
+    elif reason is not None or observed is not None:
+        raise ValueError("delivery observation is not allowed for this lifecycle")
+    return dispatch
+
+
+def _validated_ack(
+    value: object,
+    *,
+    terminal: bool,
+    now: datetime,
+) -> dict[str, Any]:
+    fields = _ACK_TERMINAL_FIELDS if terminal else _ACK_BASE_FIELDS
+    ack = _strict_object(value, fields, "acknowledgement")
+    acked_at = _strict_time(ack.get("acked_at"), "acknowledgement")
+    if acked_at > now:
+        raise ValueError("future acknowledgement")
+    thread_id = ack.get("thread_id")
+    if thread_id is not None:
+        _strict_private_id(thread_id, "acknowledgement thread")
+    if terminal:
+        if ack.get("terminal_status") not in {"completed", "failed"}:
+            raise ValueError("invalid terminal status")
+        terminal_at = _strict_time(ack.get("terminal_at"), "terminal")
+        if terminal_at > now or terminal_at < acked_at:
+            raise ValueError("invalid terminal time")
+    return ack
+
+
+def _route_for_queue_item(
+    item: dict[str, Any],
+    routes: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    dispatch = item.get("dispatch")
+    requested_role = (
+        item["next_task"].get("agent_role")
+        if isinstance(item.get("next_task"), dict)
+        else None
+    )
+    if isinstance(dispatch, dict):
+        route = routes.get(dispatch.get("route_id"))
+        if route is None:
+            raise ValueError("dispatch route is not registered")
+        if (
+            route["hostId"] != dispatch.get("hostId")
+            or route["threadId"] != dispatch.get("threadId")
+        ):
+            raise ValueError("dispatch destination mismatch")
+        if requested_role is not None and route["agentRole"] != requested_role:
+            raise ValueError("dispatch role mismatch")
+        matches = [route]
+    else:
+        matches = [
+            route
+            for route in routes.values()
+            if route["project"] == item["project"]
+            and route["repository"] == item["repository"]
+            and (requested_role is None or route["agentRole"] == requested_role)
+        ]
+        if not matches and requested_role is not None:
+            matches = [
+                route
+                for route in routes.values()
+                if route["project"] == item["project"]
+                and route["repository"] == item["repository"]
+            ]
+    if len(matches) != 1:
+        raise ValueError("queue destination is missing or ambiguous")
+    route = matches[0]
+    if route["project"] != item["project"] or route["repository"] != item["repository"]:
+        raise ValueError("queue route identity mismatch")
+    return route
+
+
+def _validated_queue_item(
+    value: object,
+    *,
+    routes: dict[str, dict[str, Any]],
+    now: datetime,
+) -> tuple[dict[str, Any], datetime]:
+    if not isinstance(value, dict):
+        raise ValueError("queue item must be an object")
+    fields = set(value)
+    allowed = _QUEUE_ITEM_FIELDS | {"dispatch"}
+    if fields not in (_QUEUE_ITEM_FIELDS, allowed):
+        raise ValueError("invalid queue item fields")
+    item = value
+    queue_id = _strict_private_id(item.get("queue_id"), "queue id")
+    project = item.get("project")
+    repository = _strict_repository(item.get("repository"))
+    source_task_id = _strict_private_id(item.get("source_task_id"), "source task id")
+    del source_task_id
+    completed_at = _strict_time(item.get("completed_at"), "source completion")
+    if completed_at > now:
+        raise ValueError("future source completion")
+    fingerprint = _strict_sha256(item.get("evidence_fingerprint"), "evidence fingerprint")
+    decision = item.get("decision")
+    owner_gate = item.get("owner_gate")
+    status = item.get("status")
+    if (
+        project not in {record["project"] for record in CAMPUS_PROJECTS}
+        or decision not in _QUEUE_DECISIONS
+        or status not in _QUEUE_STATUSES
+        or not isinstance(owner_gate, str)
+        or _safe_id(owner_gate) != owner_gate
+    ):
+        raise ValueError("invalid queue identity or lifecycle")
+    next_step = _strict_public_text(item.get("next_step"), "next step")
+    del next_step
+    expected_dedupe = f"{project}|{fingerprint}|{decision}"
+    if item.get("dedupe_key") != expected_dedupe:
+        raise ValueError("invalid queue dedupe key")
+    if _QUEUE_ID.fullmatch(queue_id) is None:
+        raise ValueError("invalid queue id")
+
+    next_task = item.get("next_task")
+    if decision == "auto_continue":
+        _validated_next_task(next_task, project=project)
+        if owner_gate != "none":
+            raise ValueError("auto continuation cannot require owner gate")
+    elif next_task is not None:
+        raise ValueError("owner notice cannot contain an executable next task")
+    elif decision == "owner_gate" and owner_gate == "none":
+        raise ValueError("owner gate is missing")
+
+    has_dispatch = "dispatch" in item
+    claim = item.get("claim")
+    ack = item.get("ack")
+    dispatch: dict[str, Any] | None = None
+    if status == "queued":
+        if claim is not None or ack is not None or has_dispatch:
+            raise ValueError("invalid queued lifecycle")
+    else:
+        _validated_claim(claim, now=now)
+
+    if status == "claimed":
+        if ack is not None or has_dispatch:
+            raise ValueError("invalid claimed lifecycle")
+    elif status in {"sending", "delivery_unknown", "active"}:
+        if not has_dispatch:
+            raise ValueError("dispatch is required")
+        dispatch = _validated_dispatch(item.get("dispatch"), status=status, now=now)
+        if status in {"sending", "delivery_unknown"} and ack is not None:
+            raise ValueError("premature acknowledgement")
+        if status == "active":
+            active_ack = _validated_ack(ack, terminal=False, now=now)
+            if (
+                active_ack.get("reason") != "sent_to_thread"
+                or active_ack.get("thread_id") != dispatch.get("threadId")
+            ):
+                raise ValueError("invalid active acknowledgement")
+    elif status == "acked":
+        if decision == "auto_continue":
+            if has_dispatch:
+                dispatch = _validated_dispatch(item.get("dispatch"), status=status, now=now)
+            terminal_ack = _validated_ack(ack, terminal=True, now=now)
+            if terminal_ack.get("reason") != "sent_to_thread":
+                raise ValueError("invalid terminal acknowledgement")
+        else:
+            if has_dispatch:
+                raise ValueError("owner notice cannot contain dispatch")
+            notice_ack = _validated_ack(ack, terminal=False, now=now)
+            expected_reason = (
+                "owner_gate_reported" if decision == "owner_gate" else "terminal_notice_reported"
+            )
+            if notice_ack.get("reason") != expected_reason or notice_ack.get("thread_id") is not None:
+                raise ValueError("invalid owner notice acknowledgement")
+
+    route = _route_for_queue_item(item, routes)
+    if status == "acked" and decision == "auto_continue":
+        terminal_ack = item["ack"]
+        if terminal_ack.get("thread_id") != route["threadId"]:
+            raise ValueError("terminal acknowledgement route mismatch")
+
+    transition_candidates = (
+        item.get("ack", {}).get("terminal_at") if isinstance(item.get("ack"), dict) else None,
+        dispatch.get("observed_at") if isinstance(dispatch, dict) else None,
+        dispatch.get("prepared_at") if isinstance(dispatch, dict) else None,
+        item.get("ack", {}).get("acked_at") if isinstance(item.get("ack"), dict) else None,
+        item.get("claim", {}).get("claimed_at") if isinstance(item.get("claim"), dict) else None,
+        item.get("completed_at"),
+    )
+    transition = next(
+        _strict_time(candidate, "transition")
+        for candidate in transition_candidates
+        if candidate is not None
+    )
+    public_status = {
+        "queued": "queued",
+        "claimed": "active",
+        "sending": "active",
+        "delivery_unknown": "failed",
+        "active": "active",
+    }.get(status)
+    if status == "acked":
+        if decision == "owner_gate":
+            public_status = "waiting"
+        elif decision == "stop":
+            public_status = "done"
+        else:
+            public_status = "done" if ack.get("terminal_status") == "completed" else "failed"
+    assert public_status is not None
+    zone = DEPARTMENT_ZONES[route["departmentId"]]
+    event = {
+        "event_id": queue_id,
+        "task_id": queue_id,
+        "department_id": route["departmentId"],
+        "department_label": zone["label"],
+        "project": project,
+        "agent_id": route["agentRole"],
+        "role": zone["roles"][0],
+        "status": public_status,
+        "updated_at": transition.isoformat().replace("+00:00", "Z"),
+        "next_step": item["next_step"],
+        "evidence_count": 1,
+        "ephemeral": True,
+        "zone_id": zone["zone_id"],
+    }
+    return event, transition
+
+
+def continuation_queue_campus_projection(
+    queue_data: object,
+    routes_data: object,
+    *,
+    now: datetime,
+) -> dict[str, Any]:
+    """Read and validate the canonical queue without mutating or dispatching it."""
+    current = _utc_now(now)
+    try:
+        queue = _strict_object(queue_data, _QUEUE_TOP_LEVEL_FIELDS, "queue")
+        if not _strict_version(queue.get("version")) or not isinstance(queue.get("items"), list):
+            raise ValueError("invalid queue schema")
+        routes = _validated_route_registry(routes_data)
+        if not queue["items"]:
+            return _empty_projection("empty", current)
+        events: list[dict[str, Any]] = []
+        transitions: list[datetime] = []
+        seen_queue_ids: set[str] = set()
+        for raw_item in queue["items"]:
+            event, transition = _validated_queue_item(raw_item, routes=routes, now=current)
+            if event["event_id"] in seen_queue_ids:
+                raise ValueError("duplicate queue item")
+            seen_queue_ids.add(event["event_id"])
+            events.append(event)
+            transitions.append(transition)
+    except (KeyError, StopIteration, TypeError, ValueError):
+        return _empty_projection("unavailable", current)
+
+    if any((current - transition).total_seconds() > _FRESH_SECONDS for transition in transitions):
+        return _empty_projection("stale", current)
+    return department_campus_projection(events, now=current, max_tasks=3)
 
 
 def _empty_projection(state: str, now: datetime) -> dict[str, Any]:

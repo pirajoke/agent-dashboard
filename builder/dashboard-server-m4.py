@@ -25,6 +25,7 @@ from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
     build_department_campus_html,
+    continuation_queue_campus_projection,
     department_campus_projection,
 )
 
@@ -56,6 +57,22 @@ BRIDGE_API_TOKEN_FILE = Path(
         str(HOME / "jarvis" / ".secrets" / "bridge_api_token"),
     )
 ).expanduser()
+_CONTINUATION_QUEUE_PATH_VALUE = os.environ.get(
+    "MAIN_MANAGER_CONTINUATION_QUEUE_PATH", ""
+).strip()
+_AGENT_ROUTES_PATH_VALUE = os.environ.get(
+    "MAIN_MANAGER_AGENT_ROUTES_PATH", ""
+).strip()
+MAIN_MANAGER_CONTINUATION_QUEUE_PATH = (
+    Path(_CONTINUATION_QUEUE_PATH_VALUE).expanduser()
+    if _CONTINUATION_QUEUE_PATH_VALUE
+    else None
+)
+MAIN_MANAGER_AGENT_ROUTES_PATH = (
+    Path(_AGENT_ROUTES_PATH_VALUE).expanduser()
+    if _AGENT_ROUTES_PATH_VALUE
+    else None
+)
 HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstrip("/")
 AIR_HEALTH_API_URL = os.environ.get("AIR_HEALTH_API_URL", "http://100.118.34.14:8880").rstrip("/")
 PRO_HEALTH_API_URL = os.environ.get("PRO_HEALTH_API_URL", "http://100.74.94.2:8880").rstrip("/")
@@ -1155,6 +1172,45 @@ def _department_campus_payload(data: object, *, now: datetime | None = None) -> 
     return department_campus_projection(events, now=current, max_tasks=3)
 
 
+def _strict_json_file(path: object) -> object:
+    """Read JSON without accepting duplicate object keys or writing any state."""
+    source = Path(path).read_text(encoding="utf-8")
+
+    def checked_object(pairs: list[tuple[str, object]]) -> dict:
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON object key")
+            result[key] = value
+        return result
+
+    return json.loads(source, object_pairs_hook=checked_object)
+
+
+def _department_campus_payload_from_sources(
+    *,
+    queue_path: object | None,
+    routes_path: object | None,
+    bridge_data: object,
+    now: datetime | None = None,
+) -> dict:
+    """Choose exactly one read-only campus source; configured queue is authoritative."""
+    current = now or datetime.now(timezone.utc)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=timezone.utc)
+    current = current.astimezone(timezone.utc)
+    if queue_path is None and routes_path is None:
+        return _department_campus_payload(bridge_data, now=current)
+    if queue_path is None or routes_path is None:
+        return department_campus_projection(None, now=current)
+    try:
+        queue_data = _strict_json_file(queue_path)
+        routes_data = _strict_json_file(routes_path)
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return department_campus_projection(None, now=current)
+    return continuation_queue_campus_projection(queue_data, routes_data, now=current)
+
+
 def _runtime_asset_block(filename: str, start_marker: str, end_marker: str) -> str:
     asset_path = Path(__file__).resolve().parent / "dashboard-assets" / filename
     source = asset_path.read_text(encoding="utf-8")
@@ -2063,14 +2119,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(502, {"error": str(e)})
             return
         if parsed.path == '/api/manager/departments':
-            try:
-                data = _bridge_request("GET", "/api/tasks?limit=24&include_messages=1")
-                self._json_response(200, _department_campus_payload(data))
-            except Exception:
-                self._json_response(
-                    200,
-                    department_campus_projection(None, now=datetime.now(timezone.utc)),
-                )
+            if (
+                MAIN_MANAGER_CONTINUATION_QUEUE_PATH is None
+                and MAIN_MANAGER_AGENT_ROUTES_PATH is None
+            ):
+                try:
+                    data = _bridge_request("GET", "/api/tasks?limit=24&include_messages=1")
+                except Exception:
+                    data = None
+            else:
+                data = None
+            self._json_response(
+                200,
+                _department_campus_payload_from_sources(
+                    queue_path=MAIN_MANAGER_CONTINUATION_QUEUE_PATH,
+                    routes_path=MAIN_MANAGER_AGENT_ROUTES_PATH,
+                    bridge_data=data,
+                ),
+            )
             return
         if parsed.path == '/api/manager/events':
             try:
