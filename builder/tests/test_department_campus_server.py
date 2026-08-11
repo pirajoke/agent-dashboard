@@ -232,6 +232,22 @@ class DepartmentCampusServerTests(unittest.TestCase):
                 self.assertEqual(projected["events"][0]["status"], expected_status)
                 self.assertEqual(projected["events"][0]["updated_at"], expected_time)
 
+        pipeline_task = {
+            **base,
+            "id": "bridge-pipeline-result",
+            "status": "done",
+            "agent_role": "SUPERVISOR_BUILDER_TESTER",
+        }
+        pipeline_projection = self.server._department_campus_payload(
+            {"tasks": [pipeline_task]},
+            now=NOW,
+        )
+        self.assertEqual(pipeline_projection["state"], "active")
+        self.assertEqual(
+            pipeline_projection["events"][0]["agent_id"],
+            "INFRASTRUCTURE",
+        )
+
         rejected = (
             {**base, "status": "cancelled"},
             {**base, "status": "unknown"},
