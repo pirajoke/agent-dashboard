@@ -13,6 +13,7 @@ import ssl
 import stat
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 from datetime import datetime, timezone
@@ -91,6 +92,14 @@ PUBLIC_FILE_PATHS = {
 JARVIS_PROJECTS = {
     "jarvis": HOME / "jarvis",
 }
+JARVIS_PING_ROLES = frozenset({"supervisor", "builder", "tester"})
+JARVIS_PING_TASK = (
+    "Read-only ping: do not change files or run tools. "
+    "Reply only with PONG and a short confirmation that the selected agent is available."
+)
+_JARVIS_PING_LOCK = threading.Lock()
+_JARVIS_PING_PROCESS = None
+_JARVIS_PING_RUNS: dict[str, str] = {}
 SENSITIVE_SERVICE_FIELDS = {"config", "env_file", "env_vars", "log", "plist"}
 JARVIS_STAGE_TO_BRIDGE_STATUS = {
     "jarvis:draft": "pending",
@@ -141,6 +150,13 @@ LOCAL_SERVICE_WATCH = [
     {"name": "postgresql@16", "kind": "launchd", "label": "homebrew.mxcl.postgresql@16"},
     {"name": "next dev", "kind": "process", "match": "next dev"},
 ]
+
+
+def _jarvis_ping_role(run_id: str) -> str | None:
+    if not run_id:
+        return None
+    with _JARVIS_PING_LOCK:
+        return _JARVIS_PING_RUNS.get(run_id)
 
 
 def _run_text(cmd: list[str], timeout: int = 5) -> str:
@@ -1238,6 +1254,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/jarvis/tasks/draft':
             self._handle_jarvis_task_draft()
             return
+        if parsed.path == '/api/jarvis/pipeline/ping':
+            self._handle_jarvis_pipeline_ping()
+            return
         if parsed.path == '/api/jarvis/pipeline/run':
             self._handle_jarvis_pipeline_run()
             return
@@ -1713,6 +1732,93 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             },
         )
 
+    def _handle_jarvis_pipeline_ping(self):
+        """Start one fixed, read-only agent availability check."""
+        if not self._require_dashboard_run_auth():
+            return
+        try:
+            body = self._read_json_body(max_bytes=512)
+        except ValueError as exc:
+            status = 413 if "too large" in str(exc).lower() else 400
+            self._json_response(status, {"error": "invalid_ping_request"})
+            return
+        except (TypeError, json.JSONDecodeError):
+            self._json_response(400, {"error": "invalid_ping_request"})
+            return
+
+        if not isinstance(body, dict) or set(body) != {"role"}:
+            self._json_response(400, {"error": "invalid_ping_request"})
+            return
+        role = body.get("role")
+        if not isinstance(role, str) or role not in JARVIS_PING_ROLES:
+            self._json_response(422, {"error": "unknown_agent_role"})
+            return
+
+        project_dir = JARVIS_PROJECTS.get("jarvis")
+        if not project_dir or not project_dir.is_dir():
+            self._json_response(503, {"error": "agent_ping_unavailable"})
+            return
+        if not JARVIS_PIPELINE_SCRIPT.is_file() or not os.access(JARVIS_PIPELINE_SCRIPT, os.X_OK):
+            self._json_response(503, {"error": "agent_ping_unavailable"})
+            return
+
+        global _JARVIS_PING_PROCESS
+        with _JARVIS_PING_LOCK:
+            if _JARVIS_PING_PROCESS is not None and _JARVIS_PING_PROCESS.poll() is None:
+                self._json_response(409, {"error": "agent_ping_busy"})
+                return
+
+            run_id = f"ping-{role}-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{secrets.token_hex(3)}"
+            try:
+                JARVIS_PIPELINE_REPORT_DIR.mkdir(parents=True, exist_ok=True)
+                JARVIS_PIPELINE_LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+            except OSError:
+                self._json_response(503, {"error": "agent_ping_unavailable"})
+                return
+            env = os.environ.copy()
+            env.update(
+                {
+                    "JARVIS_PROJECT_DIR": str(project_dir),
+                    "JARVIS_PROJECT_NAME": "jarvis",
+                    "JARVIS_AGENT_RUN_ID": run_id,
+                    "JARVIS_AGENT_REPORT_DIR": str(JARVIS_PIPELINE_REPORT_DIR),
+                    "JARVIS_AGENT_PROVIDER": "auto",
+                    "JARVIS_AGENT_BUDGET": "cheap",
+                    "JARVIS_AGENT_SELF_HEAL_MAX_RETRIES": "0",
+                    "JARVIS_AGENT_PING_ROLE": role,
+                }
+            )
+            log_file = None
+            try:
+                log_file = JARVIS_PIPELINE_LOG_FILE.open("a", encoding="utf-8")
+                _JARVIS_PING_PROCESS = subprocess.Popen(
+                    [str(JARVIS_PIPELINE_SCRIPT), JARVIS_PING_TASK],
+                    cwd=str(project_dir),
+                    env=env,
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,
+                )
+            except (OSError, subprocess.SubprocessError):
+                _JARVIS_PING_PROCESS = None
+                self._json_response(503, {"error": "agent_ping_unavailable"})
+                return
+            finally:
+                if log_file is not None:
+                    log_file.close()
+            _JARVIS_PING_RUNS[run_id] = role
+            while len(_JARVIS_PING_RUNS) > 64:
+                _JARVIS_PING_RUNS.pop(next(iter(_JARVIS_PING_RUNS)))
+
+        self._json_response(
+            202,
+            {
+                "status": "accepted",
+                "run_id": run_id,
+                "role": role,
+            },
+        )
+
     def _handle_jarvis_pipeline_status(self, parsed):
         if not self._require_dashboard_run_auth():
             return
@@ -1732,18 +1838,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 run_id = report_path.stem
 
         if not report_path or not report_path.exists():
-            self._json_response(
-                200,
-                {
+            payload = {
+                "exists": False,
+                "run_id": run_id or None,
+                "status": "waiting",
+                "usage_estimate": _pipeline_usage_estimate("", {}),
+                "steps": _pipeline_steps("waiting", {}),
+                "report_tail": "",
+            }
+            ping_role = _jarvis_ping_role(run_id)
+            if ping_role:
+                payload = {
                     "exists": False,
-                    "run_id": run_id or None,
-                    "status": "waiting",
-                    "report_path": str(report_path) if report_path else None,
-                    "usage_estimate": _pipeline_usage_estimate("", {}),
-                    "steps": _pipeline_steps("waiting", {}),
-                    "report_tail": "",
-                },
-            )
+                    "run_id": run_id,
+                    "role": ping_role,
+                    "status": "starting",
+                }
+            else:
+                payload["report_path"] = str(report_path) if report_path else None
+            self._json_response(200, payload)
             return
 
         try:
@@ -1752,6 +1865,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(500, {"error": str(exc), "run_id": run_id})
             return
         payload["run_id"] = run_id
+        ping_role = _jarvis_ping_role(run_id) or _pipeline_report_field(
+            report_path.read_text(encoding="utf-8", errors="replace"),
+            "Ping role",
+        )
+        if ping_role in JARVIS_PING_ROLES:
+            payload = {
+                "exists": True,
+                "run_id": run_id,
+                "role": ping_role,
+                "status": payload.get("status", "starting"),
+                "result_summary": payload.get("result_summary", ""),
+                "updated_at": payload.get("updated_at"),
+            }
         self._json_response(200, payload)
 
     def _handle_jarvis_pipeline_history(self, parsed):
