@@ -20,7 +20,7 @@ fi
 
 PING_ROLE="${JARVIS_AGENT_PING_ROLE:-}"
 case "$PING_ROLE" in
-  supervisor|builder|tester|"") ;;
+  coordinator|researcher|builder|designer|infrastructure|vault|analyst|"") ;;
   *)
     echo "unsupported agent ping role" >&2
     exit 2
@@ -889,9 +889,13 @@ EOF
 
 if [[ -n "$PING_ROLE" ]]; then
   case "$PING_ROLE" in
-    supervisor) PING_TITLE="Supervisor" ;;
-    builder) PING_TITLE="Builder" ;;
-    tester) PING_TITLE="Tester" ;;
+    coordinator) PING_TITLE="Главный координатор" ;;
+    researcher) PING_TITLE="Исследователь" ;;
+    builder) PING_TITLE="Разработчик" ;;
+    designer) PING_TITLE="Дизайнер" ;;
+    infrastructure) PING_TITLE="Инженер инфраструктуры" ;;
+    vault) PING_TITLE="Хранитель знаний" ;;
+    analyst) PING_TITLE="Аналитик" ;;
   esac
   PING_SYSTEM="Ты JARVIS $PING_TITLE. Это только read-only ping доступности. Не меняй файлы, не запускай инструменты и команды, не просматривай секреты и не выполняй backlog. Ответь кратко: PONG и «на связи»."
   PING_PROMPT="Read-only ping. Не меняй ничего. Ответь только: PONG — $PING_TITLE на связи."
