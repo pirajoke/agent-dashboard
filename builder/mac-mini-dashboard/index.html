@@ -2412,6 +2412,26 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   margin-top: 3px;
   color: #8f887d;
   font: 700 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.jarvis-role-next {
+  display: block;
+  margin-top: 2px;
+  color: #bdb09d;
+  font: 700 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.jarvis-role-task {
+  display: inline-block;
+  margin-top: 3px;
+  color: #efd18a;
+  font: 800 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+.jarvis-role-task[hidden] {
+  display: none;
 }
 .jarvis-pipeline-role.working .jarvis-role-status { color: #8eb7d8; }
 .jarvis-pipeline-role.done .jarvis-role-status { color: #a8cf73; }
@@ -2826,7 +2846,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <div class="jarvis-run-header">
           <div>
             <div class="jarvis-run-title">Agent Pipeline</div>
-            <div class="jarvis-run-subtitle">Агенты выполняют задачи из JARVIS · 7 постоянных ролей · ручной пинг ничего не меняет</div>
+            <div class="jarvis-run-subtitle">Агенты выполняют задачи из JARVIS · пинг проверяет статус и запускает только одну уже одобренную задачу</div>
           </div>
         </div>
         <div class="jarvis-run-flow jarvis-pipeline-role-strip" id="jarvis-run-flow">
@@ -2835,63 +2855,77 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
             <div class="jarvis-role-copy">
               <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Главный координатор</div>
               <div class="jarvis-flow-step-detail">Центр управления</div>
-              <span class="jarvis-role-status" id="jarvis-coordinator-status" role="status" aria-live="polite">ожидает задач</span>
+              <span class="jarvis-role-status" id="jarvis-coordinator-status" role="status" aria-live="polite">Статус: ожидает задач</span>
+              <span class="jarvis-role-next" id="jarvis-coordinator-next">Дальше: нажмите «Пинг» для проверки.</span>
+              <a class="jarvis-role-task" id="jarvis-coordinator-task" href="" target="_blank" rel="noopener noreferrer" hidden>Открыть задачу</a>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="coordinator" aria-describedby="jarvis-coordinator-status" onclick="pingJarvisAgent('coordinator')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="coordinator" aria-describedby="jarvis-coordinator-status jarvis-coordinator-next" onclick="pingJarvisAgent('coordinator')">Пинг</button>
           </div>
           <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="RESEARCHER" data-role="researcher" data-jarvis-agent-department="Sales">
             <span class="jarvis-role-sprite" style="--sprite-x: -96px; --sprite-y: -192px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
               <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Исследователь</div>
               <div class="jarvis-flow-step-detail">Sales</div>
-              <span class="jarvis-role-status" id="jarvis-researcher-status" role="status" aria-live="polite">ожидает задач</span>
+              <span class="jarvis-role-status" id="jarvis-researcher-status" role="status" aria-live="polite">Статус: ожидает задач</span>
+              <span class="jarvis-role-next" id="jarvis-researcher-next">Дальше: нажмите «Пинг» для проверки.</span>
+              <a class="jarvis-role-task" id="jarvis-researcher-task" href="" target="_blank" rel="noopener noreferrer" hidden>Открыть задачу</a>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="researcher" aria-describedby="jarvis-researcher-status" onclick="pingJarvisAgent('researcher')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="researcher" aria-describedby="jarvis-researcher-status jarvis-researcher-next" onclick="pingJarvisAgent('researcher')">Пинг</button>
           </div>
           <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="BUILDER" data-role="builder" data-jarvis-agent-department="Development">
             <span class="jarvis-role-sprite" style="--sprite-x: -288px; --sprite-y: -192px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
               <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Разработчик</div>
               <div class="jarvis-flow-step-detail">Development</div>
-              <span class="jarvis-role-status" id="jarvis-builder-status" role="status" aria-live="polite">ожидает задач</span>
+              <span class="jarvis-role-status" id="jarvis-builder-status" role="status" aria-live="polite">Статус: ожидает задач</span>
+              <span class="jarvis-role-next" id="jarvis-builder-next">Дальше: нажмите «Пинг» для проверки.</span>
+              <a class="jarvis-role-task" id="jarvis-builder-task" href="" target="_blank" rel="noopener noreferrer" hidden>Открыть задачу</a>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="builder" aria-describedby="jarvis-builder-status" onclick="pingJarvisAgent('builder')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="builder" aria-describedby="jarvis-builder-status jarvis-builder-next" onclick="pingJarvisAgent('builder')">Пинг</button>
           </div>
           <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="DESIGNER" data-role="designer" data-jarvis-agent-department="Design">
             <span class="jarvis-role-sprite" style="--sprite-x: -192px; --sprite-y: -64px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
               <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Дизайнер</div>
               <div class="jarvis-flow-step-detail">Design</div>
-              <span class="jarvis-role-status" id="jarvis-designer-status" role="status" aria-live="polite">ожидает задач</span>
+              <span class="jarvis-role-status" id="jarvis-designer-status" role="status" aria-live="polite">Статус: ожидает задач</span>
+              <span class="jarvis-role-next" id="jarvis-designer-next">Дальше: нажмите «Пинг» для проверки.</span>
+              <a class="jarvis-role-task" id="jarvis-designer-task" href="" target="_blank" rel="noopener noreferrer" hidden>Открыть задачу</a>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="designer" aria-describedby="jarvis-designer-status" onclick="pingJarvisAgent('designer')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="designer" aria-describedby="jarvis-designer-status jarvis-designer-next" onclick="pingJarvisAgent('designer')">Пинг</button>
           </div>
           <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="INFRASTRUCTURE" data-role="infrastructure" data-jarvis-agent-department="Infrastructure">
             <span class="jarvis-role-sprite" style="--sprite-x: -288px; --sprite-y: -64px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
               <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Инженер инфраструктуры</div>
               <div class="jarvis-flow-step-detail">Infrastructure</div>
-              <span class="jarvis-role-status" id="jarvis-infrastructure-status" role="status" aria-live="polite">ожидает задач</span>
+              <span class="jarvis-role-status" id="jarvis-infrastructure-status" role="status" aria-live="polite">Статус: ожидает задач</span>
+              <span class="jarvis-role-next" id="jarvis-infrastructure-next">Дальше: нажмите «Пинг» для проверки.</span>
+              <a class="jarvis-role-task" id="jarvis-infrastructure-task" href="" target="_blank" rel="noopener noreferrer" hidden>Открыть задачу</a>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="infrastructure" aria-describedby="jarvis-infrastructure-status" onclick="pingJarvisAgent('infrastructure')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="infrastructure" aria-describedby="jarvis-infrastructure-status jarvis-infrastructure-next" onclick="pingJarvisAgent('infrastructure')">Пинг</button>
           </div>
           <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="VAULT" data-role="vault" data-jarvis-agent-department="Internal">
             <span class="jarvis-role-sprite" style="--sprite-x: 0px; --sprite-y: -64px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
               <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Хранитель знаний</div>
               <div class="jarvis-flow-step-detail">Internal</div>
-              <span class="jarvis-role-status" id="jarvis-vault-status" role="status" aria-live="polite">ожидает задач</span>
+              <span class="jarvis-role-status" id="jarvis-vault-status" role="status" aria-live="polite">Статус: ожидает задач</span>
+              <span class="jarvis-role-next" id="jarvis-vault-next">Дальше: нажмите «Пинг» для проверки.</span>
+              <a class="jarvis-role-task" id="jarvis-vault-task" href="" target="_blank" rel="noopener noreferrer" hidden>Открыть задачу</a>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="vault" aria-describedby="jarvis-vault-status" onclick="pingJarvisAgent('vault')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="vault" aria-describedby="jarvis-vault-status jarvis-vault-next" onclick="pingJarvisAgent('vault')">Пинг</button>
           </div>
           <div class="jarvis-flow-step jarvis-pipeline-role pending" data-jarvis-agent-id="ANALYST" data-role="analyst" data-jarvis-agent-department="Finance">
             <span class="jarvis-role-sprite" style="--sprite-x: -96px; --sprite-y: -64px;" aria-hidden="true"></span>
             <div class="jarvis-role-copy">
               <div class="jarvis-flow-step-name"><span class="jarvis-flow-dot"></span>Аналитик</div>
               <div class="jarvis-flow-step-detail">Finance</div>
-              <span class="jarvis-role-status" id="jarvis-analyst-status" role="status" aria-live="polite">ожидает&#32;задач</span>
+              <span class="jarvis-role-status" id="jarvis-analyst-status" role="status" aria-live="polite">Статус: ожидает&#32;задач</span>
+              <span class="jarvis-role-next" id="jarvis-analyst-next">Дальше: нажмите «Пинг» для проверки.</span>
+              <a class="jarvis-role-task" id="jarvis-analyst-task" href="" target="_blank" rel="noopener noreferrer" hidden>Открыть задачу</a>
             </div>
-            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="analyst" aria-describedby="jarvis-analyst-status" onclick="pingJarvisAgent('analyst')">Пинг</button>
+            <button class="jarvis-ping-button" type="button" data-jarvis-ping-role="analyst" aria-describedby="jarvis-analyst-status jarvis-analyst-next" onclick="pingJarvisAgent('analyst')">Пинг</button>
           </div>
         </div>
         <details class="jarvis-history-panel" id="jarvis-history-panel">
@@ -3117,6 +3151,8 @@ const JARVIS_LAST_RUN_KEY = 'command-center.jarvis-last-run';
 let currentJarvisRunId = localStorage.getItem(JARVIS_LAST_RUN_KEY) || '';
 let lastJarvisTaskText = '';
 let jarvisRunTimer = null;
+let jarvisPingAttemptId = 0;
+const jarvisPingAttempts = new Map();
 const pixelAgentsView = {
   x: 0,
   y: 0,
@@ -3779,15 +3815,50 @@ async function refreshJarvisHistory() {
   }
 }
 
-function setJarvisPingState(role, state, message) {
+function safeGitHubIssueUrl(value, issueNumber) {
+  if (!Number.isInteger(issueNumber) || issueNumber < 1 || typeof value !== 'string') return '';
+  try {
+    const parsed = new URL(value);
+    const secureGitHub = parsed.protocol === 'https:' && parsed.hostname === 'github.com';
+    if (!secureGitHub) return '';
+    if (parsed.username || parsed.password || parsed.port || parsed.search || parsed.hash) return '';
+    const match = parsed.pathname.match(/^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/([1-9][0-9]*)$/);
+    return match && Number(match[1]) === issueNumber ? parsed.href : '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function setJarvisPingState(role, data = {}) {
   const card = document.querySelector(`.jarvis-pipeline-role[data-role="${role}"]`);
   const status = document.getElementById(`jarvis-${role}-status`);
+  const next = document.getElementById(`jarvis-${role}-next`);
+  const task = document.getElementById(`jarvis-${role}-task`);
   const button = document.querySelector(`[data-jarvis-ping-role="${role}"]`);
-  if (status) status.textContent = message;
-  if (button) button.disabled = state === 'checking';
+  const allowedStates = ['checking', 'working', 'idle', 'blocked', 'failed'];
+  const state = allowedStates.includes(data.state) ? data.state : 'failed';
+  const summary = typeof data.summary === 'string' && data.summary ? data.summary : 'Не удалось получить статус агента.';
+  const nextStep = typeof data.next_step === 'string' && data.next_step ? data.next_step : 'Повторите проверку позже.';
+  const issueNumber = Number.isInteger(data.issue_number) ? data.issue_number : null;
+  const issueUrl = safeGitHubIssueUrl(data.issue_url, issueNumber);
+  if (status) status.textContent = `Статус: ${summary}`;
+  if (next) next.textContent = `Дальше: ${nextStep}`;
+  if (task) {
+    task.removeAttribute('href');
+    task.hidden = true;
+    if (issueUrl) {
+      task.href = issueUrl;
+      task.textContent = `Задача #${issueNumber}`;
+      task.hidden = false;
+    }
+  }
+  if (button) {
+    button.disabled = state === 'checking' || state === 'working';
+    button.textContent = state === 'checking' ? 'Проверяем…' : state === 'working' ? 'Работает' : 'Пинг';
+  }
   if (card) {
     card.classList.remove('working', 'done', 'failed', 'pending');
-    card.classList.add(state === 'checking' ? 'working' : state === 'online' ? 'done' : state === 'error' ? 'failed' : 'pending');
+    card.classList.add(state === 'checking' || state === 'working' ? 'working' : state === 'idle' ? 'done' : state === 'failed' ? 'failed' : 'pending');
     card.setAttribute('aria-busy', state === 'checking' ? 'true' : 'false');
   }
 }
@@ -3800,7 +3871,19 @@ function resetJarvisAgentRoster() {
     card.classList.add('pending');
     card.setAttribute('aria-busy', 'false');
     const statusNode = card.querySelector('.jarvis-role-status');
-    if (statusNode) statusNode.textContent = idleCopy;
+    const nextNode = card.querySelector('.jarvis-role-next');
+    const taskNode = card.querySelector('.jarvis-role-task');
+    const button = card.querySelector('.jarvis-ping-button');
+    if (statusNode) statusNode.textContent = `Статус: ${idleCopy}`;
+    if (nextNode) nextNode.textContent = 'Дальше: нажмите «Пинг» для проверки.';
+    if (taskNode) {
+      taskNode.removeAttribute('href');
+      taskNode.hidden = true;
+    }
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Пинг';
+    }
   }
 }
 
@@ -3845,7 +3928,23 @@ function renderJarvisAgentRoster(payload) {
       : update.status === 'failed' ? 'failed' : update.status === 'queued' || update.status === 'waiting' ? 'pending' : 'working';
     update.card.classList.add(stateClass);
     const statusNode = update.card.querySelector('.jarvis-role-status');
-    if (statusNode) statusNode.textContent = update.copy;
+    const nextNode = update.card.querySelector('.jarvis-role-next');
+    const button = update.card.querySelector('.jarvis-ping-button');
+    const isWorking = update.status === 'active' || update.status === 'testing';
+    if (statusNode) statusNode.textContent = `Статус: ${update.copy}`;
+    if (nextNode) {
+      nextNode.textContent = isWorking
+        ? 'Дальше: дождитесь результата и проверки.'
+        : update.status === 'queued'
+          ? 'Дальше: задача ожидает запуска.'
+          : update.status === 'waiting'
+            ? 'Дальше: требуется решение владельца.'
+            : 'Дальше: нажмите «Пинг» для проверки.';
+    }
+    if (button) {
+      button.disabled = isWorking;
+      button.textContent = isWorking ? 'Работает' : 'Пинг';
+    }
   }
 }
 
@@ -3867,10 +3966,12 @@ function waitForJarvisPing(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function pollJarvisAgentPing(role, runId) {
+async function pollJarvisAgentPing(role, runId, attemptId) {
   const deadline = Date.now() + 120000;
   while (Date.now() < deadline) {
+    if (jarvisPingAttempts.get(role) !== attemptId) return;
     await waitForJarvisPing(1800);
+    if (jarvisPingAttempts.get(role) !== attemptId) return;
     const response = await fetch(
       `${JARVIS_PIPELINE_STATUS_API}?run_id=${encodeURIComponent(runId)}&_=${Date.now()}`,
       { headers: jarvisRunHeaders(), cache: 'no-store' },
@@ -3882,13 +3983,23 @@ async function pollJarvisAgentPing(role, runId) {
     if (data.run_id !== runId || data.role !== role) {
       throw new Error('неверный ответ агента');
     }
-    const status = String(data.status || '').toLowerCase();
-    if (status === 'done' || status === 'completed') {
-      setJarvisPingState(role, 'online', 'на связи');
-      return;
+    if (jarvisPingAttempts.get(role) !== attemptId) return;
+    const state = String(data.state || '').toLowerCase();
+    const summary = data.summary;
+    const nextStep = data.next_step;
+    const autoStarted = data.auto_started;
+    if (!['checking', 'working', 'idle', 'blocked', 'failed'].includes(state)) {
+      throw new Error('неверный статус агента');
     }
-    if (['failed', 'error', 'blocked_auth', 'blocked_usage_limit', 'needs_approval'].includes(status)) {
-      setJarvisPingState(role, 'error', 'не отвечает · ошибка');
+    if (typeof summary !== 'string' || typeof nextStep !== 'string' || typeof autoStarted !== 'boolean') {
+      throw new Error('неполный ответ агента');
+    }
+    if (autoStarted && state !== 'working') {
+      throw new Error('противоречивый ответ агента');
+    }
+    setJarvisPingState(role, data);
+    if (state === 'working' || state === 'idle' || state === 'blocked' || state === 'failed') {
+      if (jarvisPingAttempts.get(role) === attemptId) jarvisPingAttempts.delete(role);
       return;
     }
   }
@@ -3897,6 +4008,9 @@ async function pollJarvisAgentPing(role, runId) {
 
 async function pingJarvisAgent(role) {
   if (!['coordinator', 'researcher', 'builder', 'designer', 'infrastructure', 'vault', 'analyst'].includes(role)) return;
+  if (jarvisPingAttempts.has(role)) return;
+  const attemptId = ++jarvisPingAttemptId;
+  jarvisPingAttempts.set(role, attemptId);
   try {
     const response = await fetch(JARVIS_PIPELINE_PING_API, {
       method: 'POST',
@@ -3905,21 +4019,31 @@ async function pingJarvisAgent(role) {
       body: JSON.stringify({ role }),
     });
     const data = await response.json().catch(() => ({}));
+    if (jarvisPingAttempts.get(role) !== attemptId) return;
     if (!response.ok) {
       const message = response.status === 401
         ? 'нужен доступ владельца'
         : response.status === 409 ? 'другой агент уже проверяется' : 'не отвечает · ошибка';
-      setJarvisPingState(role, 'error', message);
+      setJarvisPingState(role, { state: 'failed', summary: message, next_step: 'Повторите проверку позже.' });
+      jarvisPingAttempts.delete(role);
       return;
     }
     if (data.role !== role || !/^ping-[a-z]+-[A-Za-z0-9._-]+$/.test(String(data.run_id || ''))) {
-      setJarvisPingState(role, 'error', 'не отвечает · ошибка');
+      setJarvisPingState(role, { state: 'failed', summary: 'не отвечает · ошибка', next_step: 'Повторите проверку позже.' });
+      jarvisPingAttempts.delete(role);
       return;
     }
-    setJarvisPingState(role, 'checking', 'проверяем…');
-    await pollJarvisAgentPing(role, data.run_id);
+    setJarvisPingState(role, {
+      state: 'checking',
+      summary: 'Проверяем…',
+      next_step: 'Проверяем связь и одобренные задачи.',
+      auto_started: false,
+    });
+    await pollJarvisAgentPing(role, data.run_id, attemptId);
   } catch (error) {
-    setJarvisPingState(role, 'error', 'не отвечает · ошибка');
+    if (jarvisPingAttempts.get(role) !== attemptId) return;
+    jarvisPingAttempts.delete(role);
+    setJarvisPingState(role, { state: 'failed', summary: 'не отвечает · ошибка', next_step: 'Повторите проверку позже.' });
   }
 }
 
