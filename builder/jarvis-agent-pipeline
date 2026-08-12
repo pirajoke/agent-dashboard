@@ -69,6 +69,7 @@ SELF_HEAL_ENABLED="${JARVIS_AGENT_SELF_HEAL_ENABLED:-1}"
 SELF_HEAL_MAX_RETRIES="${JARVIS_AGENT_SELF_HEAL_MAX_RETRIES:-1}"
 SELF_LEARNING_LEDGER="${JARVIS_AGENT_SELF_LEARNING_LEDGER:-$HOME/omniharness/.omniharness/jarvis-self-learning.jsonl}"
 AGENT_PROVIDER="${JARVIS_AGENT_PROVIDER:-auto}"
+CLAUDE_BIN="${JARVIS_CLAUDE_BIN:-claude}"
 AGENT_BUDGET="${JARVIS_AGENT_BUDGET:-normal}"
 AGENT_BUDGET="${AGENT_BUDGET:l}"
 case "$AGENT_BUDGET" in
@@ -270,7 +271,7 @@ run_claude_role() {
   allowed_tools="$(omni_allowed_tools_for_role "$role" "$risk")"
   omni_audit "$role" "$permission" "$resolved_permission" "$risk" "$allowed_tools"
 
-  claude_cmd=(claude -p
+  claude_cmd=("$CLAUDE_BIN" -p
     --model "$MODEL"
     --name "jarvis-${role}-${RUN_ID}"
     --permission-mode "$resolved_permission"
