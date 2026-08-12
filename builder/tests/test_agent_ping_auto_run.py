@@ -286,6 +286,7 @@ class AgentPingRunnerDelegationTests(unittest.TestCase):
             JARVIS_AGENT_ENV_FILE=str(root / "missing.env"),
             JARVIS_AGENT_PING_ROLE="builder",
             JARVIS_AGENT_PROVIDER="claude",
+            JARVIS_CLAUDE_BIN=str(claude),
             JARVIS_AGENT_PROJECT_NAME="jarvis",
             JARVIS_PROJECT_DIR=str(project),
             JARVIS_AGENT_REPORT_DIR=str(reports),
