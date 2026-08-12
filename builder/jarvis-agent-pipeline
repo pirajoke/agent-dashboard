@@ -654,6 +654,153 @@ append_result() {
   } >> "$REPORT"
 }
 
+append_agent_runner_result() {
+  local runner_output="$1"
+
+  JARVIS_AGENT_RUNNER_OUTPUT="$runner_output" \
+  JARVIS_AGENT_RUNNER_ROLE="$PING_ROLE" \
+  JARVIS_AGENT_RUNNER_REPORT="$REPORT" \
+  python3 - <<'PY'
+import json
+import os
+import re
+from pathlib import Path
+from urllib.parse import urlsplit
+
+
+SAFE_STATES = {"checking", "working", "idle", "blocked", "failed"}
+REQUIRED_KEYS = {"role", "state", "summary", "next_step", "auto_started"}
+OPTIONAL_KEYS = {"issue_url", "issue_number"}
+PRIVATE_MARKERS = (
+    "/users/", "/private/", "file://", "http://", "https://", "ghp_",
+    "github_pat_", "prompt", "issue_body", "tool_output", "model_output",
+    "credentials", "environment", "report_path", "project_dir", "bridge_task_id",
+    "private_url", "traceback",
+)
+SECRET_PATTERNS = (
+    re.compile(r"sk-proj-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+    re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
+    re.compile(r"xox[baprs]-[A-Za-z0-9-]{20,}"),
+    re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+)
+
+
+def public_text(value):
+    if not isinstance(value, str):
+        return None
+    text = re.sub(r"\s+", " ", value).strip()
+    if (
+        not text
+        or len(text) > 240
+        or any(ord(char) < 32 for char in text)
+        or "/" in text
+        or "\\" in text
+    ):
+        return None
+    lowered = text.lower()
+    if any(marker in lowered for marker in PRIVATE_MARKERS):
+        return None
+    if re.search(r"\b(?:data|javascript|mailto|ssh|ftp|smb):", text, re.IGNORECASE):
+        return None
+    if re.search(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text, re.IGNORECASE):
+        return None
+    if any(pattern.search(text) for pattern in SECRET_PATTERNS):
+        return None
+    return text
+
+
+def issue_url(value, number):
+    if not isinstance(value, str) or isinstance(number, bool) or not isinstance(number, int) or number < 1:
+        return None
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "github.com"
+        or parsed.username
+        or parsed.password
+        or port is not None
+        or parsed.query
+        or parsed.fragment
+    ):
+        return None
+    match = re.fullmatch(r"/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/issues/([1-9][0-9]*)", parsed.path)
+    if not match or int(match.group(1)) != number:
+        return None
+    return value
+
+
+def failed_lines():
+    return [
+        "- Agent state: failed",
+        "- Agent summary: Не удалось получить безопасный статус агента.",
+        "- Agent next step: Повторите проверку позже.",
+        "- Agent auto-started: false",
+    ]
+
+
+valid = False
+lines = failed_lines()
+try:
+    raw = os.environ.get("JARVIS_AGENT_RUNNER_OUTPUT", "")
+    if len(raw.encode("utf-8")) > 8192:
+        raise ValueError("runner output too large")
+    data = json.loads(raw)
+    if not isinstance(data, dict) or set(data) - (REQUIRED_KEYS | OPTIONAL_KEYS):
+        raise ValueError("invalid keys")
+    if not REQUIRED_KEYS.issubset(data):
+        raise ValueError("missing keys")
+    role = os.environ.get("JARVIS_AGENT_RUNNER_ROLE", "")
+    if data.get("role") != role or data.get("state") not in SAFE_STATES:
+        raise ValueError("invalid role or state")
+    if not isinstance(data.get("auto_started"), bool):
+        raise ValueError("invalid auto_started")
+    if data["auto_started"] and data["state"] != "working":
+        raise ValueError("auto-start/state mismatch")
+    summary = public_text(data.get("summary"))
+    next_step = public_text(data.get("next_step"))
+    if summary is None or next_step is None:
+        raise ValueError("unsafe public text")
+    has_url = "issue_url" in data
+    has_number = "issue_number" in data
+    if has_url != has_number:
+        raise ValueError("incomplete issue reference")
+    safe_issue_url = None
+    if has_url:
+        safe_issue_url = issue_url(data.get("issue_url"), data.get("issue_number"))
+        if safe_issue_url is None:
+            raise ValueError("unsafe issue reference")
+    lines = [
+        f"- Agent state: {data['state']}",
+        f"- Agent summary: {summary}",
+        f"- Agent next step: {next_step}",
+        f"- Agent auto-started: {'true' if data['auto_started'] else 'false'}",
+    ]
+    if safe_issue_url is not None:
+        lines.extend(
+            [
+                f"- Agent issue URL: {safe_issue_url}",
+                f"- Agent issue number: {data['issue_number']}",
+            ]
+        )
+    valid = True
+except (json.JSONDecodeError, TypeError, ValueError):
+    pass
+
+report = Path(os.environ["JARVIS_AGENT_RUNNER_REPORT"])
+with report.open("a", encoding="utf-8") as handle:
+    handle.write("\n## Agent status\n\n")
+    handle.write("\n".join(lines))
+    handle.write("\n")
+raise SystemExit(0 if valid else 1)
+PY
+}
+
 publish_bridge_result() {
   local result_status="$1"
   local detail="${2:-}"
@@ -910,8 +1057,43 @@ if [[ -n "$PING_ROLE" ]]; then
     echo "report $REPORT"
     exit 1
   fi
-  append_result "done" "$PING_TITLE на связи"
-  pixel_event done "$PING_ROLE" "$PING_TITLE на связи" "Read-only ping complete" "No work was started"
+
+  RUNNER_OUTPUT=""
+  RUNNER_CODE="0"
+  set +e
+  if [[ -n "${JARVIS_AGENT_AUTO_RUNNER:-}" ]]; then
+    if [[ -x "$JARVIS_AGENT_AUTO_RUNNER" ]]; then
+      RUNNER_OUTPUT="$("$JARVIS_AGENT_AUTO_RUNNER" "$PING_ROLE" 2>&1)"
+      RUNNER_CODE=$?
+    else
+      RUNNER_CODE="127"
+    fi
+  elif [[ -x "$PROJECT_DIR/.venv/bin/python" ]]; then
+    RUNNER_OUTPUT="$("$PROJECT_DIR/.venv/bin/python" -m jarvis.dashboard_agent_runner --role "$PING_ROLE" 2>&1)"
+    RUNNER_CODE=$?
+  else
+    RUNNER_CODE="127"
+  fi
+  VALIDATION_CODE="1"
+  if (( RUNNER_CODE == 0 )); then
+    append_agent_runner_result "$RUNNER_OUTPUT"
+    VALIDATION_CODE=$?
+  else
+    append_agent_runner_result ""
+    VALIDATION_CODE=$?
+  fi
+  set -e
+
+  if (( VALIDATION_CODE != 0 )); then
+    append_result "failed" "Не удалось получить безопасный статус агента"
+    pixel_event done "$PING_ROLE" "Status unavailable" "JARVIS runner returned no safe status" "Retry later"
+    echo "agent status failed"
+    echo "report $REPORT"
+    exit 1
+  fi
+
+  append_result "done" "$PING_TITLE вернул безопасный статус"
+  pixel_event done "$PING_ROLE" "$PING_TITLE вернул статус" "Approved-task check complete" "Follow the inline next step"
   echo "PONG $PING_TITLE"
   echo "report $REPORT"
   exit 0

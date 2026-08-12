@@ -192,7 +192,8 @@ class CanonicalAgentRosterMarkupTests(unittest.TestCase):
                 self.assertEqual(buttons[0].get("type"), "button")
                 self.assertEqual(buttons[0].get("data-jarvis-ping-role"), role)
                 self.assertEqual(
-                    buttons[0].get("aria-describedby"), f"jarvis-{role}-status"
+                    set(buttons[0].get("aria-describedby", "").split()),
+                    {f"jarvis-{role}-status", f"jarvis-{role}-next"},
                 )
 
         permanent_text = " ".join(str(card["text"]) for card in self.cards)
@@ -299,10 +300,8 @@ class CanonicalAgentRosterMarkupTests(unittest.TestCase):
             poll,
             r"data\.run_id\s*!==?\s*runId\s*\|\|\s*data\.role\s*!==?\s*role",
         )
-        self.assertRegex(
-            poll,
-            re.compile(r"(?:done|completed)[\s\S]{0,240}?['\"]online['\"]"),
-        )
+        for state in ("checking", "working", "idle", "blocked", "failed"):
+            self.assertIn(state, poll + _function_source(self.html, "setJarvisPingState"))
 
     def test_ac4_desktop_4_plus_3_intermediate_3_and_mobile_2_column_geometry(self):
         desktop = _first_rule(self.html, ".jarvis-pipeline-role-strip")
@@ -392,7 +391,7 @@ class CanonicalAgentRosterMarkupTests(unittest.TestCase):
             r"@media\s*\(prefers-reduced-motion:\s*reduce\)[\s\S]*?"
             r"\.jarvis-ping-button[\s\S]*?animation\s*:\s*none\s*!important",
         )
-        for visible in ("проверяем…", "на связи", "не отвечает · ошибка"):
+        for visible in ("Проверяем…", "Работает", "Статус:", "Дальше:"):
             self.assertIn(visible, self.html)
 
     def test_ac5_github_history_contract_is_unchanged_safe_and_concise(self):
@@ -456,13 +455,21 @@ class CanonicalAgentPingBoundaryTests(unittest.TestCase):
                 patch.object(server, "_pipeline_report_payload", return_value=raw),
                 patch.object(server, "_jarvis_ping_role", return_value="infrastructure"),
             ):
+                report_path.write_text(
+                    "# Ping\n"
+                    "- Agent state: idle\n"
+                    "- Agent summary: Инженер инфраструктуры на связи.\n"
+                    "- Agent next step: Нет одобренной задачи для этого агента.\n"
+                    "- Agent auto-started: false\n",
+                    encoding="utf-8",
+                )
                 handler._handle_jarvis_pipeline_status(SimpleNamespace(query=f"run_id={run_id}"))
 
         self.assertEqual(response["status"], 200)
         payload = response["payload"]
         self.assertEqual(
-            tuple(payload),
-            ("exists", "run_id", "role", "status", "result_summary", "updated_at"),
+            set(payload),
+            {"run_id", "role", "state", "summary", "next_step", "auto_started", "updated_at"},
         )
         self.assertEqual(payload["role"], "infrastructure")
         self.assertNotIn(tmp, repr(payload))

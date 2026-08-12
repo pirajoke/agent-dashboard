@@ -103,9 +103,11 @@ JARVIS_PING_ROLES = frozenset(
         "analyst",
     }
 )
+JARVIS_PING_SAFE_STATES = frozenset({"checking", "working", "idle", "blocked", "failed"})
 JARVIS_PING_TASK = (
-    "Read-only ping: do not change files or run tools. "
-    "Reply only with PONG and a short confirmation that the selected agent is available."
+    "Read-only ping: do not change files or run tools. Reply only with PONG and a short "
+    "confirmation that the selected agent is available. After that, let the installed JARVIS "
+    "runner inspect and start at most one already-approved task for this exact agent."
 )
 _JARVIS_PING_LOCK = threading.Lock()
 _JARVIS_PING_PROCESS = None
@@ -167,6 +169,163 @@ def _jarvis_ping_role(run_id: str) -> str | None:
         return None
     with _JARVIS_PING_LOCK:
         return _JARVIS_PING_RUNS.get(run_id)
+
+
+def _jarvis_ping_process_running() -> bool:
+    with _JARVIS_PING_LOCK:
+        return _JARVIS_PING_PROCESS is not None and _JARVIS_PING_PROCESS.poll() is None
+
+
+def _jarvis_ping_public_text(value: object, *, limit: int = 240) -> str | None:
+    if not isinstance(value, str):
+        return None
+    text = re.sub(r"\s+", " ", value).strip()
+    if (
+        not text
+        or len(text) > limit
+        or any(ord(char) < 32 for char in text)
+        or "/" in text
+        or "\\" in text
+    ):
+        return None
+    lowered = text.lower()
+    private_markers = (
+        "/users/",
+        "/private/",
+        "file://",
+        "http://",
+        "https://",
+        "ghp_",
+        "github_pat_",
+        "prompt",
+        "issue_body",
+        "tool_output",
+        "model_output",
+        "credentials",
+        "environment",
+        "report_path",
+        "project_dir",
+        "bridge_task_id",
+        "private_url",
+        "traceback",
+    )
+    if any(marker in lowered for marker in private_markers):
+        return None
+    if re.search(r"\b(?:data|javascript|mailto|ssh|ftp|smb):", text, re.IGNORECASE):
+        return None
+    if re.search(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", text, re.IGNORECASE):
+        return None
+    if any(pattern.search(text) for pattern in SECRET_TEXT_PATTERNS):
+        return None
+    return text
+
+
+def _jarvis_ping_issue_url(value: object, issue_number: object) -> str | None:
+    if not isinstance(value, str) or isinstance(issue_number, bool) or not isinstance(issue_number, int):
+        return None
+    if issue_number < 1:
+        return None
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname != "github.com"
+        or parsed.username
+        or parsed.password
+        or port is not None
+    ):
+        return None
+    if parsed.query or parsed.fragment:
+        return None
+    match = re.fullmatch(r"/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/issues/([1-9][0-9]*)", parsed.path)
+    if not match or int(match.group(1)) != issue_number:
+        return None
+    return value
+
+
+def _jarvis_ping_failed_status(run_id: str, role: str, updated_at: str | None) -> dict:
+    return {
+        "run_id": run_id,
+        "role": role,
+        "state": "failed",
+        "summary": "Не удалось получить безопасный статус агента.",
+        "next_step": "Повторите проверку позже.",
+        "auto_started": False,
+        "updated_at": updated_at,
+    }
+
+
+def _jarvis_ping_report_status(
+    report_path: Path,
+    *,
+    run_id: str,
+    role: str,
+    updated_at: str | None,
+) -> dict:
+    try:
+        report_text = report_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return _jarvis_ping_failed_status(run_id, role, updated_at)
+
+    section_marker = "\n## Agent status\n"
+    if section_marker in report_text:
+        agent_status_text = report_text.rsplit(section_marker, 1)[1]
+        agent_status_text = agent_status_text.split("\n## ", 1)[0]
+    elif not re.search(r"(?m)^##\s+", report_text):
+        # Accept a standalone status document for backwards compatibility. Full
+        # pipeline reports must use the dedicated final section so provider text
+        # can never impersonate runner fields.
+        agent_status_text = report_text
+    else:
+        agent_status_text = ""
+
+    state = _pipeline_report_field(agent_status_text, "Agent state").lower()
+    summary = _jarvis_ping_public_text(_pipeline_report_field(agent_status_text, "Agent summary"))
+    next_step = _jarvis_ping_public_text(_pipeline_report_field(agent_status_text, "Agent next step"))
+    auto_started_text = _pipeline_report_field(agent_status_text, "Agent auto-started").lower()
+    if (
+        state not in JARVIS_PING_SAFE_STATES
+        or summary is None
+        or next_step is None
+        or auto_started_text not in {"true", "false"}
+    ):
+        if _jarvis_ping_process_running():
+            return {
+                "run_id": run_id,
+                "role": role,
+                "state": "checking",
+                "summary": "Проверяем связь и одобренные задачи.",
+                "next_step": "Дождитесь ответа агента.",
+                "auto_started": False,
+                "updated_at": updated_at,
+            }
+        return _jarvis_ping_failed_status(run_id, role, updated_at)
+
+    auto_started = auto_started_text == "true"
+    if auto_started and state != "working":
+        return _jarvis_ping_failed_status(run_id, role, updated_at)
+
+    payload = {
+        "run_id": run_id,
+        "role": role,
+        "state": state,
+        "summary": summary,
+        "next_step": next_step,
+        "auto_started": auto_started,
+        "updated_at": updated_at,
+    }
+    issue_number_text = _pipeline_report_field(agent_status_text, "Agent issue number")
+    issue_number = int(issue_number_text) if issue_number_text.isdigit() else None
+    issue_url = _jarvis_ping_issue_url(
+        _pipeline_report_field(agent_status_text, "Agent issue URL"), issue_number
+    )
+    if issue_url is not None and issue_number is not None:
+        payload["issue_url"] = issue_url
+        payload["issue_number"] = issue_number
+    return payload
 
 
 def _run_text(cmd: list[str], timeout: int = 5) -> str:
@@ -1864,13 +2023,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             ping_role = _jarvis_ping_role(run_id)
             if ping_role:
                 payload = {
-                    "exists": False,
                     "run_id": run_id,
                     "role": ping_role,
-                    "status": "starting",
+                    "state": "checking",
+                    "summary": "Проверяем связь и одобренные задачи.",
+                    "next_step": "Дождитесь ответа агента.",
+                    "auto_started": False,
+                    "updated_at": None,
                 }
             else:
                 payload["report_path"] = str(report_path) if report_path else None
+            self._json_response(200, payload)
+            return
+
+        ping_role = _jarvis_ping_role(run_id) or _pipeline_report_field(
+            report_path.read_text(encoding="utf-8", errors="replace"),
+            "Ping role",
+        )
+        if ping_role in JARVIS_PING_ROLES:
+            try:
+                raw_payload = _pipeline_report_payload(report_path, include_tail=False)
+                updated_at = raw_payload.get("updated_at")
+            except Exception:
+                updated_at = None
+            payload = _jarvis_ping_report_status(
+                report_path,
+                run_id=run_id,
+                role=ping_role,
+                updated_at=updated_at,
+            )
             self._json_response(200, payload)
             return
 
@@ -1880,19 +2061,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(500, {"error": str(exc), "run_id": run_id})
             return
         payload["run_id"] = run_id
-        ping_role = _jarvis_ping_role(run_id) or _pipeline_report_field(
-            report_path.read_text(encoding="utf-8", errors="replace"),
-            "Ping role",
-        )
-        if ping_role in JARVIS_PING_ROLES:
-            payload = {
-                "exists": True,
-                "run_id": run_id,
-                "role": ping_role,
-                "status": payload.get("status", "starting"),
-                "result_summary": payload.get("result_summary", ""),
-                "updated_at": payload.get("updated_at"),
-            }
         self._json_response(200, payload)
 
     def _handle_jarvis_pipeline_history(self, parsed):

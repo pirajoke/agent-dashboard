@@ -113,12 +113,13 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
                 self.assertRegex(
                     html,
                     rf'<button\b(?=[^>]*type="button")(?=[^>]*data-jarvis-ping-role="{role}")'
-                    rf'(?=[^>]*aria-describedby="jarvis-{role}-status")[^>]*>\s*Пинг\s*</button>',
+                    rf'(?=[^>]*aria-describedby="(?=[^"]*jarvis-{role}-status)(?=[^"]*jarvis-{role}-next)[^"]+")[^>]*>\s*Пинг\s*</button>',
                 )
                 self.assertRegex(
                     html,
                     rf'id="jarvis-{role}-status"[^>]*(?:role="status"|aria-live="polite")',
                 )
+                self.assertIn(f'id="jarvis-{role}-next"', html)
         self.assertEqual(html.count("ожидает задач"), len(CANONICAL_PING_ROLES))
 
         ping_rule = _last_rule(html, ".jarvis-ping-button")
@@ -155,8 +156,8 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
         self.assertRegex(html, r"JSON\.stringify\(\{\s*role\s*\}\)")
         self.assertIn("jarvisRunHeaders()", html)
         self.assertIn("JARVIS_PIPELINE_STATUS_API", html)
-        self.assertIn("проверяем…", html)
-        self.assertIn("на связи", html)
+        self.assertIn("Проверяем…", html)
+        self.assertIn("Работает", html)
 
         function_start = html.index("async function pingJarvisAgent(role)")
         function_end = html.find("\nfunction ", function_start + 1)
@@ -173,21 +174,21 @@ class CompactAgentPipelineMarkupTests(unittest.TestCase):
             accepted,
             "UI must not show ping activity until the server accepts the request",
         )
-        self.assertRegex(
-            html,
-            r"\.disabled\s*=\s*(?:state|status)\s*===\s*['\"]checking['\"]",
-        )
+        setter_start = html.index("function setJarvisPingState")
+        setter_end = html.find("\nfunction ", setter_start + 1)
+        setter = html[setter_start : setter_end if setter_end >= 0 else len(html)]
+        self.assertRegex(setter, r"\.disabled\s*=")
+        self.assertIn("checking", setter)
+        self.assertIn("working", setter)
+        poll_start = html.index("async function pollJarvisAgentPing")
+        poll_end = html.find("\nasync function ", poll_start + 1)
+        poll = html[poll_start : poll_end if poll_end >= 0 else len(html)]
+        for state in ("checking", "working", "idle", "blocked", "failed"):
+            self.assertIn(state, poll)
         self.assertRegex(
             html,
             re.compile(
-                r"(?:done|completed).*?на связи|на связи.*?(?:done|completed)",
-                re.DOTALL,
-            ),
-        )
-        self.assertRegex(
-            html,
-            re.compile(
-                r"(?:failed|error).*?(?:ошибка|не отвечает)|(?:ошибка|не отвечает).*?(?:failed|error)",
+                r"failed.*?(?:ошибка|не отвечает)|(?:ошибка|не отвечает).*?failed",
                 re.DOTALL,
             ),
         )
