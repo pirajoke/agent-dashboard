@@ -250,7 +250,8 @@ class AgentPingSafeStatusTests(unittest.TestCase):
 class AgentPingRunnerDelegationTests(unittest.TestCase):
     def _run_pipeline(self, *, pong: str, runner_output: object) -> tuple[subprocess.CompletedProcess, Path, Path]:
         zsh = shutil.which("zsh")
-        self.assertIsNotNone(zsh)
+        if zsh is None:
+            self.skipTest("behavioral shell scenarios require zsh")
         root = Path(tempfile.mkdtemp(prefix="agent-ping-auto-run-test-"))
         self.addCleanup(shutil.rmtree, root, True)
         home = root / "home"
