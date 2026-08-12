@@ -1960,6 +1960,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     "JARVIS_AGENT_BUDGET": "cheap",
                     "JARVIS_AGENT_SELF_HEAL_MAX_RETRIES": "0",
                     "JARVIS_AGENT_PING_ROLE": role,
+                    "JARVIS_GITHUB_TASKS_ENABLED": "1",
                 }
             )
             log_file = None

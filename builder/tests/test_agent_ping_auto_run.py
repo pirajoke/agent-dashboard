@@ -504,6 +504,61 @@ class AgentPingInlineProductTests(unittest.TestCase):
 
 
 class AgentPingBoundaryRegressionTests(unittest.TestCase):
+    def test_bug_authorized_ping_enables_approved_tasks_only_in_its_subprocess(self):
+        server = _load_server()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            project_dir = root / "jarvis"
+            report_dir = root / "reports"
+            log_file = root / "logs" / "pipeline.log"
+            pipeline_script = root / "jarvis-agent-pipeline"
+            project_dir.mkdir()
+            pipeline_script.write_text("#!/bin/sh\n", encoding="utf-8")
+            pipeline_script.chmod(0o700)
+
+            handler = server.Handler.__new__(server.Handler)
+            handler._require_dashboard_run_auth = MagicMock(return_value=True)
+            handler._read_json_body = MagicMock(return_value={"role": "coordinator"})
+            response: dict[str, object] = {}
+            handler._json_response = lambda status, payload: response.update(
+                http_status=status, payload=payload
+            )
+            process = MagicMock()
+            process.poll.return_value = None
+
+            with (
+                patch.dict(
+                    os.environ,
+                    {"JARVIS_GITHUB_TASKS_ENABLED": "0"},
+                    clear=False,
+                ),
+                patch.object(server, "JARVIS_PROJECTS", {"jarvis": project_dir}),
+                patch.object(server, "JARVIS_PIPELINE_SCRIPT", pipeline_script),
+                patch.object(server, "JARVIS_PIPELINE_REPORT_DIR", report_dir),
+                patch.object(server, "JARVIS_PIPELINE_LOG_FILE", log_file),
+                patch.object(server, "_JARVIS_PING_PROCESS", None),
+                patch.object(server.subprocess, "Popen", return_value=process) as popen,
+            ):
+                handler._handle_jarvis_pipeline_ping()
+                self.assertEqual(
+                    os.environ["JARVIS_GITHUB_TASKS_ENABLED"],
+                    "0",
+                    "Ping must not enable GitHub tasks process-wide",
+                )
+
+            self.assertEqual(response["http_status"], 202)
+            popen.assert_called_once()
+            args, kwargs = popen.call_args
+            self.assertEqual(
+                args[0], [str(pipeline_script), server.JARVIS_PING_TASK]
+            )
+            self.assertEqual(kwargs["cwd"], str(project_dir))
+            self.assertEqual(kwargs["env"]["JARVIS_AGENT_PING_ROLE"], "coordinator")
+            self.assertEqual(
+                kwargs["env"]["JARVIS_GITHUB_TASKS_ENABLED"],
+                "1",
+                "the protected Ping subprocess must opt into approved GitHub tasks",
+            )
     def test_ac1_exact_roles_auth_first_busy_lock_and_512_byte_cap_remain(self):
         server = _load_server()
         self.assertEqual(set(server.JARVIS_PING_ROLES), set(CANONICAL_ROLES))
