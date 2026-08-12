@@ -347,6 +347,46 @@ class AgentPingRunnerDelegationTests(unittest.TestCase):
         self.assertIn("- Agent state: idle", report_text)
         self.assertIn("- Agent auto-started: false", report_text)
 
+    def test_bug_safe_runner_timestamp_is_accepted_and_malformed_values_fail_closed(self):
+        result, calls, report = self._run_pipeline(
+            pong="PONG — Разработчик на связи",
+            runner_output={
+                "role": "builder",
+                "state": "idle",
+                "summary": "Разработчик на связи.",
+                "next_step": "Нет одобренной задачи для этого агента.",
+                "auto_started": False,
+                "updated_at": "2026-08-12T08:11:39Z",
+            },
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(calls.read_text(encoding="utf-8").splitlines(), ["builder"])
+        report_text = report.read_text(encoding="utf-8")
+        self.assertIn("- Agent state: idle", report_text)
+        self.assertIn("- Agent auto-started: false", report_text)
+
+        for updated_at in ("2026-08-12 08:11:39", "../../private", True):
+            with self.subTest(updated_at=updated_at):
+                result, calls, report = self._run_pipeline(
+                    pong="PONG — Разработчик на связи",
+                    runner_output={
+                        "role": "builder",
+                        "state": "idle",
+                        "summary": "Разработчик на связи.",
+                        "next_step": "Нет одобренной задачи для этого агента.",
+                        "auto_started": False,
+                        "updated_at": updated_at,
+                    },
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(
+                    calls.read_text(encoding="utf-8").splitlines(), ["builder"]
+                )
+                report_text = report.read_text(encoding="utf-8")
+                self.assertIn("- Agent state: failed", report_text)
+                self.assertIn("- Agent auto-started: false", report_text)
+
     def test_ac1_invalid_pong_never_calls_the_mutating_runner(self):
         result, calls, report = self._run_pipeline(
             pong="на связи без обязательного маркера",
