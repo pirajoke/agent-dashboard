@@ -268,6 +268,11 @@ _PUBLIC_EVENT_FIELDS = (
     "ephemeral",
     "zone_id",
 )
+_OWNER_EVENT_FIELDS = (
+    "work_summary",
+    "issue_number",
+    "issue_url",
+)
 _FRESH_SECONDS = 30 * 60
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$")
 _UNSAFE_TEXT = re.compile(
@@ -412,6 +417,55 @@ def _safe_text(value: object, *, limit: int = 180) -> str:
     return _bounded_grapheme_text(value, limit)
 
 
+def _safe_owner_summary(value: object, *, limit: int = 240) -> str | None:
+    """Return a bounded owner summary, rejecting rather than repairing unsafe input."""
+    if not isinstance(value, str):
+        return None
+    normalized = unicodedata.normalize("NFKC", value)
+    summary = " ".join(normalized.strip().split())
+    if (
+        not summary
+        or _strip_unsafe_formatting(summary) != summary
+        or _UNSAFE_TEXT.search(summary)
+    ):
+        return None
+    bounded = _bounded_grapheme_text(summary, limit)
+    return bounded or None
+
+
+def _validated_owner_fields(event: dict[str, Any]) -> dict[str, Any]:
+    """Validate optional owner-only fields independently and fail closed."""
+    owner_fields: dict[str, Any] = {}
+    summary = _safe_owner_summary(event.get("work_summary"))
+    if summary is not None:
+        owner_fields["work_summary"] = summary
+
+    repo = event.get("github_repo")
+    issue_number = event.get("github_issue_number")
+    issue_url = event.get("github_issue_url")
+    repo_parts = repo.split("/", 1) if isinstance(repo, str) else ()
+    github_owner = repo_parts[0] if len(repo_parts) == 2 else ""
+    github_name = repo_parts[1] if len(repo_parts) == 2 else ""
+    if (
+        not isinstance(repo, str)
+        or not re.fullmatch(
+            r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?",
+            github_owner,
+        )
+        or not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", github_name)
+        or github_name in {".", ".."}
+        or type(issue_number) is not int
+        or issue_number <= 0
+        or not isinstance(issue_url, str)
+        or issue_url != f"https://github.com/{repo}/issues/{issue_number}"
+    ):
+        return owner_fields
+
+    owner_fields["issue_number"] = issue_number
+    owner_fields["issue_url"] = issue_url
+    return owner_fields
+
+
 def _empty_projection(state: str, now: datetime) -> dict[str, Any]:
     return {
         "state": state,
@@ -427,6 +481,7 @@ def _validated_event(
     event: object,
     *,
     now: datetime,
+    owner_view: bool = False,
 ) -> tuple[dict[str, Any] | None, str, datetime | None]:
     if not isinstance(event, dict):
         return None, "invalid", None
@@ -477,6 +532,8 @@ def _validated_event(
         "ephemeral": True,
         "zone_id": zone["zone_id"],
     }
+    if owner_view is True:
+        public.update(_validated_owner_fields(event))
     return public, "valid", updated
 
 
@@ -485,8 +542,9 @@ def department_campus_projection(
     *,
     now: datetime,
     max_tasks: int = 3,
+    owner_view: bool = False,
 ) -> dict[str, Any]:
-    """Return a strict, fresh public projection of verified pixel events."""
+    """Return a strict projection, optionally including validated owner fields."""
     if not isinstance(events, list):
         return _empty_projection("unavailable", now)
     if not events:
@@ -495,7 +553,11 @@ def department_campus_projection(
     validated: list[tuple[int, dict[str, Any], datetime]] = []
     saw_stale = False
     for index, raw_event in enumerate(events):
-        event, validation_state, updated = _validated_event(raw_event, now=now)
+        event, validation_state, updated = _validated_event(
+            raw_event,
+            now=now,
+            owner_view=owner_view,
+        )
         saw_stale = saw_stale or validation_state == "stale"
         if event is not None and updated is not None:
             validated.append((index, event, updated))
@@ -531,7 +593,11 @@ def department_campus_projection(
         "visible_task_count": len(visible_tasks),
         "omitted_task_count": max(0, len(all_tasks) - len(visible_tasks)),
         "events": [
-            {field: event[field] for field in _PUBLIC_EVENT_FIELDS}
+            {
+                field: event[field]
+                for field in _PUBLIC_EVENT_FIELDS + _OWNER_EVENT_FIELDS
+                if field in event
+            }
             for event in visible_events
         ],
         "privacy": "public_projection",
@@ -657,18 +723,28 @@ def build_department_campus_html() -> str:
         ("department_id", "Отдел", False),
         ("agent_id", "Ответственный агент", False),
         ("status", "Статус", False),
+        ("work_summary", "Над чем работаем", True),
+        ("issue_url", "GitHub Issue", True),
         ("next_step", "Следующий безопасный шаг", True),
         ("evidence_count", "Подтверждения", True),
     )
-    project_detail_rows = "".join(
-        (
+    project_detail_rows = []
+    for field, label, live_only in project_details:
+        row_start = (
             '<div data-campus-project-live-only hidden>'
             if live_only
             else "<div>"
         )
-        + f'<dt>{label}</dt><dd data-campus-project-detail-field="{field}">—</dd></div>'
-        for field, label, live_only in project_details
-    )
+        if field == "issue_url":
+            value = (
+                '<dd><a data-campus-project-detail-field="issue_url" '
+                'data-campus-project-issue-link target="_blank" '
+                'rel="noreferrer">—</a></dd>'
+            )
+        else:
+            value = f'<dd data-campus-project-detail-field="{field}">—</dd>'
+        project_detail_rows.append(f"{row_start}<dt>{label}</dt>{value}</div>")
+    project_detail_rows_html = "".join(project_detail_rows)
     return f"""
 <section class="section department-campus" id="department-campus" aria-labelledby="department-campus-title">
     <div class="section-head campus-head">
@@ -711,7 +787,7 @@ def build_department_campus_html() -> str:
             <header><div><span>Папка проекта</span>
             <h3 id="campus-project-detail-title">Сведения о проекте · только просмотр</h3></div>
             <button type="button" data-campus-project-detail-close aria-label="Закрыть сведения о проекте">×</button></header>
-            <dl>{project_detail_rows}</dl>
+            <dl>{project_detail_rows_html}</dl>
         </aside>
     </div>
     <span class="campus-status-vocabulary" hidden>

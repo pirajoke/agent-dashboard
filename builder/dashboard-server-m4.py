@@ -1250,7 +1250,7 @@ def _campus_bridge_event(task: dict) -> dict | None:
     if not isinstance(task_id, str):
         return None
     zone = DEPARTMENT_ZONES[project["department_id"]]
-    return {
+    event = {
         "event_id": task_id,
         "task_id": task_id,
         "department_id": project["department_id"],
@@ -1265,16 +1265,27 @@ def _campus_bridge_event(task: dict) -> dict | None:
         "ephemeral": True,
         "zone_id": zone["zone_id"],
     }
+    metadata = _manager_metadata(task)
+    event["work_summary"] = metadata.get("objective")
+    event["github_repo"] = metadata.get("github_repo")
+    event["github_issue_number"] = metadata.get("github_issue_number")
+    event["github_issue_url"] = metadata.get("github_issue_url")
+    return event
 
 
-def _department_campus_payload(data: object, *, now: datetime | None = None) -> dict:
+def _department_campus_payload(
+    data: object,
+    *,
+    now: datetime | None = None,
+    owner_view: bool = False,
+) -> dict:
     """Project a verified manager snapshot or safe canonical Bridge tasks."""
     current = now or datetime.now(timezone.utc)
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
     current = current.astimezone(timezone.utc)
     if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
-        return department_campus_projection(None, now=current)
+        return department_campus_projection(None, now=current, owner_view=owner_view)
 
     candidates: list[tuple[int, datetime, list]] = []
     malformed_verified_snapshot = False
@@ -1307,7 +1318,7 @@ def _department_campus_payload(data: object, *, now: datetime | None = None) -> 
 
     if not candidates:
         if malformed_verified_snapshot:
-            return department_campus_projection(None, now=current)
+            return department_campus_projection(None, now=current, owner_view=owner_view)
         events = [
             event
             for task in data["tasks"]
@@ -1315,13 +1326,23 @@ def _department_campus_payload(data: object, *, now: datetime | None = None) -> 
             for event in [_campus_bridge_event(task)]
             if event is not None
         ]
-        return department_campus_projection(events, now=current, max_tasks=3)
+        return department_campus_projection(
+            events,
+            now=current,
+            max_tasks=3,
+            owner_view=owner_view,
+        )
 
     # max() preserves the first source item when timestamps tie.
     _, snapshot_time, events = max(candidates, key=lambda item: item[1])
     if (current - snapshot_time).total_seconds() > 30 * 60:
         return _department_campus_state("stale", now=current)
-    return department_campus_projection(events, now=current, max_tasks=3)
+    return department_campus_projection(
+        events,
+        now=current,
+        max_tasks=3,
+        owner_view=owner_view,
+    )
 
 
 def _runtime_asset_block(filename: str, start_marker: str, end_marker: str) -> str:
@@ -2244,7 +2265,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/manager/departments':
             try:
                 data = _bridge_request("GET", "/api/tasks?limit=24&include_messages=1")
-                self._json_response(200, _department_campus_payload(data))
+                if self._dashboard_run_authorized():
+                    payload = _department_campus_payload(data, owner_view=True)
+                else:
+                    payload = _department_campus_payload(data)
+                self._json_response(200, payload)
             except Exception:
                 self._json_response(
                     200,

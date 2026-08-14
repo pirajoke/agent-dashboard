@@ -174,8 +174,20 @@ class DepartmentCampusProjectTests(unittest.TestCase):
 
     def test_ac_5_err_1_detail_and_projection_are_strict_safe_allowlists(self):
         fields = re.findall(r'data-campus-project-detail-field="([^"]+)"', self.html)
-        self.assertEqual(fields, ["project", "department_id", "agent_id", "status", "next_step", "evidence_count"])
-        for field in ("next_step", "evidence_count"):
+        self.assertEqual(
+            fields,
+            [
+                "project",
+                "department_id",
+                "agent_id",
+                "status",
+                "work_summary",
+                "issue_url",
+                "next_step",
+                "evidence_count",
+            ],
+        )
+        for field in ("work_summary", "issue_url", "next_step", "evidence_count"):
             self.assertRegex(
                 self.html,
                 rf'data-campus-project-live-only[^>]*[\s\S]{{0,180}}data-campus-project-detail-field="{field}"',
