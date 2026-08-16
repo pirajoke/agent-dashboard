@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixel Agents</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="identity">
+          <img class="app-icon" src="icons/icon-48.png" alt="" width="40" height="40" />
+          <div>
+            <h1>Pixel Agents</h1>
+            <p>Твой офис агентов</p>
+          </div>
+        </div>
+        <div class="connection" id="connection" aria-live="polite">
+          <span class="connection-dot" aria-hidden="true"></span>
+          <span id="connectionText">Подключаем офис…</span>
+        </div>
+      </header>
+
+      <section class="office" aria-label="Pixel Agents office — только просмотр">
+        <iframe
+          id="officeFrame"
+          src="https://pixel-agents.meshly.fr/"
+          title="Pixel Agents office"
+          loading="eager"
+          tabindex="-1"
+          referrerpolicy="no-referrer"
+          sandbox="allow-scripts allow-same-origin"
+        ></iframe>
+        <div class="read-only-shield" aria-hidden="true"></div>
+
+        <div class="office-fallback" id="officeFallback" hidden>
+          <p class="fallback-title">Офис временно не отвечает</p>
+          <div class="fallback-route" aria-hidden="true">
+            <span class="station">План</span>
+            <span class="runner runner-one"><img src="icons/icon-32.png" alt="" /></span>
+            <span class="station">Работа</span>
+            <span class="runner runner-two"><img src="icons/icon-32.png" alt="" /></span>
+            <span class="station">Готово</span>
+          </div>
+          <p>Полный Command Center всё равно можно открыть кнопкой ниже.</p>
+        </div>
+
+        <span class="read-only-label">Только просмотр</span>
+      </section>
+
+      <nav class="actions" aria-label="Быстрые действия">
+        <a
+          class="primary-action"
+          href="https://command.meshly.fr/?tab=agents"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Открыть Command Center
+          <span aria-hidden="true">↗</span>
+        </a>
+        <a
+          class="secondary-action"
+          href="https://pixel-agents.meshly.fr/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Открыть офис во весь экран
+        </a>
+      </nav>
+
+      <footer>
+        Расширение ничего не запускает и не меняет — оно только показывает существующий офис.
+      </footer>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
