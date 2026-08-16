@@ -3,8 +3,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import importlib
 import importlib.util
+import os
 from pathlib import Path
 import re
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -130,6 +132,28 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
         self.assertEqual(payload["state"], "active")
         self.assertEqual(len(payload["events"]), 1)
         return payload["events"][0]
+
+    def _public_departments_get(
+        self,
+        tasks: list[dict],
+        *,
+        provided_token: str | None,
+    ) -> dict:
+        response: dict = {}
+        handler = self.server.Handler.__new__(self.server.Handler)
+        handler.path = "/api/manager/departments"
+        handler.headers = {"Host": "command.meshly.fr"}
+        if provided_token is not None:
+            handler.headers["X-Dashboard-Run-Token"] = provided_token
+        handler._json_response = lambda status, payload: response.update(
+            status=status, payload=payload
+        )
+        with patch.object(
+            self.server, "_bridge_request", return_value={"tasks": tasks}
+        ):
+            handler.do_GET()
+        self.assertEqual(response.get("status"), 200)
+        return response["payload"]
 
     def _campus_script(self) -> str:
         start = self.script.index("// ── Department Campus ──")
@@ -274,6 +298,68 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
             "FORBIDDEN_",
         ):
             self.assertNotIn(forbidden, rendered)
+
+    def test_err04_public_departments_get_never_creates_a_missing_dashboard_token(self):
+        for provided_token in (None, "wrong-token"):
+            with self.subTest(provided_token=provided_token):
+                with tempfile.TemporaryDirectory() as tmp:
+                    token_path = Path(tmp) / "missing-parent" / "dashboard-token"
+                    with (
+                        patch.object(
+                            self.server,
+                            "JARVIS_DASHBOARD_RUN_TOKEN_FILE",
+                            token_path,
+                        ),
+                        patch.dict(os.environ, {"DASHBOARD_RUN_TOKEN": ""}),
+                    ):
+                        payload = self._public_departments_get(
+                            [self._bridge_task()],
+                            provided_token=provided_token,
+                        )
+
+                    self.assertEqual(payload["privacy"], "public_projection")
+                    self.assertNotIn("work_summary", repr(payload))
+                    self.assertFalse(
+                        token_path.parent.exists(),
+                        "a public read must not create token storage",
+                    )
+
+    def test_ac07_existing_or_env_dashboard_token_authorizes_without_mutation(self):
+        for token_source in ("file", "env"):
+            with self.subTest(token_source=token_source):
+                with tempfile.TemporaryDirectory() as tmp:
+                    token_path = Path(tmp) / "token-store" / "dashboard-token"
+                    environment = {"DASHBOARD_RUN_TOKEN": ""}
+                    original_bytes = None
+                    original_mtime_ns = None
+                    if token_source == "file":
+                        token_path.parent.mkdir()
+                        token_path.write_text("owner-token\n", encoding="utf-8")
+                        original_bytes = token_path.read_bytes()
+                        original_mtime_ns = token_path.stat().st_mtime_ns
+                    else:
+                        environment["DASHBOARD_RUN_TOKEN"] = "owner-token"
+
+                    with (
+                        patch.object(
+                            self.server,
+                            "JARVIS_DASHBOARD_RUN_TOKEN_FILE",
+                            token_path,
+                        ),
+                        patch.dict(os.environ, environment),
+                    ):
+                        payload = self._public_departments_get(
+                            [self._bridge_task()],
+                            provided_token="owner-token",
+                        )
+
+                    self.assertEqual(payload["events"][0]["issue_number"], 34)
+                    self.assertIn("work_summary", payload["events"][0])
+                    if token_source == "file":
+                        self.assertEqual(token_path.read_bytes(), original_bytes)
+                        self.assertEqual(token_path.stat().st_mtime_ns, original_mtime_ns)
+                    else:
+                        self.assertFalse(token_path.exists())
 
     def test_ec01_err01_missing_malformed_or_unsafe_summary_hides_only_summary(self):
         base = dict(self._bridge_task()["metadata"])

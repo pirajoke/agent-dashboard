@@ -60,6 +60,8 @@
     const taskPanelEl = campus.querySelector('[data-campus-task-panel]');
     const routeLayerEl = campus.querySelector('[data-campus-route-layer]');
     const managerMarkerEl = campus.querySelector('[data-campus-static-manager]');
+    const managerPresenceEl = campus.querySelector('[data-campus-manager-presence]');
+    const managerStatusEl = campus.querySelector('[data-campus-manager-status]');
     const boulevardEl = campus.querySelector('.campus-boulevard');
     const rosterEls = Array.from(campus.querySelectorAll('[data-campus-roster-agent]'));
     const projectFolderEls = Array.from(campus.querySelectorAll('[data-campus-project-folder]'));
@@ -222,7 +224,17 @@
         closeCampusDetails(false);
         closeCampusProjectDetails(false);
         resetCampusProjectFolders();
+        setManagerPresence();
         lastTrigger = null;
+    }
+
+    function setManagerPresence(event = null) {
+        if (!managerPresenceEl || !managerStatusEl) return;
+        const status = event && Object.prototype.hasOwnProperty.call(statusLabels, event.status)
+            ? statusLabels[event.status]
+            : 'ожидает задач';
+        managerStatusEl.textContent = status;
+        managerPresenceEl.dataset.campusManagerState = event?.status || 'idle';
     }
 
     function setCampusState(state, visibleTasks, agentCount, omittedTasks) {
@@ -276,7 +288,9 @@
             ? event.work_summary
             : null;
         const issue = verifiedCampusIssue(event);
-        projectDetailFields.project.textContent = folder.dataset.campusProject || '—';
+        projectDetailFields.project.textContent = (
+            folder.dataset.campusProjectLabel || folder.dataset.campusProject || '—'
+        );
         projectDetailFields.department_id.textContent = (
             folder.dataset.campusProjectDepartmentLabel || '—'
         );
@@ -490,6 +504,9 @@
             setCampusState('empty', 0, 0, Number(payload?.omitted_task_count) || 0);
             return;
         }
+        setManagerPresence(
+            matchedEvents.find((event) => event.agent_id === 'COORDINATOR') || null,
+        );
         const newJourneySignatures = new Set();
         const managerOriginRect = managerMarkerEl?.getBoundingClientRect() || null;
         matchedEvents.forEach((event) => {

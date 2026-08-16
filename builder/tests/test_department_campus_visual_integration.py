@@ -103,18 +103,9 @@ class _CampusStructureParser(HTMLParser):
         if any(attributes.get("id") == "campus-zone-hq-label" for _, attributes in self._stack):
             self.hq_heading_text.append(data)
 
-        inside_coordinator = any(
-            attributes.get("data-campus-static-manager") == "true"
-            for _, attributes in self._stack
-        )
-        if not inside_coordinator:
-            return
-        if any(tag == "strong" for tag, _attributes in self._stack):
+        if any("data-campus-manager-name" in attributes for _, attributes in self._stack):
             self.coordinator_name_text.append(data)
-        elif any(
-            tag == "span" and "campus-manager-sprite" not in (attributes.get("class") or "").split()
-            for tag, attributes in self._stack
-        ):
+        elif any("data-campus-manager-status" in attributes for _, attributes in self._stack):
             self.coordinator_status_text.append(data)
 
     def handle_endtag(self, tag: str) -> None:
@@ -315,12 +306,16 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
     def test_ac_4_coordinator_has_a_floor_contact_shadow(self):
         manager_css = self._css_declarations(".campus-static-manager")
         sprite_css = self._css_declarations(".campus-manager-sprite")
+        contact_shadow_css = self._css_declarations(".campus-static-manager::after")
 
         self.assertRegex(
             manager_css + sprite_css,
             r"(?:drop-shadow\(|box-shadow:)",
             "the coordinator needs a contact shadow that visually anchors it to the room",
         )
+        self.assertRegex(contact_shadow_css, r"content:\s*[\"']{2}")
+        self.assertRegex(contact_shadow_css, r"bottom:\s*-?\d")
+        self.assertRegex(contact_shadow_css, r"background:\s*rgba\(")
 
     def test_ac_5_file_dashboard_uses_reachable_campus_and_matching_message_origin(self):
         required_contracts = (
@@ -414,6 +409,12 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             self.dashboard_html,
             r"@media\s*\(max-width:\s*760px\)[\s\S]*?\.pixel-agents-viewport\.has-content-height",
         )
+        self.assertRegex(
+            self.css,
+            r"@media\s*\(max-width:\s*560px\)[\s\S]*?\.campus-zone-hq\s*\{"
+            r"[\s\S]*?pixel-verse-campus-bg\.webp[\s\S]*?background-position:\s*center,\s*left",
+            "the narrow HQ room must retain its own management-room crop",
+        )
 
     def test_ac_9_configured_roster_is_visible_without_claiming_live_work(self):
         expected = {
@@ -471,20 +472,45 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             "clearing live routes must not erase the persistent team roster",
         )
 
-    def test_ac_12_coordinator_plaque_moves_with_the_room_local_character(self):
+    def test_ac_12_coordinator_identity_lives_in_the_room_header_not_over_the_sprite(self):
         hq = re.search(
             r'<section class="campus-zone campus-zone-hq"[\s\S]*?</section>',
             self.campus_html,
         )
         self.assertIsNotNone(hq)
-        self.assertNotIn("campus-zone-presence", hq.group(0))
-        self.assertRegex(
-            hq.group(0),
-            r'data-campus-static-manager="true"[\s\S]*campus-resident-caption',
+        hq_html = hq.group(0)
+        room_header = re.search(r"<header>[\s\S]*?</header>", hq_html)
+        manager = re.search(
+            r'<div class="[^"]*campus-static-manager[^"]*"[\s\S]*?</div>',
+            hq_html,
         )
+        self.assertIsNotNone(room_header)
+        self.assertIsNotNone(manager)
+        self.assertIn("data-campus-manager-presence", room_header.group(0))
+        self.assertIn("data-campus-manager-name", room_header.group(0))
+        self.assertIn("data-campus-manager-status", room_header.group(0))
+        self.assertIn("Главный координатор", room_header.group(0))
+        self.assertIn("ожидает задач", room_header.group(0))
+        self.assertNotIn("campus-resident-caption", manager.group(0))
+        self.assertNotIn("Главный координатор", manager.group(0))
+        self.assertNotIn("ожидает задач", manager.group(0))
+        self.assertIn('data-campus-project-label="Координация"', hq_html)
+        self.assertIn(
+            "folder.dataset.campusProjectLabel || folder.dataset.campusProject || '—'",
+            self.script,
+        )
+        for contract in (
+            "const managerPresenceEl = campus.querySelector('[data-campus-manager-presence]');",
+            "const managerStatusEl = campus.querySelector('[data-campus-manager-status]');",
+            "function setManagerPresence(event = null)",
+            "setManagerPresence();",
+            "matchedEvents.find((event) => event.agent_id === 'COORDINATOR') || null",
+        ):
+            with self.subTest(manager_state_contract=contract):
+                self.assertIn(contract, self.script)
         self.assertLess(
-            hq.group(0).index("campus-manager-sprite"),
-            hq.group(0).index("Главный координатор"),
+            hq_html.index("data-campus-manager-presence"),
+            hq_html.index("data-campus-static-manager"),
         )
 
     def test_ec_1_seven_zone_public_shell_stays_read_only_and_unsynthesized(self):

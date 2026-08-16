@@ -699,10 +699,15 @@ def _github_bridge_reconciliation(issues: list[dict], bridge_tasks: list[dict]) 
     }
 
 
-def _dashboard_run_token() -> str:
+def _dashboard_run_token(*, create_if_missing: bool = True) -> str:
     token = os.environ.get("DASHBOARD_RUN_TOKEN", "").strip()
     if token:
         return token
+    if not create_if_missing:
+        try:
+            return JARVIS_DASHBOARD_RUN_TOKEN_FILE.read_text().strip()
+        except FileNotFoundError:
+            return ""
     JARVIS_DASHBOARD_RUN_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
     if not JARVIS_DASHBOARD_RUN_TOKEN_FILE.exists() or not JARVIS_DASHBOARD_RUN_TOKEN_FILE.read_text().strip():
         JARVIS_DASHBOARD_RUN_TOKEN_FILE.write_text(secrets.token_urlsafe(24) + "\n")
@@ -1413,9 +1418,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def _dashboard_run_authorized(self) -> bool:
         if not self._is_public_request():
             return True
-        expected = _dashboard_run_token()
+        write_method = getattr(self, "command", "").upper() in {
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+        }
+        expected = _dashboard_run_token(create_if_missing=write_method)
         provided = self.headers.get("X-Dashboard-Run-Token", "").strip()
-        return bool(provided) and secrets.compare_digest(provided, expected)
+        return (
+            bool(expected)
+            and bool(provided)
+            and secrets.compare_digest(provided, expected)
+        )
 
     def _require_dashboard_run_auth(self) -> bool:
         if self._dashboard_run_authorized():

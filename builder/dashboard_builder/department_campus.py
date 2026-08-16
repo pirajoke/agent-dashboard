@@ -611,6 +611,18 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
         if zone["owner_permission_boundary"]
         else ""
     )
+    manager_presence = ""
+    if department_id == "hq":
+        manager = _CAMPUS_RESIDENT_PROFILES["COORDINATOR"]
+        manager_dom_id = "campus-resident-coordinator"
+        manager_presence = f"""
+            <div class="campus-zone-presence" data-campus-manager-presence>
+                <strong id="{manager_dom_id}-name" data-campus-manager-name>{manager['name']}</strong>
+                <span class="campus-zone-presence-status">
+                    <i aria-hidden="true"></i>
+                    <span id="{manager_dom_id}-status" data-campus-manager-status>ожидает задач</span>
+                </span>
+            </div>"""
     residents = []
     for resident in CAMPUS_RESIDENTS:
         if resident["department_id"] != department_id:
@@ -634,6 +646,13 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
             f"--campus-walk-duration:{resident['walk_duration']};"
             f"--campus-walk-delay:{resident['walk_delay']}"
         )
+        resident_caption = ""
+        if not is_coordinator:
+            resident_caption = f"""
+                <span class="campus-resident-caption">
+                    <strong id="{resident_dom_id}-name">{resident['name']}</strong>
+                    <span id="{resident_dom_id}-status"><i></i>ожидает задач</span>
+                </span>"""
         residents.append(
             f"""
             <div class="{classes}" data-campus-roster-agent="{resident['agent_id']}"
@@ -642,10 +661,7 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
                 style="{style}"
                 aria-labelledby="{resident_dom_id}-name {resident_dom_id}-status">
                 <span class="{sprite_class}" aria-hidden="true"></span>
-                <span class="campus-resident-caption">
-                    <strong id="{resident_dom_id}-name">{resident['name']}</strong>
-                    <span id="{resident_dom_id}-status"><i></i>ожидает задач</span>
-                </span>
+                {resident_caption}
             </div>"""
         )
     residents_html = "".join(residents)
@@ -667,6 +683,7 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
             f"""
             <button class="campus-project-folder" type="button"
                 data-campus-project-folder data-campus-project="{escape(project_name)}"
+                data-campus-project-label="{escape(visible_name)}"
                 data-campus-project-agent="{escape(project['agent_id'])}"
                 data-campus-project-department="{escape(department_id)}"
                 data-campus-project-agent-label="{escape(agent_name)}"
@@ -692,7 +709,7 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
     return f"""
         <section class="campus-zone campus-zone-{department_id}" id="{zone['zone_id']}"
             data-department-id="{department_id}" aria-labelledby="{zone['zone_id']}-label">
-            <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{boundary}</header>
+            <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{manager_presence}{boundary}</header>
             {residents_html}
             {project_folders_html}
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
