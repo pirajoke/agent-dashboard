@@ -111,6 +111,49 @@
         unavailable: 'Команда на местах · live-данные временно недоступны',
         active: 'Показаны свежие подтверждённые события',
     };
+
+    function campusOwnerHeaders() {
+        const headers = {};
+        try {
+            const token = window.localStorage
+                .getItem('command-center.jarvis-run-token')
+                ?.trim();
+            if (token) headers['X-Dashboard-Run-Token'] = token;
+        } catch (_error) {
+            // Storage can be unavailable; the endpoint then returns its public projection.
+        }
+        return headers;
+    }
+
+    function verifiedCampusIssue(event) {
+        const issueNumber = event?.issue_number;
+        const issueUrl = event?.issue_url;
+        if (!Number.isInteger(issueNumber) || issueNumber <= 0 || typeof issueUrl !== 'string') {
+            return null;
+        }
+        try {
+            const parsed = new URL(issueUrl);
+            const match = parsed.pathname.match(
+                /^\/[A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*\/issues\/([1-9]\d*)$/,
+            );
+            if (
+                parsed.protocol !== 'https:'
+                || parsed.hostname !== 'github.com'
+                || parsed.username
+                || parsed.password
+                || parsed.port
+                || parsed.search
+                || parsed.hash
+                || !match
+                || Number(match[1]) !== issueNumber
+            ) {
+                return null;
+            }
+        } catch (_error) {
+            return null;
+        }
+        return {number: issueNumber, url: issueUrl};
+    }
     let lastTrigger = null;
     let intervalId = null;
     let refreshInFlight = false;
@@ -241,6 +284,10 @@
             ? event.next_step
             : null;
         const hasEvidence = Number.isInteger(event?.evidence_count) && event.evidence_count >= 0;
+        const workSummary = typeof event?.work_summary === 'string' && event.work_summary.trim()
+            ? event.work_summary
+            : null;
+        const issue = verifiedCampusIssue(event);
         projectDetailFields.project.textContent = (
             folder.dataset.campusProjectLabel || folder.dataset.campusProject || '—'
         );
@@ -251,6 +298,13 @@
         projectDetailFields.status.textContent = event
             ? (statusLabels[event.status] || '—')
             : 'нет активных задач';
+        projectDetailFields.work_summary.textContent = workSummary || '—';
+        projectDetailFields.issue_url.removeAttribute('href');
+        projectDetailFields.issue_url.textContent = '—';
+        if (issue) {
+            projectDetailFields.issue_url.setAttribute('href', issue.url);
+            projectDetailFields.issue_url.textContent = `Issue #${issue.number}`;
+        }
         projectDetailFields.next_step.textContent = nextStep || '—';
         projectDetailFields.evidence_count.textContent = hasEvidence
             ? String(event.evidence_count)
@@ -258,7 +312,13 @@
         projectLiveOnlyEls.forEach((row) => {
             const field = row.querySelector('[data-campus-project-detail-field]')
                 ?.dataset.campusProjectDetailField;
-            row.hidden = field === 'next_step' ? !nextStep : !hasEvidence;
+            const visible = {
+                work_summary: Boolean(workSummary),
+                issue_url: Boolean(issue),
+                next_step: Boolean(nextStep),
+                evidence_count: hasEvidence,
+            };
+            row.hidden = !visible[field];
         });
         projectDetailEl.hidden = false;
         projectDetailCloseEl?.focus();
@@ -497,6 +557,7 @@
             const response = await fetch('/api/manager/departments', {
                 cache: 'no-store',
                 signal: controller.signal,
+                headers: campusOwnerHeaders(),
             });
             if (!response.ok) throw new Error('unavailable');
             const payload = await response.json();
