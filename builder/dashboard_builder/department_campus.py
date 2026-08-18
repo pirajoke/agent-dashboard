@@ -170,9 +170,9 @@ _CAMPUS_RESIDENT_PROFILES = {
         "sprite_x": "-96px",
         "sprite_step_x": "-128px",
         "sprite_y": "-192px",
-        "wandering": True,
-        "walk_duration": "11s",
-        "walk_delay": "-4s",
+        "wandering": False,
+        "walk_duration": "0s",
+        "walk_delay": "0s",
     },
     "BUILDER": {
         "name": "Разработчик",
@@ -186,9 +186,9 @@ _CAMPUS_RESIDENT_PROFILES = {
         "sprite_x": "-288px",
         "sprite_step_x": "-320px",
         "sprite_y": "-192px",
-        "wandering": True,
-        "walk_duration": "13s",
-        "walk_delay": "-7s",
+        "wandering": False,
+        "walk_duration": "0s",
+        "walk_delay": "0s",
     },
     "DESIGNER": {
         "name": "Дизайнер",
@@ -197,9 +197,9 @@ _CAMPUS_RESIDENT_PROFILES = {
         "sprite_x": "-192px",
         "sprite_step_x": "-224px",
         "sprite_y": "-64px",
-        "wandering": True,
-        "walk_duration": "14s",
-        "walk_delay": "-5s",
+        "wandering": False,
+        "walk_duration": "0s",
+        "walk_delay": "0s",
     },
     "INFRASTRUCTURE": {
         "name": "Инженер инфраструктуры",
@@ -208,9 +208,9 @@ _CAMPUS_RESIDENT_PROFILES = {
         "sprite_x": "-288px",
         "sprite_step_x": "-320px",
         "sprite_y": "-64px",
-        "wandering": True,
-        "walk_duration": "15s",
-        "walk_delay": "-9s",
+        "wandering": False,
+        "walk_duration": "0s",
+        "walk_delay": "0s",
     },
     "VAULT": {
         "name": "Хранитель знаний",
@@ -219,9 +219,9 @@ _CAMPUS_RESIDENT_PROFILES = {
         "sprite_x": "0px",
         "sprite_step_x": "-32px",
         "sprite_y": "-64px",
-        "wandering": True,
-        "walk_duration": "12s",
-        "walk_delay": "-2s",
+        "wandering": False,
+        "walk_duration": "0s",
+        "walk_delay": "0s",
     },
     "ANALYST": {
         "name": "Аналитик",
@@ -230,9 +230,9 @@ _CAMPUS_RESIDENT_PROFILES = {
         "sprite_x": "-96px",
         "sprite_step_x": "-128px",
         "sprite_y": "-64px",
-        "wandering": True,
-        "walk_duration": "10s",
-        "walk_delay": "-6s",
+        "wandering": False,
+        "walk_duration": "0s",
+        "walk_delay": "0s",
     },
 }
 
@@ -274,6 +274,7 @@ _OWNER_EVENT_FIELDS = (
     "issue_url",
 )
 _FRESH_SECONDS = 30 * 60
+_HEARTBEAT_FRESH_SECONDS = 45
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$")
 _UNSAFE_TEXT = re.compile(
     r"(?:"
@@ -508,6 +509,7 @@ def _validated_event(
         or type(event.get("ephemeral")) is not bool
         or event.get("ephemeral") is not True
         or updated is None
+        or campus_project_for_event(event) is None
     ):
         return None, "invalid", None
     age = (_utc_now(now) - updated).total_seconds()
@@ -537,9 +539,112 @@ def _validated_event(
     return public, "valid", updated
 
 
+def _validated_heartbeat(
+    heartbeat: object,
+    *,
+    now: datetime,
+) -> tuple[dict[str, Any] | None, str]:
+    """Validate only the public identity proof needed for live presence."""
+    if not isinstance(heartbeat, dict):
+        return None, "invalid"
+    project_name = heartbeat.get("project")
+    agent_id = heartbeat.get("agent_id")
+    run_id = _safe_id(heartbeat.get("run_id"))
+    session_id = _safe_id(heartbeat.get("session_id"))
+    heartbeat_at = _parse_time(heartbeat.get("heartbeat_at"))
+    project = next(
+        (
+            record
+            for record in CAMPUS_PROJECTS
+            if record["project"] == project_name
+        ),
+        None,
+    )
+    if (
+        project is None
+        or agent_id != project["agent_id"]
+        or run_id is None
+        or session_id is None
+        or heartbeat.get("state") != "working"
+        or heartbeat_at is None
+    ):
+        return None, "invalid"
+    age = (_utc_now(now) - heartbeat_at).total_seconds()
+    if age < 0:
+        return None, "invalid"
+    if age > _HEARTBEAT_FRESH_SECONDS:
+        return None, "stale"
+    return {
+        "project": project["project"],
+        "department_id": project["department_id"],
+        "agent_id": project["agent_id"],
+        "run_id": run_id,
+        "heartbeat_at": heartbeat_at,
+    }, "valid"
+
+
+def _heartbeat_event(
+    heartbeat: dict[str, Any],
+    events: list[object],
+    *,
+    now: datetime,
+    owner_view: bool,
+) -> tuple[dict[str, Any] | None, datetime]:
+    """Join a heartbeat to safe lifecycle copy or synthesize a minimal event."""
+    matching: list[tuple[int, dict[str, Any], datetime]] = []
+    for index, raw_event in enumerate(events):
+        if not isinstance(raw_event, dict):
+            continue
+        if (
+            raw_event.get("project") != heartbeat["project"]
+            or raw_event.get("agent_id") != heartbeat["agent_id"]
+            or raw_event.get("task_id") != heartbeat["run_id"]
+        ):
+            continue
+        if raw_event.get("status") in {"done", "failed"}:
+            return None, heartbeat["heartbeat_at"]
+        event, _, updated = _validated_event(
+            raw_event,
+            now=now,
+            owner_view=owner_view,
+        )
+        if event is None or updated is None:
+            return None, heartbeat["heartbeat_at"]
+        if event is not None and updated is not None and event["status"] in {"active", "testing"}:
+            matching.append((index, event, updated))
+    if matching:
+        # The newest safe lifecycle copy enriches the heartbeat. Stable sorting
+        # retains the first source row when timestamps tie.
+        _, event, _ = sorted(
+            matching,
+            key=lambda item: item[2],
+            reverse=True,
+        )[0]
+        return event, heartbeat["heartbeat_at"]
+
+    zone = DEPARTMENT_ZONES[heartbeat["department_id"]]
+    timestamp = heartbeat["heartbeat_at"].isoformat().replace("+00:00", "Z")
+    return {
+        "event_id": heartbeat["run_id"],
+        "task_id": heartbeat["run_id"],
+        "department_id": heartbeat["department_id"],
+        "department_label": zone["label"],
+        "project": heartbeat["project"],
+        "agent_id": heartbeat["agent_id"],
+        "role": zone["roles"][0],
+        "status": "active",
+        "updated_at": timestamp,
+        "next_step": "",
+        "evidence_count": 0,
+        "ephemeral": True,
+        "zone_id": zone["zone_id"],
+    }, heartbeat["heartbeat_at"]
+
+
 def department_campus_projection(
     events: object,
     *,
+    heartbeats: object = None,
     now: datetime,
     max_tasks: int = 3,
     owner_view: bool = False,
@@ -547,46 +652,68 @@ def department_campus_projection(
     """Return a strict projection, optionally including validated owner fields."""
     if not isinstance(events, list):
         return _empty_projection("unavailable", now)
-    if not events:
-        return _empty_projection("empty", now)
 
-    validated: list[tuple[int, dict[str, Any], datetime]] = []
+    # Lifecycle rows remain history. They are inspected for staleness and
+    # terminal conflicts, but only a fresh exact heartbeat can create presence.
     saw_stale = False
-    for index, raw_event in enumerate(events):
-        event, validation_state, updated = _validated_event(
+    for raw_event in events:
+        _, validation_state, _ = _validated_event(
             raw_event,
             now=now,
             owner_view=owner_view,
         )
         saw_stale = saw_stale or validation_state == "stale"
-        if event is not None and updated is not None:
-            validated.append((index, event, updated))
-    if not validated:
+
+    if not isinstance(heartbeats, list):
         return _empty_projection("stale" if saw_stale else "empty", now)
 
-    # Newest update wins for both event id and task+agent identity. Python's
-    # stable sort preserves the first source item when timestamps tie.
-    deduped: list[tuple[int, dict[str, Any], datetime]] = []
-    seen_event_ids: set[str] = set()
-    seen_identities: set[tuple[str, str]] = set()
-    for item in sorted(validated, key=lambda candidate: candidate[2], reverse=True):
-        _, event, _ = item
-        identity = (event["task_id"], event["agent_id"])
-        if event["event_id"] in seen_event_ids or identity in seen_identities:
+    # Any repeated canonical agent claim is ambiguous, even when one record is
+    # malformed. Fail that identity closed instead of choosing a winner.
+    identity_claims: dict[str, int] = {}
+    for raw_heartbeat in heartbeats:
+        if not isinstance(raw_heartbeat, dict):
             continue
-        seen_event_ids.add(event["event_id"])
-        seen_identities.add(identity)
-        deduped.append(item)
-    deduped.sort(key=lambda item: item[0])
+        claimed_agent = raw_heartbeat.get("agent_id")
+        claimed_at = _parse_time(raw_heartbeat.get("heartbeat_at"))
+        claim_age = (
+            (_utc_now(now) - claimed_at).total_seconds()
+            if claimed_at is not None
+            else None
+        )
+        if (
+            claimed_agent in _CAMPUS_AGENT_DEPARTMENTS
+            and raw_heartbeat.get("state") == "working"
+            and claim_age is not None
+            and 0 <= claim_age <= _HEARTBEAT_FRESH_SECONDS
+        ):
+            identity_claims[claimed_agent] = identity_claims.get(claimed_agent, 0) + 1
+
+    live: list[tuple[int, dict[str, Any], datetime]] = []
+    for index, raw_heartbeat in enumerate(heartbeats):
+        heartbeat, validation_state = _validated_heartbeat(raw_heartbeat, now=now)
+        saw_stale = saw_stale or validation_state == "stale"
+        if heartbeat is None or identity_claims.get(heartbeat["agent_id"]) != 1:
+            continue
+        event, updated = _heartbeat_event(
+            heartbeat,
+            events,
+            now=now,
+            owner_view=owner_view,
+        )
+        if event is not None:
+            live.append((index, event, updated))
+
+    if not live:
+        return _empty_projection("stale" if saw_stale else "empty", now)
 
     requested = max_tasks if type(max_tasks) is int else 3
     lane_limit = min(3, max(0, requested))
     all_tasks: list[str] = []
-    for _, event, _ in deduped:
+    for _, event, _ in live:
         if event["task_id"] not in all_tasks:
             all_tasks.append(event["task_id"])
     visible_tasks = set(all_tasks[:lane_limit])
-    visible_events = [event for _, event, _ in deduped if event["task_id"] in visible_tasks]
+    visible_events = [event for _, event, _ in live if event["task_id"] in visible_tasks]
     return {
         "state": "active" if visible_events else "empty",
         "generated_at": _utc_now(now).isoformat().replace("+00:00", "Z"),

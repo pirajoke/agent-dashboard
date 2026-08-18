@@ -438,11 +438,12 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         self.assertIn("const activeAgentCount = new Set", self.script)
         self.assertIn("в команде", self.script)
 
-    def test_ac_10_idle_residents_walk_inside_rooms_and_reduced_motion_stops_them(self):
+    def test_ac_10_idle_residents_stay_static_and_reduced_motion_remains_a_backstop(self):
         self.assertIn("@keyframes campusResidentWander", self.css)
-        self.assertRegex(
-            self.css,
-            r"\.campus-resident\.is-wandering[^{]*\{[^}]*animation:",
+        self.assertNotIn("is-wandering", self.campus_html)
+        self.assertTrue(
+            all(resident["wandering"] is False for resident in self.campus.CAMPUS_RESIDENTS),
+            "idle residents must not imply work through ambient walking",
         )
         self.assertRegex(
             self.css,

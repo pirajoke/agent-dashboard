@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import importlib
 import importlib.util
+import json
 import os
 from pathlib import Path
 import re
@@ -111,6 +112,66 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
             "metadata": metadata,
         }
 
+    def _heartbeat_document(self, tasks: list[dict]) -> dict:
+        records = {}
+        registry = {
+            record["project"]: record["agent_id"]
+            for record in self.campus.CAMPUS_PROJECTS
+        }
+        for task in tasks:
+            metadata = task.get("metadata") if isinstance(task, dict) else None
+            pixel_events = metadata.get("pixel_events") if isinstance(metadata, dict) else None
+            candidates = pixel_events if isinstance(pixel_events, list) else [task]
+            for item in candidates:
+                if not isinstance(item, dict):
+                    continue
+                project = item.get("project")
+                agent_id = item.get("agent_id") or registry.get(project)
+                run_id = item.get("task_id") or item.get("id")
+                if not all(isinstance(value, str) for value in (project, agent_id, run_id)):
+                    continue
+                records[agent_id.lower()] = {
+                    "project": project,
+                    "agentId": agent_id,
+                    "runId": run_id,
+                    "sessionId": f"session-{agent_id.lower()}-summary",
+                    "state": "working",
+                    "heartbeatAt": datetime.now(timezone.utc).isoformat(),
+                }
+        return {
+            "updatedAt": datetime.now(timezone.utc).isoformat(),
+            "agents": records,
+        }
+
+    def _with_heartbeat_payload(self, tasks: list[dict], callback):
+        original_payload = self.server._department_campus_payload
+        with tempfile.TemporaryDirectory() as tmp:
+            heartbeat_path = Path(tmp) / "jarvis-agent-details.json"
+            heartbeat_path.write_text(
+                json.dumps(self._heartbeat_document(tasks)),
+                encoding="utf-8",
+            )
+
+            def payload_with_heartbeat(data, **kwargs):
+                try:
+                    return original_payload(
+                        data,
+                        heartbeat_path=heartbeat_path,
+                        **kwargs,
+                    )
+                except TypeError as exc:
+                    self.fail(
+                        "RED: endpoint projection must read explicit heartbeat storage "
+                        f"({exc})"
+                    )
+
+            with patch.object(
+                self.server,
+                "_department_campus_payload",
+                side_effect=payload_with_heartbeat,
+            ):
+                return callback()
+
     def _endpoint_payload(self, tasks: list[dict], *, owner: bool) -> dict:
         response: dict = {}
         handler = self.server.Handler.__new__(self.server.Handler)
@@ -120,10 +181,13 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
         handler._json_response = lambda status, payload: response.update(
             status=status, payload=payload
         )
-        with patch.object(
-            self.server, "_bridge_request", return_value={"tasks": tasks}
-        ):
-            handler.do_GET()
+        def request():
+            with patch.object(
+                self.server, "_bridge_request", return_value={"tasks": tasks}
+            ):
+                handler.do_GET()
+
+        self._with_heartbeat_payload(tasks, request)
         self.assertEqual(response.get("status"), 200)
         return response["payload"]
 
@@ -148,10 +212,13 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
         handler._json_response = lambda status, payload: response.update(
             status=status, payload=payload
         )
-        with patch.object(
-            self.server, "_bridge_request", return_value={"tasks": tasks}
-        ):
-            handler.do_GET()
+        def request():
+            with patch.object(
+                self.server, "_bridge_request", return_value={"tasks": tasks}
+            ):
+                handler.do_GET()
+
+        self._with_heartbeat_payload(tasks, request)
         self.assertEqual(response.get("status"), 200)
         return response["payload"]
 
@@ -353,6 +420,8 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
                             provided_token="owner-token",
                         )
 
+                    self.assertEqual(payload["state"], "active")
+                    self.assertEqual(len(payload["events"]), 1)
                     self.assertEqual(payload["events"][0]["issue_number"], 34)
                     self.assertIn("work_summary", payload["events"][0])
                     if token_source == "file":
@@ -411,16 +480,23 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
 
     def test_err03_existing_empty_cap_focus_escape_and_read_only_contracts_remain(self):
         now = datetime(2026, 8, 14, 12, 0, tzinfo=timezone.utc)
-        zone = self.campus.DEPARTMENT_ZONES["development"]
+        identities = (
+            ("hq", "MAIN MANAGER", "COORDINATOR"),
+            ("sales", "AI STUDIO", "RESEARCHER"),
+            ("development", "MY DICTIONARY", "BUILDER"),
+            ("design", "PIXELVERSE DASHBOARD", "DESIGNER"),
+        )
         events = []
-        for index in range(4):
+        heartbeats = []
+        for index, (department_id, project, agent_id) in enumerate(identities):
+            zone = self.campus.DEPARTMENT_ZONES[department_id]
             events.append({
                 "event_id": f"evt-regression-{index}",
                 "task_id": f"task-regression-{index}",
-                "department_id": "development",
+                "department_id": department_id,
                 "department_label": zone["label"],
-                "project": "MY DICTIONARY",
-                "agent_id": f"agent-regression-{index}",
+                "project": project,
+                "agent_id": agent_id,
                 "role": zone["roles"][0],
                 "status": "active",
                 "updated_at": "2026-08-14T11:59:00Z",
@@ -429,8 +505,30 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
                 "ephemeral": True,
                 "zone_id": zone["zone_id"],
             })
-        capped = self.campus.department_campus_projection(events, now=now)
-        empty = self.campus.department_campus_projection([], now=now)
+            heartbeats.append({
+                "project": project,
+                "agent_id": agent_id,
+                "run_id": f"task-regression-{index}",
+                "session_id": f"session-regression-{index}",
+                "state": "working",
+                "heartbeat_at": "2026-08-14T11:59:45Z",
+            })
+        try:
+            capped = self.campus.department_campus_projection(
+                events,
+                heartbeats=heartbeats,
+                now=now,
+            )
+            empty = self.campus.department_campus_projection(
+                [],
+                heartbeats=[],
+                now=now,
+            )
+        except TypeError as exc:
+            self.fail(
+                "RED: cap regression requires explicit heartbeat projection "
+                f"({exc})"
+            )
         self.assertEqual(capped["visible_task_count"], 3)
         self.assertEqual(capped["omitted_task_count"], 1)
         self.assertEqual(empty["state"], "empty")

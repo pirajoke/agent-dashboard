@@ -11,10 +11,30 @@ const cwd =
   process.env.JARVIS_PROJECT_DIR ||
   '/Users/pirajoke/pixel-agents';
 const sessionPrefix = process.env.JARVIS_PIXEL_SESSION_PREFIX || 'jarvis-visual';
-const sessionId = `${sessionPrefix}-${role}`;
+const explicitProjectName = (process.env.JARVIS_PIXEL_PROJECT_NAME || '').trim();
+const explicitAgentId = (process.env.JARVIS_PIXEL_AGENT_ID || '').trim();
+const explicitRunId = (process.env.JARVIS_PIXEL_RUN_ID || '').trim();
+const explicitSessionId = (process.env.JARVIS_PIXEL_SESSION_ID || '').trim();
+const hasExactHeartbeatIdentity = Boolean(
+  explicitProjectName && explicitAgentId && explicitRunId && explicitSessionId,
+);
+const sessionId = explicitSessionId || `${sessionPrefix}-${role}`;
+const runId = explicitRunId || sessionId;
 const serverPath = path.join(os.homedir(), '.pixel-agents', 'server.json');
 const detailsPath = path.join(os.homedir(), '.pixel-agents', 'jarvis-agent-details.json');
-const envProjectName = process.env.JARVIS_PIXEL_PROJECT_NAME || path.basename(cwd);
+const envProjectName = explicitProjectName || path.basename(cwd);
+const defaultAgentIds = {
+  supervisor: 'COORDINATOR',
+  coordinator: 'COORDINATOR',
+  researcher: 'RESEARCHER',
+  builder: 'BUILDER',
+  tester: 'BUILDER',
+  designer: 'DESIGNER',
+  infrastructure: 'INFRASTRUCTURE',
+  vault: 'VAULT',
+  analyst: 'ANALYST',
+};
+const agentId = explicitAgentId || defaultAgentIds[role] || role.toUpperCase();
 const envProjectDir = process.env.JARVIS_PIXEL_PROJECT_DIR || process.env.JARVIS_PROJECT_DIR || cwd;
 const envTask = process.env.JARVIS_PIXEL_TASK || '';
 const envPhase = process.env.JARVIS_PIXEL_PHASE || '';
@@ -24,7 +44,7 @@ const envAcceptance = process.env.JARVIS_PIXEL_ACCEPTANCE || '';
 const envEvidence = process.env.JARVIS_PIXEL_EVIDENCE || '';
 
 function usage() {
-  console.error('usage: jarvis-pixel-agent-event <spawn|start|done|wait|end|permission> <role> [message]');
+  console.error('usage: jarvis-pixel-agent-event <spawn|start|heartbeat|done|wait|end|permission> <role> [message]');
   process.exit(2);
 }
 
@@ -34,9 +54,8 @@ function readConfig() {
   try {
     return JSON.parse(fs.readFileSync(serverPath, 'utf8'));
   } catch (error) {
-    console.error(`Pixel Agents server config not found: ${serverPath}`);
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(`Pixel Agents server config not found: ${serverPath}: ${reason}`);
   }
 }
 
@@ -45,6 +64,23 @@ function readJson(filePath, fallback) {
     return JSON.parse(fs.readFileSync(filePath, 'utf8'));
   } catch {
     return fallback;
+  }
+}
+
+function writeJsonAtomically(filePath, value) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  const tmpPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    fs.writeFileSync(tmpPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+    fs.renameSync(tmpPath, filePath);
+  } finally {
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch (error) {
+      if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
   }
 }
 
@@ -142,6 +178,26 @@ function writeDetails(eventCommand, label) {
   const details = readJson(detailsPath, { updatedAt: null, agents: {} });
   const agents = details.agents && typeof details.agents === 'object' ? details.agents : {};
   const previous = agents[role] || {};
+  if (eventCommand === 'heartbeat') {
+    if (
+      !hasExactHeartbeatIdentity
+      || previous.state !== 'working'
+      || previous.project !== envProjectName
+      || previous.agentId !== agentId
+      || previous.runId !== runId
+      || previous.sessionId !== sessionId
+    ) {
+      return false;
+    }
+    agents[role] = {
+      ...previous,
+      updatedAt: now,
+      heartbeatAt: now,
+    };
+    const next = {updatedAt: now, agents};
+    writeJsonAtomically(detailsPath, next);
+    return true;
+  }
   const history = Array.isArray(previous.history) ? previous.history : [];
   const task = cleanTask(label) || previous.task || '';
   const phase = envPhase || defaultPhase(eventCommand, role);
@@ -152,6 +208,9 @@ function writeDetails(eventCommand, label) {
   const acceptanceCriteria = splitList(envAcceptance);
   const evidence = splitList(envEvidence);
   const shouldResetRunContext = eventCommand === 'spawn' || eventCommand === 'start';
+  const heartbeatIdentity = hasExactHeartbeatIdentity
+    ? { agentId, runId, sessionId, heartbeatAt: now }
+    : { agentId: '', runId: '', sessionId, heartbeatAt: null };
   const event = {
     at: now,
     type: eventCommand,
@@ -166,7 +225,7 @@ function writeDetails(eventCommand, label) {
 
   agents[role] = {
     role,
-    sessionId,
+    ...heartbeatIdentity,
     updatedAt: now,
     state: stateForCommand(eventCommand),
     current: currentForCommand(eventCommand, label),
@@ -194,10 +253,8 @@ function writeDetails(eventCommand, label) {
     agents,
   };
 
-  fs.mkdirSync(path.dirname(detailsPath), { recursive: true });
-  const tmpPath = `${detailsPath}.tmp`;
-  fs.writeFileSync(tmpPath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
-  fs.renameSync(tmpPath, detailsPath);
+  writeJsonAtomically(detailsPath, next);
+  return true;
 }
 
 async function post(config, payload) {
@@ -254,39 +311,57 @@ async function wait(config) {
 }
 
 async function main() {
-  const config = readConfig();
   const label = message || `${role}: ${command}`;
 
   switch (command) {
-    case 'spawn':
-      await toolStart(config, `${role}: online`);
-      await toolDone(config);
-      await wait(config);
-      break;
-    case 'start':
-      await toolStart(config, `${role}: ${label}`);
-      break;
-    case 'done':
-      await toolDone(config);
-      await post(config, base('Stop'));
-      break;
-    case 'wait':
-      await wait(config);
-      break;
-    case 'permission':
-      await post(config, base('PermissionRequest'));
-      break;
-    case 'end':
-      await post(config, {
-        ...base('SessionEnd'),
-        reason: 'exit',
-      });
-      break;
+    case 'heartbeat':
+      if (!writeDetails(command, label)) {
+        throw new Error('heartbeat rejected: exact working identity is required');
+      }
+      console.log(`${command} ${role} ${sessionId}`);
+      return;
     default:
-      usage();
+      break;
   }
 
-  writeDetails(command, label);
+  let detailsCommand = command;
+  try {
+    const config = readConfig();
+    switch (command) {
+      case 'spawn':
+        await toolStart(config, `${role}: online`);
+        await toolDone(config);
+        await wait(config);
+        break;
+      case 'start':
+        await toolStart(config, `${role}: ${label}`);
+        break;
+      case 'done':
+        await toolDone(config);
+        await post(config, base('Stop'));
+        break;
+      case 'wait':
+        await wait(config);
+        break;
+      case 'permission':
+        await post(config, base('PermissionRequest'));
+        break;
+      case 'end':
+        await post(config, {
+          ...base('SessionEnd'),
+          reason: 'exit',
+        });
+        break;
+      default:
+        usage();
+    }
+  } catch (error) {
+    if (command === 'start') detailsCommand = 'done';
+    throw error;
+  } finally {
+    // A failed Pixel hook must never leave the durable heartbeat looking live.
+    writeDetails(detailsCommand, label);
+  }
   console.log(`${command} ${role} ${sessionId}`);
 }
 

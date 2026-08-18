@@ -40,6 +40,12 @@ JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_LOG_FILE = HOME / "Library" / "Logs" / "dashboard-jarvis-pipeline-run.log"
+JARVIS_PIXEL_AGENT_DETAILS_FILE = Path(
+    os.environ.get(
+        "JARVIS_PIXEL_AGENT_DETAILS_FILE",
+        str(HOME / ".pixel-agents" / "jarvis-agent-details.json"),
+    )
+).expanduser()
 JARVIS_REPO = HOME / "jarvis"
 JARVIS_PYTHON = JARVIS_REPO / ".venv" / "bin" / "python"
 JARVIS_VAULT_ROOT = Path(
@@ -1193,7 +1199,7 @@ def _department_snapshot_time(value: object) -> datetime | None:
 
 
 def _department_campus_state(state: str, *, now: datetime) -> dict:
-    payload = department_campus_projection([], now=now)
+    payload = department_campus_projection([], heartbeats=[], now=now)
     payload["state"] = state
     return payload
 
@@ -1278,9 +1284,34 @@ def _campus_bridge_event(task: dict) -> dict | None:
     return event
 
 
+def _department_campus_heartbeats(path: Path) -> list[dict]:
+    """Read only the six heartbeat proof fields from local producer storage."""
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return []
+    agents = document.get("agents") if isinstance(document, dict) else None
+    if not isinstance(agents, dict):
+        return []
+    normalized: list[dict] = []
+    for record in agents.values():
+        if not isinstance(record, dict):
+            continue
+        normalized.append({
+            "project": record.get("project"),
+            "agent_id": record.get("agentId", record.get("agent_id")),
+            "run_id": record.get("runId", record.get("run_id")),
+            "session_id": record.get("sessionId", record.get("session_id")),
+            "state": record.get("state"),
+            "heartbeat_at": record.get("heartbeatAt", record.get("heartbeat_at")),
+        })
+    return normalized
+
+
 def _department_campus_payload(
     data: object,
     *,
+    heartbeat_path: Path | None = None,
     now: datetime | None = None,
     owner_view: bool = False,
 ) -> dict:
@@ -1289,8 +1320,16 @@ def _department_campus_payload(
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
     current = current.astimezone(timezone.utc)
+    heartbeats = _department_campus_heartbeats(
+        heartbeat_path or JARVIS_PIXEL_AGENT_DETAILS_FILE
+    )
     if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
-        return department_campus_projection(None, now=current, owner_view=owner_view)
+        return department_campus_projection(
+            None,
+            heartbeats=heartbeats,
+            now=current,
+            owner_view=owner_view,
+        )
 
     candidates: list[tuple[int, datetime, list]] = []
     malformed_verified_snapshot = False
@@ -1323,7 +1362,12 @@ def _department_campus_payload(
 
     if not candidates:
         if malformed_verified_snapshot:
-            return department_campus_projection(None, now=current, owner_view=owner_view)
+            return department_campus_projection(
+                None,
+                heartbeats=heartbeats,
+                now=current,
+                owner_view=owner_view,
+            )
         events = [
             event
             for task in data["tasks"]
@@ -1331,8 +1375,12 @@ def _department_campus_payload(
             for event in [_campus_bridge_event(task)]
             if event is not None
         ]
+        # A heartbeat can stand alone only when Bridge has no lifecycle rows.
+        # Non-empty but unverified rows are not allowed to borrow that proof.
+        fallback_heartbeats = heartbeats if events or not data["tasks"] else []
         return department_campus_projection(
             events,
+            heartbeats=fallback_heartbeats,
             now=current,
             max_tasks=3,
             owner_view=owner_view,
@@ -1344,6 +1392,7 @@ def _department_campus_payload(
         return _department_campus_state("stale", now=current)
     return department_campus_projection(
         events,
+        heartbeats=heartbeats,
         now=current,
         max_tasks=3,
         owner_view=owner_view,
