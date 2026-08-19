@@ -18,6 +18,8 @@ if [[ -z "$TASK" ]]; then
   echo "usage: jarvis-agent-pipeline '<task text>'" >&2
   exit 2
 fi
+PIPELINE_SCRIPT="${0:A}"
+PROVIDER_WORKER_ROLE="${JARVIS_AGENT_PROVIDER_WORKER_ROLE:-}"
 
 PING_ROLE="${JARVIS_AGENT_PING_ROLE:-}"
 case "$PING_ROLE" in
@@ -279,6 +281,10 @@ pixel_event() {
   local event_phase="${4:-}"
   local event_handoff="${5:-}"
   local event_evidence="${6:-}"
+  if [[ "$event_command" == "done" \
+    && "${PROVIDER_TERMINAL_ALLOWED:-1}" != "1" ]]; then
+    return 0
+  fi
   local canonical_project_name=""
   local canonical_agent_id=""
   canonical_project_name="$(pixel_project_name)"
@@ -305,32 +311,86 @@ pixel_cleanup() {
 }
 
 ACTIVE_PROVIDER_PID=""
+ACTIVE_PROVIDER_PROCESS_GROUP=""
 ACTIVE_HEARTBEAT_PID=""
 ACTIVE_PROVIDER_OUTPUT=""
+ACTIVE_PROVIDER_CONTEXT=""
 ACTIVE_PROVIDER_ROLE=""
+PROVIDER_SPAWN_CRITICAL="0"
+PENDING_SIGNAL_STATUS=""
+PROVIDER_TERMINAL_ALLOWED="1"
 ROLE_PROVIDER_RESULT=""
 SELF_HEAL_RESULT=""
 
+terminate_active_provider_group() {
+  if [[ "$ACTIVE_PROVIDER_PROCESS_GROUP" != <-> ]]; then
+    return 0
+  fi
+
+  local provider_pid="$ACTIVE_PROVIDER_PID"
+  local term_deadline=$(( SECONDS + 3 ))
+  local kill_deadline=""
+  if ! kill -TERM -- "-$ACTIVE_PROVIDER_PROCESS_GROUP" 2>/dev/null; then
+    kill -TERM "$provider_pid" 2>/dev/null || true
+  fi
+  while (( SECONDS < term_deadline )); do
+    if ! kill -0 -- "-$ACTIVE_PROVIDER_PROCESS_GROUP" 2>/dev/null \
+      && ! kill -0 "$provider_pid" 2>/dev/null; then
+      break
+    fi
+    sleep 0.05
+  done
+  if kill -0 -- "-$ACTIVE_PROVIDER_PROCESS_GROUP" 2>/dev/null \
+    || kill -0 "$provider_pid" 2>/dev/null; then
+    kill -KILL -- "-$ACTIVE_PROVIDER_PROCESS_GROUP" 2>/dev/null || true
+    kill -KILL "$provider_pid" 2>/dev/null || true
+  fi
+  kill_deadline=$(( SECONDS + 3 ))
+  while (( SECONDS < kill_deadline )); do
+    if ! kill -0 -- "-$ACTIVE_PROVIDER_PROCESS_GROUP" 2>/dev/null \
+      && ! kill -0 "$provider_pid" 2>/dev/null; then
+      break
+    fi
+    sleep 0.05
+  done
+  if kill -0 -- "-$ACTIVE_PROVIDER_PROCESS_GROUP" 2>/dev/null \
+    || kill -0 "$provider_pid" 2>/dev/null; then
+    PROVIDER_TERMINAL_ALLOWED="0"
+    return 1
+  fi
+  if [[ "$provider_pid" == <-> ]]; then
+    wait "$ACTIVE_PROVIDER_PID" 2>/dev/null || true
+  fi
+  ACTIVE_PROVIDER_PID=""
+  ACTIVE_PROVIDER_PROCESS_GROUP=""
+}
+
 cleanup_active_role() {
+  local cleanup_proven="1"
   if [[ "$ACTIVE_HEARTBEAT_PID" == <-> ]]; then
     kill "$ACTIVE_HEARTBEAT_PID" 2>/dev/null || true
+    wait "$ACTIVE_HEARTBEAT_PID" 2>/dev/null || true
   fi
-  if [[ "$ACTIVE_PROVIDER_PID" == <-> ]]; then
-    kill "$ACTIVE_PROVIDER_PID" 2>/dev/null || true
-  fi
+  ACTIVE_HEARTBEAT_PID=""
+  terminate_active_provider_group || cleanup_proven="0"
   if [[ -n "$ACTIVE_PROVIDER_OUTPUT" ]]; then
     rm -f -- "$ACTIVE_PROVIDER_OUTPUT" 2>/dev/null || true
   fi
-  ACTIVE_HEARTBEAT_PID=""
-  ACTIVE_PROVIDER_PID=""
+  if [[ -n "$ACTIVE_PROVIDER_CONTEXT" ]]; then
+    rm -rf -- "$ACTIVE_PROVIDER_CONTEXT" 2>/dev/null || true
+  fi
   ACTIVE_PROVIDER_OUTPUT=""
+  ACTIVE_PROVIDER_CONTEXT=""
   ACTIVE_PROVIDER_ROLE=""
+  [[ "$cleanup_proven" == "1" ]]
 }
 
 pipeline_exit_cleanup() {
   local interrupted_role="$ACTIVE_PROVIDER_ROLE"
-  cleanup_active_role
-  if [[ -n "$interrupted_role" ]]; then
+  local cleanup_proven="1"
+  cleanup_active_role || cleanup_proven="0"
+  if [[ -n "$interrupted_role" && "$cleanup_proven" == "1" \
+    && "$PROVIDER_TERMINAL_ALLOWED" == "1" ]]; then
     pixel_event done "$interrupted_role" "Provider interrupted" "Provider stopped" "Retry the exact task"
   fi
   if [[ -z "$PING_ROLE" ]]; then
@@ -338,13 +398,24 @@ pipeline_exit_cleanup() {
   fi
 }
 
-trap pipeline_exit_cleanup EXIT
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
+handle_pipeline_signal() {
+  local signal_status="$1"
+  if [[ "$PROVIDER_SPAWN_CRITICAL" == "1" ]]; then
+    PENDING_SIGNAL_STATUS="$signal_status"
+    return 0
+  fi
+  exit "$signal_status"
+}
 
-if [[ -z "$PING_ROLE" ]]; then
-  pixel_cleanup
+if [[ -z "$PROVIDER_WORKER_ROLE" ]]; then
+  trap pipeline_exit_cleanup EXIT
+  trap 'handle_pipeline_signal 129' HUP
+  trap 'handle_pipeline_signal 130' INT
+  trap 'handle_pipeline_signal 143' TERM
+
+  if [[ -z "$PING_ROLE" ]]; then
+    pixel_cleanup
+  fi
 fi
 
 run_claude_role() {
@@ -549,14 +620,33 @@ run_agent_role_with_heartbeat() {
   local user_prompt="$4"
   local provider_code=0
   local provider_output=""
+  local provider_context=""
   local heartbeat_elapsed="$JARVIS_PIXEL_HEARTBEAT_INTERVAL_SECONDS"
 
   ROLE_PROVIDER_RESULT=""
+  PROVIDER_TERMINAL_ALLOWED="1"
+  PENDING_SIGNAL_STATUS=""
   provider_output="$(mktemp "$REPORT_DIR/.provider-output.XXXXXX")"
   ACTIVE_PROVIDER_OUTPUT="$provider_output"
+  provider_context="$(mktemp -d "$REPORT_DIR/.provider-worker.XXXXXX")"
+  ACTIVE_PROVIDER_CONTEXT="$provider_context"
   ACTIVE_PROVIDER_ROLE="$role"
-  run_agent_role "$role" "$permission" "$system_prompt" "$user_prompt" > "$provider_output" 2>&1 &
+  print -rn -- "$permission" > "$provider_context/permission"
+  print -rn -- "$system_prompt" > "$provider_context/system-prompt"
+  print -rn -- "$user_prompt" > "$provider_context/user-prompt"
+  chmod 700 "$provider_context"
+  chmod 600 "$provider_context/permission" "$provider_context/system-prompt" "$provider_context/user-prompt"
+  PROVIDER_SPAWN_CRITICAL="1"
+  JARVIS_AGENT_PROVIDER_WORKER_ROLE="$role" \
+    JARVIS_AGENT_PROVIDER_WORKER_CONTEXT="$provider_context" \
+    python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' \
+      zsh "$PIPELINE_SCRIPT" "$TASK" > "$provider_output" 2>&1 &
   ACTIVE_PROVIDER_PID=$!
+  ACTIVE_PROVIDER_PROCESS_GROUP="$ACTIVE_PROVIDER_PID"
+  PROVIDER_SPAWN_CRITICAL="0"
+  if [[ "$PENDING_SIGNAL_STATUS" == <-> ]]; then
+    exit "$PENDING_SIGNAL_STATUS"
+  fi
 
   while kill -0 "$ACTIVE_PROVIDER_PID" 2>/dev/null; do
     if (( heartbeat_elapsed >= JARVIS_PIXEL_HEARTBEAT_INTERVAL_SECONDS )); then
@@ -574,12 +664,17 @@ run_agent_role_with_heartbeat() {
   wait "$ACTIVE_PROVIDER_PID"
   provider_code=$?
   set -e
-  ACTIVE_PROVIDER_PID=""
+  if ! terminate_active_provider_group; then
+    PROVIDER_TERMINAL_ALLOWED="0"
+    exit 125
+  fi
   ACTIVE_PROVIDER_ROLE=""
 
   ROLE_PROVIDER_RESULT="$(<"$provider_output")"
   rm -f "$provider_output" 2>/dev/null || true
+  rm -rf "$provider_context" 2>/dev/null || true
   ACTIVE_PROVIDER_OUTPUT=""
+  ACTIVE_PROVIDER_CONTEXT=""
   return "$provider_code"
 }
 
@@ -1139,6 +1234,28 @@ finally:
     conn.close()
 PY
 }
+
+if [[ -n "$PROVIDER_WORKER_ROLE" ]]; then
+  PROVIDER_WORKER_CONTEXT="${JARVIS_AGENT_PROVIDER_WORKER_CONTEXT:-}"
+  if [[ ! -d "$PROVIDER_WORKER_CONTEXT" \
+    || "${PROVIDER_WORKER_CONTEXT:A:h}" != "${REPORT_DIR:A}" \
+    || "${PROVIDER_WORKER_CONTEXT:t}" != .provider-worker.* ]]; then
+    echo "ROLE_FAILED=$PROVIDER_WORKER_ROLE"
+    echo "EXIT_CODE=2"
+    echo
+    echo "Provider worker context is missing"
+    exit 2
+  fi
+  PROVIDER_WORKER_PERMISSION="$(<"$PROVIDER_WORKER_CONTEXT/permission")"
+  PROVIDER_WORKER_SYSTEM="$(<"$PROVIDER_WORKER_CONTEXT/system-prompt")"
+  PROVIDER_WORKER_PROMPT="$(<"$PROVIDER_WORKER_CONTEXT/user-prompt")"
+  run_agent_role \
+    "$PROVIDER_WORKER_ROLE" \
+    "$PROVIDER_WORKER_PERMISSION" \
+    "$PROVIDER_WORKER_SYSTEM" \
+    "$PROVIDER_WORKER_PROMPT"
+  exit $?
+fi
 
 if [[ -n "$PING_ROLE" ]]; then
   ROUTE_LABEL="$PING_ROLE availability ping"

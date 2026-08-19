@@ -22,6 +22,9 @@ const sessionId = explicitSessionId || `${sessionPrefix}-${role}`;
 const runId = explicitRunId || sessionId;
 const serverPath = path.join(os.homedir(), '.pixel-agents', 'server.json');
 const detailsPath = path.join(os.homedir(), '.pixel-agents', 'jarvis-agent-details.json');
+const detailsLockPath = `${detailsPath}.lock`;
+const lockWaitTimeoutMs = 3000;
+const lockStaleAfterMs = 10000;
 const envProjectName = explicitProjectName || path.basename(cwd);
 const defaultAgentIds = {
   supervisor: 'COORDINATOR',
@@ -76,6 +79,123 @@ function writeJsonAtomically(filePath, value) {
   } finally {
     try {
       fs.unlinkSync(tmpPath);
+    } catch (error) {
+      if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+  }
+}
+
+function sleepSync(milliseconds) {
+  const sleeper = new Int32Array(new SharedArrayBuffer(4));
+  Atomics.wait(sleeper, 0, 0, milliseconds);
+}
+
+function ticketOwnerIsAlive(owner) {
+  if (!owner || !Number.isInteger(owner.pid) || owner.pid < 1) return false;
+  try {
+    process.kill(owner.pid, 0);
+    return true;
+  } catch (error) {
+    return Boolean(
+      error instanceof Error && 'code' in error && error.code === 'EPERM',
+    );
+  }
+}
+
+function ticketOwner(ticketPath) {
+  try {
+    return JSON.parse(fs.readFileSync(ticketPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function removeAbandonedTicket(ticketPath, now) {
+  let ticketStat = null;
+  try {
+    ticketStat = fs.statSync(ticketPath);
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return;
+    }
+    throw error;
+  }
+
+  const owner = ticketOwner(ticketPath);
+  if (ticketOwnerIsAlive(owner) || now - ticketStat.mtimeMs < lockStaleAfterMs) {
+    return;
+  }
+
+  // Ticket names are unique and never reused. Re-check the inode and owner
+  // token immediately before unlinking only this abandoned contender.
+  try {
+    const currentStat = fs.statSync(ticketPath);
+    const currentOwner = ticketOwner(ticketPath);
+    if (
+      currentStat.ino !== ticketStat.ino
+      || currentOwner?.token !== owner?.token
+      || ticketOwnerIsAlive(currentOwner)
+    ) return;
+    fs.unlinkSync(ticketPath);
+  } catch (error) {
+    if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
+      throw error;
+    }
+  }
+}
+
+function withDetailsLock(callback) {
+  fs.mkdirSync(detailsLockPath, { recursive: true, mode: 0o700 });
+  fs.chmodSync(detailsLockPath, 0o700);
+  const deadline = Date.now() + lockWaitTimeoutMs;
+  const lockToken = `${process.pid}-${Date.now()}-${Math.random()}`;
+  const orderKey = process.hrtime.bigint().toString().padStart(20, '0');
+  const ticketName = `${orderKey}-${process.pid}-${Math.random().toString(16).slice(2)}.ticket`;
+  const ticketPath = path.join(detailsLockPath, ticketName);
+  const ticketFd = fs.openSync(ticketPath, 'wx', 0o600);
+  try {
+    fs.writeFileSync(
+      ticketFd,
+      JSON.stringify({ pid: process.pid, token: lockToken }),
+      'utf8',
+    );
+  } catch (error) {
+    try {
+      fs.unlinkSync(ticketPath);
+    } catch {
+      // A failed ticket write remains fail-closed and later expires as stale.
+    }
+    throw error;
+  } finally {
+    fs.closeSync(ticketFd);
+  }
+
+  try {
+    while (true) {
+      const now = Date.now();
+      const tickets = fs.readdirSync(detailsLockPath)
+        .filter((name) => name.endsWith('.ticket'))
+        .sort();
+      for (const queuedTicket of tickets) {
+        if (queuedTicket !== ticketName) {
+          removeAbandonedTicket(path.join(detailsLockPath, queuedTicket), now);
+        }
+      }
+      const remaining = fs.readdirSync(detailsLockPath)
+        .filter((name) => name.endsWith('.ticket'))
+        .sort();
+      if (remaining[0] === ticketName) break;
+      if (now >= deadline) {
+        throw new Error('heartbeat details lock timeout');
+      }
+      sleepSync(10);
+    }
+    return callback();
+  } finally {
+    try {
+      fs.unlinkSync(ticketPath);
     } catch (error) {
       if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
         throw error;
@@ -173,7 +293,7 @@ function defaultHandoff(eventCommand, eventRole) {
   return '';
 }
 
-function writeDetails(eventCommand, label) {
+function writeDetailsUnlocked(eventCommand, label) {
   const now = new Date().toISOString();
   const details = readJson(detailsPath, { updatedAt: null, agents: {} });
   const agents = details.agents && typeof details.agents === 'object' ? details.agents : {};
@@ -255,6 +375,10 @@ function writeDetails(eventCommand, label) {
 
   writeJsonAtomically(detailsPath, next);
   return true;
+}
+
+function writeDetails(eventCommand, label) {
+  return withDetailsLock(() => writeDetailsUnlocked(eventCommand, label));
 }
 
 async function post(config, payload) {

@@ -52,6 +52,22 @@ process is still executing.
   Claude/Codex provider process runs, stops the loop afterward, and writes idle
   on completion/failure.
 
+### AC-6 — concurrent producer updates preserve every agent
+
+- Heartbeat storage updates are protected across independent producer
+  processes, so one agent's read-modify-write cannot discard another agent's
+  newly written or refreshed record.
+- The protection remains dependency-free, bounded, and fail-closed; an
+  abandoned lock must not block the producer forever.
+
+### AC-7 — terminal state follows the complete provider process tree
+
+- On `HUP`, `INT`, `TERM`, or pipeline exit, cleanup stops and waits for the
+  complete provider process group, not only its shell wrapper.
+- The terminal Pixel `done` event is written only after that process group is
+  no longer running, so Campus cannot report idle while Claude/Codex work
+  continues in an orphaned descendant.
+
 ## Error and boundary criteria
 
 - ERR-1: unreadable or malformed heartbeat storage returns no live events.
@@ -60,6 +76,9 @@ process is still executing.
 - EC-1: exactly 45 seconds old is accepted; older is stale.
 - EC-2: terminal Bridge history may remain available elsewhere but never
   changes Campus live counts or motion.
+- EC-3: two independent producer processes updating different canonical agents
+  preserve both records.
+- EC-4: interrupted cleanup is bounded and still removes provider temp output.
 
 ## Constraints
 
