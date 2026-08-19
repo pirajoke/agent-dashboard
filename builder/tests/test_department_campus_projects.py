@@ -61,8 +61,37 @@ class DepartmentCampusProjectTests(unittest.TestCase):
         event.update(overrides)
         return event
 
-    def _projection(self, events):
-        return self.campus.department_campus_projection(events, now=NOW)
+    def _projection(self, events, *, heartbeats=None):
+        heartbeat_records = heartbeats
+        if heartbeat_records is None:
+            heartbeat_records = []
+            seen = set()
+            for event in events if isinstance(events, list) else []:
+                if not isinstance(event, dict) or event.get("status") not in {"active", "testing"}:
+                    continue
+                identity = (event.get("project"), event.get("agent_id"), event.get("task_id"))
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                heartbeat_records.append({
+                    "project": event.get("project"),
+                    "agent_id": event.get("agent_id"),
+                    "run_id": event.get("task_id"),
+                    "session_id": f"session-project-{len(heartbeat_records) + 1}",
+                    "state": "working",
+                    "heartbeat_at": "2026-08-10T11:59:45Z",
+                })
+        try:
+            return self.campus.department_campus_projection(
+                events,
+                heartbeats=heartbeat_records,
+                now=NOW,
+            )
+        except TypeError as exc:
+            self.fail(
+                "RED: project projection must accept explicit heartbeats "
+                f"({exc})"
+            )
 
     def test_ac_1_ec_4_registry_is_the_exact_canonical_public_project_set(self):
         registry = self._registry()

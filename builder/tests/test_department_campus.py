@@ -49,6 +49,16 @@ PUBLIC_EVENT_FIELDS = (
     "ephemeral",
     "zone_id",
 )
+_AUTO_HEARTBEATS = object()
+_CANONICAL_BY_DEPARTMENT = {
+    "hq": ("MAIN MANAGER", "COORDINATOR"),
+    "sales": ("AI STUDIO", "RESEARCHER"),
+    "development": ("MY DICTIONARY", "BUILDER"),
+    "design": ("PIXELVERSE DASHBOARD", "DESIGNER"),
+    "infrastructure": ("JARVIS", "INFRASTRUCTURE"),
+    "internal": ("SKILLS LIBRARY", "VAULT"),
+    "finance": ("FINANCIAL OS", "ANALYST"),
+}
 
 
 class DepartmentCampusContractTests(unittest.TestCase):
@@ -79,13 +89,14 @@ class DepartmentCampusContractTests(unittest.TestCase):
         zone = self._zones()[department_id]
         roles = zone.get("roles", ())
         self.assertTrue(roles, f"{department_id} must declare at least one public role")
+        project, agent_id = _CANONICAL_BY_DEPARTMENT[department_id]
         payload = {
             "event_id": "evt-001",
             "task_id": "task-001",
             "department_id": department_id,
             "department_label": zone["label"],
-            "project": "Public Project",
-            "agent_id": "agent-001",
+            "project": project,
+            "agent_id": agent_id,
             "role": roles[0],
             "status": "active",
             "updated_at": "2026-08-08T11:55:00Z",
@@ -97,8 +108,46 @@ class DepartmentCampusContractTests(unittest.TestCase):
         payload.update(overrides)
         return payload
 
-    def _project(self, events, **kwargs):
-        return self.campus.department_campus_projection(events, now=NOW, **kwargs)
+    def _heartbeats(self, events):
+        if not isinstance(events, list):
+            return []
+        records = []
+        seen = set()
+        for event in events:
+            if not isinstance(event, dict) or event.get("status") not in {"active", "testing"}:
+                continue
+            identity = (
+                event.get("project"),
+                event.get("agent_id"),
+                event.get("task_id"),
+            )
+            if identity in seen:
+                continue
+            seen.add(identity)
+            records.append({
+                "project": event.get("project"),
+                "agent_id": event.get("agent_id"),
+                "run_id": event.get("task_id"),
+                "session_id": f"session-{len(records) + 1}",
+                "state": "working",
+                "heartbeat_at": (NOW - timedelta(seconds=15)).isoformat(),
+            })
+        return records
+
+    def _project(self, events, *, heartbeats=_AUTO_HEARTBEATS, **kwargs):
+        heartbeat_records = self._heartbeats(events) if heartbeats is _AUTO_HEARTBEATS else heartbeats
+        try:
+            return self.campus.department_campus_projection(
+                events,
+                heartbeats=heartbeat_records,
+                now=NOW,
+                **kwargs,
+            )
+        except TypeError as exc:
+            self.fail(
+                "RED: department_campus_projection must accept explicit heartbeats "
+                f"({exc})"
+            )
 
     def _css(self):
         return (ASSETS_DIR / "style.css").read_text(encoding="utf-8")
@@ -148,7 +197,7 @@ class DepartmentCampusContractTests(unittest.TestCase):
         self.assertRegex(script, r"fetch\([^)]*/api/manager/departments")
         self.assertNotRegex(script, r"fetch\([^)]*/api/manager/departments[^)]*\bPOST\b")
 
-    def test_ac_4_status_text_and_motion_allowlist_are_explicit_and_accessible(self):
+    def test_ac_4_status_text_is_accessible_but_lifecycle_rows_are_not_live_presence(self):
         expected = {
             "queued": "в очереди",
             "active": "работает",
@@ -161,9 +210,19 @@ class DepartmentCampusContractTests(unittest.TestCase):
         script = self._script()
         for raw, visible in expected.items():
             with self.subTest(status=raw):
-                projected = self._project([self._event(status=raw)])
-                self.assertEqual(projected["events"][0]["status"], raw)
                 self.assertIn(visible, html + script)
+                try:
+                    projected = self._project(
+                        [self._event(status=raw)],
+                        heartbeats=[],
+                    )
+                except TypeError as exc:
+                    self.fail(
+                        "RED: lifecycle truth requires the heartbeats projection "
+                        f"contract ({exc})"
+                    )
+                self.assertNotEqual(projected["state"], "active")
+                self.assertEqual(projected["events"], [])
         self.assertIn("active", script)
         self.assertIn("testing", script)
         for nonmoving in ("queued", "waiting", "done", "failed"):
@@ -171,19 +230,15 @@ class DepartmentCampusContractTests(unittest.TestCase):
         self.assertIn("aria-live", html)
 
     def test_ac_5_ec_2_lane_limit_is_clamped_to_zero_through_three_with_honest_counts(self):
+        departments = ("hq", "sales", "development", "design", "infrastructure")
         events = [
-            self._event(
-                event_id=f"evt-{index}",
-                task_id=f"task-{index}",
-                agent_id=f"agent-{index}",
-            )
-            for index in range(5)
+            self._event(department_id=department_id, event_id=f"evt-{index}", task_id=f"task-{index}")
+            for index, department_id in enumerate(departments)
         ]
         support = self._event(
-            department_id="design",
+            department_id="internal",
             event_id="evt-support",
             task_id="task-0",
-            agent_id="agent-support",
         )
         for requested, visible, omitted in ((-4, 0, 5), (0, 0, 5), (2, 2, 3), (99, 3, 2)):
             with self.subTest(max_tasks=requested):
@@ -192,10 +247,10 @@ class DepartmentCampusContractTests(unittest.TestCase):
                 self.assertEqual(projected["omitted_task_count"], omitted)
                 self.assertLessEqual(len({item["task_id"] for item in projected["events"]}), visible)
         capped = self._project(events + [support], max_tasks=99)
-        self.assertIn("agent-support", {item["agent_id"] for item in capped["events"]})
+        self.assertIn("VAULT", {item["agent_id"] for item in capped["events"]})
 
     def test_ac_6_ec_4_registry_mismatches_are_rejected_and_support_stays_in_own_zone(self):
-        valid_support = self._event(department_id="design", agent_id="support-agent")
+        valid_support = self._event(department_id="design")
         projected = self._project([valid_support])
         self.assertEqual(projected["events"][0]["department_id"], "design")
         self.assertEqual(projected["events"][0]["zone_id"], self._zones()["design"]["zone_id"])
@@ -347,13 +402,13 @@ class DepartmentCampusContractTests(unittest.TestCase):
         duplicate = self._event()
         self.assertEqual(len(self._project([duplicate, dict(duplicate)])["events"]), 1)
 
-        older = self._event(project="Older", updated_at="2026-08-08T11:50:00Z")
-        newer = self._event(event_id="evt-new", project="Newer", updated_at="2026-08-08T11:59:00Z")
-        self.assertEqual(self._project([older, newer])["events"][0]["project"], "Newer")
+        older = self._event(event_id="evt-old", updated_at="2026-08-08T11:50:00Z")
+        newer = self._event(event_id="evt-new", updated_at="2026-08-08T11:59:00Z")
+        self.assertEqual(self._project([older, newer])["events"][0]["event_id"], "evt-new")
 
-        first = self._event(event_id="evt-first", project="First")
-        tied = self._event(event_id="evt-tied", project="Second")
-        self.assertEqual(self._project([first, tied])["events"][0]["project"], "First")
+        first = self._event(event_id="evt-first")
+        tied = self._event(event_id="evt-tied")
+        self.assertEqual(self._project([first, tied])["events"][0]["event_id"], "evt-first")
 
     def test_ac_13_projection_and_idle_render_start_no_external_work(self):
         with (
@@ -405,12 +460,12 @@ class DepartmentCampusContractTests(unittest.TestCase):
                 self.assertEqual(self._project([event])["events"], [])
 
     def test_ec_8_err_3_safe_text_is_bounded_and_secret_or_identity_shapes_fail_closed(self):
-        long_unicode = "Проект-" + ("🚀" * 1000)
-        projected = self._project([self._event(project=long_unicode)])
+        long_unicode = "Шаг-" + ("🚀" * 1000)
+        projected = self._project([self._event(next_step=long_unicode)])
         self.assertEqual(len(projected["events"]), 1)
-        safe_project = projected["events"][0]["project"]
-        self.assertLess(len(safe_project), len(long_unicode))
-        safe_project.encode("utf-8")
+        safe_step = projected["events"][0]["next_step"]
+        self.assertLess(len(safe_step), len(long_unicode))
+        safe_step.encode("utf-8")
 
         unsafe = self._event(
             event_id="evt-secret",
@@ -453,19 +508,19 @@ class DepartmentCampusContractTests(unittest.TestCase):
             "aws_access": "AKIACAMPUSPROBE1234X",
         }
 
-        for field in ("project", "next_step"):
-            for shape, value in high_risk.items():
-                with self.subTest(field=field, shape=shape):
-                    projected = self._project([self._event(**{field: value})])
-                    rendered = repr(projected)
-                    self.assertNotIn(value, rendered)
-                    self.assertNotIn("CAMPUS_", rendered)
+        for shape, value in high_risk.items():
+            with self.subTest(field="next_step", shape=shape):
+                projected = self._project([self._event(next_step=value)])
+                rendered = repr(projected)
+                self.assertNotIn(value, rendered)
+                self.assertNotIn("CAMPUS_", rendered)
+            with self.subTest(field="project", shape=shape):
+                self.assertEqual(self._project([self._event(project=value)])["events"], [])
 
         safe_prose = "Document OAuth token rotation policy with the team"
-        for field in ("project", "next_step"):
-            with self.subTest(field=field, shape="safe_prose"):
-                projected = self._project([self._event(**{field: safe_prose})])
-                self.assertEqual(projected["events"][0][field], safe_prose)
+        projected = self._project([self._event(next_step=safe_prose)])
+        self.assertEqual(projected["events"][0]["next_step"], safe_prose)
+        self.assertEqual(self._project([self._event(project=safe_prose)])["events"], [])
 
     def test_ac_8_embedded_relative_and_schemeless_sensitive_text_is_neutral(self):
         sensitive_values = (
@@ -478,12 +533,11 @@ class DepartmentCampusContractTests(unittest.TestCase):
             "internal.example/private?token=CAMPUS_URL_TOKEN",
         )
         neutral = "Недоступно в публичной сводке"
-        for field in ("project", "next_step"):
-            for value in sensitive_values:
-                with self.subTest(field=field, value=value[:18]):
-                    projected = self._project([self._event(**{field: value})])
+        for value in sensitive_values:
+            with self.subTest(field="next_step", value=value[:18]):
+                    projected = self._project([self._event(next_step=value)])
                     self.assertEqual(len(projected["events"]), 1)
-                    self.assertEqual(projected["events"][0][field], neutral)
+                    self.assertEqual(projected["events"][0]["next_step"], neutral)
                     rendered = repr(projected)
                     for marker in (
                         "/Users/mark",
@@ -494,12 +548,12 @@ class DepartmentCampusContractTests(unittest.TestCase):
                         r"C:\Users\Mark",
                     ):
                         self.assertNotIn(marker, rendered)
+            with self.subTest(field="project", value=value[:18]):
+                self.assertEqual(self._project([self._event(project=value)])["events"], [])
 
         safe = "Open the documentation and review token rotation policy"
-        projected = self._project([
-            self._event(project=safe, next_step=safe),
-        ])
-        self.assertEqual(projected["events"][0]["project"], safe)
+        projected = self._project([self._event(next_step=safe)])
+        self.assertEqual(projected["events"][0]["project"], "MY DICTIONARY")
         self.assertEqual(projected["events"][0]["next_step"], safe)
 
     def test_ac_8_generic_secret_shaped_identity_is_rejected(self):
@@ -523,34 +577,34 @@ class DepartmentCampusContractTests(unittest.TestCase):
             "eyJhbGciOiJIUzI1NiJ9.CAMPUS_JWT_PAYLOAD.CAMPUS_JWT_SIGNATURE",
         )
         neutral = "Недоступно в публичной сводке"
-        for field in ("project", "next_step"):
-            for value in sensitive_values:
-                with self.subTest(field=field, value=value[:18]):
-                    projected = self._project([self._event(**{field: value})])
+        for value in sensitive_values:
+            with self.subTest(field="next_step", value=value[:18]):
+                    projected = self._project([self._event(next_step=value)])
                     self.assertEqual(len(projected["events"]), 1)
-                    self.assertEqual(projected["events"][0][field], neutral)
+                    self.assertEqual(projected["events"][0]["next_step"], neutral)
                     self.assertNotIn(value, repr(projected))
                     self.assertNotIn("CAMPUS_", repr(projected))
+            with self.subTest(field="project", value=value[:18]):
+                self.assertEqual(self._project([self._event(project=value)])["events"], [])
 
         safe_prose = "Run /help for public documentation"
         with self.subTest(safe_case="public-help-prose"):
             safe_text_event = self._project([
-                self._event(project=safe_prose, next_step=safe_prose),
+                self._event(next_step=safe_prose),
             ])["events"][0]
-            self.assertEqual(safe_text_event["project"], safe_prose)
+            self.assertEqual(safe_text_event["project"], "MY DICTIONARY")
             self.assertEqual(safe_text_event["next_step"], safe_prose)
 
         with self.subTest(safe_case="ordinary-token-secret-words-in-identifiers"):
-            safe_identity_projection = self._project([
-                self._event(
-                    task_id="design-token-audit",
-                    agent_id="secret-santa-task",
-                ),
-            ])
+            safe_identity_projection = self._project([self._event(task_id="design-token-audit")])
             self.assertEqual(len(safe_identity_projection["events"]), 1)
             safe_event = safe_identity_projection["events"][0]
             self.assertEqual(safe_event["task_id"], "design-token-audit")
-            self.assertEqual(safe_event["agent_id"], "secret-santa-task")
+            self.assertEqual(safe_event["agent_id"], "BUILDER")
+            self.assertEqual(
+                self._project([self._event(agent_id="secret-santa-task")])["events"],
+                [],
+            )
 
     def test_ac_8_release_matrix_redacts_private_mounts_hosts_auth_and_email(self):
         sensitive_values = (
@@ -566,14 +620,15 @@ class DepartmentCampusContractTests(unittest.TestCase):
         )
         neutral = "Недоступно в публичной сводке"
 
-        for field in ("project", "next_step"):
-            for value, marker in sensitive_values:
-                with self.subTest(field=field, marker=marker):
-                    projected = self._project([self._event(**{field: value})])
+        for value, marker in sensitive_values:
+            with self.subTest(field="next_step", marker=marker):
+                    projected = self._project([self._event(next_step=value)])
                     self.assertEqual(len(projected["events"]), 1)
-                    self.assertEqual(projected["events"][0][field], neutral)
+                    self.assertEqual(projected["events"][0]["next_step"], neutral)
                     self.assertNotIn(value, repr(projected))
                     self.assertNotIn(marker, repr(projected))
+            with self.subTest(field="project", marker=marker):
+                self.assertEqual(self._project([self._event(project=value)])["events"], [])
 
     def test_ac_8_err_3_common_api_key_shapes_drop_public_identity_fields(self):
         credentials = (
@@ -596,17 +651,15 @@ class DepartmentCampusContractTests(unittest.TestCase):
     def test_ac_8_ec_8_control_and_bidi_characters_are_neutralized(self):
         unsafe = "Safe text\x00\x1b[31m\u202eCAMPUS_BIDI\u2066"
         forbidden = ("\x00", "\x1b", "\u202e", "\u2066")
-        for field in ("project", "next_step"):
-            with self.subTest(field=field):
-                projected = self._project([self._event(**{field: unsafe})])
-                rendered = repr(projected)
-                for character in forbidden:
-                    self.assertNotIn(character, projected["events"][0][field])
+        projected = self._project([self._event(next_step=unsafe)])
+        for character in forbidden:
+            self.assertNotIn(character, projected["events"][0]["next_step"])
+        self.assertEqual(self._project([self._event(project=unsafe)])["events"], [])
 
     def test_ec_8_unicode_bound_does_not_end_inside_a_zwj_grapheme(self):
-        long_unicode = "Проект-" + ("👩\u200d💻" * 1000)
-        projected = self._project([self._event(project=long_unicode)])
-        safe_project = projected["events"][0]["project"]
+        long_unicode = "Шаг-" + ("👩\u200d💻" * 1000)
+        projected = self._project([self._event(next_step=long_unicode)])
+        safe_project = projected["events"][0]["next_step"]
 
         self.assertLess(len(safe_project), len(long_unicode))
         safe_project.encode("utf-8")
@@ -660,7 +713,7 @@ class DepartmentCampusContractTests(unittest.TestCase):
         self.assertRegex(script, r"(?:slice\(\s*0\s*,\s*3\s*\)|length\s*<\s*3)")
         self.assertRegex(script, r"textContent\s*=\s*[^;]*task_id")
 
-    def test_ac_15_status_only_routes_to_department_test_lab_or_github(self):
+    def test_ac_15_only_verified_active_or_testing_status_can_create_live_routes(self):
         script = self._campus_script()
         css = self._css()
 
@@ -669,18 +722,20 @@ class DepartmentCampusContractTests(unittest.TestCase):
         for token in (
             "active",
             "testing",
-            "done",
-            "queued",
-            "waiting",
-            "failed",
             "department",
             "test-lab",
-            "github-station",
         ):
             self.assertIn(token, script)
         self.assertRegex(script, r"active[\s\S]{0,240}department")
         self.assertRegex(script, r"testing[\s\S]{0,240}test-lab")
-        self.assertRegex(script, r"done[\s\S]{0,240}github-station")
+        self.assertRegex(
+            script,
+            r"(?:liveStatuses|movingStatuses)[\s\S]{0,160}active[\s\S]{0,80}testing",
+        )
+        self.assertRegex(
+            script,
+            r"(?:liveStatuses|movingStatuses)\.includes\([^)]*event\.status",
+        )
         self.assertRegex(script, r"active[\s\S]{0,160}testing[\s\S]{0,240}moving")
         self.assertRegex(css, r"data-campus-moving[^{}]*true")
 
@@ -712,20 +767,18 @@ class DepartmentCampusContractTests(unittest.TestCase):
             self._event(
                 event_id="evt-primary",
                 task_id="task-shared",
-                agent_id="agent-primary",
                 status="active",
             ),
             self._event(
                 department_id="design",
                 event_id="evt-support",
                 task_id="task-shared",
-                agent_id="agent-support",
                 status="active",
             ),
             self._event(
+                department_id="infrastructure",
                 event_id="evt-second",
                 task_id="task-second",
-                agent_id="agent-second",
                 status="testing",
             ),
         ]
@@ -750,30 +803,27 @@ class DepartmentCampusContractTests(unittest.TestCase):
             self._event(
                 event_id="evt-shared-done",
                 task_id="task-shared",
-                agent_id="agent-done",
                 status="done",
             ),
             self._event(
                 event_id="evt-shared-active",
                 task_id="task-shared",
-                agent_id="agent-active",
                 status="active",
             ),
             self._event(
                 department_id="design",
                 event_id="evt-shared-testing",
                 task_id="task-shared",
-                agent_id="agent-testing",
                 status="testing",
             ),
             self._event(
-                event_id="evt-two", task_id="task-two", agent_id="agent-two",
+                department_id="infrastructure", event_id="evt-two", task_id="task-two",
             ),
             self._event(
-                event_id="evt-three", task_id="task-three", agent_id="agent-three",
+                department_id="internal", event_id="evt-three", task_id="task-three",
             ),
             self._event(
-                event_id="evt-four", task_id="task-four", agent_id="agent-four",
+                department_id="finance", event_id="evt-four", task_id="task-four",
             ),
         ]
         projected = self._project(events, max_tasks=99)

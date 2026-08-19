@@ -103,6 +103,7 @@
         waiting: 'department',
         failed: 'department',
     };
+    const liveStatuses = ['active', 'testing'];
     const movingStatuses = ['active', 'testing'];
     const stateMessages = {
         loading: 'Загрузка кампуса…',
@@ -473,7 +474,9 @@
 
     function renderDepartmentCampus(payload) {
         const state = payload && typeof payload.state === 'string' ? payload.state : 'unavailable';
-        const events = state === 'active' && Array.isArray(payload.events) ? payload.events : [];
+        const events = state === 'active' && Array.isArray(payload.events)
+            ? payload.events.filter((event) => liveStatuses.includes(event?.status))
+            : [];
         if (
             state === 'empty'
             || state === 'stale'
@@ -494,7 +497,7 @@
         }
         const matchedEvents = [];
         events.forEach((event) => {
-            if (!Object.prototype.hasOwnProperty.call(statusLabels, event?.status)) return;
+            if (!liveStatuses.includes(event?.status)) return;
             const folder = projectFolderForEvent(event);
             if (!folder) return;
             matchedEvents.push(event);
@@ -533,7 +536,10 @@
             animateCampusJourney(button, shouldAnimate, managerOriginRect);
         });
         const activeAgentCount = new Set(
-            matchedEvents.map((event) => String(event.agent_id || '')).filter(Boolean),
+            matchedEvents
+                .filter((event) => liveStatuses.includes(event.status))
+                .map((event) => String(event.agent_id || ''))
+                .filter(Boolean),
         ).size;
         setCampusState(
             'active',

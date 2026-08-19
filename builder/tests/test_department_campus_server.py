@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 import importlib
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -59,15 +61,15 @@ class DepartmentCampusServerTests(unittest.TestCase):
                 f"({type(exc).__name__}: {exc})"
             )
 
-    def _event(self, department_id="development", **overrides):
+    def _event(self, department_id="design", **overrides):
         zone = self.campus.DEPARTMENT_ZONES[department_id]
         payload = {
             "event_id": "evt-server-1",
             "task_id": "task-server-1",
             "department_id": department_id,
             "department_label": zone["label"],
-            "project": "Public Project",
-            "agent_id": "agent-server-1",
+            "project": "PIXELVERSE DASHBOARD",
+            "agent_id": "DESIGNER",
             "role": zone["roles"][0],
             "status": "active",
             "updated_at": "2026-08-08T11:59:00Z",
@@ -78,6 +80,42 @@ class DepartmentCampusServerTests(unittest.TestCase):
         }
         payload.update(overrides)
         return payload
+
+    def _heartbeat(self, *, project="PIXELVERSE DASHBOARD", agent_id="DESIGNER", run_id="task-server-1"):
+        return {
+            "project": project,
+            "agentId": agent_id,
+            "runId": run_id,
+            "sessionId": f"session-{agent_id.lower()}-server",
+            "state": "working",
+            "heartbeatAt": "2026-08-08T11:59:45Z",
+        }
+
+    def _payload(self, bridge_data, *, heartbeats, owner_view=False):
+        with tempfile.TemporaryDirectory() as tmp:
+            heartbeat_path = Path(tmp) / "jarvis-agent-details.json"
+            heartbeat_path.write_text(
+                json.dumps({
+                    "updatedAt": "2026-08-08T11:59:45Z",
+                    "agents": {
+                        f"record-{index}": record
+                        for index, record in enumerate(heartbeats)
+                    },
+                }),
+                encoding="utf-8",
+            )
+            try:
+                return self.server._department_campus_payload(
+                    bridge_data,
+                    heartbeat_path=heartbeat_path,
+                    now=NOW,
+                    owner_view=owner_view,
+                )
+            except TypeError as exc:
+                self.fail(
+                    "RED: server payload must accept explicit heartbeat_path "
+                    f"({exc})"
+                )
 
     def _snapshot(self, events, *, updated_at="2026-08-08T11:59:30Z", **metadata_overrides):
         metadata = {
@@ -95,19 +133,22 @@ class DepartmentCampusServerTests(unittest.TestCase):
             "messages": [{"body": "<private-message>"}],
         }
 
-    def test_ac_3_err_5_only_newest_same_metadata_verified_manager_snapshot_is_used(self):
+    def test_ac_3_err_5_manager_snapshots_without_heartbeat_are_not_live(self):
         older = self._snapshot(
-            [self._event(event_id="evt-old", project="Older Snapshot")],
+            [self._event(event_id="evt-old")],
             updated_at="2026-08-08T11:50:00Z",
         )
         newer = self._snapshot(
-            [self._event(event_id="evt-new", project="Newest Snapshot")],
+            [self._event(event_id="evt-new")],
             updated_at="2026-08-08T11:59:30Z",
             source_agent="main-manager",
         )
-        projected = self.server._department_campus_payload({"tasks": [older, newer]}, now=NOW)
+        projected = self._payload(
+            {"tasks": [older, newer]},
+            heartbeats=[self._heartbeat()],
+        )
         self.assertEqual(projected["state"], "active")
-        self.assertEqual([item["project"] for item in projected["events"]], ["Newest Snapshot"])
+        self.assertEqual([item["event_id"] for item in projected["events"]], ["evt-new"])
 
         ordinary = self._snapshot([self._event()])
         ordinary["metadata"].pop("source_agent")
@@ -122,26 +163,23 @@ class DepartmentCampusServerTests(unittest.TestCase):
             {"tasks": [{"metadata": {}}, {"metadata": {"source_agent": "MAIN MANAGER"}}]},
         ):
             with self.subTest(bridge_data=bridge_data):
-                rejected = self.server._department_campus_payload(bridge_data, now=NOW)
+                rejected = self._payload(bridge_data, heartbeats=[self._heartbeat()])
                 self.assertEqual(rejected["state"], "empty")
                 self.assertEqual(rejected["events"], [])
 
-    def test_ac_3_source_agent_provenance_requires_a_real_string(self):
+    def test_ac_3_source_agent_provenance_alone_never_proves_live_work(self):
         for source in ("MAIN MANAGER", "main-manager", "main_manager"):
             with self.subTest(kind="valid_string", source=source):
                 snapshot = self._snapshot(
-                    [self._event(project="Verified Manager")],
+                    [self._event()],
                     source_agent=source,
                 )
-                projected = self.server._department_campus_payload(
+                projected = self._payload(
                     {"tasks": [snapshot]},
-                    now=NOW,
+                    heartbeats=[self._heartbeat()],
                 )
                 self.assertEqual(projected["state"], "active")
-                self.assertEqual(
-                    [event["project"] for event in projected["events"]],
-                    ["Verified Manager"],
-                )
+                self.assertEqual(projected["events"][0]["project"], "PIXELVERSE DASHBOARD")
 
         for source in ({"main": "manager"}, ["main", "manager"]):
             with self.subTest(kind="forged_non_string", source=source):
@@ -149,15 +187,15 @@ class DepartmentCampusServerTests(unittest.TestCase):
                     [self._event(project="FORGED NON STRING SOURCE")],
                     source_agent=source,
                 )
-                projected = self.server._department_campus_payload(
+                projected = self._payload(
                     {"tasks": [snapshot]},
-                    now=NOW,
+                    heartbeats=[self._heartbeat()],
                 )
                 self.assertEqual(projected["state"], "empty")
                 self.assertEqual(projected["events"], [])
                 self.assertNotIn("FORGED", repr(projected))
 
-    def test_ac_fresh_canonical_bridge_dispatch_projects_one_safe_active_owner(self):
+    def test_ac_fresh_canonical_bridge_dispatch_without_heartbeat_is_not_live(self):
         task = {
             "id": "bridge-task-23",
             "status": "running",
@@ -176,26 +214,14 @@ class DepartmentCampusServerTests(unittest.TestCase):
             },
         }
 
-        projected = self.server._department_campus_payload({"tasks": [task]}, now=NOW)
+        projected = self._payload({"tasks": [task]}, heartbeats=[])
 
         self.assertEqual(tuple(projected), TOP_LEVEL_FIELDS)
-        self.assertEqual(projected["state"], "active")
-        self.assertEqual(projected["visible_task_count"], 1)
+        self.assertNotEqual(projected["state"], "active")
+        self.assertEqual(projected["visible_task_count"], 0)
         self.assertEqual(projected["omitted_task_count"], 0)
         self.assertEqual(projected["privacy"], "public_projection")
-        self.assertEqual(len(projected["events"]), 1)
-        event = projected["events"][0]
-        self.assertEqual(tuple(event), PUBLIC_EVENT_FIELDS)
-        self.assertEqual(event["task_id"], "bridge-task-23")
-        self.assertEqual(event["department_id"], "infrastructure")
-        self.assertEqual(event["department_label"], "Infrastructure")
-        self.assertEqual(event["project"], "JARVIS")
-        self.assertEqual(event["agent_id"], "INFRASTRUCTURE")
-        self.assertEqual(event["role"], "Infrastructure Engineer")
-        self.assertEqual(event["status"], "active")
-        self.assertEqual(event["updated_at"], "2026-08-08T11:59:00Z")
-        self.assertTrue(event["ephemeral"])
-        self.assertEqual(event["zone_id"], "campus-zone-infrastructure")
+        self.assertEqual(projected["events"], [])
         rendered = repr(projected)
         for private_value in (
             "<private-description>",
@@ -206,7 +232,7 @@ class DepartmentCampusServerTests(unittest.TestCase):
         ):
             self.assertNotIn(private_value, rendered)
 
-    def test_bridge_fallback_maps_lifecycle_timestamps_and_fails_closed(self):
+    def test_bridge_fallback_lifecycle_never_becomes_live_without_heartbeat(self):
         base = {
             "id": "bridge-lifecycle",
             "agent_role": "TESTER",
@@ -215,22 +241,13 @@ class DepartmentCampusServerTests(unittest.TestCase):
             "claimed_at": "2026-08-08T11:58:00Z",
             "completed_at": "2026-08-08T11:59:00Z",
         }
-        cases = (
-            ("pending", "queued", "2026-08-08T11:57:00Z"),
-            ("claimed", "active", "2026-08-08T11:58:00Z"),
-            ("done", "done", "2026-08-08T11:59:00Z"),
-            ("failed", "failed", "2026-08-08T11:59:00Z"),
-        )
-        for status, expected_status, expected_time in cases:
+        for status in ("pending", "claimed", "done", "failed"):
             with self.subTest(status=status):
                 task = {**base, "id": f"bridge-{status}", "status": status}
-                projected = self.server._department_campus_payload(
-                    {"tasks": [task]},
-                    now=NOW,
-                )
-                self.assertEqual(projected["state"], "active")
-                self.assertEqual(projected["events"][0]["status"], expected_status)
-                self.assertEqual(projected["events"][0]["updated_at"], expected_time)
+                projected = self._payload({"tasks": [task]}, heartbeats=[])
+                self.assertNotEqual(projected["state"], "active")
+                self.assertEqual(projected["visible_task_count"], 0)
+                self.assertEqual(projected["events"], [])
 
         pipeline_task = {
             **base,
@@ -238,15 +255,9 @@ class DepartmentCampusServerTests(unittest.TestCase):
             "status": "done",
             "agent_role": "SUPERVISOR_BUILDER_TESTER",
         }
-        pipeline_projection = self.server._department_campus_payload(
-            {"tasks": [pipeline_task]},
-            now=NOW,
-        )
-        self.assertEqual(pipeline_projection["state"], "active")
-        self.assertEqual(
-            pipeline_projection["events"][0]["agent_id"],
-            "INFRASTRUCTURE",
-        )
+        pipeline_projection = self._payload({"tasks": [pipeline_task]}, heartbeats=[])
+        self.assertNotEqual(pipeline_projection["state"], "active")
+        self.assertEqual(pipeline_projection["events"], [])
 
         rejected = (
             {**base, "status": "cancelled"},
@@ -256,45 +267,39 @@ class DepartmentCampusServerTests(unittest.TestCase):
         )
         for task in rejected:
             with self.subTest(rejected=task):
-                projected = self.server._department_campus_payload(
-                    {"tasks": [task]},
-                    now=NOW,
-                )
+                projected = self._payload({"tasks": [task]}, heartbeats=[])
                 self.assertEqual(projected["state"], "empty")
                 self.assertEqual(projected["events"], [])
-    def test_live_bridge_snapshot_uses_terminal_or_claimed_timestamp_when_updated_at_is_absent(self):
-        """Bridge task rows expose lifecycle timestamps, not an updated_at field."""
+
+    def test_bridge_snapshot_lifecycle_timestamp_without_heartbeat_is_not_live(self):
         for lifecycle_field in ("completed_at", "claimed_at", "created_at"):
             with self.subTest(lifecycle_field=lifecycle_field):
                 snapshot = self._snapshot(
-                    [self._event(project="MY DICTIONARY")],
+                    [self._event()],
                     updated_at="2026-08-08T11:59:30Z",
                 )
                 snapshot.pop("updated_at")
                 snapshot[lifecycle_field] = "2026-08-08T11:59:30Z"
 
-                projected = self.server._department_campus_payload(
+                projected = self._payload(
                     {"tasks": [snapshot]},
-                    now=NOW,
+                    heartbeats=[self._heartbeat()],
                 )
 
                 self.assertEqual(projected["state"], "active")
                 self.assertEqual(projected["visible_task_count"], 1)
-                self.assertEqual(
-                    [event["project"] for event in projected["events"]],
-                    ["MY DICTIONARY"],
-                )
+                self.assertEqual(projected["events"][0]["project"], "PIXELVERSE DASHBOARD")
     def test_err_1_non_object_bridge_or_non_list_pixel_events_is_unavailable_without_partial_data(self):
         malformed_sources = (None, [], "bad", 7, True)
         for bridge_data in malformed_sources:
             with self.subTest(bridge_data=bridge_data):
-                projected = self.server._department_campus_payload(bridge_data, now=NOW)
+                projected = self._payload(bridge_data, heartbeats=[])
                 self.assertEqual(projected["state"], "unavailable")
                 self.assertEqual(projected["events"], [])
                 self.assertEqual(projected["visible_task_count"], 0)
 
         malformed_events = self._snapshot({"not": "a list"})
-        projected = self.server._department_campus_payload({"tasks": [malformed_events]}, now=NOW)
+        projected = self._payload({"tasks": [malformed_events]}, heartbeats=[])
         self.assertEqual(projected["state"], "unavailable")
         self.assertEqual(projected["events"], [])
 
@@ -303,13 +308,13 @@ class DepartmentCampusServerTests(unittest.TestCase):
             [self._event(updated_at=(NOW - timedelta(minutes=31)).isoformat())],
             updated_at=(NOW - timedelta(minutes=31)).isoformat(),
         )
-        projected = self.server._department_campus_payload({"tasks": [stale]}, now=NOW)
+        projected = self._payload({"tasks": [stale]}, heartbeats=[self._heartbeat()])
         self.assertEqual(projected["state"], "stale")
         self.assertEqual(projected["events"], [])
         self.assertEqual(projected["visible_task_count"], 0)
 
         malformed = self._snapshot([self._event(updated_at="not-a-time")])
-        projected = self.server._department_campus_payload({"tasks": [malformed]}, now=NOW)
+        projected = self._payload({"tasks": [malformed]}, heartbeats=[self._heartbeat()])
         self.assertNotEqual(projected["state"], "active")
         self.assertEqual(projected["events"], [])
 
@@ -326,24 +331,39 @@ class DepartmentCampusServerTests(unittest.TestCase):
             return {"tasks": [self._snapshot([self._event(prompt="<private-prompt>")])]}
 
         original_payload = self.server._department_campus_payload
+        with tempfile.TemporaryDirectory() as tmp:
+            heartbeat_path = Path(tmp) / "jarvis-agent-details.json"
+            heartbeat_path.write_text(
+                json.dumps({
+                    "updatedAt": "2026-08-08T11:59:45Z",
+                    "agents": {"designer": self._heartbeat()},
+                }),
+                encoding="utf-8",
+            )
 
-        def payload_at_fixed_now(bridge_data, *, now=None):
-            return original_payload(bridge_data, now=NOW)
+            def payload_at_fixed_now(bridge_data, *, now=None, **kwargs):
+                return original_payload(
+                    bridge_data,
+                    heartbeat_path=heartbeat_path,
+                    now=NOW,
+                    **kwargs,
+                )
 
-        with (
-            patch.object(self.server, "_bridge_request", side_effect=bridge_request),
-            patch.object(
-                self.server,
-                "_department_campus_payload",
-                side_effect=payload_at_fixed_now,
-            ),
-        ):
-            handler.do_GET()
+            with (
+                patch.object(self.server, "_bridge_request", side_effect=bridge_request),
+                patch.object(
+                    self.server,
+                    "_department_campus_payload",
+                    side_effect=payload_at_fixed_now,
+                ),
+            ):
+                handler.do_GET()
 
         self.assertEqual(response["status"], 200)
         self.assertEqual(requested, [("GET", "/api/tasks?limit=24&include_messages=1", None)])
         self.assertEqual(tuple(response["payload"]), TOP_LEVEL_FIELDS)
         self.assertEqual(response["payload"]["privacy"], "public_projection")
+        self.assertEqual(response["payload"]["state"], "active")
         self.assertEqual(tuple(response["payload"]["events"][0]), PUBLIC_EVENT_FIELDS)
         self.assertNotIn("<private-prompt>", repr(response["payload"]))
         self.assertNotIn("<private-task-body>", repr(response["payload"]))
