@@ -180,7 +180,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 matches.append(declarations)
         return "\n".join(matches)
 
-    def test_ac_1_top_navigation_contains_only_the_four_public_surfaces(self):
+    def test_ac_1_top_navigation_contains_only_the_five_public_surfaces(self):
         parser = self._dashboard()
 
         self.assertEqual(
@@ -190,6 +190,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 ("air", "Air"),
                 ("pro", "Pro"),
                 ("agents", "Agents"),
+                ("platforms", "Platforms"),
             ],
         )
 
@@ -210,7 +211,10 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             "query-string tab restoration must retain an explicit safe allowlist",
         )
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
-        self.assertEqual(allowed, ["mac-mini", "air", "pro", "agents"])
+        self.assertEqual(
+            allowed,
+            ["mac-mini", "air", "pro", "agents", "platforms"],
+        )
 
     def test_ac_3_hq_keeps_its_id_but_uses_the_new_visible_russian_copy(self):
         structure = self._campus_structure()
