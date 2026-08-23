@@ -19,6 +19,37 @@
             this.classList.add('active');
         });
     });
+    // Common Center: copy the safe, credential-free SSH forwarding command.
+    document.querySelectorAll('[data-copy]').forEach((button) => {
+        const originalText = button.textContent;
+        const originalLabel = button.getAttribute('aria-label');
+        let restoreTimer;
+        const announceCopyState = (text, label) => {
+            window.clearTimeout(restoreTimer);
+            button.textContent = text;
+            button.setAttribute('aria-label', label);
+            restoreTimer = window.setTimeout(() => {
+                button.textContent = originalText;
+                if (originalLabel) button.setAttribute('aria-label', originalLabel);
+            }, 1600);
+        };
+        button.addEventListener('click', async () => {
+            const source = document.querySelector(button.dataset.copy);
+            if (!source) return;
+            const value = source.textContent.trim();
+            try {
+                await navigator.clipboard.writeText(value);
+                announceCopyState('Copied', 'SSH tunnel command copied');
+            } catch (_error) {
+                const range = document.createRange();
+                range.selectNodeContents(source);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                announceCopyState('Selected', 'SSH tunnel command selected; press Command-C to copy');
+            }
+        });
+    });
     // Scroll spy: highlight active nav on scroll
     const sections = Array.from(navLinks).map(a => document.querySelector(a.dataset.target)).filter(Boolean);
     let ticking = false;

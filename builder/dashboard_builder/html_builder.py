@@ -10,6 +10,7 @@ from .command_center import build_command_center_html
 from .agent_theater import build_agent_theater_html
 from .agent_workshop import build_agent_workshop_html
 from .department_campus import build_department_campus_html
+from .platforms import build_platform_hub_html
 
 
 def _build_project_row(p: dict, completed: bool = False) -> str:
@@ -98,6 +99,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
     theater_html = build_agent_theater_html()
     workshop_html = build_agent_workshop_html()
     campus_html = build_department_campus_html()
+    platform_html = build_platform_hub_html()
 
     # Projects
     active_projs = [p for p in projects if is_project_active(p)]
@@ -113,7 +115,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Command Center</title>
+<title>Common Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 {css_text}
@@ -128,11 +130,15 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 <!-- Sidebar -->
 <nav class="sidebar">
     <div class="sidebar-brand">
-        <h1>Command Center</h1>
-        <div class="sb-sub">agent orchestration</div>
+        <h1>Common Center</h1>
+        <div class="sb-sub">portfolio operations</div>
     </div>
     <ul class="sidebar-nav">
-        <li><a data-target="#theater" href="javascript:void(0)" class="active">
+        <li><a data-target="#common-center" href="#common-center" class="active">
+            <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" fill="none" stroke-width="1.2"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" fill="none" stroke-width="1.2"/></svg>
+            Common Center
+        </a></li>
+        <li><a data-target="#theater" href="#theater">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M3 12c2-4 8-4 10 0" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/><circle cx="5" cy="6" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="11" cy="6" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M8 8v5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
             Theater
         </a></li>
@@ -175,6 +181,9 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 
 <!-- Main content -->
 <main class="main">
+
+<!-- Common Center platform switchboard -->
+{platform_html}
 
 <!-- Theater Section -->
 <div class="topbar" id="theater-top">
@@ -272,7 +281,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
     {costs_html}
 </div>
 
-<div class="footer">command center v4 // {now_data['total_agents']} agents // {timestamp}</div>
+<div class="footer">common center v1 // {now_data['total_agents']} agents // {timestamp}</div>
 
 </main>
 </div>

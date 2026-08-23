@@ -32,11 +32,14 @@ class AgentTheaterTests(unittest.TestCase):
         self.assertIn('data-theater-agent="VAULT"', html)
         self.assertGreaterEqual(len(THEATER_AGENTS), 9)
 
-    def test_full_dashboard_includes_theater_navigation(self):
+    def test_full_dashboard_keeps_theater_after_common_center_navigation(self):
         html = build_html([], "2026-07-04 12:00:00 ICT")
 
-        self.assertIn('data-target="#theater"', html)
-        self.assertIn('<li><a data-target="#theater" href="javascript:void(0)" class="active">', html)
+        common_nav = '<li><a data-target="#common-center" href="#common-center" class="active">'
+        theater_nav = '<li><a data-target="#theater" href="#theater">'
+        self.assertIn(common_nav, html)
+        self.assertIn(theater_nav, html)
+        self.assertLess(html.index(common_nav), html.index(theater_nav))
         self.assertIn("Agent Theater", html)
         self.assertIn("initAgentTheater", html)
         self.assertIn("theater-runners", html)
