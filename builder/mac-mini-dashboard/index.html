@@ -52,6 +52,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .nav-pills::-webkit-scrollbar { display: none; }
 .nav-pill { flex: 0 0 auto; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; transition: all 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .nav-pill:hover { color: var(--text); }
+.nav-pill:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
 .nav-pill.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .nav-pill .pill-icon { font-size: 16px; }
 .nav-pill .pill-badge { font-size: 11px; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 6px; font-weight: 600; }
@@ -181,6 +182,165 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 /* Section */
 .section { display: none; }
 .section.active { display: block; }
+
+/* Platforms */
+.platforms-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: end;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border2);
+}
+.platforms-eyebrow {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+.platforms-title {
+  margin-top: 5px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+.platforms-copy {
+  max-width: 620px;
+  margin-top: 6px;
+  color: var(--text2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.platforms-legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.platforms-legend span,
+.platform-access {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text2);
+  padding: 4px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25px;
+  text-transform: uppercase;
+}
+.platforms-legend .private,
+.platform-access.private { background: var(--accent-bg); color: #9A7100; border-color: rgba(234,179,8,0.28); }
+.platforms-legend .public,
+.platform-access.public { background: var(--green-bg); color: #16803A; border-color: rgba(34,197,94,0.24); }
+.platform-directory {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 32px;
+  row-gap: 0;
+  border-top: 1px solid var(--border2);
+}
+.platform-entry {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 14px;
+  padding: 19px 4px;
+  border-bottom: 1px solid var(--border2);
+}
+.platform-entry.priority {
+  position: relative;
+  padding-left: 14px;
+  background: linear-gradient(90deg, var(--accent-bg), transparent 62%);
+}
+.platform-entry.priority::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.platform-index {
+  color: var(--muted);
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 22px;
+}
+.platform-entry.priority .platform-index { color: #9A7100; }
+.platform-content { min-width: 0; }
+.platform-name {
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+.platform-description {
+  margin-top: 3px;
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.platform-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.platform-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  border-bottom: 1px solid currentColor;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+.platform-link::after { content: '\2197'; color: var(--muted); }
+.platform-link:hover { color: #9A7100; transform: translateY(-1px); }
+.platform-link:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid rgba(234,179,8,0.34);
+  outline-offset: 4px;
+}
+.platform-note {
+  grid-column: 1 / -1;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .platforms-header { grid-template-columns: 1fr; align-items: start; gap: 12px; }
+  .platforms-title { font-size: 22px; }
+  .platforms-legend { justify-content: flex-start; }
+  .platform-directory { grid-template-columns: 1fr; }
+  .platform-entry { padding-left: 2px; padding-right: 2px; }
+  .platform-entry.priority { padding-left: 14px; }
+  .platform-links { align-items: flex-start; flex-direction: column; }
+  .platform-link { max-width: 100%; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 360px) {
+  .platform-entry { grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .platform-link { transition: none; }
+  .platform-link:hover { transform: none; }
+}
 
 /* Footer */
 .footer { margin-top: 32px; text-align: center; font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -2586,24 +2746,127 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   </div>
 
   <!-- Navigation -->
-  <div class="nav-pills">
-    <button class="nav-pill" onclick="showSection('mac-mini')">
+  <nav class="nav-pills" aria-label="Command Center sections">
+    <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
       <span class="pill-icon">🖥</span> Mac Mini
       <span class="pill-badge" id="mini-badge">offline</span>
     </button>
-    <button class="nav-pill" onclick="showSection('air')">
+    <button class="nav-pill" type="button" aria-controls="section-air" aria-pressed="false" onclick="showSection('air')">
       <span class="pill-icon">💻</span> Air
       <span class="pill-badge" id="air-badge">-</span>
     </button>
-    <button class="nav-pill" onclick="showSection('pro')">
+    <button class="nav-pill" type="button" aria-controls="section-pro" aria-pressed="false" onclick="showSection('pro')">
       <span class="pill-icon">💼</span> Pro
       <span class="pill-badge" id="pro-badge">-</span>
     </button>
-    <button class="nav-pill active" onclick="showSection('agents')">
+    <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')">
       <span class="pill-icon">🤖</span> Agents
       <span class="pill-badge" id="agents-badge">pixel</span>
     </button>
-  </div>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')">
+      <span class="pill-icon">⌘</span> Platforms
+      <span class="pill-badge">7</span>
+    </button>
+  </nav>
+
+  <!-- ═══════════════ PLATFORMS ═══════════════ -->
+  <section id="section-platforms" class="section" aria-labelledby="platforms-title">
+    <div class="platforms-header">
+      <div>
+        <div class="platforms-eyebrow">Common Center directory</div>
+        <h2 class="platforms-title" id="platforms-title">Platforms</h2>
+        <p class="platforms-copy">One quiet index for the products, private admin surfaces and Telegram bots that remain active while the Mac Mini is offline.</p>
+      </div>
+      <div class="platforms-legend" aria-label="Access types">
+        <span class="private">Private · SSH</span>
+        <span class="public">Public link</span>
+      </div>
+    </div>
+
+    <div class="platform-directory">
+      <article class="platform-entry priority" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
+        <span class="platform-index">01</span>
+        <div class="platform-content">
+          <h3 class="platform-name">JobRadar / Financial OS</h3>
+          <p class="platform-description">Priority product lane for job discovery and finance operations.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8792" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Admin</a>
+            <a class="platform-link" href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="platform-entry priority" data-platform-id="mydictionary" data-platform-name="MyDictionary">
+        <span class="platform-index">02</span>
+        <div class="platform-content">
+          <h3 class="platform-name">MyDictionary</h3>
+          <p class="platform-description">Priority language-learning product and its private administration surface.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8787/admin" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Admin</a>
+            <a class="platform-link" href="https://t.me/max_context_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
+        <span class="platform-index">03</span>
+        <div class="platform-content">
+          <h3 class="platform-name">Health OS</h3>
+          <p class="platform-description">Health workspace. Availability is checked after opening the public route.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://health.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Public web</span> Open</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
+        <span class="platform-index">04</span>
+        <div class="platform-content">
+          <h3 class="platform-name">AI Singularity</h3>
+          <p class="platform-description">Private OVH application surface.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8001" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Open app</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
+        <span class="platform-index">05</span>
+        <div class="platform-content">
+          <h3 class="platform-name">Context News France</h3>
+          <p class="platform-description">French news context workspace and Telegram delivery bot.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8002" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Open app</a>
+            <a class="platform-link" href="https://t.me/croissantfr_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
+        <span class="platform-index">06</span>
+        <div class="platform-content">
+          <h3 class="platform-name">Accountable OS</h3>
+          <p class="platform-description">Private accountability workspace on OVH.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Open app</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
+        <span class="platform-index">07</span>
+        <div class="platform-content">
+          <h3 class="platform-name">JARVIS</h3>
+          <p class="platform-description">Personal assistant interface in Telegram.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://t.me/max_jarvis_hoian_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+          </div>
+        </div>
+      </article>
+
+      <p class="platform-note">Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</p>
+    </div>
+  </section>
 
   <!-- ═══════════════ MAC MINI ═══════════════ -->
   <div id="section-mac-mini" class="section">
@@ -3179,18 +3442,26 @@ function initTelegramMiniApp() {
 // Navigation
 function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
+  document.querySelectorAll('.nav-pill').forEach(p => {
+    p.classList.remove('active');
+    p.setAttribute('aria-pressed', 'false');
+  });
+  const section = document.getElementById('section-' + name);
+  if (!section) return;
+  section.classList.add('active');
   const trigger = (typeof event !== 'undefined' && event.currentTarget)
     ? event.currentTarget
     : Array.from(document.querySelectorAll('.nav-pill'))
         .find(p => p.getAttribute('onclick') === `showSection('${name}')`);
-  if (trigger) trigger.classList.add('active');
+  if (trigger) {
+    trigger.classList.add('active');
+    trigger.setAttribute('aria-pressed', 'true');
+  }
   if (name === 'logs' && !currentLogService) loadLogTabs();
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['mac-mini', 'air', 'pro', 'agents'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'agents', 'platforms'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 }
 
