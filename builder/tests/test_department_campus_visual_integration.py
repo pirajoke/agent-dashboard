@@ -28,13 +28,16 @@ class _DashboardParser(HTMLParser):
         self.active_sections: list[str] = []
         self._button: dict[str, object] | None = None
         self._button_span_depth = 0
+        self._main_navigation = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         attributes = dict(attrs)
         classes = (attributes.get("class") or "").split()
         onclick = attributes.get("onclick") or ""
         target = re.fullmatch(r"showSection\(['\"]([^'\"]+)['\"]\)", onclick)
-        if tag == "button" and "nav-pill" in classes and target:
+        if tag == "nav":
+            self._main_navigation = attributes.get("aria-label") == "Command Center sections"
+        if tag == "button" and "nav-pill" in classes and target and self._main_navigation:
             self._button = {
                 "target": target.group(1),
                 "active": "active" in classes,
@@ -55,6 +58,8 @@ class _DashboardParser(HTMLParser):
             text.append(data)
 
     def handle_endtag(self, tag: str) -> None:
+        if tag == "nav":
+            self._main_navigation = False
         if self._button is None:
             return
         if tag == "span" and self._button_span_depth:
@@ -180,16 +185,15 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 matches.append(declarations)
         return "\n".join(matches)
 
-    def test_ac_1_top_navigation_contains_only_the_five_public_surfaces(self):
+    def test_ac_1_top_navigation_has_four_destinations_and_machines_are_nested(self):
         parser = self._dashboard()
 
         self.assertEqual(
             [(item["target"], item["text"]) for item in parser.navigation],
             [
-                ("mac-mini", "Mac Mini"),
-                ("air", "Air"),
-                ("pro", "Pro"),
+                ("machines", "Machines"),
                 ("agents", "Agents"),
+                ("projects", "Проекты"),
                 ("platforms", "Platforms"),
             ],
         )
@@ -213,7 +217,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "agents", "platforms"],
+            ["mac-mini", "air", "pro", "machines", "agents", "projects", "platforms"],
         )
 
     def test_ac_3_hq_keeps_its_id_but_uses_the_new_visible_russian_copy(self):
@@ -336,7 +340,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 "const PIXEL_AGENTS_ORIGIN = new URL(PIXEL_AGENTS_URL).origin;",
                 "postMessage origin must be derived from the selected campus URL",
             ),
-            ("frame.src = PIXEL_AGENTS_URL;", "iframe must receive the selected campus URL"),
+            ("frame.src = `${PIXEL_AGENTS_URL}?view=department`;", "iframe must open the focused department view"),
             (
                 "fullScreen.href = PIXEL_AGENTS_URL;",
                 "Full screen must receive the selected campus URL",

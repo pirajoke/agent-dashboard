@@ -772,6 +772,9 @@ def build_department_campus_html() -> str:
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
     </div>
     <div class="campus-state" data-campus-state aria-live="polite">Загрузка кампуса…</div>
+    <label class="campus-department-picker" data-campus-department-picker hidden>
+        Отдел <span data-campus-department-picker-slot></span>
+    </label>
     <div class="campus-map" aria-label="Семь отделов Pixel Verse">
         <div class="campus-boulevard" aria-hidden="true"></div>
         <div class="campus-route-layer" data-campus-route-layer aria-hidden="true"></div>
