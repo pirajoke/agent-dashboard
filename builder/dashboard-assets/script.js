@@ -77,6 +77,51 @@
     if (campus.dataset.campusRefreshBound === 'true') return;
     campus.dataset.campusRefreshBound = 'true';
 
+    const focusedDepartment = new URLSearchParams(window.location.search).get('view') === 'department';
+    const departmentSelect = document.createElement('select');
+    departmentSelect.dataset.campusDepartmentSelect = '';
+    departmentSelect.setAttribute('aria-label', 'Выбрать отдел');
+    campus.querySelectorAll('.campus-zone').forEach(zone => {
+        const option = document.createElement('option');
+        option.value = zone.dataset.departmentId;
+        option.textContent = zone.querySelector('h3').textContent;
+        departmentSelect.append(option);
+    });
+    const departmentPicker = campus.querySelector('[data-campus-department-picker]');
+    const departmentCrops = {
+        hq: [56, 547, 238, 283], sales: [146, 112, 342, 223],
+        development: [592, 108, 375, 232], design: [1085, 114, 342, 221],
+        infrastructure: [390, 558, 343, 275], internal: [809, 556, 350, 276],
+        finance: [1238, 554, 223, 277],
+    };
+    function selectCampusDepartment() {
+        if (!focusedDepartment || !departmentSelect) return;
+        const selected = departmentSelect.value;
+        const crop = departmentCrops[selected];
+        if (!crop) return;
+        campus.querySelectorAll('.campus-zone').forEach(zone => {
+            zone.hidden = zone.dataset.departmentId !== selected;
+        });
+        const map = campus.querySelector('.campus-map');
+        const [x, y, width, height] = crop;
+        map.style.setProperty('--campus-room-size', `${1536 / width * 100}% ${1024 / height * 100}%`);
+        map.style.setProperty('--campus-room-position', `${x / (1536 - width) * 100}% ${y / (1024 - height) * 100}%`);
+        notifyCampusContentHeight();
+    }
+    if (focusedDepartment && departmentSelect && departmentPicker) {
+        campus.classList.add('is-department-focus');
+        departmentPicker.querySelector('[data-campus-department-picker-slot]').replaceWith(departmentSelect);
+        departmentPicker.hidden = false;
+        const requested = new URLSearchParams(window.location.search).get('department');
+        departmentSelect.value = Object.hasOwn(departmentCrops, requested) ? requested : 'development';
+        departmentSelect.addEventListener('change', () => {
+            closeCampusDetails(false);
+            closeCampusProjectDetails(false);
+            selectCampusDepartment();
+        });
+        selectCampusDepartment();
+    }
+
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     campus.dataset.reducedMotion = String(reducedMotion.matches);
 
@@ -386,6 +431,16 @@
 
     function animateCampusJourney(button, shouldAnimate, managerOriginRect) {
         if (reducedMotion.matches || !shouldAnimate) return;
+        if (focusedDepartment) {
+            if (button.getBoundingClientRect().width && typeof button.animate === 'function') {
+                const arrival = button.animate(
+                    [{transform: 'translateX(-18px)', opacity: 0.45}, {transform: 'translateX(0)', opacity: 1}],
+                    {duration: 700, easing: 'ease-out'},
+                );
+                arrival.finished.then(() => { button.dataset.campusMoving = 'false'; }).catch(() => {});
+            }
+            return;
+        }
         if (!managerMarkerEl || !boulevardEl || typeof button.animate !== 'function') return;
         const managerRect = managerOriginRect || managerMarkerEl.getBoundingClientRect();
         const boulevardRect = boulevardEl.getBoundingClientRect();
@@ -554,7 +609,9 @@
             const folder = projectFolderForEvent(event);
             if (!folder) return;
             activateCampusProjectFolder(folder, event);
-            const destination = destinationForEvent(event);
+            const destination = focusedDepartment
+                ? folder.closest('.campus-zone')?.querySelector('[data-campus-zone-agents]')
+                : destinationForEvent(event);
             if (!destination) return;
             const shouldAnimate = newJourneySignatures.has(journeySignature(event));
             const resident = residentForEvent(event);

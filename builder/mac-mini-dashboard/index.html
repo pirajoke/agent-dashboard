@@ -2722,6 +2722,73 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     transition: none !important;
   }
 }
+/* Command Center navigation and owner decisions. Existing machine panels stay intact. */
+.cc-subnav { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 22px; }
+.cc-subnav button, .decision-button { min-height:44px; padding:10px 16px; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--text2); font:inherit; font-size:14px; cursor:pointer; }
+.cc-subnav button[aria-pressed="true"] { background:var(--accent-bg); border-color:var(--accent); color:var(--text); }
+.cc-subnav button:focus-visible, .decision-button:focus-visible, .decision-card input:focus-visible, .decision-card textarea:focus-visible, .decision-card summary:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+.decision-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.decision-head h2 { font-size:28px; letter-spacing:-0.6px; margin:4px 0 8px; }
+.decision-eyebrow { color:var(--text2); font-size:11px; font-weight:600; letter-spacing:1.4px; }
+.decision-head p, .decision-state { color:var(--text2); line-height:1.6; }
+.decision-state { padding:18px 0; }
+.decision-notice { color:var(--text2); min-height:24px; margin-bottom:12px; line-height:1.5; }
+.decision-notice:empty { min-height:0; margin-bottom:0; }
+.decision-card { border-top:2px solid var(--accent); background:var(--card); border-radius:0 0 16px 16px; padding:24px; margin-bottom:24px; box-shadow:var(--shadow); overflow-wrap:anywhere; }
+.decision-meta { font-size:12px; color:var(--text2); margin-bottom:10px; }
+.decision-card h3 { margin:0 0 12px; font-size:22px; line-height:1.35; }
+.decision-next { color:var(--text2); font-size:13px; line-height:1.5; margin-bottom:20px; }
+.decision-options { width:100%; border-collapse:collapse; table-layout:fixed; font-size:14px; line-height:1.5; }
+.decision-options th { text-align:left; color:var(--text2); font-size:11px; text-transform:uppercase; letter-spacing:0.6px; padding:10px 12px; border-bottom:1px solid var(--border); }
+.decision-options td { padding:14px 12px; vertical-align:top; border-bottom:1px solid var(--border); }
+.decision-options tr:has(input:checked) { background:var(--accent-bg); }
+.decision-options tbody tr { cursor:pointer; }
+.decision-option { display:flex; align-items:flex-start; gap:10px; cursor:pointer; min-height:44px; }
+.decision-option input, .decision-own input { width:18px; height:18px; flex-shrink:0; margin-top:2px; accent-color:var(--accent); }
+.decision-recommended { display:block; margin-top:5px; font-size:11px; font-weight:500; color:var(--text2); }
+.decision-reason { margin:18px 0; font-size:14px; line-height:1.6; color:var(--text2); }
+.decision-reason summary { cursor:pointer; color:var(--text); min-height:44px; display:flex; align-items:center; gap:8px; }
+.decision-reason summary::before { content:'＋'; }
+.decision-reason[open] summary::before { content:'−'; }
+.decision-own { display:flex; align-items:center; gap:10px; margin:18px 0 10px; font-size:14px; cursor:pointer; min-height:44px; }
+.decision-note-label { display:block; font-size:12px; color:var(--text2); margin:8px 0; }
+.decision-note { width:100%; box-sizing:border-box; min-height:90px; padding:12px; resize:vertical; border:1px solid var(--border2); border-radius:10px; background:var(--bg); color:var(--text); font:inherit; font-size:14px; line-height:1.5; }
+#decision-owner-token { min-height:44px; }
+.decision-button { margin-top:14px; }
+.decision-button.primary { background:var(--accent-bg); color:var(--text); border-color:var(--accent); font-weight:600; }
+.decision-button:disabled { opacity:0.5; cursor:default; }
+.decision-review { margin-top:20px; border-left:3px solid var(--accent); padding:16px 20px; background:var(--bg); border-radius:0 10px 10px 0; line-height:1.6; }
+.decision-review h4 { margin:0 0 8px; font-size:16px; }
+.decision-review p { margin:8px 0; white-space:pre-wrap; }
+.decision-review small { display:block; color:var(--text2); }
+.decision-card [hidden], #section-agents [hidden] { display:none !important; }
+.decision-activity { margin-top:24px; }
+.decision-activity h3 { font-size:16px; margin-bottom:14px; }
+.decision-activity-item { border-top:1px solid var(--border); padding:16px 0; line-height:1.5; }
+.decision-activity-item p { margin:6px 0 0; color:var(--text2); font-size:14px; }
+#section-agents { min-width:0; }
+#agents-campus .pixel-agents-shell { min-height:0; }
+#agents-campus .pixel-agents-gamebar { position:relative; top:auto; left:auto; right:auto; border-radius:0; flex-wrap:wrap; }
+#agents-campus .pixel-agents-actions { flex-wrap:wrap; }
+#agents-campus .pixel-agents-viewport { height:var(--pixel-agents-content-height, 680px); min-height:420px; max-height:960px; }
+.agents-pipeline { margin-top:26px; border-top:1px solid var(--border); padding-top:16px; }
+.agents-pipeline > summary { cursor:pointer; min-height:44px; font-size:14px; color:var(--text2); }
+.agents-pipeline .jarvis-hud-card, .agents-pipeline .jarvis-hud-card.hud-collapsed { position:relative; top:auto; left:auto; width:100%; max-height:none; margin-top:10px; }
+@media (max-width:600px) {
+  .cc-main-nav { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+  .cc-main-nav .nav-pill { justify-content:center; min-width:0; padding:10px 8px; }
+  .decision-head { flex-wrap:wrap; gap:8px; }
+  .decision-head h2 { font-size:24px; }
+  .decision-card { padding:18px 14px; }
+  .decision-card h3 { font-size:20px; }
+  .decision-options, .decision-options tbody, .decision-options tr, .decision-options td { display:block; width:100%; }
+  .decision-options thead { display:none; }
+  .decision-options tr { border:1px solid var(--border); border-radius:10px; padding:12px; margin:10px 0; }
+  .decision-options td { padding:5px 0; border:0; }
+  .decision-options td[data-label]::before { content:attr(data-label) ' · '; color:var(--text2); font-size:12px; }
+  .decision-review { padding:14px; }
+  .cc-subnav button { flex:1 1 auto; padding:10px 12px; }
+}
 </style>
 </head>
 <body>
@@ -2746,27 +2813,11 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   </div>
 
   <!-- Navigation -->
-  <nav class="nav-pills" aria-label="Command Center sections">
-    <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
-      <span class="pill-icon">🖥</span> Mac Mini
-      <span class="pill-badge" id="mini-badge">offline</span>
-    </button>
-    <button class="nav-pill" type="button" aria-controls="section-air" aria-pressed="false" onclick="showSection('air')">
-      <span class="pill-icon">💻</span> Air
-      <span class="pill-badge" id="air-badge">-</span>
-    </button>
-    <button class="nav-pill" type="button" aria-controls="section-pro" aria-pressed="false" onclick="showSection('pro')">
-      <span class="pill-icon">💼</span> Pro
-      <span class="pill-badge" id="pro-badge">-</span>
-    </button>
-    <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')">
-      <span class="pill-icon">🤖</span> Agents
-      <span class="pill-badge" id="agents-badge">pixel</span>
-    </button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')">
-      <span class="pill-icon">⌘</span> Platforms
-      <span class="pill-badge">7</span>
-    </button>
+  <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
+    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon">🖥</span> Machines</button>
+    <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon">🤖</span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-projects" aria-pressed="false" onclick="showSection('projects')"><span class="pill-icon">↗</span> Проекты</button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon">⌘</span> Platforms <span class="pill-badge">7</span></button>
   </nav>
 
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
@@ -2868,6 +2919,31 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     </div>
   </section>
 
+  <section id="section-projects" class="section" aria-labelledby="projects-title" lang="ru">
+    <div class="platforms-header">
+      <div><div class="platforms-eyebrow">Command Center · каталог</div>
+        <h2 class="platforms-title" id="projects-title">Проекты</h2>
+        <p class="platforms-copy">Приложения, панели управления и боты. Все существующие ссылки — в одном месте.</p>
+      </div>
+    </div>
+    <div class="platform-directory" id="projects-directory"></div>
+  </section>
+
+  <section id="section-machines" class="section" aria-label="Machines">
+    <nav class="nav-pills cc-machine-nav" aria-label="Computers">
+    <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
+      <span class="pill-icon">🖥</span> Mac Mini
+      <span class="pill-badge" id="mini-badge">offline</span>
+    </button>
+    <button class="nav-pill" type="button" aria-controls="section-air" aria-pressed="false" onclick="showSection('air')">
+      <span class="pill-icon">💻</span> Air
+      <span class="pill-badge" id="air-badge">-</span>
+    </button>
+    <button class="nav-pill" type="button" aria-controls="section-pro" aria-pressed="false" onclick="showSection('pro')">
+      <span class="pill-icon">💼</span> Pro
+      <span class="pill-badge" id="pro-badge">-</span>
+    </button>
+    </nav>
   <!-- ═══════════════ MAC MINI ═══════════════ -->
   <div id="section-mac-mini" class="section">
     <div class="machine-header">
@@ -3024,6 +3100,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     </div>
   </div>
 
+  </section>
+
   <!-- ═══════════════ GENERAL ═══════════════ -->
   <div id="section-general" class="section">
     <div class="drag-grid" id="general-grid">
@@ -3067,7 +3145,32 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- ═══════════════ AGENTS ═══════════════ -->
   <div id="section-agents" class="section active">
-    <div class="pixel-agents-shell">
+    <div class="cc-subnav" aria-label="Agents views">
+      <button type="button" aria-controls="agents-decisions" aria-pressed="true" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
+      <button type="button" aria-controls="agents-campus" aria-pressed="false" onclick="showAgentsView('campus')">Кампус отделов</button>
+    </div>
+    <section id="agents-decisions" aria-labelledby="decisions-title" lang="ru">
+      <div class="decision-head">
+        <div><div class="decision-eyebrow">MAIN MANAGER</div>
+          <h2 id="decisions-title">Что требует твоего решения</h2>
+          <p>Сначала выборы, которые блокируют следующий шаг.</p>
+        </div>
+        <button class="decision-button" type="button" onclick="refreshOwnerDecisions(true)">↻ Обновить решения</button>
+      </div>
+      <div class="decision-notice" id="decision-notice" role="status" aria-live="polite"></div>
+      <div class="decision-state" id="decision-state" role="status">Загрузка решений…</div>
+      <details id="decision-owner-access">
+        <summary class="decision-button">Доступ владельца</summary>
+        <label for="decision-owner-token" class="decision-note-label">Токен доступа для этого браузера</label>
+        <input class="decision-note" id="decision-owner-token" type="password" autocomplete="off" spellcheck="false" aria-label="Токен владельца">
+        <button class="decision-button" type="button" onclick="saveOwnerDecisionToken()">Сохранить токен</button>
+      </details>
+      <div id="decision-list"></div>
+      <div class="decision-activity" id="decision-activity"></div>
+    </section>
+
+    <div id="agents-campus" hidden>
+      <div class="pixel-agents-shell">
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
           <strong>Pixel Verse</strong>
@@ -3100,11 +3203,16 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <div class="pixel-agents-stage" id="pixel-agents-stage">
           <iframe
             class="pixel-agents-frame"
-            src="/department-campus.html"
+            src="/department-campus.html?view=department"
             title="Pixel Verse Department Campus"
           ></iframe>
         </div>
       </div>
+
+    </div>
+    </div>
+    <details class="agents-pipeline">
+      <summary>Agent Pipeline · инструменты и история</summary>
       <div class="jarvis-run-card jarvis-hud-card jarvis-pipeline-compact" id="jarvis-hud-card" data-jarvis-pipeline="compact">
         <div class="jarvis-run-header">
           <div>
@@ -3201,7 +3309,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           </div>
         </details>
       </div>
-    </div>
+    </details>
     <div class="ai-island legacy-hidden" aria-hidden="true">
       <div class="ai-island-hero">
         <div>
@@ -3439,29 +3547,315 @@ function initTelegramMiniApp() {
   } catch {}
 }
 
+let selectedMachine = 'mac-mini';
+let ownerDecisionsReady = false;
+let ownerDecisionController = null;
+let ownerDecisionGeneration = 0;
+let ownerDecisionSignature = '';
+let ownerDecisionSubmitting = false;
+const ownerDecisionDrafts = new Map();
+
+function showAgentsView(view) {
+  if (!['decisions', 'campus'].includes(view)) return;
+  document.getElementById('agents-decisions').hidden = view !== 'decisions';
+  document.getElementById('agents-campus').hidden = view !== 'campus';
+  document.querySelectorAll('#section-agents > .cc-subnav button').forEach(button => {
+    button.setAttribute('aria-pressed', String(button.getAttribute('aria-controls') === `agents-${view}`));
+  });
+  if (view === 'decisions' && ownerDecisionsReady) refreshOwnerDecisions(true);
+  if (view === 'campus') window.dispatchEvent(new Event('resize'));
+}
+
+function decisionNode(tag, className = '', text = '') {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  node.textContent = text;
+  return node;
+}
+
+function ownerDecisionsVisible() {
+  return !document.hidden && document.getElementById('section-agents').classList.contains('active')
+    && !document.getElementById('agents-decisions').hidden;
+}
+
+function saveOwnerDecisionToken() {
+  const input = document.getElementById('decision-owner-token');
+  const token = input.value.trim();
+  if (!token) return;
+  try {
+    localStorage.setItem(JARVIS_RUN_TOKEN_KEY, token);
+    input.value = '';
+    refreshOwnerDecisions(true);
+  } catch (_error) {
+    document.getElementById('decision-notice').textContent = 'Браузер не разрешил сохранить токен.';
+  }
+}
+
+function renderOwnerDecision(decision, index) {
+  let draft = ownerDecisionDrafts.get(decision.task_id);
+  if (!draft || draft.revision !== decision.revision) {
+    draft = { revision: decision.revision, option: null, note: '', reviewed: false };
+    ownerDecisionDrafts.set(decision.task_id, draft);
+  }
+  const card = decisionNode('article', 'decision-card');
+  card.append(decisionNode('div', 'decision-meta', `${decision.department} · ${decision.project}`));
+  const title = decisionNode('h3', '', decision.question);
+  title.id = `decision-title-${index}`;
+  card.setAttribute('aria-labelledby', title.id);
+  card.append(title, decisionNode('p', 'decision-next', `Следующий шаг: ${decision.next_step}`));
+  const table = decisionNode('table', 'decision-options');
+  table.setAttribute('aria-label', 'Сравнение вариантов решения');
+  const head = decisionNode('thead');
+  const headRow = decisionNode('tr');
+  ['Вариант', 'Плюсы', 'Минусы'].forEach(text => {
+    const th = decisionNode('th', '', text);
+    th.scope = 'col';
+    headRow.append(th);
+  });
+  head.append(headRow);
+  const body = decisionNode('tbody');
+  const radios = [];
+  const review = decisionNode('div', 'decision-review');
+  review.hidden = true;
+  const reviewButton = decisionNode('button', 'decision-button primary', 'Посмотреть итог');
+  reviewButton.type = 'button';
+  function invalidateReview() {
+    draft.reviewed = false;
+    review.hidden = true;
+    reviewButton.disabled = !draft.option && !draft.note.trim();
+  }
+  decision.options.forEach(option => {
+    const row = decisionNode('tr');
+    const choiceCell = decisionNode('td');
+    const label = decisionNode('label', 'decision-option');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = `owner-choice-${index}`;
+    radio.value = option.id;
+    radio.checked = draft.option === option.id;
+    radio.addEventListener('change', () => { draft.option = option.id; invalidateReview(); });
+    row.addEventListener('click', () => {
+      if (radio.disabled) return;
+      radio.checked = true;
+      draft.option = option.id;
+      invalidateReview();
+    });
+    radios.push(radio);
+    const labelCopy = decisionNode('span', '', option.label);
+    if (option.recommended) labelCopy.append(decisionNode('span', 'decision-recommended', 'Рекомендация MAIN MANAGER'));
+    label.append(radio, labelCopy);
+    choiceCell.append(label);
+    row.append(choiceCell);
+    [['Плюсы', option.pros], ['Минусы', option.cons]].forEach(([label, text]) => {
+      const cell = decisionNode('td', '', text);
+      cell.dataset.label = label;
+      row.append(cell);
+    });
+    body.append(row);
+  });
+  table.append(head, body);
+  if (decision.options.length) card.append(table);
+  else card.append(decisionNode('p', 'decision-next', 'MAIN MANAGER пока не предложил варианты. Можно написать свой ответ.'));
+  if (decision.reason) {
+    const reasoning = decisionNode('details', 'decision-reason');
+    reasoning.append(decisionNode('summary', '', 'Почему MAIN MANAGER предлагает это'), decisionNode('p', '', decision.reason));
+    card.append(reasoning);
+  }
+  const ownLabel = decisionNode('label', 'decision-own');
+  const ownRadio = document.createElement('input');
+  ownRadio.type = 'radio';
+  ownRadio.name = `owner-choice-${index}`;
+  ownRadio.checked = !draft.option && !!draft.note;
+  ownRadio.addEventListener('change', () => { draft.option = null; invalidateReview(); note.focus(); });
+  radios.push(ownRadio);
+  ownLabel.append(ownRadio, decisionNode('span', '', 'Предложить своё решение'));
+  const noteLabel = decisionNode('label', 'decision-note-label', 'Свой ответ или дополнение к выбранному варианту');
+  noteLabel.htmlFor = `decision-note-${index}`;
+  const note = document.createElement('textarea');
+  note.className = 'decision-note';
+  note.id = noteLabel.htmlFor;
+  note.maxLength = 500;
+  note.value = draft.note;
+  note.addEventListener('input', () => {
+    draft.note = note.value;
+    if (!draft.option && note.value.trim()) ownRadio.checked = true;
+    invalidateReview();
+  });
+  card.append(ownLabel, noteLabel, note, reviewButton, review);
+  function showReview(focus = false) {
+    const option = decision.options.find(item => item.id === draft.option);
+    if (!option && !draft.note.trim()) return;
+    draft.reviewed = true;
+    review.replaceChildren(decisionNode('h4', '', 'Проверь итог перед подтверждением'));
+    review.append(decisionNode('p', '', option?.summary || 'Свой ответ владельца'));
+    if (draft.note.trim()) review.append(decisionNode('p', '', draft.note.trim()));
+    review.append(decisionNode('small', '', 'Подтверждение сохранит ответ для MAIN MANAGER.'));
+    const confirm = decisionNode('button', 'decision-button primary', 'Подтвердить решение');
+    confirm.type = 'button';
+    confirm.addEventListener('click', async () => {
+      if (!draft.reviewed || ownerDecisionSubmitting) return;
+      ownerDecisionSubmitting = true;
+      confirm.disabled = true;
+      reviewButton.disabled = true;
+      radios.forEach(radio => { radio.disabled = true; });
+      note.disabled = true;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      let refresh = false;
+      try {
+        const response = await fetch(`${DASHBOARD_API}/api/manager/decisions/respond`, {
+          method: 'POST', headers: jarvisRunHeaders(), signal: controller.signal,
+          body: JSON.stringify({ task_id: decision.task_id, revision: decision.revision,
+            option_id: draft.option, note: draft.note.trim(), reviewed: true }),
+        });
+        if (response.status === 409) {
+          draft.reviewed = false;
+          review.hidden = true;
+          document.getElementById('decision-notice').textContent = 'Задача изменилась. Проверь обновлённые варианты и итог.';
+          refresh = true;
+        } else if (response.ok) {
+          const result = await response.json();
+          if (result.record_only !== true || result.recorded?.task_id !== decision.task_id || result.recorded?.revision !== decision.revision) {
+            throw new Error('unavailable');
+          }
+          ownerDecisionDrafts.delete(decision.task_id);
+          card.remove();
+          document.getElementById('decision-notice').textContent = 'Решение записано для MAIN MANAGER.';
+          refresh = true;
+        } else {
+          throw new Error(response.status === 401 ? 'owner_required' : 'unavailable');
+        }
+      } catch (error) {
+        document.getElementById('decision-notice').textContent = error.message === 'owner_required'
+          ? 'Нужен действующий токен владельца. Ответ пока не записан.'
+          : 'Не удалось подтвердить запись. Обнови решения перед повторной попыткой.';
+        draft.reviewed = false;
+        review.hidden = true;
+      } finally {
+        clearTimeout(timeout);
+        ownerDecisionSubmitting = false;
+        radios.forEach(radio => { radio.disabled = false; });
+        note.disabled = false;
+        reviewButton.disabled = !draft.option && !draft.note.trim();
+        if (refresh) { ownerDecisionSignature = ''; refreshOwnerDecisions(true); }
+      }
+    });
+    review.append(confirm);
+    review.hidden = false;
+    if (focus) confirm.focus();
+  }
+  reviewButton.addEventListener('click', () => showReview(true));
+  reviewButton.disabled = !draft.option && !draft.note.trim();
+  if (draft.reviewed) showReview();
+  return card;
+}
+
+function renderOwnerDecisions(payload) {
+  const state = document.getElementById('decision-state');
+  const list = document.getElementById('decision-list');
+  const decisions = Array.isArray(payload.decisions) ? payload.decisions : [];
+  const signature = JSON.stringify([payload.state, payload.owner, decisions]);
+  if (signature !== ownerDecisionSignature) {
+    const changed = decisions.some(item => {
+      const previous = ownerDecisionDrafts.get(item.task_id);
+      return previous && previous.revision !== item.revision;
+    });
+    if (changed) document.getElementById('decision-notice').textContent = 'Варианты обновились. Выбери ответ и проверь новый итог.';
+    ownerDecisionSignature = signature;
+    list.replaceChildren(...decisions.map(renderOwnerDecision));
+    const current = new Set(decisions.map(item => item.task_id));
+    for (const taskId of ownerDecisionDrafts.keys()) {
+      if (!current.has(taskId)) ownerDecisionDrafts.delete(taskId);
+    }
+  }
+  document.getElementById('decision-count').textContent = decisions.length ? `· ${decisions.length}` : '';
+  const messages = {
+    owner_required: 'Решения доступны владельцу. Открой «Доступ владельца» и введи токен.',
+    unavailable: 'Не удалось получить решения. Попробуй обновить.',
+    stale: 'Свежих данных пока нет. Обнови решения позже.',
+  };
+  state.textContent = decisions.length ? '' : (messages[payload.state] || 'Сейчас твоих решений не требуется.');
+  state.hidden = !!decisions.length;
+  document.getElementById('decision-owner-access').hidden = payload.owner === true;
+  const activity = document.getElementById('decision-activity');
+  activity.replaceChildren();
+  const events = Array.isArray(payload.activity) ? payload.activity : [];
+  if (events.length) {
+    activity.append(decisionNode('h3', '', decisions.length ? 'Что ещё происходит' : 'Текущая работа и следующий результат'));
+    const statuses = { queued: 'в очереди', active: 'работает', testing: 'проверяет', waiting: 'ждёт решения', done: 'готово', failed: 'ошибка' };
+    events.forEach(event => {
+      const item = decisionNode('div', 'decision-activity-item');
+      item.append(decisionNode('strong', '', `${event.department_label} · ${event.project} · ${statuses[event.status] || '—'}`));
+      if (event.work_summary) item.append(decisionNode('p', '', event.work_summary));
+      item.append(decisionNode('p', '', `Дальше: ${event.next_step}`));
+      activity.append(item);
+    });
+  }
+}
+
+async function refreshOwnerDecisions(force = false) {
+  if (!ownerDecisionsVisible() || ownerDecisionSubmitting || (ownerDecisionController && !force)) return;
+  if (!DASHBOARD_API) { renderOwnerDecisions({ state: 'unavailable' }); return; }
+  const generation = ++ownerDecisionGeneration;
+  ownerDecisionController?.abort();
+  const controller = new AbortController();
+  ownerDecisionController = controller;
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/manager/decisions`, { headers: jarvisRunHeaders(), cache: 'no-store', signal: controller.signal });
+    if (!response.ok) throw new Error('unavailable');
+    const payload = await response.json();
+    if (generation === ownerDecisionGeneration && ownerDecisionsVisible()) renderOwnerDecisions(payload);
+  } catch (_error) {
+    if (generation === ownerDecisionGeneration && ownerDecisionsVisible()) renderOwnerDecisions({ state: 'unavailable' });
+  } finally {
+    clearTimeout(timeout);
+    if (generation === ownerDecisionGeneration) ownerDecisionController = null;
+  }
+}
+
+function initOwnerDecisions() {
+  ownerDecisionsReady = true;
+  const directory = document.querySelector('#section-platforms .platform-directory');
+  document.getElementById('projects-directory').replaceChildren(...Array.from(directory.children, child => child.cloneNode(true)));
+  refreshOwnerDecisions();
+  setInterval(() => refreshOwnerDecisions(), 15000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { ownerDecisionGeneration++; ownerDecisionController?.abort(); ownerDecisionController = null; }
+    else refreshOwnerDecisions(true);
+  });
+}
+
 // Navigation
 function showSection(name) {
+  const isMachine = ['mac-mini', 'air', 'pro'].includes(name);
+  if (isMachine) selectedMachine = name;
+  const parent = isMachine ? 'machines' : name;
+  if (!document.getElementById('section-' + parent)) return;
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-pill').forEach(p => {
     p.classList.remove('active');
     p.setAttribute('aria-pressed', 'false');
   });
-  const section = document.getElementById('section-' + name);
-  if (!section) return;
+  const section = document.getElementById('section-' + parent);
   section.classList.add('active');
-  const trigger = (typeof event !== 'undefined' && event.currentTarget)
-    ? event.currentTarget
-    : Array.from(document.querySelectorAll('.nav-pill'))
-        .find(p => p.getAttribute('onclick') === `showSection('${name}')`);
+  const trigger = document.querySelector(`.cc-main-nav [aria-controls="section-${parent}"]`);
   if (trigger) {
     trigger.classList.add('active');
     trigger.setAttribute('aria-pressed', 'true');
   }
+  if (parent === 'machines') {
+    document.getElementById('section-' + selectedMachine).classList.add('active');
+    const machineTrigger = document.querySelector(`.cc-machine-nav [aria-controls="section-${selectedMachine}"]`);
+    machineTrigger.classList.add('active');
+    machineTrigger.setAttribute('aria-pressed', 'true');
+  }
+  if (parent === 'agents' && ownerDecisionsReady) refreshOwnerDecisions(true);
   if (name === 'logs' && !currentLogService) loadLogTabs();
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['mac-mini', 'air', 'pro', 'agents', 'platforms'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'projects', 'platforms'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 }
 
@@ -3470,7 +3864,7 @@ function initPixelAgentsFrame() {
   const fullScreen = document.getElementById('pixel-agents-fullscreen');
   const viewport = document.getElementById('pixel-agents-viewport');
   if (frame) {
-    frame.src = PIXEL_AGENTS_URL;
+    frame.src = `${PIXEL_AGENTS_URL}?view=department`;
     window.addEventListener('message', (event) => {
       if (event.origin !== PIXEL_AGENTS_ORIGIN || event.source !== frame.contentWindow) return;
       if (event.data?.type !== 'pixelAgentsContentHeight') return;
@@ -5278,6 +5672,7 @@ initTelegramMiniApp();
 initJarvisHud();
 initJarvisBudget();
 initJarvisRunPanel();
+initOwnerDecisions();
 initPixelAgentsFrame();
 initPixelAgentsView();
 initPixelAgentsPin();

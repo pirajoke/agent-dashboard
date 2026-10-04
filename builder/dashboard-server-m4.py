@@ -21,6 +21,9 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 from dashboard_builder.manager_events import project_manager_event
+from dashboard_builder.owner_decisions import (
+    DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
+)
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
@@ -37,6 +40,7 @@ SCRIPTS_DIR = HOME / "scripts"
 LAUNCH_AGENTS_DIR = HOME / "Library" / "LaunchAgents"
 GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
 JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
+MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_LOG_FILE = HOME / "Library" / "Logs" / "dashboard-jarvis-pipeline-run.log"
@@ -1211,6 +1215,10 @@ _BRIDGE_CAMPUS_STATUSES = {
     "running": "active",
     "done": "done",
     "failed": "failed",
+    "blocked": "waiting",
+    "waiting": "waiting",
+    "needs_input": "waiting",
+    "needs_approval": "waiting",
 }
 
 
@@ -1224,6 +1232,8 @@ def _campus_bridge_identity(value: object, *, separator: str) -> str | None:
 
 
 def _campus_bridge_timestamp(task: dict, status: str) -> object:
+    if status in {"blocked", "waiting", "needs_input", "needs_approval"}:
+        return task.get("updated_at") or task.get("claimed_at") or task.get("created_at")
     if status in {"done", "failed"}:
         return (
             task.get("completed_at")
@@ -1350,6 +1360,63 @@ def _department_campus_payload(
     )
 
 
+def _manager_decision_snapshot(data: object, *, now: datetime) -> list | None:
+    """Use the same newest verified snapshot as the campus, including all blockers."""
+    candidates = []
+    tasks = data.get("tasks") if isinstance(data, dict) else None
+    for task in tasks if isinstance(tasks, list) else []:
+        if not isinstance(task, dict):
+            continue
+        metadata = _manager_metadata(task)
+        source = metadata.get("source_agent")
+        if not isinstance(source, str) or re.sub(r"[^a-z0-9]+", "", source.lower()) != "mainmanager":
+            continue
+        if str(metadata.get("event") or '').strip().lower() not in {"handoff", "status"} or not isinstance(metadata.get("pixel_events"), list):
+            continue
+        updated = _department_snapshot_time(task.get("updated_at") or task.get("completed_at") or task.get("claimed_at") or task.get("created_at"))
+        if updated and updated <= now:
+            candidates.append((updated, metadata["pixel_events"]))
+    if not candidates:
+        return None
+    updated, events = max(candidates, key=lambda item: item[0])
+    if (now - updated).total_seconds() > 30 * 60:
+        return []
+    return events[:100]
+
+
+def _manager_decision_proposals(events: list) -> dict:
+    proposals = {}
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        task_id, event_id = event.get("task_id"), event.get("event_id")
+        timestamp = _department_snapshot_time(event.get("updated_at"))
+        if isinstance(task_id, str) and isinstance(event_id, str) and timestamp:
+            key = (task_id, event_id, timestamp.isoformat().replace("+00:00", "Z"))
+            proposals.setdefault(key, event.get("decision"))
+    return proposals
+
+
+def _manager_decisions_payload(data: object, *, owner: bool, records: list, now: datetime | None = None) -> dict:
+    current = now or datetime.now(timezone.utc)
+    campus = _department_campus_payload(data, now=current, owner_view=owner)
+    events = _manager_decision_snapshot(data, now=current) if owner else []
+    if events is None:
+        tasks = data.get('tasks') if isinstance(data, dict) else None
+        events = [event for task in tasks if isinstance(task, dict)
+                  for event in [_campus_bridge_event(task)] if event is not None][:100] if isinstance(tasks, list) else []
+    latest = {}
+    for event in events:
+        for validated in department_campus_projection([event], now=current, max_tasks=1, owner_view=owner)['events']:
+            previous = latest.get(validated['task_id'])
+            if previous is None or _department_snapshot_time(validated['updated_at']) > _department_snapshot_time(previous['updated_at']):
+                latest[validated['task_id']] = validated
+    waiting = [event for event in latest.values() if event['status'] == 'waiting']
+    waiting.sort(key=lambda event: _department_snapshot_time(event['updated_at']), reverse=True)
+    proposals = _manager_decision_proposals(events) if owner else {}
+    return decision_projection(campus, proposals, records, owner=owner, waiting_events=waiting)
+
+
 def _runtime_asset_block(filename: str, start_marker: str, end_marker: str) -> str:
     asset_path = Path(__file__).resolve().parent / "dashboard-assets" / filename
     source = asset_path.read_text(encoding="utf-8")
@@ -1459,8 +1526,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return str(HOME / 'mac-mini-dashboard' / 'index.html')
         return str(HOME / clean_path.lstrip('/'))
 
+    def send_head(self):
+        # Static serving must not bypass the token-gated decision endpoints,
+        # including through a private Host, HEAD request or filesystem alias.
+        try:
+            target = Path(self.translate_path(self.path)).resolve()
+            private_state = (HOME / '.agent-bridge').resolve()
+            protected = target.is_relative_to(private_state) or target == MANAGER_DECISIONS_FILE.resolve()
+        except (OSError, ValueError, RuntimeError):
+            self.send_error(403, 'Forbidden')
+            return None
+        if protected:
+            self.send_error(403, 'Forbidden')
+            return None
+        return super().send_head()
+
     def do_POST(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/manager/decisions/respond':
+            self._handle_manager_decision_response()
+            return
         if parsed.path == '/api/jarvis/tasks/draft':
             self._handle_jarvis_task_draft()
             return
@@ -2100,6 +2185,57 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         payload["run_id"] = run_id
         self._json_response(200, payload)
 
+    def _decision_owner_authorized(self) -> bool:
+        # New choice records require the existing owner token on every host.
+        # Never infer authority from a caller-controlled Host header.
+        try:
+            expected = _dashboard_run_token(create_if_missing=False)
+        except (OSError, RuntimeError):
+            return False
+        provided = self.headers.get('X-Dashboard-Run-Token', '').strip()
+        return bool(expected and provided and provided.isascii() and secrets.compare_digest(expected, provided))
+
+    def _handle_manager_decisions(self, *, responses: bool = False):
+        owner = self._decision_owner_authorized()
+        if responses and not owner:
+            self._json_response(401, {'error': 'owner_token_required'})
+            return
+        try:
+            records = DecisionJournal(MANAGER_DECISIONS_FILE).read() if owner else []
+            if responses:
+                self._json_response(200, {'responses': records, 'record_only': True})
+                return
+            data = _bridge_request('GET', '/api/tasks?limit=24&include_messages=1')
+            payload = _manager_decisions_payload(data, owner=owner, records=records)
+            self._json_response(200, payload)
+        except (OSError, ValueError, RuntimeError):
+            self._json_response(503, {'error': 'decisions_unavailable', 'state': 'unavailable', 'decisions': [], 'activity': []})
+
+    def _handle_manager_decision_response(self):
+        if not self._decision_owner_authorized():
+            self._json_response(401, {'error': 'owner_token_required'})
+            return
+        origin, host = self.headers.get('Origin'), self.headers.get('Host', '')
+        if origin and origin not in {f'http://{host}', f'https://{host}'}:
+            self._json_response(403, {'error': 'origin_not_allowed'})
+            return
+        try:
+            if not 1 <= int(self.headers.get('Content-Length', 0)) <= 4096:
+                raise ValueError('invalid_body_length')
+            body = self._read_json_body(max_bytes=4096)
+            data = _bridge_request('GET', '/api/tasks?limit=24&include_messages=1')
+            # Keep already-recorded revisions here for safe, idempotent retries.
+            payload = _manager_decisions_payload(data, owner=True, records=[])
+            response = reviewed_response(body, payload['decisions'])
+            recorded = DecisionJournal(MANAGER_DECISIONS_FILE).record(response)
+            self._json_response(200, {'recorded': recorded, 'record_only': True})
+        except DecisionConflict:
+            self._json_response(409, {'error': 'decision_changed', 'message': 'Обнови решение и проверь новое резюме.'})
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_decision_response'})
+        except (OSError, RuntimeError):
+            self._json_response(503, {'error': 'decisions_unavailable'})
+
     def _handle_jarvis_pipeline_history(self, parsed):
         query = parse_qs(parsed.query)
         try:
@@ -2192,6 +2328,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path in {'/api/manager/decisions', '/api/manager/decisions/responses'}:
+            self._handle_manager_decisions(responses=parsed.path.endswith('/responses'))
+            return
         if parsed.path in {"/agent-dashboard.html", "/legacy-dashboard.html"}:
             self._redirect_legacy_dashboard()
             return
