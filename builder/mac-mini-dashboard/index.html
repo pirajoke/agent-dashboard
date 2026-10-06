@@ -3501,7 +3501,12 @@ const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
 let currentLogService = null;
 const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
 const PIXEL_AGENTS_VIEW_KEY = 'command-center.pixel-agents.view';
-const PIXEL_AGENTS_BASE = IS_FILE_DASHBOARD ? 'https://command.meshly.fr' : window.location.origin;
+const IS_LOOPBACK_HEALTH_GATEWAY = window.location.protocol === 'http:'
+  && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  && window.location.port === '8880';
+const PIXEL_AGENTS_BASE = (IS_FILE_DASHBOARD || IS_LOOPBACK_HEALTH_GATEWAY)
+  ? 'https://command.meshly.fr'
+  : window.location.origin;
 const PIXEL_AGENTS_URL = `${PIXEL_AGENTS_BASE}/department-campus.html`;
 const PIXEL_AGENTS_ORIGIN = new URL(PIXEL_AGENTS_URL).origin;
 const JARVIS_HUD_COLLAPSED_KEY = 'command-center.jarvis-hud-collapsed';
