@@ -1,16 +1,15 @@
 # Command Center owner decisions
 
-The live shell has four main destinations: Machines, Agents, Проекты and
-Platforms. Machines nests the unchanged Mac Mini, Air and Pro panels. Existing
+The live shell has three main destinations: Machines, Agents and Platforms.
+Machines nests the unchanged Mac Mini, Air and Pro panels. Existing
 `?tab=mac-mini`, `?tab=air` and `?tab=pro` links still select the corresponding
-computer. Проекты reuses the existing Platforms directory and its access labels;
-it does not infer deployment health from a link.
+computer. Platforms remains the single directory of applications and access
+labels; there is no duplicated Projects surface.
 
-Agents opens the decision queue. The campus is a separate subview using
-`/department-campus.html?view=department`; its department picker shows one of the
-seven existing rooms. The standalone campus keeps its original overview. The
-existing Agent Pipeline tools and history are available below both subviews.
-The Decisions view accepts the existing owner token through “Доступ владельца”.
+Agents opens the complete seven-room campus overview. Decisions remains a
+secondary subview and accepts the existing owner token through “Доступ
+владельца”. The existing Agent Pipeline tools and history are available below
+both subviews.
 
 ## Producer contract
 

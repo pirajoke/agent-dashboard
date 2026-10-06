@@ -185,7 +185,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 matches.append(declarations)
         return "\n".join(matches)
 
-    def test_ac_1_top_navigation_has_four_destinations_and_machines_are_nested(self):
+    def test_ac_1_top_navigation_has_three_destinations_and_machines_are_nested(self):
         parser = self._dashboard()
 
         self.assertEqual(
@@ -193,7 +193,6 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             [
                 ("machines", "Machines"),
                 ("agents", "Agents"),
-                ("projects", "Проекты"),
                 ("platforms", "Platforms"),
             ],
         )
@@ -217,8 +216,31 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "projects", "platforms"],
+            ["mac-mini", "air", "pro", "machines", "agents", "platforms"],
         )
+        self.assertIn(
+            'aria-controls="agents-campus" aria-pressed="true"',
+            self.dashboard_html,
+        )
+        self.assertIn(
+            'aria-controls="agents-decisions" aria-pressed="false"',
+            self.dashboard_html,
+        )
+        self.assertIn(
+            '<section id="agents-decisions" aria-labelledby="decisions-title" lang="ru" hidden>',
+            self.dashboard_html,
+        )
+        self.assertIn('<div id="agents-campus">', self.dashboard_html)
+        for duplicate_projects_marker in (
+            'aria-controls="section-projects"',
+            'id="section-projects"',
+            'id="projects-directory"',
+            "document.getElementById('projects-directory').replaceChildren(",
+        ):
+            with self.subTest(marker=duplicate_projects_marker):
+                self.assertNotIn(duplicate_projects_marker, self.dashboard_html)
+        self.assertIn('src="/department-campus.html"', self.dashboard_html)
+        self.assertNotIn("?view=department", self.dashboard_html)
 
     def test_ac_3_hq_keeps_its_id_but_uses_the_new_visible_russian_copy(self):
         structure = self._campus_structure()
@@ -340,7 +362,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 "const PIXEL_AGENTS_ORIGIN = new URL(PIXEL_AGENTS_URL).origin;",
                 "postMessage origin must be derived from the selected campus URL",
             ),
-            ("frame.src = `${PIXEL_AGENTS_URL}?view=department`;", "iframe must open the focused department view"),
+            ("frame.src = PIXEL_AGENTS_URL;", "iframe must open the complete campus overview"),
             (
                 "fullScreen.href = PIXEL_AGENTS_URL;",
                 "Full screen must receive the selected campus URL",
