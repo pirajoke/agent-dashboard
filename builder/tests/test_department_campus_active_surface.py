@@ -77,9 +77,10 @@ class ActiveDepartmentCampusSurfaceTests(unittest.TestCase):
 
         self.assertEqual(
             parser.sources,
-            [SURFACE_PATH + "?view=department"],
-            "the production Agents iframe must default to the same-origin Department Campus",
+            [SURFACE_PATH],
+            "the production Agents iframe must default to the complete same-origin Department Campus overview",
         )
+        self.assertNotIn(SURFACE_PATH + "?view=department", parser.sources)
         self.assertNotIn("https://pixel-agents.meshly.fr", parser.sources)
 
     def test_ac_active_2_public_get_returns_standalone_campus_document(self):

@@ -2816,7 +2816,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon">🖥</span> Machines</button>
     <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon">🤖</span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-projects" aria-pressed="false" onclick="showSection('projects')"><span class="pill-icon">↗</span> Проекты</button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon">⌘</span> Platforms <span class="pill-badge">7</span></button>
   </nav>
 
@@ -2917,16 +2916,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
       <p class="platform-note">Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</p>
     </div>
-  </section>
-
-  <section id="section-projects" class="section" aria-labelledby="projects-title" lang="ru">
-    <div class="platforms-header">
-      <div><div class="platforms-eyebrow">Command Center · каталог</div>
-        <h2 class="platforms-title" id="projects-title">Проекты</h2>
-        <p class="platforms-copy">Приложения, панели управления и боты. Все существующие ссылки — в одном месте.</p>
-      </div>
-    </div>
-    <div class="platform-directory" id="projects-directory"></div>
   </section>
 
   <section id="section-machines" class="section" aria-label="Machines">
@@ -3146,10 +3135,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <!-- ═══════════════ AGENTS ═══════════════ -->
   <div id="section-agents" class="section active">
     <div class="cc-subnav" aria-label="Agents views">
-      <button type="button" aria-controls="agents-decisions" aria-pressed="true" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
-      <button type="button" aria-controls="agents-campus" aria-pressed="false" onclick="showAgentsView('campus')">Кампус отделов</button>
+      <button type="button" aria-controls="agents-campus" aria-pressed="true" onclick="showAgentsView('campus')">Кампус отделов</button>
+      <button type="button" aria-controls="agents-decisions" aria-pressed="false" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
     </div>
-    <section id="agents-decisions" aria-labelledby="decisions-title" lang="ru">
+    <section id="agents-decisions" aria-labelledby="decisions-title" lang="ru" hidden>
       <div class="decision-head">
         <div><div class="decision-eyebrow">MAIN MANAGER</div>
           <h2 id="decisions-title">Что требует твоего решения</h2>
@@ -3169,7 +3158,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="decision-activity" id="decision-activity"></div>
     </section>
 
-    <div id="agents-campus" hidden>
+    <div id="agents-campus">
       <div class="pixel-agents-shell">
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
@@ -3203,7 +3192,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <div class="pixel-agents-stage" id="pixel-agents-stage">
           <iframe
             class="pixel-agents-frame"
-            src="/department-campus.html?view=department"
+            src="/department-campus.html"
             title="Pixel Verse Department Campus"
           ></iframe>
         </div>
@@ -3816,8 +3805,6 @@ async function refreshOwnerDecisions(force = false) {
 
 function initOwnerDecisions() {
   ownerDecisionsReady = true;
-  const directory = document.querySelector('#section-platforms .platform-directory');
-  document.getElementById('projects-directory').replaceChildren(...Array.from(directory.children, child => child.cloneNode(true)));
   refreshOwnerDecisions();
   setInterval(() => refreshOwnerDecisions(), 15000);
   document.addEventListener('visibilitychange', () => {
@@ -3855,7 +3842,7 @@ function showSection(name) {
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'projects', 'platforms'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 }
 
@@ -3864,7 +3851,7 @@ function initPixelAgentsFrame() {
   const fullScreen = document.getElementById('pixel-agents-fullscreen');
   const viewport = document.getElementById('pixel-agents-viewport');
   if (frame) {
-    frame.src = `${PIXEL_AGENTS_URL}?view=department`;
+    frame.src = PIXEL_AGENTS_URL;
     window.addEventListener('message', (event) => {
       if (event.origin !== PIXEL_AGENTS_ORIGIN || event.source !== frame.contentWindow) return;
       if (event.data?.type !== 'pixelAgentsContentHeight') return;
