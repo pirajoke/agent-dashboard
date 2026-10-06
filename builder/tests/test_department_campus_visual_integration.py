@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from html.parser import HTMLParser
 import importlib
+import json
 from pathlib import Path
 import re
+import subprocess
 import unittest
 
 
@@ -350,9 +352,16 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
     def test_ac_5_file_dashboard_uses_reachable_campus_and_matching_message_origin(self):
         required_contracts = (
             (
-                "const PIXEL_AGENTS_BASE = IS_FILE_DASHBOARD "
-                "? 'https://command.meshly.fr' : window.location.origin;",
-                "file:// must use the reachable HTTPS campus while http(s) stays same-origin",
+                "const IS_LOOPBACK_HEALTH_GATEWAY = window.location.protocol === 'http:'\n"
+                "  && ['localhost', '127.0.0.1'].includes(window.location.hostname)\n"
+                "  && window.location.port === '8880';",
+                "only the loopback health gateway must be recognized as the local app host",
+            ),
+            (
+                "const PIXEL_AGENTS_BASE = (IS_FILE_DASHBOARD || IS_LOOPBACK_HEALTH_GATEWAY)\n"
+                "  ? 'https://command.meshly.fr'\n"
+                "  : window.location.origin;",
+                "file:// and the loopback health gateway must use the reachable HTTPS campus",
             ),
             (
                 "const PIXEL_AGENTS_URL = `${PIXEL_AGENTS_BASE}/department-campus.html`;",
@@ -382,6 +391,42 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             self.dashboard_html.index("initPixelAgentsPin();"),
             "the file:// iframe URL must be selected before postMessage pin setup",
         )
+
+    def test_ac_5_loopback_health_gateway_uses_public_campus_only_on_port_8880(self):
+        campus_url_contract = re.search(
+            r"(const IS_FILE_DASHBOARD = .*?"
+            r"const PIXEL_AGENTS_ORIGIN = new URL\(PIXEL_AGENTS_URL\)\.origin;)",
+            self.dashboard_html,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(campus_url_contract)
+
+        scenarios = (
+            ("http://127.0.0.1:8880/", "https://command.meshly.fr/department-campus.html"),
+            ("http://localhost:8880/", "https://command.meshly.fr/department-campus.html"),
+            ("http://127.0.0.1:7777/", "http://127.0.0.1:7777/department-campus.html"),
+            ("https://command.meshly.fr/", "https://command.meshly.fr/department-campus.html"),
+            ("file:///tmp/agent-dashboard.html", "https://command.meshly.fr/department-campus.html"),
+        )
+        for page_url, expected_campus_url in scenarios:
+            javascript = "\n".join(
+                (
+                    f"const window = {{ location: new URL({json.dumps(page_url)}) }};",
+                    campus_url_contract.group(1),
+                    "process.stdout.write(PIXEL_AGENTS_URL);",
+                )
+            )
+            result = subprocess.run(
+                ["node", "-e", javascript],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(
+                result.stdout,
+                expected_campus_url,
+                f"campus URL selected for dashboard page {page_url}",
+            )
 
     def test_ac_6_unavailable_project_summary_is_removed_instead_of_left_loading(self):
         self.assertNotIn('id="stat-projects"', self.dashboard_html)
