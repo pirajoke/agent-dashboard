@@ -57,12 +57,11 @@ PLATFORM_REGISTRY = (
     {
         "id": "context-news",
         "name": "Context News France",
-        "description": "French news operations surface and Telegram publication bot.",
+        "description": "Personalized news digests delivered by the Context News Telegram bot.",
         "tier": "active",
-        "status": "Private Mac mini + Telegram",
+        "status": "Telegram",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:8002", "access": "private"},
-            {"label": "Open news bot", "url": "https://t.me/croissantfr_bot", "access": "telegram"},
+            {"label": "Open news bot", "url": "https://t.me/contextnews_bot", "access": "telegram"},
         ),
     },
     {

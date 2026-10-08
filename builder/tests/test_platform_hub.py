@@ -43,14 +43,11 @@ EXPECTED_LINKS = {
     ),
     "health-os": ("https://health.meshly.fr/",),
     "ai-singularity": ("http://127.0.0.1:8790",),
-    "context-news": (
-        "http://127.0.0.1:8002",
-        "https://t.me/croissantfr_bot",
-    ),
+    "context-news": ("https://t.me/contextnews_bot",),
     "accountable-os": ("http://127.0.0.1:4174",),
     "jarvis": ("https://t.me/max_jarvis_hoian_bot",),
 }
-EXPECTED_LOOPBACK_PORTS = (7777, 8792, 8791, 8790, 8002, 4174)
+EXPECTED_LOOPBACK_PORTS = (7777, 8792, 8791, 8790, 4174)
 REQUIRED_PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 REQUIRED_ACTION_FIELDS = ("label", "url", "access")
 

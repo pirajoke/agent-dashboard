@@ -33,10 +33,7 @@ EXPECTED_PLATFORMS = {
     ),
     "context-news": (
         "Context News France",
-        (
-            "http://127.0.0.1:8002",
-            "https://t.me/croissantfr_bot",
-        ),
+        ("https://t.me/contextnews_bot",),
     ),
     "accountable": (
         "Accountable OS",

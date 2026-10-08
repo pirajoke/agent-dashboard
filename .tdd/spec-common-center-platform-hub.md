@@ -20,9 +20,8 @@ an operating map, not a generic SaaS card grid.
   are the two primary product lanes. The other five surfaces are visibly
   grouped as active systems without being represented as current product P0s.
 - **AC-CC-3 — Useful destinations.** Every surface has at least one real link.
-  Financial OS, Lexi admin, AI Singularity, Context News, and
-  Accountable OS use their current loopback Mac mini ports. Health OS links to its
-  existing HTTPS page. Lexi (@my_dictionnary_tg_bot), JobRadar, Context News, and JARVIS expose
+  Financial OS, Lexi admin, AI Singularity, and Accountable OS use their current loopback Mac mini ports. Health OS links to its
+  existing HTTPS page. Lexi (@my_dictionnary_tg_bot), JobRadar, Context News (@contextnews_bot), and JARVIS expose
   their verified Telegram links where available.
 - **AC-CC-4 — Safe link contract.** Links are limited to explicit HTTPS hosts
   (`t.me`, `health.meshly.fr`) or loopback HTTP (`127.0.0.1`/`localhost`).
@@ -74,4 +73,5 @@ an operating map, not a generic SaaS card grid.
 
 Everything runs on the Mac mini, not OVH (owner decision). MyDictionary was
 replaced by the Lexi bot. Private ports now match the Mac mini: Lexi admin
-8791, AI Singularity 8790.
+8791, AI Singularity 8790. Context News is reached through its Mac mini bot
+@contextnews_bot; the old port 8002 and @croissantfr_bot are not running.
