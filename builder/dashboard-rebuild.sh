@@ -137,6 +137,7 @@ if [ -d "$REPO_DIR/.git" ]; then
     cp "$HTML_OUT" "$PUBLISH_WT/index.html"
     mkdir -p "$PUBLISH_WT/dashboard-assets"
     cp "$HOME/dashboard-assets/ai-town-32x32folk.png" "$PUBLISH_WT/dashboard-assets/ai-town-32x32folk.png" 2>/dev/null || log "WARN: AI Town sprite asset missing"
+    cp "$HOME/dashboard-assets/three.module.min.js" "$PUBLISH_WT/dashboard-assets/three.module.min.js" 2>/dev/null || log "WARN: Three.js campus asset missing"
     cd "$PUBLISH_WT"
 
     # Only commit+push if there are actual changes
