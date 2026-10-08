@@ -15,6 +15,7 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -976,26 +977,39 @@ def _health_request(method: str, path: str, payload: dict | None = None) -> dict
     return json.loads(raw) if raw else {}
 
 
-def _air_health_request(method: str, path: str, payload: dict | None = None) -> dict:
+# After a laptop fails to answer, GET reads fail fast for a while instead of
+# holding a server thread for the full timeout on every dashboard refresh.
+REMOTE_HEALTH_COOLDOWN_SECONDS = 60
+_remote_health_down_until: dict[str, float] = {}
+
+
+def _remote_health_request(base_url: str, method: str, path: str, payload: dict | None = None) -> dict:
+    if method == "GET" and time.monotonic() < _remote_health_down_until.get(base_url, 0.0):
+        raise ConnectionError("machine unreachable, retrying shortly")
     data = None
     headers = {"Content-Type": "application/json"}
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(f"{AIR_HEALTH_API_URL}{path}", data=data, method=method, headers=headers)
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        raw = resp.read().decode("utf-8")
+    req = urllib.request.Request(f"{base_url}{path}", data=data, method=method, headers=headers)
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            raw = resp.read().decode("utf-8")
+    except urllib.error.HTTPError:
+        _remote_health_down_until.pop(base_url, None)
+        raise
+    except OSError:
+        _remote_health_down_until[base_url] = time.monotonic() + REMOTE_HEALTH_COOLDOWN_SECONDS
+        raise
+    _remote_health_down_until.pop(base_url, None)
     return json.loads(raw) if raw else {}
+
+
+def _air_health_request(method: str, path: str, payload: dict | None = None) -> dict:
+    return _remote_health_request(AIR_HEALTH_API_URL, method, path, payload)
 
 
 def _pro_health_request(method: str, path: str, payload: dict | None = None) -> dict:
-    data = None
-    headers = {"Content-Type": "application/json"}
-    if payload is not None:
-        data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(f"{PRO_HEALTH_API_URL}{path}", data=data, method=method, headers=headers)
-    with urllib.request.urlopen(req, timeout=5) as resp:
-        raw = resp.read().decode("utf-8")
-    return json.loads(raw) if raw else {}
+    return _remote_health_request(PRO_HEALTH_API_URL, method, path, payload)
 
 
 def _air_proxy_path(path: str) -> str | None:

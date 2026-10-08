@@ -2255,13 +2255,21 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         else statusEl.textContent = `green - ${activeTasks} queued`;
     }
 
-    async function refreshMachines() {
+    // A machine that answers neither endpoint is skipped for a while, so an
+    // offline laptop doesn't hold every 7s refresh for its full timeout.
+    const MACHINE_BACKOFF_MIN_MS = 60000;
+    const MACHINE_BACKOFF_MAX_MS = 600000;
+    const machineBackoff = {};
+
+    async function refreshMachines(force = false) {
         const configs = [
             {id: 'mini', label: 'Mac Mini', health: '/api/health', services: '/api/local-services'},
             {id: 'air', label: 'MacBook Air', health: '/api/air/health', services: '/api/air/services/detailed'},
             {id: 'pro', label: 'MacBook Pro', health: '/api/pro/health', services: '/api/pro/services/detailed'},
         ];
         await Promise.all(configs.map(async (cfg) => {
+            const backoff = machineBackoff[cfg.id];
+            if (!force && backoff && Date.now() < backoff.until) return;
             const [healthResult, servicesResult] = await Promise.allSettled([
                 fetchJson(cfg.health, cfg.id === 'air' ? 5500 : 4500),
                 fetchJson(cfg.services, cfg.id === 'air' ? 5500 : 4500),
@@ -2271,6 +2279,12 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
             const error = healthResult.status === 'rejected'
                 ? healthResult.reason
                 : (servicesResult.status === 'rejected' && !health ? servicesResult.reason : null);
+            if (!health && !serviceData) {
+                const delay = Math.min(backoff ? backoff.delay * 2 : MACHINE_BACKOFF_MIN_MS, MACHINE_BACKOFF_MAX_MS);
+                machineBackoff[cfg.id] = {until: Date.now() + delay, delay};
+            } else {
+                delete machineBackoff[cfg.id];
+            }
             renderMachine(cfg.id, cfg.label, health, serviceData, error);
         }));
     }
@@ -2289,14 +2303,19 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         }
     }
 
-    async function refreshCommandCenter() {
+    let refreshInFlight = null;
+
+    function refreshCommandCenter(force = false) {
+        if (refreshInFlight) return refreshInFlight;
         const statusEl = document.getElementById('command-status');
         if (statusEl) statusEl.textContent = 'refreshing';
-        await Promise.all([refreshMachines(), refreshFlow()]);
-        renderOverallStatus();
+        refreshInFlight = Promise.all([refreshMachines(force === true), refreshFlow()])
+            .then(renderOverallStatus)
+            .finally(() => { refreshInFlight = null; });
+        return refreshInFlight;
     }
 
-    document.getElementById('command-refresh')?.addEventListener('click', refreshCommandCenter);
+    document.getElementById('command-refresh')?.addEventListener('click', () => refreshCommandCenter(true));
     window.SystemsCommandCenterRefresh = refreshCommandCenter;
     refreshCommandCenter();
     setInterval(refreshCommandCenter, 7000);
