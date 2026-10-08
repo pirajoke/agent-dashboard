@@ -254,6 +254,57 @@ class BridgeAuthenticationTests(unittest.TestCase):
         self.assertEqual(payload, {"status": "ok"})
 
 
+class RemoteHealthCooldownTests(unittest.TestCase):
+    def setUp(self):
+        SERVER._remote_health_down_until.clear()
+        self.addCleanup(SERVER._remote_health_down_until.clear)
+
+    def _ok_response(self):
+        response = MagicMock()
+        response.read.return_value = b'{"system":{}}'
+        response.__enter__.return_value = response
+        response.__exit__.return_value = False
+        return response
+
+    def test_unreachable_air_fails_fast_until_cooldown_ends(self):
+        error = SERVER.urllib.error.URLError("timed out")
+        with patch.object(SERVER.urllib.request, "urlopen", side_effect=error) as open_url:
+            with self.assertRaises(OSError):
+                SERVER._air_health_request("GET", "/api/all")
+            with self.assertRaisesRegex(ConnectionError, "retrying shortly"):
+                SERVER._air_health_request("GET", "/api/all")
+        self.assertEqual(open_url.call_count, 1)
+
+        SERVER._remote_health_down_until[SERVER.AIR_HEALTH_API_URL] = 0.0
+        with patch.object(SERVER.urllib.request, "urlopen", return_value=self._ok_response()):
+            self.assertEqual(SERVER._air_health_request("GET", "/api/all"), {"system": {}})
+        self.assertNotIn(SERVER.AIR_HEALTH_API_URL, SERVER._remote_health_down_until)
+
+    def test_cooldown_is_per_machine_and_skips_service_actions(self):
+        error = SERVER.urllib.error.URLError("timed out")
+        with patch.object(SERVER.urllib.request, "urlopen", side_effect=error):
+            with self.assertRaises(OSError):
+                SERVER._air_health_request("GET", "/api/all")
+        with patch.object(SERVER.urllib.request, "urlopen", return_value=self._ok_response()) as open_url:
+            self.assertEqual(SERVER._pro_health_request("GET", "/api/all"), {"system": {}})
+            SERVER._air_health_request("POST", "/api/service/x/restart")
+        self.assertEqual(open_url.call_count, 2)
+
+    def test_failed_service_action_does_not_start_cooldown(self):
+        error = SERVER.urllib.error.URLError("timed out")
+        with patch.object(SERVER.urllib.request, "urlopen", side_effect=error):
+            with self.assertRaises(OSError):
+                SERVER._air_health_request("POST", "/api/service/x/restart")
+        self.assertNotIn(SERVER.AIR_HEALTH_API_URL, SERVER._remote_health_down_until)
+
+    def test_http_error_does_not_mark_machine_offline(self):
+        error = SERVER.urllib.error.HTTPError("http://air", 500, "boom", {}, None)
+        with patch.object(SERVER.urllib.request, "urlopen", side_effect=error):
+            with self.assertRaises(SERVER.urllib.error.HTTPError):
+                SERVER._air_health_request("GET", "/api/all")
+        self.assertNotIn(SERVER.AIR_HEALTH_API_URL, SERVER._remote_health_down_until)
+
+
 class DashboardOwnerAuthTests(unittest.TestCase):
     def _authorized(self, provided: str | None) -> bool:
         handler = SERVER.Handler.__new__(SERVER.Handler)
