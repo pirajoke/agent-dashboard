@@ -23,6 +23,7 @@ cp "$SRC_DIR/dashboard-assets/script.js" "$SCRIPTS_DIR/dashboard-assets/script.j
 cp "$SRC_DIR/dashboard-assets/ai-town-32x32folk.png" "$SCRIPTS_DIR/dashboard-assets/ai-town-32x32folk.png"
 cp "$SRC_DIR/dashboard-assets/ai-town-32x32folk.png" "$PUBLIC_ASSETS_DIR/ai-town-32x32folk.png"
 cp "$SRC_DIR/dashboard-assets/pixel-verse-campus-bg.webp" "$PUBLIC_ASSETS_DIR/pixel-verse-campus-bg.webp"
+cp "$SRC_DIR/dashboard-assets/three.module.min.js" "$PUBLIC_ASSETS_DIR/three.module.min.js"
 
 if [[ -f "$SRC_DIR/mac-mini-dashboard/index.html" ]]; then
   cp "$SRC_DIR/mac-mini-dashboard/index.html" "$MAC_MINI_DASHBOARD_DIR/index.html"

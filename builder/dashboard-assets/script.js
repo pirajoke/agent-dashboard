@@ -471,6 +471,12 @@
         button.dataset.campusAgentTrigger = '';
         button.setAttribute('data-campus-destination', destination);
         button.setAttribute('data-campus-moving', String(moving));
+        // Public projection fields only; the 3D scene mirrors these buttons.
+        button.dataset.campusAgentId = String(event.agent_id || '');
+        button.dataset.campusDepartmentId = String(event.department_id || '');
+        button.dataset.campusTaskId = String(event.task_id || '');
+        button.dataset.campusStatus = String(event.status || '');
+        button.dataset.campusProject = String(event.project || '');
         button.setAttribute('aria-label', `${event.role}, ${statusLabels[event.status] || event.status}`);
         button.setAttribute('aria-controls', 'campus-agent-details');
         button.setAttribute('aria-expanded', 'false');
@@ -722,6 +728,1204 @@
     }
 })();
 // ── End Department Campus ──
+
+// ── Campus 3D Scene ──
+// Read-only 3D mirror of the Department Campus. The semantic 2D campus stays
+// the single source of truth: this block never fetches events itself, it only
+// reads the public state the campus has already rendered. Characters walk only
+// for verified active/testing journeys; idle, stale and unavailable states keep
+// everyone at their own desk and stop the frame loop.
+(function initCampus3dScene() {
+    const campus = document.getElementById('department-campus');
+    if (!campus || campus.dataset.campus3dBound === 'true') return;
+    campus.dataset.campus3dBound = 'true';
+    const stage = campus.querySelector('[data-campus-3d]');
+    const labelsEl = campus.querySelector('[data-campus-3d-labels]');
+    const focusEl = campus.querySelector('[data-campus-3d-focus]');
+    const map = campus.querySelector('.campus-map');
+    const toggle = campus.querySelector('[data-campus-view-toggle]');
+    if (!stage || !labelsEl || !focusEl || !map || !toggle) return;
+    // The focused single-department iframe keeps its 2D room crops.
+    if (new URLSearchParams(window.location.search).get('view') === 'department') return;
+
+    const VIEW_KEY = 'command-center.campus.view';
+    const THREE_URL = new URL('/dashboard-assets/three.module.min.js', window.location.href).href;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function webglSupported() {
+        if (typeof window.WebGLRenderingContext === 'undefined') return false;
+        try {
+            const probe = document.createElement('canvas');
+            const context = probe.getContext('webgl2') || probe.getContext('webgl');
+            context?.getExtension('WEBGL_lose_context')?.loseContext();
+            return Boolean(context);
+        } catch (_error) {
+            return false;
+        }
+    }
+    if (!webglSupported()) return;
+
+    function readViewPreference() {
+        try {
+            return window.localStorage.getItem(VIEW_KEY);
+        } catch (_error) {
+            return null;
+        }
+    }
+
+    function writeViewPreference(view) {
+        try {
+            window.localStorage.setItem(VIEW_KEY, view);
+        } catch (_error) {
+            // Storage can be unavailable; the view then resets on reload.
+        }
+    }
+
+    function postContentHeight() {
+        if (window.parent === window) return;
+        window.queueMicrotask(() => {
+            const height = Math.ceil(campus.getBoundingClientRect().height);
+            if (!Number.isFinite(height) || height <= 0) return;
+            window.parent.postMessage({type: 'pixelAgentsContentHeight', height}, '*');
+        });
+    }
+
+    let scene3d = null;
+    let scenePromise = null;
+    let active = false;
+
+    function applyView(want3d) {
+        active = Boolean(want3d && scene3d);
+        campus.classList.toggle('is-3d-view', active);
+        stage.hidden = !active;
+        toggle.setAttribute('aria-pressed', String(active));
+        toggle.textContent = active ? '2D' : '3D';
+        toggle.setAttribute('aria-label', active ? 'Плоский план кампуса' : 'Объёмный 3D-вид кампуса');
+        if (active) {
+            scene3d.resize();
+            scene3d.sync();
+        } else {
+            focusEl.hidden = true;
+        }
+        postContentHeight();
+    }
+
+    function loadScene() {
+        if (!scenePromise) {
+            stage.setAttribute('data-campus-3d-state', 'loading');
+            scenePromise = import(THREE_URL)
+                .then((THREE) => {
+                    stage.hidden = false;
+                    scene3d = createCampusScene(THREE);
+                    stage.setAttribute('data-campus-3d-state', 'ready');
+                    return scene3d;
+                })
+                .catch(() => {
+                    stage.hidden = true;
+                    stage.setAttribute('data-campus-3d-state', 'unavailable');
+                    toggle.hidden = true;
+                    return null;
+                });
+        }
+        return scenePromise;
+    }
+
+    async function show3d(persist) {
+        const ready = await loadScene();
+        applyView(Boolean(ready));
+        if (persist && ready) writeViewPreference('3d');
+    }
+
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+        if (active) {
+            applyView(false);
+            writeViewPreference('2d');
+            return;
+        }
+        show3d(true);
+    });
+    if (readViewPreference() !== '2d') show3d(false);
+
+    function createCampusScene(THREE) {
+        const STATUS_GLYPHS = {
+            queued: '…', active: '▶', testing: '◎', waiting: '‖', done: '✓', failed: '✕',
+        };
+        const STATUS_COLORS = {
+            queued: 0x9e9aa0, active: 0xe6a23c, testing: 0x6fa8dc,
+            waiting: 0xc792ea, done: 0x5fae74, failed: 0xe06c5a,
+        };
+        const ROUTE_PRECEDENCE = ['testing', 'active', 'done', 'queued', 'waiting', 'failed'];
+        const WALK_SPEED = 4.6;
+        const MEETING_SECONDS = 1.4;
+        const LOOKS = {
+            COORDINATOR: {shirt: '#e6a23c', pants: '#3a2c22', skin: '#e9bf98', hair: '#3b2a20'},
+            RESEARCHER: {shirt: '#d9708f', pants: '#2b2b38', skin: '#f1cdb0', hair: '#c94f7c'},
+            BUILDER: {shirt: '#4f7cc2', pants: '#26262e', skin: '#f0c9a4', hair: '#d7b46a'},
+            DESIGNER: {shirt: '#4e7a5a', pants: '#2d2a26', skin: '#c99068', hair: '#2a2a2a'},
+            INFRASTRUCTURE: {shirt: '#7c838e', pants: '#22252b', skin: '#e3b693', hair: '#e8e6e1'},
+            VAULT: {shirt: '#8a6bb0', pants: '#26242c', skin: '#8d5a3b', hair: '#1f1a17'},
+            ANALYST: {shirt: '#3f9a8f', pants: '#24282a', skin: '#6f4630', hair: '#151515'},
+        };
+        const ROOMS = {
+            sales: {x: -8.25, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
+            development: {x: -0.5, z: -6, w: 8, d: 6.5, tint: '#80553a'},
+            design: {x: 7.75, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
+            hq: {x: -11, z: 6, w: 6, d: 6.5, tint: '#845a3b'},
+            infrastructure: {x: -4.25, z: 6, w: 6.5, d: 6.5, tint: '#6f4a33'},
+            internal: {x: 2.75, z: 6, w: 6.5, d: 6.5, tint: '#7b4f32'},
+            finance: {x: 9.5, z: 6, w: 6, d: 6.5, tint: '#7a5236'},
+        };
+        Object.entries(ROOMS).forEach(([id, room]) => {
+            room.id = id;
+            room.top = room.z < 0;
+            room.farZ = room.z - room.d / 2;
+            room.nearZ = room.z + room.d / 2;
+            room.doorZ = room.top ? room.nearZ : room.farZ;
+            room.doorInner = new THREE.Vector3(room.x, 0, room.top ? room.doorZ - 0.9 : room.doorZ + 0.9);
+            room.doorOuter = new THREE.Vector3(room.x, 0, room.top ? -1.5 : 1.5);
+            room.aisleZ = room.farZ + 2.3;
+        });
+        const WAYPOINTS = {
+            'test-lab': {x: 2.6, z: 0, color: 0x6fa8dc, label: 'Test Lab'},
+            'github-station': {x: 10.4, z: 0, color: 0x5fae74, label: 'GitHub Station'},
+        };
+
+        const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'low-power'});
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setClearColor(0x09090b, 1);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.domElement.className = 'campus-3d-canvas';
+        stage.prepend(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x09090b, 46, 90);
+        const camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.5, 200);
+        const lookTarget = new THREE.Vector3(-0.8, 0, 0);
+        const view = {azimuth: 0, elevation: 0.9};
+
+        scene.add(new THREE.HemisphereLight(0xfff0db, 0x1b1511, 1.25));
+        const sun = new THREE.DirectionalLight(0xffe0b5, 2.1);
+        sun.position.set(-9, 26, 15);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(2048, 2048);
+        Object.assign(sun.shadow.camera, {left: -19, right: 19, top: 14, bottom: -14, near: 2, far: 70});
+        sun.shadow.bias = -0.0006;
+        sun.shadow.normalBias = 0.02;
+        scene.add(sun);
+
+        const materials = new Map();
+        function material(color, options = {}) {
+            const key = JSON.stringify([color, options]);
+            if (!materials.has(key)) {
+                materials.set(key, new THREE.MeshStandardMaterial({
+                    color, roughness: 0.82, metalness: 0.04, flatShading: true, ...options,
+                }));
+            }
+            return materials.get(key);
+        }
+
+        function box(parent, w, h, d, color, x, y, z, options) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material(color, options));
+            mesh.position.set(x, y + h / 2, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            parent.add(mesh);
+            return mesh;
+        }
+
+        function canvasTexture(size, draw, repeatX, repeatY) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            draw(canvas.getContext('2d'), size);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(repeatX, repeatY);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.anisotropy = 4;
+            return texture;
+        }
+
+        const plankTexture = canvasTexture(128, (ctx, size) => {
+            const rows = 4;
+            for (let row = 0; row < rows; row += 1) {
+                ctx.fillStyle = row % 2 ? '#b98a64' : '#c79a72';
+                ctx.fillRect(0, row * size / rows, size, size / rows);
+                ctx.fillStyle = '#8a6142';
+                ctx.fillRect(0, (row + 1) * size / rows - 2, size, 2);
+                ctx.fillRect((row * 53) % size, row * size / rows, 2, size / rows);
+            }
+        }, 3, 3);
+        const tileTexture = canvasTexture(128, (ctx, size) => {
+            ctx.fillStyle = '#3b352d';
+            ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = '#463f35';
+            ctx.fillRect(3, 3, size / 2 - 6, size / 2 - 6);
+            ctx.fillRect(size / 2 + 3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
+            ctx.fillStyle = '#413a31';
+            ctx.fillRect(size / 2 + 3, 3, size / 2 - 6, size / 2 - 6);
+            ctx.fillRect(3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
+        }, 14, 3);
+
+        // ── Ground and boulevard ──
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(80, 60),
+            material('#121115', {flatShading: false}),
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+        const boulevard = new THREE.Mesh(
+            new THREE.BoxGeometry(29.5, 0.06, 5.5),
+            new THREE.MeshStandardMaterial({map: tileTexture, roughness: 0.95}),
+        );
+        boulevard.position.set(-0.75, 0.03, 0);
+        boulevard.receiveShadow = true;
+        scene.add(boulevard);
+        [-2.82, 2.82].forEach((z) => box(scene, 29.5, 0.1, 0.12, '#5c4a3a', -0.75, 0, z));
+
+        // ── Rooms ──
+        const WALL = '#2a272c';
+        const TRIM = '#5a3b27';
+        const pickRoots = [];
+        const lampLights = [];
+
+        function plant(parent, x, z, scale = 1) {
+            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * scale, 0.16 * scale, 0.32 * scale, 8), material('#6b4a35'));
+            pot.position.set(x, 0.16 * scale + 0.12, z);
+            pot.castShadow = true;
+            parent.add(pot);
+            const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(0.36 * scale, 0), material('#4e7a5a'));
+            leaves.position.set(x, 0.62 * scale + 0.12, z);
+            leaves.castShadow = true;
+            parent.add(leaves);
+            const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.24 * scale, 0), material('#5f9168'));
+            crown.position.set(x + 0.08, 0.92 * scale + 0.12, z - 0.05);
+            crown.castShadow = true;
+            parent.add(crown);
+        }
+
+        function lamp(parent, x, z) {
+            box(parent, 0.08, 1.1, 0.08, '#3a3330', x, 0.12, z);
+            const bulb = new THREE.Mesh(
+                new THREE.SphereGeometry(0.16, 10, 8),
+                material('#ffd28a', {emissive: '#ffb347', emissiveIntensity: 1.6}),
+            );
+            bulb.position.set(x, 1.32, z);
+            parent.add(bulb);
+            const light = new THREE.PointLight(0xffb85c, 5, 6.5, 1.6);
+            light.position.set(x, 1.5, z);
+            parent.add(light);
+            lampLights.push(light);
+        }
+
+        function buildRoom(room) {
+            const group = new THREE.Group();
+            scene.add(group);
+            const floorMaterial = new THREE.MeshStandardMaterial({
+                map: plankTexture, color: room.tint, roughness: 0.9,
+            });
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(room.w, 0.12, room.d), floorMaterial);
+            floor.position.set(room.x, 0.06, room.z);
+            floor.receiveShadow = true;
+            group.add(floor);
+
+            const tall = 1.15;
+            const low = 0.42;
+            const thick = 0.18;
+            const left = room.x - room.w / 2;
+            const right = room.x + room.w / 2;
+            const door = 1.9;
+            const segment = (room.w - door) / 2;
+            // The far wall is tall; the wall facing the camera stays low so the
+            // room interior is always visible.
+            const farHeight = room.top ? tall : tall * 0.85;
+            const nearHeight = low;
+            const farDoor = !room.top;
+            [[room.farZ, farHeight, farDoor], [room.nearZ, nearHeight, !farDoor]].forEach(([z, height, hasDoor]) => {
+                if (hasDoor) {
+                    box(group, segment, height, thick, WALL, left + segment / 2, 0.12, z);
+                    box(group, segment, height, thick, WALL, right - segment / 2, 0.12, z);
+                    box(group, segment, 0.06, thick + 0.04, TRIM, left + segment / 2, 0.12 + height, z);
+                    box(group, segment, 0.06, thick + 0.04, TRIM, right - segment / 2, 0.12 + height, z);
+                } else {
+                    box(group, room.w, height, thick, WALL, room.x, 0.12, z);
+                    box(group, room.w, 0.06, thick + 0.04, TRIM, room.x, 0.12 + height, z);
+                }
+            });
+            [left, right].forEach((x) => {
+                // Side walls taper from the far height to the near height.
+                box(group, thick, farHeight, room.d * 0.5, WALL, x, 0.12, room.farZ + room.d * 0.25);
+                box(group, thick, nearHeight, room.d * 0.5, WALL, x, 0.12, room.nearZ - room.d * 0.25);
+            });
+            plant(group, left + 0.55, room.nearZ - 0.55);
+            plant(group, right - 0.55, room.nearZ - 0.55, 0.85);
+            lamp(group, right - 0.5, room.farZ + 0.55);
+            buildRoomProps(group, room);
+            return group;
+        }
+
+        function buildRoomProps(group, room) {
+            const left = room.x - room.w / 2;
+            const right = room.x + room.w / 2;
+            const midZ = room.z + 0.6;
+            if (room.id === 'hq') {
+                const rug = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.02, 1.8), material('#4e7a5a'));
+                rug.position.set(room.x - 0.6, 0.13, midZ + 0.4);
+                rug.receiveShadow = true;
+                group.add(rug);
+                box(group, 0.9, 0.9, 0.5, '#3a2c22', left + 0.6, 0.12, room.farZ + 0.5);
+            } else if (room.id === 'sales') {
+                box(group, 1.8, 0.4, 0.7, '#3d5f47', left + 1.3, 0.12, midZ + 0.6);
+                box(group, 1.8, 0.45, 0.18, '#355440', left + 1.3, 0.52, midZ + 0.95);
+                box(group, 0.5, 1.5, 1.6, '#5a3b27', right - 0.4, 0.12, midZ - 0.2);
+            } else if (room.id === 'development') {
+                const wallScreen = box(group, 2.4, 0.9, 0.06, '#1c2a24', room.x, 0.5, room.farZ + 0.14, {
+                    emissive: '#2f6b4f', emissiveIntensity: 0.55,
+                });
+                wallScreen.castShadow = false;
+            } else if (room.id === 'design') {
+                box(group, 0.08, 1.4, 0.08, '#5a3b27', right - 1.1, 0.12, midZ);
+                box(group, 1.1, 0.8, 0.06, '#f2f0ea', right - 1.1, 0.75, midZ + 0.06);
+                ['#e6a23c', '#4e7a5a', '#d9708f', '#6fa8dc'].forEach((color, index) => {
+                    box(group, 0.2, 0.2, 0.02, color, right - 1.4 + (index % 2) * 0.55, 0.85 + Math.floor(index / 2) * 0.3, midZ + 0.1);
+                });
+                box(group, 1.2, 0.35, 0.8, '#3d5f47', left + 1.0, 0.12, midZ + 0.7);
+            } else if (room.id === 'infrastructure') {
+                [0, 1, 2].forEach((index) => {
+                    const z = room.z - 0.4 + index * 0.75;
+                    box(group, 0.6, 1.6, 0.6, '#1f2126', left + 0.55, 0.12, z);
+                    [0, 1, 2, 3].forEach((row) => {
+                        box(group, 0.04, 0.05, 0.4, '#6fd39a', left + 0.87, 0.4 + row * 0.32, z, {
+                            emissive: '#3fbf7f', emissiveIntensity: 1.1,
+                        }).castShadow = false;
+                    });
+                });
+            } else if (room.id === 'internal') {
+                [-0.9, 0.9].forEach((offset) => {
+                    box(group, 0.5, 1.6, 1.3, '#5a3b27', right - 0.4, 0.12, room.z + 0.4 + offset);
+                    ['#e6a23c', '#4e7a5a', '#8a6bb0', '#d9708f'].forEach((color, index) => {
+                        box(group, 0.06, 0.28, 1.1, color, right - 0.68, 0.3 + index * 0.34, room.z + 0.4 + offset);
+                    });
+                });
+            } else if (room.id === 'finance') {
+                const safe = box(group, 0.9, 0.95, 0.8, '#4a4d55', left + 0.75, 0.12, midZ, {metalness: 0.45, roughness: 0.5});
+                const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.06, 12), material('#c9a45c', {metalness: 0.6, roughness: 0.4}));
+                dial.rotation.x = Math.PI / 2;
+                dial.position.set(left + 0.75, 0.62, midZ + 0.42);
+                group.add(dial);
+                safe.userData.campusSafe = true;
+                // Owner-permission threshold: a restrained amber frame inside the room.
+                const frame = material('#e6a23c', {emissive: '#e6a23c', emissiveIntensity: 0.35});
+                const inset = 0.35;
+                const fw = room.w - inset * 2;
+                const fd = room.d - inset * 2;
+                [[fw, 0.05, room.x, room.farZ + inset], [fw, 0.05, room.x, room.nearZ - inset]].forEach(([w, d, x, z]) => {
+                    const strip = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, d), frame);
+                    strip.position.set(x, 0.135, z);
+                    group.add(strip);
+                });
+                [room.x - fw / 2, room.x + fw / 2].forEach((x) => {
+                    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, fd), frame);
+                    strip.position.set(x, 0.135, room.z);
+                    group.add(strip);
+                });
+            }
+        }
+
+        Object.values(ROOMS).forEach(buildRoom);
+
+        // ── Shared waypoints ──
+        Object.entries(WAYPOINTS).forEach(([id, waypoint]) => {
+            const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.1, 24), material('#1f1e24'));
+            pad.position.set(waypoint.x, 0.11, waypoint.z);
+            pad.receiveShadow = true;
+            scene.add(pad);
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(1.15, 0.045, 6, 40),
+                material(waypoint.color, {emissive: waypoint.color, emissiveIntensity: 0.7}),
+            );
+            ring.rotation.x = Math.PI / 2;
+            ring.position.set(waypoint.x, 0.18, waypoint.z);
+            scene.add(ring);
+            box(scene, 0.5, 0.75, 0.35, '#2a272c', waypoint.x, 0.16, waypoint.z - 0.85);
+            box(scene, 0.42, 0.26, 0.04, '#111', waypoint.x, 0.62, waypoint.z - 0.66, {
+                emissive: waypoint.color, emissiveIntensity: 0.5,
+            });
+            waypoint.id = id;
+        });
+
+        // ── Desks and project folders (mirrors the 2D project buttons) ──
+        const folderViews = [];
+        const roomFolders = {};
+        campus.querySelectorAll('[data-campus-project-folder]').forEach((el) => {
+            const department = el.dataset.campusProjectDepartment;
+            if (!ROOMS[department]) return;
+            (roomFolders[department] ||= []).push(el);
+        });
+
+        function deskSlots(room, count) {
+            const slots = [];
+            const usable = room.w - 1.2;
+            if (room.top) {
+                for (let index = 0; index < count; index += 1) {
+                    slots.push(room.x - usable / 2 + usable * (index + 0.5) / count);
+                }
+                return slots;
+            }
+            // Bottom rooms keep the boulevard doorway clear.
+            if (count === 1) return [room.x + room.w * 0.22];
+            for (let index = 0; index < count; index += 1) {
+                const side = index % 2 === 0 ? -1 : 1;
+                const rank = Math.floor(index / 2);
+                slots.push(room.x + side * (room.w * 0.27 + rank * 1.4));
+            }
+            return slots.sort((a, b) => a - b);
+        }
+
+        function buildDesk(room, x, folderEl, index) {
+            const group = new THREE.Group();
+            scene.add(group);
+            const isHq = room.id === 'hq';
+            const deskZ = room.farZ + (isHq ? 1.75 : 1.35);
+            const width = isHq ? 1.9 : 1.35;
+            box(group, width, 0.07, 0.72, '#4a2f1f', x, 0.8, deskZ);
+            [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+                box(group, 0.07, 0.68, 0.07, '#3a2418', x + sx * (width / 2 - 0.08), 0.12, deskZ + sz * 0.28);
+            });
+            const screenColor = room.id === 'infrastructure' ? '#3fbf7f' : room.id === 'design' ? '#d9708f' : '#6fa8dc';
+            box(group, 0.62, 0.4, 0.05, '#18181c', x - 0.15, 0.95, deskZ - 0.18);
+            const screen = box(group, 0.54, 0.32, 0.01, '#111', x - 0.15, 0.99, deskZ - 0.15, {
+                emissive: screenColor, emissiveIntensity: 0.45,
+            });
+            screen.castShadow = false;
+            const folder = box(group, 0.36, 0.05, 0.26, '#d9a85b', x + 0.38, 0.87, deskZ + 0.05);
+            folder.material = folder.material.clone();
+            box(group, 0.14, 0.02, 0.26, '#c48f43', x + 0.27, 0.92, deskZ + 0.05);
+            // Chair on the camera side of the desk.
+            // Chair pushed to the side: specialists stand at the desk while working.
+            const chairX = x - width / 2 - 0.2;
+            box(group, 0.5, 0.08, 0.5, '#3d5f47', chairX, 0.5, deskZ + 0.35);
+            box(group, 0.08, 0.5, 0.5, '#355440', chairX - 0.24, 0.58, deskZ + 0.35);
+            box(group, 0.06, 0.38, 0.06, '#222', chairX, 0.12, deskZ + 0.35);
+            group.userData.pickTarget = folderEl;
+            pickRoots.push(group);
+            const workSpot = new THREE.Vector3(x, 0, deskZ + 0.62);
+            const view = {
+                el: folderEl,
+                room,
+                folder,
+                workSpot,
+                meetingSpot: new THREE.Vector3(x + 0.2, 0, deskZ + 2.1),
+                // Crowded rooms stagger their wall signs so names stay readable.
+                labelAnchor: new THREE.Vector3(x, (room.top ? 1.95 : 1.65) + (index % 2) * 0.95, room.farZ),
+                label: null,
+            };
+            folderViews.push(view);
+            return view;
+        }
+
+        Object.values(ROOMS).forEach((room) => {
+            const folders = roomFolders[room.id] || [];
+            deskSlots(room, folders.length).forEach((x, index) => buildDesk(room, x, folders[index], index));
+        });
+        const hqDesk = folderViews.find((view) => view.room.id === 'hq');
+
+        // ── Overlay labels (visual mirror; the 2D map keeps the semantics) ──
+        const labels = [];
+        function addLabel(kind, anchor, target) {
+            const el = document.createElement('span');
+            el.className = `campus-3d-label is-${kind}`;
+            labelsEl.append(el);
+            const label = {el, anchor, visible: true};
+            if (target) {
+                el.dataset.clickable = 'true';
+                el.addEventListener('click', () => target.click());
+            }
+            labels.push(label);
+            return label;
+        }
+        function setLabelText(label, title, detail) {
+            const strong = document.createElement('strong');
+            strong.textContent = title;
+            if (detail) {
+                const small = document.createElement('small');
+                small.textContent = detail;
+                label.el.replaceChildren(strong, small);
+            } else {
+                label.el.replaceChildren(strong);
+            }
+        }
+
+        campus.querySelectorAll('.campus-zone').forEach((zone) => {
+            const room = ROOMS[zone.dataset.departmentId];
+            if (!room) return;
+            const label = addLabel('department', new THREE.Vector3(room.x - room.w / 2 + 0.9, room.top ? 3.8 : 3.6, room.farZ));
+            const boundary = zone.querySelector('.campus-owner-boundary');
+            setLabelText(label, zone.querySelector('h3')?.textContent || room.id, boundary ? boundary.textContent.trim() : '');
+            if (boundary) label.el.classList.add('has-boundary');
+        });
+        Object.values(WAYPOINTS).forEach((waypoint) => {
+            const label = addLabel('waypoint', new THREE.Vector3(waypoint.x, 0.2, waypoint.z - 1.45));
+            setLabelText(label, waypoint.label);
+        });
+        folderViews.forEach((view) => {
+            view.label = addLabel('project', view.labelAnchor, view.el);
+        });
+
+        // ── Characters ──
+        function makePerson(look) {
+            const group = new THREE.Group();
+            const body = new THREE.Group();
+            group.add(body);
+            const limb = (color, w, h, d, x, y) => {
+                const pivot = new THREE.Group();
+                pivot.position.set(x, y, 0);
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material(color));
+                mesh.position.y = -h / 2;
+                mesh.castShadow = true;
+                pivot.add(mesh);
+                body.add(pivot);
+                return pivot;
+            };
+            const legs = [limb(look.pants, 0.15, 0.5, 0.17, -0.1, 0.62), limb(look.pants, 0.15, 0.5, 0.17, 0.1, 0.62)];
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.52, 0.27), material(look.shirt));
+            torso.position.y = 0.88;
+            torso.castShadow = true;
+            body.add(torso);
+            const arms = [limb(look.shirt, 0.12, 0.46, 0.14, -0.29, 1.1), limb(look.shirt, 0.12, 0.46, 0.14, 0.29, 1.1)];
+            arms.forEach((arm) => {
+                const hand = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.1, 0.12), material(look.skin));
+                hand.position.y = -0.5;
+                arm.add(hand);
+            });
+            const head = new THREE.Group();
+            head.position.y = 1.36;
+            body.add(head);
+            const face = new THREE.Mesh(new THREE.IcosahedronGeometry(0.22, 1), material(look.skin));
+            face.castShadow = true;
+            head.add(face);
+            const hair = new THREE.Mesh(
+                new THREE.SphereGeometry(0.235, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.52),
+                material(look.hair),
+            );
+            hair.position.set(0, 0.03, -0.02);
+            hair.rotation.x = -0.25;
+            head.add(hair);
+            [-0.08, 0.08].forEach((x) => {
+                const eye = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.02), material('#1b1b1f'));
+                eye.position.set(x, 0.0, 0.205);
+                head.add(eye);
+            });
+            const ring = new THREE.Mesh(
+                new THREE.RingGeometry(0.36, 0.46, 28),
+                new THREE.MeshBasicMaterial({color: 0xe6a23c, side: THREE.DoubleSide}),
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.15;
+            ring.visible = false;
+            group.add(ring);
+            scene.add(group);
+            return {group, body, legs, arms, head, ring};
+        }
+
+        function residentInfo(agentId) {
+            const resident = campus.querySelector(`[data-campus-roster-agent="${agentId}"]`);
+            if (!resident) return null;
+            const name = agentId === 'COORDINATOR'
+                ? campus.querySelector('[data-campus-manager-name]')?.textContent
+                : resident.querySelector('.campus-resident-caption strong')?.textContent;
+            return {department: resident.dataset.campusResidentDepartment, name: (name || agentId).trim()};
+        }
+
+        const actors = [];
+        const residents = new Map();
+        const liveActors = new Map();
+
+        function createActor(agentId, info) {
+            const person = makePerson(LOOKS[agentId] || LOOKS.BUILDER);
+            const actor = {
+                agentId,
+                name: info?.name || agentId,
+                home: null,
+                homeRoom: info?.department || null,
+                homeFacing: 0,
+                room: info?.department || null,
+                person,
+                position: new THREE.Vector3(),
+                facing: 0,
+                steps: [],
+                mode: 'idle',
+                phase: Math.random() * Math.PI * 2,
+                status: null,
+                destinationKey: null,
+                taskId: null,
+                button: null,
+                label: null,
+                bubble: null,
+            };
+            actor.label = addLabel('agent', {
+                copy: (out) => out.copy(actor.position).setY(1.95),
+            }, null);
+            actor.bubble = addLabel('bubble', {
+                copy: (out) => out.copy(actor.position).setY(2.6),
+            }, null);
+            actor.bubble.visible = false;
+            actor.label.el.addEventListener('click', () => {
+                if (actor.button?.isConnected) actor.button.click();
+            });
+            person.group.userData.pickActor = actor;
+            pickRoots.push(person.group);
+            actors.push(actor);
+            return actor;
+        }
+
+        function placeActor(actor, point, facing) {
+            actor.position.copy(point);
+            actor.facing = facing;
+            actor.steps = [];
+        }
+
+        // One resident per known roster agent, standing in their own room.
+        ['COORDINATOR', 'RESEARCHER', 'BUILDER', 'DESIGNER', 'INFRASTRUCTURE', 'VAULT', 'ANALYST'].forEach((agentId) => {
+            const info = residentInfo(agentId);
+            if (!info || !ROOMS[info.department]) return;
+            const actor = createActor(agentId, info);
+            const room = ROOMS[info.department];
+            if (agentId === 'COORDINATOR' && hqDesk) {
+                actor.home = hqDesk.workSpot.clone();
+                actor.homeFacing = Math.PI;
+            } else {
+                actor.home = new THREE.Vector3(room.x - room.w * 0.2, 0, room.z + room.d * 0.18);
+                actor.homeFacing = 0.35;
+            }
+            placeActor(actor, actor.home, actor.homeFacing);
+            residents.set(agentId, actor);
+        });
+        const coordinator = residents.get('COORDINATOR') || null;
+
+        function roomPath(fromRoom, toRoom) {
+            const points = [];
+            if (fromRoom === toRoom) return points;
+            if (fromRoom && ROOMS[fromRoom]) {
+                points.push(ROOMS[fromRoom].doorInner.clone(), ROOMS[fromRoom].doorOuter.clone());
+            }
+            if (toRoom && ROOMS[toRoom]) {
+                points.push(ROOMS[toRoom].doorOuter.clone(), ROOMS[toRoom].doorInner.clone());
+                points.push(new THREE.Vector3(ROOMS[toRoom].x, 0, ROOMS[toRoom].aisleZ));
+            }
+            return points;
+        }
+
+        function destinationFor(button, slotIndex) {
+            const status = button.dataset.campusStatus;
+            const agentId = button.dataset.campusAgentId;
+            if (agentId === 'COORDINATOR' && coordinator) {
+                return {key: 'hq-desk', point: coordinator.home.clone(), room: 'hq', facing: Math.PI};
+            }
+            const waypointId = button.getAttribute('data-campus-destination');
+            const waypoint = WAYPOINTS[waypointId];
+            if (waypoint) {
+                const offsets = [[-0.5, 0.35], [0.5, 0.35], [0, -0.3], [-0.6, -0.4], [0.6, -0.4]];
+                const [dx, dz] = offsets[slotIndex % offsets.length];
+                return {
+                    key: `${waypointId}:${slotIndex}`,
+                    point: new THREE.Vector3(waypoint.x + dx, 0.06, waypoint.z + dz),
+                    room: null,
+                    facing: 0,
+                };
+            }
+            const desk = folderViews.find((view) => (
+                view.el?.dataset.campusProject === button.dataset.campusProject
+                && view.el?.dataset.campusProjectDepartment === button.dataset.campusDepartmentId
+            ));
+            if (desk) {
+                return {key: `desk:${desk.el.dataset.campusProject}`, point: desk.workSpot.clone(), room: desk.room.id, facing: Math.PI, status};
+            }
+            const room = ROOMS[button.dataset.campusDepartmentId];
+            return room
+                ? {key: `room:${room.id}`, point: new THREE.Vector3(room.x, 0, room.z), room: room.id, facing: 0}
+                : null;
+        }
+
+        function startJourney(actor, destination, taskId) {
+            const steps = [];
+            const pushPoints = (points, room) => points.forEach((point, index) => {
+                steps.push({to: point, room: index === points.length - 1 ? room : undefined});
+            });
+            // Handoff with MAIN MANAGER first: the verified event came from HQ.
+            if (coordinator && actor !== coordinator && hqDesk) {
+                const meeting = hqDesk.meetingSpot.clone();
+                const toHq = roomPath(actor.room, 'hq');
+                toHq.forEach((point) => steps.push({to: point}));
+                steps.push({to: meeting, room: 'hq'});
+                steps.push({pause: MEETING_SECONDS, taskId});
+                pushPoints(roomPath('hq', destination.room), destination.room);
+            } else {
+                pushPoints(roomPath(actor.room, destination.room), destination.room);
+            }
+            steps.push({to: destination.point, room: destination.room, facing: destination.facing});
+            actor.steps = steps;
+            actor.mode = 'walk';
+        }
+
+        // ── Task routes: amber footprints along up to three verified journeys ──
+        const routeGroup = new THREE.Group();
+        scene.add(routeGroup);
+        const routeDot = new THREE.CircleGeometry(0.075, 8);
+        const routeMaterial = new THREE.MeshBasicMaterial({color: 0xe6a23c});
+        function renderRoutes(primaryByTask) {
+            routeGroup.children.forEach((child) => child.dispose?.());
+            routeGroup.clear();
+            primaryByTask.forEach(({destination}) => {
+                if (!destination || !hqDesk) return;
+                const points = [hqDesk.meetingSpot.clone()];
+                points.push(...roomPath('hq', destination.room), destination.point.clone());
+                const dots = [];
+                for (let index = 1; index < points.length; index += 1) {
+                    const from = points[index - 1];
+                    const to = points[index];
+                    const length = from.distanceTo(to);
+                    for (let travelled = 0; travelled < length; travelled += 0.42) {
+                        dots.push(from.clone().lerp(to, travelled / length));
+                    }
+                }
+                if (!dots.length) return;
+                const mesh = new THREE.InstancedMesh(routeDot, routeMaterial, dots.length);
+                const matrix = new THREE.Matrix4();
+                const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+                const scale = new THREE.Vector3(1, 1, 1);
+                dots.forEach((point, index) => {
+                    matrix.compose(point.clone().setY(0.16), rotation, scale);
+                    mesh.setMatrixAt(index, matrix);
+                });
+                routeGroup.add(mesh);
+            });
+        }
+
+        // ── Sync from the rendered 2D campus ──
+        function describeStatus(status, text) {
+            return `${STATUS_GLYPHS[status] || '·'} ${text}`;
+        }
+
+        function sync() {
+            const state = campus.dataset.campusState || 'loading';
+            if (state === 'loading') return;
+            stage.setAttribute('data-campus-3d-live', state);
+
+            folderViews.forEach((view) => {
+                const status = view.el?.dataset.campusProjectStatus || 'idle';
+                const live = status !== 'idle';
+                const statusText = view.el?.querySelector('[data-campus-project-folder-status]')?.textContent || '';
+                view.folder.material.emissive.set(live ? 0xe6a23c : 0x000000);
+                view.folder.material.emissiveIntensity = live ? 0.9 : 0;
+                setLabelText(view.label, view.el?.dataset.campusProjectLabel || '', live ? describeStatus(status, statusText) : statusText);
+                view.label.el.classList.toggle('is-live', live);
+            });
+
+            const buttons = Array.from(campus.querySelectorAll('[data-campus-live-agent]'))
+                .filter((button) => button.dataset.campusAgentId && button.dataset.campusTaskId);
+            const wanted = new Map();
+            buttons.forEach((button) => {
+                wanted.set(`${button.dataset.campusTaskId}|${button.dataset.campusAgentId}`, button);
+            });
+
+            liveActors.forEach((actor, key) => {
+                if (wanted.has(key)) return;
+                liveActors.delete(key);
+                if (residents.get(actor.agentId) === actor) {
+                    // Stale, empty or finished: the resident is simply back at their desk.
+                    actor.status = null;
+                    actor.destinationKey = null;
+                    actor.taskId = null;
+                    actor.button = null;
+                    actor.room = actor.homeRoom;
+                    actor.mode = 'idle';
+                    placeActor(actor, actor.home, actor.homeFacing);
+                } else {
+                    scene.remove(actor.person.group);
+                    actor.label.el.remove();
+                    actor.bubble.el.remove();
+                    labels.splice(labels.indexOf(actor.label), 1);
+                    labels.splice(labels.indexOf(actor.bubble), 1);
+                    pickRoots.splice(pickRoots.indexOf(actor.person.group), 1);
+                    actors.splice(actors.indexOf(actor), 1);
+                }
+            });
+
+            const slotCounters = {};
+            const primaryByTask = new Map();
+            wanted.forEach((button, key) => {
+                const agentId = button.dataset.campusAgentId;
+                const status = button.dataset.campusStatus;
+                let actor = liveActors.get(key);
+                if (!actor) {
+                    const resident = residents.get(agentId);
+                    const residentBusy = Array.from(liveActors.values()).includes(resident);
+                    actor = resident && !residentBusy ? resident : createActor(agentId, residentInfo(agentId));
+                    if (actor !== resident) {
+                        actor.room = actor.homeRoom;
+                        actor.home = resident ? resident.home.clone() : new THREE.Vector3();
+                        placeActor(actor, resident ? resident.position : actor.home, 0);
+                    }
+                    liveActors.set(key, actor);
+                }
+                const slotKey = button.getAttribute('data-campus-destination');
+                slotCounters[slotKey] = (slotCounters[slotKey] || 0) + 1;
+                const destination = destinationFor(button, slotCounters[slotKey] - 1);
+                actor.button = button;
+                actor.taskId = button.dataset.campusTaskId;
+                const role = button.querySelector('strong')?.textContent || actor.name;
+                const statusText = button.querySelector('.campus-agent-status')?.textContent || '';
+                setLabelText(actor.label, role, describeStatus(status, statusText));
+                actor.label.el.dataset.clickable = 'true';
+                actor.label.el.classList.add('is-live');
+                actor.person.ring.visible = true;
+                actor.person.ring.material.color.setHex(STATUS_COLORS[status] || 0xe6a23c);
+                if (!destination) return;
+                const changed = actor.destinationKey !== destination.key || actor.status !== status;
+                const moving = button.dataset.campusMoving === 'true' && !reducedMotion.matches;
+                if (changed && moving && actor !== coordinator) {
+                    startJourney(actor, destination, actor.taskId);
+                } else if (changed) {
+                    placeActor(actor, destination.point, destination.facing);
+                    actor.room = destination.room;
+                }
+                if (!actor.steps.length) actor.mode = 'arrived';
+                actor.status = status;
+                actor.destinationKey = destination.key;
+
+                const taskId = actor.taskId;
+                const current = primaryByTask.get(taskId);
+                const rank = ROUTE_PRECEDENCE.indexOf(status);
+                if (agentId !== 'COORDINATOR' && primaryByTask.size < 3 && (!current || rank < current.rank)) {
+                    primaryByTask.set(taskId, {rank, destination});
+                }
+            });
+
+            residents.forEach((actor) => {
+                if (Array.from(liveActors.values()).includes(actor)) return;
+                const managerStatus = actor === coordinator
+                    ? campus.querySelector('[data-campus-manager-status]')?.textContent
+                    : null;
+                setLabelText(actor.label, actor.name, `· ${(managerStatus || 'ожидает задач').trim()}`);
+                actor.label.el.classList.remove('is-live');
+                delete actor.label.el.dataset.clickable;
+                actor.person.ring.visible = false;
+            });
+
+            renderRoutes(primaryByTask);
+            stage.setAttribute('data-campus-3d-agents', String(liveActors.size));
+            requestRender();
+        }
+
+        // ── Motion (only verified active/testing work moves) ──
+        const scratch = new THREE.Vector3();
+        function advanceActors(dt, time) {
+            let animating = false;
+            actors.forEach((actor) => {
+                actor.bubble.visible = false;
+            });
+            actors.forEach((actor) => {
+                const step = actor.steps[0];
+                if (step && step.pause !== undefined) {
+                    animating = true;
+                    actor.mode = 'meet';
+                    step.pause -= dt;
+                    if (coordinator) {
+                        actor.facing = Math.atan2(coordinator.position.x - actor.position.x, coordinator.position.z - actor.position.z);
+                        coordinator.facing = actor.facing + Math.PI;
+                        coordinator.meeting = true;
+                        coordinator.bubble.visible = true;
+                        setLabelText(coordinator.bubble, `⇄ ${step.taskId || ''}`);
+                    }
+                    actor.bubble.visible = true;
+                    setLabelText(actor.bubble, `⇄ ${step.taskId || ''}`);
+                    if (step.pause <= 0) {
+                        actor.steps.shift();
+                        if (coordinator) {
+                            coordinator.meeting = false;
+                            coordinator.facing = coordinator.homeFacing;
+                        }
+                    }
+                } else if (step) {
+                    animating = true;
+                    actor.mode = 'walk';
+                    scratch.copy(step.to).sub(actor.position).setY(0);
+                    const distance = scratch.length();
+                    const travel = WALK_SPEED * dt;
+                    if (distance > 0.001) {
+                        actor.facing = Math.atan2(scratch.x, scratch.z);
+                    }
+                    if (distance <= travel) {
+                        actor.position.copy(step.to);
+                        if (step.room !== undefined) actor.room = step.room;
+                        if (step.facing !== undefined) actor.facing = step.facing;
+                        actor.steps.shift();
+                    } else {
+                        actor.position.addScaledVector(scratch.normalize(), travel);
+                    }
+                    actor.phase += dt * 11;
+                }
+                if (!actor.steps.length && actor.mode !== 'idle') {
+                    actor.mode = 'arrived';
+                }
+                const working = actor.mode === 'arrived' && (actor.status === 'active' || actor.status === 'testing');
+                if (working) {
+                    animating = true;
+                    actor.phase += dt * 10;
+                }
+                poseActor(actor, working, time);
+            });
+            return animating;
+        }
+
+        function poseActor(actor, working, time) {
+            const {group, body, legs, arms, head} = actor.person;
+            group.position.copy(actor.position);
+            group.rotation.y = actor.facing;
+            const walking = actor.mode === 'walk' && !reducedMotion.matches;
+            const swing = walking ? Math.sin(actor.phase) * 0.65 : 0;
+            legs[0].rotation.x = swing;
+            legs[1].rotation.x = -swing;
+            arms[0].rotation.x = -swing * 0.8;
+            arms[1].rotation.x = swing * 0.8;
+            body.position.y = walking ? Math.abs(Math.sin(actor.phase)) * 0.06 : 0;
+            head.rotation.y = 0;
+            if (working && !reducedMotion.matches) {
+                arms[0].rotation.x = -1.05 + Math.sin(actor.phase * 1.3) * 0.14;
+                arms[1].rotation.x = -1.05 + Math.sin(actor.phase * 1.3 + 1.8) * 0.14;
+                head.rotation.y = Math.sin(time * 0.9) * 0.18;
+            } else if (actor.mode === 'arrived' && actor.status && actor.status !== 'done') {
+                arms[0].rotation.x = -0.35;
+                arms[1].rotation.x = -0.35;
+            }
+        }
+
+        // ── Camera, picking and frame scheduling ──
+        function updateCamera() {
+            const width = stage.clientWidth || 1;
+            const height = stage.clientHeight || 1;
+            const aspect = width / height;
+            // Portrait stages turn the campus a quarter so the long boulevard
+            // runs down the screen instead of shrinking to fit the width.
+            const narrow = aspect < 1.1;
+            const azimuth = view.azimuth + (narrow ? Math.PI / 2 : 0);
+            const elevation = narrow ? Math.max(view.elevation, 1.12) : view.elevation;
+            const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+            const distance = narrow
+                ? Math.max(23 / (2 * Math.tan(halfFov) * aspect), 31.5 / (2 * Math.tan(halfFov)))
+                : 37 * Math.pow(Math.max(1, 1.78 / aspect), 0.95);
+            camera.aspect = aspect;
+            const planar = Math.cos(elevation) * distance;
+            camera.position.set(
+                lookTarget.x + Math.sin(azimuth) * planar,
+                Math.sin(elevation) * distance,
+                lookTarget.z + Math.cos(azimuth) * planar,
+            );
+            camera.lookAt(lookTarget);
+            camera.updateProjectionMatrix();
+            labelsEl.classList.toggle('is-compact', width < 720);
+        }
+
+        const projected = new THREE.Vector3();
+        let focusAnchor = null;
+        function placeLabels() {
+            const width = stage.clientWidth;
+            const height = stage.clientHeight;
+            labels.forEach((label) => {
+                if (!label.visible) {
+                    label.el.hidden = true;
+                    return;
+                }
+                if (typeof label.anchor.copy === 'function' && !label.anchor.isVector3) {
+                    label.anchor.copy(projected);
+                } else {
+                    projected.copy(label.anchor);
+                }
+                projected.project(camera);
+                const offscreen = projected.z > 1 || Math.abs(projected.x) > 1.2 || Math.abs(projected.y) > 1.2;
+                label.el.hidden = offscreen;
+                if (offscreen) return;
+                const x = (projected.x * 0.5 + 0.5) * width;
+                const y = (-projected.y * 0.5 + 0.5) * height;
+                label.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
+                label.el.style.zIndex = String(Math.round((1 - projected.z) * 100000));
+            });
+            if (focusAnchor) {
+                projected.copy(typeof focusAnchor === 'function' ? focusAnchor() : focusAnchor).project(camera);
+                focusEl.hidden = projected.z > 1;
+                focusEl.style.transform = `translate(${((projected.x * 0.5 + 0.5) * width).toFixed(1)}px, ${((-projected.y * 0.5 + 0.5) * height).toFixed(1)}px) translate(-50%, -50%)`;
+            } else {
+                focusEl.hidden = true;
+            }
+        }
+
+        let frame = 0;
+        let lastFrame = 0;
+        function requestRender() {
+            if (!active || frame) return;
+            frame = window.requestAnimationFrame(renderFrame);
+        }
+        function renderFrame(now) {
+            frame = 0;
+            const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 1 / 60;
+            let animating = false;
+            if (reducedMotion.matches) {
+                actors.forEach((actor) => {
+                    const last = actor.steps.filter((step) => step.to).pop();
+                    if (last) {
+                        placeActor(actor, last.to, last.facing ?? actor.facing);
+                        if (last.room !== undefined) actor.room = last.room;
+                    }
+                    actor.bubble.visible = false;
+                    if (actor.mode === 'walk' || actor.mode === 'meet') actor.mode = 'arrived';
+                    poseActor(actor, false, now / 1000);
+                });
+            } else {
+                animating = advanceActors(dt, now / 1000);
+            }
+            renderer.render(scene, camera);
+            placeLabels();
+            stage.setAttribute('data-campus-3d-animating', String(animating));
+            if (animating && active && !document.hidden) {
+                lastFrame = now;
+                frame = window.requestAnimationFrame(renderFrame);
+            } else {
+                lastFrame = 0;
+            }
+        }
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        function pickAt(clientX, clientY) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(pickRoots, true);
+            for (const hit of hits) {
+                let node = hit.object;
+                while (node) {
+                    if (node.userData.pickActor) {
+                        const button = node.userData.pickActor.button;
+                        return button?.isConnected ? button : null;
+                    }
+                    if (node.userData.pickTarget) return node.userData.pickTarget;
+                    node = node.parent;
+                }
+            }
+            return null;
+        }
+
+        const drag = {id: null, x: 0, y: 0, moved: 0};
+        const canvas = renderer.domElement;
+        canvas.addEventListener('pointerdown', (event) => {
+            drag.id = event.pointerId;
+            drag.x = event.clientX;
+            drag.y = event.clientY;
+            drag.moved = 0;
+        });
+        canvas.addEventListener('pointermove', (event) => {
+            if (drag.id !== event.pointerId) {
+                canvas.style.cursor = pickAt(event.clientX, event.clientY) ? 'pointer' : 'grab';
+                return;
+            }
+            const dx = event.clientX - drag.x;
+            const dy = event.clientY - drag.y;
+            drag.moved += Math.abs(dx) + Math.abs(dy);
+            drag.x = event.clientX;
+            drag.y = event.clientY;
+            if (drag.moved < 6) return;
+            if (!canvas.hasPointerCapture(event.pointerId)) canvas.setPointerCapture(event.pointerId);
+            canvas.style.cursor = 'grabbing';
+            view.azimuth = Math.max(-0.75, Math.min(0.75, view.azimuth - dx * 0.006));
+            if (event.pointerType === 'mouse') {
+                view.elevation = Math.max(0.55, Math.min(1.25, view.elevation + dy * 0.004));
+            }
+            updateCamera();
+            requestRender();
+        });
+        function endDrag(event) {
+            if (drag.id !== event.pointerId) return;
+            const click = drag.moved < 6;
+            drag.id = null;
+            canvas.style.cursor = 'grab';
+            if (click && event.type === 'pointerup') {
+                const target = pickAt(event.clientX, event.clientY);
+                if (target) target.click();
+            }
+        }
+        canvas.addEventListener('pointerup', endDrag);
+        canvas.addEventListener('pointercancel', endDrag);
+        canvas.addEventListener('dblclick', () => {
+            view.azimuth = 0;
+            view.elevation = 0.9;
+            updateCamera();
+            requestRender();
+        });
+
+        // Keyboard focus stays on the semantic 2D controls; mirror it in 3D.
+        campus.addEventListener('focusin', (event) => {
+            if (!active || !map.contains(event.target)) return;
+            const folder = folderViews.find((view) => view.el === event.target);
+            const actor = actors.find((candidate) => candidate.button === event.target);
+            focusAnchor = folder
+                ? folder.labelAnchor.clone().setY(0.9)
+                : actor
+                    ? () => scratch.copy(actor.position).setY(0.9)
+                    : null;
+            requestRender();
+        });
+        campus.addEventListener('focusout', () => {
+            focusAnchor = null;
+            requestRender();
+        });
+
+        let syncQueued = false;
+        const observer = new MutationObserver((records) => {
+            // Ignore the scene's own label updates; only the 2D campus drives sync.
+            if (records.every((record) => stage.contains(record.target))) return;
+            if (syncQueued || !active) return;
+            syncQueued = true;
+            window.queueMicrotask(() => {
+                syncQueued = false;
+                sync();
+            });
+        });
+        observer.observe(campus, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['data-campus-state', 'data-campus-project-status', 'data-campus-manager-state'],
+        });
+        reducedMotion.addEventListener?.('change', requestRender);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) requestRender();
+        });
+
+        function resize() {
+            const width = stage.clientWidth;
+            const height = stage.clientHeight;
+            if (!width || !height) return;
+            renderer.setSize(width, height, false);
+            updateCamera();
+            requestRender();
+        }
+        if (typeof ResizeObserver === 'function') {
+            new ResizeObserver(() => resize()).observe(stage);
+        } else {
+            window.addEventListener('resize', resize);
+        }
+
+        updateCamera();
+        return {resize, sync};
+    }
+})();
+// ── End Campus 3D Scene ──
 
 const GH_REPO = 'pirajoke/agent-dashboard';
 const GH_MODE_PATH = 'mode-request.json';

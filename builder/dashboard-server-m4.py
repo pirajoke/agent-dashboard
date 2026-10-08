@@ -89,6 +89,7 @@ PUBLIC_FILE_PATHS = {
     "/legacy-dashboard.html",
     "/dashboard-assets/ai-town-32x32folk.png",
     "/dashboard-assets/pixel-verse-campus-bg.webp",
+    "/dashboard-assets/three.module.min.js",
     "/favicon.ico",
     "/live-feed.json",
     "/scripts/live-feed.json",
@@ -1436,6 +1437,11 @@ def _department_campus_document() -> str:
         "// ── Department Campus ──",
         "// ── End Department Campus ──",
     )
+    campus_scene_script = _runtime_asset_block(
+        "script.js",
+        "// ── Campus 3D Scene ──",
+        "// ── End Campus 3D Scene ──",
+    )
     return f"""<!doctype html>
 <html lang="ru">
 <head>
@@ -1459,6 +1465,7 @@ button {{ font: inherit; }}
 <body>
 {build_department_campus_html()}
 <script>{campus_script}</script>
+<script>{campus_scene_script}</script>
 </body>
 </html>
 """

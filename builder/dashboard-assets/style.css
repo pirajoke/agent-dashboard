@@ -5401,6 +5401,222 @@ tr:last-child td { border-bottom: none; }
     .is-department-focus .campus-head .section-count { width: 100%; font-size: 11px; }
 }
 
+/* Campus 3D scene: a visual mirror; the 2D map below keeps the semantics. */
+.campus-view-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid #635f66;
+    background: #17171c;
+    color: #f2f0ea;
+    cursor: pointer;
+    font: 800 0.72rem 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+}
+
+.campus-view-toggle[aria-pressed="true"] {
+    border-color: #e6a23c;
+    color: #e6a23c;
+}
+
+.campus-view-toggle:focus-visible {
+    outline: 3px solid #e6a23c;
+    outline-offset: 3px;
+}
+
+.campus-stage-3d {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 520px;
+    max-height: 860px;
+    overflow: hidden;
+    background: #09090b;
+    border-bottom: 1px solid #343239;
+}
+
+.campus-stage-3d[hidden] {
+    display: none;
+}
+
+.campus-3d-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: pan-y;
+}
+
+.department-campus.is-3d-view .campus-map {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+    aspect-ratio: auto;
+}
+
+.campus-3d-labels {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.campus-3d-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    gap: 1px;
+    max-width: 150px;
+    padding: 3px 7px;
+    border: 1px solid #635f66;
+    background: #17171c;
+    color: #f2f0ea;
+    font: 0.56rem 'JetBrains Mono', ui-monospace, monospace;
+    line-height: 1.25;
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.campus-3d-label[hidden] {
+    display: none;
+}
+
+.campus-3d-label strong,
+.campus-3d-label small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.campus-3d-label strong {
+    font-weight: 800;
+}
+
+.campus-3d-label small {
+    color: #b9b5ae;
+    font-size: 0.52rem;
+}
+
+.campus-3d-label[data-clickable] {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.campus-3d-label.is-department {
+    padding: 4px 9px;
+    border: 2px solid #e6a23c;
+    background: #3a2618;
+    font: 800 0.68rem Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    transform-origin: left bottom;
+}
+
+.campus-3d-label.is-department.has-boundary small {
+    color: #e6a23c;
+}
+
+.campus-3d-label.is-waypoint {
+    border-color: #4f5d70;
+    background: #1d2129;
+}
+
+.campus-3d-label.is-project {
+    max-width: 112px;
+    border-color: #8a6142;
+    background: #2a1d14;
+}
+
+.campus-3d-label.is-project small {
+    color: #a99b8c;
+}
+
+.campus-3d-label.is-live {
+    border-color: #e6a23c;
+}
+
+.campus-3d-label.is-live small {
+    color: #e6a23c;
+}
+
+.campus-3d-label.is-agent {
+    border-color: #4e7a5a;
+}
+
+.campus-3d-label.is-bubble {
+    border: 2px solid #09090b;
+    background: #f2f0ea;
+    color: #09090b;
+}
+
+.campus-3d-labels.is-compact .campus-3d-label.is-project:not(.is-live),
+.campus-3d-labels.is-compact .campus-3d-label.is-agent:not(.is-live) small,
+.campus-3d-labels.is-compact .campus-3d-label.is-department small {
+    display: none;
+}
+
+.campus-3d-labels.is-compact .campus-3d-label {
+    max-width: 96px;
+    padding: 2px 5px;
+    font-size: 0.5rem;
+}
+
+.campus-3d-labels.is-compact .campus-3d-label.is-department {
+    font-size: 0.56rem;
+}
+
+.campus-3d-focus {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 64px;
+    height: 64px;
+    border: 3px solid #e6a23c;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.campus-3d-focus[hidden] {
+    display: none;
+}
+
+.campus-3d-hint {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    margin: 0;
+    padding: 4px 8px;
+    border: 1px solid #343239;
+    background: #17171c;
+    color: #9e9aa0;
+    font: 0.58rem 'JetBrains Mono', ui-monospace, monospace;
+    pointer-events: none;
+}
+
+@media (max-width: 560px) {
+    .campus-stage-3d {
+        aspect-ratio: 4 / 5;
+        min-height: 420px;
+    }
+
+    .campus-3d-hint {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .campus-stage-3d,
+    .campus-stage-3d * {
+        animation: none;
+        transition: none;
+    }
+}
+
 /* ── Agent Theater v2: AI Town-inspired town map ── */
 .theater-layout {
     grid-template-columns: minmax(0, 1.7fr) minmax(330px, 0.58fr);
