@@ -1602,7 +1602,8 @@
                 const taskId = actor.taskId;
                 const current = primaryByTask.get(taskId);
                 const rank = ROUTE_PRECEDENCE.indexOf(status);
-                if (agentId !== 'COORDINATOR' && primaryByTask.size < 3 && (!current || rank < current.rank)) {
+                // Cap new tasks at three lanes, but let a known task take a higher-precedence event.
+                if (agentId !== 'COORDINATOR' && (current ? rank < current.rank : primaryByTask.size < 3)) {
                     primaryByTask.set(taskId, {rank, destination});
                 }
             });

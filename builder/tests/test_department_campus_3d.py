@@ -56,6 +56,8 @@ class CampusThreeDimensionalSceneTests(unittest.TestCase):
         self.assertIn("/dashboard-assets/three.module.min.js", self.server.PUBLIC_FILE_PATHS)
         deploy = (BUILDER_DIR / "deploy_to_scripts.sh").read_text(encoding="utf-8")
         self.assertIn("three.module.min.js", deploy)
+        rebuild = (BUILDER_DIR / "dashboard-rebuild.sh").read_text(encoding="utf-8")
+        self.assertIn('"$PUBLISH_WT/dashboard-assets/three.module.min.js"', rebuild)
 
     def test_ac_3_scene_has_no_network_write_or_model_paths(self):
         for pattern in (
@@ -90,6 +92,8 @@ class CampusThreeDimensionalSceneTests(unittest.TestCase):
 
     def test_ac_6_routes_are_capped_at_three_tasks(self):
         self.assertIn("primaryByTask.size < 3", self.scene)
+        # An existing task may still switch to a higher-precedence event.
+        self.assertIn("current ? rank < current.rank : primaryByTask.size < 3", self.scene)
 
     def test_ac_7_idle_states_return_residents_home_without_routes(self):
         self.assertIn("placeActor(actor, actor.home, actor.homeFacing);", self.scene)
