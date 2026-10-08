@@ -20,23 +20,20 @@ EXPECTED_PLATFORMS = {
         ),
     ),
     "mydictionary": (
-        "MyDictionary",
+        "Lexi",
         (
-            "http://127.0.0.1:8787/admin",
-            "https://t.me/max_context_bot",
+            "http://127.0.0.1:8791/admin",
+            "https://t.me/my_dictionnary_tg_bot",
         ),
     ),
     "health": ("Health OS", ("https://health.meshly.fr/",)),
     "ai-singularity": (
         "AI Singularity",
-        ("http://127.0.0.1:8001",),
+        ("http://127.0.0.1:8790",),
     ),
     "context-news": (
         "Context News France",
-        (
-            "http://127.0.0.1:8002",
-            "https://t.me/croissantfr_bot",
-        ),
+        ("https://t.me/contextnews_bot",),
     ),
     "accountable": (
         "Accountable OS",
