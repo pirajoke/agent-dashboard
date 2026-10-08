@@ -1316,7 +1316,7 @@ def _department_campus_payload(
     if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
         return department_campus_projection(None, now=current, owner_view=owner_view)
 
-    candidates: list[tuple[int, datetime, list]] = []
+    candidates: list[tuple[int, datetime, list, datetime | None]] = []
     malformed_verified_snapshot = False
     for index, task in enumerate(data["tasks"]):
         if not isinstance(task, dict):
@@ -1343,7 +1343,10 @@ def _department_campus_payload(
         )
         if updated is None or updated > current:
             continue
-        candidates.append((index, updated, pixel_events))
+        queue_updated = _department_snapshot_time(metadata.get("queue_updated_at"))
+        if queue_updated is not None and queue_updated > current:
+            queue_updated = None
+        candidates.append((index, updated, pixel_events, queue_updated))
 
     if not candidates:
         if malformed_verified_snapshot:
@@ -1363,15 +1366,19 @@ def _department_campus_payload(
         )
 
     # max() preserves the first source item when timestamps tie.
-    _, snapshot_time, events = max(candidates, key=lambda item: item[1])
+    _, snapshot_time, events, queue_updated = max(candidates, key=lambda item: item[1])
     if (current - snapshot_time).total_seconds() > 30 * 60:
-        return _department_campus_state("stale", now=current)
-    return department_campus_projection(
-        events,
-        now=current,
-        max_tasks=3,
-        owner_view=owner_view,
-    )
+        payload = _department_campus_state("stale", now=current)
+    else:
+        payload = department_campus_projection(
+            events,
+            now=current,
+            max_tasks=3,
+            owner_view=owner_view,
+        )
+    if queue_updated is not None:
+        payload["queue_updated_at"] = queue_updated.isoformat().replace("+00:00", "Z")
+    return payload
 
 
 def _manager_decision_snapshot(data: object, *, now: datetime) -> list | None:
