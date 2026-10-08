@@ -998,7 +998,8 @@ def _remote_health_request(base_url: str, method: str, path: str, payload: dict 
         _remote_health_down_until.pop(base_url, None)
         raise
     except OSError:
-        _remote_health_down_until[base_url] = time.monotonic() + REMOTE_HEALTH_COOLDOWN_SECONDS
+        if method == "GET":
+            _remote_health_down_until[base_url] = time.monotonic() + REMOTE_HEALTH_COOLDOWN_SECONDS
         raise
     _remote_health_down_until.pop(base_url, None)
     return json.loads(raw) if raw else {}

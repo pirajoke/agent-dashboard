@@ -2304,9 +2304,19 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
     }
 
     let refreshInFlight = null;
+    let forcedRefreshQueued = false;
 
     function refreshCommandCenter(force = false) {
-        if (refreshInFlight) return refreshInFlight;
+        if (refreshInFlight) {
+            if (force === true && !forcedRefreshQueued) {
+                forcedRefreshQueued = true;
+                refreshInFlight.then(() => {
+                    forcedRefreshQueued = false;
+                    refreshCommandCenter(true);
+                });
+            }
+            return refreshInFlight;
+        }
         const statusEl = document.getElementById('command-status');
         if (statusEl) statusEl.textContent = 'refreshing';
         refreshInFlight = Promise.all([refreshMachines(force === true), refreshFlow()])

@@ -290,6 +290,13 @@ class RemoteHealthCooldownTests(unittest.TestCase):
             SERVER._air_health_request("POST", "/api/service/x/restart")
         self.assertEqual(open_url.call_count, 2)
 
+    def test_failed_service_action_does_not_start_cooldown(self):
+        error = SERVER.urllib.error.URLError("timed out")
+        with patch.object(SERVER.urllib.request, "urlopen", side_effect=error):
+            with self.assertRaises(OSError):
+                SERVER._air_health_request("POST", "/api/service/x/restart")
+        self.assertNotIn(SERVER.AIR_HEALTH_API_URL, SERVER._remote_health_down_until)
+
     def test_http_error_does_not_mark_machine_offline(self):
         error = SERVER.urllib.error.HTTPError("http://air", 500, "boom", {}, None)
         with patch.object(SERVER.urllib.request, "urlopen", side_effect=error):
