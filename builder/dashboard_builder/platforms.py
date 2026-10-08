@@ -17,7 +17,7 @@ PLATFORM_REGISTRY = (
         "name": "JobRadar / Financial OS",
         "description": "Job discovery and the financial operations workspace.",
         "tier": "primary",
-        "status": "Private OVH + Telegram",
+        "status": "Private Mac mini + Telegram",
         "actions": (
             {"label": "Open workspace", "url": "http://127.0.0.1:8792", "access": "private"},
             {"label": "Open JobRadar bot", "url": "https://t.me/JobsRadarS_bot", "access": "telegram"},
@@ -25,13 +25,13 @@ PLATFORM_REGISTRY = (
     },
     {
         "id": "mydictionary",
-        "name": "MyDictionary",
-        "description": "Language-learning administration and the learner bot.",
+        "name": "Lexi",
+        "description": "Language-learning administration and the Lexi learner bot.",
         "tier": "primary",
-        "status": "Private OVH + Telegram",
+        "status": "Private Mac mini + Telegram",
         "actions": (
-            {"label": "Open admin", "url": "http://127.0.0.1:8787/admin", "access": "private"},
-            {"label": "Open learner bot", "url": "https://t.me/max_context_bot", "access": "telegram"},
+            {"label": "Open admin", "url": "http://127.0.0.1:8791/admin", "access": "private"},
+            {"label": "Open learner bot", "url": "https://t.me/my_dictionnary_tg_bot", "access": "telegram"},
         ),
     },
     {
@@ -47,22 +47,21 @@ PLATFORM_REGISTRY = (
     {
         "id": "ai-singularity",
         "name": "AI Singularity",
-        "description": "Private publishing and content operations surface.",
+        "description": "Context News web app and admin surface.",
         "tier": "active",
-        "status": "Private OVH",
+        "status": "Private Mac mini",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:8001", "access": "private"},
+            {"label": "Open workspace", "url": "http://127.0.0.1:8790", "access": "private"},
         ),
     },
     {
         "id": "context-news",
         "name": "Context News France",
-        "description": "French news operations surface and Telegram publication bot.",
+        "description": "Personalized news digests delivered in Telegram.",
         "tier": "active",
-        "status": "Private OVH + Telegram",
+        "status": "Telegram",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:8002", "access": "private"},
-            {"label": "Open news bot", "url": "https://t.me/croissantfr_bot", "access": "telegram"},
+            {"label": "Open news bot", "url": "https://t.me/contextnews_bot", "access": "telegram"},
         ),
     },
     {
@@ -70,7 +69,7 @@ PLATFORM_REGISTRY = (
         "name": "Accountable OS",
         "description": "Private accountability and operating-rhythm workspace.",
         "tier": "active",
-        "status": "Private OVH",
+        "status": "Private Mac mini",
         "actions": (
             {"label": "Open workspace", "url": "http://127.0.0.1:4174", "access": "private"},
         ),
@@ -197,12 +196,12 @@ def build_tunnel_command(registry=PLATFORM_REGISTRY) -> str:
             if parsed.scheme == "http" and parsed.port not in ports:
                 ports.append(parsed.port)
     forwards = " ".join(f"-L {port}:127.0.0.1:{port}" for port in ports)
-    return f"ssh -N {forwards} ubuntu@51.255.36.141"
+    return f"ssh -N {forwards} pirajoke@maxxs-mac-mini"
 
 
 def _access_label(access: str) -> str:
     return {
-        "private": "Private OVH",
+        "private": "Private Mac mini",
         "public": "Public HTTPS",
         "telegram": "Telegram",
     }[access]
@@ -271,8 +270,8 @@ def build_platform_hub_html(registry=PLATFORM_REGISTRY) -> str:
     <aside class="platform-access" aria-labelledby="secure-access-title">
         <div class="platform-access-copy">
             <p class="platform-eyebrow">Secure access</p>
-            <h3 id="secure-access-title">One SSH tunnel for every private OVH surface</h3>
-            <p>Public HTTPS and Telegram links open directly. Start this tunnel before using links marked Private OVH.</p>
+            <h3 id="secure-access-title">One SSH tunnel for every private Mac mini surface</h3>
+            <p>Public HTTPS and Telegram links open directly. Start this tunnel before using links marked Private Mac mini.</p>
         </div>
         <div class="platform-command">
             <span>SSH tunnel</span>
