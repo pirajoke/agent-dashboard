@@ -183,18 +183,27 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .section { display: none; }
 .section.active { display: block; }
 
+/* Header greeting */
+.header-hello { display: flex; align-items: center; gap: 14px; }
+.header-mascot { width: 58px; height: 58px; flex: 0 0 auto; }
+.nav-pill .pill-icon svg { display: block; width: 18px; height: 18px; }
+
 /* Platforms */
 .platforms-header {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 20px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto 132px;
+  gap: 24px;
+  align-items: center;
   margin-bottom: 22px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border2);
+  padding: 26px 28px;
+  border: 1px solid rgba(234,179,8,0.22);
+  border-radius: var(--radius);
+  background: var(--accent-bg);
+  overflow: hidden;
 }
 .platforms-eyebrow {
-  color: var(--accent);
+  color: #9A7100;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.9px;
@@ -202,145 +211,236 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 .platforms-title {
   margin-top: 5px;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.4px;
 }
 .platforms-copy {
-  max-width: 620px;
+  max-width: 560px;
   margin-top: 6px;
   color: var(--text2);
   font-size: 13px;
   line-height: 1.55;
 }
-.platforms-legend {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+.platforms-hero-mascot {
+  width: 132px;
+  height: 132px;
+  justify-self: end;
 }
-.platforms-legend span,
+.platforms-legend {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.platforms-legend li {
+  display: grid;
+  grid-template-columns: 26px auto;
+  column-gap: 10px;
+  align-items: center;
+  min-width: 220px;
+  padding: 8px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  background: var(--card);
+}
+.platforms-legend li svg { grid-row: 1 / span 2; width: 26px; height: 26px; }
+.platforms-legend li strong { font-size: 12px; font-weight: 750; }
+.platforms-legend li small { color: var(--text2); font-size: 11px; }
 .platform-access {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   width: fit-content;
   border: 1px solid var(--border2);
   border-radius: 6px;
   background: var(--card);
   color: var(--text2);
-  padding: 4px 7px;
+  padding: 3px 7px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.25px;
   text-transform: uppercase;
 }
-.platforms-legend .private,
+.platform-access-icon { width: 14px; height: 14px; flex: 0 0 auto; }
 .platform-access.private { background: var(--accent-bg); color: #9A7100; border-color: rgba(234,179,8,0.28); }
-.platforms-legend .public,
 .platform-access.public { background: var(--green-bg); color: #16803A; border-color: rgba(34,197,94,0.24); }
 .platform-directory {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 32px;
-  row-gap: 0;
-  border-top: 1px solid var(--border2);
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 16px;
 }
 .platform-entry {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 14px;
-  padding: 19px 4px;
-  border-bottom: 1px solid var(--border2);
-}
-.platform-entry.priority {
+  --platform-tint: var(--bg2);
   position: relative;
-  padding-left: 14px;
-  background: linear-gradient(90deg, var(--accent-bg), transparent 62%);
+  min-width: 0;
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.platform-entry.priority::before {
-  content: '';
-  position: absolute;
-  top: 14px;
-  bottom: 14px;
-  left: 0;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--accent);
+.platform-entry:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.platform-entry.priority {
+  grid-column: span 5;
+  display: grid;
+  grid-template-columns: 188px minmax(0, 1fr);
+  border-color: rgba(234,179,8,0.32);
 }
+.platform-entry[data-platform-id="financial"] { --platform-tint: #FEF3C7; }
+.platform-entry[data-platform-id="mydictionary"] { --platform-tint: var(--blue-bg); }
+.platform-entry[data-platform-id="health"] { --platform-tint: var(--red-bg); }
+.platform-entry[data-platform-id="ai-singularity"] { --platform-tint: #F5F3FF; }
+.platform-entry[data-platform-id="context-news"] { --platform-tint: var(--orange-bg); }
+.platform-entry[data-platform-id="accountable"] { --platform-tint: var(--green-bg); }
+.platform-entry[data-platform-id="jarvis"] { --platform-tint: #F1F5F9; }
+.platform-art {
+  display: grid;
+  place-items: center;
+  height: 132px;
+  background: var(--platform-tint);
+}
+.platform-entry.priority .platform-art { height: auto; min-height: 190px; }
+.platform-art svg {
+  width: 112px;
+  height: 112px;
+  transition: transform 0.25s ease;
+}
+.platform-entry.priority .platform-art svg { width: 150px; height: 150px; }
+.platform-entry:hover .platform-art svg { transform: translateY(-4px) rotate(-3deg); }
 .platform-index {
+  position: absolute;
+  top: 10px;
+  right: 12px;
   color: var(--muted);
   font-family: 'SF Mono', 'JetBrains Mono', monospace;
   font-size: 11px;
   font-weight: 700;
-  line-height: 22px;
 }
 .platform-entry.priority .platform-index { color: #9A7100; }
-.platform-content { min-width: 0; }
-.platform-name {
-  font-size: 15px;
-  font-weight: 750;
-  line-height: 1.4;
+.platform-content {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 16px 18px 18px;
 }
+.platform-entry.priority .platform-content { padding: 22px 24px; justify-content: center; }
+.platform-tag {
+  width: fit-content;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.platform-entry.priority .platform-tag { color: #9A7100; }
+.platform-name {
+  font-size: 16px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.platform-entry.priority .platform-name { font-size: 20px; }
 .platform-description {
-  margin-top: 3px;
+  margin-top: 4px;
   color: var(--text2);
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .platform-links {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: auto;
+  padding-top: 14px;
 }
 .platform-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  border-bottom: 1px solid currentColor;
+  gap: 8px;
+  min-height: 40px;
+  padding: 5px 12px 5px 6px;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  background: var(--card);
   color: var(--text);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.25;
   text-decoration: none;
-  transition: color 0.15s ease, transform 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 .platform-link::after { content: '\2197'; color: var(--muted); }
-.platform-link:hover { color: #9A7100; transform: translateY(-1px); }
+.platform-link:hover { color: #9A7100; border-color: rgba(234,179,8,0.55); transform: translateY(-1px); }
 .platform-link:focus-visible {
-  border-radius: 4px;
   outline: 3px solid rgba(234,179,8,0.34);
-  outline-offset: 4px;
+  outline-offset: 3px;
 }
 .platform-note {
   grid-column: 1 / -1;
-  margin-top: 18px;
-  color: var(--muted);
-  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: 1px dashed rgba(234,179,8,0.45);
+  border-radius: 12px;
+  color: var(--text2);
+  font-size: 12px;
   line-height: 1.5;
+}
+.platform-note svg { width: 22px; height: 22px; flex: 0 0 auto; }
+
+@media (max-width: 1100px) {
+  .platforms-header { grid-template-columns: minmax(0, 1fr) auto; }
+  .platforms-hero-mascot { display: none; }
+  .platform-directory { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .platform-entry.priority { grid-column: span 6; }
+  .platform-entry { grid-column: span 2; }
 }
 
 @media (max-width: 760px) {
-  .platforms-header { grid-template-columns: 1fr; align-items: start; gap: 12px; }
+  .header-mascot { width: 44px; height: 44px; }
+  .platforms-header { grid-template-columns: minmax(0, 1fr) 84px; gap: 14px; padding: 18px; }
+  .platforms-hero-mascot { display: block; width: 84px; height: 84px; grid-column: 2; grid-row: 1; }
+  .platforms-legend { grid-column: 1 / -1; }
+  .platforms-legend li { min-width: 0; }
   .platforms-title { font-size: 22px; }
-  .platforms-legend { justify-content: flex-start; }
-  .platform-directory { grid-template-columns: 1fr; }
-  .platform-entry { padding-left: 2px; padding-right: 2px; }
-  .platform-entry.priority { padding-left: 14px; }
-  .platform-links { align-items: flex-start; flex-direction: column; }
+  .platform-directory { grid-template-columns: 1fr; gap: 12px; }
+  .platform-entry,
+  .platform-entry.priority { grid-column: auto; display: grid; grid-template-columns: 96px minmax(0, 1fr); }
+  .platform-art,
+  .platform-entry.priority .platform-art { height: auto; min-height: 0; }
+  .platform-art svg,
+  .platform-entry.priority .platform-art svg { width: 76px; height: 76px; }
+  .platform-content,
+  .platform-entry.priority .platform-content { padding: 14px 14px 14px 12px; }
+  .platform-entry.priority .platform-name { font-size: 17px; }
+  .platform-links { align-items: stretch; flex-direction: column; }
   .platform-link { max-width: 100%; overflow-wrap: anywhere; }
 }
 
 @media (max-width: 360px) {
-  .platform-entry { grid-template-columns: 28px minmax(0, 1fr); gap: 8px; }
+  .platform-entry,
+  .platform-entry.priority { grid-template-columns: 1fr; }
+  .platform-art { padding: 10px 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .platform-entry,
+  .platform-art svg,
   .platform-link { transition: none; }
+  .platform-entry:hover,
   .platform-link:hover { transform: none; }
+  .platform-entry:hover .platform-art svg { transform: none; }
 }
+
 
 /* Footer */
 .footer { margin-top: 32px; text-align: center; font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -2792,13 +2892,158 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" class="cc-sprite" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <g id="cc-face">
+      <circle cx="-9" cy="0" r="3.6" fill="#1A1A1A"/>
+      <circle cx="9" cy="0" r="3.6" fill="#1A1A1A"/>
+      <circle cx="-7.8" cy="-1.3" r="1.1" fill="#fff"/>
+      <circle cx="10.2" cy="-1.3" r="1.1" fill="#fff"/>
+      <path d="M-4.5 6 Q0 10 4.5 6" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round"/>
+      <ellipse cx="-15" cy="6" rx="3.6" ry="2.2" fill="#F9A8A8" opacity=".75"/>
+      <ellipse cx="15" cy="6" rx="3.6" ry="2.2" fill="#F9A8A8" opacity=".75"/>
+    </g>
+  </defs>
+  <!-- Common Center guide: a little hub bot holding a key -->
+  <symbol id="cc-mascot-hub" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M60 30V17" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="13" r="6" fill="#EAB308" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="26" y="30" width="68" height="60" rx="26" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="35" y="42" width="50" height="30" rx="15" fill="#1A1A1A"/>
+    <g transform="translate(60 56)">
+      <circle cx="-9" cy="0" r="4" fill="#F5C542"/><circle cx="9" cy="0" r="4" fill="#F5C542"/>
+      <path d="M-4.5 7 Q0 10.5 4.5 7" fill="none" stroke="#F5C542" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+    <ellipse cx="33" cy="78" rx="4" ry="2.4" fill="#F9A8A8" opacity=".8"/>
+    <ellipse cx="87" cy="78" rx="4" ry="2.4" fill="#F9A8A8" opacity=".8"/>
+    <path d="M27 66 Q14 62 12 50" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="12" cy="47" r="5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M93 66 Q103 72 104 84" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="104" cy="94" r="9" fill="#F5C542" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="104" cy="94" r="3" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/>
+    <path d="M104 103v12M104 109h5M104 114h4" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <rect x="40" y="88" width="12" height="14" rx="5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="68" y="88" width="12" height="14" rx="5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="26" y="30" width="68" height="60" rx="26" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+  </symbol>
+  <!-- JobRadar / Financial OS: radar bot with a coin -->
+  <symbol id="cc-mascot-jobradar" viewBox="0 0 120 120">
+    <ellipse cx="58" cy="110" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M58 32V20" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M44 20a14 14 0 0 0 28 0z" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M76 8a12 12 0 0 1 8 9M80 2a19 19 0 0 1 11 14" fill="none" stroke="#EAB308" stroke-width="3" stroke-linecap="round"/>
+    <rect x="24" y="32" width="68" height="58" rx="24" fill="#F5C542" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="33" y="44" width="50" height="28" rx="14" fill="#FFFBEB" stroke="#1A1A1A" stroke-width="3"/>
+    <use href="#cc-face" transform="translate(58 56)"/>
+    <rect x="36" y="88" width="12" height="14" rx="5" fill="#F5C542" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="66" y="88" width="12" height="14" rx="5" fill="#F5C542" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M91 70 Q99 72 100 80" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="100" cy="88" r="12" fill="#FDE68A" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M104 83.5c-1.5-1.6-7.5-1.8-7.5 1.4 0 3.4 7.8 1.6 7.8 5.2 0 3.3-6.4 3.1-8.3 1.3M100 79.5v17" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round"/>
+  </symbol>
+  <!-- MyDictionary: an owl reading a book -->
+  <symbol id="cc-mascot-dictionary" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="111" rx="34" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M36 26 L40 12 L50 24 M84 26 L80 12 L70 24" fill="#93C5FD" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M60 20c-22 0-30 16-30 36s6 34 30 34 30-14 30-34-8-36-30-36z" fill="#93C5FD" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M60 52c-12 0-17 10-17 20s6 15 17 15 17-5 17-15-5-20-17-20z" fill="#DBEAFE"/>
+    <circle cx="48" cy="44" r="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="72" cy="44" r="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="49" cy="45" r="4.5" fill="#1A1A1A"/><circle cx="71" cy="45" r="4.5" fill="#1A1A1A"/>
+    <circle cx="50.4" cy="43.4" r="1.4" fill="#fff"/><circle cx="72.4" cy="43.4" r="1.4" fill="#fff"/>
+    <path d="M56 54 L64 54 L60 61 Z" fill="#F97316" stroke="#1A1A1A" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M22 84 Q41 76 60 86 Q79 76 98 84 L98 104 Q79 96 60 106 Q41 96 22 104 Z" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M60 86V106" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M30 88 Q40 84 52 89 M30 95 Q40 91 52 96 M68 89 Q80 84 90 88 M68 96 Q80 91 90 95" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <!-- Health OS: a heart with a pulse -->
+  <symbol id="cc-mascot-health" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="28" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M60 98C34 80 18 64 18 44c0-14 10-24 23-24 9 0 15 5 19 11 4-6 10-11 19-11 13 0 23 10 23 24 0 20-16 36-42 54z" fill="#FCA5A5" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M30 40c1-7 6-11 12-11" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+    <use href="#cc-face" transform="translate(60 52)"/>
+    <path d="M6 78h18l5-9 7 18 6-12 4 3h14" fill="none" stroke="#EF4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="96" cy="84" r="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M96 78v12M90 84h12" stroke="#EF4444" stroke-width="3.4" stroke-linecap="round"/>
+  </symbol>
+  <!-- AI Singularity: a friendly spark -->
+  <symbol id="cc-mascot-singularity" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="26" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <ellipse cx="60" cy="60" rx="50" ry="16" fill="none" stroke="#8B5CF6" stroke-width="2.4" opacity=".55" transform="rotate(-18 60 60)"/>
+    <path d="M60 10 C64 38 74 48 100 54 C74 60 64 70 60 100 C56 70 46 60 20 54 C46 48 56 38 60 10Z" fill="#C4B5FD" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <use href="#cc-face" transform="translate(60 56) scale(.85)"/>
+    <circle cx="104" cy="40" r="5" fill="#8B5CF6" stroke="#1A1A1A" stroke-width="2.4"/>
+    <circle cx="16" cy="76" r="4" fill="#F5C542" stroke="#1A1A1A" stroke-width="2.4"/>
+    <path d="M94 88l3 6 6 3-6 3-3 6-3-6-6-3 6-3z" fill="#EDE9FE" stroke="#1A1A1A" stroke-width="2" stroke-linejoin="round"/>
+  </symbol>
+  <!-- Context News France: a croissant in a beret reading the news -->
+  <symbol id="cc-mascot-news" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="34" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <ellipse cx="20" cy="70" rx="9" ry="12" fill="#FDBA74" stroke="#1A1A1A" stroke-width="3" transform="rotate(-40 20 70)"/>
+    <ellipse cx="100" cy="70" rx="9" ry="12" fill="#FDBA74" stroke="#1A1A1A" stroke-width="3" transform="rotate(40 100 70)"/>
+    <ellipse cx="36" cy="56" rx="14" ry="18" fill="#FDBA74" stroke="#1A1A1A" stroke-width="3" transform="rotate(-30 36 56)"/>
+    <ellipse cx="84" cy="56" rx="14" ry="18" fill="#FDBA74" stroke="#1A1A1A" stroke-width="3" transform="rotate(30 84 56)"/>
+    <ellipse cx="60" cy="46" rx="21" ry="22" fill="#FDBA74" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M47 36c3-5 8-7 13-7" fill="none" stroke="#FFF7ED" stroke-width="3.4" stroke-linecap="round" opacity=".9"/>
+    <ellipse cx="58" cy="25" rx="16" ry="6.5" fill="#1A1A1A" transform="rotate(-8 58 25)"/>
+    <path d="M60 19v-5" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <use href="#cc-face" transform="translate(60 46) scale(.85)"/>
+    <rect x="30" y="68" width="60" height="38" rx="5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M38 77h24M38 84h44M38 91h44M38 98h30" stroke="#9CA3AF" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="66" y="74" width="16" height="8" rx="2" fill="#F97316"/>
+  </symbol>
+  <!-- Accountable OS: a clipboard that keeps its promises -->
+  <symbol id="cc-mascot-accountable" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="111" rx="28" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <rect x="28" y="18" width="64" height="86" rx="12" fill="#86EFAC" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="36" y="30" width="48" height="66" rx="6" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.4"/>
+    <rect x="46" y="12" width="28" height="12" rx="5" fill="#1A1A1A"/>
+    <use href="#cc-face" transform="translate(60 46) scale(.8)"/>
+    <path d="M43 66l3.5 3.5 6-7M43 80l3.5 3.5 6-7" fill="none" stroke="#22C55E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M58 67h18M58 81h14" stroke="#9CA3AF" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M28 62 Q16 58 14 46" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="14" cy="43" r="5" fill="#86EFAC" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M92 62 Q104 58 106 46" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="106" cy="43" r="5" fill="#86EFAC" stroke="#1A1A1A" stroke-width="3"/>
+  </symbol>
+  <!-- JARVIS: a butler bot with a bow tie -->
+  <symbol id="cc-mascot-jarvis" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="111" rx="28" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M60 22V12" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="10" r="5" fill="#3B82F6" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="30" y="22" width="60" height="44" rx="18" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="38" y="32" width="44" height="22" rx="11" fill="#1E293B"/>
+    <circle cx="51" cy="43" r="4" fill="#93C5FD"/><circle cx="69" cy="43" r="4" fill="#93C5FD"/>
+    <path d="M38 66 h44 l6 34 a6 6 0 0 1 -6 6 h-44 a6 6 0 0 1 -6 -6 z" fill="#1E293B" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M52 66 L60 84 L68 66 Z" fill="#FFFFFF"/>
+    <path d="M50 70 L60 74 L50 78 Z M70 70 L60 74 L70 78 Z" fill="#EF4444" stroke="#1A1A1A" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="60" cy="92" r="2.4" fill="#F5C542"/><circle cx="60" cy="100" r="2.4" fill="#F5C542"/>
+    <path d="M32 74 Q20 76 18 90" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M8 90h20" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M10 90 a8 8 0 0 1 16 0" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.4"/>
+    <path d="M88 74 Q98 78 98 92" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="98" cy="95" r="4" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="2.4"/>
+  </symbol>
+  <!-- Access type icons -->
+  <symbol id="cc-icon-telegram" viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="#DBEAFE" stroke="#1A1A1A" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="#3B82F6" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="cc-icon-web" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#DCFCE7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="#16803A" stroke-width="1.4"/></symbol>
+  <symbol id="cc-icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3" fill="#FEF3C7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#1A1A1A" stroke-width="1.6"/><circle cx="12" cy="15.5" r="1.6" fill="#9A7100"/></symbol>
+  <!-- Navigation icons -->
+  <symbol id="cc-icon-machines" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
+  <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+</svg>
 
 <div class="container">
   <!-- Header -->
   <div class="header">
-    <div class="header-left">
-      <h1>Hello, Maxim</h1>
-      <div class="subtitle" id="header-subtitle"></div>
+    <div class="header-left header-hello">
+      <svg class="header-mascot" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-hub"/></svg>
+      <div>
+        <h1>Hello, Maxim</h1>
+        <div class="subtitle" id="header-subtitle"></div>
+      </div>
     </div>
     <div class="header-stats">
       <div class="stat-box">
@@ -2814,107 +3059,117 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
-    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon">🖥</span> Machines</button>
-    <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon">🤖</span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon">⌘</span> Platforms <span class="pill-badge">7</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Machines</button>
+    <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
   </nav>
 
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
   <section id="section-platforms" class="section" aria-labelledby="platforms-title">
-    <div class="platforms-header">
-      <div>
+    <div class="platforms-header platforms-hero">
+      <div class="platforms-hero-copy">
         <div class="platforms-eyebrow">Common Center directory</div>
         <h2 class="platforms-title" id="platforms-title">Platforms</h2>
-        <p class="platforms-copy">One quiet index for the products, private admin surfaces and Telegram bots that remain active while the Mac Mini is offline.</p>
+        <p class="platforms-copy">Every product, admin surface and Telegram bot in one place. They keep running on OVH even while the Mac Mini is offline.</p>
       </div>
-      <div class="platforms-legend" aria-label="Access types">
-        <span class="private">Private · SSH</span>
-        <span class="public">Public link</span>
-      </div>
+      <ul class="platforms-legend platforms-howto" aria-label="How each access type opens">
+        <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg><strong>Telegram</strong><small>Opens the bot right away</small></li>
+        <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg><strong>Public web</strong><small>Opens in any browser</small></li>
+        <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Private · SSH</strong><small>Start your SSH tunnel first</small></li>
+      </ul>
+      <svg class="platforms-hero-mascot" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-hub"/></svg>
     </div>
 
     <div class="platform-directory">
       <article class="platform-entry priority" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
         <div class="platform-content">
+          <span class="platform-tag">Priority product</span>
           <h3 class="platform-name">JobRadar / Financial OS</h3>
           <p class="platform-description">Priority product lane for job discovery and finance operations.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8792" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Admin</a>
-            <a class="platform-link" href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+            <a class="platform-link" href="http://127.0.0.1:8792" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Admin</a>
+            <a class="platform-link" href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
           </div>
         </div>
       </article>
-
       <article class="platform-entry priority" data-platform-id="mydictionary" data-platform-name="MyDictionary">
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
         <span class="platform-index">02</span>
         <div class="platform-content">
+          <span class="platform-tag">Priority product</span>
           <h3 class="platform-name">MyDictionary</h3>
           <p class="platform-description">Priority language-learning product and its private administration surface.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8787/admin" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Admin</a>
-            <a class="platform-link" href="https://t.me/max_context_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+            <a class="platform-link" href="http://127.0.0.1:8787/admin" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Admin</a>
+            <a class="platform-link" href="https://t.me/max_context_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
           </div>
         </div>
       </article>
-
       <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
         <span class="platform-index">03</span>
         <div class="platform-content">
+          <span class="platform-tag">Active system</span>
           <h3 class="platform-name">Health OS</h3>
           <p class="platform-description">Health workspace. Availability is checked after opening the public route.</p>
           <div class="platform-links">
-            <a class="platform-link" href="https://health.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Public web</span> Open</a>
+            <a class="platform-link" href="https://health.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Public web</span> Open</a>
           </div>
         </div>
       </article>
-
       <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
         <span class="platform-index">04</span>
         <div class="platform-content">
+          <span class="platform-tag">Active system</span>
           <h3 class="platform-name">AI Singularity</h3>
           <p class="platform-description">Private OVH application surface.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8001" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Open app</a>
+            <a class="platform-link" href="http://127.0.0.1:8001" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open app</a>
           </div>
         </div>
       </article>
-
       <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
         <span class="platform-index">05</span>
         <div class="platform-content">
+          <span class="platform-tag">Active system</span>
           <h3 class="platform-name">Context News France</h3>
           <p class="platform-description">French news context workspace and Telegram delivery bot.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8002" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Open app</a>
-            <a class="platform-link" href="https://t.me/croissantfr_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+            <a class="platform-link" href="http://127.0.0.1:8002" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open app</a>
+            <a class="platform-link" href="https://t.me/croissantfr_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
           </div>
         </div>
       </article>
-
       <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
         <span class="platform-index">06</span>
         <div class="platform-content">
+          <span class="platform-tag">Active system</span>
           <h3 class="platform-name">Accountable OS</h3>
           <p class="platform-description">Private accountability workspace on OVH.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer"><span class="platform-access private">Private · SSH</span> Open app</a>
+            <a class="platform-link" href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open app</a>
           </div>
         </div>
       </article>
-
       <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
         <span class="platform-index">07</span>
         <div class="platform-content">
+          <span class="platform-tag">Active system</span>
           <h3 class="platform-name">JARVIS</h3>
           <p class="platform-description">Personal assistant interface in Telegram.</p>
           <div class="platform-links">
-            <a class="platform-link" href="https://t.me/max_jarvis_hoian_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public">Telegram</span> Open bot</a>
+            <a class="platform-link" href="https://t.me/max_jarvis_hoian_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
           </div>
         </div>
       </article>
 
-      <p class="platform-note">Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</p>
+      <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
     </div>
   </section>
 
