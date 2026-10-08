@@ -25,7 +25,7 @@ EXPECTED_PLATFORM_IDS = (
 )
 EXPECTED_PLATFORM_NAMES = (
     "JobRadar / Financial OS",
-    "MyDictionary",
+    "Lexi",
     "Health OS",
     "AI Singularity",
     "Context News France",
@@ -38,11 +38,11 @@ EXPECTED_LINKS = {
         "https://t.me/JobsRadarS_bot",
     ),
     "mydictionary": (
-        "http://127.0.0.1:8787/admin",
-        "https://t.me/max_context_bot",
+        "http://127.0.0.1:8791/admin",
+        "https://t.me/my_dictionnary_tg_bot",
     ),
     "health-os": ("https://health.meshly.fr/",),
-    "ai-singularity": ("http://127.0.0.1:8001",),
+    "ai-singularity": ("http://127.0.0.1:8790",),
     "context-news": (
         "http://127.0.0.1:8002",
         "https://t.me/croissantfr_bot",
@@ -50,7 +50,7 @@ EXPECTED_LINKS = {
     "accountable-os": ("http://127.0.0.1:4174",),
     "jarvis": ("https://t.me/max_jarvis_hoian_bot",),
 }
-EXPECTED_LOOPBACK_PORTS = (7777, 8792, 8787, 8001, 8002, 4174)
+EXPECTED_LOOPBACK_PORTS = (7777, 8792, 8791, 8790, 8002, 4174)
 REQUIRED_PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 REQUIRED_ACTION_FIELDS = ("label", "url", "access")
 
@@ -163,7 +163,7 @@ class PlatformHubContractTests(unittest.TestCase):
         command = self.platforms.build_tunnel_command()
         self.assertIsInstance(command, str)
         self.assertTrue(command.startswith("ssh -N "), command)
-        self.assertTrue(command.endswith("ubuntu@51.255.36.141"), command)
+        self.assertTrue(command.endswith("pirajoke@maxxs-mac-mini"), command)
         self.assertEqual(command.count("ssh "), 1)
         for port in EXPECTED_LOOPBACK_PORTS:
             with self.subTest(port=port):
@@ -184,7 +184,7 @@ class PlatformHubContractTests(unittest.TestCase):
                 self.assertIsInstance(platform["status"], str)
                 self.assertTrue(platform["status"].strip())
         html = self.platforms.build_platform_hub_html()
-        for label in ("Private OVH", "Public HTTPS", "Telegram"):
+        for label in ("Private Mac mini", "Public HTTPS", "Telegram"):
             self.assertIn(label, html)
 
     def test_ec_cc_1_health_link_is_stable_copy_not_a_live_health_claim(self):

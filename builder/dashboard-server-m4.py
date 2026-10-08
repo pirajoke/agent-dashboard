@@ -155,8 +155,6 @@ MANAGED_SERVICES = [
 LOCAL_SERVICE_WATCH = [
     {"name": "tag-website", "kind": "launchd", "label": "com.pirajoke.tag-website"},
     {"name": "meshly-api", "kind": "launchd", "label": "com.pirajoke.meshly-api"},
-    {"name": "turkish-ai-agent", "kind": "launchd", "label": "com.pirajoke.turkish-ai-agent"},
-    {"name": "fastdata-webhook", "kind": "launchd", "label": "com.pirajoke.fastdata-webhook"},
     {"name": "cloudflared-m4", "kind": "launchd", "label": "com.pirajoke.cloudflared-m4"},
     {"name": "dashboard-rebuild", "kind": "launchd", "label": "com.pirajoke.dashboard-rebuild"},
     {"name": "generate-live-feed", "kind": "launchd", "label": "com.pirajoke.generate-live-feed"},

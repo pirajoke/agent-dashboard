@@ -7300,14 +7300,14 @@ body {
             data-platform-tier="primary">
         <div class="platform-index" aria-hidden="true">01</div>
         <div class="platform-copy">
-            <p class="platform-status">Private OVH + Telegram</p>
+            <p class="platform-status">Private Mac mini + Telegram</p>
             <h3>JobRadar / Financial OS</h3>
             <p class="platform-description">Job discovery and the financial operations workspace.</p>
         </div>
         <div class="platform-actions"><a class="platform-action platform-action-private"
                 href="http://127.0.0.1:8792" target="_blank" rel="noopener noreferrer">
                 <span>Open workspace</span>
-                <span class="platform-action-access">Private OVH</span>
+                <span class="platform-action-access">Private Mac mini</span>
             </a><a class="platform-action platform-action-telegram"
                 href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer">
                 <span>Open JobRadar bot</span>
@@ -7318,17 +7318,17 @@ body {
             data-platform-tier="primary">
         <div class="platform-index" aria-hidden="true">02</div>
         <div class="platform-copy">
-            <p class="platform-status">Private OVH + Telegram</p>
-            <h3>MyDictionary</h3>
-            <p class="platform-description">Language-learning administration and the learner bot.</p>
+            <p class="platform-status">Private Mac mini + Telegram</p>
+            <h3>Lexi</h3>
+            <p class="platform-description">Lexi language-learning bot (formerly MyDictionary) and its administration.</p>
         </div>
         <div class="platform-actions"><a class="platform-action platform-action-private"
-                href="http://127.0.0.1:8787/admin" target="_blank" rel="noopener noreferrer">
+                href="http://127.0.0.1:8791/admin" target="_blank" rel="noopener noreferrer">
                 <span>Open admin</span>
-                <span class="platform-action-access">Private OVH</span>
+                <span class="platform-action-access">Private Mac mini</span>
             </a><a class="platform-action platform-action-telegram"
-                href="https://t.me/max_context_bot" target="_blank" rel="noopener noreferrer">
-                <span>Open learner bot</span>
+                href="https://t.me/my_dictionnary_tg_bot" target="_blank" rel="noopener noreferrer">
+                <span>Open Lexi bot</span>
                 <span class="platform-action-access">Telegram</span>
             </a></div>
     </article></div>
@@ -7358,28 +7358,28 @@ body {
             data-platform-tier="active">
         <div class="platform-index" aria-hidden="true">—</div>
         <div class="platform-copy">
-            <p class="platform-status">Private OVH</p>
+            <p class="platform-status">Private Mac mini</p>
             <h3>AI Singularity</h3>
             <p class="platform-description">Private publishing and content operations surface.</p>
         </div>
         <div class="platform-actions"><a class="platform-action platform-action-private"
-                href="http://127.0.0.1:8001" target="_blank" rel="noopener noreferrer">
+                href="http://127.0.0.1:8790" target="_blank" rel="noopener noreferrer">
                 <span>Open workspace</span>
-                <span class="platform-action-access">Private OVH</span>
+                <span class="platform-action-access">Private Mac mini</span>
             </a></div>
     </article><article class="platform-entry platform-entry-active"
             data-platform-id="context-news"
             data-platform-tier="active">
         <div class="platform-index" aria-hidden="true">—</div>
         <div class="platform-copy">
-            <p class="platform-status">Private OVH + Telegram</p>
+            <p class="platform-status">Private Mac mini + Telegram</p>
             <h3>Context News France</h3>
             <p class="platform-description">French news operations surface and Telegram publication bot.</p>
         </div>
         <div class="platform-actions"><a class="platform-action platform-action-private"
                 href="http://127.0.0.1:8002" target="_blank" rel="noopener noreferrer">
                 <span>Open workspace</span>
-                <span class="platform-action-access">Private OVH</span>
+                <span class="platform-action-access">Private Mac mini</span>
             </a><a class="platform-action platform-action-telegram"
                 href="https://t.me/croissantfr_bot" target="_blank" rel="noopener noreferrer">
                 <span>Open news bot</span>
@@ -7390,14 +7390,14 @@ body {
             data-platform-tier="active">
         <div class="platform-index" aria-hidden="true">—</div>
         <div class="platform-copy">
-            <p class="platform-status">Private OVH</p>
+            <p class="platform-status">Private Mac mini</p>
             <h3>Accountable OS</h3>
             <p class="platform-description">Private accountability and operating-rhythm workspace.</p>
         </div>
         <div class="platform-actions"><a class="platform-action platform-action-private"
                 href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer">
                 <span>Open workspace</span>
-                <span class="platform-action-access">Private OVH</span>
+                <span class="platform-action-access">Private Mac mini</span>
             </a></div>
     </article><article class="platform-entry platform-entry-active"
             data-platform-id="jarvis"
@@ -7419,12 +7419,12 @@ body {
     <aside class="platform-access" aria-labelledby="secure-access-title">
         <div class="platform-access-copy">
             <p class="platform-eyebrow">Secure access</p>
-            <h3 id="secure-access-title">One SSH tunnel for every private OVH surface</h3>
-            <p>Public HTTPS and Telegram links open directly. Start this tunnel before using links marked Private OVH.</p>
+            <h3 id="secure-access-title">One SSH tunnel to the Mac mini for every private surface</h3>
+            <p>Public HTTPS and Telegram links open directly. Start this tunnel over Tailscale before using links marked Private Mac mini.</p>
         </div>
         <div class="platform-command">
             <span>SSH tunnel</span>
-            <code id="common-center-tunnel">ssh -N -L 7777:127.0.0.1:7777 -L 8792:127.0.0.1:8792 -L 8787:127.0.0.1:8787 -L 8001:127.0.0.1:8001 -L 8002:127.0.0.1:8002 -L 4174:127.0.0.1:4174 ubuntu@51.255.36.141</code>
+            <code id="common-center-tunnel">ssh -N -L 7777:127.0.0.1:7777 -L 8792:127.0.0.1:8792 -L 8791:127.0.0.1:8791 -L 8790:127.0.0.1:8790 -L 8002:127.0.0.1:8002 -L 4174:127.0.0.1:4174 pirajoke@maxxs-mac-mini</code>
             <button class="platform-action platform-copy-action" type="button"
                     data-copy="#common-center-tunnel" aria-label="Copy SSH tunnel command"
                     aria-live="polite" aria-atomic="true">Copy</button>
