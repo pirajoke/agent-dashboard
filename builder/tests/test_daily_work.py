@@ -100,6 +100,27 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(lexi["active_minutes"], 10)
 
 
+    def test_pull_heads_follow_every_page(self):
+        pages = {1: [{"number": n, "head": {"ref": f"b{n}"}, "state": "closed"} for n in range(100)],
+                 2: [{"number": 100, "head": {"ref": "late-branch"}, "state": "open"}]}
+
+        def fake_get(path, token, params=None):
+            return pages.get(int(params["page"]), [])
+
+        with patch.object(COLLECTOR, "github_get", side_effect=fake_get):
+            heads = COLLECTOR.repo_pull_heads("pirajoke/x", "t")
+        self.assertEqual(len(heads), 101)
+        self.assertIn("late-branch", {pull["head"] for pull in heads})
+
+        def failing_second_page(path, token, params=None):
+            if params["page"] == "2":
+                raise OSError("network")
+            return pages[1]
+
+        with patch.object(COLLECTOR, "github_get", side_effect=failing_second_page):
+            self.assertIsNone(COLLECTOR.repo_pull_heads("pirajoke/x", "t"))
+
+
 class ProjectionTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

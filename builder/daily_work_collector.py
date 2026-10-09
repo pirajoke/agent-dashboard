@@ -78,8 +78,11 @@ INFRA_SEGMENT_RE = re.compile(
 )
 SEGMENT_PREFIX_RE = re.compile(r"^(?:\s|\(|sudo\s+|nohup\s+|time\s+|exec\s+|[A-Z_][A-Z0-9_]*=\S*\s+)+")
 HEREDOC_RE = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n.*?\n\s*\1\b", re.DOTALL)
-SSH_RE = re.compile(r"^ssh\s+(?:-\S+\s+(?:[^-\s]\S*\s+)?)*([A-Za-z0-9_.@-]+)\s*(.*)$", re.DOTALL)
+# OpenSSH options that take a value; every other option letter is a plain switch.
+SSH_VALUE_OPTIONS = frozenset("BbcDEeFIiJLlmOoPpQRSWw")
+SSH_HOST_RE = re.compile(r"[A-Za-z0-9_.@-]+")
 COMMAND_LIMIT = 220
+PULL_HEAD_PAGES = 20
 INFRA_ACTIONS_PER_DAY = 300
 TOPIC_SKIP_PREFIXES = (
     "<", "caveat:", "[request interrupted", "this session is being continued",
@@ -166,19 +169,45 @@ def _split_segments(command: str) -> list[str]:
     return segments
 
 
+def _ssh_target(segment: str) -> tuple[str, str] | None:
+    """Split `ssh [options] destination [command]` into (destination, remote command)."""
+    words = list(re.finditer(r"\S+", segment))
+    if not words or words[0].group() != "ssh":
+        return None
+    index = 1
+    while index < len(words):
+        word = words[index].group()
+        if word == "--":
+            index += 1
+            break
+        if not word.startswith("-") or word == "-":
+            break
+        takes_value = False
+        for position, letter in enumerate(word[1:], start=1):
+            if letter in SSH_VALUE_OPTIONS:
+                # `-p22` carries its value; `-p 22` takes the next word.
+                takes_value = position == len(word) - 1
+                break
+        index += 2 if takes_value else 1
+    if index >= len(words) or not SSH_HOST_RE.fullmatch(words[index].group()):
+        return None
+    return words[index].group(), segment[words[index].end():]
+
+
 def _changing_segments(command: str) -> tuple[bool, str | None]:
     """Return (changes infra, ssh host) for a shell command line."""
     command = HEREDOC_RE.sub(" ", command)
     host = None
     for segment in _split_segments(command):
         segment = SEGMENT_PREFIX_RE.sub("", segment).strip()
-        ssh = SSH_RE.match(segment)
+        ssh = _ssh_target(segment)
         if ssh:
-            remote = ssh.group(2).strip().strip("'\"")
+            target, remote = ssh
+            remote = remote.strip().strip("'\"")
             if remote:
                 changes, _ = _changing_segments(remote)
                 if changes:
-                    return True, ssh.group(1).split("@")[-1]
+                    return True, target.split("@")[-1]
             continue
         if INFRA_SEGMENT_RE.match(segment):
             return True, host
@@ -541,6 +570,27 @@ def github_search(query: str, token: str, *, kind: str = "issues", pages: int = 
     return items
 
 
+def repo_pull_heads(repo: str, token: str) -> list[dict[str, Any]] | None:
+    """Every PR head branch of a repository, or None when the list could not be read in full."""
+    heads: list[dict[str, Any]] = []
+    for page in range(1, PULL_HEAD_PAGES + 1):
+        try:
+            pulls = github_get(f"/repos/{repo}/pulls", token, {
+                "state": "all", "sort": "created", "direction": "desc", "per_page": "100", "page": str(page)})
+        except (urllib.error.URLError, OSError, ValueError):
+            return None
+        if not isinstance(pulls, list):
+            return None
+        heads.extend(
+            {"number": pull.get("number"), "head": (pull.get("head") or {}).get("ref"), "state": pull.get("state")}
+            for pull in pulls if isinstance(pull, dict)
+        )
+        if len(pulls) < 100:
+            return heads
+    # An incomplete list would mark branches whose PR is on a later page as "without PR".
+    return None
+
+
 def _issue_repo(item: dict[str, Any]) -> str | None:
     url = item.get("repository_url")
     if isinstance(url, str) and "/repos/" in url:
@@ -594,16 +644,9 @@ def collect_github(login: str, since: datetime, repos: set[str]) -> dict[str, An
         # Head branches let the server tell "branch with a PR" from "branch without one".
         heads: dict[str, list[dict[str, Any]]] = {}
         for repo in sorted(repos):
-            try:
-                pulls = github_get(f"/repos/{repo}/pulls", token, {
-                    "state": "all", "sort": "updated", "direction": "desc", "per_page": "100"})
-            except (urllib.error.URLError, OSError, ValueError):
-                continue
-            if isinstance(pulls, list):
-                heads[repo] = [
-                    {"number": pull.get("number"), "head": (pull.get("head") or {}).get("ref"), "state": pull.get("state")}
-                    for pull in pulls if isinstance(pull, dict)
-                ]
+            pulls = repo_pull_heads(repo, token)
+            if pulls is not None:
+                heads[repo] = pulls
     except (urllib.error.URLError, OSError, ValueError) as error:
         reason = "github_auth_failed" if isinstance(error, urllib.error.HTTPError) and error.code in {401, 403} else "github_unavailable"
         return {**snapshot, "ok": False, "reason": reason}

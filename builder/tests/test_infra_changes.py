@@ -64,6 +64,19 @@ class AgentCommandFilterTest(unittest.TestCase):
         self.assertNotIn("ghp_", action["command"])
         self.assertIsNone(WORK.infra_action("ssh maxxs-mac-mini 'uptime'", self.MOMENT))
 
+    def test_ssh_switches_do_not_swallow_the_host(self):
+        for command, host in (
+            ("ssh -A maxxs-mac-mini launchctl kickstart -k gui/501/com.x", "maxxs-mac-mini"),
+            ("ssh -tt -v ovh-main-manager sudo systemctl restart nginx", "ovh-main-manager"),
+            ("ssh -p 2222 -o BatchMode=yes mark@maxxs-mac-mini 'brew services restart redis'", "maxxs-mac-mini"),
+            ("ssh -p2222 -At maxxs-mac-mini docker compose up -d", "maxxs-mac-mini"),
+        ):
+            with self.subTest(command=command):
+                action = WORK.infra_action(command, self.MOMENT)
+                self.assertIsNotNone(action)
+                self.assertEqual(action["host"], host)
+        self.assertIsNone(WORK.infra_action("ssh -A maxxs-mac-mini uptime", self.MOMENT))
+
     def test_claude_session_title_and_commands_reach_day_record(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "s1.jsonl"
@@ -139,6 +152,21 @@ class SnapshotDiffTest(unittest.TestCase):
         self.assertEqual([(e["action"], e["subject"]) for e in events], [("failed", "com.bot")])
         back = INFRA.diff(cur, {"launchd_jobs": {**cur["launchd_jobs"], "com.bot": {"running": False, "pid": None, "exit": "0"}}})
         self.assertEqual([(e["action"], e["subject"]) for e in back], [("recovered", "com.bot")])
+
+    def test_crontab_read_failure_is_not_an_empty_crontab(self):
+        from unittest import mock
+        import subprocess
+
+        def fake(returncode, stdout="", stderr=""):
+            return mock.patch.object(INFRA.subprocess, "run", return_value=subprocess.CompletedProcess(
+                ["crontab", "-l"], returncode, stdout, stderr))
+
+        with fake(0, "*/5 * * * * job\n# note\n"):
+            self.assertEqual(INFRA.snap_crontab()["entries"], 1)
+        with fake(1, stderr="crontab: no crontab for mark\n"):
+            self.assertEqual(INFRA.snap_crontab()["entries"], 0)
+        with fake(1, stderr="crontab: Operation not permitted\n"):
+            self.assertIsNone(INFRA.snap_crontab())
 
     def test_identical_snapshots_produce_no_events(self):
         snap = {"launchd_files": {"a": "1"}, "docker": {}, "ports": {"22": {"process": "sshd", "scope": "network"}}}

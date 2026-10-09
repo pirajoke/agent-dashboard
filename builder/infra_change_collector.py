@@ -154,8 +154,17 @@ def snap_files(dirs: list[Path], suffixes: set[str] | None) -> dict[str, Any] | 
 
 
 def snap_crontab() -> dict[str, Any] | None:
-    output = run(["crontab", "-l"])
-    lines = [line for line in (output or "").splitlines() if line.strip() and not line.startswith("#")]
+    try:
+        result = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=15, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode == 0:
+        output = result.stdout
+    elif "no crontab" in (result.stderr or "").lower():
+        output = ""
+    else:
+        return None  # a failed read must not look like every entry was removed
+    lines = [line for line in output.splitlines() if line.strip() and not line.startswith("#")]
     return {"entries": len(lines), "hash": hashlib.sha256("\n".join(lines).encode()).hexdigest()[:16]}
 
 
