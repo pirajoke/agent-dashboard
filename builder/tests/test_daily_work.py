@@ -187,6 +187,41 @@ class ProjectionTest(unittest.TestCase):
         self.assertGreaterEqual(payload["dropped_count"], 2)
         self.assertNotIn("dropped", payload)
 
+    def test_projects_use_platform_products_and_drill_down(self):
+        payload = work_projection(self.root, now=self.now, owner=True, project="jarvis")
+        projects = {item["id"]: item for item in payload["projects"]}
+        self.assertEqual(set(projects), {"command-center", "jarvis", "mydictionary"})
+        self.assertEqual(projects["command-center"]["mascot"], "hub")
+        self.assertEqual(projects["command-center"]["total_minutes"], 60)  # Codex overlapped Claude
+        self.assertEqual(projects["command-center"]["prs_merged"], 1)
+        self.assertEqual(projects["jarvis"]["total_minutes"], 65)
+        self.assertEqual(projects["jarvis"]["loose"], 2)
+        self.assertEqual(projects["mydictionary"]["name"], "Lexi")
+        self.assertEqual(projects["mydictionary"]["prs_open"], 1)
+        self.assertEqual(len(projects["jarvis"]["daily_minutes"]), 30)
+        self.assertEqual(payload["project_total"], 3)
+        detail = payload["project"]
+        timeline = {day["date"]: day for day in detail["timeline"]}
+        self.assertEqual(list(timeline), ["2026-10-08", "2026-10-07", "2026-10-06", "2026-10-05"])
+        self.assertEqual(timeline["2026-10-08"]["sessions"][0]["topic"], "private topic")
+        self.assertEqual(timeline["2026-10-06"]["opened"][0]["number"], 140)
+        self.assertEqual(timeline["2026-10-07"]["closed_unmerged"][0]["number"], 140)
+        self.assertEqual({item["bucket"] for item in detail["loose_list"]}, {"dropped"})
+
+    def test_product_mapping_follows_platforms(self):
+        from dashboard_builder.daily_work import product_for
+        self.assertEqual(product_for("FINANCIAL OS", None)["id"], "financial")
+        self.assertEqual(product_for(None, "pirajoke/agent-dashboard")["mascot"], "hub")
+        self.assertEqual(product_for("health-os", None)["mascot"], "health")
+        other = product_for("skills-library", None)
+        self.assertEqual((other["id"], other["mascot"]), ("p-skillslibrary", None))
+
+    def test_public_projection_hides_projects(self):
+        payload = work_projection(self.root, now=self.now, owner=False, project="jarvis")
+        self.assertNotIn("projects", payload)
+        self.assertNotIn("project", payload)
+        self.assertEqual(payload["project_total"], 3)
+
     def test_missing_collection_is_reported_as_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
             payload = work_projection(Path(tmp), now=self.now, owner=True)
@@ -205,6 +240,10 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn('id="section-work"', html)
         self.assertIn("/api/work/daily", html)
         self.assertIn("'work'].includes(INITIAL_SECTION)", html)
+        # Projects reuse the Platforms mascots and open a per-project page.
+        self.assertIn('data-mm-view="projects"', html)
+        self.assertIn('<use href="#cc-mascot-${mmEsc(item.mascot)}"/>', html)
+        self.assertIn("project: id", html)
 
     def test_server_exposes_daily_work_endpoint(self):
         server = (BUILDER_DIR / "dashboard-server-m4.py").read_text(encoding="utf-8")

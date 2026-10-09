@@ -2385,12 +2385,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except ValueError:
             days = 30
         selected = (query.get('date') or [None])[0]
+        project = (query.get('project') or [None])[0]
         try:
             payload = work_projection(
                 DAILY_WORK_DIR,
                 days=days,
                 selected=selected,
                 owner=self._dashboard_run_authorized(),
+                project=project[:80] if project else None,
             )
         except Exception:
             self._json_response(200, {"ok": False, "state": "unavailable", "reason": "daily_work_unreadable"})

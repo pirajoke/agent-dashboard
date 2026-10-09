@@ -12,6 +12,7 @@ names, PR titles, branches or session topics.
 from __future__ import annotations
 
 import json
+import re
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -25,6 +26,20 @@ FORGOTTEN_AFTER = timedelta(days=7)
 BRANCH_LOOKBACK = timedelta(days=30)
 MAIN_BRANCHES = {"main", "master", "head", "develop", "dev", "trunk"}
 LIST_LIMIT = 12
+PROJECT_DAY_LIMIT = 30
+# Products as Command Center's Platforms tab shows them; the mascot is the
+# Platforms SVG symbol (cc-mascot-<mascot>). Sessions and PRs are matched by
+# the checkout folder or repo name.
+PRODUCTS = (
+    {"id": "command-center", "name": "Command Center", "mascot": "hub", "match": ("agentdashboard", "commandcenter")},
+    {"id": "financial", "name": "JobRadar / Financial OS", "mascot": "jobradar", "match": ("financial", "jobradar", "jobsradar", "propertyos")},
+    {"id": "mydictionary", "name": "Lexi", "mascot": "dictionary", "match": ("lexi", "dictionary")},
+    {"id": "health", "name": "Health OS", "mascot": "health", "match": ("health",)},
+    {"id": "ai-singularity", "name": "AI Singularity", "mascot": "singularity", "match": ("singularity",)},
+    {"id": "context-news", "name": "Context News France", "mascot": "news", "match": ("contextnews",)},
+    {"id": "accountable", "name": "Accountable OS", "mascot": "accountable", "match": ("accountable",)},
+    {"id": "jarvis", "name": "JARVIS", "mascot": "jarvis", "match": ("jarvis",)},
+)
 
 
 def _ts(value: object) -> datetime | None:
@@ -213,12 +228,146 @@ def _branches_without_pr(by_day: dict[str, list[dict]], github: dict | None) -> 
     return result
 
 
+def _norm(value: object) -> str:
+    return re.sub(r"[^a-z0-9]", "", str(value or "").lower())
+
+
+def product_for(project: object, repo: object) -> dict[str, Any]:
+    """Map a checkout folder / repo to a Platforms product, or to itself."""
+    keys = [key for key in (_norm(project), _norm(str(repo or "").rsplit("/", 1)[-1])) if key]
+    for product in PRODUCTS:
+        if any(match in key for key in keys for match in product["match"]):
+            return {"id": product["id"], "name": product["name"], "mascot": product["mascot"]}
+    name = str(project or (str(repo).rsplit("/", 1)[-1] if repo else "") or "без проекта")
+    return {"id": "p-" + (_norm(name) or "other"), "name": name, "mascot": None}
+
+
+def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], github: dict | None,
+                       gh_days: dict[str, dict[str, list]], loose: list[dict], now: datetime) -> dict[str, dict[str, Any]]:
+    """Per-product work over the window, keyed by product id."""
+    products: dict[str, dict[str, Any]] = {}
+
+    def entry(product: dict[str, Any]) -> dict[str, Any]:
+        return products.setdefault(product["id"], {
+            **product, "repos": set(), "projects": set(), "sessions_by_day": defaultdict(list),
+            "prs_by_day": defaultdict(lambda: {"merged": [], "opened": [], "closed_unmerged": []}),
+        })
+
+    repo_product: dict[str, str] = {}
+    for day in series_days:
+        for record in by_day.get(day, []):
+            item = entry(product_for(record.get("project"), record.get("repo")))
+            item["sessions_by_day"][day].append(record)
+            item["projects"].add(str(record.get("project") or ""))
+            if record.get("repo"):
+                item["repos"].add(record["repo"])
+                repo_product.setdefault(record["repo"], item["id"])
+    # PRs count for the product of their repo, also when the work happened in
+    # sessions this collector cannot see (for example claude.ai/code).
+    for day in series_days:
+        for kind in ("merged", "opened", "closed_unmerged"):
+            for pr in gh_days[day][kind]:
+                repo = pr.get("repo")
+                if not repo:
+                    continue
+                product_id = repo_product.get(repo)
+                item = products[product_id] if product_id else entry(product_for(None, repo))
+                item["repos"].add(repo)
+                repo_product.setdefault(repo, item["id"])
+                item["prs_by_day"][day][kind].append(pr)
+    open_prs: dict[str, list[dict]] = defaultdict(list)
+    if isinstance(github, dict) and github.get("ok"):
+        for pr in github.get("prs") or []:
+            if isinstance(pr, dict) and pr.get("state") == "open" and pr.get("repo") in repo_product:
+                open_prs[repo_product[pr["repo"]]].append(pr)
+    for item in products.values():
+        item["open_prs"] = sorted(open_prs.get(item["id"], []), key=lambda pr: pr.get("updated_at") or "", reverse=True)
+        item["loose"] = [entry_ for entry_ in loose if entry_.get("repo") in item["repos"]
+                         or (entry_.get("project") and entry_.get("project") in item["projects"])]
+    return products
+
+
+def _portfolio_summary(item: dict[str, Any], series_days: list[str]) -> dict[str, Any]:
+    daily, daily_prs, claude, codex = [], [], [], []
+    last_activity, last_topic = None, None
+    sessions = prompts = 0
+    for day in series_days:
+        records = item["sessions_by_day"].get(day, [])
+        pairs = [pair for record in records for pair in _session_intervals(record)]
+        daily.append(_union_minutes(pairs))
+        claude.append(_union_minutes(p for r in records if r["tool"] == "claude" for p in _session_intervals(r)))
+        codex.append(_union_minutes(p for r in records if r["tool"] == "codex" for p in _session_intervals(r)))
+        daily_prs.append(len(item["prs_by_day"][day]["merged"]) if day in item["prs_by_day"] else 0)
+        sessions += len(records)
+        prompts += sum(int(r.get("prompts") or 0) for r in records)
+        for record in records:
+            end = _ts(record.get("end"))
+            if end and (last_activity is None or end > last_activity):
+                last_activity, last_topic = end, record.get("topic") or last_topic
+    for day, prs in item["prs_by_day"].items():
+        for pr in prs["merged"] + prs["opened"]:
+            moment = _ts(pr.get("merged_at")) or _ts(pr.get("created_at"))
+            if moment and (last_activity is None or moment > last_activity):
+                last_activity, last_topic = moment, pr.get("title") or last_topic
+    complete = daily[:-1]
+    return {
+        "id": item["id"], "name": item["name"], "mascot": item["mascot"],
+        "repos": sorted(item["repos"]), "projects": sorted(p for p in item["projects"] if p),
+        "total_minutes": sum(daily), "claude_minutes": sum(claude), "codex_minutes": sum(codex),
+        "last_7_minutes": sum(complete[-7:]), "previous_7_minutes": sum(complete[-14:-7]),
+        "active_days": sum(1 for minutes in daily if minutes > 0),
+        "sessions": sessions, "prompts": prompts,
+        "daily_minutes": daily, "daily_prs_merged": daily_prs,
+        "prs_merged": sum(daily_prs),
+        "prs_opened": sum(len(prs["opened"]) for prs in item["prs_by_day"].values()),
+        "prs_open": len(item["open_prs"]), "loose": len(item["loose"]),
+        "last_activity": _iso(last_activity), "last_topic": last_topic,
+    }
+
+
+def _project_detail(item: dict[str, Any], series_days: list[str]) -> dict[str, Any]:
+    detail = _portfolio_summary(item, series_days)
+    detail["daily_claude_minutes"] = [
+        _union_minutes(p for r in item["sessions_by_day"].get(day, []) if r["tool"] == "claude" for p in _session_intervals(r))
+        for day in series_days]
+    detail["daily_codex_minutes"] = [
+        _union_minutes(p for r in item["sessions_by_day"].get(day, []) if r["tool"] == "codex" for p in _session_intervals(r))
+        for day in series_days]
+    timeline = []
+    for index, day in reversed(list(enumerate(series_days))):
+        records = item["sessions_by_day"].get(day, [])
+        prs = item["prs_by_day"].get(day) or {"merged": [], "opened": [], "closed_unmerged": []}
+        if not records and not any(prs.values()):
+            continue
+        commands = [
+            {"at": action.get("at"), "command": action.get("command"), "host": action.get("host") or record.get("machine"),
+             "tool": record["tool"]}
+            for record in records for action in record.get("infra_actions") or [] if isinstance(action, dict)]
+        timeline.append({
+            "date": day,
+            "minutes": detail["daily_minutes"][index],
+            "claude_minutes": detail["daily_claude_minutes"][index],
+            "codex_minutes": detail["daily_codex_minutes"][index],
+            "sessions": _session_rows(records),
+            "merged": [_pr_view(pr) for pr in prs["merged"]],
+            "opened": [_pr_view(pr) for pr in prs["opened"] if pr not in prs["merged"]],
+            "closed_unmerged": [_pr_view(pr) for pr in prs["closed_unmerged"]],
+            "commands": sorted(commands, key=lambda c: c.get("at") or ""),
+        })
+        if len(timeline) >= PROJECT_DAY_LIMIT:
+            break
+    detail["timeline"] = timeline
+    detail["open_prs_list"] = [_pr_view(pr) for pr in item["open_prs"]]
+    detail["loose_list"] = item["loose"][:LIST_LIMIT]
+    return detail
+
+
 def _age_days(moment: datetime | None, now: datetime) -> int | None:
     return None if moment is None else max(0, (now - moment).days)
 
 
 def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFAULT_DAYS,
-                    selected: str | None = None, owner: bool = False) -> dict[str, Any]:
+                    selected: str | None = None, owner: bool = False, project: str | None = None) -> dict[str, Any]:
     now = now or datetime.now(timezone.utc)
     tz = now.astimezone().tzinfo
     today = now.astimezone(tz).date()
@@ -273,6 +422,10 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
                                "age_days": _age_days(updated, now)})
     dropped.sort(key=lambda item: item.get("age_days") or 0)
     forgot.sort(key=lambda item: item.get("age_days") or 0, reverse=True)
+    portfolio = _project_portfolio(series_days, by_day, github, gh_days,
+                                   [{**item, "bucket": "dropped"} for item in dropped] + [{**item, "bucket": "forgot"} for item in forgot], now)
+    summaries = sorted((_portfolio_summary(item, series_days) for item in portfolio.values()),
+                       key=lambda item: (item["last_activity"] or "", item["total_minutes"]), reverse=True)
 
     def window_sum(offset: int) -> dict[str, int]:
         # Complete days only: the 7 days before today, then the 7 before those.
@@ -312,6 +465,7 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         "day": day_view,
         "dropped_count": len(dropped),
         "forgot_count": len(forgot),
+        "project_total": len(summaries),
     }
     if owner:
         day_view["projects"] = _project_rows(selected_sessions, selected_gh)
@@ -322,6 +476,9 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         payload["dropped"] = dropped[:LIST_LIMIT]
         payload["forgot"] = forgot[:LIST_LIMIT]
         payload["sources"] = sources
+        payload["projects"] = summaries
+        if project:
+            payload["project"] = _project_detail(portfolio[project], series_days) if project in portfolio else None
     else:
         payload["sources"] = {
             "machines": [{"machine": f"machine-{i + 1}", "collected_at": m["collected_at"]} for i, m in enumerate(sources["machines"])],

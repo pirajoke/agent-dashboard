@@ -2909,6 +2909,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   --mm-claude: #c9652a;
   --mm-codex: #0e9fb5;
   --mm-pr: #a8a094;
+  --mm-tint-command-center: #dff0f2; --mm-tint-financial: #fdf1c7; --mm-tint-mydictionary: #e7effb; --mm-tint-health: #fbe7e7;
+  --mm-tint-ai-singularity: #f0edfd; --mm-tint-context-news: #fcecda; --mm-tint-accountable: #e2f3e7; --mm-tint-jarvis: #ebeff3; --mm-tint-other: #f1eadf;
   --mm-shadow: 0 6px 20px rgb(60 45 20 / .12);
   --mm-shadow-soft: 0 1px 2px rgb(60 45 20 / .06), 0 4px 12px rgb(60 45 20 / .06);
   --mm-nav-height: 74px;
@@ -2929,6 +2931,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
     --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
     --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+    --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
+    --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
     --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
   }
 }
@@ -2938,6 +2942,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
   --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
   --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+  --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
+  --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
   --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
 }
 .mm-os *, .mm-os *::before, .mm-os *::after { box-sizing: border-box; }
@@ -3079,6 +3085,68 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-filter-tabs button[aria-pressed="true"] { color: var(--mm-background); background: var(--mm-ink); border-color: var(--mm-ink) !important; }
 .mm-filter-tabs button span { margin-left: 6px; font-variant-numeric: tabular-nums; }
 
+
+/* Projects: the same mascots and tints as the Platforms tab. */
+.mm-sort { margin-bottom: 0; flex-wrap: nowrap; }
+.mm-project-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+.mm-project-grid > .mm-empty { grid-column: 1 / -1; }
+.mm-project-card { grid-column: span 2; display: flex; flex-direction: column; min-width: 0; overflow: hidden; color: var(--mm-ink) !important; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; text-decoration: none !important; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.mm-project-card:hover { transform: translateY(-2px); border-color: var(--mm-control-line); box-shadow: var(--mm-shadow-soft); }
+.mm-project-card.is-featured { grid-column: span 3; flex-direction: row; }
+.mm-project-art { display: grid; place-items: center; flex: none; height: 124px; background: var(--mm-tint, var(--mm-tint-other)); }
+.mm-project-art svg { width: 96px; height: 96px; transition: transform .2s ease; }
+.mm-project-card.is-featured .mm-project-art { width: 176px; height: auto; }
+.mm-project-card.is-featured .mm-project-art svg { width: 128px; height: 128px; }
+.mm-project-card:hover .mm-project-art svg { transform: translateY(-3px) rotate(-3deg); }
+.mm-project-art.tint-command-center { --mm-tint: var(--mm-tint-command-center); }
+.mm-project-art.tint-financial { --mm-tint: var(--mm-tint-financial); }
+.mm-project-art.tint-mydictionary { --mm-tint: var(--mm-tint-mydictionary); }
+.mm-project-art.tint-health { --mm-tint: var(--mm-tint-health); }
+.mm-project-art.tint-ai-singularity { --mm-tint: var(--mm-tint-ai-singularity); }
+.mm-project-art.tint-context-news { --mm-tint: var(--mm-tint-context-news); }
+.mm-project-art.tint-accountable { --mm-tint: var(--mm-tint-accountable); }
+.mm-project-art.tint-jarvis { --mm-tint: var(--mm-tint-jarvis); }
+.mm-art-initials { display: grid; place-items: center; width: 68px; height: 68px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 20px; font-size: 22px; font-weight: 750; letter-spacing: .02em; }
+.mm-project-body { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; padding: 16px 18px 18px; }
+.mm-project-kicker { color: var(--mm-accent); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.mm-project-name { font-size: 19px; font-weight: 750; line-height: 1.25; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.mm-project-repo { overflow: hidden; color: var(--mm-muted); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.mm-spark { display: block; width: 100%; height: 32px; margin: 12px 0 2px; }
+.mm-spark rect { fill: var(--mm-accent); }
+.mm-spark rect.zero { fill: var(--mm-control-line); }
+.mm-project-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--mm-line); }
+.mm-project-stats b { display: block; font-size: 16px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.mm-project-stats small { color: var(--mm-muted); font-size: 12px; }
+.mm-project-foot, .mm-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mm-chip.is-up { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
+.mm-chip.is-down, .mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
+.mm-project-last { display: -webkit-box; margin-top: 10px; overflow: hidden; color: var(--mm-muted); font-size: 13px; line-height: 1.45; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.mm-project-last b { color: var(--mm-ink); font-weight: 600; }
+.mm-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-bottom: 16px; padding: 0 16px 0 12px; font-size: 14px; font-weight: 600; border: 1px solid var(--mm-control-line) !important; border-radius: 999px; }
+.mm-back span { font-size: 20px; line-height: 1; }
+.mm-back:hover { background: var(--mm-surface-hover); }
+.mm-project-hero { display: grid; grid-template-columns: 210px minmax(0, 1fr); margin-bottom: 20px; overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-project-art.is-hero { height: auto; min-height: 190px; }
+.mm-project-art.is-hero svg { width: 148px; height: 148px; }
+.mm-project-hero-body { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; padding: 22px 28px; }
+.mm-project-title { font-size: 30px; font-weight: 750; line-height: 1.2; letter-spacing: -.02em; }
+.mm-project-hero .mm-project-last { -webkit-line-clamp: 3; font-size: 14px; }
+.mm-outcomes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.mm-block { margin-bottom: 28px; }
+.mm-day-table { table-layout: fixed; }
+.mm-day-table .mm-col-span { width: 120px; }
+.mm-day-table .mm-col-tool { width: 210px; }
+.mm-day-table .mm-col-min { width: 64px; }
+.mm-command-list { display: grid; gap: 8px; padding-top: 12px; }
+.mm-command { min-width: 0; padding: 10px 12px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
+.mm-command small { display: block; margin-bottom: 4px; color: var(--mm-muted); font-size: 12px; }
+.mm-command code { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 1180px) {
+  .mm-project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mm-project-card, .mm-project-card.is-featured { grid-column: span 1; flex-direction: column; }
+  .mm-project-card.is-featured .mm-project-art { width: auto; height: 124px; }
+  .mm-project-card.is-featured .mm-project-art svg { width: 96px; height: 96px; }
+}
 @media (max-width: 960px) {
   .mm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mm-data-table thead { display: none; }
@@ -3114,10 +3182,25 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-stat { padding: 14px; }
   .mm-stat strong { font-size: 21px; }
   .mm-group-row > summary, .mm-group-row-static { padding: 10px 14px; }
+  .mm-project-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  /* Phone: mascot on the left, like the Platforms list. */
+  .mm-project-card, .mm-project-card.is-featured { flex-direction: row; }
+  .mm-project-art, .mm-project-card.is-featured .mm-project-art { width: 92px; height: auto; }
+  .mm-project-art svg, .mm-project-card.is-featured .mm-project-art svg { width: 72px; height: 72px; }
+  .mm-art-initials { width: 52px; height: 52px; border-radius: 16px; font-size: 18px; }
+  .mm-project-body { padding: 14px 14px 16px; }
+  .mm-project-name { font-size: 17px; }
+  .mm-project-stats b { font-size: 15px; }
+  .mm-project-hero { grid-template-columns: 104px minmax(0, 1fr); }
+  .mm-project-art.is-hero { width: auto; min-height: 0; }
+  .mm-project-art.is-hero svg { width: 84px; height: 84px; }
+  .mm-project-hero-body { padding: 16px; }
+  .mm-project-title { font-size: 24px; }
   .mm-group-body { padding: 2px 14px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mm-chevron { transition: none; }
+  .mm-chevron, .mm-project-card, .mm-project-art svg { transition: none; }
+  .mm-project-card:hover, .mm-project-card:hover .mm-project-art svg { transform: none; }
 }
 </style>
 </head>
@@ -3413,7 +3496,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           <span><b id="mm-title">MAIN MANAGER</b><small>Command Center</small></span>
         </div>
         <nav class="mm-nav" aria-label="Разделы MAIN MANAGER">
-          <button type="button" data-mm-view="overview" aria-pressed="true"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Обзор дня</span></button>
+          <button type="button" data-mm-view="projects" aria-pressed="true"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg></span><span>Проекты</span><b id="mm-projects-nav-count">0</b></button>
+          <button type="button" data-mm-view="overview" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Обзор дня</span></button>
           <button type="button" data-mm-view="loose" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 2 2 3-4m-5 9 2 2 3-4m-5 9 2 2 3-4M12 6h9M12 13h9M12 20h9"/></svg></span><span>Хвосты</span><b id="mm-loose-count">0</b></button>
           <button type="button" data-mm-view="infra" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg></span><span>Изменения</span><b id="mm-infra-count">0</b></button>
         </nav>
@@ -3424,8 +3508,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       </aside>
       <div class="mm-workspace">
         <header class="mm-topbar">
-          <h2 class="mm-module" id="mm-view-title">Обзор дня</h2>
-          <div class="mm-day-picker" id="mm-day-picker" role="group" aria-label="Выбор дня">
+          <h2 class="mm-module" id="mm-view-title">Проекты</h2>
+          <div class="mm-day-picker" id="mm-day-picker" role="group" aria-label="Выбор дня" hidden>
             <button type="button" class="mm-round" id="mm-prev-day" aria-label="Предыдущий день">‹</button>
             <span class="mm-day-label"><b id="mm-day-label">Вчера</b><small id="mm-day-date">—</small></span>
             <button type="button" class="mm-round" id="mm-next-day" aria-label="Следующий день">›</button>
@@ -3433,7 +3517,22 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </header>
         <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
         <div class="mm-main">
-          <div class="mm-view" data-mm-panel="overview">
+          <div class="mm-view" data-mm-panel="projects">
+            <div class="mm-section-heading">
+              <div><h3>Над чем работал <span id="mm-projects-total"></span></h3><p class="mm-section-note">Claude, Codex и PR по проектам за 30 дней. Нажми на проект, чтобы провалиться в его работу по дням.</p></div>
+              <div class="mm-filter-tabs mm-sort" id="mm-project-sort" role="group" aria-label="Порядок">
+                <button type="button" data-sort="recent" aria-pressed="true">Недавние</button>
+                <button type="button" data-sort="time" aria-pressed="false">Больше времени</button>
+              </div>
+            </div>
+            <div class="mm-project-grid" id="mm-project-grid"><p class="mm-empty">Загружаю проекты…</p></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="project" hidden>
+            <div id="mm-project-page"></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="overview" hidden>
             <div class="mm-stats" id="mm-stats" aria-label="Итоги выбранного дня"></div>
             <section class="mm-panel" aria-labelledby="mm-traction-title">
               <div class="mm-section-heading">
@@ -6239,12 +6338,17 @@ const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
 const MM_THEME_KEY = 'command-center.main-manager.theme';
 const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-const MM_VIEW_TITLES = { overview: 'Обзор дня', loose: 'Хвосты', infra: 'Изменения в инфраструктуре' };
+const MM_VIEW_TITLES = { projects: 'Проекты', project: 'Проект', overview: 'Обзор дня', loose: 'Хвосты', infra: 'Изменения в инфраструктуре' };
+// Platforms products that have their own mascot tint; anything else uses the neutral tint.
+const MM_TINTS = new Set(['command-center', 'financial', 'mydictionary', 'health', 'ai-singularity', 'context-news', 'accountable', 'jarvis']);
 let dailyWorkData = null;
 let dailyWorkDate = null;
 let dailyWorkLoading = false;
 let infraData = null;
-let mmView = 'overview';
+let mmView = 'projects';
+let mmProjectSort = 'recent';
+let mmProjectId = null;
+let mmProjectData = null;
 let mmLooseFilter = 'all';
 let mmInfraFilter = 'all';
 let mmInitialised = false;
@@ -6338,7 +6442,7 @@ function mmInit() {
     os.dataset.theme = dark ? 'light' : 'dark';
     try { window.localStorage.setItem(MM_THEME_KEY, os.dataset.theme); } catch (error) { /* per-browser convenience only */ }
     mmSyncThemeButton();
-    if (dailyWorkData) renderWorkChart(dailyWorkData);
+    mmRedrawCharts();
   });
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
     button.addEventListener('click', () => mmShowView(button.dataset.mmView));
@@ -6357,6 +6461,23 @@ function mmInit() {
     mmInfraFilter = button.dataset.filter;
     renderInfra(infraData);
   });
+  document.getElementById('mm-project-sort').addEventListener('click', event => {
+    const button = event.target.closest('[data-sort]');
+    if (!button) return;
+    mmProjectSort = button.dataset.sort;
+    if (dailyWorkData) renderProjectCards(dailyWorkData);
+  });
+  document.getElementById('mm-project-grid').addEventListener('click', event => {
+    const card = event.target.closest('[data-project]');
+    if (!card || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
+    event.preventDefault();
+    openProject(card.dataset.project);
+  });
+}
+
+function mmRedrawCharts() {
+  if (mmView === 'overview' && dailyWorkData) renderWorkChart(dailyWorkData);
+  if (mmView === 'project') renderProjectChart();
 }
 
 function mmIsDark() {
@@ -6375,22 +6496,38 @@ function mmSyncThemeButton() {
 function mmShowView(view) {
   if (!MM_VIEW_TITLES[view]) return;
   mmView = view;
+  // A project page lives under "Проекты" in the navigation.
+  const navView = view === 'project' ? 'projects' : view;
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
-    button.setAttribute('aria-pressed', button.dataset.mmView === view ? 'true' : 'false');
+    button.setAttribute('aria-pressed', button.dataset.mmView === navView ? 'true' : 'false');
   });
   document.querySelectorAll('[data-mm-panel]').forEach(panel => {
     panel.hidden = panel.dataset.mmPanel !== view;
   });
-  document.getElementById('mm-view-title').textContent = MM_VIEW_TITLES[view];
+  document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
   document.getElementById('mm-day-picker').hidden = view !== 'overview';
+  if (view !== 'project') mmSetProjectUrl(null);
   mmRenderNotice();
-  if (view === 'overview' && dailyWorkData) renderWorkChart(dailyWorkData);
+  mmRedrawCharts();
+}
+
+function mmSetProjectUrl(id) {
+  try {
+    const url = new URL(window.location.href);
+    if ((url.searchParams.get('project') || null) === (id || null)) return;
+    if (id) url.searchParams.set('project', id);
+    else url.searchParams.delete('project');
+    window.history.replaceState(null, '', url);
+  } catch (error) { /* the link is a convenience only */ }
 }
 
 function openMainManager() {
+  const firstOpen = !mmInitialised;
   mmInit();
   loadDailyWork(dailyWorkDate);
   loadInfraChanges();
+  const wanted = firstOpen ? new URLSearchParams(window.location.search).get('project') : null;
+  if (wanted) openProject(wanted);
 }
 
 async function loadDailyWork(date) {
@@ -6485,6 +6622,7 @@ function renderDailyWork() {
   renderWorkSeriesTable(data);
   renderWorkProjects(data);
   renderLoose(data);
+  renderProjectCards(data);
   mmRenderSources();
 }
 
@@ -6524,13 +6662,20 @@ function mmRoundedTop(x, y, width, height, radius) {
 }
 
 function renderWorkChart(data) {
-  const host = document.getElementById('mm-chart');
-  const prHost = document.getElementById('mm-chart-prs');
+  mmDrawChart({
+    host: document.getElementById('mm-chart'),
+    prHost: document.getElementById('mm-chart-prs'),
+    series: data.series,
+    selectedDate: data.selected_date,
+    onPick: date => loadDailyWork(date),
+  });
+}
+
+function mmDrawChart({ host, prHost, series, selectedDate, onPick }) {
   if (!host || host.offsetParent === null) return;
   const width = Math.max(300, host.clientWidth || 900);
   const height = 220;
   const pad = { top: 12, right: 4, bottom: 26, left: 34 };
-  const series = data.series;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const step = plotW / series.length;
@@ -6540,7 +6685,7 @@ function renderWorkChart(data) {
   const top = Math.ceil(maxHours / tick) * tick;
   const y = hours => pad.top + plotH - (hours / top) * plotH;
   const labelEvery = width < 520 ? 7 : (width < 900 ? 3 : 2);
-  const selectedIndex = series.findIndex(day => day.date === data.selected_date);
+  const selectedIndex = series.findIndex(day => day.date === selectedDate);
   const parts = [];
   for (let value = 0; value <= top + 1e-9; value += tick) {
     parts.push(`<line class="${value === 0 ? 'mm-baseline' : 'mm-grid'}" x1="${pad.left}" x2="${width - pad.right}" y1="${y(value)}" y2="${y(value)}"/>`);
@@ -6549,7 +6694,7 @@ function renderWorkChart(data) {
   series.forEach((day, i) => {
     const cx = pad.left + step * i + step / 2;
     const x = cx - barW / 2;
-    const selected = day.date === data.selected_date;
+    const selected = day.date === selectedDate;
     if (selected) parts.push(`<rect class="mm-selected-band" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}" rx="6"/>`);
     // Each tool's own time is stacked; the tooltip also gives the de-duplicated total.
     const claudeH = (day.claude_minutes / 60 / top) * plotH;
@@ -6585,7 +6730,7 @@ function renderWorkChart(data) {
     const cx = pad.left + step * i + step / 2;
     const h = Math.max(3, (day.prs_merged / maxPr) * 26);
     prParts.push(`<path class="seg-pr" d="${mmRoundedTop(cx - barW / 2, baseY - h, barW, h, 3)}"/>`);
-    if ((maxPr > 1 && day.prs_merged === maxPr) || day.date === data.selected_date) {
+    if ((maxPr > 1 && day.prs_merged === maxPr) || day.date === selectedDate) {
       prParts.push(`<text class="is-current" x="${cx}" y="${baseY - h - 4}" text-anchor="middle">${day.prs_merged}</text>`);
     }
   });
@@ -6599,18 +6744,18 @@ function renderWorkChart(data) {
     hit.addEventListener('focus', show);
     hit.addEventListener('mouseleave', hideWorkTooltip);
     hit.addEventListener('blur', hideWorkTooltip);
-    hit.addEventListener('click', () => loadDailyWork(day.date));
+    hit.addEventListener('click', () => onPick(day.date));
     hit.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        loadDailyWork(day.date);
+        onPick(day.date);
       }
     });
   });
 }
 
 function showWorkTooltip(day, target) {
-  const tip = document.getElementById('mm-tooltip');
+  const tip = target.closest('.mm-panel').querySelector('.mm-tooltip');
   const panel = tip.parentElement.getBoundingClientRect();
   tip.innerHTML = `<b>${mmEsc(mmDayShort(day.date))}</b>
     <div class="row"><span>Всего без пересечений</span><span>${mmEsc(workMinutes(day.total_minutes))}</span></div>
@@ -6626,7 +6771,7 @@ function showWorkTooltip(day, target) {
 }
 
 function hideWorkTooltip() {
-  document.getElementById('mm-tooltip').hidden = true;
+  document.querySelectorAll('#mm-os .mm-tooltip').forEach(tip => { tip.hidden = true; });
 }
 
 function renderWorkSeriesTable(data) {
@@ -6809,6 +6954,261 @@ function renderInfra(data) {
   }).join('') + (data.truncated ? '<p class="mm-section-note">Показаны последние 600 изменений.</p>' : '');
 }
 
+function mmCompactTime(minutes) {
+  return minutes < 60 ? workMinutes(minutes) : `${workHours(minutes)} ч`;
+}
+
+function mmInitials(name) {
+  return String(name || '?').split(/[\s/_.-]+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase() || '?';
+}
+
+function mmArt(item, extraClass = '') {
+  const tint = MM_TINTS.has(item.id) ? item.id : 'other';
+  const inner = item.mascot
+    ? `<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-${mmEsc(item.mascot)}"/></svg>`
+    : `<span class="mm-art-initials">${mmEsc(mmInitials(item.name))}</span>`;
+  return `<span class="mm-project-art tint-${tint} ${extraClass}" aria-hidden="true">${inner}</span>`;
+}
+
+function mmSpark(values) {
+  const bar = 4;
+  const gap = 2;
+  const height = 32;
+  const max = Math.max(1, ...values);
+  const rects = values.map((value, i) => {
+    const h = value > 0 ? Math.max(3, (value / max) * height) : 1;
+    return `<rect class="${value > 0 ? '' : 'zero'}" x="${i * (bar + gap)}" y="${height - h}" width="${bar}" height="${h}" rx="1"/>`;
+  }).join('');
+  return `<svg class="mm-spark" viewBox="0 0 ${values.length * (bar + gap) - gap} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects}</svg>`;
+}
+
+function mmDayOffset(isoTs) {
+  const date = new Date(isoTs || '');
+  if (Number.isNaN(date.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  return Math.round((today - date) / 86400000);
+}
+
+function mmRelDay(isoTs) {
+  const offset = mmDayOffset(isoTs);
+  if (offset === null) return '—';
+  if (offset <= 0) return `сегодня, ${mmTime(isoTs)}`;
+  if (offset === 1) return `вчера, ${mmTime(isoTs)}`;
+  if (offset < 7) return `${offset} дн назад`;
+  const date = new Date(isoTs);
+  return `${date.getDate()} ${MM_MONTHS[date.getMonth()]}`;
+}
+
+function mmDayHeading(iso) {
+  const offset = mmDayOffset(`${iso}T12:00:00`);
+  if (offset === 0) return 'Сегодня';
+  if (offset === 1) return 'Вчера';
+  return `${mmDayShort(iso)}, ${MM_WEEKDAYS[mmDate(iso).getDay()]}`;
+}
+
+function mmWeekChip(item) {
+  const week = item.last_7_minutes;
+  const prev = item.previous_7_minutes;
+  if (!week) return '<span class="mm-chip">на этой неделе не трогал</span>';
+  const cls = prev ? (week >= prev ? 'is-up' : 'is-down') : '';
+  return `<span class="mm-chip ${cls}">${mmEsc(workMinutes(week))} за 7 дней</span>`;
+}
+
+function renderProjectCards(data) {
+  const host = document.getElementById('mm-project-grid');
+  document.getElementById('mm-projects-total').textContent = data.project_total || '';
+  document.getElementById('mm-projects-nav-count').textContent = data.project_total || 0;
+  document.querySelectorAll('#mm-project-sort [data-sort]').forEach(button => {
+    button.setAttribute('aria-pressed', button.dataset.sort === mmProjectSort ? 'true' : 'false');
+  });
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="mm-empty">Проектов за 30 дней: ${data.project_total}. Названия и работа видны только владельцу.</p>`;
+    return;
+  }
+  const items = (data.projects || []).slice();
+  if (mmProjectSort === 'time') items.sort((a, b) => b.total_minutes - a.total_minutes);
+  if (!items.length) {
+    host.innerHTML = '<p class="mm-empty">За 30 дней ни сессий Claude и Codex, ни PR не найдено.</p>';
+    return;
+  }
+  host.innerHTML = items.map((item, index) => {
+    const featured = index < 2 && item.total_minutes > 0 ? ' is-featured' : '';
+    const where = item.repos.length ? item.repos.join(' · ') : item.projects.join(' · ');
+    return `<a class="mm-project-card${featured}" href="?tab=work&amp;project=${encodeURIComponent(item.id)}" data-project="${mmEsc(item.id)}">
+      ${mmArt(item)}
+      <span class="mm-project-body">
+        <span class="mm-project-kicker">${mmEsc(item.last_activity ? mmRelDay(item.last_activity) : 'без активности')}</span>
+        <span class="mm-project-name">${mmEsc(item.name)}</span>
+        <span class="mm-project-repo">${mmEsc(where || 'без репозитория')}</span>
+        ${mmSpark(item.daily_minutes)}
+        <span class="mm-project-stats">
+          <span><b>${mmEsc(mmCompactTime(item.total_minutes))}</b><small>за 30 дней</small></span>
+          <span><b>${item.prs_merged}</b><small>PR смёрджено</small></span>
+          <span><b>${item.active_days}</b><small>дней в работе</small></span>
+        </span>
+        <span class="mm-project-foot">${mmWeekChip(item)}${item.prs_open ? `<span class="mm-chip">открытых PR: ${item.prs_open}</span>` : ''}${item.loose ? `<span class="mm-chip is-warn">хвостов: ${item.loose}</span>` : ''}</span>
+        ${item.last_topic ? `<span class="mm-project-last"><b>Последнее:</b> ${mmEsc(compactText(item.last_topic, 110))}</span>` : ''}
+      </span>
+    </a>`;
+  }).join('');
+}
+
+async function openProject(id) {
+  mmProjectId = id;
+  mmProjectData = null;
+  const page = document.getElementById('mm-project-page');
+  page.innerHTML = '<p class="mm-empty">Загружаю проект…</p>';
+  mmShowView('project');
+  mmSetProjectUrl(id);
+  const os = document.getElementById('mm-os');
+  if (os.getBoundingClientRect().top < 0) os.scrollIntoView({ block: 'start' });
+  try {
+    const params = new URLSearchParams({ days: '30', project: id });
+    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    if (mmProjectId !== id) return;
+    if (!data.owner_view) {
+      page.innerHTML = '<p class="mm-empty">Работа по проектам видна только владельцу.</p>';
+      return;
+    }
+    if (!data.project) {
+      page.innerHTML = '<p class="mm-empty">За 30 дней по этому проекту ничего не найдено.</p>';
+      return;
+    }
+    mmProjectData = { ...data.project, dates: data.series.map(day => day.date) };
+    renderProjectPage();
+  } catch (error) {
+    if (mmProjectId === id) page.innerHTML = '<p class="mm-empty">Не удалось получить проект с сервера Command Center.</p>';
+  }
+}
+
+function mmProjectSeries(project) {
+  const byDate = Object.fromEntries((project.timeline || []).map(day => [day.date, day]));
+  return project.dates.map((date, i) => {
+    const day = byDate[date];
+    return {
+      date,
+      claude_minutes: project.daily_claude_minutes[i] || 0,
+      codex_minutes: project.daily_codex_minutes[i] || 0,
+      total_minutes: project.daily_minutes[i] || 0,
+      prs_merged: project.daily_prs_merged[i] || 0,
+      sessions: day ? day.sessions.length : 0,
+      prompts: day ? day.sessions.reduce((sum, session) => sum + (session.prompts || 0), 0) : 0,
+    };
+  });
+}
+
+function mmProjectDay(day, open) {
+  const note = [
+    day.claude_minutes ? `Claude ${workMinutes(day.claude_minutes)}` : '',
+    day.codex_minutes ? `Codex ${workMinutes(day.codex_minutes)}` : '',
+    day.sessions.length ? `${day.sessions.length} сесс.` : '',
+    day.merged.length ? `смёрджено ${day.merged.length}` : '',
+    day.opened.length ? `открыто PR ${day.opened.length}` : '',
+    day.closed_unmerged.length ? `закрыто без merge ${day.closed_unmerged.length}` : '',
+    day.commands.length ? `команд в инфраструктуре ${day.commands.length}` : '',
+  ].filter(Boolean).join(' · ');
+  const dot = day.claude_minutes || day.codex_minutes ? (day.claude_minutes >= day.codex_minutes ? 'claude' : 'codex') : 'cat-pr';
+  const prs = [
+    ...day.merged.map(pr => mmPrAction(pr, 'merged')),
+    ...day.opened.map(pr => mmPrAction(pr, 'open')),
+    ...day.closed_unmerged.map(pr => mmPrAction(pr, 'closed')),
+  ];
+  const sessions = day.sessions.length ? `<div class="mm-table-scroll"><table class="mm-data-table mm-day-table">
+      <colgroup><col class="mm-col-span"><col class="mm-col-tool"><col><col class="mm-col-min"></colgroup>
+      <thead><tr><th>Время</th><th>Инструмент</th><th>Что делал</th><th class="num">Мин</th></tr></thead>
+      <tbody>${day.sessions.map(s => `<tr>
+        <td class="cell-date" data-label="Время">${mmEsc(mmTime(s.start))}–${mmEsc(mmTime(s.end))}</td>
+        <td data-label="Инструмент"><b>${s.tool === 'claude' ? 'Claude' : 'Codex'}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
+        <td data-label="Что делал">${mmEsc(compactText(s.topic || '—', 160))}</td>
+        <td class="num" data-label="Мин">${s.active_minutes}</td>
+      </tr>`).join('')}</tbody></table></div>` : '';
+  const commands = day.commands.length ? `<div class="mm-command-list">${day.commands.map(c => `<div class="mm-command">
+      <small>${mmEsc(mmTime(c.at))} · ${c.tool === 'claude' ? 'Claude' : 'Codex'} · ${mmEsc(c.host || '')}</small><code>${mmEsc(c.command || '')}</code></div>`).join('')}</div>` : '';
+  return `<details class="mm-group-row" id="mm-day-${mmEsc(day.date)}"${open ? ' open' : ''}>
+    <summary>
+      <span class="mm-dot ${dot}" aria-hidden="true"></span>
+      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(mmDayHeading(day.date))}</span><span class="mm-group-note">${mmEsc(note || 'без сессий')}</span></span>
+      <span class="mm-group-aside">${day.minutes ? mmEsc(workMinutes(day.minutes)) : '—'}<small>${day.minutes ? 'работы' : 'только GitHub'}</small></span>
+      <span class="mm-chevron" aria-hidden="true">›</span>
+    </summary>
+    <div class="mm-group-body">
+      ${prs.length ? `<div class="mm-group-foot">${prs.join('')}</div>` : ''}
+      ${sessions}
+      ${commands}
+    </div>
+  </details>`;
+}
+
+function renderProjectPage() {
+  const p = mmProjectData;
+  const page = document.getElementById('mm-project-page');
+  document.getElementById('mm-view-title').textContent = p.name;
+  const week = p.last_7_minutes;
+  const prev = p.previous_7_minutes;
+  const delta = week - prev;
+  const stats = [
+    { label: 'За 30 дней', value: workMinutes(p.total_minutes), note: `Claude ${workMinutes(p.claude_minutes)} · Codex ${workMinutes(p.codex_minutes)}` },
+    { label: 'Последние 7 дней', value: workMinutes(week), note: prev ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе` : 'прошлой недели в данных нет', cls: prev ? (delta >= 0 ? 'is-up' : 'is-down') : '' },
+    { label: 'PR смёрджено', value: String(p.prs_merged), note: `открыто сейчас: ${p.prs_open}` },
+    { label: 'Дней в работе', value: `${p.active_days} из 30`, note: `${p.sessions} сессий · ${p.prompts} промптов` },
+  ];
+  const merged = p.timeline.flatMap(day => day.merged);
+  const where = (p.repos.length ? p.repos : p.projects).map(name => `<span class="mm-chip">${mmEsc(name)}</span>`).join('');
+  page.innerHTML = `
+    <button type="button" class="mm-back" id="mm-project-back"><span aria-hidden="true">‹</span> Все проекты</button>
+    <section class="mm-project-hero">
+      ${mmArt(p, 'is-hero')}
+      <div class="mm-project-hero-body">
+        <span class="mm-project-kicker">${mmEsc(p.last_activity ? `последняя работа: ${mmRelDay(p.last_activity)}` : 'без активности')}</span>
+        <h3 class="mm-project-title">${mmEsc(p.name)}</h3>
+        <div class="mm-chip-row">${where}</div>
+        ${p.last_topic ? `<p class="mm-project-last"><b>Последнее:</b> ${mmEsc(p.last_topic)}</p>` : ''}
+      </div>
+    </section>
+    <div class="mm-stats">${stats.map(stat => `
+      <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
+    </div>
+    <section class="mm-panel" aria-labelledby="mm-project-chart-title">
+      <div class="mm-section-heading">
+        <div><h3 id="mm-project-chart-title">Работа по дням <span>30 дней</span></h3><p class="mm-section-note">Нажми на столбик, чтобы открыть этот день ниже.</p></div>
+        <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
+      </div>
+      <div class="mm-chart" id="mm-project-chart"></div>
+      <div class="mm-chart mm-chart-prs" id="mm-project-chart-prs"></div>
+      <div class="mm-tooltip" role="tooltip" hidden></div>
+    </section>
+    <div class="mm-section-heading"><div><h3>Что получилось <span>${merged.length}</span></h3><p class="mm-section-note">PR, смёрдженные за 30 дней.</p></div></div>
+    <div class="mm-outcomes">${merged.length ? merged.map(pr => mmPrAction(pr, 'merged')).join('') : '<span class="mm-chip">За 30 дней PR не смёрджено</span>'}</div>
+    ${p.open_prs_list.length ? `<div class="mm-section-heading"><div><h3>Открытые PR <span>${p.open_prs_list.length}</span></h3></div></div>
+    <div class="mm-outcomes">${p.open_prs_list.map(pr => mmPrAction(pr, 'open')).join('')}</div>` : ''}
+    ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
+    <div class="mm-group-rows mm-block">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}
+    <div class="mm-section-heading"><div><h3>По дням <span>${p.timeline.length}</span></h3><p class="mm-section-note">Сессии с темами, PR и команды, которые меняли инфраструктуру.</p></div></div>
+    <div class="mm-group-rows">${p.timeline.map((day, index) => mmProjectDay(day, index < 3)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>`;
+  document.getElementById('mm-project-back').addEventListener('click', () => mmShowView('projects'));
+  renderProjectChart();
+}
+
+function renderProjectChart() {
+  if (!mmProjectData) return;
+  mmDrawChart({
+    host: document.getElementById('mm-project-chart'),
+    prHost: document.getElementById('mm-project-chart-prs'),
+    series: mmProjectSeries(mmProjectData),
+    selectedDate: null,
+    onPick: date => {
+      const row = document.getElementById(`mm-day-${date}`);
+      if (!row) return;
+      row.open = true;
+      row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+  });
+}
+
 function mmRenderSources() {
   const parts = [];
   const machines = dailyWorkData?.sources?.machines || [];
@@ -6825,7 +7225,7 @@ let mmResizeTimer = null;
 window.addEventListener('resize', () => {
   if (!dailyWorkData || !document.getElementById('section-work')?.classList.contains('active')) return;
   clearTimeout(mmResizeTimer);
-  mmResizeTimer = setTimeout(() => renderWorkChart(dailyWorkData), 150);
+  mmResizeTimer = setTimeout(mmRedrawCharts, 150);
 });
 // ── End MAIN MANAGER ──
 </script>
