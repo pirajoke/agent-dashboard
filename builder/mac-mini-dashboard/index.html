@@ -3133,6 +3133,25 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-project-hero .mm-project-last { -webkit-line-clamp: 3; font-size: 14px; }
 .mm-outcomes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
 .mm-block { margin-bottom: 28px; }
+.mm-project-desc { margin-top: 2px; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; }
+.mm-project-hero .mm-project-desc { max-width: 64ch; margin: 2px 0 4px; font-size: 15px; }
+.mm-bullets { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mm-bullets li { position: relative; padding-left: 16px; font-size: 14px; line-height: 1.5; }
+.mm-bullets li::before { content: ""; position: absolute; top: .6em; left: 2px; width: 6px; height: 6px; background: var(--mm-accent); border-radius: 50%; }
+.mm-summary-headline { margin-bottom: 16px; font-size: 17px; font-weight: 650; line-height: 1.4; }
+.mm-summary-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.mm-summary-item { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; align-items: start; padding: 14px; color: var(--mm-ink) !important; text-decoration: none !important; border: 1px solid var(--mm-line); border-radius: 12px; transition: border-color .15s ease, background .15s ease; }
+.mm-summary-item:hover { background: var(--mm-surface-hover); border-color: var(--mm-control-line); }
+.mm-project-art.is-mini { width: 52px; height: 52px; border-radius: 12px; }
+.mm-project-art.is-mini svg { width: 42px; height: 42px; }
+.mm-project-art.is-mini .mm-art-initials { width: 36px; height: 36px; font-size: 13px; border-radius: 10px; }
+.mm-summary-name { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 15px; font-weight: 700; }
+.mm-summary-name small { color: var(--mm-muted); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.mm-summary-empty { margin: 0; color: var(--mm-muted); font-size: 14px; line-height: 1.5; }
+.mm-day-lead { margin: 6px 0 4px; }
+.mm-day-lead + .mm-more { margin-top: 8px; }
+/* An open day already lists its bullets; the first one need not repeat in the header. */
+.mm-group-row.has-summary[open] > summary .mm-group-note { display: none; }
 .mm-day-table { table-layout: fixed; }
 .mm-day-table .mm-col-span { width: 120px; }
 .mm-day-table .mm-col-tool { width: 210px; }
@@ -3196,6 +3215,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-project-art.is-hero svg { width: 84px; height: 84px; }
   .mm-project-hero-body { padding: 16px; }
   .mm-project-title { font-size: 24px; }
+  .mm-summary-list { grid-template-columns: minmax(0, 1fr); }
+  .mm-summary-item { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .mm-project-art.is-mini { width: 44px; height: 44px; }
+  .mm-project-art.is-mini svg { width: 36px; height: 36px; }
   .mm-group-body { padding: 2px 14px 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3533,6 +3556,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           </div>
 
           <div class="mm-view" data-mm-panel="overview" hidden>
+            <section class="mm-panel" id="mm-day-summary-panel" aria-labelledby="mm-day-summary-title" hidden>
+              <div class="mm-section-heading">
+                <div><h3 id="mm-day-summary-title">Итог дня</h3><p class="mm-section-note">Что изменилось в продуктах, простыми словами. Пишет Claude по сессиям и PR этого дня.</p></div>
+              </div>
+              <div id="mm-day-summary"></div>
+            </section>
             <div class="mm-stats" id="mm-stats" aria-label="Итоги выбранного дня"></div>
             <section class="mm-panel" aria-labelledby="mm-traction-title">
               <div class="mm-section-heading">
@@ -6467,12 +6496,12 @@ function mmInit() {
     mmProjectSort = button.dataset.sort;
     if (dailyWorkData) renderProjectCards(dailyWorkData);
   });
-  document.getElementById('mm-project-grid').addEventListener('click', event => {
+  ['mm-project-grid', 'mm-day-summary'].forEach(id => document.getElementById(id).addEventListener('click', event => {
     const card = event.target.closest('[data-project]');
     if (!card || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
     event.preventDefault();
     openProject(card.dataset.project);
-  });
+  }));
 }
 
 function mmRedrawCharts() {
@@ -6617,6 +6646,7 @@ function renderDailyWork() {
   document.getElementById('mm-next-day').disabled = index >= days.length - 1;
   document.getElementById('mm-loose-count').textContent = data.dropped_count + data.forgot_count;
   mmRenderNotice();
+  renderDaySummary(data);
   renderWorkStats(data);
   renderWorkChart(data);
   renderWorkSeriesTable(data);
@@ -6624,6 +6654,50 @@ function renderDailyWork() {
   renderLoose(data);
   renderProjectCards(data);
   mmRenderSources();
+}
+
+function mmBullets(bullets) {
+  return `<ul class="mm-bullets">${bullets.map(text => `<li>${mmEsc(text)}</li>`).join('')}</ul>`;
+}
+
+function mmSummaryPending(data) {
+  const status = data.summaries_status;
+  if (status && status.ok === false) {
+    const why = String(status.reason || '').startsWith('claude_not_found')
+      ? 'на Mac mini не найден Claude Code'
+      : 'Claude не ответил';
+    return `Итог этого дня ещё не готов: последняя попытка не удалась (${why}). Повтор каждые 3 часа.`;
+  }
+  return 'Итог этого дня ещё не готов. Его пишет Claude на Mac mini, проверка каждые 3 часа.';
+}
+
+function renderDaySummary(data) {
+  const panel = document.getElementById('mm-day-summary-panel');
+  const host = document.getElementById('mm-day-summary');
+  panel.hidden = !data.owner_view;
+  if (!data.owner_view) return;
+  const day = data.day;
+  const summary = day.summary;
+  document.getElementById('mm-day-summary-title').textContent = `Итог: ${mmDayHeading(day.date).toLowerCase()}`;
+  if (!summary || !summary.projects.length) {
+    let text;
+    if (day.is_today) text = 'Итог за сегодня появится после конца дня.';
+    else if (!day.sessions && !day.prs_merged && !day.prs_opened) text = 'В этот день работы не было.';
+    else text = mmSummaryPending(data);
+    host.innerHTML = `<p class="mm-summary-empty">${mmEsc(text)}</p>`;
+    return;
+  }
+  host.innerHTML = `
+    ${summary.headline ? `<p class="mm-summary-headline">${mmEsc(summary.headline)}</p>` : ''}
+    <div class="mm-summary-list">${summary.projects.map(item => `
+      <a class="mm-summary-item" href="?tab=work&amp;project=${encodeURIComponent(item.id)}" data-project="${mmEsc(item.id)}">
+        ${mmArt(item, 'is-mini')}
+        <span>
+          <span class="mm-summary-name">${mmEsc(item.name)}${item.minutes ? `<small>${mmEsc(workMinutes(item.minutes))}</small>` : ''}</span>
+          ${mmBullets(item.bullets)}
+        </span>
+      </a>`).join('')}
+    </div>`;
 }
 
 function renderWorkStats(data) {
@@ -7041,6 +7115,7 @@ function renderProjectCards(data) {
       <span class="mm-project-body">
         <span class="mm-project-kicker">${mmEsc(item.last_activity ? mmRelDay(item.last_activity) : 'без активности')}</span>
         <span class="mm-project-name">${mmEsc(item.name)}</span>
+        ${item.description ? `<span class="mm-project-desc">${mmEsc(item.description)}</span>` : ''}
         <span class="mm-project-repo">${mmEsc(where || 'без репозитория')}</span>
         ${mmSpark(item.daily_minutes)}
         <span class="mm-project-stats">
@@ -7049,10 +7124,18 @@ function renderProjectCards(data) {
           <span><b>${item.active_days}</b><small>дней в работе</small></span>
         </span>
         <span class="mm-project-foot">${mmWeekChip(item)}${item.prs_open ? `<span class="mm-chip">открытых PR: ${item.prs_open}</span>` : ''}${item.loose ? `<span class="mm-chip is-warn">хвостов: ${item.loose}</span>` : ''}</span>
-        ${item.last_topic ? `<span class="mm-project-last"><b>Последнее:</b> ${mmEsc(compactText(item.last_topic, 110))}</span>` : ''}
+        ${mmLastWork(item, 140)}
       </span>
     </a>`;
   }).join('');
+}
+
+function mmLastWork(item, limit) {
+  const last = item.last_summary;
+  if (last && last.bullets.length) {
+    return `<span class="mm-project-last"><b>Итог, ${mmEsc(mmDayHeading(last.date).toLowerCase())}:</b> ${mmEsc(compactText(last.bullets[0], limit))}</span>`;
+  }
+  return item.last_topic ? `<span class="mm-project-last"><b>Последнее:</b> ${mmEsc(compactText(item.last_topic, limit))}</span>` : '';
 }
 
 async function openProject(id) {
@@ -7128,17 +7211,22 @@ function mmProjectDay(day, open) {
       </tr>`).join('')}</tbody></table></div>` : '';
   const commands = day.commands.length ? `<div class="mm-command-list">${day.commands.map(c => `<div class="mm-command">
       <small>${mmEsc(mmTime(c.at))} · ${c.tool === 'claude' ? 'Claude' : 'Codex'} · ${mmEsc(c.host || '')}</small><code>${mmEsc(c.command || '')}</code></div>`).join('')}</div>` : '';
-  return `<details class="mm-group-row" id="mm-day-${mmEsc(day.date)}"${open ? ' open' : ''}>
+  const tech = `${prs.length ? `<div class="mm-group-foot">${prs.join('')}</div>` : ''}${sessions}${commands}`;
+  const summary = day.summary && day.summary.length ? day.summary : null;
+  const isToday = mmDayOffset(`${day.date}T12:00:00`) === 0;
+  const lead = summary
+    ? `<div class="mm-day-lead">${mmBullets(summary)}</div>`
+    : `<p class="mm-summary-empty mm-day-lead">${isToday ? 'Итог за сегодня появится после конца дня.' : 'Итог этого дня ещё не готов.'}</p>`;
+  return `<details class="mm-group-row${summary ? ' has-summary' : ''}" id="mm-day-${mmEsc(day.date)}"${open ? ' open' : ''}>
     <summary>
       <span class="mm-dot ${dot}" aria-hidden="true"></span>
-      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(mmDayHeading(day.date))}</span><span class="mm-group-note">${mmEsc(note || 'без сессий')}</span></span>
+      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(mmDayHeading(day.date))}</span><span class="mm-group-note">${mmEsc(summary ? summary[0] : (note || 'без сессий'))}</span></span>
       <span class="mm-group-aside">${day.minutes ? mmEsc(workMinutes(day.minutes)) : '—'}<small>${day.minutes ? 'работы' : 'только GitHub'}</small></span>
       <span class="mm-chevron" aria-hidden="true">›</span>
     </summary>
     <div class="mm-group-body">
-      ${prs.length ? `<div class="mm-group-foot">${prs.join('')}</div>` : ''}
-      ${sessions}
-      ${commands}
+      ${lead}
+      ${tech ? `<details class="mm-more"${summary ? '' : ' open'}><summary>Технические детали${note ? ` · ${mmEsc(note)}` : ''}</summary>${tech}</details>` : ''}
     </div>
   </details>`;
 }
@@ -7165,8 +7253,8 @@ function renderProjectPage() {
       <div class="mm-project-hero-body">
         <span class="mm-project-kicker">${mmEsc(p.last_activity ? `последняя работа: ${mmRelDay(p.last_activity)}` : 'без активности')}</span>
         <h3 class="mm-project-title">${mmEsc(p.name)}</h3>
+        ${p.description ? `<p class="mm-project-desc">${mmEsc(p.description)}</p>` : ''}
         <div class="mm-chip-row">${where}</div>
-        ${p.last_topic ? `<p class="mm-project-last"><b>Последнее:</b> ${mmEsc(p.last_topic)}</p>` : ''}
       </div>
     </section>
     <div class="mm-stats">${stats.map(stat => `
@@ -7187,7 +7275,7 @@ function renderProjectPage() {
     <div class="mm-outcomes">${p.open_prs_list.map(pr => mmPrAction(pr, 'open')).join('')}</div>` : ''}
     ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
     <div class="mm-group-rows mm-block">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}
-    <div class="mm-section-heading"><div><h3>По дням <span>${p.timeline.length}</span></h3><p class="mm-section-note">Сессии с темами, PR и команды, которые меняли инфраструктуру.</p></div></div>
+    <div class="mm-section-heading"><div><h3>По дням <span>${p.timeline.length}</span></h3><p class="mm-section-note">Итог каждого дня простыми словами. Сессии, PR и команды лежат в технических деталях.</p></div></div>
     <div class="mm-group-rows">${p.timeline.map((day, index) => mmProjectDay(day, index < 3)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>`;
   document.getElementById('mm-project-back').addEventListener('click', () => mmShowView('projects'));
   renderProjectChart();

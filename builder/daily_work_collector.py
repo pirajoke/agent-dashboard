@@ -10,8 +10,10 @@ calendar day of this machine). GitHub snapshot: ``<out>/github.json``. The
 Mac mini runs with ``--github``; other Macs run with ``--push-to <host>`` so
 their session files land next to the Mac mini's ones.
 
-Prompt text is reduced to a short, redacted topic line. Raw prompts and
-assistant output never leave the machine.
+Prompt text is reduced to a short, redacted topic line, plus a few short
+redacted excerpts per day (what Mark asked, the agent's last reply) that only
+``daily_work_summarizer.py`` on the Mac mini reads to write the plain-language
+day summary. The API never serves those excerpts.
 """
 from __future__ import annotations
 
@@ -30,18 +32,28 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
-SCHEMA = 1
+SCHEMA = 2
 HOME = Path.home()
 DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
 CLAUDE_DIRS = [HOME / ".claude" / "projects", HOME / ".config" / "claude" / "projects"]
 CODEX_DIRS = [HOME / ".codex" / "sessions", HOME / ".codex" / "archived_sessions"]
 GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
+# The summarizer runs Claude here; its own sessions are not Mark's work.
+SUMMARIZER_DIR = DEFAULT_OUT / "summarizer"
 GITHUB_API = "https://api.github.com"
 # Two events of one session closer than this count as continuous work.
 IDLE_GAP_SECONDS = 30 * 60
 # A lone event (one prompt, one reply) still costs about a minute.
 EVENT_SECONDS = 60
 TOPIC_LIMIT = 110
+# Inputs for the plain-language summary: a few asks and the last reply per day.
+ASK_LIMIT = 280
+ASKS_PER_DAY = 8
+OUTCOME_LIMIT = 700
+PR_BODY_LIMIT = 900
+# Day files older than SCHEMA are rewritten once inside this window, so the
+# summarizer gets asks and replies for the last two weeks.
+UPGRADE_DAYS = 14
 REMOTE_RE = re.compile(r"github\.com[:/]+([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?$")
 SECRET_PATTERNS = [
     re.compile(r"sk-(?:proj-)?[A-Za-z0-9_-]{20,}"),
@@ -116,7 +128,7 @@ def local_day(moment: datetime) -> str:
     return moment.astimezone().date().isoformat()
 
 
-def redact_topic(text: object) -> str | None:
+def redact_topic(text: object, limit: int = TOPIC_LIMIT) -> str | None:
     if not isinstance(text, str):
         return None
     line = " ".join(text.split())
@@ -124,8 +136,8 @@ def redact_topic(text: object) -> str | None:
         return None
     for pattern in SECRET_PATTERNS:
         line = pattern.sub("[скрыто]", line)
-    if len(line) > TOPIC_LIMIT:
-        line = line[: TOPIC_LIMIT - 1].rstrip() + "…"
+    if len(line) > limit:
+        line = line[: limit - 1].rstrip() + "…"
     return line
 
 
@@ -329,6 +341,20 @@ class Session:
         self.events: list[datetime] = []
         self.prompts: list[datetime] = []
         self.infra_actions: list[dict[str, Any]] = []
+        self.asks: list[tuple[datetime, str]] = []
+        # Latest agent reply per local day: usually its wrap-up of the work.
+        self.replies: dict[str, tuple[datetime, str]] = {}
+
+    def note_ask(self, moment: datetime, text: str) -> None:
+        ask = redact_topic(text, ASK_LIMIT)
+        if ask:
+            self.asks.append((moment, ask))
+
+    def note_reply(self, moment: datetime, text: object) -> None:
+        reply = redact_topic(text, OUTCOME_LIMIT)
+        day = local_day(moment)
+        if reply and (day not in self.replies or self.replies[day][0] <= moment):
+            self.replies[day] = (moment, reply)
 
 
 def _claude_prompt_text(record: dict[str, Any]) -> str | None:
@@ -374,6 +400,8 @@ def parse_claude_file(path: Path) -> list[Session]:
                     action = infra_action((part.get("input") or {}).get("command"), moment)
                     if action:
                         session.infra_actions.append(action)
+            texts = [part.get("text") for part in message["content"] if isinstance(part, dict) and part.get("type") == "text"]
+            session.note_reply(moment, " ".join(t for t in texts if isinstance(t, str)))
         if record.get("type") == "user" and not record.get("isMeta"):
             text = _claude_prompt_text(record)
             if text is not None:
@@ -381,6 +409,7 @@ def parse_claude_file(path: Path) -> list[Session]:
                 if topic:
                     session.prompts.append(moment)
                     session.topic = session.topic or topic
+                    session.note_ask(moment, text)
     for session in sessions.values():
         session.summary = summary
         session.repo = repo_for_cwd(session.cwd)
@@ -448,12 +477,15 @@ def parse_codex_file(path: Path) -> list[Session]:
             action = infra_action(_codex_command(payload), moment)
             if action:
                 session.infra_actions.append(action)
+        if record.get("type") == "event_msg" and payload.get("type") == "agent_message":
+            session.note_reply(moment, payload.get("message"))
         text = _codex_prompt_text(record)
         if text is not None:
             topic = redact_topic(text)
             if topic:
                 session.prompts.append(moment)
                 session.topic = session.topic or topic
+                session.note_ask(moment, text)
     if session.repo is None:
         session.repo = repo_for_cwd(session.cwd)
     return [session] if session.events else []
@@ -472,7 +504,23 @@ def collect_sessions(since: datetime) -> tuple[list[Session], dict[str, Any]]:
         sessions.extend(parse_codex_file(path))
     sources["codex"] = {"ok": codex_found, "files": len(codex_files)} if codex_found else {
         "ok": False, "reason": "logs_not_found"}
+    sessions = [session for session in sessions if not _is_summarizer(session.cwd)]
     return sessions, sources
+
+
+def _is_summarizer(cwd: str | None) -> bool:
+    return bool(cwd) and (cwd == str(SUMMARIZER_DIR) or cwd.startswith(str(SUMMARIZER_DIR) + os.sep))
+
+
+def _day_asks(asks: list[tuple[datetime, str]], day: str) -> list[str]:
+    texts: list[str] = []
+    for moment, text in asks:
+        if local_day(moment) == day and (not texts or texts[-1] != text):
+            texts.append(text)
+    if len(texts) > ASKS_PER_DAY:
+        # The first asks set the goal, the last ones show where it ended up.
+        texts = texts[: ASKS_PER_DAY - 3] + texts[-3:]
+    return texts
 
 
 def split_by_local_day(intervals: list[tuple[datetime, datetime]]) -> dict[str, list[tuple[datetime, datetime]]]:
@@ -511,6 +559,8 @@ def day_records(sessions: list[Session], days: set[str]) -> dict[str, list[dict[
                 "topic": session.summary or session.topic,
                 "intervals": [[iso_z(start), iso_z(end)] for start, end in intervals],
                 "infra_actions": [a for a in session.infra_actions if local_day(_parse_z(a["at"])) == day],
+                "asks": _day_asks(session.asks, day),
+                "outcome": session.replies[day][1] if day in session.replies else None,
             })
     for records in by_day.values():
         records.sort(key=lambda item: item["start"])
@@ -611,6 +661,7 @@ def _pr_item(item: dict[str, Any]) -> dict[str, Any]:
         "updated_at": item.get("updated_at"),
         "closed_at": item.get("closed_at"),
         "merged_at": pull.get("merged_at"),
+        "body": redact_topic(item.get("body"), PR_BODY_LIMIT),
     }
 
 
@@ -670,6 +721,24 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     tmp.replace(path)
 
 
+def _read_day_file(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _file_schema(path: Path) -> int:
+    schema = _read_day_file(path).get("schema")
+    return schema if isinstance(schema, int) else 0
+
+
+def _file_session_count(path: Path) -> int:
+    sessions = _read_day_file(path).get("sessions")
+    return len(sessions) if isinstance(sessions, list) else 0
+
+
 def machine_name(value: str | None) -> str:
     raw = value or socket.gethostname().split(".", 1)[0]
     return re.sub(r"[^a-z0-9-]+", "-", raw.lower()).strip("-") or "mac"
@@ -712,12 +781,20 @@ def main(argv: list[str] | None = None) -> int:
     window = [today - timedelta(days=offset) for offset in range(args.backfill_days)]
     recent = {day.isoformat() for day in window[: max(1, args.recent_days)]}
     wanted = {day.isoformat() for day in window if day.isoformat() in recent or not (machine_dir / f"{day.isoformat()}.json").exists()}
+    upgrades = {day.isoformat() for day in window[:UPGRADE_DAYS]
+                if day.isoformat() not in wanted and _file_schema(machine_dir / f"{day.isoformat()}.json") < SCHEMA}
+    wanted |= upgrades
     oldest = min(date.fromisoformat(day) for day in wanted)
     since = datetime.combine(oldest, datetime.min.time()).astimezone() - timedelta(days=1)
 
     sessions, sources = collect_sessions(since)
     by_day = day_records(sessions, wanted)
     for day in sorted(wanted):
+        if day in upgrades and len(by_day.get(day, [])) < _file_session_count(machine_dir / f"{day}.json"):
+            # The logs behind that day are partly gone: keep what was collected
+            # and mark it upgraded so it is not retried every run.
+            write_json(machine_dir / f"{day}.json", {**_read_day_file(machine_dir / f"{day}.json"), "schema": SCHEMA})
+            continue
         write_json(machine_dir / f"{day}.json", {
             "schema": SCHEMA,
             "date": day,
