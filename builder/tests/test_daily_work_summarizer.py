@@ -40,6 +40,8 @@ if mode == "error":
     sys.exit(0)
 body = text[text.index("Активность за"):]
 products = json.loads(body[body.index("["):body.rindex("]") + 1])
+if mode == "partial" or (mode == "partial-once" and "В прошлом ответе" not in text):
+    products = products[:1]
 answer = {"day": "Главное: стало удобнее", "projects": {p["id"]: [p["name"] + ": стало удобнее"] for p in products}}
 print(json.dumps({"type": "result", "is_error": False,
                   "result": "```json\\n" + json.dumps(answer, ensure_ascii=False) + "\\n```"}))
@@ -171,6 +173,26 @@ class SummarizerTest(unittest.TestCase):
         self.assertEqual(self._run("--day", self.yesterday), 0)
         self.assertEqual(self._status()["written"], [self.yesterday])
         self.assertEqual(len(self._calls()), 4)
+
+    def test_projects_left_out_are_asked_again(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "partial-once"
+        self.assertEqual(self._run("--max-days", "1"), 0)
+        self.assertEqual(len(self._calls()), 2)
+        self.assertIn("В прошлом ответе не было проектов: jarvis", self._calls()[1]["stdin"])
+        summary = self._summary(self.yesterday)
+        self.assertEqual(set(summary["projects"]), {"command-center", "jarvis"})
+        self.assertEqual(summary["missing"], [])
+
+    def test_projects_still_left_out_are_listed_not_retried_forever(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "partial"
+        self.assertEqual(self._run("--max-days", "1"), 0)
+        summary = self._summary(self.yesterday)
+        self.assertEqual(set(summary["projects"]), {"command-center"})
+        self.assertEqual(summary["missing"], ["jarvis"])
+        calls = len(self._calls())
+        self.assertEqual(self._run("--max-days", "1"), 0)
+        self.assertEqual(self._status()["written"], [self.before])  # yesterday is done for this input
+        self.assertEqual(len(self._calls()), calls + 1)  # the older day has one project: no retry
 
     def test_older_cli_without_new_flags_still_works(self):
         os.environ["FAKE_CLAUDE_MODE"] = "old"

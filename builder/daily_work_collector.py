@@ -38,8 +38,8 @@ DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
 CLAUDE_DIRS = [HOME / ".claude" / "projects", HOME / ".config" / "claude" / "projects"]
 CODEX_DIRS = [HOME / ".codex" / "sessions", HOME / ".codex" / "archived_sessions"]
 GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
-# The summarizer runs Claude here; its own sessions are not Mark's work.
-SUMMARIZER_DIR = DEFAULT_OUT / "summarizer"
+# daily_work_summarizer.py runs Claude in <out>/summarizer; those sessions are not Mark's work.
+SUMMARIZER_DIRNAME = "summarizer"
 GITHUB_API = "https://api.github.com"
 # Two events of one session closer than this count as continuous work.
 IDLE_GAP_SECONDS = 30 * 60
@@ -491,7 +491,7 @@ def parse_codex_file(path: Path) -> list[Session]:
     return [session] if session.events else []
 
 
-def collect_sessions(since: datetime) -> tuple[list[Session], dict[str, Any]]:
+def collect_sessions(since: datetime, out_dir: Path = DEFAULT_OUT) -> tuple[list[Session], dict[str, Any]]:
     sources: dict[str, Any] = {}
     sessions: list[Session] = []
     claude_files, claude_found = recent_files(CLAUDE_DIRS, "*.jsonl", since)
@@ -504,12 +504,13 @@ def collect_sessions(since: datetime) -> tuple[list[Session], dict[str, Any]]:
         sessions.extend(parse_codex_file(path))
     sources["codex"] = {"ok": codex_found, "files": len(codex_files)} if codex_found else {
         "ok": False, "reason": "logs_not_found"}
-    sessions = [session for session in sessions if not _is_summarizer(session.cwd)]
+    skip = out_dir.expanduser().resolve() / SUMMARIZER_DIRNAME
+    sessions = [session for session in sessions if not _is_inside(session.cwd, skip)]
     return sessions, sources
 
 
-def _is_summarizer(cwd: str | None) -> bool:
-    return bool(cwd) and (cwd == str(SUMMARIZER_DIR) or cwd.startswith(str(SUMMARIZER_DIR) + os.sep))
+def _is_inside(cwd: str | None, directory: Path) -> bool:
+    return bool(cwd) and (cwd == str(directory) or cwd.startswith(str(directory) + os.sep))
 
 
 def _day_asks(asks: list[tuple[datetime, str]], day: str) -> list[str]:
@@ -787,7 +788,7 @@ def main(argv: list[str] | None = None) -> int:
     oldest = min(date.fromisoformat(day) for day in wanted)
     since = datetime.combine(oldest, datetime.min.time()).astimezone() - timedelta(days=1)
 
-    sessions, sources = collect_sessions(since)
+    sessions, sources = collect_sessions(since, args.out)
     by_day = day_records(sessions, wanted)
     for day in sorted(wanted):
         if day in upgrades and len(by_day.get(day, [])) < _file_session_count(machine_dir / f"{day}.json"):

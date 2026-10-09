@@ -150,12 +150,13 @@ class CollectorParsingTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
             now = datetime.now(timezone.utc)
-            for name, cwd in (("mine", "/nonexistent/jarvis"), ("robot", str(COLLECTOR.SUMMARIZER_DIR))):
+            out = (home / "custom-out").resolve()
+            for name, cwd in (("mine", "/nonexistent/jarvis"), ("robot", str(out / "summarizer"))):
                 _write_jsonl(home / "claude" / "p" / f"{name}.jsonl", [
                     {"type": "user", "sessionId": name, "timestamp": _iso(now), "cwd": cwd,
                      "message": {"role": "user", "content": "Сделай итог дня"}}])
             with patch.object(COLLECTOR, "CLAUDE_DIRS", [home / "claude"]), patch.object(COLLECTOR, "CODEX_DIRS", []):
-                sessions, _ = COLLECTOR.collect_sessions(now - timedelta(days=1))
+                sessions, _ = COLLECTOR.collect_sessions(now - timedelta(days=1), out)
         self.assertEqual([s.session_id for s in sessions], ["mine"])
 
     def test_pr_body_is_redacted_and_shortened(self):

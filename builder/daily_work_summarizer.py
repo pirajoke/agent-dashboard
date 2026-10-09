@@ -34,7 +34,7 @@ from dashboard_builder.daily_work import (  # noqa: E402
 SCHEMA = 1
 HOME = Path.home()
 DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
-# Claude runs in <out>/summarizer; daily_work_collector.py skips sessions there (SUMMARIZER_DIR).
+# Claude runs in <out>/summarizer; daily_work_collector.py skips sessions there (SUMMARIZER_DIRNAME).
 WORKDIR_NAME = "summarizer"
 DEFAULT_MODEL = os.environ.get("DAILY_SUMMARY_MODEL", "claude-opus-5-5")
 WINDOW_DAYS = 14
@@ -202,6 +202,23 @@ def parse_summary(text: str, ids: set[str]) -> dict[str, Any]:
             "projects": projects}
 
 
+def summarize_day(cli: str, model: str, day: str, products: list[dict[str, Any]], workdir: Path) -> dict[str, Any]:
+    """Summarize one day; ask once more when the answer leaves projects out."""
+    ids = {product["id"] for product in products}
+    prompt = user_prompt(day, products)
+    summary = parse_summary(call_claude(cli, model, SYSTEM_PROMPT, prompt, workdir), ids)
+    missing = sorted(ids - set(summary["projects"]))
+    if missing:
+        retry_prompt = prompt + "\n\nВ прошлом ответе не было проектов: " + ", ".join(missing) + ". Ответь по всем проектам из входа."
+        try:
+            retry = parse_summary(call_claude(cli, model, SYSTEM_PROMPT, retry_prompt, workdir), ids)
+        except (RuntimeError, ValueError):
+            retry = None
+        if retry and len(retry["projects"]) > len(summary["projects"]):
+            summary = retry
+    return summary
+
+
 # ── run ──────────────────────────────────────────────────────────────────────
 
 def due_days(out: Path, inputs: dict[str, list[dict[str, Any]]], force: str | None) -> list[str]:
@@ -247,15 +264,17 @@ def main(argv: list[str] | None = None) -> int:
         status.update(ok=False, reason="claude_not_found")
     for day in due if cli else []:
         products = inputs[day]
+        ids = {product["id"] for product in products}
         try:
-            text = call_claude(cli, args.model, SYSTEM_PROMPT, user_prompt(day, products), args.out / WORKDIR_NAME)
-            summary = parse_summary(text, {product["id"] for product in products})
+            summary = summarize_day(cli, args.model, day, products, args.out / WORKDIR_NAME)
         except (RuntimeError, ValueError) as error:
             status.update(ok=False, reason=str(error)[:240])
             break
+        # Projects still left out after a retry stay without bullets for this
+        # input; they are listed rather than retried every run.
         write_json(args.out / "summaries" / f"{day}.json", {
             "schema": SCHEMA, "date": day, "generated_at": iso_z(datetime.now(timezone.utc)), "model": args.model,
-            "input_hash": input_hash(products), **summary,
+            "input_hash": input_hash(products), **summary, "missing": sorted(ids - set(summary["projects"])),
         })
         status["written"].append(day)
     status["pending"] = len([day for day in outstanding if day not in status["written"]])
