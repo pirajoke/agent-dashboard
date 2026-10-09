@@ -91,7 +91,20 @@ def queue_updated_at(queue_path: Path) -> str | None:
         return None
 
 
-def build_events(status: dict[str, Any], *, observed_at: str) -> list[dict[str, Any]]:
+def item_time(value: object) -> str | None:
+    """Normalise the scheduler's per-item transition time (stable across polls)."""
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return iso_z(parsed)
+
+
+def build_events(status: dict[str, Any]) -> list[dict[str, Any]]:
     pixel_events = status.get("pixel_events")
     human = status.get("human_projection")
     if not isinstance(pixel_events, list) or not isinstance(human, list) or len(pixel_events) != len(human):
@@ -102,7 +115,8 @@ def build_events(status: dict[str, Any], *, observed_at: str) -> list[dict[str, 
             continue
         campus_status = CAMPUS_STATUS.get(person.get("status"))
         record = campus_project(pixel.get("project"))
-        if campus_status is None or record is None:
+        updated_at = item_time(pixel.get("updatedAt"))
+        if campus_status is None or record is None or updated_at is None:
             continue
         current = by_project.get(record["project"])
         if current is not None and STATUS_PRIORITY[current["status"]] <= STATUS_PRIORITY[campus_status]:
@@ -120,7 +134,7 @@ def build_events(status: dict[str, Any], *, observed_at: str) -> list[dict[str, 
             "agent_id": record["agent_id"],
             "role": DEPARTMENT_ROLE[department_id],
             "status": campus_status,
-            "updated_at": observed_at,
+            "updated_at": updated_at,
             "next_step": NEXT_STEP[campus_status],
             "evidence_count": 0,
             "ephemeral": True,
@@ -139,7 +153,7 @@ def build_snapshot(status: dict[str, Any], *, now: datetime, queue_path: Path) -
         "project": "MAIN MANAGER",
         "observed_at": observed_at,
         "queue_updated_at": queue_updated_at(queue_path),
-        "pixel_events": build_events(status, observed_at=observed_at),
+        "pixel_events": build_events(status),
     }
     if isinstance(counts, dict) and all(type(v) is int and v >= 0 for v in counts.values()):
         snapshot["counts"] = counts

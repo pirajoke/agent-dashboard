@@ -56,12 +56,10 @@ def _status(*rows, ok=True):
 
 
 class BuildEventsTests(unittest.TestCase):
-    observed = "2026-10-09T00:10:00Z"
 
     def test_open_items_map_to_campus_contract(self):
         events = PUBLISHER.build_events(
             _status(("JARVIS", "NEEDS MARK"), ("MY DICTIONARY", "WAITING"), ("HEALTH OS", "WORKING")),
-            observed_at=self.observed,
         )
         by_project = {event["project"]: event for event in events}
         self.assertEqual(by_project["JARVIS"]["status"], "waiting")
@@ -70,24 +68,22 @@ class BuildEventsTests(unittest.TestCase):
         self.assertEqual(by_project["MY DICTIONARY"]["status"], "queued")
         self.assertEqual(by_project["HEALTH OS"]["status"], "active")
         for event in events:
-            self.assertEqual(event["updated_at"], self.observed)
+            self.assertEqual(event["updated_at"], "2026-08-18T11:47:31Z")
             self.assertIs(event["ephemeral"], True)
 
     def test_done_items_are_history_not_live_work(self):
-        events = PUBLISHER.build_events(_status(("JARVIS", "DONE")), observed_at=self.observed)
+        events = PUBLISHER.build_events(_status(("JARVIS", "DONE")))
         self.assertEqual(events, [])
 
     def test_most_urgent_item_wins_per_project(self):
         events = PUBLISHER.build_events(
             _status(("JARVIS", "DONE"), ("JARVIS", "WAITING"), ("JARVIS", "NEEDS MARK")),
-            observed_at=self.observed,
         )
         self.assertEqual([(e["project"], e["status"]) for e in events], [("JARVIS", "waiting")])
 
     def test_project_names_are_normalised_and_unknown_projects_skipped(self):
         events = PUBLISHER.build_events(
             _status(("ACCOUNTABLE_OS", "WAITING"), ("MYDICTIONNARY", "WAITING"), ("SECRET LAB", "WAITING")),
-            observed_at=self.observed,
         )
         self.assertEqual(sorted(e["project"] for e in events), ["ACCOUNTABLE OS", "MY DICTIONARY"])
 
@@ -95,14 +91,15 @@ class BuildEventsTests(unittest.TestCase):
         broken = _status(("JARVIS", "NEEDS MARK"))
         broken["human_projection"] = []
         with self.assertRaises(PUBLISHER.PublisherError):
-            PUBLISHER.build_events(broken, observed_at=self.observed)
+            PUBLISHER.build_events(broken)
 
     def test_published_events_pass_campus_validation(self):
         events = PUBLISHER.build_events(
             _status(("JARVIS", "NEEDS MARK"), ("HEALTH OS", "WORKING")),
-            observed_at=self.observed,
         )
-        projection = department_campus_projection(events, now=NOW + timedelta(minutes=1))
+        projection = department_campus_projection(
+            events, now=NOW + timedelta(minutes=1), max_event_age_seconds=None
+        )
         self.assertEqual(projection["state"], "active")
         self.assertEqual({e["project"] for e in projection["events"]}, {"JARVIS", "HEALTH OS"})
 
@@ -120,6 +117,18 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(snapshot["source_agent"], "main-manager")
         self.assertEqual(snapshot["event"], "status")
         self.assertEqual(snapshot["counts"]["owner_gate"], 1)
+
+    def test_event_identity_and_time_are_stable_across_polls(self):
+        status = _status(("JARVIS", "NEEDS MARK"))
+        first = PUBLISHER.build_snapshot(status, now=NOW, queue_path=Path("/nonexistent"))
+        later = PUBLISHER.build_snapshot(status, now=NOW + timedelta(minutes=5), queue_path=Path("/nonexistent"))
+        self.assertNotEqual(first["observed_at"], later["observed_at"])
+        self.assertEqual(first["pixel_events"], later["pixel_events"])
+
+    def test_items_without_a_valid_time_are_skipped(self):
+        status = _status(("JARVIS", "NEEDS MARK"))
+        status["pixel_events"][0]["updatedAt"] = "not-a-time"
+        self.assertEqual(PUBLISHER.build_events(status), [])
 
     def test_missing_queue_file_gives_null_change_time(self):
         snapshot = PUBLISHER.build_snapshot(_status(), now=NOW, queue_path=Path("/nonexistent/queue.json"))
@@ -213,6 +222,66 @@ class CampusServerIntegrationTests(unittest.TestCase):
         self.assertEqual(payload["state"], "stale")
         self.assertEqual(payload["events"], [])
         self.assertEqual(payload["queue_updated_at"], "2026-10-08T23:50:00Z")
+
+    def test_old_owner_gate_stays_visible_while_heartbeat_is_fresh(self):
+        data = self._bridge(self._snapshot(("JARVIS", "NEEDS MARK")), completed_at="2026-10-09T00:10:01Z")
+        payload = SERVER._department_campus_payload(data, now=NOW + timedelta(minutes=2))
+        self.assertEqual(payload["events"][0]["updated_at"], "2026-08-18T11:47:31Z")
+
+    def test_decisions_revision_does_not_change_between_heartbeats(self):
+        snapshot = self._snapshot(("JARVIS", "NEEDS MARK"))
+        first = SERVER._manager_decision_snapshot(
+            self._bridge(snapshot, completed_at="2026-10-09T00:10:01Z"), now=NOW + timedelta(minutes=2)
+        )
+        later = SERVER._manager_decision_snapshot(
+            self._bridge(snapshot, completed_at="2026-10-09T00:15:01Z"), now=NOW + timedelta(minutes=7)
+        )
+        self.assertEqual(first, later)
+        events, age_limit = first
+        self.assertIsNone(age_limit)
+        self.assertEqual(events[0]["updated_at"], "2026-08-18T11:47:31Z")
+
+    def test_fresh_manager_handoff_wins_over_newer_heartbeat(self):
+        heartbeat = self._bridge(self._snapshot(("JARVIS", "NEEDS MARK")), completed_at="2026-10-09T00:15:00Z")["tasks"][0]
+        handoff_event = {
+            "event_id": "evt-handoff",
+            "task_id": "task-handoff",
+            "department_id": "development",
+            "department_label": "Development",
+            "zone_id": "campus-zone-development",
+            "project": "MY DICTIONARY",
+            "agent_id": "BUILDER",
+            "role": "Builder",
+            "status": "waiting",
+            "updated_at": "2026-10-09T00:09:00Z",
+            "next_step": "Pick an option",
+            "evidence_count": 1,
+            "ephemeral": True,
+            "decision": {"question": "Ship v2?"},
+        }
+        handoff = {
+            "id": "handoff-row",
+            "updated_at": "2026-10-09T00:09:30Z",
+            "metadata": {"event": "handoff", "source_agent": "MAIN MANAGER", "pixel_events": [handoff_event]},
+        }
+        data = {"tasks": [heartbeat, handoff]}
+        now = NOW + timedelta(minutes=6)
+        events, age_limit = SERVER._manager_decision_snapshot(data, now=now)
+        self.assertEqual(events[0]["event_id"], "evt-handoff")
+        self.assertEqual(age_limit, 30 * 60)
+        campus = SERVER._department_campus_payload(data, now=now)
+        self.assertEqual([e["project"] for e in campus["events"]], ["MY DICTIONARY"])
+
+    def test_stale_handoff_falls_back_to_heartbeat(self):
+        heartbeat = self._bridge(self._snapshot(("JARVIS", "NEEDS MARK")), completed_at="2026-10-09T00:15:00Z")["tasks"][0]
+        handoff = {
+            "id": "handoff-row",
+            "updated_at": "2026-10-08T22:00:00Z",
+            "metadata": {"event": "handoff", "source_agent": "MAIN MANAGER", "pixel_events": []},
+        }
+        campus = SERVER._department_campus_payload({"tasks": [heartbeat, handoff]}, now=NOW + timedelta(minutes=6))
+        self.assertEqual(campus["state"], "active")
+        self.assertEqual(campus["events"][0]["project"], "JARVIS")
 
     def test_future_queue_time_is_dropped(self):
         snapshot = self._snapshot(("JARVIS", "NEEDS MARK"))

@@ -1302,6 +1302,73 @@ def _campus_bridge_event(task: dict) -> dict | None:
     return event
 
 
+_MANAGER_SNAPSHOT_FRESH_SECONDS = 30 * 60
+_HEARTBEAT_ENTRYPOINT = "bridge.status_event"
+
+
+def _is_heartbeat_snapshot(metadata: dict) -> bool:
+    """Tokenless publisher heartbeats arrive through Bridge /api/status-event."""
+    return metadata.get("entrypoint") == _HEARTBEAT_ENTRYPOINT and metadata.get("executable") is False
+
+
+def _select_manager_snapshot(data: object, *, now: datetime) -> tuple[dict | None, bool]:
+    """Return (newest usable MAIN MANAGER snapshot, saw_malformed_snapshot).
+
+    A fresh handoff/status snapshot written by MAIN MANAGER itself is richer
+    (it can carry decision options), so it wins over newer publisher
+    heartbeats. Otherwise the newest snapshot wins; max() keeps the first
+    source item when timestamps tie.
+    """
+    tasks = data.get("tasks") if isinstance(data, dict) else None
+    candidates: list[dict] = []
+    malformed = False
+    for index, task in enumerate(tasks if isinstance(tasks, list) else []):
+        if not isinstance(task, dict):
+            continue
+        metadata = _manager_metadata(task)
+        event_marker = str(metadata.get("event") or "").strip().lower()
+        source_agent = metadata.get("source_agent")
+        if not isinstance(source_agent, str):
+            continue
+        source_marker = re.sub(r"[^a-z0-9]+", "", source_agent.lower())
+        if event_marker not in {"handoff", "status"} or source_marker != "mainmanager":
+            continue
+        pixel_events = metadata.get("pixel_events")
+        if not isinstance(pixel_events, list):
+            malformed = True
+            continue
+        updated = _department_snapshot_time(
+            task.get("updated_at")
+            or task.get("completed_at")
+            or task.get("claimed_at")
+            or task.get("created_at")
+        )
+        if updated is None or updated > now:
+            continue
+        queue_updated = _department_snapshot_time(metadata.get("queue_updated_at"))
+        if queue_updated is not None and queue_updated > now:
+            queue_updated = None
+        candidates.append({
+            "index": index,
+            "updated": updated,
+            "events": pixel_events,
+            "queue_updated": queue_updated,
+            "heartbeat": _is_heartbeat_snapshot(metadata),
+            "fresh": (now - updated).total_seconds() <= _MANAGER_SNAPSHOT_FRESH_SECONDS,
+        })
+    if not candidates:
+        return None, malformed
+    handoffs = [item for item in candidates if not item["heartbeat"] and item["fresh"]]
+    chosen = max(handoffs or candidates, key=lambda item: item["updated"])
+    return chosen, malformed
+
+
+def _snapshot_event_age_limit(snapshot: dict) -> int | None:
+    # Heartbeat events keep the queue item's own (stable) update time; the
+    # heartbeat itself proves they are current, so only the snapshot age counts.
+    return None if snapshot["heartbeat"] else _MANAGER_SNAPSHOT_FRESH_SECONDS
+
+
 def _department_campus_payload(
     data: object,
     *,
@@ -1316,39 +1383,8 @@ def _department_campus_payload(
     if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
         return department_campus_projection(None, now=current, owner_view=owner_view)
 
-    candidates: list[tuple[int, datetime, list, datetime | None]] = []
-    malformed_verified_snapshot = False
-    for index, task in enumerate(data["tasks"]):
-        if not isinstance(task, dict):
-            continue
-        metadata = _manager_metadata(task)
-        event_marker = str(metadata.get("event") or "").strip().lower()
-        source_agent = metadata.get("source_agent")
-        if not isinstance(source_agent, str):
-            continue
-        source_marker = re.sub(
-            r"[^a-z0-9]+", "", source_agent.lower()
-        )
-        if event_marker not in {"handoff", "status"} or source_marker != "mainmanager":
-            continue
-        pixel_events = metadata.get("pixel_events")
-        if not isinstance(pixel_events, list):
-            malformed_verified_snapshot = True
-            continue
-        updated = _department_snapshot_time(
-            task.get("updated_at")
-            or task.get("completed_at")
-            or task.get("claimed_at")
-            or task.get("created_at")
-        )
-        if updated is None or updated > current:
-            continue
-        queue_updated = _department_snapshot_time(metadata.get("queue_updated_at"))
-        if queue_updated is not None and queue_updated > current:
-            queue_updated = None
-        candidates.append((index, updated, pixel_events, queue_updated))
-
-    if not candidates:
+    snapshot, malformed_verified_snapshot = _select_manager_snapshot(data, now=current)
+    if snapshot is None:
         if malformed_verified_snapshot:
             return department_campus_projection(None, now=current, owner_view=owner_view)
         events = [
@@ -1365,44 +1401,29 @@ def _department_campus_payload(
             owner_view=owner_view,
         )
 
-    # max() preserves the first source item when timestamps tie.
-    _, snapshot_time, events, queue_updated = max(candidates, key=lambda item: item[1])
-    if (current - snapshot_time).total_seconds() > 30 * 60:
+    if not snapshot["fresh"]:
         payload = _department_campus_state("stale", now=current)
     else:
         payload = department_campus_projection(
-            events,
+            snapshot["events"],
             now=current,
             max_tasks=3,
             owner_view=owner_view,
+            max_event_age_seconds=_snapshot_event_age_limit(snapshot),
         )
-    if queue_updated is not None:
-        payload["queue_updated_at"] = queue_updated.isoformat().replace("+00:00", "Z")
+    if snapshot["queue_updated"] is not None:
+        payload["queue_updated_at"] = snapshot["queue_updated"].isoformat().replace("+00:00", "Z")
     return payload
 
 
-def _manager_decision_snapshot(data: object, *, now: datetime) -> list | None:
-    """Use the same newest verified snapshot as the campus, including all blockers."""
-    candidates = []
-    tasks = data.get("tasks") if isinstance(data, dict) else None
-    for task in tasks if isinstance(tasks, list) else []:
-        if not isinstance(task, dict):
-            continue
-        metadata = _manager_metadata(task)
-        source = metadata.get("source_agent")
-        if not isinstance(source, str) or re.sub(r"[^a-z0-9]+", "", source.lower()) != "mainmanager":
-            continue
-        if str(metadata.get("event") or '').strip().lower() not in {"handoff", "status"} or not isinstance(metadata.get("pixel_events"), list):
-            continue
-        updated = _department_snapshot_time(task.get("updated_at") or task.get("completed_at") or task.get("claimed_at") or task.get("created_at"))
-        if updated and updated <= now:
-            candidates.append((updated, metadata["pixel_events"]))
-    if not candidates:
+def _manager_decision_snapshot(data: object, *, now: datetime) -> tuple[list, int | None] | None:
+    """Use the same snapshot as the campus, including all blockers."""
+    snapshot, _ = _select_manager_snapshot(data, now=now)
+    if snapshot is None:
         return None
-    updated, events = max(candidates, key=lambda item: item[0])
-    if (now - updated).total_seconds() > 30 * 60:
-        return []
-    return events[:100]
+    if not snapshot["fresh"]:
+        return [], _MANAGER_SNAPSHOT_FRESH_SECONDS
+    return snapshot["events"][:100], _snapshot_event_age_limit(snapshot)
 
 
 def _manager_decision_proposals(events: list) -> dict:
@@ -1421,14 +1442,17 @@ def _manager_decision_proposals(events: list) -> dict:
 def _manager_decisions_payload(data: object, *, owner: bool, records: list, now: datetime | None = None) -> dict:
     current = now or datetime.now(timezone.utc)
     campus = _department_campus_payload(data, now=current, owner_view=owner)
-    events = _manager_decision_snapshot(data, now=current) if owner else []
-    if events is None:
+    snapshot = _manager_decision_snapshot(data, now=current) if owner else ([], _MANAGER_SNAPSHOT_FRESH_SECONDS)
+    if snapshot is None:
         tasks = data.get('tasks') if isinstance(data, dict) else None
         events = [event for task in tasks if isinstance(task, dict)
                   for event in [_campus_bridge_event(task)] if event is not None][:100] if isinstance(tasks, list) else []
+        age_limit = _MANAGER_SNAPSHOT_FRESH_SECONDS
+    else:
+        events, age_limit = snapshot
     latest = {}
     for event in events:
-        for validated in department_campus_projection([event], now=current, max_tasks=1, owner_view=owner)['events']:
+        for validated in department_campus_projection([event], now=current, max_tasks=1, owner_view=owner, max_event_age_seconds=age_limit)['events']:
             previous = latest.get(validated['task_id'])
             if previous is None or _department_snapshot_time(validated['updated_at']) > _department_snapshot_time(previous['updated_at']):
                 latest[validated['task_id']] = validated
