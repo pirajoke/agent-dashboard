@@ -313,8 +313,25 @@
         managerPresenceEl.dataset.campusManagerState = event?.status || 'idle';
     }
 
+    let campusQueueUpdatedAt = null;
+
+    function formatCampusQueueTime(value) {
+        const parsed = typeof value === 'string' ? new Date(value) : null;
+        if (!parsed || Number.isNaN(parsed.getTime())) return '';
+        return parsed.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+
     function setCampusState(state, visibleTasks, agentCount, omittedTasks) {
-        if (stateEl) stateEl.textContent = stateMessages[state] || stateMessages.unavailable;
+        if (stateEl) {
+            const queueTime = state === 'loading' ? '' : formatCampusQueueTime(campusQueueUpdatedAt);
+            const message = stateMessages[state] || stateMessages.unavailable;
+            stateEl.textContent = queueTime ? `${message} · очередь обновлена ${queueTime}` : message;
+        }
         if (countEl) {
             const omitted = omittedTasks > 0 ? ` · скрыто задач: ${omittedTasks}` : '';
             const live = agentCount > 0
@@ -564,6 +581,9 @@
     }
 
     function renderDepartmentCampus(payload) {
+        campusQueueUpdatedAt = typeof payload?.queue_updated_at === 'string'
+            ? payload.queue_updated_at
+            : null;
         const state = payload && typeof payload.state === 'string' ? payload.state : 'unavailable';
         const events = state === 'active' && Array.isArray(payload.events) ? payload.events : [];
         if (

@@ -482,6 +482,7 @@ def _validated_event(
     *,
     now: datetime,
     owner_view: bool = False,
+    max_event_age_seconds: int | None = _FRESH_SECONDS,
 ) -> tuple[dict[str, Any] | None, str, datetime | None]:
     if not isinstance(event, dict):
         return None, "invalid", None
@@ -513,7 +514,7 @@ def _validated_event(
     age = (_utc_now(now) - updated).total_seconds()
     if age < 0:
         return None, "invalid", None
-    if age > _FRESH_SECONDS:
+    if max_event_age_seconds is not None and age > max_event_age_seconds:
         return None, "stale", None
     evidence = event.get("evidence_count")
     evidence_count = evidence if type(evidence) is int and evidence >= 0 else 0
@@ -543,6 +544,7 @@ def department_campus_projection(
     now: datetime,
     max_tasks: int = 3,
     owner_view: bool = False,
+    max_event_age_seconds: int | None = _FRESH_SECONDS,
 ) -> dict[str, Any]:
     """Return a strict projection, optionally including validated owner fields."""
     if not isinstance(events, list):
@@ -557,6 +559,7 @@ def department_campus_projection(
             raw_event,
             now=now,
             owner_view=owner_view,
+            max_event_age_seconds=max_event_age_seconds,
         )
         saw_stale = saw_stale or validation_state == "stale"
         if event is not None and updated is not None:
