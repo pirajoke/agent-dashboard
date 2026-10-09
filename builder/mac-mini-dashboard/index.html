@@ -2889,6 +2889,319 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .decision-review { padding:14px; }
   .cc-subnav button { flex:1 1 auto; padding:10px 12px; }
 }
+/* MAIN MANAGER: Property OS visual language, scoped to this section only. */
+.mm-os {
+  color-scheme: light;
+  --mm-background: #f8f3ea;
+  --mm-surface: #fffcf6;
+  --mm-ink: #24292b;
+  --mm-muted: #6c6a63;
+  --mm-line: #e6dccc;
+  --mm-accent: #0a7f93;
+  --mm-surface-hover: #f1eadf;
+  --mm-control-line: #d4c6b1;
+  --mm-selection: #e0f2f4;
+  --mm-danger: #b8321a;
+  --mm-success: #1d7a46;
+  --mm-warning: #a35a0c;
+  --mm-success-soft: #e3f3e8;
+  --mm-warning-soft: #fbedd9;
+  --mm-claude: #c9652a;
+  --mm-codex: #0e9fb5;
+  --mm-pr: #a8a094;
+  --mm-tint-command-center: #dff0f2; --mm-tint-financial: #fdf1c7; --mm-tint-mydictionary: #e7effb; --mm-tint-health: #fbe7e7;
+  --mm-tint-ai-singularity: #f0edfd; --mm-tint-context-news: #fcecda; --mm-tint-accountable: #e2f3e7; --mm-tint-jarvis: #ebeff3; --mm-tint-other: #f1eadf;
+  --mm-shadow: 0 6px 20px rgb(60 45 20 / .12);
+  --mm-shadow-soft: 0 1px 2px rgb(60 45 20 / .06), 0 4px 12px rgb(60 45 20 / .06);
+  --mm-nav-height: 74px;
+  display: grid;
+  grid-template-columns: 218px minmax(0, 1fr);
+  min-height: 70vh;
+  overflow: hidden;
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: var(--mm-ink);
+  background: var(--mm-background);
+  border: 1px solid var(--mm-line);
+  border-radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  .mm-os:not([data-theme="light"]) {
+    color-scheme: dark;
+    --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
+    --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
+    --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
+    --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+    --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
+    --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
+    --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
+  }
+}
+.mm-os[data-theme="dark"] {
+  color-scheme: dark;
+  --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
+  --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
+  --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
+  --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+  --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
+  --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
+  --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
+}
+.mm-os *, .mm-os *::before, .mm-os *::after { box-sizing: border-box; }
+.mm-os [hidden] { display: none !important; }
+.mm-os :where(h2, h3, p) { margin: 0; }
+.mm-os :where(button) { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.mm-os :where(a) { color: var(--mm-accent); text-decoration: none; }
+.mm-os :where(a):hover { text-decoration: underline; }
+.mm-os :focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
+
+.mm-sidebar { display: flex; flex-direction: column; padding: 24px 16px; background: var(--mm-surface); border-right: 1px solid var(--mm-line); }
+.mm-brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+.mm-brand-mark { display: grid; place-items: center; width: 36px; height: 36px; flex: none; color: #fffcf6; background: var(--mm-accent); border-radius: 10px; }
+.mm-brand-mark svg { width: 20px; height: 20px; }
+.mm-brand b { display: block; font-size: 14px; font-weight: 700; letter-spacing: .02em; }
+.mm-brand small { display: block; color: var(--mm-muted); font-size: 12px; }
+.mm-nav { display: flex; flex-direction: column; gap: 4px; margin-top: 28px; }
+.mm-nav button { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: var(--mm-muted); font-size: 14px; text-align: left; border-radius: 8px; white-space: nowrap; }
+.mm-nav button:hover { background: var(--mm-surface-hover); }
+.mm-nav button[aria-pressed="true"] { background: var(--mm-selection); color: var(--mm-accent); font-weight: 600; }
+.mm-nav button > span:first-child { display: grid; place-items: center; width: 24px; }
+.mm-nav svg { width: 24px; height: 24px; }
+.mm-nav b { margin-left: auto; padding: 0 6px; border-radius: 3px; font-size: 12px; background: var(--mm-selection); color: var(--mm-accent); }
+.mm-sidebar-bottom { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid var(--mm-line); }
+.mm-sidebar-button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 0; color: var(--mm-muted); font-size: 13px; text-align: left; }
+.mm-sidebar-button svg { width: 18px; height: 18px; flex: none; }
+.mm-sidebar-button:hover { color: var(--mm-ink); }
+.mm-sidebar-bottom p { margin-top: 10px; color: var(--mm-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+
+.mm-workspace { min-width: 0; display: flex; flex-direction: column; }
+.mm-topbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; background: var(--mm-surface); border-bottom: 1px solid var(--mm-line); }
+.mm-module { font-size: 17px; font-weight: 600; }
+.mm-day-picker { display: flex; align-items: center; gap: 8px; }
+.mm-round { display: grid; place-items: center; width: 44px; height: 44px; color: var(--mm-ink); border: 1px solid var(--mm-control-line) !important; border-radius: 999px; font-size: 22px; line-height: 1; }
+.mm-round:hover:not(:disabled) { background: var(--mm-surface-hover); }
+.mm-round:disabled { opacity: .35; cursor: default; }
+.mm-day-label { display: grid; min-width: 112px; text-align: center; line-height: 1.3; }
+.mm-day-label b { font-size: 15px; font-weight: 650; }
+.mm-day-label small { color: var(--mm-muted); font-size: 12px; }
+.mm-notice { margin: 20px 32px 0; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
+.mm-notice.live { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
+.mm-notice.stale, .mm-notice.empty, .mm-notice.error { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
+.mm-main { padding: 24px 32px 40px; }
+
+.mm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.mm-stat { min-width: 0; padding: 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-stat > span { color: var(--mm-muted); font-size: 13px; }
+.mm-stat > span i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; }
+.mm-stat strong { display: block; margin-top: 6px; font-size: 25px; font-weight: 750; line-height: 1.4; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.mm-stat small { display: block; margin-top: 4px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-stat strong.is-up { color: var(--mm-success); }
+.mm-stat strong.is-down { color: var(--mm-warning); }
+
+.mm-panel { position: relative; padding: 24px; margin-bottom: 28px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+.mm-section-heading h3 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.mm-section-heading h3 span { margin-left: 6px; color: var(--mm-muted); font-size: 14px; font-weight: 400; letter-spacing: 0; }
+.mm-section-note { margin-top: 4px; max-width: 640px; color: var(--mm-muted); font-size: 13px; }
+.mm-loose-note { margin: -8px 0 18px; }
+.mm-chart-legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--mm-muted); font-size: 13px; }
+.mm-chart-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; }
+.mm-os i.claude { background: var(--mm-claude); }
+.mm-os i.codex { background: var(--mm-codex); }
+.mm-chart { width: 100%; min-height: 200px; }
+.mm-chart-prs { min-height: 64px; margin-top: 2px; }
+.mm-chart svg { display: block; width: 100%; overflow: visible; }
+.mm-chart text { fill: var(--mm-muted); font-size: 12px; font-family: inherit; }
+.mm-chart .mm-grid { stroke: var(--mm-line); stroke-width: 1; }
+.mm-chart .mm-baseline { stroke: var(--mm-control-line); stroke-width: 1; }
+.mm-chart .mm-selected-band { fill: var(--mm-selection); }
+.mm-chart .seg-claude { fill: var(--mm-claude); }
+.mm-chart .seg-codex { fill: var(--mm-codex); }
+.mm-chart .seg-pr { fill: var(--mm-pr); }
+.mm-chart .is-current { fill: var(--mm-ink); font-weight: 700; }
+.mm-bar-hit { fill: transparent; cursor: pointer; }
+.mm-bar-hit:focus-visible { outline: none; stroke: var(--mm-accent); stroke-width: 2; }
+.mm-tooltip { position: absolute; z-index: 5; min-width: 190px; padding: 10px 12px; pointer-events: none; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; box-shadow: var(--mm-shadow); font-size: 13px; line-height: 1.6; }
+.mm-tooltip b { display: block; margin-bottom: 2px; }
+.mm-tooltip .row { display: flex; justify-content: space-between; gap: 16px; }
+.mm-tooltip .row span:last-child { font-weight: 650; font-variant-numeric: tabular-nums; }
+.mm-more { margin-top: 12px; font-size: 13px; }
+.mm-more summary { min-height: 44px; display: flex; align-items: center; color: var(--mm-accent); font-weight: 600; cursor: pointer; }
+
+.mm-group-rows { display: flex; flex-direction: column; gap: 10px; }
+.mm-group-row { min-width: 0; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; }
+.mm-group-row > summary { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 10px 18px; list-style: none; border-radius: 12px; cursor: pointer; }
+.mm-group-row > summary::-webkit-details-marker { display: none; }
+.mm-group-row > summary:hover { background: color-mix(in srgb, var(--mm-surface-hover) 55%, transparent); }
+.mm-group-row[open] > summary { border-bottom: 1px solid var(--mm-line); border-radius: 12px 12px 0 0; }
+.mm-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--mm-muted); }
+.mm-dot.claude { background: var(--mm-claude); }
+.mm-dot.codex { background: var(--mm-codex); }
+.mm-dot.dropped, .mm-dot.cat-agent { background: var(--mm-warning); }
+.mm-dot.forgot { background: var(--mm-danger); }
+.mm-dot.cat-pr, .mm-dot.cat-repo { background: var(--mm-success); }
+.mm-dot.cat-launchd, .mm-dot.cat-brew, .mm-dot.cat-cron, .mm-dot.cat-runtime { background: var(--mm-accent); }
+.mm-dot.cat-docker { background: var(--mm-codex); }
+.mm-dot.cat-port, .mm-dot.cat-tunnel { background: var(--mm-claude); }
+.mm-group-main { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+.mm-group-title { font-size: 16px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
+.mm-group-note { overflow: hidden; color: var(--mm-muted); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.mm-group-aside { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 1px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mm-group-aside small { color: var(--mm-muted); font-size: 12px; font-weight: 500; font-variant-numeric: normal; }
+.mm-group-count { flex: none; min-width: 28px; padding: 2px 9px; color: var(--mm-muted); background: var(--mm-surface-hover); border-radius: 999px; font-size: 13px; font-weight: 650; text-align: center; }
+.mm-chevron { flex: none; width: 14px; color: var(--mm-muted); font-size: 22px; line-height: 1; text-align: center; transition: transform .15s; }
+.mm-group-row[open] .mm-chevron { transform: rotate(90deg); }
+.mm-group-body { padding: 2px 18px 12px; }
+.mm-data-table .mm-dot { display: inline-block; margin-right: 6px; vertical-align: 1px; }
+.mm-group-row-static { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 62px; padding: 10px 18px; }
+.mm-group-row-static .mm-group-main { flex-basis: 220px; }
+.mm-tip-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; vertical-align: 0; }
+.mm-group-foot { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+.mm-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-control-line); border-radius: 12px; font-size: 14px; }
+
+.mm-table-scroll { overflow-x: auto; }
+.mm-data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mm-data-table th { padding: 12px 12px 9px; color: var(--mm-muted); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--mm-line); }
+.mm-data-table td { padding: 12px; vertical-align: top; border-bottom: 1px solid var(--mm-line); overflow-wrap: anywhere; }
+.mm-data-table tbody tr:last-child td { border-bottom: 0; }
+.mm-data-table th:first-child, .mm-data-table td:first-child { padding-left: 0; }
+.mm-data-table th:last-child, .mm-data-table td:last-child { padding-right: 0; }
+.mm-data-table .num { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; overflow-wrap: normal; }
+.mm-data-table .cell-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mm-data-table td small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-infra-table { table-layout: fixed; }
+.mm-infra-table .mm-col-time { width: 76px; }
+.mm-infra-table .mm-col-where { width: 160px; }
+.mm-data-table code { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--mm-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mm-row-action { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 13px; color: var(--mm-ink) !important; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 999px; font-size: 13px; font-weight: 600; line-height: 1.2; white-space: normal; }
+.mm-row-action:hover { background: var(--mm-surface-hover); text-decoration: none !important; }
+.mm-row-action > span { color: var(--mm-accent); white-space: nowrap; }
+.mm-row-action.is-merged > span { color: var(--mm-success); }
+.mm-row-action.is-closed > span { color: var(--mm-danger); }
+.mm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: var(--mm-muted); border: 1px solid var(--mm-line); border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+
+.mm-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.mm-filter-tabs button { min-height: 44px; padding: 8px 14px; color: var(--mm-muted); border: 1px solid var(--mm-control-line) !important; border-radius: 999px; font-size: 14px; }
+.mm-filter-tabs button:hover { color: var(--mm-accent); background: var(--mm-selection); }
+.mm-filter-tabs button[aria-pressed="true"] { color: var(--mm-background); background: var(--mm-ink); border-color: var(--mm-ink) !important; }
+.mm-filter-tabs button span { margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+
+/* Projects: the same mascots and tints as the Platforms tab. */
+.mm-sort { margin-bottom: 0; flex-wrap: nowrap; }
+.mm-project-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
+.mm-project-grid > .mm-empty { grid-column: 1 / -1; }
+.mm-project-card { grid-column: span 2; display: flex; flex-direction: column; min-width: 0; overflow: hidden; color: var(--mm-ink) !important; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; text-decoration: none !important; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.mm-project-card:hover { transform: translateY(-2px); border-color: var(--mm-control-line); box-shadow: var(--mm-shadow-soft); }
+.mm-project-card.is-featured { grid-column: span 3; flex-direction: row; }
+.mm-project-art { display: grid; place-items: center; flex: none; height: 124px; background: var(--mm-tint, var(--mm-tint-other)); }
+.mm-project-art svg { width: 96px; height: 96px; transition: transform .2s ease; }
+.mm-project-card.is-featured .mm-project-art { width: 176px; height: auto; }
+.mm-project-card.is-featured .mm-project-art svg { width: 128px; height: 128px; }
+.mm-project-card:hover .mm-project-art svg { transform: translateY(-3px) rotate(-3deg); }
+.mm-project-art.tint-command-center { --mm-tint: var(--mm-tint-command-center); }
+.mm-project-art.tint-financial { --mm-tint: var(--mm-tint-financial); }
+.mm-project-art.tint-mydictionary { --mm-tint: var(--mm-tint-mydictionary); }
+.mm-project-art.tint-health { --mm-tint: var(--mm-tint-health); }
+.mm-project-art.tint-ai-singularity { --mm-tint: var(--mm-tint-ai-singularity); }
+.mm-project-art.tint-context-news { --mm-tint: var(--mm-tint-context-news); }
+.mm-project-art.tint-accountable { --mm-tint: var(--mm-tint-accountable); }
+.mm-project-art.tint-jarvis { --mm-tint: var(--mm-tint-jarvis); }
+.mm-art-initials { display: grid; place-items: center; width: 68px; height: 68px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 20px; font-size: 22px; font-weight: 750; letter-spacing: .02em; }
+.mm-project-body { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; padding: 16px 18px 18px; }
+.mm-project-kicker { color: var(--mm-accent); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.mm-project-name { font-size: 19px; font-weight: 750; line-height: 1.25; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.mm-project-repo { overflow: hidden; color: var(--mm-muted); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.mm-spark { display: block; width: 100%; height: 32px; margin: 12px 0 2px; }
+.mm-spark rect { fill: var(--mm-accent); }
+.mm-spark rect.zero { fill: var(--mm-control-line); }
+.mm-project-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--mm-line); }
+.mm-project-stats b { display: block; font-size: 16px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.mm-project-stats small { color: var(--mm-muted); font-size: 12px; }
+.mm-project-foot, .mm-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mm-chip.is-up { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
+.mm-chip.is-down, .mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
+.mm-project-last { display: -webkit-box; margin-top: 10px; overflow: hidden; color: var(--mm-muted); font-size: 13px; line-height: 1.45; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.mm-project-last b { color: var(--mm-ink); font-weight: 600; }
+.mm-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-bottom: 16px; padding: 0 16px 0 12px; font-size: 14px; font-weight: 600; border: 1px solid var(--mm-control-line) !important; border-radius: 999px; }
+.mm-back span { font-size: 20px; line-height: 1; }
+.mm-back:hover { background: var(--mm-surface-hover); }
+.mm-project-hero { display: grid; grid-template-columns: 210px minmax(0, 1fr); margin-bottom: 20px; overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-project-art.is-hero { height: auto; min-height: 190px; }
+.mm-project-art.is-hero svg { width: 148px; height: 148px; }
+.mm-project-hero-body { display: flex; flex-direction: column; justify-content: center; gap: 4px; min-width: 0; padding: 22px 28px; }
+.mm-project-title { font-size: 30px; font-weight: 750; line-height: 1.2; letter-spacing: -.02em; }
+.mm-project-hero .mm-project-last { -webkit-line-clamp: 3; font-size: 14px; }
+.mm-outcomes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.mm-block { margin-bottom: 28px; }
+.mm-day-table { table-layout: fixed; }
+.mm-day-table .mm-col-span { width: 120px; }
+.mm-day-table .mm-col-tool { width: 210px; }
+.mm-day-table .mm-col-min { width: 64px; }
+.mm-command-list { display: grid; gap: 8px; padding-top: 12px; }
+.mm-command { min-width: 0; padding: 10px 12px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
+.mm-command small { display: block; margin-bottom: 4px; color: var(--mm-muted); font-size: 12px; }
+.mm-command code { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 1180px) {
+  .mm-project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mm-project-card, .mm-project-card.is-featured { grid-column: span 1; flex-direction: column; }
+  .mm-project-card.is-featured .mm-project-art { width: auto; height: 124px; }
+  .mm-project-card.is-featured .mm-project-art svg { width: 96px; height: 96px; }
+}
+@media (max-width: 960px) {
+  .mm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mm-data-table thead { display: none; }
+  .mm-data-table, .mm-data-table tbody, .mm-data-table tr, .mm-data-table td { display: block; width: 100%; }
+  .mm-data-table tr { padding: 12px 0; border-bottom: 1px solid var(--mm-line); }
+  .mm-data-table tbody tr:last-child { border-bottom: 0; }
+  .mm-data-table td { padding: 2px 0 !important; border: 0; }
+  .mm-data-table td[data-label]::before { content: attr(data-label) ' · '; color: var(--mm-muted); font-size: 12px; }
+  .mm-data-table .num { text-align: left; }
+}
+@media (max-width: 760px) {
+  #section-work.active { padding-bottom: calc(var(--mm-nav-height, 74px) + env(safe-area-inset-bottom)); }
+  .mm-os { display: flex; flex-direction: column; border-radius: 12px; }
+  /* Brand on top, sources and theme switch after the content, nav as the bottom tab bar. */
+  .mm-sidebar { display: contents; }
+  .mm-brand { order: 0; padding: 14px 16px; background: var(--mm-surface); border-bottom: 1px solid var(--mm-line); }
+  .mm-workspace { order: 1; }
+  .mm-sidebar-bottom { order: 2; display: flex; flex-direction: column; align-items: flex-start; margin: 0; padding: 8px 16px 16px; background: var(--mm-surface); border-top: 1px solid var(--mm-line); }
+  .mm-sidebar-bottom p { margin-top: 0; }
+  .mm-filter-tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 20px; padding: 0 16px; scrollbar-width: none; }
+  .mm-filter-tabs::-webkit-scrollbar { display: none; }
+  .mm-filter-tabs button { flex: none; white-space: nowrap; }
+  .mm-nav { position: fixed; inset: auto 0 0; z-index: 40; height: calc(var(--mm-nav-height) + env(safe-area-inset-bottom)); flex-direction: row; justify-content: space-around; gap: 0; margin: 0; padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); background: var(--mm-background); border-top: 1px solid var(--mm-line); }
+  #section-work:not(.active) .mm-nav { display: none; }
+  .mm-nav button { flex: 1; flex-direction: column; justify-content: center; gap: 2px; padding: 4px; font-size: 11px; position: relative; }
+  .mm-nav button[aria-pressed="true"] { background: none; }
+  .mm-nav b { position: absolute; top: 2px; left: calc(50% + 8px); margin: 0; }
+  .mm-topbar { flex-wrap: wrap; padding: 10px 16px; }
+  .mm-notice { margin: 16px 16px 0; }
+  .mm-main { padding: 16px 16px 28px; }
+  .mm-panel { padding: 16px; }
+  .mm-section-heading { flex-direction: column; gap: 8px; }
+  .mm-stat { padding: 14px; }
+  .mm-stat strong { font-size: 21px; }
+  .mm-group-row > summary, .mm-group-row-static { padding: 10px 14px; }
+  .mm-project-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  /* Phone: mascot on the left, like the Platforms list. */
+  .mm-project-card, .mm-project-card.is-featured { flex-direction: row; }
+  .mm-project-art, .mm-project-card.is-featured .mm-project-art { width: 92px; height: auto; }
+  .mm-project-art svg, .mm-project-card.is-featured .mm-project-art svg { width: 72px; height: 72px; }
+  .mm-art-initials { width: 52px; height: 52px; border-radius: 16px; font-size: 18px; }
+  .mm-project-body { padding: 14px 14px 16px; }
+  .mm-project-name { font-size: 17px; }
+  .mm-project-stats b { font-size: 15px; }
+  .mm-project-hero { grid-template-columns: 104px minmax(0, 1fr); }
+  .mm-project-art.is-hero { width: auto; min-height: 0; }
+  .mm-project-art.is-hero svg { width: 84px; height: 84px; }
+  .mm-project-hero-body { padding: 16px; }
+  .mm-project-title { font-size: 24px; }
+  .mm-group-body { padding: 2px 14px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-chevron, .mm-project-card, .mm-project-art svg { transition: none; }
+  .mm-project-card:hover, .mm-project-card:hover .mm-project-art svg { transform: none; }
+}
 </style>
 </head>
 <body>
@@ -3033,6 +3346,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <symbol id="cc-icon-machines" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
 <div class="container">
@@ -3062,6 +3376,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Machines</button>
     <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span> MAIN MANAGER <span class="pill-badge">день</span></button>
   </nav>
 
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
@@ -3169,6 +3484,91 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       </article>
 
       <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
+  <section id="section-work" class="section" aria-labelledby="mm-title">
+    <div class="mm-os" id="mm-os">
+      <aside class="mm-sidebar">
+        <div class="mm-brand">
+          <span class="mm-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>
+          <span><b id="mm-title">MAIN MANAGER</b><small>Command Center</small></span>
+        </div>
+        <nav class="mm-nav" aria-label="Разделы MAIN MANAGER">
+          <button type="button" data-mm-view="projects" aria-pressed="true"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg></span><span>Проекты</span><b id="mm-projects-nav-count">0</b></button>
+          <button type="button" data-mm-view="overview" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Обзор дня</span></button>
+          <button type="button" data-mm-view="loose" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 2 2 3-4m-5 9 2 2 3-4m-5 9 2 2 3-4M12 6h9M12 13h9M12 20h9"/></svg></span><span>Хвосты</span><b id="mm-loose-count">0</b></button>
+          <button type="button" data-mm-view="infra" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg></span><span>Изменения</span><b id="mm-infra-count">0</b></button>
+        </nav>
+        <div class="mm-sidebar-bottom">
+          <button type="button" id="mm-theme-toggle" class="mm-sidebar-button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
+          <p id="mm-sources">Источники загружаются…</p>
+        </div>
+      </aside>
+      <div class="mm-workspace">
+        <header class="mm-topbar">
+          <h2 class="mm-module" id="mm-view-title">Проекты</h2>
+          <div class="mm-day-picker" id="mm-day-picker" role="group" aria-label="Выбор дня" hidden>
+            <button type="button" class="mm-round" id="mm-prev-day" aria-label="Предыдущий день">‹</button>
+            <span class="mm-day-label"><b id="mm-day-label">Вчера</b><small id="mm-day-date">—</small></span>
+            <button type="button" class="mm-round" id="mm-next-day" aria-label="Следующий день">›</button>
+          </div>
+        </header>
+        <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
+        <div class="mm-main">
+          <div class="mm-view" data-mm-panel="projects">
+            <div class="mm-section-heading">
+              <div><h3>Над чем работал <span id="mm-projects-total"></span></h3><p class="mm-section-note">Claude, Codex и PR по проектам за 30 дней. Нажми на проект, чтобы провалиться в его работу по дням.</p></div>
+              <div class="mm-filter-tabs mm-sort" id="mm-project-sort" role="group" aria-label="Порядок">
+                <button type="button" data-sort="recent" aria-pressed="true">Недавние</button>
+                <button type="button" data-sort="time" aria-pressed="false">Больше времени</button>
+              </div>
+            </div>
+            <div class="mm-project-grid" id="mm-project-grid"><p class="mm-empty">Загружаю проекты…</p></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="project" hidden>
+            <div id="mm-project-page"></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="overview" hidden>
+            <div class="mm-stats" id="mm-stats" aria-label="Итоги выбранного дня"></div>
+            <section class="mm-panel" aria-labelledby="mm-traction-title">
+              <div class="mm-section-heading">
+                <div><h3 id="mm-traction-title">Traction <span>30 дней</span></h3><p class="mm-section-note">Часы работы по дням. Нажми на столбик, чтобы открыть этот день.</p></div>
+                <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
+              </div>
+              <div class="mm-chart" id="mm-chart"></div>
+              <div class="mm-chart mm-chart-prs" id="mm-chart-prs"></div>
+              <div class="mm-tooltip" id="mm-tooltip" role="tooltip" hidden></div>
+              <details class="mm-more">
+                <summary>Таблица по дням</summary>
+                <div class="mm-table-scroll" id="mm-series-table"></div>
+              </details>
+            </section>
+            <div class="mm-section-heading">
+              <div><h3>Над чем работал <span id="mm-projects-count"></span></h3><p class="mm-section-note">Проект открывает свои сессии и PR за этот день.</p></div>
+            </div>
+            <div class="mm-group-rows" id="mm-projects"></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="loose" hidden>
+            <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр">
+              <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
+              <button type="button" data-filter="dropped" aria-pressed="false">Сбросил <span id="mm-loose-dropped">0</span></button>
+              <button type="button" data-filter="forgot" aria-pressed="false">Забыл <span id="mm-loose-forgot">0</span></button>
+            </div>
+            <p class="mm-section-note mm-loose-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p>
+            <div class="mm-group-rows" id="mm-loose"></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="infra" hidden>
+            <div class="mm-filter-tabs" id="mm-infra-filter" role="group" aria-label="Тип изменения"></div>
+            <div class="mm-group-rows" id="mm-infra"></div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -4098,10 +4498,12 @@ function showSection(name) {
   }
   if (parent === 'agents' && ownerDecisionsReady) refreshOwnerDecisions(true);
   if (name === 'logs' && !currentLogService) loadLogTabs();
+  // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
+  if (name === 'work') setTimeout(openMainManager, 0);
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 }
 
@@ -5925,6 +6327,907 @@ initPixelAgentsPin();
 initDragDrop();
 setInterval(refreshAll, 5000);
 setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000);
+
+// ── MAIN MANAGER ──
+const DAILY_WORK_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/work/daily`
+  : 'https://command.meshly.fr/api/work/daily';
+const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/infra/changes`
+  : 'https://command.meshly.fr/api/infra/changes';
+const MM_THEME_KEY = 'command-center.main-manager.theme';
+const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+const MM_VIEW_TITLES = { projects: 'Проекты', project: 'Проект', overview: 'Обзор дня', loose: 'Хвосты', infra: 'Изменения в инфраструктуре' };
+// Platforms products that have their own mascot tint; anything else uses the neutral tint.
+const MM_TINTS = new Set(['command-center', 'financial', 'mydictionary', 'health', 'ai-singularity', 'context-news', 'accountable', 'jarvis']);
+let dailyWorkData = null;
+let dailyWorkDate = null;
+let dailyWorkLoading = false;
+let infraData = null;
+let mmView = 'projects';
+let mmProjectSort = 'recent';
+let mmProjectId = null;
+let mmProjectData = null;
+let mmLooseFilter = 'all';
+let mmInfraFilter = 'all';
+let mmInitialised = false;
+
+function mmEsc(value) {
+  return escapeHtml(value == null ? '' : String(value));
+}
+
+function workMinutes(value) {
+  const minutes = Math.max(0, Math.round(Number(value) || 0));
+  if (minutes < 60) return `${minutes} мин`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours} ч ${rest} мин` : `${hours} ч`;
+}
+
+function workHours(value) {
+  const hours = (Number(value) || 0) / 60;
+  return hours >= 10 ? hours.toFixed(0) : hours.toFixed(1).replace(/\.0$/, '').replace('.', ',');
+}
+
+function mmDate(iso) {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function mmDayShort(iso) {
+  const date = mmDate(iso);
+  return `${date.getDate()} ${MM_MONTHS[date.getMonth()]}`;
+}
+
+function mmDayTitle(iso, series) {
+  const last = series[series.length - 1]?.date;
+  const prev = series[series.length - 2]?.date;
+  if (iso === last) return 'Сегодня';
+  if (iso === prev) return 'Вчера';
+  const weekday = MM_WEEKDAYS[mmDate(iso).getDay()];
+  return weekday.charAt(0).toUpperCase() + weekday.slice(1);
+}
+
+function mmTime(isoTs) {
+  const date = new Date(isoTs || '');
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+function mmAgo(isoTs) {
+  if (!isoTs) return 'никогда';
+  const minutes = Math.round((Date.now() - new Date(isoTs).getTime()) / 60000);
+  if (!Number.isFinite(minutes)) return '—';
+  if (minutes < 1) return 'только что';
+  if (minutes < 60) return `${minutes} мин назад`;
+  if (minutes < 48 * 60) return `${Math.round(minutes / 60)} ч назад`;
+  return `${Math.round(minutes / 1440)} дн назад`;
+}
+
+function mmGithubUrl(value) {
+  try {
+    const url = new URL(String(value));
+    return url.protocol === 'https:' && url.hostname === 'github.com' ? url.href : '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function mmPrAction(pr, state) {
+  const label = `${pr.repo ? pr.repo.split('/').pop() : ''}#${pr.number ?? ''}`;
+  const mark = state === 'merged' ? '✓' : (state === 'closed' ? '×' : '↗');
+  const body = `<span>${mark} ${mmEsc(label)}</span> ${mmEsc(compactText(pr.title || '', 70))}`;
+  const url = mmGithubUrl(pr.url);
+  const cls = `mm-row-action is-${state}`;
+  return url
+    ? `<a class="${cls}" href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${body}</a>`
+    : `<span class="${cls}">${body}</span>`;
+}
+
+function mmHeaders() {
+  return typeof jarvisRunHeaders === 'function' ? jarvisRunHeaders() : {};
+}
+
+function mmInit() {
+  if (mmInitialised) return;
+  mmInitialised = true;
+  const os = document.getElementById('mm-os');
+  let savedTheme = null;
+  try { savedTheme = window.localStorage.getItem(MM_THEME_KEY); } catch (error) { savedTheme = null; }
+  if (savedTheme === 'dark' || savedTheme === 'light') os.dataset.theme = savedTheme;
+  mmSyncThemeButton();
+  document.getElementById('mm-theme-toggle').addEventListener('click', () => {
+    const dark = mmIsDark();
+    os.dataset.theme = dark ? 'light' : 'dark';
+    try { window.localStorage.setItem(MM_THEME_KEY, os.dataset.theme); } catch (error) { /* per-browser convenience only */ }
+    mmSyncThemeButton();
+    mmRedrawCharts();
+  });
+  document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
+    button.addEventListener('click', () => mmShowView(button.dataset.mmView));
+  });
+  document.getElementById('mm-prev-day').addEventListener('click', () => shiftWorkDay(-1));
+  document.getElementById('mm-next-day').addEventListener('click', () => shiftWorkDay(1));
+  document.getElementById('mm-loose-filter').addEventListener('click', event => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    mmLooseFilter = button.dataset.filter;
+    renderLoose(dailyWorkData);
+  });
+  document.getElementById('mm-infra-filter').addEventListener('click', event => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    mmInfraFilter = button.dataset.filter;
+    renderInfra(infraData);
+  });
+  document.getElementById('mm-project-sort').addEventListener('click', event => {
+    const button = event.target.closest('[data-sort]');
+    if (!button) return;
+    mmProjectSort = button.dataset.sort;
+    if (dailyWorkData) renderProjectCards(dailyWorkData);
+  });
+  document.getElementById('mm-project-grid').addEventListener('click', event => {
+    const card = event.target.closest('[data-project]');
+    if (!card || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
+    event.preventDefault();
+    openProject(card.dataset.project);
+  });
+}
+
+function mmRedrawCharts() {
+  if (mmView === 'overview' && dailyWorkData) renderWorkChart(dailyWorkData);
+  if (mmView === 'project') renderProjectChart();
+}
+
+function mmIsDark() {
+  const os = document.getElementById('mm-os');
+  if (os.dataset.theme) return os.dataset.theme === 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function mmSyncThemeButton() {
+  const button = document.getElementById('mm-theme-toggle');
+  const dark = mmIsDark();
+  button.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  button.querySelector('span').textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+}
+
+function mmShowView(view) {
+  if (!MM_VIEW_TITLES[view]) return;
+  mmView = view;
+  // A project page lives under "Проекты" in the navigation.
+  const navView = view === 'project' ? 'projects' : view;
+  document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
+    button.setAttribute('aria-pressed', button.dataset.mmView === navView ? 'true' : 'false');
+  });
+  document.querySelectorAll('[data-mm-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.mmPanel !== view;
+  });
+  document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
+  document.getElementById('mm-day-picker').hidden = view !== 'overview';
+  if (view !== 'project') mmSetProjectUrl(null);
+  mmRenderNotice();
+  mmRedrawCharts();
+}
+
+function mmSetProjectUrl(id) {
+  try {
+    const url = new URL(window.location.href);
+    if ((url.searchParams.get('project') || null) === (id || null)) return;
+    if (id) url.searchParams.set('project', id);
+    else url.searchParams.delete('project');
+    window.history.replaceState(null, '', url);
+  } catch (error) { /* the link is a convenience only */ }
+}
+
+function openMainManager() {
+  const firstOpen = !mmInitialised;
+  mmInit();
+  loadDailyWork(dailyWorkDate);
+  loadInfraChanges();
+  const wanted = firstOpen ? new URLSearchParams(window.location.search).get('project') : null;
+  if (wanted) openProject(wanted);
+}
+
+async function loadDailyWork(date) {
+  if (dailyWorkLoading) return;
+  dailyWorkLoading = true;
+  const params = new URLSearchParams({ days: '30' });
+  if (date) params.set('date', date);
+  try {
+    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    dailyWorkData = data;
+    dailyWorkDate = data.selected_date;
+    renderDailyWork();
+  } catch (error) {
+    dailyWorkData = null;
+    mmRenderNotice('Не удалось получить итоги дня с сервера Command Center. Цифры не показываю, чтобы не гадать.');
+  } finally {
+    dailyWorkLoading = false;
+  }
+}
+
+async function loadInfraChanges() {
+  try {
+    const response = await fetch(`${INFRA_CHANGES_API}?days=14`, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    infraData = data;
+  } catch (error) {
+    infraData = { ok: false };
+  }
+  renderInfra(infraData);
+  mmRenderNotice();
+  mmRenderSources();
+}
+
+function shiftWorkDay(step) {
+  if (!dailyWorkData) return;
+  const days = dailyWorkData.series.map(day => day.date);
+  const index = days.indexOf(dailyWorkDate) + step;
+  if (index < 0 || index >= days.length) return;
+  loadDailyWork(days[index]);
+}
+
+function mmRenderNotice(errorText) {
+  const notice = document.getElementById('mm-state');
+  if (errorText) {
+    notice.className = 'mm-notice error';
+    notice.textContent = errorText;
+    return;
+  }
+  const source = mmView === 'infra' ? infraData : dailyWorkData;
+  if (!source) return;
+  if (!source.ok) {
+    notice.className = 'mm-notice error';
+    notice.textContent = 'Журнал изменений с сервера не получен. Ничего не показываю, чтобы не гадать.';
+    return;
+  }
+  notice.className = `mm-notice ${source.state}`;
+  let text;
+  if (source.state === 'empty') {
+    text = mmView === 'infra'
+      ? 'Сборщик изменений ещё не запускался. Журнал начнёт заполняться после деплоя на Mac mini.'
+      : 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
+  } else if (source.state === 'stale') {
+    text = `Данные устарели: последний сбор ${mmAgo(source.collected_at)}. Проверь сборщик на Mac mini.`;
+  } else {
+    text = mmView === 'infra'
+      ? `Обновлено: ${mmAgo(source.collected_at)}. Снимок машины каждые 10 минут плюс команды Claude и Codex и merge PR.`
+      : `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
+  }
+  if (!source.owner_view) {
+    text += ' Подробности видны только владельцу: открой Command Center через mm-command-center-auth.';
+  }
+  notice.textContent = text;
+}
+
+function renderDailyWork() {
+  const data = dailyWorkData;
+  if (!data) return;
+  const day = data.day;
+  const days = data.series.map(item => item.date);
+  const index = days.indexOf(day.date);
+  document.getElementById('mm-day-label').textContent = mmDayTitle(day.date, data.series);
+  document.getElementById('mm-day-date').textContent = mmDayShort(day.date) + (day.is_today ? ' · идёт' : '');
+  document.getElementById('mm-prev-day').disabled = index <= 0;
+  document.getElementById('mm-next-day').disabled = index >= days.length - 1;
+  document.getElementById('mm-loose-count').textContent = data.dropped_count + data.forgot_count;
+  mmRenderNotice();
+  renderWorkStats(data);
+  renderWorkChart(data);
+  renderWorkSeriesTable(data);
+  renderWorkProjects(data);
+  renderLoose(data);
+  renderProjectCards(data);
+  mmRenderSources();
+}
+
+function renderWorkStats(data) {
+  const day = data.day;
+  const last7 = data.traction.last_7;
+  const prev7 = data.traction.previous_7;
+  const delta = last7.total_minutes - prev7.total_minutes;
+  const trend = !prev7.total_minutes ? '' : (delta >= 0 ? 'is-up' : 'is-down');
+  const deltaText = prev7.total_minutes
+    ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе`
+    : 'прошлой недели в данных нет';
+  const stats = [
+    { label: 'Время работы', value: workMinutes(day.total_minutes), note: `оценка · проектов: ${day.project_count}` },
+    { label: 'Claude · Codex', value: `${workHours(day.claude_minutes)} · ${workHours(day.codex_minutes)} ч`, note: `${day.sessions} сессий · ${day.prompts} промптов`, dots: true },
+    { label: 'PR смёрджено', value: String(day.prs_merged), note: `открыто ${day.prs_opened} · брошено ${day.prs_closed_unmerged}` },
+    { label: 'Последние 7 дней', value: `${workHours(last7.total_minutes)} ч`, note: `${deltaText} · серия ${data.traction.streak_days} дн`, cls: trend },
+  ];
+  document.getElementById('mm-stats').innerHTML = stats.map(stat => `
+    <div class="mm-stat">
+      <span>${stat.dots ? '<i class="claude"></i><i class="codex"></i>' : ''}${mmEsc(stat.label)}</span>
+      <strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong>
+      <small>${mmEsc(stat.note)}</small>
+    </div>`).join('');
+}
+
+function mmNiceStep(maxHours) {
+  if (maxHours <= 2) return 0.5;
+  if (maxHours <= 5) return 1;
+  if (maxHours <= 10) return 2;
+  return 4;
+}
+
+function mmRoundedTop(x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height);
+  return `M${x},${y + height}V${y + r}Q${x},${y} ${x + r},${y}H${x + width - r}Q${x + width},${y} ${x + width},${y + r}V${y + height}Z`;
+}
+
+function renderWorkChart(data) {
+  mmDrawChart({
+    host: document.getElementById('mm-chart'),
+    prHost: document.getElementById('mm-chart-prs'),
+    series: data.series,
+    selectedDate: data.selected_date,
+    onPick: date => loadDailyWork(date),
+  });
+}
+
+function mmDrawChart({ host, prHost, series, selectedDate, onPick }) {
+  if (!host || host.offsetParent === null) return;
+  const width = Math.max(300, host.clientWidth || 900);
+  const height = 220;
+  const pad = { top: 12, right: 4, bottom: 26, left: 34 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const step = plotW / series.length;
+  const barW = Math.max(4, Math.min(24, step * 0.62));
+  const maxHours = Math.max(1, ...series.map(d => (d.claude_minutes + d.codex_minutes) / 60));
+  const tick = mmNiceStep(maxHours);
+  const top = Math.ceil(maxHours / tick) * tick;
+  const y = hours => pad.top + plotH - (hours / top) * plotH;
+  const labelEvery = width < 520 ? 7 : (width < 900 ? 3 : 2);
+  const selectedIndex = series.findIndex(day => day.date === selectedDate);
+  const parts = [];
+  for (let value = 0; value <= top + 1e-9; value += tick) {
+    parts.push(`<line class="${value === 0 ? 'mm-baseline' : 'mm-grid'}" x1="${pad.left}" x2="${width - pad.right}" y1="${y(value)}" y2="${y(value)}"/>`);
+    parts.push(`<text x="${pad.left - 8}" y="${y(value) + 4}" text-anchor="end">${value}ч</text>`);
+  }
+  series.forEach((day, i) => {
+    const cx = pad.left + step * i + step / 2;
+    const x = cx - barW / 2;
+    const selected = day.date === selectedDate;
+    if (selected) parts.push(`<rect class="mm-selected-band" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}" rx="6"/>`);
+    // Each tool's own time is stacked; the tooltip also gives the de-duplicated total.
+    const claudeH = (day.claude_minutes / 60 / top) * plotH;
+    const codexH = (day.codex_minutes / 60 / top) * plotH;
+    const base = pad.top + plotH;
+    if (claudeH > 0) {
+      const path = codexH > 0 ? `M${x},${base}V${base - claudeH}H${x + barW}V${base}Z` : mmRoundedTop(x, base - claudeH, barW, claudeH, 4);
+      parts.push(`<path class="seg-claude" d="${path}"/>`);
+    }
+    if (codexH > 0) {
+      const gap = claudeH > 0 ? 2 : 0;
+      const h = Math.max(1, codexH - gap);
+      parts.push(`<path class="seg-codex" d="${mmRoundedTop(x, base - claudeH - gap - h, barW, h, 4)}"/>`);
+    }
+    const nearSelected = !selected && selectedIndex >= 0 && Math.abs(i - selectedIndex) * step < 44;
+    if (selected || (!nearSelected && i % labelEvery === (series.length - 1) % labelEvery)) {
+      parts.push(`<text class="${selected ? 'is-current' : ''}" x="${cx}" y="${height - 6}" text-anchor="middle">${mmEsc(mmDayShort(day.date))}</text>`);
+    }
+    parts.push(`<rect class="mm-bar-hit" data-index="${i}" tabindex="0" role="button" aria-label="${mmEsc(`${mmDayShort(day.date)}: ${workMinutes(day.total_minutes)}, PR смёрджено ${day.prs_merged}`)}" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}"/>`);
+  });
+  host.innerHTML = `<svg viewBox="0 0 ${width} ${height}" height="${height}" role="img" aria-label="Часы работы с Claude и Codex за 30 дней">${parts.join('')}</svg>`;
+
+  // Merged PRs per day: a separate small chart on the same day axis, never a second y-scale.
+  const prHeight = 64;
+  const baseY = 42;
+  const maxPr = Math.max(1, ...series.map(d => d.prs_merged));
+  const prParts = [
+    `<text x="${pad.left - 8}" y="${baseY}" text-anchor="end">PR</text>`,
+    `<line class="mm-baseline" x1="${pad.left}" x2="${width - pad.right}" y1="${baseY + 0.5}" y2="${baseY + 0.5}"/>`,
+  ];
+  series.forEach((day, i) => {
+    if (!day.prs_merged) return;
+    const cx = pad.left + step * i + step / 2;
+    const h = Math.max(3, (day.prs_merged / maxPr) * 26);
+    prParts.push(`<path class="seg-pr" d="${mmRoundedTop(cx - barW / 2, baseY - h, barW, h, 3)}"/>`);
+    if ((maxPr > 1 && day.prs_merged === maxPr) || day.date === selectedDate) {
+      prParts.push(`<text class="is-current" x="${cx}" y="${baseY - h - 4}" text-anchor="middle">${day.prs_merged}</text>`);
+    }
+  });
+  prParts.push(`<text x="${pad.left}" y="${prHeight - 4}">PR смёрджено за день</text>`);
+  prHost.innerHTML = `<svg viewBox="0 0 ${width} ${prHeight}" height="${prHeight}" role="img" aria-label="Смёрдженные PR по дням">${prParts.join('')}</svg>`;
+
+  host.querySelectorAll('.mm-bar-hit').forEach(hit => {
+    const day = series[Number(hit.dataset.index)];
+    const show = event => showWorkTooltip(day, event.target);
+    hit.addEventListener('mouseenter', show);
+    hit.addEventListener('focus', show);
+    hit.addEventListener('mouseleave', hideWorkTooltip);
+    hit.addEventListener('blur', hideWorkTooltip);
+    hit.addEventListener('click', () => onPick(day.date));
+    hit.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onPick(day.date);
+      }
+    });
+  });
+}
+
+function showWorkTooltip(day, target) {
+  const tip = target.closest('.mm-panel').querySelector('.mm-tooltip');
+  const panel = tip.parentElement.getBoundingClientRect();
+  tip.innerHTML = `<b>${mmEsc(mmDayShort(day.date))}</b>
+    <div class="row"><span>Всего без пересечений</span><span>${mmEsc(workMinutes(day.total_minutes))}</span></div>
+    <div class="row"><span><i class="claude mm-tip-dot"></i>Claude</span><span>${mmEsc(workMinutes(day.claude_minutes))}</span></div>
+    <div class="row"><span><i class="codex mm-tip-dot"></i>Codex</span><span>${mmEsc(workMinutes(day.codex_minutes))}</span></div>
+    <div class="row"><span>Сессий · промптов</span><span>${day.sessions} · ${day.prompts}</span></div>
+    <div class="row"><span>PR смёрджено</span><span>${day.prs_merged}</span></div>`;
+  tip.hidden = false;
+  const rect = target.getBoundingClientRect();
+  const left = Math.min(panel.width - tip.offsetWidth - 8, Math.max(8, rect.left - panel.left + rect.width / 2 - tip.offsetWidth / 2));
+  tip.style.left = `${left}px`;
+  tip.style.top = `${Math.max(8, rect.top - panel.top - tip.offsetHeight + 24)}px`;
+}
+
+function hideWorkTooltip() {
+  document.querySelectorAll('#mm-os .mm-tooltip').forEach(tip => { tip.hidden = true; });
+}
+
+function renderWorkSeriesTable(data) {
+  const rows = data.series.slice().reverse().map(day => `<tr>
+      <td class="cell-date" data-label="День">${mmEsc(mmDayShort(day.date))}</td>
+      <td class="num" data-label="Всего">${mmEsc(workMinutes(day.total_minutes))}</td>
+      <td class="num" data-label="Claude">${mmEsc(workMinutes(day.claude_minutes))}</td>
+      <td class="num" data-label="Codex">${mmEsc(workMinutes(day.codex_minutes))}</td>
+      <td class="num" data-label="Сессии">${day.sessions}</td>
+      <td class="num" data-label="PR merged">${day.prs_merged}</td>
+      <td class="num" data-label="Коммиты">${day.commits}</td>
+    </tr>`).join('');
+  document.getElementById('mm-series-table').innerHTML = `<table class="mm-data-table">
+    <thead><tr><th>День</th><th class="num">Всего</th><th class="num">Claude</th><th class="num">Codex</th><th class="num">Сессии</th><th class="num">PR merged</th><th class="num">Коммиты</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+function renderWorkProjects(data) {
+  const host = document.getElementById('mm-projects');
+  const projects = data.day.projects;
+  document.getElementById('mm-projects-count').textContent = data.day.project_count || '';
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="mm-empty">Проектов: ${data.day.project_count}. Названия видны только владельцу.</p>`;
+    return;
+  }
+  if (!projects || !projects.length) {
+    host.innerHTML = '<p class="mm-empty">В этот день сессий Claude и Codex не найдено.</p>';
+    return;
+  }
+  const sessions = data.day.sessions_detail || [];
+  host.innerHTML = projects.map((p, index) => {
+    const dominant = p.claude_minutes >= p.codex_minutes ? 'claude' : 'codex';
+    const note = [
+      p.claude_minutes ? `Claude ${workMinutes(p.claude_minutes)}` : '',
+      p.codex_minutes ? `Codex ${workMinutes(p.codex_minutes)}` : '',
+      `${p.sessions} сесс.`,
+      p.merged.length ? `смёрджено ${p.merged.length}` : '',
+    ].filter(Boolean).join(' · ');
+    const own = sessions.filter(s => s.project === p.project);
+    const outcome = [
+      ...p.merged.map(pr => mmPrAction(pr, 'merged')),
+      ...p.opened.filter(pr => !p.merged.some(m => m.number === pr.number)).map(pr => mmPrAction(pr, 'open')),
+      ...p.branches.map(branch => `<span class="mm-chip">⑂ ${mmEsc(branch)}</span>`),
+    ];
+    return `<details class="mm-group-row"${index === 0 ? ' open' : ''}>
+      <summary>
+        <span class="mm-dot ${dominant}" aria-hidden="true"></span>
+        <span class="mm-group-main"><span class="mm-group-title">${mmEsc(p.project)}</span><span class="mm-group-note">${mmEsc(p.repo ? `${p.repo} · ${note}` : note)}</span></span>
+        <span class="mm-group-aside">${mmEsc(workMinutes(p.total_minutes))}<small>${p.prompts} промпт.</small></span>
+        <span class="mm-chevron" aria-hidden="true">›</span>
+      </summary>
+      <div class="mm-group-body">
+        <div class="mm-group-foot">${outcome.length ? outcome.join('') : '<span class="mm-chip">без PR и без отдельной ветки</span>'}</div>
+        <div class="mm-table-scroll"><table class="mm-data-table">
+          <thead><tr><th>Время</th><th>Инструмент</th><th>Тема</th><th class="num">Мин</th><th class="num">Промпты</th></tr></thead>
+          <tbody>${own.map(s => `<tr>
+            <td class="cell-date" data-label="Время">${mmEsc(mmTime(s.start))}–${mmEsc(mmTime(s.end))}</td>
+            <td data-label="Инструмент"><b>${s.tool === 'claude' ? 'Claude' : 'Codex'}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
+            <td data-label="Тема">${mmEsc(compactText(s.topic || '—', 140))}</td>
+            <td class="num" data-label="Мин">${s.active_minutes}</td>
+            <td class="num" data-label="Промпты">${s.prompts}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>
+    </details>`;
+  }).join('');
+}
+
+function mmLooseRow(item, bucket) {
+  const age = item.age_days ? `${item.age_days} дн` : 'меньше суток';
+  if (item.kind === 'branch') {
+    const tools = (item.tools || []).map(tool => tool === 'claude' ? 'Claude' : 'Codex').join(' + ');
+    return `<details class="mm-group-row">
+      <summary>
+        <span class="mm-dot ${bucket}" aria-hidden="true"></span>
+        <span class="mm-group-main"><span class="mm-group-title">⑂ ${mmEsc(item.branch)}</span><span class="mm-group-note">${mmEsc(`${item.project || item.repo} · ветка без PR · ${tools}`)}</span></span>
+        <span class="mm-group-aside">${mmEsc(age)}<small>не трогал</small></span>
+        <span class="mm-chevron" aria-hidden="true">›</span>
+      </summary>
+      <div class="mm-group-body"><table class="mm-data-table"><tbody>
+        <tr><td data-label="Репозиторий">${mmEsc(item.repo)}</td></tr>
+        <tr><td data-label="Работы">${mmEsc(workMinutes(item.minutes))} · последняя активность ${mmEsc(new Date(item.last_activity).toLocaleString('ru-RU'))}</td></tr>
+        ${item.topic ? `<tr><td data-label="Тема">${mmEsc(item.topic)}</td></tr>` : ''}
+      </tbody></table></div>
+    </details>`;
+  }
+  const kind = item.kind === 'pr_closed' ? 'PR закрыт без merge' : (item.kind === 'issue_open' ? 'Задача открыта' : 'PR открыт');
+  const state = item.kind === 'pr_closed' ? 'closed' : 'open';
+  const when = item.kind === 'pr_closed' ? (item.age_days ? `${age} назад` : 'сегодня') : age;
+  return `<div class="mm-group-row"><div class="mm-group-row-static">
+      <span class="mm-dot ${bucket}" aria-hidden="true"></span>
+      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(compactText(item.title || '', 90))}</span><span class="mm-group-note">${mmEsc(`${item.repo}#${item.number} · ${kind}${item.draft ? ' · черновик' : ''}`)}</span></span>
+      <span class="mm-group-aside">${mmEsc(when)}<small>${item.kind === 'pr_closed' ? 'закрыт' : 'без движения'}</small></span>
+      ${mmPrAction(item, state)}
+    </div></div>`;
+}
+
+function renderLoose(data) {
+  const host = document.getElementById('mm-loose');
+  if (!data) return;
+  document.getElementById('mm-loose-all').textContent = data.dropped_count + data.forgot_count;
+  document.getElementById('mm-loose-dropped').textContent = data.dropped_count;
+  document.getElementById('mm-loose-forgot').textContent = data.forgot_count;
+  document.querySelectorAll('#mm-loose-filter [data-filter]').forEach(button => {
+    button.setAttribute('aria-pressed', button.dataset.filter === mmLooseFilter ? 'true' : 'false');
+  });
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="mm-empty">Сбросил: ${data.dropped_count}, забыл: ${data.forgot_count}. Подробности видны только владельцу.</p>`;
+    return;
+  }
+  const items = [
+    ...(mmLooseFilter !== 'forgot' ? (data.dropped || []).map(item => mmLooseRow(item, 'dropped')) : []),
+    ...(mmLooseFilter !== 'dropped' ? (data.forgot || []).map(item => mmLooseRow(item, 'forgot')) : []),
+  ];
+  const githubOk = data.sources?.github?.ok;
+  host.innerHTML = items.length
+    ? items.join('')
+    : `<p class="mm-empty">${githubOk ? 'Здесь пусто: ничего не брошено и не забыто.' : 'GitHub ещё не собран, поэтому список может быть неполным.'}</p>`;
+}
+
+function mmInfraRow(event) {
+  const time = mmTime(event.at);
+  if (event.category === 'pr') {
+    const url = mmGithubUrl(event.url);
+    const what = url ? `<a href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${mmEsc(event.subject)}</a>` : mmEsc(event.subject);
+    return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-pr" aria-hidden="true"></span> <b>Merge</b> ${what}<small>${mmEsc(event.detail || '')}</small></td><td data-label="Где">GitHub</td></tr>`;
+  }
+  if (event.category === 'agent') {
+    return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-agent" aria-hidden="true"></span> <b>${mmEsc(event.subject)}</b><small><code>${mmEsc(event.detail || '')}</code></small>${event.topic ? `<small>${mmEsc(compactText(event.topic, 100))}</small>` : ''}</td><td data-label="Где">${mmEsc(event.host || event.machine)}</td></tr>`;
+  }
+  const label = (infraData.categories || []).find(c => c.id === event.category)?.label || event.category;
+  const files = Array.isArray(event.files) && event.files.length ? `<small>${mmEsc(event.files.slice(0, 8).join(', '))}${event.files.length > 8 ? '…' : ''}</small>` : '';
+  const commits = event.category === 'repo' && event.to_head ? `<small>${mmEsc(`${event.branch || ''} · ${event.from_head} → ${event.to_head}${event.commits ? ` · коммитов: ${event.commits}` : ''}`)}</small>` : '';
+  return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-${mmEsc(event.category)}" aria-hidden="true"></span> <b>${mmEsc(label)}: ${mmEsc(event.subject)}</b><small>${mmEsc(event.detail || '')}</small>${commits}${files}</td><td data-label="Где">${mmEsc(event.machine)}</td></tr>`;
+}
+
+function renderInfra(data) {
+  const filterHost = document.getElementById('mm-infra-filter');
+  const host = document.getElementById('mm-infra');
+  if (!data || !data.ok) {
+    filterHost.innerHTML = '';
+    host.innerHTML = '<p class="mm-empty">Журнал изменений недоступен.</p>';
+    return;
+  }
+  document.getElementById('mm-infra-count').textContent = data.total;
+  const categories = (data.categories || []).filter(c => c.count > 0);
+  if (mmInfraFilter !== 'all' && !categories.some(c => c.id === mmInfraFilter)) mmInfraFilter = 'all';
+  filterHost.innerHTML = [`<button type="button" data-filter="all" aria-pressed="${mmInfraFilter === 'all'}">Все <span>${data.total}</span></button>`,
+    ...categories.map(c => `<button type="button" data-filter="${mmEsc(c.id)}" aria-pressed="${mmInfraFilter === c.id}">${mmEsc(c.label)} <span>${c.count}</span></button>`)].join('');
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="mm-empty">Изменений за ${data.days} дней: ${data.total}. Сам журнал виден только владельцу.</p>`;
+    return;
+  }
+  const days = (data.timeline || []).map(day => ({
+    date: day.date,
+    events: day.events.filter(event => mmInfraFilter === 'all' || event.category === mmInfraFilter),
+  })).filter(day => day.events.length);
+  if (!days.length) {
+    host.innerHTML = `<p class="mm-empty">${data.state === 'empty' ? 'Журнал ещё пуст: сборщик изменений не запускался.' : `За ${data.days} дней таких изменений не было.`}</p>`;
+    return;
+  }
+  const todayIso = new Date().toLocaleDateString('sv-SE');
+  host.innerHTML = days.map((day, index) => {
+    const counts = {};
+    day.events.forEach(event => { counts[event.category] = (counts[event.category] || 0) + 1; });
+    const note = Object.entries(counts).map(([id, count]) => `${(data.categories.find(c => c.id === id) || {}).label || id} ${count}`).join(' · ');
+    const title = day.date === todayIso ? 'Сегодня' : `${mmDayShort(day.date)}, ${MM_WEEKDAYS[mmDate(day.date).getDay()]}`;
+    return `<details class="mm-group-row"${index === 0 ? ' open' : ''}>
+      <summary>
+        <span class="mm-group-main"><span class="mm-group-title">${mmEsc(title)}</span><span class="mm-group-note">${mmEsc(note)}</span></span>
+        <span class="mm-group-count">${day.events.length}</span>
+        <span class="mm-chevron" aria-hidden="true">›</span>
+      </summary>
+      <div class="mm-group-body"><div class="mm-table-scroll"><table class="mm-data-table mm-infra-table">
+        <colgroup><col class="mm-col-time"><col><col class="mm-col-where"></colgroup>
+        <thead><tr><th>Время</th><th>Что изменилось</th><th>Где</th></tr></thead>
+        <tbody>${day.events.map(mmInfraRow).join('')}</tbody>
+      </table></div></div>
+    </details>`;
+  }).join('') + (data.truncated ? '<p class="mm-section-note">Показаны последние 600 изменений.</p>' : '');
+}
+
+function mmCompactTime(minutes) {
+  return minutes < 60 ? workMinutes(minutes) : `${workHours(minutes)} ч`;
+}
+
+function mmInitials(name) {
+  return String(name || '?').split(/[\s/_.-]+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase() || '?';
+}
+
+function mmArt(item, extraClass = '') {
+  const tint = MM_TINTS.has(item.id) ? item.id : 'other';
+  const inner = item.mascot
+    ? `<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-${mmEsc(item.mascot)}"/></svg>`
+    : `<span class="mm-art-initials">${mmEsc(mmInitials(item.name))}</span>`;
+  return `<span class="mm-project-art tint-${tint} ${extraClass}" aria-hidden="true">${inner}</span>`;
+}
+
+function mmSpark(values) {
+  const bar = 4;
+  const gap = 2;
+  const height = 32;
+  const max = Math.max(1, ...values);
+  const rects = values.map((value, i) => {
+    const h = value > 0 ? Math.max(3, (value / max) * height) : 1;
+    return `<rect class="${value > 0 ? '' : 'zero'}" x="${i * (bar + gap)}" y="${height - h}" width="${bar}" height="${h}" rx="1"/>`;
+  }).join('');
+  return `<svg class="mm-spark" viewBox="0 0 ${values.length * (bar + gap) - gap} ${height}" preserveAspectRatio="none" aria-hidden="true">${rects}</svg>`;
+}
+
+function mmDayOffset(isoTs) {
+  const date = new Date(isoTs || '');
+  if (Number.isNaN(date.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  return Math.round((today - date) / 86400000);
+}
+
+function mmRelDay(isoTs) {
+  const offset = mmDayOffset(isoTs);
+  if (offset === null) return '—';
+  if (offset <= 0) return `сегодня, ${mmTime(isoTs)}`;
+  if (offset === 1) return `вчера, ${mmTime(isoTs)}`;
+  if (offset < 7) return `${offset} дн назад`;
+  const date = new Date(isoTs);
+  return `${date.getDate()} ${MM_MONTHS[date.getMonth()]}`;
+}
+
+function mmDayHeading(iso) {
+  const offset = mmDayOffset(`${iso}T12:00:00`);
+  if (offset === 0) return 'Сегодня';
+  if (offset === 1) return 'Вчера';
+  return `${mmDayShort(iso)}, ${MM_WEEKDAYS[mmDate(iso).getDay()]}`;
+}
+
+function mmWeekChip(item) {
+  const week = item.last_7_minutes;
+  const prev = item.previous_7_minutes;
+  if (!week) return '<span class="mm-chip">на этой неделе не трогал</span>';
+  const cls = prev ? (week >= prev ? 'is-up' : 'is-down') : '';
+  return `<span class="mm-chip ${cls}">${mmEsc(workMinutes(week))} за 7 дней</span>`;
+}
+
+function renderProjectCards(data) {
+  const host = document.getElementById('mm-project-grid');
+  document.getElementById('mm-projects-total').textContent = data.project_total || '';
+  document.getElementById('mm-projects-nav-count').textContent = data.project_total || 0;
+  document.querySelectorAll('#mm-project-sort [data-sort]').forEach(button => {
+    button.setAttribute('aria-pressed', button.dataset.sort === mmProjectSort ? 'true' : 'false');
+  });
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="mm-empty">Проектов за 30 дней: ${data.project_total}. Названия и работа видны только владельцу.</p>`;
+    return;
+  }
+  const items = (data.projects || []).slice();
+  if (mmProjectSort === 'time') items.sort((a, b) => b.total_minutes - a.total_minutes);
+  if (!items.length) {
+    host.innerHTML = '<p class="mm-empty">За 30 дней ни сессий Claude и Codex, ни PR не найдено.</p>';
+    return;
+  }
+  host.innerHTML = items.map((item, index) => {
+    const featured = index < 2 && item.total_minutes > 0 ? ' is-featured' : '';
+    const where = item.repos.length ? item.repos.join(' · ') : item.projects.join(' · ');
+    return `<a class="mm-project-card${featured}" href="?tab=work&amp;project=${encodeURIComponent(item.id)}" data-project="${mmEsc(item.id)}">
+      ${mmArt(item)}
+      <span class="mm-project-body">
+        <span class="mm-project-kicker">${mmEsc(item.last_activity ? mmRelDay(item.last_activity) : 'без активности')}</span>
+        <span class="mm-project-name">${mmEsc(item.name)}</span>
+        <span class="mm-project-repo">${mmEsc(where || 'без репозитория')}</span>
+        ${mmSpark(item.daily_minutes)}
+        <span class="mm-project-stats">
+          <span><b>${mmEsc(mmCompactTime(item.total_minutes))}</b><small>за 30 дней</small></span>
+          <span><b>${item.prs_merged}</b><small>PR смёрджено</small></span>
+          <span><b>${item.active_days}</b><small>дней в работе</small></span>
+        </span>
+        <span class="mm-project-foot">${mmWeekChip(item)}${item.prs_open ? `<span class="mm-chip">открытых PR: ${item.prs_open}</span>` : ''}${item.loose ? `<span class="mm-chip is-warn">хвостов: ${item.loose}</span>` : ''}</span>
+        ${item.last_topic ? `<span class="mm-project-last"><b>Последнее:</b> ${mmEsc(compactText(item.last_topic, 110))}</span>` : ''}
+      </span>
+    </a>`;
+  }).join('');
+}
+
+async function openProject(id) {
+  mmProjectId = id;
+  mmProjectData = null;
+  const page = document.getElementById('mm-project-page');
+  page.innerHTML = '<p class="mm-empty">Загружаю проект…</p>';
+  mmShowView('project');
+  mmSetProjectUrl(id);
+  const os = document.getElementById('mm-os');
+  if (os.getBoundingClientRect().top < 0) os.scrollIntoView({ block: 'start' });
+  try {
+    const params = new URLSearchParams({ days: '30', project: id });
+    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    if (mmProjectId !== id) return;
+    if (!data.owner_view) {
+      page.innerHTML = '<p class="mm-empty">Работа по проектам видна только владельцу.</p>';
+      return;
+    }
+    if (!data.project) {
+      page.innerHTML = '<p class="mm-empty">За 30 дней по этому проекту ничего не найдено.</p>';
+      return;
+    }
+    mmProjectData = { ...data.project, dates: data.series.map(day => day.date) };
+    renderProjectPage();
+  } catch (error) {
+    if (mmProjectId === id) page.innerHTML = '<p class="mm-empty">Не удалось получить проект с сервера Command Center.</p>';
+  }
+}
+
+function mmProjectSeries(project) {
+  const byDate = Object.fromEntries((project.timeline || []).map(day => [day.date, day]));
+  return project.dates.map((date, i) => {
+    const day = byDate[date];
+    return {
+      date,
+      claude_minutes: project.daily_claude_minutes[i] || 0,
+      codex_minutes: project.daily_codex_minutes[i] || 0,
+      total_minutes: project.daily_minutes[i] || 0,
+      prs_merged: project.daily_prs_merged[i] || 0,
+      sessions: day ? day.sessions.length : 0,
+      prompts: day ? day.sessions.reduce((sum, session) => sum + (session.prompts || 0), 0) : 0,
+    };
+  });
+}
+
+function mmProjectDay(day, open) {
+  const note = [
+    day.claude_minutes ? `Claude ${workMinutes(day.claude_minutes)}` : '',
+    day.codex_minutes ? `Codex ${workMinutes(day.codex_minutes)}` : '',
+    day.sessions.length ? `${day.sessions.length} сесс.` : '',
+    day.merged.length ? `смёрджено ${day.merged.length}` : '',
+    day.opened.length ? `открыто PR ${day.opened.length}` : '',
+    day.closed_unmerged.length ? `закрыто без merge ${day.closed_unmerged.length}` : '',
+    day.commands.length ? `команд в инфраструктуре ${day.commands.length}` : '',
+  ].filter(Boolean).join(' · ');
+  const dot = day.claude_minutes || day.codex_minutes ? (day.claude_minutes >= day.codex_minutes ? 'claude' : 'codex') : 'cat-pr';
+  const prs = [
+    ...day.merged.map(pr => mmPrAction(pr, 'merged')),
+    ...day.opened.map(pr => mmPrAction(pr, 'open')),
+    ...day.closed_unmerged.map(pr => mmPrAction(pr, 'closed')),
+  ];
+  const sessions = day.sessions.length ? `<div class="mm-table-scroll"><table class="mm-data-table mm-day-table">
+      <colgroup><col class="mm-col-span"><col class="mm-col-tool"><col><col class="mm-col-min"></colgroup>
+      <thead><tr><th>Время</th><th>Инструмент</th><th>Что делал</th><th class="num">Мин</th></tr></thead>
+      <tbody>${day.sessions.map(s => `<tr>
+        <td class="cell-date" data-label="Время">${mmEsc(mmTime(s.start))}–${mmEsc(mmTime(s.end))}</td>
+        <td data-label="Инструмент"><b>${s.tool === 'claude' ? 'Claude' : 'Codex'}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
+        <td data-label="Что делал">${mmEsc(compactText(s.topic || '—', 160))}</td>
+        <td class="num" data-label="Мин">${s.active_minutes}</td>
+      </tr>`).join('')}</tbody></table></div>` : '';
+  const commands = day.commands.length ? `<div class="mm-command-list">${day.commands.map(c => `<div class="mm-command">
+      <small>${mmEsc(mmTime(c.at))} · ${c.tool === 'claude' ? 'Claude' : 'Codex'} · ${mmEsc(c.host || '')}</small><code>${mmEsc(c.command || '')}</code></div>`).join('')}</div>` : '';
+  return `<details class="mm-group-row" id="mm-day-${mmEsc(day.date)}"${open ? ' open' : ''}>
+    <summary>
+      <span class="mm-dot ${dot}" aria-hidden="true"></span>
+      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(mmDayHeading(day.date))}</span><span class="mm-group-note">${mmEsc(note || 'без сессий')}</span></span>
+      <span class="mm-group-aside">${day.minutes ? mmEsc(workMinutes(day.minutes)) : '—'}<small>${day.minutes ? 'работы' : 'только GitHub'}</small></span>
+      <span class="mm-chevron" aria-hidden="true">›</span>
+    </summary>
+    <div class="mm-group-body">
+      ${prs.length ? `<div class="mm-group-foot">${prs.join('')}</div>` : ''}
+      ${sessions}
+      ${commands}
+    </div>
+  </details>`;
+}
+
+function renderProjectPage() {
+  const p = mmProjectData;
+  const page = document.getElementById('mm-project-page');
+  document.getElementById('mm-view-title').textContent = p.name;
+  const week = p.last_7_minutes;
+  const prev = p.previous_7_minutes;
+  const delta = week - prev;
+  const stats = [
+    { label: 'За 30 дней', value: workMinutes(p.total_minutes), note: `Claude ${workMinutes(p.claude_minutes)} · Codex ${workMinutes(p.codex_minutes)}` },
+    { label: 'Последние 7 дней', value: workMinutes(week), note: prev ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе` : 'прошлой недели в данных нет', cls: prev ? (delta >= 0 ? 'is-up' : 'is-down') : '' },
+    { label: 'PR смёрджено', value: String(p.prs_merged), note: `открыто сейчас: ${p.prs_open}` },
+    { label: 'Дней в работе', value: `${p.active_days} из 30`, note: `${p.sessions} сессий · ${p.prompts} промптов` },
+  ];
+  const merged = p.timeline.flatMap(day => day.merged);
+  const where = (p.repos.length ? p.repos : p.projects).map(name => `<span class="mm-chip">${mmEsc(name)}</span>`).join('');
+  page.innerHTML = `
+    <button type="button" class="mm-back" id="mm-project-back"><span aria-hidden="true">‹</span> Все проекты</button>
+    <section class="mm-project-hero">
+      ${mmArt(p, 'is-hero')}
+      <div class="mm-project-hero-body">
+        <span class="mm-project-kicker">${mmEsc(p.last_activity ? `последняя работа: ${mmRelDay(p.last_activity)}` : 'без активности')}</span>
+        <h3 class="mm-project-title">${mmEsc(p.name)}</h3>
+        <div class="mm-chip-row">${where}</div>
+        ${p.last_topic ? `<p class="mm-project-last"><b>Последнее:</b> ${mmEsc(p.last_topic)}</p>` : ''}
+      </div>
+    </section>
+    <div class="mm-stats">${stats.map(stat => `
+      <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
+    </div>
+    <section class="mm-panel" aria-labelledby="mm-project-chart-title">
+      <div class="mm-section-heading">
+        <div><h3 id="mm-project-chart-title">Работа по дням <span>30 дней</span></h3><p class="mm-section-note">Нажми на столбик, чтобы открыть этот день ниже.</p></div>
+        <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
+      </div>
+      <div class="mm-chart" id="mm-project-chart"></div>
+      <div class="mm-chart mm-chart-prs" id="mm-project-chart-prs"></div>
+      <div class="mm-tooltip" role="tooltip" hidden></div>
+    </section>
+    <div class="mm-section-heading"><div><h3>Что получилось <span>${merged.length}</span></h3><p class="mm-section-note">PR, смёрдженные за 30 дней.</p></div></div>
+    <div class="mm-outcomes">${merged.length ? merged.map(pr => mmPrAction(pr, 'merged')).join('') : '<span class="mm-chip">За 30 дней PR не смёрджено</span>'}</div>
+    ${p.open_prs_list.length ? `<div class="mm-section-heading"><div><h3>Открытые PR <span>${p.open_prs_list.length}</span></h3></div></div>
+    <div class="mm-outcomes">${p.open_prs_list.map(pr => mmPrAction(pr, 'open')).join('')}</div>` : ''}
+    ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
+    <div class="mm-group-rows mm-block">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}
+    <div class="mm-section-heading"><div><h3>По дням <span>${p.timeline.length}</span></h3><p class="mm-section-note">Сессии с темами, PR и команды, которые меняли инфраструктуру.</p></div></div>
+    <div class="mm-group-rows">${p.timeline.map((day, index) => mmProjectDay(day, index < 3)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>`;
+  document.getElementById('mm-project-back').addEventListener('click', () => mmShowView('projects'));
+  renderProjectChart();
+}
+
+function renderProjectChart() {
+  if (!mmProjectData) return;
+  mmDrawChart({
+    host: document.getElementById('mm-project-chart'),
+    prHost: document.getElementById('mm-project-chart-prs'),
+    series: mmProjectSeries(mmProjectData),
+    selectedDate: null,
+    onPick: date => {
+      const row = document.getElementById(`mm-day-${date}`);
+      if (!row) return;
+      row.open = true;
+      row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+  });
+}
+
+function mmRenderSources() {
+  const parts = [];
+  const machines = dailyWorkData?.sources?.machines || [];
+  if (machines.length) parts.push(`Логи: ${machines.map(m => `${m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
+  const github = dailyWorkData?.sources?.github;
+  if (github) parts.push(github.ok ? `GitHub ${mmAgo(github.collected_at)}` : 'GitHub ещё не собран');
+  const infraMachines = infraData?.machines || [];
+  if (infraMachines.length) parts.push(`Снимки: ${infraMachines.map(m => `${m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
+  parts.push('облачные сессии claude.ai/code не учитываются');
+  document.getElementById('mm-sources').textContent = parts.join(' · ');
+}
+
+let mmResizeTimer = null;
+window.addEventListener('resize', () => {
+  if (!dailyWorkData || !document.getElementById('section-work')?.classList.contains('active')) return;
+  clearTimeout(mmResizeTimer);
+  mmResizeTimer = setTimeout(mmRedrawCharts, 150);
+});
+// ── End MAIN MANAGER ──
 </script>
 
 </body>
