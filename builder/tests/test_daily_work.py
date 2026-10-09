@@ -44,6 +44,15 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(len(intervals), 2)
         self.assertEqual(COLLECTOR.interval_minutes(intervals), 26 + 6)
 
+    def test_session_crossing_midnight_stays_continuous(self):
+        os.environ["TZ"] = "UTC"
+        time.tzset()
+        session = COLLECTOR.Session("claude", "night")
+        session.events = [datetime(2026, 10, 7, 23, 50, tzinfo=timezone.utc), datetime(2026, 10, 8, 0, 10, tzinfo=timezone.utc)]
+        days = COLLECTOR.day_records([session], {"2026-10-07", "2026-10-08"})
+        self.assertEqual(days["2026-10-07"][0]["active_minutes"], 10)
+        self.assertEqual(days["2026-10-08"][0]["active_minutes"], 11)
+
     def test_topic_is_redacted_and_shortened(self):
         topic = COLLECTOR.redact_topic("deploy with token=ghp_abcdefghijklmnopqrstuvwxyz0123 please " + "x " * 100)
         self.assertNotIn("ghp_", topic)

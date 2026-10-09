@@ -308,17 +308,28 @@ def collect_sessions(since: datetime) -> tuple[list[Session], dict[str, Any]]:
     return sessions, sources
 
 
+def split_by_local_day(intervals: list[tuple[datetime, datetime]]) -> dict[str, list[tuple[datetime, datetime]]]:
+    """Clip work intervals at local midnight so late-night work stays continuous."""
+    pieces: dict[str, list[tuple[datetime, datetime]]] = defaultdict(list)
+    for start, end in intervals:
+        while start < end:
+            local_start = start.astimezone()
+            midnight = datetime.combine(local_start.date() + timedelta(days=1), datetime.min.time(),
+                                        tzinfo=local_start.tzinfo).astimezone(timezone.utc)
+            piece_end = min(end, midnight)
+            pieces[local_day(start)].append((start, piece_end))
+            start = piece_end
+    return pieces
+
+
 def day_records(sessions: list[Session], days: set[str]) -> dict[str, list[dict[str, Any]]]:
     """Split sessions by local calendar day into privacy-reduced records."""
     by_day: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for session in sessions:
-        events_by_day: dict[str, list[datetime]] = defaultdict(list)
-        for moment in session.events:
-            events_by_day[local_day(moment)].append(moment)
-        for day, events in events_by_day.items():
+        # Intervals are built over the whole session first, then clipped per day.
+        for day, intervals in split_by_local_day(active_intervals(session.events)).items():
             if day not in days:
                 continue
-            intervals = active_intervals(events)
             prompts = sum(1 for moment in session.prompts if local_day(moment) == day)
             by_day[day].append({
                 "tool": session.tool,
@@ -326,8 +337,8 @@ def day_records(sessions: list[Session], days: set[str]) -> dict[str, list[dict[
                 "project": project_name(session.cwd, session.repo),
                 "repo": session.repo,
                 "branch": session.branch,
-                "start": iso_z(min(events)),
-                "end": iso_z(max(events)),
+                "start": iso_z(intervals[0][0]),
+                "end": iso_z(intervals[-1][1]),
                 "active_minutes": interval_minutes(intervals),
                 "prompts": prompts,
                 "topic": session.summary or session.topic,
