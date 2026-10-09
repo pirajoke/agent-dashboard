@@ -2889,6 +2889,114 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .decision-review { padding:14px; }
   .cc-subnav button { flex:1 1 auto; padding:10px 12px; }
 }
+/* Daily work */
+#section-work {
+  --work-claude: #eb6834;
+  --work-codex: #2a78d6;
+  --work-pr: #6B6B6B;
+}
+.work-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+  padding: 24px 28px;
+  border: 1px solid rgba(234,179,8,0.22);
+  border-radius: var(--radius);
+  background: var(--accent-bg);
+}
+.work-eyebrow { color: #9A7100; font-size: 11px; font-weight: 800; letter-spacing: 0.9px; text-transform: uppercase; }
+.work-title { margin-top: 5px; font-size: 28px; font-weight: 800; letter-spacing: -0.4px; }
+.work-copy { max-width: 620px; margin-top: 6px; color: var(--text2); font-size: 13px; line-height: 1.55; }
+.work-day-picker { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.work-day-btn {
+  width: 40px; height: 40px; border: 1px solid var(--border2); border-radius: 10px;
+  background: var(--card); color: var(--text); font-size: 20px; cursor: pointer;
+}
+.work-day-btn:disabled { opacity: 0.35; cursor: default; }
+.work-day-btn:focus-visible, .work-bar-hit:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
+.work-day-label { display: grid; min-width: 120px; text-align: center; }
+.work-day-label strong { font-size: 15px; }
+.work-day-label small { color: var(--text2); font-size: 12px; }
+.work-state { margin-bottom: 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg2); color: var(--text2); font-size: 13px; }
+.work-state.live { background: var(--green-bg); color: #16803A; }
+.work-state.stale, .work-state.empty, .work-state.error { background: var(--orange-bg); color: #9A3412; }
+.work-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.work-tile { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); box-shadow: var(--shadow); min-width: 0; }
+.work-tile-label { color: var(--text2); font-size: 11px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
+.work-tile-value { margin-top: 6px; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.work-tile-note { margin-top: 2px; color: var(--text2); font-size: 12px; }
+.work-tile-dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
+.work-card { position: relative; margin-bottom: 16px; padding: 20px 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); min-width: 0; }
+.work-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
+.work-card-title { font-size: 16px; font-weight: 750; }
+.work-card-sub { margin-top: 3px; color: var(--text2); font-size: 12px; line-height: 1.5; }
+.work-count { color: var(--text2); font-weight: 600; }
+.work-legend { display: flex; gap: 14px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--text2); }
+.work-legend li { display: flex; align-items: center; gap: 6px; }
+.work-swatch { width: 10px; height: 10px; border-radius: 3px; }
+.work-swatch.claude, .work-tile-dot.claude { background: var(--work-claude); }
+.work-swatch.codex, .work-tile-dot.codex { background: var(--work-codex); }
+.work-chart { width: 100%; min-height: 200px; }
+.work-chart-prs { min-height: 64px; margin-top: 4px; }
+.work-chart svg { display: block; width: 100%; overflow: visible; }
+.work-chart text { fill: var(--text2); font-size: 11px; font-family: inherit; }
+.work-chart .work-axis-label { fill: var(--muted); }
+.work-chart .work-grid { stroke: rgba(0,0,0,0.06); stroke-width: 1; }
+.work-chart .work-baseline { stroke: rgba(0,0,0,0.18); stroke-width: 1; }
+.work-chart .work-selected-band { fill: var(--accent-bg); }
+.work-chart .seg-claude { fill: var(--work-claude); }
+.work-chart .seg-codex { fill: var(--work-codex); }
+.work-chart .seg-pr { fill: var(--work-pr); }
+.work-chart .work-pr-label { fill: var(--text); font-weight: 700; }
+.work-bar-hit { fill: transparent; cursor: pointer; }
+.work-tooltip {
+  position: absolute; z-index: 5; pointer-events: none; min-width: 170px;
+  padding: 10px 12px; border: 1px solid var(--border2); border-radius: 10px;
+  background: var(--card); box-shadow: var(--shadow-lg); font-size: 12px; line-height: 1.6;
+}
+.work-tooltip strong { display: block; margin-bottom: 2px; }
+.work-tooltip .row { display: flex; justify-content: space-between; gap: 16px; }
+.work-tooltip .row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+.work-series-table { margin-top: 12px; font-size: 13px; }
+.work-series-table summary, .work-sessions summary { cursor: pointer; color: var(--text2); font-weight: 600; }
+.work-sessions summary { font-size: 15px; color: var(--text); }
+.work-table-wrap { overflow-x: auto; margin-top: 8px; }
+.work-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.work-table th { padding: 8px 10px; border-bottom: 1px solid var(--border2); color: var(--text2); font-size: 11px; font-weight: 700; letter-spacing: 0.3px; text-align: left; text-transform: uppercase; white-space: nowrap; }
+.work-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.work-table td.num, .work-table th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.work-table .project-name { font-weight: 700; }
+.work-table .muted, .work-list .muted { color: var(--text2); font-size: 12px; }
+.work-table a, .work-list a { color: var(--blue); text-decoration: none; }
+.work-table a:hover, .work-list a:hover { text-decoration: underline; }
+.work-share { display: block; height: 6px; margin-top: 6px; border-radius: 3px; background: var(--bg2); overflow: hidden; }
+.work-share span { display: block; height: 100%; float: left; }
+.work-share .claude { background: var(--work-claude); }
+.work-share .codex { background: var(--work-codex); margin-left: 2px; }
+.work-tag { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border: 1px solid var(--border2); border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.work-tag.merged { background: var(--green-bg); color: #16803A; border-color: rgba(34,197,94,0.24); }
+.work-tag.open { background: var(--blue-bg); color: #1D4ED8; border-color: rgba(59,130,246,0.24); }
+.work-tag.closed { background: var(--red-bg); color: #B91C1C; border-color: rgba(239,68,68,0.24); }
+.work-tag.branch { background: var(--bg2); color: var(--text2); }
+.work-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.work-list { display: grid; gap: 8px; margin-top: 12px; padding: 0; list-style: none; }
+.work-list li { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); font-size: 13px; line-height: 1.45; min-width: 0; overflow-wrap: anywhere; }
+.work-list-card.dropped { border-top: 3px solid var(--orange); }
+.work-list-card.forgot { border-top: 3px solid var(--red); }
+.work-empty { color: var(--text2); font-size: 13px; padding: 8px 0; }
+.work-sources { color: var(--muted); font-size: 12px; line-height: 1.6; }
+@media (max-width: 1100px) { .work-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .work-hero { flex-direction: column; align-items: stretch; padding: 18px 16px; }
+  .work-day-picker { justify-content: space-between; }
+  .work-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .work-columns { grid-template-columns: 1fr; }
+  .work-card { padding: 16px 14px; }
+  .work-card-head { flex-direction: column; }
+  .work-tile-value { font-size: 22px; }
+}
 </style>
 </head>
 <body>
@@ -3033,6 +3141,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <symbol id="cc-icon-machines" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
 <div class="container">
@@ -3062,6 +3171,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Machines</button>
     <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span> Daily Work <span class="pill-badge">вчера</span></button>
   </nav>
 
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
@@ -3170,6 +3280,76 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
       <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
     </div>
+  </section>
+
+  <!-- ═══════════════ DAILY WORK ═══════════════ -->
+  <section id="section-work" class="section" aria-labelledby="work-title">
+    <div class="work-hero">
+      <div class="work-hero-copy">
+        <div class="work-eyebrow">MAIN MANAGER · Claude + Codex</div>
+        <h2 class="work-title" id="work-title">Итоги дня</h2>
+        <p class="work-copy">Над чем работал, сколько времени, что смёрджено, что брошено и про что забыл. Время считается по активности сессий; перерывы больше 30 минут не входят, поэтому это оценка.</p>
+      </div>
+      <div class="work-day-picker" role="group" aria-label="Выбор дня">
+        <button class="work-day-btn" type="button" id="work-prev-day" onclick="shiftWorkDay(-1)" aria-label="Предыдущий день">‹</button>
+        <div class="work-day-label"><strong id="work-day-label">Вчера</strong><small id="work-day-date">—</small></div>
+        <button class="work-day-btn" type="button" id="work-next-day" onclick="shiftWorkDay(1)" aria-label="Следующий день">›</button>
+      </div>
+    </div>
+
+    <div class="work-state" id="work-state" role="status">Загружаю данные…</div>
+
+    <div class="work-tiles" id="work-tiles" aria-label="Итоги выбранного дня"></div>
+
+    <article class="work-card" aria-labelledby="work-traction-title">
+      <div class="work-card-head">
+        <div>
+          <h3 class="work-card-title" id="work-traction-title">Traction · 30 дней</h3>
+          <p class="work-card-sub" id="work-traction-sub">Часы работы по дням. Нажми на день, чтобы открыть его итоги.</p>
+        </div>
+        <ul class="work-legend" aria-label="Легенда">
+          <li><span class="work-swatch claude" aria-hidden="true"></span>Claude</li>
+          <li><span class="work-swatch codex" aria-hidden="true"></span>Codex</li>
+        </ul>
+      </div>
+      <div class="work-chart" id="work-chart"></div>
+      <div class="work-chart work-chart-prs" id="work-chart-prs"></div>
+      <div class="work-tooltip" id="work-tooltip" role="tooltip" hidden></div>
+      <details class="work-series-table">
+        <summary>Таблица по дням</summary>
+        <div class="work-table-wrap" id="work-series-table"></div>
+      </details>
+    </article>
+
+    <article class="work-card" aria-labelledby="work-projects-title">
+      <div class="work-card-head">
+        <div>
+          <h3 class="work-card-title" id="work-projects-title">Над чем работал</h3>
+          <p class="work-card-sub">По проектам за выбранный день: время, сессии и чем закончилось.</p>
+        </div>
+      </div>
+      <div class="work-table-wrap" id="work-projects"></div>
+    </article>
+
+    <div class="work-columns">
+      <article class="work-card work-list-card dropped" aria-labelledby="work-dropped-title">
+        <h3 class="work-card-title" id="work-dropped-title">Сбросил <span class="work-count" id="work-dropped-count"></span></h3>
+        <p class="work-card-sub">За последние 7 дней: PR закрыты без merge и ветки без PR, которые не трогал 2+ дня.</p>
+        <ul class="work-list" id="work-dropped"></ul>
+      </article>
+      <article class="work-card work-list-card forgot" aria-labelledby="work-forgot-title">
+        <h3 class="work-card-title" id="work-forgot-title">Забыл <span class="work-count" id="work-forgot-count"></span></h3>
+        <p class="work-card-sub">Открытые PR и задачи без движения 7+ дней, ветки без PR старше недели.</p>
+        <ul class="work-list" id="work-forgot"></ul>
+      </article>
+    </div>
+
+    <details class="work-card work-sessions">
+      <summary>Сессии дня</summary>
+      <div class="work-table-wrap" id="work-sessions"></div>
+    </details>
+
+    <p class="work-sources" id="work-sources"></p>
   </section>
 
   <section id="section-machines" class="section" aria-label="Machines">
@@ -4098,10 +4278,12 @@ function showSection(name) {
   }
   if (parent === 'agents' && ownerDecisionsReady) refreshOwnerDecisions(true);
   if (name === 'logs' && !currentLogService) loadLogTabs();
+  // Deferred: ?tab=work calls showSection before the Daily Work block is initialised.
+  if (name === 'work') setTimeout(() => loadDailyWork(dailyWorkDate), 0);
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 }
 
@@ -5925,6 +6107,411 @@ initPixelAgentsPin();
 initDragDrop();
 setInterval(refreshAll, 5000);
 setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000);
+
+// ── Daily Work ──
+const DAILY_WORK_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/work/daily`
+  : 'https://command.meshly.fr/api/work/daily';
+const WORK_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+const WORK_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+let dailyWorkData = null;
+let dailyWorkDate = null;
+let dailyWorkLoading = false;
+
+function workMinutes(value) {
+  const minutes = Math.max(0, Math.round(Number(value) || 0));
+  if (minutes < 60) return `${minutes} мин`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours} ч ${rest} мин` : `${hours} ч`;
+}
+
+function workHours(value) {
+  const hours = (Number(value) || 0) / 60;
+  return hours >= 10 ? hours.toFixed(0) : hours.toFixed(1).replace('.0', '');
+}
+
+function workDateParts(iso) {
+  const [y, m, d] = String(iso).split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function workDayTitle(iso, data) {
+  if (!data) return iso;
+  const last = data.series[data.series.length - 1]?.date;
+  const prev = data.series[data.series.length - 2]?.date;
+  if (iso === last) return 'Сегодня';
+  if (iso === prev) return 'Вчера';
+  const date = workDateParts(iso);
+  return WORK_WEEKDAYS[date.getDay()].replace(/^./, c => c.toUpperCase());
+}
+
+function workDayShort(iso) {
+  const date = workDateParts(iso);
+  return `${date.getDate()} ${WORK_MONTHS[date.getMonth()]}`;
+}
+
+function workTime(isoTs) {
+  if (!isoTs) return '—';
+  const date = new Date(isoTs);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+function workAgo(isoTs) {
+  if (!isoTs) return 'никогда';
+  const minutes = Math.round((Date.now() - new Date(isoTs).getTime()) / 60000);
+  if (!Number.isFinite(minutes)) return '—';
+  if (minutes < 60) return `${Math.max(0, minutes)} мин назад`;
+  if (minutes < 48 * 60) return `${Math.round(minutes / 60)} ч назад`;
+  return `${Math.round(minutes / 1440)} дн назад`;
+}
+
+function workSafeUrl(value) {
+  try {
+    const url = new URL(String(value));
+    return url.protocol === 'https:' && url.hostname === 'github.com' ? url.href : '';
+  } catch (error) {
+    return '';
+  }
+}
+
+function workPrLink(pr, cls) {
+  const label = `${pr.repo ? pr.repo.split('/').pop() : ''}#${pr.number ?? ''}`;
+  const url = workSafeUrl(pr.url);
+  const title = pr.title ? ` ${escapeHtml(compactText(pr.title, 70))}` : '';
+  const tag = `<span class="work-tag ${cls}">${escapeHtml(label)}</span>`;
+  return url
+    ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${tag}${title}</a>`
+    : `${tag}${title}`;
+}
+
+async function loadDailyWork(date) {
+  if (dailyWorkLoading) return;
+  dailyWorkLoading = true;
+  const params = new URLSearchParams({ days: '30' });
+  if (date) params.set('date', date);
+  try {
+    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: jarvisRunHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    dailyWorkData = data;
+    dailyWorkDate = data.selected_date;
+    renderDailyWork();
+  } catch (error) {
+    const state = document.getElementById('work-state');
+    if (state) {
+      state.className = 'work-state error';
+      state.textContent = 'Не удалось получить данные о работе с сервера Command Center. Цифры не показываю, чтобы не гадать.';
+    }
+  } finally {
+    dailyWorkLoading = false;
+  }
+}
+
+function shiftWorkDay(step) {
+  if (!dailyWorkData) return;
+  const days = dailyWorkData.series.map(day => day.date);
+  const index = days.indexOf(dailyWorkDate) + step;
+  if (index < 0 || index >= days.length) return;
+  loadDailyWork(days[index]);
+}
+
+function renderDailyWork() {
+  const data = dailyWorkData;
+  if (!data) return;
+  const day = data.day;
+  const days = data.series.map(item => item.date);
+  const index = days.indexOf(day.date);
+  document.getElementById('work-day-label').textContent = workDayTitle(day.date, data);
+  document.getElementById('work-day-date').textContent = workDayShort(day.date) + (day.is_today ? ' · идёт' : '');
+  document.getElementById('work-prev-day').disabled = index <= 0;
+  document.getElementById('work-next-day').disabled = index >= days.length - 1;
+
+  const state = document.getElementById('work-state');
+  state.className = `work-state ${data.state}`;
+  if (data.state === 'empty') {
+    state.textContent = 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
+  } else if (data.state === 'stale') {
+    state.textContent = `Данные устарели: последний сбор ${workAgo(data.collected_at)}. Проверь сборщик на Mac mini.`;
+  } else {
+    state.textContent = `Обновлено ${workAgo(data.collected_at)}. ${data.time_estimate_note}`;
+  }
+  if (!data.owner_view) {
+    state.textContent += ' Названия проектов, PR и темы сессий видны только владельцу: открой Command Center через mm-command-center-auth.';
+  }
+
+  renderWorkTiles(data);
+  renderWorkChart(data);
+  renderWorkSeriesTable(data);
+  renderWorkProjects(data);
+  renderWorkLists(data);
+  renderWorkSessions(data);
+  renderWorkSources(data);
+}
+
+function renderWorkTiles(data) {
+  const day = data.day;
+  const last7 = data.traction.last_7;
+  const prev7 = data.traction.previous_7;
+  const delta = last7.total_minutes - prev7.total_minutes;
+  const deltaText = prev7.total_minutes
+    ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе`
+    : 'прошлой недели нет в данных';
+  const tiles = [
+    { label: 'Время работы', value: workMinutes(day.total_minutes), note: `оценка · проектов: ${day.project_count}` },
+    { label: 'Claude', value: workMinutes(day.claude_minutes), note: 'Claude Code', dot: 'claude' },
+    { label: 'Codex', value: workMinutes(day.codex_minutes), note: 'Codex', dot: 'codex' },
+    { label: 'PR смёрджено', value: String(day.prs_merged), note: `открыто ${day.prs_opened} · закрыто без merge ${day.prs_closed_unmerged}` },
+    { label: '7 дней', value: `${workHours(last7.total_minutes)} ч`, note: `${deltaText} · серия ${data.traction.streak_days} дн` },
+  ];
+  document.getElementById('work-tiles').innerHTML = tiles.map(tile => `
+    <div class="work-tile">
+      <div class="work-tile-label">${tile.dot ? `<span class="work-tile-dot ${tile.dot}" aria-hidden="true"></span>` : ''}${escapeHtml(tile.label)}</div>
+      <div class="work-tile-value">${escapeHtml(tile.value)}</div>
+      <div class="work-tile-note">${escapeHtml(tile.note)}</div>
+    </div>`).join('');
+}
+
+function workNiceStep(maxHours) {
+  if (maxHours <= 2) return 0.5;
+  if (maxHours <= 5) return 1;
+  if (maxHours <= 10) return 2;
+  return 4;
+}
+
+function workRoundedTop(x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height);
+  return `M${x},${y + height}V${y + r}Q${x},${y} ${x + r},${y}H${x + width - r}Q${x + width},${y} ${x + width},${y + r}V${y + height}Z`;
+}
+
+function renderWorkChart(data) {
+  const host = document.getElementById('work-chart');
+  const prHost = document.getElementById('work-chart-prs');
+  const width = Math.max(320, host.clientWidth || 900);
+  const height = 220;
+  const pad = { top: 12, right: 8, bottom: 24, left: 34 };
+  const series = data.series;
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const step = plotW / series.length;
+  const barW = Math.max(4, Math.min(26, step * 0.66));
+  const maxHours = Math.max(1, ...series.map(d => d.total_minutes / 60), ...series.map(d => (d.claude_minutes + d.codex_minutes) / 60));
+  const tick = workNiceStep(maxHours);
+  const top = Math.ceil(maxHours / tick) * tick;
+  const y = hours => pad.top + plotH - (hours / top) * plotH;
+  const labelEvery = width < 520 ? 7 : (width < 900 ? 3 : 2);
+  const parts = [];
+  for (let value = 0; value <= top + 1e-9; value += tick) {
+    parts.push(`<line class="${value === 0 ? 'work-baseline' : 'work-grid'}" x1="${pad.left}" x2="${width - pad.right}" y1="${y(value)}" y2="${y(value)}"/>`);
+    parts.push(`<text class="work-axis-label" x="${pad.left - 6}" y="${y(value) + 4}" text-anchor="end">${value}ч</text>`);
+  }
+  series.forEach((day, i) => {
+    const cx = pad.left + step * i + step / 2;
+    const x = cx - barW / 2;
+    if (day.date === data.selected_date) {
+      parts.push(`<rect class="work-selected-band" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}" rx="4"/>`);
+    }
+    // Claude and Codex can overlap in time, so the stack shows each tool's own
+    // time; the tooltip also gives the de-duplicated total.
+    const claudeH = (day.claude_minutes / 60 / top) * plotH;
+    const codexH = (day.codex_minutes / 60 / top) * plotH;
+    const base = pad.top + plotH;
+    if (claudeH > 0) {
+      const path = codexH > 0 ? `M${x},${base}V${base - claudeH}H${x + barW}V${base}Z` : workRoundedTop(x, base - claudeH, barW, claudeH, 4);
+      parts.push(`<path class="seg-claude" d="${path}"/>`);
+    }
+    if (codexH > 0) {
+      const gap = claudeH > 0 ? 2 : 0;
+      const h = Math.max(1, codexH - gap);
+      parts.push(`<path class="seg-codex" d="${workRoundedTop(x, base - claudeH - gap - h, barW, h, 4)}"/>`);
+    }
+    if (i % labelEvery === (series.length - 1) % labelEvery) {
+      parts.push(`<text x="${cx}" y="${height - 6}" text-anchor="middle">${escapeHtml(workDayShort(day.date))}</text>`);
+    }
+    parts.push(`<rect class="work-bar-hit" data-index="${i}" tabindex="0" role="button" aria-label="${escapeHtml(`${workDayShort(day.date)}: ${workMinutes(day.total_minutes)}, PR смёрджено ${day.prs_merged}`)}" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}"/>`);
+  });
+  host.innerHTML = `<svg viewBox="0 0 ${width} ${height}" height="${height}" role="img" aria-label="Часы работы с Claude и Codex за 30 дней">${parts.join('')}</svg>`;
+
+  // Merged PRs per day: separate small chart on the same day axis (no second y-scale).
+  const prHeight = 64;
+  const prPlot = 36;
+  const maxPr = Math.max(1, ...series.map(d => d.prs_merged));
+  const prParts = [`<text class="work-axis-label" x="${pad.left - 6}" y="${prPlot + 4}" text-anchor="end">PR</text>`,
+    `<line class="work-baseline" x1="${pad.left}" x2="${width - pad.right}" y1="${prPlot + 6}" y2="${prPlot + 6}"/>`];
+  series.forEach((day, i) => {
+    if (!day.prs_merged) return;
+    const cx = pad.left + step * i + step / 2;
+    const h = Math.max(3, (day.prs_merged / maxPr) * (prPlot - 14));
+    prParts.push(`<path class="seg-pr" d="${workRoundedTop(cx - barW / 2, prPlot + 6 - h, barW, h, 3)}"/>`);
+    if ((maxPr > 1 && day.prs_merged === maxPr) || day.date === data.selected_date) {
+      prParts.push(`<text class="work-pr-label" x="${cx}" y="${prPlot + 2 - h}" text-anchor="middle">${day.prs_merged}</text>`);
+    }
+  });
+  prParts.push(`<text x="${pad.left}" y="${prHeight - 4}">PR смёрджено за день</text>`);
+  prHost.innerHTML = `<svg viewBox="0 0 ${width} ${prHeight}" height="${prHeight}" role="img" aria-label="Смёрдженные PR по дням">${prParts.join('')}</svg>`;
+
+  host.querySelectorAll('.work-bar-hit').forEach(hit => {
+    const day = series[Number(hit.dataset.index)];
+    hit.addEventListener('mouseenter', event => showWorkTooltip(day, event));
+    hit.addEventListener('mousemove', event => showWorkTooltip(day, event));
+    hit.addEventListener('mouseleave', hideWorkTooltip);
+    hit.addEventListener('focus', event => showWorkTooltip(day, event));
+    hit.addEventListener('blur', hideWorkTooltip);
+    hit.addEventListener('click', () => loadDailyWork(day.date));
+    hit.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        loadDailyWork(day.date);
+      }
+    });
+  });
+}
+
+function showWorkTooltip(day, event) {
+  const tip = document.getElementById('work-tooltip');
+  const card = tip.parentElement.getBoundingClientRect();
+  tip.innerHTML = `<strong>${escapeHtml(workDayShort(day.date))}</strong>
+    <div class="row"><span>Всего (без пересечений)</span><span>${escapeHtml(workMinutes(day.total_minutes))}</span></div>
+    <div class="row"><span><span class="work-tile-dot claude"></span>Claude</span><span>${escapeHtml(workMinutes(day.claude_minutes))}</span></div>
+    <div class="row"><span><span class="work-tile-dot codex"></span>Codex</span><span>${escapeHtml(workMinutes(day.codex_minutes))}</span></div>
+    <div class="row"><span>Сессий / промптов</span><span>${day.sessions} / ${day.prompts}</span></div>
+    <div class="row"><span>PR смёрджено</span><span>${day.prs_merged}</span></div>`;
+  tip.hidden = false;
+  const rect = event.target.getBoundingClientRect();
+  const left = Math.min(card.width - tip.offsetWidth - 8, Math.max(8, rect.left - card.left + rect.width / 2 - tip.offsetWidth / 2));
+  tip.style.left = `${left}px`;
+  tip.style.top = `${Math.max(8, rect.top - card.top - tip.offsetHeight + 20)}px`;
+}
+
+function hideWorkTooltip() {
+  document.getElementById('work-tooltip').hidden = true;
+}
+
+function renderWorkSeriesTable(data) {
+  const rows = data.series.slice().reverse().map(day => `<tr>
+      <td>${escapeHtml(workDayShort(day.date))}</td>
+      <td class="num">${escapeHtml(workMinutes(day.total_minutes))}</td>
+      <td class="num">${escapeHtml(workMinutes(day.claude_minutes))}</td>
+      <td class="num">${escapeHtml(workMinutes(day.codex_minutes))}</td>
+      <td class="num">${day.sessions}</td>
+      <td class="num">${day.prs_merged}</td>
+      <td class="num">${day.prs_closed_unmerged}</td>
+      <td class="num">${day.commits}</td>
+    </tr>`).join('');
+  document.getElementById('work-series-table').innerHTML = `<table class="work-table">
+    <thead><tr><th>День</th><th class="num">Всего</th><th class="num">Claude</th><th class="num">Codex</th><th class="num">Сессии</th><th class="num">PR merged</th><th class="num">PR брошено</th><th class="num">Коммиты</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+function renderWorkProjects(data) {
+  const host = document.getElementById('work-projects');
+  const projects = data.day.projects;
+  if (!data.owner_view) {
+    host.innerHTML = '<p class="work-empty">Детали по проектам видны только владельцу.</p>';
+    return;
+  }
+  if (!projects || !projects.length) {
+    host.innerHTML = '<p class="work-empty">В этот день сессий Claude и Codex не найдено.</p>';
+    return;
+  }
+  const max = Math.max(1, ...projects.map(p => p.claude_minutes + p.codex_minutes));
+  host.innerHTML = `<table class="work-table">
+    <thead><tr><th>Проект</th><th class="num">Claude</th><th class="num">Codex</th><th class="num">Всего</th><th class="num">Сессии</th><th>Итог</th></tr></thead>
+    <tbody>${projects.map(p => {
+      const outcome = [
+        ...p.merged.map(pr => workPrLink(pr, 'merged')),
+        ...p.opened.filter(pr => !p.merged.some(m => m.number === pr.number)).map(pr => workPrLink(pr, 'open')),
+        ...p.branches.map(branch => `<span class="work-tag branch">${escapeHtml(branch)}</span>`),
+      ];
+      return `<tr>
+        <td><div class="project-name">${escapeHtml(p.project)}</div>${p.repo ? `<div class="muted">${escapeHtml(p.repo)}</div>` : ''}
+          <span class="work-share" aria-hidden="true"><span class="claude" style="width:${(p.claude_minutes / max) * 100}%"></span><span class="codex" style="width:${(p.codex_minutes / max) * 100}%"></span></span></td>
+        <td class="num">${escapeHtml(workMinutes(p.claude_minutes))}</td>
+        <td class="num">${escapeHtml(workMinutes(p.codex_minutes))}</td>
+        <td class="num"><strong>${escapeHtml(workMinutes(p.total_minutes))}</strong></td>
+        <td class="num">${p.sessions}<div class="muted">${p.prompts} промпт.</div></td>
+        <td>${outcome.length ? outcome.join('<br>') : '<span class="muted">без PR и коммитов в отдельной ветке</span>'}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+function workListItem(item) {
+  const age = item.age_days ? `${item.age_days} дн` : 'меньше суток';
+  if (item.kind === 'branch') {
+    const tools = (item.tools || []).map(tool => tool === 'claude' ? 'Claude' : 'Codex').join(' + ');
+    return `<li><span class="work-tag branch">${escapeHtml(item.branch)}</span> <strong>${escapeHtml(item.project || item.repo)}</strong>
+      <div class="muted">Ветка без PR · ${escapeHtml(tools)} · ${escapeHtml(workMinutes(item.minutes))} работы · не трогал ${escapeHtml(age)}</div>
+      ${item.topic ? `<div class="muted">${escapeHtml(compactText(item.topic, 110))}</div>` : ''}</li>`;
+  }
+  const label = item.kind === 'pr_closed' ? 'PR закрыт без merge' : (item.kind === 'issue_open' ? 'Задача открыта' : 'PR открыт');
+  const cls = item.kind === 'pr_closed' ? 'closed' : 'open';
+  const when = item.kind === 'pr_closed' ? (item.age_days ? `закрыт ${age} назад` : 'закрыт сегодня') : `без движения ${age}`;
+  return `<li>${workPrLink(item, cls)}<div class="muted">${escapeHtml(label)}${item.draft ? ' · черновик' : ''} · ${escapeHtml(when)}</div></li>`;
+}
+
+function renderWorkLists(data) {
+  document.getElementById('work-dropped-count').textContent = `· ${data.dropped_count}`;
+  document.getElementById('work-forgot-count').textContent = `· ${data.forgot_count}`;
+  const fill = (id, items, count, emptyText) => {
+    const host = document.getElementById(id);
+    if (!data.owner_view) {
+      host.innerHTML = `<li class="work-empty">${count} шт. Подробности видны только владельцу.</li>`;
+    } else if (!items || !items.length) {
+      host.innerHTML = `<li class="work-empty">${escapeHtml(emptyText)}</li>`;
+    } else {
+      host.innerHTML = items.map(workListItem).join('') + (count > items.length ? `<li class="work-empty">и ещё ${count - items.length}</li>` : '');
+    }
+  };
+  const githubOk = data.sources?.github?.ok;
+  fill('work-dropped', data.dropped, data.dropped_count, githubOk ? 'Ничего не брошено.' : 'GitHub ещё не собран, поэтому список может быть неполным.');
+  fill('work-forgot', data.forgot, data.forgot_count, githubOk ? 'Забытого нет.' : 'GitHub ещё не собран, поэтому список может быть неполным.');
+}
+
+function renderWorkSessions(data) {
+  const host = document.getElementById('work-sessions');
+  const sessions = data.day.sessions_detail;
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="work-empty">${data.day.sessions} сессий. Подробности видны только владельцу.</p>`;
+    return;
+  }
+  if (!sessions || !sessions.length) {
+    host.innerHTML = '<p class="work-empty">Сессий нет.</p>';
+    return;
+  }
+  host.innerHTML = `<table class="work-table">
+    <thead><tr><th>Время</th><th>Инструмент</th><th>Проект</th><th class="num">Мин</th><th class="num">Промпты</th><th>Тема</th></tr></thead>
+    <tbody>${sessions.map(s => `<tr>
+      <td class="num">${escapeHtml(workTime(s.start))}–${escapeHtml(workTime(s.end))}</td>
+      <td><span class="work-tile-dot ${s.tool === 'claude' ? 'claude' : 'codex'}" aria-hidden="true"></span>${s.tool === 'claude' ? 'Claude' : 'Codex'}<div class="muted">${escapeHtml(s.machine || '')}</div></td>
+      <td>${escapeHtml(s.project || '')}${s.branch ? `<div class="muted">${escapeHtml(s.branch)}</div>` : ''}</td>
+      <td class="num">${s.active_minutes}</td>
+      <td class="num">${s.prompts}</td>
+      <td>${escapeHtml(compactText(s.topic || '—', 120))}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function renderWorkSources(data) {
+  const machines = (data.sources?.machines || []).map(m => {
+    const tools = data.owner_view
+      ? ['claude', 'codex'].map(tool => `${tool === 'claude' ? 'Claude' : 'Codex'} ${m.sources?.[tool]?.ok ? '✓' : 'нет логов'}`).join(', ')
+      : '';
+    return `${m.machine}: ${workAgo(m.collected_at)}${tools ? ` (${tools})` : ''}`;
+  });
+  const github = data.sources?.github;
+  const githubText = github?.ok ? `GitHub: ${workAgo(github.collected_at)}` : 'GitHub: ещё не собран';
+  const error = github?.last_error ? ` · последняя попытка GitHub: ошибка ${github.last_error}` : '';
+  document.getElementById('work-sources').textContent =
+    `Источники · ${machines.length ? machines.join(' · ') : 'машины ещё не присылали данные'} · ${githubText}${error}. Облачные сессии claude.ai/code пока не учитываются.`;
+}
+
+let workResizeTimer = null;
+window.addEventListener('resize', () => {
+  if (!dailyWorkData || !document.getElementById('section-work')?.classList.contains('active')) return;
+  clearTimeout(workResizeTimer);
+  workResizeTimer = setTimeout(() => renderWorkChart(dailyWorkData), 150);
+});
+// ── End Daily Work ──
 </script>
 
 </body>

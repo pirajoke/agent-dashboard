@@ -187,7 +187,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 matches.append(declarations)
         return "\n".join(matches)
 
-    def test_ac_1_top_navigation_has_three_destinations_and_machines_are_nested(self):
+    def test_ac_1_top_navigation_has_four_destinations_and_machines_are_nested(self):
         parser = self._dashboard()
 
         self.assertEqual(
@@ -196,6 +196,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 ("machines", "Machines"),
                 ("agents", "Agents"),
                 ("platforms", "Platforms"),
+                ("work", "Daily Work"),
             ],
         )
 
@@ -218,7 +219,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "platforms"],
+            ["mac-mini", "air", "pro", "machines", "agents", "platforms", "work"],
         )
         self.assertIn(
             'aria-controls="agents-campus" aria-pressed="true"',

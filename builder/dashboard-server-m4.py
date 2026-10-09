@@ -25,6 +25,7 @@ from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
+from dashboard_builder.daily_work import work_projection
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
@@ -42,6 +43,7 @@ LAUNCH_AGENTS_DIR = HOME / "Library" / "LaunchAgents"
 GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
 JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
+DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_LOG_FILE = HOME / "Library" / "Logs" / "dashboard-jarvis-pipeline-run.log"
@@ -81,6 +83,7 @@ PUBLIC_BRIDGE_PATHS = {
     "/api/bridge/status",
     "/api/manager/events",
     "/api/manager/departments",
+    "/api/work/daily",
 }
 PUBLIC_FILE_PATHS = {
     "/",
@@ -2370,6 +2373,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             },
         )
 
+    def _handle_daily_work(self, parsed):
+        # Owner view (token or private host) adds names, titles and topics;
+        # the public view is numbers only.
+        query = parse_qs(parsed.query)
+        try:
+            days = int((query.get('days') or ['30'])[0])
+        except ValueError:
+            days = 30
+        selected = (query.get('date') or [None])[0]
+        try:
+            payload = work_projection(
+                DAILY_WORK_DIR,
+                days=days,
+                selected=selected,
+                owner=self._dashboard_run_authorized(),
+            )
+        except Exception:
+            self._json_response(200, {"ok": False, "state": "unavailable", "reason": "daily_work_unreadable"})
+            return
+        self._json_response(200, payload)
+
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header('Access-Control-Allow-Origin', self._cors_origin())
@@ -2480,6 +2504,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     200,
                     department_campus_projection(None, now=datetime.now(timezone.utc)),
                 )
+            return
+        if parsed.path == '/api/work/daily':
+            self._handle_daily_work(parsed)
             return
         if parsed.path == '/api/manager/events':
             try:

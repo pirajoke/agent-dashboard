@@ -35,6 +35,7 @@ Single-page HTML dashboard showing all agents, projects, orchestrator state, liv
 - **Token ledger**: `~/.agent-bridge/token_ledger.jsonl`
 - **CodexBar**: `~/Library/Group Containers/group.com.steipete.codexbar/widget-snapshot.json`
 - **Linear**: via `~/.claude/lib/linear_api.py` CLI
+- **Daily Work**: `~/.agent-bridge/daily-work/` written by `daily_work_collector.py` (launchd `com.pirajoke.daily-work-collector`, every 2 h). `sessions/<machine>/<day>.json` from Claude Code (`~/.claude/projects`) and Codex (`~/.codex/sessions`) logs; `github.json` from the GitHub API (Mac mini only, `--github`). Other Macs install it with `builder/install_daily_work_collector.sh --machine <name> --push-to maxxs-mac-mini`. Served by `/api/work/daily` (numbers only without the owner token) to the Daily Work tab.
 - **JARVIS Pipeline**: `/Users/pirajoke/jarvis` git checkout, `launchctl` service state, `/tmp/jarvis-bot.err` AIOS startup log, and `/Users/pirajoke/jarvis/data/jarvis.db` `answer_sources`
 
 ## Pipeline
