@@ -31,14 +31,23 @@ PROJECT_DAY_LIMIT = 30
 # Platforms SVG symbol (cc-mascot-<mascot>). Sessions and PRs are matched by
 # the checkout folder or repo name.
 PRODUCTS = (
-    {"id": "command-center", "name": "Command Center", "mascot": "hub", "match": ("agentdashboard", "commandcenter")},
-    {"id": "financial", "name": "JobRadar / Financial OS", "mascot": "jobradar", "match": ("financial", "jobradar", "jobsradar", "propertyos")},
-    {"id": "mydictionary", "name": "Lexi", "mascot": "dictionary", "match": ("lexi", "dictionary")},
-    {"id": "health", "name": "Health OS", "mascot": "health", "match": ("health",)},
-    {"id": "ai-singularity", "name": "AI Singularity", "mascot": "singularity", "match": ("singularity",)},
-    {"id": "context-news", "name": "Context News France", "mascot": "news", "match": ("contextnews",)},
-    {"id": "accountable", "name": "Accountable OS", "mascot": "accountable", "match": ("accountable",)},
-    {"id": "jarvis", "name": "JARVIS", "mascot": "jarvis", "match": ("jarvis",)},
+    {"id": "command-center", "name": "Command Center", "mascot": "hub", "match": ("agentdashboard", "commandcenter"),
+     "description": "Командный центр: продукты, серверы и работа агентов на одном экране."},
+    {"id": "financial", "name": "JobRadar / Financial OS", "mascot": "jobradar", "match": ("financial", "jobradar", "jobsradar", "propertyos"),
+     "description": "Поиск работы и личные финансы: JobRadar, Financial OS и Property OS для недвижимости."},
+    {"id": "mydictionary", "name": "Lexi", "mascot": "dictionary", "match": ("lexi", "dictionary"),
+     "description": "Telegram-бот для изучения языков с личным словарём и админкой."},
+    {"id": "health", "name": "Health OS", "mascot": "health", "match": ("health",),
+     "description": "Личное пространство для здоровья."},
+    # The news bot repo is ai-singularity-news-bot, so Context News is matched before AI Singularity.
+    {"id": "context-news", "name": "Context News France", "mascot": "news", "match": ("contextnews", "singularitynews"),
+     "description": "Telegram-бот с персональными подборками новостей."},
+    {"id": "ai-singularity", "name": "AI Singularity", "mascot": "singularity", "match": ("singularity",),
+     "description": "Закрытое приложение на Mac mini."},
+    {"id": "accountable", "name": "Accountable OS", "mascot": "accountable", "match": ("accountable", "urssaf"),
+     "description": "Учёт и налоги своей компании во Франции: URSSAF и отчётность EURL."},
+    {"id": "jarvis", "name": "JARVIS", "mascot": "jarvis", "match": ("jarvis",),
+     "description": "Личный ассистент в Telegram, который управляет остальными системами."},
 )
 
 
@@ -118,6 +127,24 @@ def load_sessions(root: Path, first_day: str, last_day: str) -> tuple[dict[str, 
                 if isinstance(record, dict) and record.get("tool") in TOOLS:
                     by_day[data["date"]].append({**record, "machine": machine})
     return by_day, machines
+
+
+def load_summaries(root: Path, days: Iterable[str]) -> dict[str, dict[str, Any]]:
+    """Plain-language day summaries written by daily_work_summarizer.py, by day."""
+    summaries: dict[str, dict[str, Any]] = {}
+    for day in days:
+        data = _read_json(root / "summaries" / f"{day}.json")
+        if isinstance(data, dict) and data.get("date") == day and isinstance(data.get("projects"), dict):
+            summaries[day] = data
+    return summaries
+
+
+def _bullets(summary: dict[str, Any] | None, product_id: str) -> list[str] | None:
+    bullets = (summary or {}).get("projects", {}).get(product_id)
+    if not isinstance(bullets, list):
+        return None
+    clean = [bullet.strip() for bullet in bullets if isinstance(bullet, str) and bullet.strip()]
+    return clean or None
 
 
 def _bucket_github(github: dict | None, tz) -> dict[str, dict[str, list]]:
@@ -237,9 +264,9 @@ def product_for(project: object, repo: object) -> dict[str, Any]:
     keys = [key for key in (_norm(project), _norm(str(repo or "").rsplit("/", 1)[-1])) if key]
     for product in PRODUCTS:
         if any(match in key for key in keys for match in product["match"]):
-            return {"id": product["id"], "name": product["name"], "mascot": product["mascot"]}
+            return {key: product[key] for key in ("id", "name", "mascot", "description")}
     name = str(project or (str(repo).rsplit("/", 1)[-1] if repo else "") or "без проекта")
-    return {"id": "p-" + (_norm(name) or "other"), "name": name, "mascot": None}
+    return {"id": "p-" + (_norm(name) or "other"), "name": name, "mascot": None, "description": None}
 
 
 def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], github: dict | None,
@@ -287,7 +314,8 @@ def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], gi
     return products
 
 
-def _portfolio_summary(item: dict[str, Any], series_days: list[str]) -> dict[str, Any]:
+def _portfolio_summary(item: dict[str, Any], series_days: list[str],
+                       summaries: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     daily, daily_prs, claude, codex = [], [], [], []
     last_activity, last_topic = None, None
     sessions = prompts = 0
@@ -310,8 +338,15 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str]) -> dict[str
             if moment and (last_activity is None or moment > last_activity):
                 last_activity, last_topic = moment, pr.get("title") or last_topic
     complete = daily[:-1]
+    last_summary = None
+    for day in reversed(series_days):
+        bullets = _bullets((summaries or {}).get(day), item["id"])
+        if bullets:
+            last_summary = {"date": day, "bullets": bullets}
+            break
     return {
         "id": item["id"], "name": item["name"], "mascot": item["mascot"],
+        "description": item.get("description"), "last_summary": last_summary,
         "repos": sorted(item["repos"]), "projects": sorted(p for p in item["projects"] if p),
         "total_minutes": sum(daily), "claude_minutes": sum(claude), "codex_minutes": sum(codex),
         "last_7_minutes": sum(complete[-7:]), "previous_7_minutes": sum(complete[-14:-7]),
@@ -325,8 +360,9 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str]) -> dict[str
     }
 
 
-def _project_detail(item: dict[str, Any], series_days: list[str]) -> dict[str, Any]:
-    detail = _portfolio_summary(item, series_days)
+def _project_detail(item: dict[str, Any], series_days: list[str],
+                    summaries: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
+    detail = _portfolio_summary(item, series_days, summaries)
     detail["daily_claude_minutes"] = [
         _union_minutes(p for r in item["sessions_by_day"].get(day, []) if r["tool"] == "claude" for p in _session_intervals(r))
         for day in series_days]
@@ -345,6 +381,7 @@ def _project_detail(item: dict[str, Any], series_days: list[str]) -> dict[str, A
             for record in records for action in record.get("infra_actions") or [] if isinstance(action, dict)]
         timeline.append({
             "date": day,
+            "summary": _bullets((summaries or {}).get(day), item["id"]),
             "minutes": detail["daily_minutes"][index],
             "claude_minutes": detail["daily_claude_minutes"][index],
             "codex_minutes": detail["daily_codex_minutes"][index],
@@ -360,6 +397,23 @@ def _project_detail(item: dict[str, Any], series_days: list[str]) -> dict[str, A
     detail["open_prs_list"] = [_pr_view(pr) for pr in item["open_prs"]]
     detail["loose_list"] = item["loose"][:LIST_LIMIT]
     return detail
+
+
+def _day_summary(summary: dict[str, Any] | None, portfolio: dict[str, dict[str, Any]], day: str) -> dict[str, Any] | None:
+    """The selected day's summary, one entry per product, busiest first."""
+    if not summary:
+        return None
+    projects = []
+    for product_id, item in portfolio.items():
+        bullets = _bullets(summary, product_id)
+        if not bullets:
+            continue
+        minutes = _union_minutes(p for r in item["sessions_by_day"].get(day, []) for p in _session_intervals(r))
+        projects.append({"id": product_id, "name": item["name"], "mascot": item["mascot"],
+                         "minutes": minutes, "bullets": bullets})
+    projects.sort(key=lambda entry: entry["minutes"], reverse=True)
+    headline = summary.get("day") if isinstance(summary.get("day"), str) else None
+    return {"headline": headline, "generated_at": summary.get("generated_at"), "projects": projects}
 
 
 def _age_days(moment: datetime | None, now: datetime) -> int | None:
@@ -424,7 +478,8 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
     forgot.sort(key=lambda item: item.get("age_days") or 0, reverse=True)
     portfolio = _project_portfolio(series_days, by_day, github, gh_days,
                                    [{**item, "bucket": "dropped"} for item in dropped] + [{**item, "bucket": "forgot"} for item in forgot], now)
-    summaries = sorted((_portfolio_summary(item, series_days) for item in portfolio.values()),
+    day_summaries = load_summaries(root, series_days) if owner else {}
+    summaries = sorted((_portfolio_summary(item, series_days, day_summaries) for item in portfolio.values()),
                        key=lambda item: (item["last_activity"] or "", item["total_minutes"]), reverse=True)
 
     def window_sum(offset: int) -> dict[str, int]:
@@ -473,12 +528,14 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         day_view["merged"] = [_pr_view(pr) for pr in selected_gh["merged"]]
         day_view["opened"] = [_pr_view(pr) for pr in selected_gh["opened"]]
         day_view["closed_unmerged"] = [_pr_view(pr) for pr in selected_gh["closed_unmerged"]]
+        day_view["summary"] = _day_summary(day_summaries.get(selected_day), portfolio, selected_day)
+        payload["summaries_status"] = _read_json(root / "summaries" / "status.json")
         payload["dropped"] = dropped[:LIST_LIMIT]
         payload["forgot"] = forgot[:LIST_LIMIT]
         payload["sources"] = sources
         payload["projects"] = summaries
         if project:
-            payload["project"] = _project_detail(portfolio[project], series_days) if project in portfolio else None
+            payload["project"] = _project_detail(portfolio[project], series_days, day_summaries) if project in portfolio else None
     else:
         payload["sources"] = {
             "machines": [{"machine": f"machine-{i + 1}", "collected_at": m["collected_at"]} for i, m in enumerate(sources["machines"])],
