@@ -54,6 +54,33 @@ SECRET_PATTERNS = [
     re.compile(r"(?i)\b(api[_ -]?key|token|secret|password|passwd|пароль|секрет)\s*[:=]\s*\S{6,}"),
     re.compile(r"[A-Za-z0-9+/_-]{40,}"),
 ]
+# Commands that change infrastructure, matched at the start of each shell
+# segment so that reading a script (cat deploy.sh) or a heredoc body does not
+# count. Read-only calls (launchctl list, docker ps, curl) stay out.
+INFRA_SEGMENT_RE = re.compile(
+    r"(?:launchctl\s+(?:bootstrap|bootout|load|unload|kickstart|enable|disable|start|stop|remove)\b"
+    r"|docker(?:-compose|\s+compose)?\s+(?:\S+\s+)*?(?:run|rm|rmi|stop|start|restart|up|down|build|pull|create|kill|update)\b"
+    r"|brew\s+(?:services\s+(?:start|stop|restart|run)|install|uninstall|upgrade|reinstall)\b"
+    r"|systemctl\s+(?:--user\s+)?(?:start|stop|restart|reload|enable|disable|daemon-reload)\b"
+    r"|plutil\s+-(?:replace|insert|remove|convert)\b"
+    r"|crontab\s+(?!-l\b)\S+"
+    r"|(?:mv|cp|rm|ln)\s.*(?:\.plist|LaunchAgents|LaunchDaemons|\.service\b|compose\.ya?ml|\.env\b)"
+    r"|(?:bash\s+|sh\s+|zsh\s+)?[\w./~$-]*(?:deploy|install|bootstrap|provision|migrate|run)[\w-]*\.sh\b"
+    r"|(?:kill|pkill|killall)\s"
+    r"|git\s+(?:-C\s+\S+\s+)?(?:pull|reset\s+--hard)\b"
+    r"|gh\s+pr\s+merge\b"
+    r"|cloudflared\s+(?:tunnel\s+(?:create|delete|route|run)|service)\b"
+    r"|tailscale\s+(?:up|down|serve|funnel|set)\b"
+    r"|sed\s+-i\b.*(?:\.plist|\.env|\.ya?ml|\.conf|\.toml|\.json)"
+    r"|(?:scp|rsync)\s"
+    r"|(?:pip3?|python3?\s+-m\s+pip)\s+install\b|npm\s+(?:install|i)\s+-g\b"
+    r"|(?:chmod|chown)\s)",
+)
+SEGMENT_PREFIX_RE = re.compile(r"^(?:\s|\(|sudo\s+|nohup\s+|time\s+|exec\s+|[A-Z_][A-Z0-9_]*=\S*\s+)+")
+HEREDOC_RE = re.compile(r"<<-?\s*['\"]?(\w+)['\"]?[^\n]*\n.*?\n\s*\1\b", re.DOTALL)
+SSH_RE = re.compile(r"^ssh\s+(?:-\S+\s+(?:[^-\s]\S*\s+)?)*([A-Za-z0-9_.@-]+)\s*(.*)$", re.DOTALL)
+COMMAND_LIMIT = 220
+INFRA_ACTIONS_PER_DAY = 300
 TOPIC_SKIP_PREFIXES = (
     "<", "caveat:", "[request interrupted", "this session is being continued",
     "# agents.md", "# claude.md",
@@ -72,6 +99,10 @@ def parse_ts(value: object) -> datetime | None:
     if parsed.tzinfo is None:
         return None
     return parsed.astimezone(timezone.utc)
+
+
+def _parse_z(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 def iso_z(moment: datetime) -> str:
@@ -93,6 +124,75 @@ def redact_topic(text: object) -> str | None:
     if len(line) > TOPIC_LIMIT:
         line = line[: TOPIC_LIMIT - 1].rstrip() + "…"
     return line
+
+
+def redact_command(command: str) -> str:
+    line = " ".join(command.split())
+    for pattern in SECRET_PATTERNS:
+        line = pattern.sub("[скрыто]", line)
+    if len(line) > COMMAND_LIMIT:
+        line = line[: COMMAND_LIMIT - 1].rstrip() + "…"
+    return line
+
+
+def _split_segments(command: str) -> list[str]:
+    """Split on && || ; | and newlines outside quotes."""
+    segments, current, quote, i = [], [], None, 0
+    while i < len(command):
+        char = command[i]
+        if quote:
+            if char == quote:
+                quote = None
+            elif char == "\\" and quote == '"' and i + 1 < len(command):
+                current.append(char)
+                i += 1
+                char = command[i]
+        elif char in "'\"":
+            quote = char
+        elif char in ";|\n&":
+            if char == "&" and command[i + 1:i + 2] != "&":
+                current.append(char)
+                i += 1
+                continue
+            segments.append("".join(current))
+            current = []
+            if command[i + 1:i + 2] == char:
+                i += 1
+            i += 1
+            continue
+        current.append(char)
+        i += 1
+    segments.append("".join(current))
+    return segments
+
+
+def _changing_segments(command: str) -> tuple[bool, str | None]:
+    """Return (changes infra, ssh host) for a shell command line."""
+    command = HEREDOC_RE.sub(" ", command)
+    host = None
+    for segment in _split_segments(command):
+        segment = SEGMENT_PREFIX_RE.sub("", segment).strip()
+        ssh = SSH_RE.match(segment)
+        if ssh:
+            remote = ssh.group(2).strip().strip("'\"")
+            if remote:
+                changes, _ = _changing_segments(remote)
+                if changes:
+                    return True, ssh.group(1).split("@")[-1]
+            continue
+        if INFRA_SEGMENT_RE.match(segment):
+            return True, host
+    return False, None
+
+
+def infra_action(command: object, moment: datetime) -> dict[str, Any] | None:
+    """Reduce an agent shell command to an infra-log entry, or None if it changes nothing."""
+    if not isinstance(command, str):
+        return None
+    changes, host = _changing_segments(command)
+    if not changes:
+        return None
+    return {"at": iso_z(moment), "command": redact_command(command), "host": host}
 
 
 def repo_from_remote(url: object) -> str | None:
@@ -199,6 +299,7 @@ class Session:
         self.summary: str | None = None
         self.events: list[datetime] = []
         self.prompts: list[datetime] = []
+        self.infra_actions: list[dict[str, Any]] = []
 
 
 def _claude_prompt_text(record: dict[str, Any]) -> str | None:
@@ -222,6 +323,10 @@ def parse_claude_file(path: Path) -> list[Session]:
         if record.get("type") == "summary":
             summary = redact_topic(record.get("summary")) or summary
             continue
+        if record.get("type") == "ai-title":
+            # Claude Code's own session title; the latest one wins.
+            summary = redact_topic(record.get("aiTitle")) or summary
+            continue
         moment = parse_ts(record.get("timestamp"))
         if moment is None or record.get("isSidechain"):
             continue
@@ -233,6 +338,13 @@ def parse_claude_file(path: Path) -> list[Session]:
         branch = record.get("gitBranch")
         if isinstance(branch, str) and branch:
             session.branch = branch
+        message = record.get("message") if isinstance(record.get("message"), dict) else {}
+        if record.get("type") == "assistant" and isinstance(message.get("content"), list):
+            for part in message["content"]:
+                if isinstance(part, dict) and part.get("type") == "tool_use" and part.get("name") == "Bash":
+                    action = infra_action((part.get("input") or {}).get("command"), moment)
+                    if action:
+                        session.infra_actions.append(action)
         if record.get("type") == "user" and not record.get("isMeta"):
             text = _claude_prompt_text(record)
             if text is not None:
@@ -262,6 +374,28 @@ def _codex_prompt_text(record: dict[str, Any]) -> str | None:
     return None
 
 
+def _codex_command(payload: dict[str, Any]) -> str | None:
+    kind = payload.get("type")
+    if kind == "local_shell_call":
+        action = payload.get("action") if isinstance(payload.get("action"), dict) else {}
+        command = action.get("command")
+    elif kind in {"function_call", "custom_tool_call"}:
+        raw = payload.get("arguments") if kind == "function_call" else payload.get("input")
+        try:
+            args = json.loads(raw) if isinstance(raw, str) else raw
+        except json.JSONDecodeError:
+            return raw if isinstance(raw, str) else None
+        if not isinstance(args, dict):
+            return None
+        command = args.get("command") or args.get("cmd")
+    else:
+        return None
+    if isinstance(command, list):
+        # ["bash", "-lc", "<script>"] -> the script itself
+        command = command[-1] if len(command) >= 3 and command[1] in {"-lc", "-c"} else " ".join(map(str, command))
+    return command if isinstance(command, str) else None
+
+
 def parse_codex_file(path: Path) -> list[Session]:
     session = Session("codex", path.stem)
     for record in iter_jsonl(path):
@@ -281,6 +415,10 @@ def parse_codex_file(path: Path) -> list[Session]:
         if moment is None:
             continue
         session.events.append(moment)
+        if record.get("type") == "response_item":
+            action = infra_action(_codex_command(payload), moment)
+            if action:
+                session.infra_actions.append(action)
         text = _codex_prompt_text(record)
         if text is not None:
             topic = redact_topic(text)
@@ -343,6 +481,7 @@ def day_records(sessions: list[Session], days: set[str]) -> dict[str, list[dict[
                 "prompts": prompts,
                 "topic": session.summary or session.topic,
                 "intervals": [[iso_z(start), iso_z(end)] for start, end in intervals],
+                "infra_actions": [a for a in session.infra_actions if local_day(_parse_z(a["at"])) == day],
             })
     for records in by_day.values():
         records.sort(key=lambda item: item["start"])

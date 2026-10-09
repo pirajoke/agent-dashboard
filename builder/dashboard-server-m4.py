@@ -26,6 +26,7 @@ from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
 from dashboard_builder.daily_work import work_projection
+from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
@@ -44,6 +45,7 @@ GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
 JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
+INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_LOG_FILE = HOME / "Library" / "Logs" / "dashboard-jarvis-pipeline-run.log"
@@ -84,6 +86,7 @@ PUBLIC_BRIDGE_PATHS = {
     "/api/manager/events",
     "/api/manager/departments",
     "/api/work/daily",
+    "/api/infra/changes",
 }
 PUBLIC_FILE_PATHS = {
     "/",
@@ -2394,6 +2397,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         self._json_response(200, payload)
 
+    def _handle_infra_changes(self, parsed):
+        # Owner view adds the timeline itself; the public view is counts only.
+        query = parse_qs(parsed.query)
+        try:
+            days = int((query.get('days') or ['14'])[0])
+        except ValueError:
+            days = 14
+        try:
+            payload = infra_projection(
+                INFRA_CHANGES_DIR,
+                DAILY_WORK_DIR,
+                days=days,
+                owner=self._dashboard_run_authorized(),
+            )
+        except Exception:
+            self._json_response(200, {"ok": False, "state": "unavailable", "reason": "infra_changes_unreadable"})
+            return
+        self._json_response(200, payload)
+
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header('Access-Control-Allow-Origin', self._cors_origin())
@@ -2507,6 +2529,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/work/daily':
             self._handle_daily_work(parsed)
+            return
+        if parsed.path == '/api/infra/changes':
+            self._handle_infra_changes(parsed)
             return
         if parsed.path == '/api/manager/events':
             try:

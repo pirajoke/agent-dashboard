@@ -196,7 +196,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 ("machines", "Machines"),
                 ("agents", "Agents"),
                 ("platforms", "Platforms"),
-                ("work", "Daily Work"),
+                ("work", "MAIN MANAGER"),
             ],
         )
 

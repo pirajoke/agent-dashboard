@@ -2889,113 +2889,235 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .decision-review { padding:14px; }
   .cc-subnav button { flex:1 1 auto; padding:10px 12px; }
 }
-/* Daily work */
-#section-work {
-  --work-claude: #eb6834;
-  --work-codex: #2a78d6;
-  --work-pr: #6B6B6B;
+/* MAIN MANAGER: Property OS visual language, scoped to this section only. */
+.mm-os {
+  color-scheme: light;
+  --mm-background: #f8f3ea;
+  --mm-surface: #fffcf6;
+  --mm-ink: #24292b;
+  --mm-muted: #6c6a63;
+  --mm-line: #e6dccc;
+  --mm-accent: #0a7f93;
+  --mm-surface-hover: #f1eadf;
+  --mm-control-line: #d4c6b1;
+  --mm-selection: #e0f2f4;
+  --mm-danger: #b8321a;
+  --mm-success: #1d7a46;
+  --mm-warning: #a35a0c;
+  --mm-success-soft: #e3f3e8;
+  --mm-warning-soft: #fbedd9;
+  --mm-claude: #c9652a;
+  --mm-codex: #0e9fb5;
+  --mm-pr: #a8a094;
+  --mm-shadow: 0 6px 20px rgb(60 45 20 / .12);
+  --mm-shadow-soft: 0 1px 2px rgb(60 45 20 / .06), 0 4px 12px rgb(60 45 20 / .06);
+  --mm-nav-height: 74px;
+  display: grid;
+  grid-template-columns: 218px minmax(0, 1fr);
+  min-height: 70vh;
+  overflow: hidden;
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  color: var(--mm-ink);
+  background: var(--mm-background);
+  border: 1px solid var(--mm-line);
+  border-radius: 14px;
 }
-.work-hero {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 16px;
-  padding: 24px 28px;
-  border: 1px solid rgba(234,179,8,0.22);
-  border-radius: var(--radius);
-  background: var(--accent-bg);
+@media (prefers-color-scheme: dark) {
+  .mm-os:not([data-theme="light"]) {
+    color-scheme: dark;
+    --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
+    --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
+    --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
+    --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+    --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
+  }
 }
-.work-eyebrow { color: #9A7100; font-size: 11px; font-weight: 800; letter-spacing: 0.9px; text-transform: uppercase; }
-.work-title { margin-top: 5px; font-size: 28px; font-weight: 800; letter-spacing: -0.4px; }
-.work-copy { max-width: 620px; margin-top: 6px; color: var(--text2); font-size: 13px; line-height: 1.55; }
-.work-day-picker { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
-.work-day-btn {
-  width: 40px; height: 40px; border: 1px solid var(--border2); border-radius: 10px;
-  background: var(--card); color: var(--text); font-size: 20px; cursor: pointer;
+.mm-os[data-theme="dark"] {
+  color-scheme: dark;
+  --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
+  --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
+  --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
+  --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+  --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
 }
-.work-day-btn:disabled { opacity: 0.35; cursor: default; }
-.work-day-btn:focus-visible, .work-bar-hit:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
-.work-day-label { display: grid; min-width: 120px; text-align: center; }
-.work-day-label strong { font-size: 15px; }
-.work-day-label small { color: var(--text2); font-size: 12px; }
-.work-state { margin-bottom: 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg2); color: var(--text2); font-size: 13px; }
-.work-state.live { background: var(--green-bg); color: #16803A; }
-.work-state.stale, .work-state.empty, .work-state.error { background: var(--orange-bg); color: #9A3412; }
-.work-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
-.work-tile { padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); box-shadow: var(--shadow); min-width: 0; }
-.work-tile-label { color: var(--text2); font-size: 11px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
-.work-tile-value { margin-top: 6px; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.work-tile-note { margin-top: 2px; color: var(--text2); font-size: 12px; }
-.work-tile-dot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
-.work-card { position: relative; margin-bottom: 16px; padding: 20px 22px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); box-shadow: var(--shadow); min-width: 0; }
-.work-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; }
-.work-card-title { font-size: 16px; font-weight: 750; }
-.work-card-sub { margin-top: 3px; color: var(--text2); font-size: 12px; line-height: 1.5; }
-.work-count { color: var(--text2); font-weight: 600; }
-.work-legend { display: flex; gap: 14px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: var(--text2); }
-.work-legend li { display: flex; align-items: center; gap: 6px; }
-.work-swatch { width: 10px; height: 10px; border-radius: 3px; }
-.work-swatch.claude, .work-tile-dot.claude { background: var(--work-claude); }
-.work-swatch.codex, .work-tile-dot.codex { background: var(--work-codex); }
-.work-chart { width: 100%; min-height: 200px; }
-.work-chart-prs { min-height: 64px; margin-top: 4px; }
-.work-chart svg { display: block; width: 100%; overflow: visible; }
-.work-chart text { fill: var(--text2); font-size: 11px; font-family: inherit; }
-.work-chart .work-axis-label { fill: var(--muted); }
-.work-chart .work-grid { stroke: rgba(0,0,0,0.06); stroke-width: 1; }
-.work-chart .work-baseline { stroke: rgba(0,0,0,0.18); stroke-width: 1; }
-.work-chart .work-selected-band { fill: var(--accent-bg); }
-.work-chart .seg-claude { fill: var(--work-claude); }
-.work-chart .seg-codex { fill: var(--work-codex); }
-.work-chart .seg-pr { fill: var(--work-pr); }
-.work-chart .work-pr-label { fill: var(--text); font-weight: 700; }
-.work-bar-hit { fill: transparent; cursor: pointer; }
-.work-tooltip {
-  position: absolute; z-index: 5; pointer-events: none; min-width: 170px;
-  padding: 10px 12px; border: 1px solid var(--border2); border-radius: 10px;
-  background: var(--card); box-shadow: var(--shadow-lg); font-size: 12px; line-height: 1.6;
+.mm-os *, .mm-os *::before, .mm-os *::after { box-sizing: border-box; }
+.mm-os [hidden] { display: none !important; }
+.mm-os :where(h2, h3, p) { margin: 0; }
+.mm-os :where(button) { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.mm-os :where(a) { color: var(--mm-accent); text-decoration: none; }
+.mm-os :where(a):hover { text-decoration: underline; }
+.mm-os :focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
+
+.mm-sidebar { display: flex; flex-direction: column; padding: 24px 16px; background: var(--mm-surface); border-right: 1px solid var(--mm-line); }
+.mm-brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+.mm-brand-mark { display: grid; place-items: center; width: 36px; height: 36px; flex: none; color: #fffcf6; background: var(--mm-accent); border-radius: 10px; }
+.mm-brand-mark svg { width: 20px; height: 20px; }
+.mm-brand b { display: block; font-size: 14px; font-weight: 700; letter-spacing: .02em; }
+.mm-brand small { display: block; color: var(--mm-muted); font-size: 12px; }
+.mm-nav { display: flex; flex-direction: column; gap: 4px; margin-top: 28px; }
+.mm-nav button { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: var(--mm-muted); font-size: 14px; text-align: left; border-radius: 8px; white-space: nowrap; }
+.mm-nav button:hover { background: var(--mm-surface-hover); }
+.mm-nav button[aria-pressed="true"] { background: var(--mm-selection); color: var(--mm-accent); font-weight: 600; }
+.mm-nav button > span:first-child { display: grid; place-items: center; width: 24px; }
+.mm-nav svg { width: 24px; height: 24px; }
+.mm-nav b { margin-left: auto; padding: 0 6px; border-radius: 3px; font-size: 12px; background: var(--mm-selection); color: var(--mm-accent); }
+.mm-sidebar-bottom { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid var(--mm-line); }
+.mm-sidebar-button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 0; color: var(--mm-muted); font-size: 13px; text-align: left; }
+.mm-sidebar-button svg { width: 18px; height: 18px; flex: none; }
+.mm-sidebar-button:hover { color: var(--mm-ink); }
+.mm-sidebar-bottom p { margin-top: 10px; color: var(--mm-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+
+.mm-workspace { min-width: 0; display: flex; flex-direction: column; }
+.mm-topbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; background: var(--mm-surface); border-bottom: 1px solid var(--mm-line); }
+.mm-module { font-size: 17px; font-weight: 600; }
+.mm-day-picker { display: flex; align-items: center; gap: 8px; }
+.mm-round { display: grid; place-items: center; width: 44px; height: 44px; color: var(--mm-ink); border: 1px solid var(--mm-control-line) !important; border-radius: 999px; font-size: 22px; line-height: 1; }
+.mm-round:hover:not(:disabled) { background: var(--mm-surface-hover); }
+.mm-round:disabled { opacity: .35; cursor: default; }
+.mm-day-label { display: grid; min-width: 112px; text-align: center; line-height: 1.3; }
+.mm-day-label b { font-size: 15px; font-weight: 650; }
+.mm-day-label small { color: var(--mm-muted); font-size: 12px; }
+.mm-notice { margin: 20px 32px 0; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
+.mm-notice.live { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
+.mm-notice.stale, .mm-notice.empty, .mm-notice.error { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
+.mm-main { padding: 24px 32px 40px; }
+
+.mm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.mm-stat { min-width: 0; padding: 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-stat > span { color: var(--mm-muted); font-size: 13px; }
+.mm-stat > span i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; }
+.mm-stat strong { display: block; margin-top: 6px; font-size: 25px; font-weight: 750; line-height: 1.4; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.mm-stat small { display: block; margin-top: 4px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-stat strong.is-up { color: var(--mm-success); }
+.mm-stat strong.is-down { color: var(--mm-warning); }
+
+.mm-panel { position: relative; padding: 24px; margin-bottom: 28px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+.mm-section-heading h3 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.mm-section-heading h3 span { margin-left: 6px; color: var(--mm-muted); font-size: 14px; font-weight: 400; letter-spacing: 0; }
+.mm-section-note { margin-top: 4px; max-width: 640px; color: var(--mm-muted); font-size: 13px; }
+.mm-loose-note { margin: -8px 0 18px; }
+.mm-chart-legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--mm-muted); font-size: 13px; }
+.mm-chart-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; }
+.mm-os i.claude { background: var(--mm-claude); }
+.mm-os i.codex { background: var(--mm-codex); }
+.mm-chart { width: 100%; min-height: 200px; }
+.mm-chart-prs { min-height: 64px; margin-top: 2px; }
+.mm-chart svg { display: block; width: 100%; overflow: visible; }
+.mm-chart text { fill: var(--mm-muted); font-size: 12px; font-family: inherit; }
+.mm-chart .mm-grid { stroke: var(--mm-line); stroke-width: 1; }
+.mm-chart .mm-baseline { stroke: var(--mm-control-line); stroke-width: 1; }
+.mm-chart .mm-selected-band { fill: var(--mm-selection); }
+.mm-chart .seg-claude { fill: var(--mm-claude); }
+.mm-chart .seg-codex { fill: var(--mm-codex); }
+.mm-chart .seg-pr { fill: var(--mm-pr); }
+.mm-chart .is-current { fill: var(--mm-ink); font-weight: 700; }
+.mm-bar-hit { fill: transparent; cursor: pointer; }
+.mm-bar-hit:focus-visible { outline: none; stroke: var(--mm-accent); stroke-width: 2; }
+.mm-tooltip { position: absolute; z-index: 5; min-width: 190px; padding: 10px 12px; pointer-events: none; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; box-shadow: var(--mm-shadow); font-size: 13px; line-height: 1.6; }
+.mm-tooltip b { display: block; margin-bottom: 2px; }
+.mm-tooltip .row { display: flex; justify-content: space-between; gap: 16px; }
+.mm-tooltip .row span:last-child { font-weight: 650; font-variant-numeric: tabular-nums; }
+.mm-more { margin-top: 12px; font-size: 13px; }
+.mm-more summary { min-height: 44px; display: flex; align-items: center; color: var(--mm-accent); font-weight: 600; cursor: pointer; }
+
+.mm-group-rows { display: flex; flex-direction: column; gap: 10px; }
+.mm-group-row { min-width: 0; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; }
+.mm-group-row > summary { display: flex; align-items: center; gap: 12px; min-height: 62px; padding: 10px 18px; list-style: none; border-radius: 12px; cursor: pointer; }
+.mm-group-row > summary::-webkit-details-marker { display: none; }
+.mm-group-row > summary:hover { background: color-mix(in srgb, var(--mm-surface-hover) 55%, transparent); }
+.mm-group-row[open] > summary { border-bottom: 1px solid var(--mm-line); border-radius: 12px 12px 0 0; }
+.mm-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--mm-muted); }
+.mm-dot.claude { background: var(--mm-claude); }
+.mm-dot.codex { background: var(--mm-codex); }
+.mm-dot.dropped, .mm-dot.cat-agent { background: var(--mm-warning); }
+.mm-dot.forgot { background: var(--mm-danger); }
+.mm-dot.cat-pr, .mm-dot.cat-repo { background: var(--mm-success); }
+.mm-dot.cat-launchd, .mm-dot.cat-brew, .mm-dot.cat-cron, .mm-dot.cat-runtime { background: var(--mm-accent); }
+.mm-dot.cat-docker { background: var(--mm-codex); }
+.mm-dot.cat-port, .mm-dot.cat-tunnel { background: var(--mm-claude); }
+.mm-group-main { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+.mm-group-title { font-size: 16px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
+.mm-group-note { overflow: hidden; color: var(--mm-muted); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
+.mm-group-aside { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: 1px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mm-group-aside small { color: var(--mm-muted); font-size: 12px; font-weight: 500; font-variant-numeric: normal; }
+.mm-group-count { flex: none; min-width: 28px; padding: 2px 9px; color: var(--mm-muted); background: var(--mm-surface-hover); border-radius: 999px; font-size: 13px; font-weight: 650; text-align: center; }
+.mm-chevron { flex: none; width: 14px; color: var(--mm-muted); font-size: 22px; line-height: 1; text-align: center; transition: transform .15s; }
+.mm-group-row[open] .mm-chevron { transform: rotate(90deg); }
+.mm-group-body { padding: 2px 18px 12px; }
+.mm-data-table .mm-dot { display: inline-block; margin-right: 6px; vertical-align: 1px; }
+.mm-group-row-static { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 62px; padding: 10px 18px; }
+.mm-group-row-static .mm-group-main { flex-basis: 220px; }
+.mm-tip-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; vertical-align: 0; }
+.mm-group-foot { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+.mm-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-control-line); border-radius: 12px; font-size: 14px; }
+
+.mm-table-scroll { overflow-x: auto; }
+.mm-data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mm-data-table th { padding: 12px 12px 9px; color: var(--mm-muted); font-size: 12px; font-weight: 600; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--mm-line); }
+.mm-data-table td { padding: 12px; vertical-align: top; border-bottom: 1px solid var(--mm-line); overflow-wrap: anywhere; }
+.mm-data-table tbody tr:last-child td { border-bottom: 0; }
+.mm-data-table th:first-child, .mm-data-table td:first-child { padding-left: 0; }
+.mm-data-table th:last-child, .mm-data-table td:last-child { padding-right: 0; }
+.mm-data-table .num { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; overflow-wrap: normal; }
+.mm-data-table .cell-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mm-data-table td small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-infra-table { table-layout: fixed; }
+.mm-infra-table .mm-col-time { width: 76px; }
+.mm-infra-table .mm-col-where { width: 160px; }
+.mm-data-table code { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--mm-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mm-row-action { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 13px; color: var(--mm-ink) !important; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 999px; font-size: 13px; font-weight: 600; line-height: 1.2; white-space: normal; }
+.mm-row-action:hover { background: var(--mm-surface-hover); text-decoration: none !important; }
+.mm-row-action > span { color: var(--mm-accent); white-space: nowrap; }
+.mm-row-action.is-merged > span { color: var(--mm-success); }
+.mm-row-action.is-closed > span { color: var(--mm-danger); }
+.mm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: var(--mm-muted); border: 1px solid var(--mm-line); border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+
+.mm-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.mm-filter-tabs button { min-height: 44px; padding: 8px 14px; color: var(--mm-muted); border: 1px solid var(--mm-control-line) !important; border-radius: 999px; font-size: 14px; }
+.mm-filter-tabs button:hover { color: var(--mm-accent); background: var(--mm-selection); }
+.mm-filter-tabs button[aria-pressed="true"] { color: var(--mm-background); background: var(--mm-ink); border-color: var(--mm-ink) !important; }
+.mm-filter-tabs button span { margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 960px) {
+  .mm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mm-data-table thead { display: none; }
+  .mm-data-table, .mm-data-table tbody, .mm-data-table tr, .mm-data-table td { display: block; width: 100%; }
+  .mm-data-table tr { padding: 12px 0; border-bottom: 1px solid var(--mm-line); }
+  .mm-data-table tbody tr:last-child { border-bottom: 0; }
+  .mm-data-table td { padding: 2px 0 !important; border: 0; }
+  .mm-data-table td[data-label]::before { content: attr(data-label) ' · '; color: var(--mm-muted); font-size: 12px; }
+  .mm-data-table .num { text-align: left; }
 }
-.work-tooltip strong { display: block; margin-bottom: 2px; }
-.work-tooltip .row { display: flex; justify-content: space-between; gap: 16px; }
-.work-tooltip .row span:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
-.work-series-table { margin-top: 12px; font-size: 13px; }
-.work-series-table summary, .work-sessions summary { cursor: pointer; color: var(--text2); font-weight: 600; }
-.work-sessions summary { font-size: 15px; color: var(--text); }
-.work-table-wrap { overflow-x: auto; margin-top: 8px; }
-.work-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.work-table th { padding: 8px 10px; border-bottom: 1px solid var(--border2); color: var(--text2); font-size: 11px; font-weight: 700; letter-spacing: 0.3px; text-align: left; text-transform: uppercase; white-space: nowrap; }
-.work-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.work-table td.num, .work-table th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.work-table .project-name { font-weight: 700; }
-.work-table .muted, .work-list .muted { color: var(--text2); font-size: 12px; }
-.work-table a, .work-list a { color: var(--blue); text-decoration: none; }
-.work-table a:hover, .work-list a:hover { text-decoration: underline; }
-.work-share { display: block; height: 6px; margin-top: 6px; border-radius: 3px; background: var(--bg2); overflow: hidden; }
-.work-share span { display: block; height: 100%; float: left; }
-.work-share .claude { background: var(--work-claude); }
-.work-share .codex { background: var(--work-codex); margin-left: 2px; }
-.work-tag { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 7px; border: 1px solid var(--border2); border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-.work-tag.merged { background: var(--green-bg); color: #16803A; border-color: rgba(34,197,94,0.24); }
-.work-tag.open { background: var(--blue-bg); color: #1D4ED8; border-color: rgba(59,130,246,0.24); }
-.work-tag.closed { background: var(--red-bg); color: #B91C1C; border-color: rgba(239,68,68,0.24); }
-.work-tag.branch { background: var(--bg2); color: var(--text2); }
-.work-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.work-list { display: grid; gap: 8px; margin-top: 12px; padding: 0; list-style: none; }
-.work-list li { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); font-size: 13px; line-height: 1.45; min-width: 0; overflow-wrap: anywhere; }
-.work-list-card.dropped { border-top: 3px solid var(--orange); }
-.work-list-card.forgot { border-top: 3px solid var(--red); }
-.work-empty { color: var(--text2); font-size: 13px; padding: 8px 0; }
-.work-sources { color: var(--muted); font-size: 12px; line-height: 1.6; }
-@media (max-width: 1100px) { .work-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
-  .work-hero { flex-direction: column; align-items: stretch; padding: 18px 16px; }
-  .work-day-picker { justify-content: space-between; }
-  .work-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .work-columns { grid-template-columns: 1fr; }
-  .work-card { padding: 16px 14px; }
-  .work-card-head { flex-direction: column; }
-  .work-tile-value { font-size: 22px; }
+  #section-work.active { padding-bottom: calc(var(--mm-nav-height, 74px) + env(safe-area-inset-bottom)); }
+  .mm-os { display: flex; flex-direction: column; border-radius: 12px; }
+  /* Brand on top, sources and theme switch after the content, nav as the bottom tab bar. */
+  .mm-sidebar { display: contents; }
+  .mm-brand { order: 0; padding: 14px 16px; background: var(--mm-surface); border-bottom: 1px solid var(--mm-line); }
+  .mm-workspace { order: 1; }
+  .mm-sidebar-bottom { order: 2; display: flex; flex-direction: column; align-items: flex-start; margin: 0; padding: 8px 16px 16px; background: var(--mm-surface); border-top: 1px solid var(--mm-line); }
+  .mm-sidebar-bottom p { margin-top: 0; }
+  .mm-filter-tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 20px; padding: 0 16px; scrollbar-width: none; }
+  .mm-filter-tabs::-webkit-scrollbar { display: none; }
+  .mm-filter-tabs button { flex: none; white-space: nowrap; }
+  .mm-nav { position: fixed; inset: auto 0 0; z-index: 40; height: calc(var(--mm-nav-height) + env(safe-area-inset-bottom)); flex-direction: row; justify-content: space-around; gap: 0; margin: 0; padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); background: var(--mm-background); border-top: 1px solid var(--mm-line); }
+  #section-work:not(.active) .mm-nav { display: none; }
+  .mm-nav button { flex: 1; flex-direction: column; justify-content: center; gap: 2px; padding: 4px; font-size: 11px; position: relative; }
+  .mm-nav button[aria-pressed="true"] { background: none; }
+  .mm-nav b { position: absolute; top: 2px; left: calc(50% + 8px); margin: 0; }
+  .mm-topbar { flex-wrap: wrap; padding: 10px 16px; }
+  .mm-notice { margin: 16px 16px 0; }
+  .mm-main { padding: 16px 16px 28px; }
+  .mm-panel { padding: 16px; }
+  .mm-section-heading { flex-direction: column; gap: 8px; }
+  .mm-stat { padding: 14px; }
+  .mm-stat strong { font-size: 21px; }
+  .mm-group-row > summary, .mm-group-row-static { padding: 10px 14px; }
+  .mm-group-body { padding: 2px 14px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-chevron { transition: none; }
 }
 </style>
 </head>
@@ -3171,7 +3293,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Machines</button>
     <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span> Daily Work <span class="pill-badge">вчера</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span> MAIN MANAGER <span class="pill-badge">день</span></button>
   </nav>
 
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
@@ -3282,74 +3404,73 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     </div>
   </section>
 
-  <!-- ═══════════════ DAILY WORK ═══════════════ -->
-  <section id="section-work" class="section" aria-labelledby="work-title">
-    <div class="work-hero">
-      <div class="work-hero-copy">
-        <div class="work-eyebrow">MAIN MANAGER · Claude + Codex</div>
-        <h2 class="work-title" id="work-title">Итоги дня</h2>
-        <p class="work-copy">Над чем работал, сколько времени, что смёрджено, что брошено и про что забыл. Время считается по активности сессий; перерывы больше 30 минут не входят, поэтому это оценка.</p>
-      </div>
-      <div class="work-day-picker" role="group" aria-label="Выбор дня">
-        <button class="work-day-btn" type="button" id="work-prev-day" onclick="shiftWorkDay(-1)" aria-label="Предыдущий день">‹</button>
-        <div class="work-day-label"><strong id="work-day-label">Вчера</strong><small id="work-day-date">—</small></div>
-        <button class="work-day-btn" type="button" id="work-next-day" onclick="shiftWorkDay(1)" aria-label="Следующий день">›</button>
+  <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
+  <section id="section-work" class="section" aria-labelledby="mm-title">
+    <div class="mm-os" id="mm-os">
+      <aside class="mm-sidebar">
+        <div class="mm-brand">
+          <span class="mm-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>
+          <span><b id="mm-title">MAIN MANAGER</b><small>Command Center</small></span>
+        </div>
+        <nav class="mm-nav" aria-label="Разделы MAIN MANAGER">
+          <button type="button" data-mm-view="overview" aria-pressed="true"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Обзор дня</span></button>
+          <button type="button" data-mm-view="loose" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 2 2 3-4m-5 9 2 2 3-4m-5 9 2 2 3-4M12 6h9M12 13h9M12 20h9"/></svg></span><span>Хвосты</span><b id="mm-loose-count">0</b></button>
+          <button type="button" data-mm-view="infra" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg></span><span>Изменения</span><b id="mm-infra-count">0</b></button>
+        </nav>
+        <div class="mm-sidebar-bottom">
+          <button type="button" id="mm-theme-toggle" class="mm-sidebar-button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
+          <p id="mm-sources">Источники загружаются…</p>
+        </div>
+      </aside>
+      <div class="mm-workspace">
+        <header class="mm-topbar">
+          <h2 class="mm-module" id="mm-view-title">Обзор дня</h2>
+          <div class="mm-day-picker" id="mm-day-picker" role="group" aria-label="Выбор дня">
+            <button type="button" class="mm-round" id="mm-prev-day" aria-label="Предыдущий день">‹</button>
+            <span class="mm-day-label"><b id="mm-day-label">Вчера</b><small id="mm-day-date">—</small></span>
+            <button type="button" class="mm-round" id="mm-next-day" aria-label="Следующий день">›</button>
+          </div>
+        </header>
+        <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
+        <div class="mm-main">
+          <div class="mm-view" data-mm-panel="overview">
+            <div class="mm-stats" id="mm-stats" aria-label="Итоги выбранного дня"></div>
+            <section class="mm-panel" aria-labelledby="mm-traction-title">
+              <div class="mm-section-heading">
+                <div><h3 id="mm-traction-title">Traction <span>30 дней</span></h3><p class="mm-section-note">Часы работы по дням. Нажми на столбик, чтобы открыть этот день.</p></div>
+                <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
+              </div>
+              <div class="mm-chart" id="mm-chart"></div>
+              <div class="mm-chart mm-chart-prs" id="mm-chart-prs"></div>
+              <div class="mm-tooltip" id="mm-tooltip" role="tooltip" hidden></div>
+              <details class="mm-more">
+                <summary>Таблица по дням</summary>
+                <div class="mm-table-scroll" id="mm-series-table"></div>
+              </details>
+            </section>
+            <div class="mm-section-heading">
+              <div><h3>Над чем работал <span id="mm-projects-count"></span></h3><p class="mm-section-note">Проект открывает свои сессии и PR за этот день.</p></div>
+            </div>
+            <div class="mm-group-rows" id="mm-projects"></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="loose" hidden>
+            <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр">
+              <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
+              <button type="button" data-filter="dropped" aria-pressed="false">Сбросил <span id="mm-loose-dropped">0</span></button>
+              <button type="button" data-filter="forgot" aria-pressed="false">Забыл <span id="mm-loose-forgot">0</span></button>
+            </div>
+            <p class="mm-section-note mm-loose-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p>
+            <div class="mm-group-rows" id="mm-loose"></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="infra" hidden>
+            <div class="mm-filter-tabs" id="mm-infra-filter" role="group" aria-label="Тип изменения"></div>
+            <div class="mm-group-rows" id="mm-infra"></div>
+          </div>
+        </div>
       </div>
     </div>
-
-    <div class="work-state" id="work-state" role="status">Загружаю данные…</div>
-
-    <div class="work-tiles" id="work-tiles" aria-label="Итоги выбранного дня"></div>
-
-    <article class="work-card" aria-labelledby="work-traction-title">
-      <div class="work-card-head">
-        <div>
-          <h3 class="work-card-title" id="work-traction-title">Traction · 30 дней</h3>
-          <p class="work-card-sub" id="work-traction-sub">Часы работы по дням. Нажми на день, чтобы открыть его итоги.</p>
-        </div>
-        <ul class="work-legend" aria-label="Легенда">
-          <li><span class="work-swatch claude" aria-hidden="true"></span>Claude</li>
-          <li><span class="work-swatch codex" aria-hidden="true"></span>Codex</li>
-        </ul>
-      </div>
-      <div class="work-chart" id="work-chart"></div>
-      <div class="work-chart work-chart-prs" id="work-chart-prs"></div>
-      <div class="work-tooltip" id="work-tooltip" role="tooltip" hidden></div>
-      <details class="work-series-table">
-        <summary>Таблица по дням</summary>
-        <div class="work-table-wrap" id="work-series-table"></div>
-      </details>
-    </article>
-
-    <article class="work-card" aria-labelledby="work-projects-title">
-      <div class="work-card-head">
-        <div>
-          <h3 class="work-card-title" id="work-projects-title">Над чем работал</h3>
-          <p class="work-card-sub">По проектам за выбранный день: время, сессии и чем закончилось.</p>
-        </div>
-      </div>
-      <div class="work-table-wrap" id="work-projects"></div>
-    </article>
-
-    <div class="work-columns">
-      <article class="work-card work-list-card dropped" aria-labelledby="work-dropped-title">
-        <h3 class="work-card-title" id="work-dropped-title">Сбросил <span class="work-count" id="work-dropped-count"></span></h3>
-        <p class="work-card-sub">За последние 7 дней: PR закрыты без merge и ветки без PR, которые не трогал 2+ дня.</p>
-        <ul class="work-list" id="work-dropped"></ul>
-      </article>
-      <article class="work-card work-list-card forgot" aria-labelledby="work-forgot-title">
-        <h3 class="work-card-title" id="work-forgot-title">Забыл <span class="work-count" id="work-forgot-count"></span></h3>
-        <p class="work-card-sub">Открытые PR и задачи без движения 7+ дней, ветки без PR старше недели.</p>
-        <ul class="work-list" id="work-forgot"></ul>
-      </article>
-    </div>
-
-    <details class="work-card work-sessions">
-      <summary>Сессии дня</summary>
-      <div class="work-table-wrap" id="work-sessions"></div>
-    </details>
-
-    <p class="work-sources" id="work-sources"></p>
   </section>
 
   <section id="section-machines" class="section" aria-label="Machines">
@@ -4278,8 +4399,8 @@ function showSection(name) {
   }
   if (parent === 'agents' && ownerDecisionsReady) refreshOwnerDecisions(true);
   if (name === 'logs' && !currentLogService) loadLogTabs();
-  // Deferred: ?tab=work calls showSection before the Daily Work block is initialised.
-  if (name === 'work') setTimeout(() => loadDailyWork(dailyWorkDate), 0);
+  // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
+  if (name === 'work') setTimeout(openMainManager, 0);
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
@@ -6108,15 +6229,29 @@ initDragDrop();
 setInterval(refreshAll, 5000);
 setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000);
 
-// ── Daily Work ──
+// ── MAIN MANAGER ──
 const DAILY_WORK_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/work/daily`
   : 'https://command.meshly.fr/api/work/daily';
-const WORK_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
-const WORK_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/infra/changes`
+  : 'https://command.meshly.fr/api/infra/changes';
+const MM_THEME_KEY = 'command-center.main-manager.theme';
+const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+const MM_VIEW_TITLES = { overview: 'Обзор дня', loose: 'Хвосты', infra: 'Изменения в инфраструктуре' };
 let dailyWorkData = null;
 let dailyWorkDate = null;
 let dailyWorkLoading = false;
+let infraData = null;
+let mmView = 'overview';
+let mmLooseFilter = 'all';
+let mmInfraFilter = 'all';
+let mmInitialised = false;
+
+function mmEsc(value) {
+  return escapeHtml(value == null ? '' : String(value));
+}
 
 function workMinutes(value) {
   const minutes = Math.max(0, Math.round(Number(value) || 0));
@@ -6128,46 +6263,45 @@ function workMinutes(value) {
 
 function workHours(value) {
   const hours = (Number(value) || 0) / 60;
-  return hours >= 10 ? hours.toFixed(0) : hours.toFixed(1).replace('.0', '');
+  return hours >= 10 ? hours.toFixed(0) : hours.toFixed(1).replace(/\.0$/, '').replace('.', ',');
 }
 
-function workDateParts(iso) {
+function mmDate(iso) {
   const [y, m, d] = String(iso).split('-').map(Number);
   return new Date(y, m - 1, d);
 }
 
-function workDayTitle(iso, data) {
-  if (!data) return iso;
-  const last = data.series[data.series.length - 1]?.date;
-  const prev = data.series[data.series.length - 2]?.date;
+function mmDayShort(iso) {
+  const date = mmDate(iso);
+  return `${date.getDate()} ${MM_MONTHS[date.getMonth()]}`;
+}
+
+function mmDayTitle(iso, series) {
+  const last = series[series.length - 1]?.date;
+  const prev = series[series.length - 2]?.date;
   if (iso === last) return 'Сегодня';
   if (iso === prev) return 'Вчера';
-  const date = workDateParts(iso);
-  return WORK_WEEKDAYS[date.getDay()].replace(/^./, c => c.toUpperCase());
+  const weekday = MM_WEEKDAYS[mmDate(iso).getDay()];
+  return weekday.charAt(0).toUpperCase() + weekday.slice(1);
 }
 
-function workDayShort(iso) {
-  const date = workDateParts(iso);
-  return `${date.getDate()} ${WORK_MONTHS[date.getMonth()]}`;
-}
-
-function workTime(isoTs) {
-  if (!isoTs) return '—';
-  const date = new Date(isoTs);
+function mmTime(isoTs) {
+  const date = new Date(isoTs || '');
   if (Number.isNaN(date.getTime())) return '—';
   return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
-function workAgo(isoTs) {
+function mmAgo(isoTs) {
   if (!isoTs) return 'никогда';
   const minutes = Math.round((Date.now() - new Date(isoTs).getTime()) / 60000);
   if (!Number.isFinite(minutes)) return '—';
-  if (minutes < 60) return `${Math.max(0, minutes)} мин назад`;
+  if (minutes < 1) return 'только что';
+  if (minutes < 60) return `${minutes} мин назад`;
   if (minutes < 48 * 60) return `${Math.round(minutes / 60)} ч назад`;
   return `${Math.round(minutes / 1440)} дн назад`;
 }
 
-function workSafeUrl(value) {
+function mmGithubUrl(value) {
   try {
     const url = new URL(String(value));
     return url.protocol === 'https:' && url.hostname === 'github.com' ? url.href : '';
@@ -6176,14 +6310,87 @@ function workSafeUrl(value) {
   }
 }
 
-function workPrLink(pr, cls) {
+function mmPrAction(pr, state) {
   const label = `${pr.repo ? pr.repo.split('/').pop() : ''}#${pr.number ?? ''}`;
-  const url = workSafeUrl(pr.url);
-  const title = pr.title ? ` ${escapeHtml(compactText(pr.title, 70))}` : '';
-  const tag = `<span class="work-tag ${cls}">${escapeHtml(label)}</span>`;
+  const mark = state === 'merged' ? '✓' : (state === 'closed' ? '×' : '↗');
+  const body = `<span>${mark} ${mmEsc(label)}</span> ${mmEsc(compactText(pr.title || '', 70))}`;
+  const url = mmGithubUrl(pr.url);
+  const cls = `mm-row-action is-${state}`;
   return url
-    ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${tag}${title}</a>`
-    : `${tag}${title}`;
+    ? `<a class="${cls}" href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${body}</a>`
+    : `<span class="${cls}">${body}</span>`;
+}
+
+function mmHeaders() {
+  return typeof jarvisRunHeaders === 'function' ? jarvisRunHeaders() : {};
+}
+
+function mmInit() {
+  if (mmInitialised) return;
+  mmInitialised = true;
+  const os = document.getElementById('mm-os');
+  let savedTheme = null;
+  try { savedTheme = window.localStorage.getItem(MM_THEME_KEY); } catch (error) { savedTheme = null; }
+  if (savedTheme === 'dark' || savedTheme === 'light') os.dataset.theme = savedTheme;
+  mmSyncThemeButton();
+  document.getElementById('mm-theme-toggle').addEventListener('click', () => {
+    const dark = mmIsDark();
+    os.dataset.theme = dark ? 'light' : 'dark';
+    try { window.localStorage.setItem(MM_THEME_KEY, os.dataset.theme); } catch (error) { /* per-browser convenience only */ }
+    mmSyncThemeButton();
+    if (dailyWorkData) renderWorkChart(dailyWorkData);
+  });
+  document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
+    button.addEventListener('click', () => mmShowView(button.dataset.mmView));
+  });
+  document.getElementById('mm-prev-day').addEventListener('click', () => shiftWorkDay(-1));
+  document.getElementById('mm-next-day').addEventListener('click', () => shiftWorkDay(1));
+  document.getElementById('mm-loose-filter').addEventListener('click', event => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    mmLooseFilter = button.dataset.filter;
+    renderLoose(dailyWorkData);
+  });
+  document.getElementById('mm-infra-filter').addEventListener('click', event => {
+    const button = event.target.closest('[data-filter]');
+    if (!button) return;
+    mmInfraFilter = button.dataset.filter;
+    renderInfra(infraData);
+  });
+}
+
+function mmIsDark() {
+  const os = document.getElementById('mm-os');
+  if (os.dataset.theme) return os.dataset.theme === 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function mmSyncThemeButton() {
+  const button = document.getElementById('mm-theme-toggle');
+  const dark = mmIsDark();
+  button.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  button.querySelector('span').textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+}
+
+function mmShowView(view) {
+  if (!MM_VIEW_TITLES[view]) return;
+  mmView = view;
+  document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
+    button.setAttribute('aria-pressed', button.dataset.mmView === view ? 'true' : 'false');
+  });
+  document.querySelectorAll('[data-mm-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.mmPanel !== view;
+  });
+  document.getElementById('mm-view-title').textContent = MM_VIEW_TITLES[view];
+  document.getElementById('mm-day-picker').hidden = view !== 'overview';
+  mmRenderNotice();
+  if (view === 'overview' && dailyWorkData) renderWorkChart(dailyWorkData);
+}
+
+function openMainManager() {
+  mmInit();
+  loadDailyWork(dailyWorkDate);
+  loadInfraChanges();
 }
 
 async function loadDailyWork(date) {
@@ -6192,21 +6399,32 @@ async function loadDailyWork(date) {
   const params = new URLSearchParams({ days: '30' });
   if (date) params.set('date', date);
   try {
-    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: jarvisRunHeaders(), cache: 'no-store' });
+    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
     dailyWorkData = data;
     dailyWorkDate = data.selected_date;
     renderDailyWork();
   } catch (error) {
-    const state = document.getElementById('work-state');
-    if (state) {
-      state.className = 'work-state error';
-      state.textContent = 'Не удалось получить данные о работе с сервера Command Center. Цифры не показываю, чтобы не гадать.';
-    }
+    dailyWorkData = null;
+    mmRenderNotice('Не удалось получить итоги дня с сервера Command Center. Цифры не показываю, чтобы не гадать.');
   } finally {
     dailyWorkLoading = false;
   }
+}
+
+async function loadInfraChanges() {
+  try {
+    const response = await fetch(`${INFRA_CHANGES_API}?days=14`, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    infraData = data;
+  } catch (error) {
+    infraData = { ok: false };
+  }
+  renderInfra(infraData);
+  mmRenderNotice();
+  mmRenderSources();
 }
 
 function shiftWorkDay(step) {
@@ -6217,146 +6435,169 @@ function shiftWorkDay(step) {
   loadDailyWork(days[index]);
 }
 
+function mmRenderNotice(errorText) {
+  const notice = document.getElementById('mm-state');
+  if (errorText) {
+    notice.className = 'mm-notice error';
+    notice.textContent = errorText;
+    return;
+  }
+  const source = mmView === 'infra' ? infraData : dailyWorkData;
+  if (!source) return;
+  if (!source.ok) {
+    notice.className = 'mm-notice error';
+    notice.textContent = 'Журнал изменений с сервера не получен. Ничего не показываю, чтобы не гадать.';
+    return;
+  }
+  notice.className = `mm-notice ${source.state}`;
+  let text;
+  if (source.state === 'empty') {
+    text = mmView === 'infra'
+      ? 'Сборщик изменений ещё не запускался. Журнал начнёт заполняться после деплоя на Mac mini.'
+      : 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
+  } else if (source.state === 'stale') {
+    text = `Данные устарели: последний сбор ${mmAgo(source.collected_at)}. Проверь сборщик на Mac mini.`;
+  } else {
+    text = mmView === 'infra'
+      ? `Обновлено: ${mmAgo(source.collected_at)}. Снимок машины каждые 10 минут плюс команды Claude и Codex и merge PR.`
+      : `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
+  }
+  if (!source.owner_view) {
+    text += ' Подробности видны только владельцу: открой Command Center через mm-command-center-auth.';
+  }
+  notice.textContent = text;
+}
+
 function renderDailyWork() {
   const data = dailyWorkData;
   if (!data) return;
   const day = data.day;
   const days = data.series.map(item => item.date);
   const index = days.indexOf(day.date);
-  document.getElementById('work-day-label').textContent = workDayTitle(day.date, data);
-  document.getElementById('work-day-date').textContent = workDayShort(day.date) + (day.is_today ? ' · идёт' : '');
-  document.getElementById('work-prev-day').disabled = index <= 0;
-  document.getElementById('work-next-day').disabled = index >= days.length - 1;
-
-  const state = document.getElementById('work-state');
-  state.className = `work-state ${data.state}`;
-  if (data.state === 'empty') {
-    state.textContent = 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
-  } else if (data.state === 'stale') {
-    state.textContent = `Данные устарели: последний сбор ${workAgo(data.collected_at)}. Проверь сборщик на Mac mini.`;
-  } else {
-    state.textContent = `Обновлено ${workAgo(data.collected_at)}. ${data.time_estimate_note}`;
-  }
-  if (!data.owner_view) {
-    state.textContent += ' Названия проектов, PR и темы сессий видны только владельцу: открой Command Center через mm-command-center-auth.';
-  }
-
-  renderWorkTiles(data);
+  document.getElementById('mm-day-label').textContent = mmDayTitle(day.date, data.series);
+  document.getElementById('mm-day-date').textContent = mmDayShort(day.date) + (day.is_today ? ' · идёт' : '');
+  document.getElementById('mm-prev-day').disabled = index <= 0;
+  document.getElementById('mm-next-day').disabled = index >= days.length - 1;
+  document.getElementById('mm-loose-count').textContent = data.dropped_count + data.forgot_count;
+  mmRenderNotice();
+  renderWorkStats(data);
   renderWorkChart(data);
   renderWorkSeriesTable(data);
   renderWorkProjects(data);
-  renderWorkLists(data);
-  renderWorkSessions(data);
-  renderWorkSources(data);
+  renderLoose(data);
+  mmRenderSources();
 }
 
-function renderWorkTiles(data) {
+function renderWorkStats(data) {
   const day = data.day;
   const last7 = data.traction.last_7;
   const prev7 = data.traction.previous_7;
   const delta = last7.total_minutes - prev7.total_minutes;
+  const trend = !prev7.total_minutes ? '' : (delta >= 0 ? 'is-up' : 'is-down');
   const deltaText = prev7.total_minutes
     ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе`
-    : 'прошлой недели нет в данных';
-  const tiles = [
+    : 'прошлой недели в данных нет';
+  const stats = [
     { label: 'Время работы', value: workMinutes(day.total_minutes), note: `оценка · проектов: ${day.project_count}` },
-    { label: 'Claude', value: workMinutes(day.claude_minutes), note: 'Claude Code', dot: 'claude' },
-    { label: 'Codex', value: workMinutes(day.codex_minutes), note: 'Codex', dot: 'codex' },
-    { label: 'PR смёрджено', value: String(day.prs_merged), note: `открыто ${day.prs_opened} · закрыто без merge ${day.prs_closed_unmerged}` },
-    { label: '7 дней', value: `${workHours(last7.total_minutes)} ч`, note: `${deltaText} · серия ${data.traction.streak_days} дн` },
+    { label: 'Claude · Codex', value: `${workHours(day.claude_minutes)} · ${workHours(day.codex_minutes)} ч`, note: `${day.sessions} сессий · ${day.prompts} промптов`, dots: true },
+    { label: 'PR смёрджено', value: String(day.prs_merged), note: `открыто ${day.prs_opened} · брошено ${day.prs_closed_unmerged}` },
+    { label: 'Последние 7 дней', value: `${workHours(last7.total_minutes)} ч`, note: `${deltaText} · серия ${data.traction.streak_days} дн`, cls: trend },
   ];
-  document.getElementById('work-tiles').innerHTML = tiles.map(tile => `
-    <div class="work-tile">
-      <div class="work-tile-label">${tile.dot ? `<span class="work-tile-dot ${tile.dot}" aria-hidden="true"></span>` : ''}${escapeHtml(tile.label)}</div>
-      <div class="work-tile-value">${escapeHtml(tile.value)}</div>
-      <div class="work-tile-note">${escapeHtml(tile.note)}</div>
+  document.getElementById('mm-stats').innerHTML = stats.map(stat => `
+    <div class="mm-stat">
+      <span>${stat.dots ? '<i class="claude"></i><i class="codex"></i>' : ''}${mmEsc(stat.label)}</span>
+      <strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong>
+      <small>${mmEsc(stat.note)}</small>
     </div>`).join('');
 }
 
-function workNiceStep(maxHours) {
+function mmNiceStep(maxHours) {
   if (maxHours <= 2) return 0.5;
   if (maxHours <= 5) return 1;
   if (maxHours <= 10) return 2;
   return 4;
 }
 
-function workRoundedTop(x, y, width, height, radius) {
+function mmRoundedTop(x, y, width, height, radius) {
   const r = Math.min(radius, width / 2, height);
   return `M${x},${y + height}V${y + r}Q${x},${y} ${x + r},${y}H${x + width - r}Q${x + width},${y} ${x + width},${y + r}V${y + height}Z`;
 }
 
 function renderWorkChart(data) {
-  const host = document.getElementById('work-chart');
-  const prHost = document.getElementById('work-chart-prs');
-  const width = Math.max(320, host.clientWidth || 900);
+  const host = document.getElementById('mm-chart');
+  const prHost = document.getElementById('mm-chart-prs');
+  if (!host || host.offsetParent === null) return;
+  const width = Math.max(300, host.clientWidth || 900);
   const height = 220;
-  const pad = { top: 12, right: 8, bottom: 24, left: 34 };
+  const pad = { top: 12, right: 4, bottom: 26, left: 34 };
   const series = data.series;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const step = plotW / series.length;
-  const barW = Math.max(4, Math.min(26, step * 0.66));
-  const maxHours = Math.max(1, ...series.map(d => d.total_minutes / 60), ...series.map(d => (d.claude_minutes + d.codex_minutes) / 60));
-  const tick = workNiceStep(maxHours);
+  const barW = Math.max(4, Math.min(24, step * 0.62));
+  const maxHours = Math.max(1, ...series.map(d => (d.claude_minutes + d.codex_minutes) / 60));
+  const tick = mmNiceStep(maxHours);
   const top = Math.ceil(maxHours / tick) * tick;
   const y = hours => pad.top + plotH - (hours / top) * plotH;
   const labelEvery = width < 520 ? 7 : (width < 900 ? 3 : 2);
+  const selectedIndex = series.findIndex(day => day.date === data.selected_date);
   const parts = [];
   for (let value = 0; value <= top + 1e-9; value += tick) {
-    parts.push(`<line class="${value === 0 ? 'work-baseline' : 'work-grid'}" x1="${pad.left}" x2="${width - pad.right}" y1="${y(value)}" y2="${y(value)}"/>`);
-    parts.push(`<text class="work-axis-label" x="${pad.left - 6}" y="${y(value) + 4}" text-anchor="end">${value}ч</text>`);
+    parts.push(`<line class="${value === 0 ? 'mm-baseline' : 'mm-grid'}" x1="${pad.left}" x2="${width - pad.right}" y1="${y(value)}" y2="${y(value)}"/>`);
+    parts.push(`<text x="${pad.left - 8}" y="${y(value) + 4}" text-anchor="end">${value}ч</text>`);
   }
   series.forEach((day, i) => {
     const cx = pad.left + step * i + step / 2;
     const x = cx - barW / 2;
-    if (day.date === data.selected_date) {
-      parts.push(`<rect class="work-selected-band" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}" rx="4"/>`);
-    }
-    // Claude and Codex can overlap in time, so the stack shows each tool's own
-    // time; the tooltip also gives the de-duplicated total.
+    const selected = day.date === data.selected_date;
+    if (selected) parts.push(`<rect class="mm-selected-band" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}" rx="6"/>`);
+    // Each tool's own time is stacked; the tooltip also gives the de-duplicated total.
     const claudeH = (day.claude_minutes / 60 / top) * plotH;
     const codexH = (day.codex_minutes / 60 / top) * plotH;
     const base = pad.top + plotH;
     if (claudeH > 0) {
-      const path = codexH > 0 ? `M${x},${base}V${base - claudeH}H${x + barW}V${base}Z` : workRoundedTop(x, base - claudeH, barW, claudeH, 4);
+      const path = codexH > 0 ? `M${x},${base}V${base - claudeH}H${x + barW}V${base}Z` : mmRoundedTop(x, base - claudeH, barW, claudeH, 4);
       parts.push(`<path class="seg-claude" d="${path}"/>`);
     }
     if (codexH > 0) {
       const gap = claudeH > 0 ? 2 : 0;
       const h = Math.max(1, codexH - gap);
-      parts.push(`<path class="seg-codex" d="${workRoundedTop(x, base - claudeH - gap - h, barW, h, 4)}"/>`);
+      parts.push(`<path class="seg-codex" d="${mmRoundedTop(x, base - claudeH - gap - h, barW, h, 4)}"/>`);
     }
-    if (i % labelEvery === (series.length - 1) % labelEvery) {
-      parts.push(`<text x="${cx}" y="${height - 6}" text-anchor="middle">${escapeHtml(workDayShort(day.date))}</text>`);
+    const nearSelected = !selected && selectedIndex >= 0 && Math.abs(i - selectedIndex) * step < 44;
+    if (selected || (!nearSelected && i % labelEvery === (series.length - 1) % labelEvery)) {
+      parts.push(`<text class="${selected ? 'is-current' : ''}" x="${cx}" y="${height - 6}" text-anchor="middle">${mmEsc(mmDayShort(day.date))}</text>`);
     }
-    parts.push(`<rect class="work-bar-hit" data-index="${i}" tabindex="0" role="button" aria-label="${escapeHtml(`${workDayShort(day.date)}: ${workMinutes(day.total_minutes)}, PR смёрджено ${day.prs_merged}`)}" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}"/>`);
+    parts.push(`<rect class="mm-bar-hit" data-index="${i}" tabindex="0" role="button" aria-label="${mmEsc(`${mmDayShort(day.date)}: ${workMinutes(day.total_minutes)}, PR смёрджено ${day.prs_merged}`)}" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}"/>`);
   });
   host.innerHTML = `<svg viewBox="0 0 ${width} ${height}" height="${height}" role="img" aria-label="Часы работы с Claude и Codex за 30 дней">${parts.join('')}</svg>`;
 
-  // Merged PRs per day: separate small chart on the same day axis (no second y-scale).
+  // Merged PRs per day: a separate small chart on the same day axis, never a second y-scale.
   const prHeight = 64;
-  const prPlot = 36;
+  const baseY = 42;
   const maxPr = Math.max(1, ...series.map(d => d.prs_merged));
-  const prParts = [`<text class="work-axis-label" x="${pad.left - 6}" y="${prPlot + 4}" text-anchor="end">PR</text>`,
-    `<line class="work-baseline" x1="${pad.left}" x2="${width - pad.right}" y1="${prPlot + 6}" y2="${prPlot + 6}"/>`];
+  const prParts = [
+    `<text x="${pad.left - 8}" y="${baseY}" text-anchor="end">PR</text>`,
+    `<line class="mm-baseline" x1="${pad.left}" x2="${width - pad.right}" y1="${baseY + 0.5}" y2="${baseY + 0.5}"/>`,
+  ];
   series.forEach((day, i) => {
     if (!day.prs_merged) return;
     const cx = pad.left + step * i + step / 2;
-    const h = Math.max(3, (day.prs_merged / maxPr) * (prPlot - 14));
-    prParts.push(`<path class="seg-pr" d="${workRoundedTop(cx - barW / 2, prPlot + 6 - h, barW, h, 3)}"/>`);
+    const h = Math.max(3, (day.prs_merged / maxPr) * 26);
+    prParts.push(`<path class="seg-pr" d="${mmRoundedTop(cx - barW / 2, baseY - h, barW, h, 3)}"/>`);
     if ((maxPr > 1 && day.prs_merged === maxPr) || day.date === data.selected_date) {
-      prParts.push(`<text class="work-pr-label" x="${cx}" y="${prPlot + 2 - h}" text-anchor="middle">${day.prs_merged}</text>`);
+      prParts.push(`<text class="is-current" x="${cx}" y="${baseY - h - 4}" text-anchor="middle">${day.prs_merged}</text>`);
     }
   });
   prParts.push(`<text x="${pad.left}" y="${prHeight - 4}">PR смёрджено за день</text>`);
   prHost.innerHTML = `<svg viewBox="0 0 ${width} ${prHeight}" height="${prHeight}" role="img" aria-label="Смёрдженные PR по дням">${prParts.join('')}</svg>`;
 
-  host.querySelectorAll('.work-bar-hit').forEach(hit => {
+  host.querySelectorAll('.mm-bar-hit').forEach(hit => {
     const day = series[Number(hit.dataset.index)];
-    hit.addEventListener('mouseenter', event => showWorkTooltip(day, event));
-    hit.addEventListener('mousemove', event => showWorkTooltip(day, event));
+    const show = event => showWorkTooltip(day, event.target);
+    hit.addEventListener('mouseenter', show);
+    hit.addEventListener('focus', show);
     hit.addEventListener('mouseleave', hideWorkTooltip);
-    hit.addEventListener('focus', event => showWorkTooltip(day, event));
     hit.addEventListener('blur', hideWorkTooltip);
     hit.addEventListener('click', () => loadDailyWork(day.date));
     hit.addEventListener('keydown', event => {
@@ -6368,150 +6609,225 @@ function renderWorkChart(data) {
   });
 }
 
-function showWorkTooltip(day, event) {
-  const tip = document.getElementById('work-tooltip');
-  const card = tip.parentElement.getBoundingClientRect();
-  tip.innerHTML = `<strong>${escapeHtml(workDayShort(day.date))}</strong>
-    <div class="row"><span>Всего (без пересечений)</span><span>${escapeHtml(workMinutes(day.total_minutes))}</span></div>
-    <div class="row"><span><span class="work-tile-dot claude"></span>Claude</span><span>${escapeHtml(workMinutes(day.claude_minutes))}</span></div>
-    <div class="row"><span><span class="work-tile-dot codex"></span>Codex</span><span>${escapeHtml(workMinutes(day.codex_minutes))}</span></div>
-    <div class="row"><span>Сессий / промптов</span><span>${day.sessions} / ${day.prompts}</span></div>
+function showWorkTooltip(day, target) {
+  const tip = document.getElementById('mm-tooltip');
+  const panel = tip.parentElement.getBoundingClientRect();
+  tip.innerHTML = `<b>${mmEsc(mmDayShort(day.date))}</b>
+    <div class="row"><span>Всего без пересечений</span><span>${mmEsc(workMinutes(day.total_minutes))}</span></div>
+    <div class="row"><span><i class="claude mm-tip-dot"></i>Claude</span><span>${mmEsc(workMinutes(day.claude_minutes))}</span></div>
+    <div class="row"><span><i class="codex mm-tip-dot"></i>Codex</span><span>${mmEsc(workMinutes(day.codex_minutes))}</span></div>
+    <div class="row"><span>Сессий · промптов</span><span>${day.sessions} · ${day.prompts}</span></div>
     <div class="row"><span>PR смёрджено</span><span>${day.prs_merged}</span></div>`;
   tip.hidden = false;
-  const rect = event.target.getBoundingClientRect();
-  const left = Math.min(card.width - tip.offsetWidth - 8, Math.max(8, rect.left - card.left + rect.width / 2 - tip.offsetWidth / 2));
+  const rect = target.getBoundingClientRect();
+  const left = Math.min(panel.width - tip.offsetWidth - 8, Math.max(8, rect.left - panel.left + rect.width / 2 - tip.offsetWidth / 2));
   tip.style.left = `${left}px`;
-  tip.style.top = `${Math.max(8, rect.top - card.top - tip.offsetHeight + 20)}px`;
+  tip.style.top = `${Math.max(8, rect.top - panel.top - tip.offsetHeight + 24)}px`;
 }
 
 function hideWorkTooltip() {
-  document.getElementById('work-tooltip').hidden = true;
+  document.getElementById('mm-tooltip').hidden = true;
 }
 
 function renderWorkSeriesTable(data) {
   const rows = data.series.slice().reverse().map(day => `<tr>
-      <td>${escapeHtml(workDayShort(day.date))}</td>
-      <td class="num">${escapeHtml(workMinutes(day.total_minutes))}</td>
-      <td class="num">${escapeHtml(workMinutes(day.claude_minutes))}</td>
-      <td class="num">${escapeHtml(workMinutes(day.codex_minutes))}</td>
-      <td class="num">${day.sessions}</td>
-      <td class="num">${day.prs_merged}</td>
-      <td class="num">${day.prs_closed_unmerged}</td>
-      <td class="num">${day.commits}</td>
+      <td class="cell-date" data-label="День">${mmEsc(mmDayShort(day.date))}</td>
+      <td class="num" data-label="Всего">${mmEsc(workMinutes(day.total_minutes))}</td>
+      <td class="num" data-label="Claude">${mmEsc(workMinutes(day.claude_minutes))}</td>
+      <td class="num" data-label="Codex">${mmEsc(workMinutes(day.codex_minutes))}</td>
+      <td class="num" data-label="Сессии">${day.sessions}</td>
+      <td class="num" data-label="PR merged">${day.prs_merged}</td>
+      <td class="num" data-label="Коммиты">${day.commits}</td>
     </tr>`).join('');
-  document.getElementById('work-series-table').innerHTML = `<table class="work-table">
-    <thead><tr><th>День</th><th class="num">Всего</th><th class="num">Claude</th><th class="num">Codex</th><th class="num">Сессии</th><th class="num">PR merged</th><th class="num">PR брошено</th><th class="num">Коммиты</th></tr></thead>
+  document.getElementById('mm-series-table').innerHTML = `<table class="mm-data-table">
+    <thead><tr><th>День</th><th class="num">Всего</th><th class="num">Claude</th><th class="num">Codex</th><th class="num">Сессии</th><th class="num">PR merged</th><th class="num">Коммиты</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
 function renderWorkProjects(data) {
-  const host = document.getElementById('work-projects');
+  const host = document.getElementById('mm-projects');
   const projects = data.day.projects;
+  document.getElementById('mm-projects-count').textContent = data.day.project_count || '';
   if (!data.owner_view) {
-    host.innerHTML = '<p class="work-empty">Детали по проектам видны только владельцу.</p>';
+    host.innerHTML = `<p class="mm-empty">Проектов: ${data.day.project_count}. Названия видны только владельцу.</p>`;
     return;
   }
   if (!projects || !projects.length) {
-    host.innerHTML = '<p class="work-empty">В этот день сессий Claude и Codex не найдено.</p>';
+    host.innerHTML = '<p class="mm-empty">В этот день сессий Claude и Codex не найдено.</p>';
     return;
   }
-  const max = Math.max(1, ...projects.map(p => p.claude_minutes + p.codex_minutes));
-  host.innerHTML = `<table class="work-table">
-    <thead><tr><th>Проект</th><th class="num">Claude</th><th class="num">Codex</th><th class="num">Всего</th><th class="num">Сессии</th><th>Итог</th></tr></thead>
-    <tbody>${projects.map(p => {
-      const outcome = [
-        ...p.merged.map(pr => workPrLink(pr, 'merged')),
-        ...p.opened.filter(pr => !p.merged.some(m => m.number === pr.number)).map(pr => workPrLink(pr, 'open')),
-        ...p.branches.map(branch => `<span class="work-tag branch">${escapeHtml(branch)}</span>`),
-      ];
-      return `<tr>
-        <td><div class="project-name">${escapeHtml(p.project)}</div>${p.repo ? `<div class="muted">${escapeHtml(p.repo)}</div>` : ''}
-          <span class="work-share" aria-hidden="true"><span class="claude" style="width:${(p.claude_minutes / max) * 100}%"></span><span class="codex" style="width:${(p.codex_minutes / max) * 100}%"></span></span></td>
-        <td class="num">${escapeHtml(workMinutes(p.claude_minutes))}</td>
-        <td class="num">${escapeHtml(workMinutes(p.codex_minutes))}</td>
-        <td class="num"><strong>${escapeHtml(workMinutes(p.total_minutes))}</strong></td>
-        <td class="num">${p.sessions}<div class="muted">${p.prompts} промпт.</div></td>
-        <td>${outcome.length ? outcome.join('<br>') : '<span class="muted">без PR и коммитов в отдельной ветке</span>'}</td>
-      </tr>`;
-    }).join('')}</tbody></table>`;
+  const sessions = data.day.sessions_detail || [];
+  host.innerHTML = projects.map((p, index) => {
+    const dominant = p.claude_minutes >= p.codex_minutes ? 'claude' : 'codex';
+    const note = [
+      p.claude_minutes ? `Claude ${workMinutes(p.claude_minutes)}` : '',
+      p.codex_minutes ? `Codex ${workMinutes(p.codex_minutes)}` : '',
+      `${p.sessions} сесс.`,
+      p.merged.length ? `смёрджено ${p.merged.length}` : '',
+    ].filter(Boolean).join(' · ');
+    const own = sessions.filter(s => s.project === p.project);
+    const outcome = [
+      ...p.merged.map(pr => mmPrAction(pr, 'merged')),
+      ...p.opened.filter(pr => !p.merged.some(m => m.number === pr.number)).map(pr => mmPrAction(pr, 'open')),
+      ...p.branches.map(branch => `<span class="mm-chip">⑂ ${mmEsc(branch)}</span>`),
+    ];
+    return `<details class="mm-group-row"${index === 0 ? ' open' : ''}>
+      <summary>
+        <span class="mm-dot ${dominant}" aria-hidden="true"></span>
+        <span class="mm-group-main"><span class="mm-group-title">${mmEsc(p.project)}</span><span class="mm-group-note">${mmEsc(p.repo ? `${p.repo} · ${note}` : note)}</span></span>
+        <span class="mm-group-aside">${mmEsc(workMinutes(p.total_minutes))}<small>${p.prompts} промпт.</small></span>
+        <span class="mm-chevron" aria-hidden="true">›</span>
+      </summary>
+      <div class="mm-group-body">
+        <div class="mm-group-foot">${outcome.length ? outcome.join('') : '<span class="mm-chip">без PR и без отдельной ветки</span>'}</div>
+        <div class="mm-table-scroll"><table class="mm-data-table">
+          <thead><tr><th>Время</th><th>Инструмент</th><th>Тема</th><th class="num">Мин</th><th class="num">Промпты</th></tr></thead>
+          <tbody>${own.map(s => `<tr>
+            <td class="cell-date" data-label="Время">${mmEsc(mmTime(s.start))}–${mmEsc(mmTime(s.end))}</td>
+            <td data-label="Инструмент"><b>${s.tool === 'claude' ? 'Claude' : 'Codex'}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
+            <td data-label="Тема">${mmEsc(compactText(s.topic || '—', 140))}</td>
+            <td class="num" data-label="Мин">${s.active_minutes}</td>
+            <td class="num" data-label="Промпты">${s.prompts}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>
+    </details>`;
+  }).join('');
 }
 
-function workListItem(item) {
+function mmLooseRow(item, bucket) {
   const age = item.age_days ? `${item.age_days} дн` : 'меньше суток';
   if (item.kind === 'branch') {
     const tools = (item.tools || []).map(tool => tool === 'claude' ? 'Claude' : 'Codex').join(' + ');
-    return `<li><span class="work-tag branch">${escapeHtml(item.branch)}</span> <strong>${escapeHtml(item.project || item.repo)}</strong>
-      <div class="muted">Ветка без PR · ${escapeHtml(tools)} · ${escapeHtml(workMinutes(item.minutes))} работы · не трогал ${escapeHtml(age)}</div>
-      ${item.topic ? `<div class="muted">${escapeHtml(compactText(item.topic, 110))}</div>` : ''}</li>`;
+    return `<details class="mm-group-row">
+      <summary>
+        <span class="mm-dot ${bucket}" aria-hidden="true"></span>
+        <span class="mm-group-main"><span class="mm-group-title">⑂ ${mmEsc(item.branch)}</span><span class="mm-group-note">${mmEsc(`${item.project || item.repo} · ветка без PR · ${tools}`)}</span></span>
+        <span class="mm-group-aside">${mmEsc(age)}<small>не трогал</small></span>
+        <span class="mm-chevron" aria-hidden="true">›</span>
+      </summary>
+      <div class="mm-group-body"><table class="mm-data-table"><tbody>
+        <tr><td data-label="Репозиторий">${mmEsc(item.repo)}</td></tr>
+        <tr><td data-label="Работы">${mmEsc(workMinutes(item.minutes))} · последняя активность ${mmEsc(new Date(item.last_activity).toLocaleString('ru-RU'))}</td></tr>
+        ${item.topic ? `<tr><td data-label="Тема">${mmEsc(item.topic)}</td></tr>` : ''}
+      </tbody></table></div>
+    </details>`;
   }
-  const label = item.kind === 'pr_closed' ? 'PR закрыт без merge' : (item.kind === 'issue_open' ? 'Задача открыта' : 'PR открыт');
-  const cls = item.kind === 'pr_closed' ? 'closed' : 'open';
-  const when = item.kind === 'pr_closed' ? (item.age_days ? `закрыт ${age} назад` : 'закрыт сегодня') : `без движения ${age}`;
-  return `<li>${workPrLink(item, cls)}<div class="muted">${escapeHtml(label)}${item.draft ? ' · черновик' : ''} · ${escapeHtml(when)}</div></li>`;
+  const kind = item.kind === 'pr_closed' ? 'PR закрыт без merge' : (item.kind === 'issue_open' ? 'Задача открыта' : 'PR открыт');
+  const state = item.kind === 'pr_closed' ? 'closed' : 'open';
+  const when = item.kind === 'pr_closed' ? (item.age_days ? `${age} назад` : 'сегодня') : age;
+  return `<div class="mm-group-row"><div class="mm-group-row-static">
+      <span class="mm-dot ${bucket}" aria-hidden="true"></span>
+      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(compactText(item.title || '', 90))}</span><span class="mm-group-note">${mmEsc(`${item.repo}#${item.number} · ${kind}${item.draft ? ' · черновик' : ''}`)}</span></span>
+      <span class="mm-group-aside">${mmEsc(when)}<small>${item.kind === 'pr_closed' ? 'закрыт' : 'без движения'}</small></span>
+      ${mmPrAction(item, state)}
+    </div></div>`;
 }
 
-function renderWorkLists(data) {
-  document.getElementById('work-dropped-count').textContent = `· ${data.dropped_count}`;
-  document.getElementById('work-forgot-count').textContent = `· ${data.forgot_count}`;
-  const fill = (id, items, count, emptyText) => {
-    const host = document.getElementById(id);
-    if (!data.owner_view) {
-      host.innerHTML = `<li class="work-empty">${count} шт. Подробности видны только владельцу.</li>`;
-    } else if (!items || !items.length) {
-      host.innerHTML = `<li class="work-empty">${escapeHtml(emptyText)}</li>`;
-    } else {
-      host.innerHTML = items.map(workListItem).join('') + (count > items.length ? `<li class="work-empty">и ещё ${count - items.length}</li>` : '');
-    }
-  };
-  const githubOk = data.sources?.github?.ok;
-  fill('work-dropped', data.dropped, data.dropped_count, githubOk ? 'Ничего не брошено.' : 'GitHub ещё не собран, поэтому список может быть неполным.');
-  fill('work-forgot', data.forgot, data.forgot_count, githubOk ? 'Забытого нет.' : 'GitHub ещё не собран, поэтому список может быть неполным.');
-}
-
-function renderWorkSessions(data) {
-  const host = document.getElementById('work-sessions');
-  const sessions = data.day.sessions_detail;
-  if (!data.owner_view) {
-    host.innerHTML = `<p class="work-empty">${data.day.sessions} сессий. Подробности видны только владельцу.</p>`;
-    return;
-  }
-  if (!sessions || !sessions.length) {
-    host.innerHTML = '<p class="work-empty">Сессий нет.</p>';
-    return;
-  }
-  host.innerHTML = `<table class="work-table">
-    <thead><tr><th>Время</th><th>Инструмент</th><th>Проект</th><th class="num">Мин</th><th class="num">Промпты</th><th>Тема</th></tr></thead>
-    <tbody>${sessions.map(s => `<tr>
-      <td class="num">${escapeHtml(workTime(s.start))}–${escapeHtml(workTime(s.end))}</td>
-      <td><span class="work-tile-dot ${s.tool === 'claude' ? 'claude' : 'codex'}" aria-hidden="true"></span>${s.tool === 'claude' ? 'Claude' : 'Codex'}<div class="muted">${escapeHtml(s.machine || '')}</div></td>
-      <td>${escapeHtml(s.project || '')}${s.branch ? `<div class="muted">${escapeHtml(s.branch)}</div>` : ''}</td>
-      <td class="num">${s.active_minutes}</td>
-      <td class="num">${s.prompts}</td>
-      <td>${escapeHtml(compactText(s.topic || '—', 120))}</td>
-    </tr>`).join('')}</tbody></table>`;
-}
-
-function renderWorkSources(data) {
-  const machines = (data.sources?.machines || []).map(m => {
-    const tools = data.owner_view
-      ? ['claude', 'codex'].map(tool => `${tool === 'claude' ? 'Claude' : 'Codex'} ${m.sources?.[tool]?.ok ? '✓' : 'нет логов'}`).join(', ')
-      : '';
-    return `${m.machine}: ${workAgo(m.collected_at)}${tools ? ` (${tools})` : ''}`;
+function renderLoose(data) {
+  const host = document.getElementById('mm-loose');
+  if (!data) return;
+  document.getElementById('mm-loose-all').textContent = data.dropped_count + data.forgot_count;
+  document.getElementById('mm-loose-dropped').textContent = data.dropped_count;
+  document.getElementById('mm-loose-forgot').textContent = data.forgot_count;
+  document.querySelectorAll('#mm-loose-filter [data-filter]').forEach(button => {
+    button.setAttribute('aria-pressed', button.dataset.filter === mmLooseFilter ? 'true' : 'false');
   });
-  const github = data.sources?.github;
-  const githubText = github?.ok ? `GitHub: ${workAgo(github.collected_at)}` : 'GitHub: ещё не собран';
-  const error = github?.last_error ? ` · последняя попытка GitHub: ошибка ${github.last_error}` : '';
-  document.getElementById('work-sources').textContent =
-    `Источники · ${machines.length ? machines.join(' · ') : 'машины ещё не присылали данные'} · ${githubText}${error}. Облачные сессии claude.ai/code пока не учитываются.`;
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="mm-empty">Сбросил: ${data.dropped_count}, забыл: ${data.forgot_count}. Подробности видны только владельцу.</p>`;
+    return;
+  }
+  const items = [
+    ...(mmLooseFilter !== 'forgot' ? (data.dropped || []).map(item => mmLooseRow(item, 'dropped')) : []),
+    ...(mmLooseFilter !== 'dropped' ? (data.forgot || []).map(item => mmLooseRow(item, 'forgot')) : []),
+  ];
+  const githubOk = data.sources?.github?.ok;
+  host.innerHTML = items.length
+    ? items.join('')
+    : `<p class="mm-empty">${githubOk ? 'Здесь пусто: ничего не брошено и не забыто.' : 'GitHub ещё не собран, поэтому список может быть неполным.'}</p>`;
 }
 
-let workResizeTimer = null;
+function mmInfraRow(event) {
+  const time = mmTime(event.at);
+  if (event.category === 'pr') {
+    const url = mmGithubUrl(event.url);
+    const what = url ? `<a href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${mmEsc(event.subject)}</a>` : mmEsc(event.subject);
+    return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-pr" aria-hidden="true"></span> <b>Merge</b> ${what}<small>${mmEsc(event.detail || '')}</small></td><td data-label="Где">GitHub</td></tr>`;
+  }
+  if (event.category === 'agent') {
+    return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-agent" aria-hidden="true"></span> <b>${mmEsc(event.subject)}</b><small><code>${mmEsc(event.detail || '')}</code></small>${event.topic ? `<small>${mmEsc(compactText(event.topic, 100))}</small>` : ''}</td><td data-label="Где">${mmEsc(event.host || event.machine)}</td></tr>`;
+  }
+  const label = (infraData.categories || []).find(c => c.id === event.category)?.label || event.category;
+  const files = Array.isArray(event.files) && event.files.length ? `<small>${mmEsc(event.files.slice(0, 8).join(', '))}${event.files.length > 8 ? '…' : ''}</small>` : '';
+  const commits = event.category === 'repo' && event.to_head ? `<small>${mmEsc(`${event.branch || ''} · ${event.from_head} → ${event.to_head}${event.commits ? ` · коммитов: ${event.commits}` : ''}`)}</small>` : '';
+  return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-${mmEsc(event.category)}" aria-hidden="true"></span> <b>${mmEsc(label)}: ${mmEsc(event.subject)}</b><small>${mmEsc(event.detail || '')}</small>${commits}${files}</td><td data-label="Где">${mmEsc(event.machine)}</td></tr>`;
+}
+
+function renderInfra(data) {
+  const filterHost = document.getElementById('mm-infra-filter');
+  const host = document.getElementById('mm-infra');
+  if (!data || !data.ok) {
+    filterHost.innerHTML = '';
+    host.innerHTML = '<p class="mm-empty">Журнал изменений недоступен.</p>';
+    return;
+  }
+  document.getElementById('mm-infra-count').textContent = data.total;
+  const categories = (data.categories || []).filter(c => c.count > 0);
+  if (mmInfraFilter !== 'all' && !categories.some(c => c.id === mmInfraFilter)) mmInfraFilter = 'all';
+  filterHost.innerHTML = [`<button type="button" data-filter="all" aria-pressed="${mmInfraFilter === 'all'}">Все <span>${data.total}</span></button>`,
+    ...categories.map(c => `<button type="button" data-filter="${mmEsc(c.id)}" aria-pressed="${mmInfraFilter === c.id}">${mmEsc(c.label)} <span>${c.count}</span></button>`)].join('');
+  if (!data.owner_view) {
+    host.innerHTML = `<p class="mm-empty">Изменений за ${data.days} дней: ${data.total}. Сам журнал виден только владельцу.</p>`;
+    return;
+  }
+  const days = (data.timeline || []).map(day => ({
+    date: day.date,
+    events: day.events.filter(event => mmInfraFilter === 'all' || event.category === mmInfraFilter),
+  })).filter(day => day.events.length);
+  if (!days.length) {
+    host.innerHTML = `<p class="mm-empty">${data.state === 'empty' ? 'Журнал ещё пуст: сборщик изменений не запускался.' : `За ${data.days} дней таких изменений не было.`}</p>`;
+    return;
+  }
+  const todayIso = new Date().toLocaleDateString('sv-SE');
+  host.innerHTML = days.map((day, index) => {
+    const counts = {};
+    day.events.forEach(event => { counts[event.category] = (counts[event.category] || 0) + 1; });
+    const note = Object.entries(counts).map(([id, count]) => `${(data.categories.find(c => c.id === id) || {}).label || id} ${count}`).join(' · ');
+    const title = day.date === todayIso ? 'Сегодня' : `${mmDayShort(day.date)}, ${MM_WEEKDAYS[mmDate(day.date).getDay()]}`;
+    return `<details class="mm-group-row"${index === 0 ? ' open' : ''}>
+      <summary>
+        <span class="mm-group-main"><span class="mm-group-title">${mmEsc(title)}</span><span class="mm-group-note">${mmEsc(note)}</span></span>
+        <span class="mm-group-count">${day.events.length}</span>
+        <span class="mm-chevron" aria-hidden="true">›</span>
+      </summary>
+      <div class="mm-group-body"><div class="mm-table-scroll"><table class="mm-data-table mm-infra-table">
+        <colgroup><col class="mm-col-time"><col><col class="mm-col-where"></colgroup>
+        <thead><tr><th>Время</th><th>Что изменилось</th><th>Где</th></tr></thead>
+        <tbody>${day.events.map(mmInfraRow).join('')}</tbody>
+      </table></div></div>
+    </details>`;
+  }).join('') + (data.truncated ? '<p class="mm-section-note">Показаны последние 600 изменений.</p>' : '');
+}
+
+function mmRenderSources() {
+  const parts = [];
+  const machines = dailyWorkData?.sources?.machines || [];
+  if (machines.length) parts.push(`Логи: ${machines.map(m => `${m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
+  const github = dailyWorkData?.sources?.github;
+  if (github) parts.push(github.ok ? `GitHub ${mmAgo(github.collected_at)}` : 'GitHub ещё не собран');
+  const infraMachines = infraData?.machines || [];
+  if (infraMachines.length) parts.push(`Снимки: ${infraMachines.map(m => `${m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
+  parts.push('облачные сессии claude.ai/code не учитываются');
+  document.getElementById('mm-sources').textContent = parts.join(' · ');
+}
+
+let mmResizeTimer = null;
 window.addEventListener('resize', () => {
   if (!dailyWorkData || !document.getElementById('section-work')?.classList.contains('active')) return;
-  clearTimeout(workResizeTimer);
-  workResizeTimer = setTimeout(() => renderWorkChart(dailyWorkData), 150);
+  clearTimeout(mmResizeTimer);
+  mmResizeTimer = setTimeout(() => renderWorkChart(dailyWorkData), 150);
 });
-// ── End Daily Work ──
+// ── End MAIN MANAGER ──
 </script>
 
 </body>
