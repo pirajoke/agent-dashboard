@@ -418,7 +418,8 @@ class ProjectionTest(unittest.TestCase):
             "jarvis": {"lead": "Бот отвечает голосом", "you": ["Решили оставить голос"], "agents": ["Ответы стали быстрее"],
                        "next": [], "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
             "command-center": {"lead": "Появились итоги дня", "you": [], "agents": ["Итоги дня на сайте"],
-                               "next": ["Сохранить токен на Mac mini"], "deadlines": []},
+                               "next": ["Сохранить токен на Mac mini"],
+                               "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
         }, headline="Голос и итоги дня")
         paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
         self.assertEqual(paper["headline"], "Голос и итоги дня")
@@ -430,9 +431,19 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual(jarvis["next"], ["Проверить голос"])  # no new next steps: the latest known ones
         self.assertEqual(articles["command-center"]["next"], ["Сохранить токен на Mac mini"])
         self.assertEqual(paper["deadlines"], [
+            {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "command-center", "project": "Command Center"},
             {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "jarvis", "project": "JARVIS"},
             {"date": "2026-11-07", "what": "Продлить проверку цен", "project_id": "jarvis", "project": "JARVIS"},
-        ])  # past ones dropped, every summary in the window counts
+        ])  # past ones dropped, every summary in the window counts, same words in two projects kept apart
+
+    def test_newspaper_counts_a_day_with_only_a_closed_pr(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["prs"].append({"repo": "pirajoke/jarvis", "number": 141, "title": "Dropped", "url": "https://github.com/pirajoke/jarvis/pull/141",
+                              "state": "closed", "created_at": "2026-10-08T10:00:00Z", "updated_at": "2026-10-09T07:00:00Z",
+                              "closed_at": "2026-10-09T07:00:00Z", "merged_at": None})
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
+        self.assertEqual((paper["date"], [a["id"] for a in paper["articles"]]), ("2026-10-09", ["jarvis"]))
 
     def test_newspaper_is_owner_only(self):
         self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Бот отвечает голосом", "you": [], "agents": ["Быстрее"],
@@ -510,6 +521,8 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn('<div id="section-today" class="section active" lang="ru">', html)
         self.assertIn("new URLSearchParams({ days: '30', edition: '1' })", html)
         self.assertIn("function renderPaper()", html)
+        self.assertIn("day.prs_closed_unmerged", html)  # a closed-only day is a working day too
+        self.assertIn("if (request !== paperRequest) return;", html)  # the newest request wins
         for label in ("'Вы'", "'Агенты'", "'Дальше'", "'Сроки'", "'Ждёт вашего решения'", ">Остальные проекты<"):
             self.assertIn(label, html)
         # Without the owner token the newspaper shows only the day's numbers.

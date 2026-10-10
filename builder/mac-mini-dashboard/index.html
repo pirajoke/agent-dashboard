@@ -7452,7 +7452,8 @@ const NP_WEEKDAYS = ['воскресенье', 'понедельник', 'вто
 const NP_REFRESH_MS = 5 * 60 * 1000;
 let paperData = null;
 let paperDate = null; // a day the reader picked; null follows the newest day with work
-let paperLoading = false;
+let paperLoading = null; // the day being fetched ('' for the newest), to skip duplicate requests
+let paperRequest = 0;
 
 function npDayLine(iso) {
   const date = mmDate(iso);
@@ -7480,7 +7481,8 @@ function npDue(iso, today) {
 function npWorkDays(data) {
   const today = data.series[data.series.length - 1]?.date;
   return data.series
-    .filter(day => day.sessions || day.prs_merged || day.prs_opened || day.date === today || day.date === data.selected_date)
+    .filter(day => day.sessions || day.prs_merged || day.prs_opened || day.prs_closed_unmerged
+      || day.date === today || day.date === data.selected_date)
     .map(day => day.date);
 }
 
@@ -7637,23 +7639,26 @@ function renderPaper() {
 }
 
 async function loadPaper(date) {
-  if (paperLoading) return;
-  paperLoading = true;
+  // A newer request (an arrow click during a refresh) wins; only the latest one renders.
+  if (paperLoading === (date || '')) return;
+  paperLoading = date || '';
+  const request = ++paperRequest;
   const params = new URLSearchParams({ days: '30', edition: '1' });
   if (date) params.set('date', date);
   try {
     const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    if (request !== paperRequest) return;
     paperData = data;
     renderPaper();
   } catch (error) {
-    if (!paperData) {
+    if (request === paperRequest && !paperData) {
       document.getElementById('np-articles').innerHTML = '';
       npSetMeta('Не удалось получить газету с сервера Command Center. Ничего не показываю, чтобы не гадать.', true);
     }
   } finally {
-    paperLoading = false;
+    if (request === paperRequest) paperLoading = null;
   }
 }
 

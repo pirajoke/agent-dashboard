@@ -457,8 +457,8 @@ def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str
         for day in series_days:
             for deadline in (_details(summaries.get(day), product_id) or {}).get("deadlines", []):
                 if deadline["date"] >= today:
-                    deadlines[(deadline["date"], deadline["what"])] = {**deadline, "project_id": product_id,
-                                                                       "project": item["name"]}
+                    deadlines[(product_id, deadline["date"], deadline["what"])] = {**deadline, "project_id": product_id,
+                                                                                   "project": item["name"]}
         waiting = [_pr_view(pr) for pr in item["open_prs"] if not pr.get("draft")]
         base = {"id": product_id, "name": item["name"], "mascot": item["mascot"], "description": item.get("description"),
                 "waiting": waiting[:3], "waiting_count": len(waiting)}
@@ -531,7 +531,8 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
     series = [{"date": day, **_day_totals(by_day.get(day, []), gh_days[day])} for day in series_days]
     if edition and not selected:
         selected_day = next((day["date"] for day in reversed(series)
-                             if day["sessions"] or day["prs_merged"] or day["prs_opened"]), today.isoformat())
+                             if day["sessions"] or day["prs_merged"] or day["prs_opened"] or day["prs_closed_unmerged"]),
+                            today.isoformat())
     selected_sessions = by_day.get(selected_day, [])
     selected_gh = gh_days[selected_day]
     day_view: dict[str, Any] = {"date": selected_day, "is_today": selected_day == today.isoformat(),
