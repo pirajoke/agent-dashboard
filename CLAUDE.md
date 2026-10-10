@@ -64,6 +64,10 @@ To apply git-managed source to runtime first:
 cd ~/agent-dashboard && builder/deploy_to_scripts.sh
 ```
 
+## Auto-deploy
+
+After the first manual `deploy_to_scripts.sh`, merged code deploys by itself. `builder/auto_deploy.py` (launchd `com.pirajoke.dashboard-auto-deploy`, every 5 min, installed by `deploy_to_scripts.sh`) fetches `origin/main` and compares it with the last deployed commit in `~/.agent-bridge/auto-deploy/state.json`. When `builder/` changed and every GitHub check run on the new commit passed, it runs that commit's `deploy_to_scripts.sh` from a detached worktree (with `DASHBOARD_INSTALL_AUTO_DEPLOY=0`, so it never reloads itself), checks `http://127.0.0.1:7777/`, and on failure redeploys the previous commit. Commits that only touch generated files (`index.html`, `live-feed.json`) just move the marker. A commit with red CI or a failed deploy is not retried; the next commit is. History: `~/.agent-bridge/auto-deploy/deploys.jsonl`. No token is used; CI status comes from the public GitHub API.
+
 ## Module structure
 
 ```
