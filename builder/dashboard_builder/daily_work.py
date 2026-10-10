@@ -26,6 +26,7 @@ FORGOTTEN_AFTER = timedelta(days=7)
 BRANCH_LOOKBACK = timedelta(days=30)
 MAIN_BRANCHES = {"main", "master", "head", "develop", "dev", "trunk"}
 LIST_LIMIT = 12
+TODO_LIMIT = 8
 PROJECT_DAY_LIMIT = 30
 # Products as Command Center's Platforms tab shows them; the mascot is the
 # Platforms SVG symbol (cc-mascot-<mascot>). Sessions and PRs are matched by
@@ -147,6 +148,24 @@ def _bullets(summary: dict[str, Any] | None, product_id: str) -> list[str] | Non
     return clean or None
 
 
+def _details(summary: dict[str, Any] | None, product_id: str) -> dict[str, Any] | None:
+    """Lead, what Mark did, what agents did, next steps and deadlines (summaries schema 2)."""
+    entry = ((summary or {}).get("details") or {}).get(product_id)
+    if not isinstance(entry, dict):
+        return None
+
+    def lines(key: str) -> list[str]:
+        value = entry.get(key)
+        return [line.strip() for line in value if isinstance(line, str) and line.strip()] if isinstance(value, list) else []
+
+    deadlines = [{"date": item["date"], "what": item["what"].strip()} for item in entry.get("deadlines") or []
+                 if isinstance(item, dict) and isinstance(item.get("date"), str) and isinstance(item.get("what"), str)
+                 and re.fullmatch(r"\d{4}-\d{2}-\d{2}", item["date"]) and item["what"].strip()]
+    lead = entry.get("lead")
+    return {"lead": lead.strip() if isinstance(lead, str) and lead.strip() else None,
+            "you": lines("you"), "agents": lines("agents"), "next": lines("next"), "deadlines": deadlines}
+
+
 def _bucket_github(github: dict | None, tz) -> dict[str, dict[str, list]]:
     buckets: dict[str, dict[str, list]] = defaultdict(lambda: {"opened": [], "merged": [], "closed_unmerged": [], "commits": []})
     if not isinstance(github, dict) or not github.get("ok"):
@@ -189,6 +208,19 @@ def _day_totals(sessions: list[dict], gh: dict[str, list]) -> dict[str, Any]:
 
 def _pr_view(pr: dict) -> dict[str, Any]:
     return {key: pr.get(key) for key in ("repo", "number", "title", "url", "draft", "created_at", "updated_at", "merged_at", "closed_at")}
+
+
+def _issue_view(issue: dict) -> dict[str, Any]:
+    return {key: issue.get(key) for key in ("repo", "number", "title", "url", "updated_at")}
+
+
+def _latest_next(summaries: dict[str, dict[str, Any]] | None, product_id: str, days: list[str]) -> list[str]:
+    """Next steps from the newest summary of these days that named any."""
+    for day in reversed(days):
+        details = _details((summaries or {}).get(day), product_id)
+        if details and details["next"]:
+            return details["next"]
+    return []
 
 
 def _project_rows(sessions: list[dict], gh: dict[str, list]) -> list[dict[str, Any]]:
@@ -307,8 +339,17 @@ def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], gi
         for pr in github.get("prs") or []:
             if isinstance(pr, dict) and pr.get("state") == "open" and pr.get("repo") in repo_product:
                 open_prs[repo_product[pr["repo"]]].append(pr)
+    # Open GitHub issues are the project's to-do list (the vault routes tasks to the owning repo's issues).
+    open_issues: dict[str, list[dict]] = defaultdict(list)
+    if isinstance(github, dict) and github.get("ok"):
+        for issue in github.get("open_issues") or []:
+            repo = issue.get("repo") if isinstance(issue, dict) else None
+            product_id = repo_product.get(repo) or (product_for(None, repo)["id"] if repo else None)
+            if product_id in products:
+                open_issues[product_id].append(issue)
     for item in products.values():
         item["open_prs"] = sorted(open_prs.get(item["id"], []), key=lambda pr: pr.get("updated_at") or "", reverse=True)
+        item["open_issues"] = sorted(open_issues.get(item["id"], []), key=lambda issue: issue.get("updated_at") or "", reverse=True)
         item["loose"] = [entry_ for entry_ in loose if entry_.get("repo") in item["repos"]
                          or (entry_.get("project") and entry_.get("project") in item["projects"])]
     return products
@@ -395,6 +436,9 @@ def _project_detail(item: dict[str, Any], series_days: list[str],
             break
     detail["timeline"] = timeline
     detail["open_prs_list"] = [_pr_view(pr) for pr in item["open_prs"]]
+    detail["open_issues_list"] = [_issue_view(issue) for issue in item["open_issues"][:TODO_LIMIT]]
+    detail["open_issues_count"] = len(item["open_issues"])
+    detail["next_steps"] = _latest_next(summaries, item["id"], series_days)
     detail["loose_list"] = item["loose"][:LIST_LIMIT]
     return detail
 
@@ -416,12 +460,83 @@ def _day_summary(summary: dict[str, Any] | None, portfolio: dict[str, dict[str, 
     return {"headline": headline, "generated_at": summary.get("generated_at"), "projects": projects}
 
 
+def _has_activity(item: dict[str, Any], day: str) -> bool:
+    prs = item["prs_by_day"].get(day)
+    return bool(item["sessions_by_day"].get(day)) or bool(prs and any(prs.values()))
+
+
+def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str, dict[str, Any]],
+           summaries: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """The «Сегодня» newspaper for one day: an article per product that had work, the rest in brief.
+
+    Text comes only from the summaries Claude wrote from real activity; without one, an article
+    falls back to session titles and PR counts. Deadlines are only the dated ones in summaries.
+    """
+    summary = summaries.get(edition)
+    past = [day for day in series_days if day <= edition]
+    articles, quiet, deadlines = [], [], {}
+    for product_id, item in portfolio.items():
+        latest = next((details for details in (_details(summaries.get(day), product_id) for day in reversed(past)) if details), None)
+        # Next steps stay up until a later summary names new ones.
+        latest_next = _latest_next(summaries, product_id, past)
+        for day in series_days:
+            for deadline in (_details(summaries.get(day), product_id) or {}).get("deadlines", []):
+                if deadline["date"] >= today:
+                    deadlines[(product_id, deadline["date"], deadline["what"])] = {**deadline, "project_id": product_id,
+                                                                                   "project": item["name"]}
+        waiting = [_pr_view(pr) for pr in item["open_prs"] if not pr.get("draft")]
+        base = {"id": product_id, "name": item["name"], "mascot": item["mascot"], "description": item.get("description"),
+                "waiting": waiting[:3], "waiting_count": len(waiting),
+                "issues": [_issue_view(issue) for issue in item["open_issues"][:TODO_LIMIT]],
+                "issues_count": len(item["open_issues"])}
+        if _has_activity(item, edition):
+            records = item["sessions_by_day"].get(edition, [])
+            prs = item["prs_by_day"].get(edition) or {"merged": [], "opened": [], "closed_unmerged": []}
+            details = _details(summary, product_id) or {}
+            topics = list(dict.fromkeys(str(r["topic"]).strip() for r in records if isinstance(r.get("topic"), str) and r["topic"].strip()))
+            articles.append({
+                **base,
+                "minutes": _union_minutes(p for r in records for p in _session_intervals(r)),
+                "sessions": len(records),
+                "merged": [_pr_view(pr) for pr in prs["merged"]],
+                "opened": [_pr_view(pr) for pr in prs["opened"] if pr not in prs["merged"]],
+                "closed": [_pr_view(pr) for pr in prs["closed_unmerged"]],
+                "topics": topics[:4],
+                "written": bool(details),
+                "lead": details.get("lead"),
+                "you": details.get("you", []),
+                "agents": details.get("agents") or ([] if details else (_bullets(summary, product_id) or [])),
+                "next": details.get("next") or latest_next,
+                "deadlines": [d for d in details.get("deadlines", []) if d["date"] >= today],
+            })
+        else:
+            last_day = next((day for day in reversed(past) if _has_activity(item, day)), None)
+            if not last_day and not waiting and not item["open_issues"]:
+                continue
+            quiet.append({**base, "last_date": last_day, "lead": (latest or {}).get("lead"),
+                          "next": latest_next,
+                          "deadlines": [d for d in (latest or {}).get("deadlines", []) if d["date"] >= today]})
+    articles.sort(key=lambda a: (a["minutes"], len(a["merged"]), a["sessions"]), reverse=True)
+    quiet.sort(key=lambda q: q["last_date"] or "", reverse=True)
+    return {
+        "date": edition, "is_today": edition == today,
+        "headline": (summary or {}).get("day") if isinstance((summary or {}).get("day"), str) else None,
+        "written_at": (summary or {}).get("generated_at"),
+        "in_progress": bool((summary or {}).get("in_progress")),
+        "articles": articles, "quiet": quiet,
+        "deadlines": sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:8],
+    }
+
+
 def _age_days(moment: datetime | None, now: datetime) -> int | None:
     return None if moment is None else max(0, (now - moment).days)
 
 
 def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFAULT_DAYS,
-                    selected: str | None = None, owner: bool = False, project: str | None = None) -> dict[str, Any]:
+                    selected: str | None = None, owner: bool = False, project: str | None = None,
+                    edition: bool = False) -> dict[str, Any]:
+    """MAIN MANAGER payload. ``edition`` asks for the «Сегодня» newspaper: without a chosen
+    day it opens on the newest day with work (today once anything happened today)."""
     now = now or datetime.now(timezone.utc)
     tz = now.astimezone().tzinfo
     today = now.astimezone(tz).date()
@@ -442,6 +557,10 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
     gh_days = _bucket_github(github, tz)
 
     series = [{"date": day, **_day_totals(by_day.get(day, []), gh_days[day])} for day in series_days]
+    if edition and not selected:
+        selected_day = next((day["date"] for day in reversed(series)
+                             if day["sessions"] or day["prs_merged"] or day["prs_opened"] or day["prs_closed_unmerged"]),
+                            today.isoformat())
     selected_sessions = by_day.get(selected_day, [])
     selected_gh = gh_days[selected_day]
     day_view: dict[str, Any] = {"date": selected_day, "is_today": selected_day == today.isoformat(),
@@ -534,6 +653,8 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         payload["forgot"] = forgot[:LIST_LIMIT]
         payload["sources"] = sources
         payload["projects"] = summaries
+        if edition:
+            payload["paper"] = _paper(selected_day, today.isoformat(), series_days, portfolio, day_summaries)
         if project:
             payload["project"] = _project_detail(portfolio[project], series_days, day_summaries) if project in portfolio else None
     else:
