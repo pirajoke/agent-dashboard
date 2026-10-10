@@ -20,6 +20,7 @@ cp "$SRC_DIR/main_manager_status_publisher.py" "$SCRIPTS_DIR/main_manager_status
 cp "$SRC_DIR/daily_work_collector.py" "$SCRIPTS_DIR/daily_work_collector.py"
 cp "$SRC_DIR/infra_change_collector.py" "$SCRIPTS_DIR/infra_change_collector.py"
 cp "$SRC_DIR/daily_work_summarizer.py" "$SCRIPTS_DIR/daily_work_summarizer.py"
+cp "$SRC_DIR/auto_deploy.py" "$SCRIPTS_DIR/auto_deploy.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
 cp "$SRC_DIR/dashboard-assets/style.css" "$SCRIPTS_DIR/dashboard-assets/style.css"
@@ -39,7 +40,7 @@ chmod +x "$SCRIPTS_DIR/jarvis-pixel-agent-event"
 chmod +x "$LOCAL_BIN_DIR/mm-command-center-auth"
 
 cd "$SCRIPTS_DIR"
-python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manager_status_publisher.py daily_work_collector.py infra_change_collector.py daily_work_summarizer.py dashboard_builder/*.py
+python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manager_status_publisher.py daily_work_collector.py infra_change_collector.py daily_work_summarizer.py auto_deploy.py dashboard_builder/*.py
 python3 build-agent-dashboard.py
 
 if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]] && launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then
@@ -60,6 +61,26 @@ fi
 
 if [[ "${DASHBOARD_INSTALL_DAILY_WORK:-1}" == "1" ]]; then
   DAILY_WORK_INSTALL_DIR="$SCRIPTS_DIR" "$SRC_DIR/install_daily_work_collector.sh" --machine mac-mini --github --summaries
+fi
+
+# Record what is deployed now, before the agent starts (RunAtLoad), so the auto-deploy agent compares main against it.
+DEPLOYED_SHA="${AUTO_DEPLOY_DEPLOYED_SHA:-$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)}"
+if [[ -n "$DEPLOYED_SHA" ]]; then
+  python3 "$SRC_DIR/auto_deploy.py" --record "$DEPLOYED_SHA"
+fi
+
+# Merged code reaches the site by itself: the auto-deploy agent watches main.
+# It runs this script with DASHBOARD_INSTALL_AUTO_DEPLOY=0 so it never reloads itself mid-run.
+AUTO_DEPLOY_LABEL="com.pirajoke.dashboard-auto-deploy"
+AUTO_DEPLOY_PLIST="$HOME/Library/LaunchAgents/$AUTO_DEPLOY_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_AUTO_DEPLOY:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$AUTO_DEPLOY_LABEL"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$AUTO_DEPLOY_LABEL.plist.template" > "$AUTO_DEPLOY_PLIST.tmp"
+  plutil -lint "$AUTO_DEPLOY_PLIST.tmp" >/dev/null
+  mv "$AUTO_DEPLOY_PLIST.tmp" "$AUTO_DEPLOY_PLIST"
+  launchctl bootout "gui/$(id -u)/$AUTO_DEPLOY_LABEL" >/dev/null 2>&1 || true
+  launchctl bootstrap "gui/$(id -u)" "$AUTO_DEPLOY_PLIST"
 fi
 
 echo "Dashboard builder deployed to $SCRIPTS_DIR"
