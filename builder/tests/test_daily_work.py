@@ -460,6 +460,19 @@ class ProjectionTest(unittest.TestCase):
         public = json.dumps(work_projection(self.root, now=self.now, owner=False, edition=True, project="jarvis"), ensure_ascii=False)
         self.assertNotIn("Голос в машине", public)
 
+    def test_a_known_project_with_only_an_open_issue_keeps_its_todo(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["open_issues"] = [
+            {"repo": "pirajoke/accountable-os", "number": 4, "title": "Декларация URSSAF", "url": "https://github.com/pirajoke/accountable-os/issues/4",
+             "created_at": "2026-07-01T09:00:00Z", "updated_at": "2026-07-02T09:00:00Z"},
+        ]
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
+        accountable = next(q for q in paper["quiet"] if q["id"] == "accountable")
+        self.assertEqual(([i["number"] for i in accountable["issues"]], accountable["last_date"]), ([4], None))
+        project = work_projection(self.root, now=self.now, owner=True, project="accountable")["project"]
+        self.assertEqual((project["open_issues_count"], project["total_minutes"]), (1, 0))
+
     def test_newspaper_counts_a_day_with_only_a_closed_pr(self):
         github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
         github["prs"].append({"repo": "pirajoke/jarvis", "number": 141, "title": "Dropped", "url": "https://github.com/pirajoke/jarvis/pull/141",
