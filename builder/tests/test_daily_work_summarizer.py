@@ -40,6 +40,9 @@ if mode == "old" and "--no-session-persistence" in args:
 if mode == "ancient" and "--tools" in args:
     sys.stderr.write("error: unknown option '--tools'\\n")
     sys.exit(1)
+if mode == "leak":
+    sys.stderr.write('TypeError: Invalid header value "Bearer ' + os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "") + '"\\n')
+    sys.exit(1)
 if mode == "auth":
     print(json.dumps({"type": "result", "is_error": True, "result": "Failed to authenticate. API Error: 401"}))
     sys.exit(1)
@@ -246,6 +249,30 @@ class SummarizerTest(unittest.TestCase):
         self.assertEqual(self._calls()[-1]["token"], "sk-ant-oat01-test")
         self.assertEqual(self._calls()[-1]["scrub"], "1")  # hooks and other subprocesses don't get it
         self.assertNotIn("sk-ant-oat01-test", json.dumps(self._status()))
+
+    def test_token_pasted_with_line_breaks_is_joined(self):
+        self.token_file.write_text("sk-ant-oat01-" + "A" * 40 + "\n  " + "B" * 40 + " \n" + "C" * 9 + "\n", encoding="utf-8")
+        self.assertEqual(self._run("--max-days", "1"), 0)
+        self.assertEqual(self._calls()[-1]["token"], "sk-ant-oat01-" + "A" * 40 + "B" * 40 + "C" * 9)
+
+    def test_token_never_reaches_status_or_log(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "leak"
+        self.token_file.write_text("sk-ant-oat01-" + "A" * 40 + "\n" + "B" * 40 + "\n", encoding="utf-8")
+        with patch("sys.stdout") as stdout:
+            self.assertEqual(SUMMARIZER.main(["--out", str(self.root), "--claude", str(self.cli), "--days", "3"]), 1)
+        printed = "".join(str(call.args[0]) for call in stdout.write.call_args_list if call.args)
+        reason = self._status()["reason"]
+        self.assertTrue(reason.startswith("claude_failed: TypeError: Invalid header value"))
+        for text in (reason, printed, (self.root / "summaries" / "status.json").read_text(encoding="utf-8")):
+            self.assertNotIn("A" * 40, text)
+            self.assertNotIn("B" * 40, text)
+            self.assertNotIn("sk-ant-", text)
+
+    def test_redact_hides_a_token_split_across_lines(self):
+        self.token_file.write_text("sk-ant-oat01-" + "A" * 30 + "\n" + "B" * 30 + "\n" + "C" * 6, encoding="utf-8")
+        text = SUMMARIZER.redact("bad header: Bearer sk-ant-oat01-" + "A" * 30 + " " + "B" * 30 + " " + "C" * 6 + " end")
+        self.assertEqual(text, "bad header: [token] [token] [token] end")
+        self.assertEqual(SUMMARIZER.redact("Not logged in · Please run /login"), "Not logged in · Please run /login")
 
     def test_failed_sign_in_is_named_in_status(self):
         os.environ["FAKE_CLAUDE_MODE"] = "auth"
