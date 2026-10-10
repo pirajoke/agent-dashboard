@@ -31,10 +31,14 @@ import json, os, sys
 args, text = sys.argv[1:], sys.stdin.read()
 with open(os.environ["FAKE_CLAUDE_LOG"], "a", encoding="utf-8") as log:
     log.write(json.dumps({"args": args, "cwd": os.getcwd(), "stdin": text,
-                          "token": os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")}, ensure_ascii=False) + "\\n")
+                          "token": os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"),
+                          "scrub": os.environ.get("CLAUDE_CODE_SUBPROCESS_ENV_SCRUB")}, ensure_ascii=False) + "\\n")
 mode = os.environ.get("FAKE_CLAUDE_MODE", "ok")
 if mode == "old" and "--no-session-persistence" in args:
     sys.stderr.write("error: unknown option '--no-session-persistence'\\n")
+    sys.exit(1)
+if mode == "ancient" and "--tools" in args:
+    sys.stderr.write("error: unknown option '--tools'\\n")
     sys.exit(1)
 if mode == "auth":
     print(json.dumps({"type": "result", "is_error": True, "result": "Failed to authenticate. API Error: 401"}))
@@ -210,7 +214,18 @@ class SummarizerTest(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertNotIn("--system-prompt", calls[1]["args"])
         self.assertTrue(calls[1]["stdin"].startswith(SUMMARIZER.SYSTEM_PROMPT[:40]))
+        for call in calls:  # the retry keeps tools and MCP servers switched off
+            self.assertEqual(call["args"][call["args"].index("--tools") + 1], "")
+            self.assertIn("--strict-mcp-config", call["args"])
         self.assertIn("command-center", self._summary(self.yesterday)["projects"])
+
+    def test_cli_too_old_to_switch_tools_off_is_never_run_with_tools(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "ancient"
+        self.assertEqual(self._run(), 1)
+        self.assertTrue(self._status()["reason"].startswith("claude_too_old: error: unknown option '--tools'"))
+        calls = self._calls()
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(all("--tools" in call["args"] for call in calls))
 
     def test_claude_errors_are_reported_in_status(self):
         os.environ["FAKE_CLAUDE_MODE"] = "error"
@@ -229,6 +244,7 @@ class SummarizerTest(unittest.TestCase):
         self.token_file.write_text("sk-ant-oat01-test\n", encoding="utf-8")
         self.assertEqual(self._run("--max-days", "1"), 0)
         self.assertEqual(self._calls()[-1]["token"], "sk-ant-oat01-test")
+        self.assertEqual(self._calls()[-1]["scrub"], "1")  # hooks and other subprocesses don't get it
         self.assertNotIn("sk-ant-oat01-test", json.dumps(self._status()))
 
     def test_failed_sign_in_is_named_in_status(self):

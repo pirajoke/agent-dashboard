@@ -168,13 +168,15 @@ def token_env() -> dict[str, str]:
 
 def call_claude(cli: str, model: str, system: str, prompt: str, workdir: Path) -> str:
     """Run one headless Claude Code turn and return its text."""
-    env = {**os.environ, **token_env(),
+    # The prompt carries PR and session text, so no attempt may give the model
+    # tools or MCP servers, and hooks or other subprocesses Claude starts must
+    # not inherit the saved token.
+    env = {**os.environ, **token_env(), "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
            "PATH": os.pathsep.join([str(Path(cli).parent), os.environ.get("PATH", "")] + [str(d) for d in CLI_DIRS])}
     workdir.mkdir(parents=True, exist_ok=True)
-    base = [cli, "-p", "--output-format", "json", "--model", model]
-    # Older CLI versions lack some flags; retry with the bare minimum then.
-    attempts = [base + ["--system-prompt", system, "--tools", "", "--no-session-persistence"], base]
-    last_error = "claude_failed"
+    base = [cli, "-p", "--output-format", "json", "--model", model, "--tools", "", "--strict-mcp-config"]
+    # Older CLI versions lack some flags; retry without the optional ones then.
+    attempts = [base + ["--system-prompt", system, "--no-session-persistence"], base]
     for index, args in enumerate(attempts):
         text = prompt if index == 0 else system + "\n\n" + prompt
         try:
@@ -196,10 +198,12 @@ def call_claude(cli: str, model: str, system: str, prompt: str, workdir: Path) -
             raise RuntimeError("claude_auth_failed: " + detail)
         if failed:
             raise RuntimeError("claude_error: " + detail)
-        last_error = "claude_failed: " + detail
         if "unknown option" not in (result.stderr or "").lower():
-            break
-    raise RuntimeError(last_error)
+            raise RuntimeError("claude_failed: " + detail)
+        if index == len(attempts) - 1:
+            # Too old to switch tools off: never run it with tools instead.
+            raise RuntimeError("claude_too_old: " + detail)
+    raise RuntimeError("claude_failed")
 
 
 def parse_summary(text: str, ids: set[str]) -> dict[str, Any]:
