@@ -196,6 +196,24 @@ class SummarizerTest(unittest.TestCase):
         tomorrow = (datetime.now(timezone.utc).date() + timedelta(days=1)).isoformat()
         self.assertEqual(SUMMARIZER.due_days(self.root, SUMMARIZER.day_inputs(self.root, [today]), None, tomorrow), [today])
 
+    def test_a_date_added_to_a_pr_description_redoes_the_day(self):
+        product = {"id": "jarvis", "sessions": [], "prs_opened": [], "prs_closed_without_merge": [],
+                   "prs_merged": [{"title": "Voice", "body": "Голосовой режим."}]}
+        base = SUMMARIZER.input_hash([product])
+        reworded = {**product, "prs_merged": [{"title": "Voice", "body": "Голосовой режим, переписали текст."}]}
+        dated = {**product, "prs_merged": [{"title": "Voice", "body": "Голосовой режим до 7 ноября."}]}
+        self.assertEqual(SUMMARIZER.input_hash([reworded]), base)  # an edit without dates changes nothing
+        self.assertNotEqual(SUMMARIZER.input_hash([dated]), base)
+
+    def test_summaries_of_the_old_shape_are_redone(self):
+        day = (datetime.now(timezone.utc).date() - timedelta(days=1)).isoformat()
+        self._write_day(day, [self._session("jarvis", "pirajoke/jarvis", day, 0, 5)])
+        inputs = SUMMARIZER.day_inputs(self.root, [day])
+        path = self.root / "summaries" / f"{day}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"schema": 1, "input_hash": SUMMARIZER.input_hash(inputs[day])}), encoding="utf-8")
+        self.assertEqual(SUMMARIZER.due_days(self.root, inputs, None), [day])
+
     def test_runs_summarize_newest_days_first_and_only_once(self):
         self.assertEqual(self._run("--max-days", "1"), 0)
         self.assertEqual(self._status()["written"], [self.yesterday])

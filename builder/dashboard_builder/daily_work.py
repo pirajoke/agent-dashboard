@@ -500,6 +500,7 @@ def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str
                 "sessions": len(records),
                 "merged": [_pr_view(pr) for pr in prs["merged"]],
                 "opened": [_pr_view(pr) for pr in prs["opened"] if pr not in prs["merged"]],
+                "closed": [_pr_view(pr) for pr in prs["closed_unmerged"]],
                 "topics": topics[:4],
                 "written": bool(details),
                 "lead": details.get("lead"),

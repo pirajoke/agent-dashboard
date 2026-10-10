@@ -55,6 +55,10 @@ CLI_DIRS = [HOME / ".local" / "bin", HOME / ".claude" / "local", Path("/opt/home
 # the CLI as CLAUDE_CODE_OAUTH_TOKEN instead.
 TOKEN_FILE = Path(os.environ.get("DAILY_SUMMARY_TOKEN_FILE") or HOME / ".agent-bridge" / "claude_oauth_token")
 SECRET = re.compile(r"sk-ant-[A-Za-z0-9_-]+|\b[Bb]earer\s+\S+")
+# Dates in PR descriptions can become deadlines, so adding or changing one re-runs the day.
+DATE_HINT = re.compile(r"\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?\b"
+                       r"|\b\d{1,2}\s+(?:янв|фев|мар|апр|ма[йя]|июн|июл|авг|сен|окт|ноя|дек"
+                       r"|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*", re.IGNORECASE)
 AUTH_ERROR = re.compile(r"\b401\b|authenticat|not logged in|/login", re.IGNORECASE)
 
 SYSTEM_PROMPT = """Ты пишешь короткие новости дня для Марка, владельца нескольких продуктов: что за день \
@@ -148,8 +152,13 @@ def day_inputs(root: Path, days: list[str]) -> dict[str, list[dict[str, Any]]]:
 
 
 def input_hash(products: list[dict[str, Any]]) -> str:
-    # PR descriptions get edited after the fact; only titles and sessions decide a re-run.
-    stable = [{**product, **{kind: [pr.get("title") for pr in product[kind]]
+    # PR descriptions get edited after the fact; titles, sessions and the dates a
+    # description mentions (possible deadlines) decide a re-run, not every edit.
+    def pr_key(pr: dict[str, Any]) -> Any:
+        dates = sorted({match.group(0).lower() for match in DATE_HINT.finditer(pr.get("body") or "")})
+        return [pr.get("title"), dates] if dates else pr.get("title")
+
+    stable = [{**product, **{kind: [pr_key(pr) for pr in product[kind]]
                              for kind in ("prs_merged", "prs_opened", "prs_closed_without_merge")}}
               for product in products]
     return hashlib.sha256(json.dumps(stable, ensure_ascii=False, sort_keys=True).encode()).hexdigest()[:16]
@@ -317,7 +326,7 @@ def due_days(out: Path, inputs: dict[str, list[dict[str, Any]]], force: str | No
     for day in sorted(inputs, reverse=True):
         existing = _read_json(out / "summaries" / f"{day}.json")
         if (force == day or not isinstance(existing, dict) or existing.get("input_hash") != input_hash(inputs[day])
-                or (existing.get("in_progress") and day != today)):
+                or existing.get("schema") != SCHEMA or (existing.get("in_progress") and day != today)):
             due.append(day)
     return due
 

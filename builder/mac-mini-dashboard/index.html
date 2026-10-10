@@ -7481,6 +7481,7 @@ let paperData = null;
 let paperDate = null; // a day the reader picked; null follows the newest day with work
 let paperLoading = null; // the day being fetched ('' for the newest), to skip duplicate requests
 let paperRequest = 0;
+let paperShown = null; // paperDate of the edition on screen
 
 function npDayLine(iso) {
   const date = mmDate(iso);
@@ -7562,6 +7563,7 @@ function npArticle(item, day, today) {
   if (item.minutes) facts.push(`${workMinutes(item.minutes)} работы`);
   if (item.merged.length) facts.push(`слито PR: ${item.merged.length}`);
   if (item.opened.length) facts.push(`открыто PR: ${item.opened.length}`);
+  if (item.closed.length) facts.push(`закрыто без слияния: ${item.closed.length}`);
   const news = [];
   let lead = '';
   if (item.written) {
@@ -7572,8 +7574,11 @@ function npArticle(item, day, today) {
     // An older summary: what got done, without who did what.
     item.agents.forEach(text => news.push(['Сделано', '', text]));
   } else {
-    lead = '<p class="np-lead is-pending">Пересказ ещё не готов, пока только над чем работали.</p>';
+    lead = '<p class="np-lead is-pending">Пересказ ещё не готов, пока только факты.</p>';
     item.topics.forEach(text => news.push(['Работа', '', text]));
+    item.merged.forEach(pr => news.push(['Слито', '', pr.title || `PR #${pr.number ?? ''}`]));
+    item.opened.forEach(pr => news.push(['Открыт PR', '', pr.title || `PR #${pr.number ?? ''}`]));
+    item.closed.forEach(pr => news.push(['Закрыт', '', pr.title || `PR #${pr.number ?? ''}`]));
   }
   const list = news.length ? `<ul class="np-news">${news.map(([who, cls, text]) => `<li>${npLink(item.id, day,
     `<span class="np-who ${cls}">${mmEsc(who)}</span><span>${mmEsc(text)}</span><span class="np-go" aria-hidden="true">›</span>`, '')}</li>`).join('')}</ul>` : '';
@@ -7690,9 +7695,14 @@ async function loadPaper(date) {
     if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
     if (request !== paperRequest) return;
     paperData = data;
+    paperShown = date || null;
     renderPaper();
   } catch (error) {
-    if (request === paperRequest && !paperData) {
+    if (request === paperRequest && paperData) {
+      // Keep the edition on screen, say so, and let the arrows and refresh go on from it.
+      paperDate = paperShown;
+      npSetMeta('Не удалось получить новости с сервера Command Center, показываю последние полученные.', true);
+    } else if (request === paperRequest) {
       document.getElementById('np-articles').innerHTML = '';
       npSetMeta('Не удалось получить новости с сервера Command Center. Ничего не показываю, чтобы не гадать.', true);
     }

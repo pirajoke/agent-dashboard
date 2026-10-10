@@ -468,6 +468,7 @@ class ProjectionTest(unittest.TestCase):
         (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
         paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
         self.assertEqual((paper["date"], [a["id"] for a in paper["articles"]]), ("2026-10-09", ["jarvis"]))
+        self.assertEqual([pr["number"] for pr in paper["articles"][0]["closed"]], [141])  # the only fact that day
 
     def test_newspaper_is_owner_only(self):
         self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Бот отвечает голосом", "you": [], "agents": ["Быстрее"],
@@ -547,6 +548,7 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn("function renderPaper()", html)
         self.assertIn("day.prs_closed_unmerged", html)  # a closed-only day is a working day too
         self.assertIn("if (request !== paperRequest) return;", html)  # the newest request wins
+        self.assertIn("paperDate = paperShown;", html)  # a failed day keeps the edition on screen
         for label in ("'Вы'", "'Агенты'", "'Следующие шаги'", "'Ждёт вашего решения'", "'Задачи на GitHub'",
                       "Задачи проекта", ">Остальные проекты<"):
             self.assertIn(label, html)
