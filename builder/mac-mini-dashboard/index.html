@@ -3225,6 +3225,103 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-chevron, .mm-project-card, .mm-project-art svg { transition: none; }
   .mm-project-card:hover, .mm-project-card:hover .mm-project-art svg { transform: none; }
 }
+
+/* «Сегодня»: the newspaper, first screen. Base Command Center look, serif masthead. */
+#section-today { --np-serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif; }
+.machines-stats { justify-content: flex-start; margin-bottom: 20px; }
+.np { max-width: 1040px; margin: 0 auto; }
+.np-masthead { text-align: center; padding-bottom: 20px; margin-bottom: 22px; border-bottom: 3px double var(--text); }
+.np-kicker { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--text2); }
+.np-dayline { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 10px; padding: 6px 0; font-size: 14px; color: var(--text2); border-top: 1px solid var(--border2); border-bottom: 1px solid var(--border2); }
+.np-dayline span { min-width: 0; }
+.np-dayline button { display: grid; place-items: center; flex: none; width: 36px; height: 36px; font-size: 20px; line-height: 1; color: var(--text); background: var(--card); border: 1px solid var(--border2); border-radius: 50%; cursor: pointer; }
+.np-dayline button:hover:not(:disabled) { border-color: var(--accent); }
+.np-dayline button:disabled { opacity: .35; cursor: default; }
+.np-dayline button:focus-visible, .np a:focus-visible { outline: 3px solid rgba(234,179,8,0.45); outline-offset: 2px; }
+.np-title { margin-top: 14px; font-family: var(--np-serif); font-size: 56px; font-weight: 700; line-height: 1.05; letter-spacing: -.01em; }
+.np-headline { max-width: 760px; margin: 12px auto 0; font-family: var(--np-serif); font-size: 21px; line-height: 1.4; }
+.np-meta { max-width: 760px; margin: 12px auto 0; font-size: 13px; line-height: 1.5; color: var(--text2); }
+.np-meta.is-warn { color: #9A5B00; }
+.np [hidden] { display: none !important; }
+.np-deadlines { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; margin-bottom: 22px; padding: 12px 16px; background: var(--accent-bg); border: 1px solid rgba(234,179,8,0.32); border-radius: var(--radius-sm); }
+.np-deadlines h3 { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #7A5A00; }
+.np-deadlines ul { display: flex; flex-wrap: wrap; gap: 6px 18px; list-style: none; }
+.np-deadlines li { font-size: 14px; line-height: 1.45; }
+.np-deadlines li b { font-weight: 700; }
+.np-deadlines li small { font-size: 12px; color: var(--text2); }
+.np-articles { display: grid; gap: 18px; }
+.np-article { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 22px; padding: 22px 24px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+.np-art { display: grid; place-items: center; width: 112px; height: 112px; background: var(--np-tint, var(--bg2)); border-radius: 14px; }
+.np-art svg { width: 92px; height: 92px; }
+.np-art.is-small { width: 44px; height: 44px; border-radius: 10px; }
+.np-art.is-small svg { width: 38px; height: 38px; }
+.np-initials { font: 700 28px/1 var(--np-serif); color: var(--text2); }
+.np-art.is-small .np-initials { font-size: 15px; }
+.np-art.tint-command-center { --np-tint: var(--accent-bg); }
+.np-art.tint-financial { --np-tint: #FEF3C7; }
+.np-art.tint-mydictionary { --np-tint: var(--blue-bg); }
+.np-art.tint-health { --np-tint: var(--red-bg); }
+.np-art.tint-ai-singularity { --np-tint: #F5F3FF; }
+.np-art.tint-context-news { --np-tint: var(--orange-bg); }
+.np-art.tint-accountable { --np-tint: var(--green-bg); }
+.np-art.tint-jarvis { --np-tint: #F1F5F9; }
+.np-body { min-width: 0; }
+.np-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.np-head h3 { font-family: var(--np-serif); font-size: 27px; font-weight: 700; line-height: 1.15; }
+.np-head h3 a { color: inherit; text-decoration: none; }
+.np-head h3 a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.np-facts { font-size: 13px; color: var(--text2); }
+.np-facts span { white-space: nowrap; }
+.np-desc { margin-top: 3px; font-size: 13px; line-height: 1.45; color: var(--text2); }
+.np-lead { margin-top: 12px; font-family: var(--np-serif); font-size: 19px; line-height: 1.45; }
+.np-lead.is-pending { font-family: inherit; font-size: 14px; font-style: italic; color: var(--text2); }
+.np-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 22px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.np-cols.is-single { grid-template-columns: minmax(0, 1fr); }
+.np-block h4 { margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text2); }
+.np-block ul { display: grid; gap: 6px; list-style: none; }
+.np-block li { position: relative; padding-left: 16px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.np-block li::before { content: ''; position: absolute; top: .6em; left: 2px; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+.np-block.is-next li::before { content: '→'; top: 0; left: 0; width: auto; height: auto; color: var(--text2); background: none; }
+.np-block.is-due li::before { background: var(--orange); }
+.np-block.is-waiting li::before { background: var(--blue); }
+.np-block a { color: var(--text); text-decoration: underline; text-decoration-color: var(--border2); text-underline-offset: 3px; }
+.np-block a:hover { text-decoration-color: var(--accent); }
+.np-block small { color: var(--text2); }
+.np-foot { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 22px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.np-code { margin-top: 12px; font-size: 13px; color: var(--text2); }
+.np-code summary { width: fit-content; padding: 6px 0; cursor: pointer; }
+.np-code ul { margin-top: 4px; padding-left: 18px; display: grid; gap: 4px; }
+.np-code a { color: var(--text2); }
+.np-more { display: inline-flex; align-items: center; min-height: 32px; margin-top: 10px; font-size: 13px; font-weight: 600; color: #8A6500; text-decoration: none; }
+.np-more:hover { text-decoration: underline; }
+.np-empty { padding: 28px 24px; text-align: center; font-size: 15px; line-height: 1.5; color: var(--text2); background: var(--card); border: 1px dashed var(--border2); border-radius: var(--radius); }
+.np-empty b { display: block; margin-bottom: 4px; font-family: var(--np-serif); font-size: 21px; color: var(--text); }
+.np-quiet { margin-top: 30px; }
+.np-quiet h3 { padding-bottom: 8px; font-family: var(--np-serif); font-size: 22px; border-bottom: 1px solid var(--text); }
+.np-quiet ul { list-style: none; }
+.np-quiet-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); }
+.np-quiet-row:hover { background: var(--bg2); }
+.np-quiet-row b { font-size: 15px; font-weight: 600; }
+.np-quiet-row p { margin-top: 2px; font-size: 13px; line-height: 1.45; color: var(--text2); overflow-wrap: anywhere; }
+.np-quiet-when { font-size: 12px; text-align: right; color: var(--text2); }
+.np-quiet-when .np-chip { display: inline-block; margin-top: 4px; padding: 2px 8px; font-weight: 600; color: #1D4ED8; background: var(--blue-bg); border-radius: 6px; white-space: nowrap; }
+@media (max-width: 600px) {
+  .cc-main-nav .nav-pill:first-child { grid-column: 1 / -1; }
+  .np-masthead { padding-bottom: 16px; margin-bottom: 16px; }
+  .np-dayline { gap: 10px; font-size: 13px; }
+  .np-title { font-size: 40px; }
+  .np-headline { font-size: 18px; }
+  .np-article { display: flow-root; padding: 16px; }
+  .np-article > .np-art { float: left; width: 56px; height: 56px; margin: 0 12px 6px 0; border-radius: 12px; }
+  .np-article > .np-art svg { width: 48px; height: 48px; }
+  .np-article > .np-art .np-initials { font-size: 18px; }
+  .np-head h3 { font-size: 22px; }
+  .np-lead { clear: both; padding-top: 4px; font-size: 17px; }
+  .np-cols, .np-foot, .np-code { clear: both; }
+  .np-cols { grid-template-columns: minmax(0, 1fr); }
+  .np-quiet-row { grid-template-columns: 44px minmax(0, 1fr); }
+  .np-quiet-when { grid-column: 2; text-align: left; }
+}
 </style>
 </head>
 <body>
@@ -3369,6 +3466,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <symbol id="cc-icon-machines" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="cc-icon-today" viewBox="0 0 24 24"><path d="M5 5h11v14H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Zm11 4h3a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h5M8 12.5h5M8 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
@@ -3382,25 +3480,42 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         <div class="subtitle" id="header-subtitle"></div>
       </div>
     </div>
-    <div class="header-stats">
-      <div class="stat-box">
-        <div class="stat-value" id="stat-services">-</div>
-        <div class="stat-label">Services</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-value" id="stat-hooks">5</div>
-        <div class="stat-label">Hooks</div>
-      </div>
-    </div>
   </div>
 
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
-    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Machines</button>
-    <button class="nav-pill active" type="button" aria-controls="section-agents" aria-pressed="true" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
+    <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span> Сегодня</button>
     <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span> MAIN MANAGER <span class="pill-badge">день</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Техника</button>
   </nav>
+
+  <!-- ═══════════════ СЕГОДНЯ: газета ═══════════════ -->
+  <div id="section-today" class="section active" lang="ru">
+    <article class="np" aria-labelledby="np-title">
+      <header class="np-masthead">
+        <div class="np-kicker">Газета Command Center</div>
+        <div class="np-dayline">
+          <button type="button" id="np-prev" aria-label="Предыдущий рабочий день" disabled>‹</button>
+          <span id="np-date">—</span>
+          <button type="button" id="np-next" aria-label="Следующий рабочий день" disabled>›</button>
+        </div>
+        <h2 class="np-title" id="np-title">Сегодня</h2>
+        <p class="np-headline" id="np-headline" hidden></p>
+        <p class="np-meta" id="np-meta" role="status" aria-live="polite">Загружаю газету…</p>
+      </header>
+      <section class="np-deadlines" id="np-deadlines" aria-labelledby="np-deadlines-title" hidden>
+        <h3 id="np-deadlines-title">Сроки</h3>
+        <ul id="np-deadline-list"></ul>
+      </section>
+      <div class="np-articles" id="np-articles"></div>
+      <section class="np-quiet" id="np-quiet" aria-labelledby="np-quiet-title" hidden>
+        <h3 id="np-quiet-title">Остальные проекты</h3>
+        <ul id="np-quiet-list"></ul>
+      </section>
+    </article>
+  </div>
 
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
   <section id="section-platforms" class="section" aria-labelledby="platforms-title">
@@ -3601,7 +3716,17 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     </div>
   </section>
 
-  <section id="section-machines" class="section" aria-label="Machines">
+  <section id="section-machines" class="section" aria-label="Техника">
+    <div class="header-stats machines-stats">
+      <div class="stat-box">
+        <div class="stat-value" id="stat-services">-</div>
+        <div class="stat-label">Services</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-value" id="stat-hooks">5</div>
+        <div class="stat-label">Hooks</div>
+      </div>
+    </div>
     <nav class="nav-pills cc-machine-nav" aria-label="Computers">
     <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
       <span class="pill-icon">🖥</span> Mac Mini
@@ -3816,7 +3941,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   </div>
 
   <!-- ═══════════════ AGENTS ═══════════════ -->
-  <div id="section-agents" class="section active">
+  <div id="section-agents" class="section">
     <div class="cc-subnav" aria-label="Agents views">
       <button type="button" aria-controls="agents-campus" aria-pressed="true" onclick="showAgentsView('campus')">Кампус отделов</button>
       <button type="button" aria-controls="agents-decisions" aria-pressed="false" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
@@ -4529,10 +4654,11 @@ function showSection(name) {
   if (name === 'logs' && !currentLogService) loadLogTabs();
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
+  if (name === 'today') setTimeout(() => loadPaper(paperDate), 0);
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work'].includes(INITIAL_SECTION)) {
+if (['today', 'mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 }
 
@@ -6660,7 +6786,7 @@ function mmBullets(bullets) {
   return `<ul class="mm-bullets">${bullets.map(text => `<li>${mmEsc(text)}</li>`).join('')}</ul>`;
 }
 
-function mmSummaryPending(data) {
+function mmSummaryPending(data, subject = 'Итог этого дня') {
   const status = data.summaries_status;
   if (status && status.ok === false) {
     const reason = String(status.reason || '');
@@ -6668,7 +6794,7 @@ function mmSummaryPending(data) {
       : reason.startsWith('claude_auth_failed') ? 'Claude на Mac mini не вошёл в аккаунт'
       : reason.startsWith('claude_too_old') ? 'Claude Code на Mac mini устарел, его нужно обновить'
       : 'Claude не ответил';
-    return `Итог этого дня ещё не готов: последняя попытка не удалась (${why}). Повтор каждые 3 часа.`;
+    return `${subject} ещё не готов: последняя попытка не удалась (${why}). Повтор каждые 3 часа.`;
   }
   return 'Итог этого дня ещё не готов. Его пишет Claude на Mac mini, проверка каждые 3 часа.';
 }
@@ -7318,6 +7444,247 @@ window.addEventListener('resize', () => {
   mmResizeTimer = setTimeout(mmRedrawCharts, 150);
 });
 // ── End MAIN MANAGER ──
+// ── «Сегодня»: newspaper ──
+// One page per day: what happened in each product, written by Claude on the Mac mini from real
+// activity (sessions, asks, merged PRs). Owner only; others see just the day's numbers.
+const NP_MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const NP_WEEKDAYS = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+const NP_REFRESH_MS = 5 * 60 * 1000;
+let paperData = null;
+let paperDate = null; // a day the reader picked; null follows the newest day with work
+let paperLoading = false;
+
+function npDayLine(iso) {
+  const date = mmDate(iso);
+  return `${NP_WEEKDAYS[date.getDay()]}, ${date.getDate()} ${NP_MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+function npDayName(iso, series) {
+  const last = series[series.length - 1]?.date;
+  const prev = series[series.length - 2]?.date;
+  if (iso === last) return 'Сегодня';
+  if (iso === prev) return 'Вчера';
+  const date = mmDate(iso);
+  return `${date.getDate()} ${NP_MONTHS[date.getMonth()]}`;
+}
+
+function npDue(iso, today) {
+  const days = Math.round((mmDate(iso) - mmDate(today)) / 86400000);
+  const date = mmDate(iso);
+  const when = `${date.getDate()} ${NP_MONTHS[date.getMonth()]}`;
+  if (days <= 0) return `${when}, сегодня`;
+  if (days === 1) return `${when}, завтра`;
+  return `${when}, через ${days} дн`;
+}
+
+function npWorkDays(data) {
+  const today = data.series[data.series.length - 1]?.date;
+  return data.series
+    .filter(day => day.sessions || day.prs_merged || day.prs_opened || day.date === today || day.date === data.selected_date)
+    .map(day => day.date);
+}
+
+function npArt(item, small) {
+  const tint = MM_TINTS.has(item.id) ? item.id : 'other';
+  const inner = item.mascot
+    ? `<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-${mmEsc(item.mascot)}"/></svg>`
+    : `<span class="np-initials">${mmEsc(mmInitials(item.name))}</span>`;
+  return `<span class="np-art tint-${tint}${small ? ' is-small' : ''}" aria-hidden="true">${inner}</span>`;
+}
+
+function npList(items) {
+  return `<ul>${items.map(text => `<li>${mmEsc(text)}</li>`).join('')}</ul>`;
+}
+
+function npBlock(title, body, cls = '') {
+  return `<div class="np-block ${cls}"><h4>${mmEsc(title)}</h4>${body}</div>`;
+}
+
+function npPrLink(pr) {
+  const title = mmEsc(compactText(pr.title || `PR #${pr.number ?? ''}`, 90));
+  const url = mmGithubUrl(pr.url);
+  return url ? `<a href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${title}</a>` : title;
+}
+
+function npProjectLink(id, text, cls) {
+  return `<a class="${cls}" href="?tab=work&amp;project=${encodeURIComponent(id)}" data-project="${mmEsc(id)}">${text}</a>`;
+}
+
+function npArticle(item, today) {
+  const facts = [];
+  if (item.minutes) facts.push(`${workMinutes(item.minutes)} работы`);
+  if (item.merged.length) facts.push(`слито PR: ${item.merged.length}`);
+  if (item.opened.length) facts.push(`открыто PR: ${item.opened.length}`);
+  const columns = [];
+  let lead;
+  if (item.written) {
+    lead = item.lead ? `<p class="np-lead">${mmEsc(item.lead)}</p>` : '';
+    if (item.you.length) columns.push(npBlock('Вы', npList(item.you)));
+    if (item.agents.length) columns.push(npBlock('Агенты', npList(item.agents)));
+  } else if (item.agents.length) {
+    // An older summary: one list of what got done, without who did what.
+    lead = '';
+    columns.push(npBlock('Что сделано', npList(item.agents)));
+  } else {
+    lead = '<p class="np-lead is-pending">Пересказ ещё не готов, пока только факты.</p>';
+    if (item.topics.length) columns.push(npBlock('Над чем работали', npList(item.topics)));
+  }
+  const foot = [];
+  if (item.next.length) foot.push(npBlock('Дальше', npList(item.next), 'is-next'));
+  if (item.deadlines.length) {
+    foot.push(npBlock('Сроки', `<ul>${item.deadlines.map(d => `<li><b>${mmEsc(npDue(d.date, today))}</b>: ${mmEsc(d.what)}</li>`).join('')}</ul>`, 'is-due'));
+  }
+  if (item.waiting_count) {
+    const more = item.waiting_count > item.waiting.length ? `<li><small>и ещё ${item.waiting_count - item.waiting.length}</small></li>` : '';
+    foot.push(npBlock('Ждёт вашего решения', `<ul>${item.waiting.map(pr => `<li>${npPrLink(pr)}</li>`).join('')}${more}</ul>`, 'is-waiting'));
+  }
+  const code = [...item.merged, ...item.opened];
+  return `
+    <article class="np-article" data-project="${mmEsc(item.id)}">
+      ${npArt(item)}
+      <div class="np-body">
+        <header class="np-head">
+          <h3>${npProjectLink(item.id, mmEsc(item.name), 'np-name')}</h3>
+          ${facts.length ? `<span class="np-facts">${facts.map(fact => `<span>${mmEsc(fact)}</span>`).join(' · ')}</span>` : ''}
+        </header>
+        ${item.description ? `<p class="np-desc">${mmEsc(item.description)}</p>` : ''}
+        ${lead}
+        ${columns.length ? `<div class="np-cols${columns.length === 1 ? ' is-single' : ''}">${columns.join('')}</div>` : ''}
+        ${foot.length ? `<div class="np-foot">${foot.join('')}</div>` : ''}
+        ${code.length ? `<details class="np-code"><summary>Изменения в коде: ${code.length}</summary><ul>${code.map(pr => `<li>${npPrLink(pr)}</li>`).join('')}</ul></details>` : ''}
+        ${npProjectLink(item.id, 'Вся история проекта →', 'np-more')}
+      </div>
+    </article>`;
+}
+
+function npQuietRow(item, series) {
+  const when = item.last_date ? `работа ${npDayName(item.last_date, series).toLowerCase()}` : 'за 30 дней не трогали';
+  const line = item.next.length ? `Дальше: ${item.next[0]}` : (item.lead || item.description || '');
+  const chip = item.waiting_count ? `<br><span class="np-chip">ждёт решения: ${item.waiting_count}</span>` : '';
+  return `<li>${npProjectLink(item.id, `
+    ${npArt(item, true)}
+    <span><b>${mmEsc(item.name)}</b>${line ? `<p>${mmEsc(line)}</p>` : ''}</span>
+    <span class="np-quiet-when">${mmEsc(when)}${chip}</span>`, 'np-quiet-row')}</li>`;
+}
+
+function npMeta(data, paper) {
+  const parts = [];
+  let warn = false;
+  if (!paperDate && !paper.is_today) parts.push('Сегодня работы ещё не было, это выпуск за последний рабочий день.');
+  if (paper.written_at) {
+    parts.push(`Пересказ написал Claude ${mmAgo(paper.written_at)}${paper.in_progress ? ', день ещё идёт и он допишет' : ''}.`);
+  } else if (paper.articles.length) {
+    const status = data.summaries_status;
+    warn = Boolean(status && status.ok === false);
+    parts.push(warn ? mmSummaryPending(data, 'Пересказ дня') : 'Пересказ пишет Claude на Mac mini, проверка каждые 3 часа. Пока показываю факты.');
+  }
+  if (data.state === 'stale') {
+    warn = true;
+    parts.push(`Данные устарели: последний сбор ${mmAgo(data.collected_at)}.`);
+  } else if (data.collected_at) {
+    parts.push(`Данные обновлены ${mmAgo(data.collected_at)}.`);
+  }
+  return { text: parts.join(' '), warn };
+}
+
+function npSetMeta(text, warn) {
+  const meta = document.getElementById('np-meta');
+  meta.textContent = text;
+  meta.classList.toggle('is-warn', Boolean(warn));
+}
+
+function renderPaper() {
+  const data = paperData;
+  const days = npWorkDays(data);
+  const index = days.indexOf(data.selected_date);
+  document.getElementById('np-date').textContent = npDayLine(data.selected_date);
+  document.getElementById('np-title').textContent = npDayName(data.selected_date, data.series);
+  document.getElementById('np-prev').disabled = index <= 0;
+  document.getElementById('np-next').disabled = index < 0 || index >= days.length - 1;
+  const headline = document.getElementById('np-headline');
+  const articles = document.getElementById('np-articles');
+  const deadlines = document.getElementById('np-deadlines');
+  const quiet = document.getElementById('np-quiet');
+  const paper = data.paper;
+  if (!data.owner_view || !paper) {
+    const day = data.day;
+    headline.hidden = true;
+    deadlines.hidden = true;
+    quiet.hidden = true;
+    npSetMeta(data.state === 'stale' ? `Данные устарели: последний сбор ${mmAgo(data.collected_at)}.` : '', data.state === 'stale');
+    articles.innerHTML = `<div class="np-empty"><b>Газету видит только владелец</b>
+      ${mmEsc(`За день: ${workMinutes(day.total_minutes)} работы, проектов: ${day.project_count}, слито PR: ${day.prs_merged}.`)}
+      <br>Откройте Command Center со своей ссылкой входа (mm-command-center-auth).</div>`;
+    return;
+  }
+  headline.hidden = !paper.headline;
+  headline.textContent = paper.headline || '';
+  const meta = npMeta(data, paper);
+  npSetMeta(meta.text, meta.warn);
+  const today = data.series[data.series.length - 1]?.date || paper.date;
+  deadlines.hidden = !paper.deadlines.length;
+  document.getElementById('np-deadline-list').innerHTML = paper.deadlines.map(d => `
+    <li><b>${mmEsc(npDue(d.date, today))}</b> · ${mmEsc(d.project)}: ${mmEsc(d.what)}</li>`).join('');
+  if (paper.articles.length) {
+    articles.innerHTML = paper.articles.map(item => npArticle(item, today)).join('');
+  } else if (data.state === 'empty') {
+    articles.innerHTML = '<div class="np-empty"><b>Газета пока пустая</b>Сборщик работы ещё не присылал данные с компьютеров.</div>';
+  } else {
+    articles.innerHTML = `<div class="np-empty"><b>${paper.is_today ? 'Сегодня работы ещё не было' : 'В этот день работы не было'}</b>Ни сессий с Claude и Codex, ни PR.</div>`;
+  }
+  quiet.hidden = !paper.quiet.length;
+  document.getElementById('np-quiet-list').innerHTML = paper.quiet.map(item => npQuietRow(item, data.series)).join('');
+}
+
+async function loadPaper(date) {
+  if (paperLoading) return;
+  paperLoading = true;
+  const params = new URLSearchParams({ days: '30', edition: '1' });
+  if (date) params.set('date', date);
+  try {
+    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    paperData = data;
+    renderPaper();
+  } catch (error) {
+    if (!paperData) {
+      document.getElementById('np-articles').innerHTML = '';
+      npSetMeta('Не удалось получить газету с сервера Command Center. Ничего не показываю, чтобы не гадать.', true);
+    }
+  } finally {
+    paperLoading = false;
+  }
+}
+
+function shiftPaperDay(step) {
+  if (!paperData) return;
+  const days = npWorkDays(paperData);
+  const index = days.indexOf(paperData.selected_date) + step;
+  if (index < 0 || index >= days.length) return;
+  paperDate = days[index];
+  loadPaper(paperDate);
+}
+
+document.getElementById('np-prev').addEventListener('click', () => shiftPaperDay(-1));
+document.getElementById('np-next').addEventListener('click', () => shiftPaperDay(1));
+document.getElementById('section-today').addEventListener('click', event => {
+  const link = event.target.closest('a[data-project]');
+  if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
+  event.preventDefault();
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', 'work');
+    window.history.replaceState(null, '', url);
+  } catch (error) { /* the link is a convenience only */ }
+  showSection('work');
+  setTimeout(() => openProject(link.dataset.project), 0);
+});
+setInterval(() => {
+  if (!document.hidden && document.getElementById('section-today').classList.contains('active')) loadPaper(paperDate);
+}, NP_REFRESH_MS);
+if (document.getElementById('section-today').classList.contains('active')) loadPaper(paperDate);
+// ── End «Сегодня» ──
 </script>
 
 </body>

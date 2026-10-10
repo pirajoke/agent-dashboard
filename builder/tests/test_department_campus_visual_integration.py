@@ -187,26 +187,29 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 matches.append(declarations)
         return "\n".join(matches)
 
-    def test_ac_1_top_navigation_has_four_destinations_and_machines_are_nested(self):
+    def test_ac_1_top_navigation_opens_on_the_newspaper_and_machines_are_nested(self):
         parser = self._dashboard()
 
+        # Mark (2026-10-10): the first screen is a plain-language newspaper; the
+        # technical machine pages move to the last tab, «Техника».
         self.assertEqual(
             [(item["target"], item["text"]) for item in parser.navigation],
             [
-                ("machines", "Machines"),
+                ("today", "Сегодня"),
+                ("work", "MAIN MANAGER"),
                 ("agents", "Agents"),
                 ("platforms", "Platforms"),
-                ("work", "MAIN MANAGER"),
+                ("machines", "Техника"),
             ],
         )
 
-    def test_ac_2_agents_is_default_and_legacy_tabs_cannot_be_selected(self):
+    def test_ac_2_newspaper_is_default_and_legacy_tabs_cannot_be_selected(self):
         parser = self._dashboard()
         active_navigation = [
             item["target"] for item in parser.navigation if item["active"]
         ]
-        self.assertEqual(active_navigation, ["agents"])
-        self.assertEqual(parser.active_sections, ["agents"])
+        self.assertEqual(active_navigation, ["today"])
+        self.assertEqual(parser.active_sections, ["today"])
 
         initial_guard = re.search(
             r"\[([^\]]+)\]\.includes\(INITIAL_SECTION\)",
@@ -219,7 +222,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "platforms", "work"],
+            ["today", "mac-mini", "air", "pro", "machines", "agents", "platforms", "work"],
         )
         self.assertIn(
             'aria-controls="agents-campus" aria-pressed="true"',

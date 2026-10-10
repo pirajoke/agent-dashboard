@@ -147,6 +147,24 @@ def _bullets(summary: dict[str, Any] | None, product_id: str) -> list[str] | Non
     return clean or None
 
 
+def _details(summary: dict[str, Any] | None, product_id: str) -> dict[str, Any] | None:
+    """Lead, what Mark did, what agents did, next steps and deadlines (summaries schema 2)."""
+    entry = ((summary or {}).get("details") or {}).get(product_id)
+    if not isinstance(entry, dict):
+        return None
+
+    def lines(key: str) -> list[str]:
+        value = entry.get(key)
+        return [line.strip() for line in value if isinstance(line, str) and line.strip()] if isinstance(value, list) else []
+
+    deadlines = [{"date": item["date"], "what": item["what"].strip()} for item in entry.get("deadlines") or []
+                 if isinstance(item, dict) and isinstance(item.get("date"), str) and isinstance(item.get("what"), str)
+                 and re.fullmatch(r"\d{4}-\d{2}-\d{2}", item["date"]) and item["what"].strip()]
+    lead = entry.get("lead")
+    return {"lead": lead.strip() if isinstance(lead, str) and lead.strip() else None,
+            "you": lines("you"), "agents": lines("agents"), "next": lines("next"), "deadlines": deadlines}
+
+
 def _bucket_github(github: dict | None, tz) -> dict[str, dict[str, list]]:
     buckets: dict[str, dict[str, list]] = defaultdict(lambda: {"opened": [], "merged": [], "closed_unmerged": [], "commits": []})
     if not isinstance(github, dict) or not github.get("ok"):
@@ -416,12 +434,81 @@ def _day_summary(summary: dict[str, Any] | None, portfolio: dict[str, dict[str, 
     return {"headline": headline, "generated_at": summary.get("generated_at"), "projects": projects}
 
 
+def _has_activity(item: dict[str, Any], day: str) -> bool:
+    prs = item["prs_by_day"].get(day)
+    return bool(item["sessions_by_day"].get(day)) or bool(prs and any(prs.values()))
+
+
+def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str, dict[str, Any]],
+           summaries: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    """The «Сегодня» newspaper for one day: an article per product that had work, the rest in brief.
+
+    Text comes only from the summaries Claude wrote from real activity; without one, an article
+    falls back to session titles and PR counts. Deadlines are only the dated ones in summaries.
+    """
+    summary = summaries.get(edition)
+    past = [day for day in series_days if day <= edition]
+    articles, quiet, deadlines = [], [], {}
+    for product_id, item in portfolio.items():
+        known = [details for details in (_details(summaries.get(day), product_id) for day in reversed(past)) if details]
+        latest = known[0] if known else None
+        # Next steps stay up until a later summary names new ones.
+        latest_next = next((details["next"] for details in known if details["next"]), [])
+        for day in series_days:
+            for deadline in (_details(summaries.get(day), product_id) or {}).get("deadlines", []):
+                if deadline["date"] >= today:
+                    deadlines[(deadline["date"], deadline["what"])] = {**deadline, "project_id": product_id,
+                                                                       "project": item["name"]}
+        waiting = [_pr_view(pr) for pr in item["open_prs"] if not pr.get("draft")]
+        base = {"id": product_id, "name": item["name"], "mascot": item["mascot"], "description": item.get("description"),
+                "waiting": waiting[:3], "waiting_count": len(waiting)}
+        if _has_activity(item, edition):
+            records = item["sessions_by_day"].get(edition, [])
+            prs = item["prs_by_day"].get(edition) or {"merged": [], "opened": [], "closed_unmerged": []}
+            details = _details(summary, product_id) or {}
+            topics = list(dict.fromkeys(str(r["topic"]).strip() for r in records if isinstance(r.get("topic"), str) and r["topic"].strip()))
+            articles.append({
+                **base,
+                "minutes": _union_minutes(p for r in records for p in _session_intervals(r)),
+                "sessions": len(records),
+                "merged": [_pr_view(pr) for pr in prs["merged"]],
+                "opened": [_pr_view(pr) for pr in prs["opened"] if pr not in prs["merged"]],
+                "topics": topics[:4],
+                "written": bool(details),
+                "lead": details.get("lead"),
+                "you": details.get("you", []),
+                "agents": details.get("agents") or ([] if details else (_bullets(summary, product_id) or [])),
+                "next": details.get("next") or latest_next,
+                "deadlines": [d for d in details.get("deadlines", []) if d["date"] >= today],
+            })
+        else:
+            last_day = next((day for day in reversed(past) if _has_activity(item, day)), None)
+            if not last_day and not waiting:
+                continue
+            quiet.append({**base, "last_date": last_day, "lead": (latest or {}).get("lead"),
+                          "next": latest_next,
+                          "deadlines": [d for d in (latest or {}).get("deadlines", []) if d["date"] >= today]})
+    articles.sort(key=lambda a: (a["minutes"], len(a["merged"]), a["sessions"]), reverse=True)
+    quiet.sort(key=lambda q: q["last_date"] or "", reverse=True)
+    return {
+        "date": edition, "is_today": edition == today,
+        "headline": (summary or {}).get("day") if isinstance((summary or {}).get("day"), str) else None,
+        "written_at": (summary or {}).get("generated_at"),
+        "in_progress": bool((summary or {}).get("in_progress")),
+        "articles": articles, "quiet": quiet,
+        "deadlines": sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:8],
+    }
+
+
 def _age_days(moment: datetime | None, now: datetime) -> int | None:
     return None if moment is None else max(0, (now - moment).days)
 
 
 def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFAULT_DAYS,
-                    selected: str | None = None, owner: bool = False, project: str | None = None) -> dict[str, Any]:
+                    selected: str | None = None, owner: bool = False, project: str | None = None,
+                    edition: bool = False) -> dict[str, Any]:
+    """MAIN MANAGER payload. ``edition`` asks for the «Сегодня» newspaper: without a chosen
+    day it opens on the newest day with work (today once anything happened today)."""
     now = now or datetime.now(timezone.utc)
     tz = now.astimezone().tzinfo
     today = now.astimezone(tz).date()
@@ -442,6 +529,9 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
     gh_days = _bucket_github(github, tz)
 
     series = [{"date": day, **_day_totals(by_day.get(day, []), gh_days[day])} for day in series_days]
+    if edition and not selected:
+        selected_day = next((day["date"] for day in reversed(series)
+                             if day["sessions"] or day["prs_merged"] or day["prs_opened"]), today.isoformat())
     selected_sessions = by_day.get(selected_day, [])
     selected_gh = gh_days[selected_day]
     day_view: dict[str, Any] = {"date": selected_day, "is_today": selected_day == today.isoformat(),
@@ -534,6 +624,8 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         payload["forgot"] = forgot[:LIST_LIMIT]
         payload["sources"] = sources
         payload["projects"] = summaries
+        if edition:
+            payload["paper"] = _paper(selected_day, today.isoformat(), series_days, portfolio, day_summaries)
         if project:
             payload["project"] = _project_detail(portfolio[project], series_days, day_summaries) if project in portfolio else None
     else:

@@ -2393,6 +2393,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 selected=selected,
                 owner=self._dashboard_run_authorized(),
                 project=project[:80] if project else None,
+                edition=(query.get('edition') or ['0'])[0] == '1',
             )
         except Exception:
             self._json_response(200, {"ok": False, "state": "unavailable", "reason": "daily_work_unreadable"})

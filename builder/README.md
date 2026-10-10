@@ -38,3 +38,23 @@ Current JARVIS card source:
 - `builder/dashboard_builder/jarvis_pipeline.py`
 - `builder/dashboard_builder/now.py`
 - `builder/dashboard-assets/style.css`
+
+## «Сегодня»: the first screen
+
+command.meshly.fr opens on «Сегодня», a newspaper of the day for the owner
+(`builder/mac-mini-dashboard/index.html`, section `section-today`). Per product
+that had work: a one-line lead, «Вы» (what Mark asked, decided or merged),
+«Агенты» (what Claude and Codex got done), «Дальше», «Сроки» (dated deadlines
+only) and the PRs waiting for Mark. Products without work that day are listed
+under «Остальные проекты». It opens on the newest day with work and can step
+back through earlier days.
+
+Data comes from `/api/work/daily?edition=1` (`paper` in
+`dashboard_builder/daily_work.py`, owner token only). The text is written by
+`daily_work_summarizer.py` on the Mac mini (summaries schema 2: `details` per
+product), for today as well, rewritten while the day goes on. Without a summary
+the page shows session titles and PR counts, never invented text. Without the
+owner token it shows only the day's totals.
+
+Technical pages moved to the last tab, «Техника» (machines, services, ports);
+MAIN MANAGER keeps the charts, loose ends and the infrastructure change log.

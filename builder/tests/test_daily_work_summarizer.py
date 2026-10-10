@@ -53,7 +53,11 @@ body = text[text.index("Активность за"):]
 products = json.loads(body[body.index("["):body.rindex("]") + 1])
 if mode == "partial" or (mode == "partial-once" and "В прошлом ответе" not in text):
     products = products[:1]
-answer = {"day": "Главное: стало удобнее", "projects": {p["id"]: [p["name"] + ": стало удобнее"] for p in products}}
+answer = {"day": "Главное: стало удобнее", "projects": {p["id"]: {
+    "lead": p["name"] + " работает", "you": ["Поставили задачу"] if any("mark_asked" in s for s in p.get("sessions", [])) else [],
+    "agents": [p["name"] + ": стало удобнее"], "next": ["Проверить на телефоне"],
+    "deadlines": [{"date": "2026-11-07", "what": "Продлить проверку цен"}, {"date": "скоро", "what": "без даты"}],
+} for p in products}}
 print(json.dumps({"type": "result", "is_error": False,
                   "result": "```json\\n" + json.dumps(answer, ensure_ascii=False) + "\\n```"}))
 '''
@@ -139,13 +143,15 @@ class SummarizerTest(unittest.TestCase):
         hub = products["command-center"]
         self.assertEqual(hub["minutes"], 40)
         self.assertTrue(hub["about"])
-        self.assertEqual(hub["sessions"][0]["asks"], ["Добавь итоги дня"])
-        self.assertEqual(hub["sessions"][0]["last_reply"], "Итоги дня готовы")
+        self.assertEqual(hub["sessions"][0]["mark_asked"], ["Добавь итоги дня"])
+        self.assertEqual(hub["sessions"][0]["agent_last_reply"], "Итоги дня готовы")
         self.assertEqual(hub["prs_merged"], [{"title": "Day summaries", "body": "Adds summaries"}])
         self.assertEqual(hub["prs_opened"], [])  # opened and merged the same day: listed once
-        self.assertNotIn("asks", products["jarvis"]["sessions"][0])
+        self.assertNotIn("mark_asked", products["jarvis"]["sessions"][0])
         prompt = SUMMARIZER.user_prompt(self.yesterday, inputs[self.yesterday])
         self.assertIn(f"Активность за {self.yesterday}", prompt)
+        self.assertNotIn("день ещё идёт", prompt)
+        self.assertIn("день ещё идёт", SUMMARIZER.user_prompt(self.yesterday, inputs[self.yesterday], True))
         self.assertNotIn("prs_closed_without_merge", prompt)  # empty lists are left out
 
     def test_parse_summary_keeps_known_projects_and_caps_bullets(self):
@@ -153,11 +159,42 @@ class SummarizerTest(unittest.TestCase):
             "jarvis": ["  один  ", "", 5, "два", "три", "четыре", "пять"], "made-up": ["x"], "lexi": "not a list"}},
             ensure_ascii=False) + "\n```"
         summary = SUMMARIZER.parse_summary(text, {"jarvis", "lexi"})
-        self.assertEqual(summary, {"day": "Главное", "projects": {"jarvis": ["один", "два", "три", "четыре"]}})
+        self.assertEqual(summary["day"], "Главное")
+        self.assertEqual(summary["projects"], {"jarvis": ["один", "два", "три", "четыре"]})  # bullets only still work
+        self.assertEqual(summary["details"]["jarvis"]["agents"], ["один", "два", "три", "четыре"])
         with self.assertRaises(ValueError):
             SUMMARIZER.parse_summary('{"projects": {"made-up": ["x"]}}', {"jarvis"})
         with self.assertRaises(ValueError):
             SUMMARIZER.parse_summary("Не могу ответить", {"jarvis"})
+
+    def test_parse_summary_reads_the_newspaper_shape(self):
+        text = json.dumps({"day": "Главное", "projects": {"jarvis": {
+            "lead": ["  Бот отвечает голосом  "], "you": ["Решили оставить голос", "", "Проверили", "Приняли", "Лишнее"],
+            "agents": [], "next": "Проверить на телефоне",
+            "deadlines": [{"date": "2026-11-07", "what": " Продлить "}, {"date": "к пятнице", "what": "без даты"},
+                          {"date": "2026-10-31", "what": ""}, "не объект"]},
+            "lexi": {"lead": "Только заголовок"}}}, ensure_ascii=False)
+        summary = SUMMARIZER.parse_summary(text, {"jarvis", "lexi"})
+        self.assertEqual(summary["projects"], {"jarvis": ["Решили оставить голос", "Проверили", "Приняли"]})
+        self.assertEqual(summary["details"]["jarvis"], {
+            "lead": "Бот отвечает голосом", "you": ["Решили оставить голос", "Проверили", "Приняли"], "agents": [],
+            "next": ["Проверить на телефоне"], "deadlines": [{"date": "2026-11-07", "what": "Продлить"}]})
+        self.assertNotIn("lexi", summary["details"])  # nothing done: no entry
+
+    def test_today_is_summarized_and_redone_after_it_ends(self):
+        today = datetime.now(timezone.utc).date().isoformat()
+        self._write_day(today, [self._session("jarvis", "pirajoke/jarvis", today, 0, 5, asks=["Сделай голос"])])
+        self.assertEqual(self._run("--max-days", "1"), 0)
+        self.assertEqual(self._status()["written"], [today])  # today comes first
+        summary = self._summary(today)
+        self.assertTrue(summary["in_progress"])
+        self.assertIn("день ещё идёт", self._calls()[0]["stdin"])
+        self.assertEqual(summary["details"]["jarvis"]["you"], ["Поставили задачу"])
+        self.assertEqual(summary["details"]["jarvis"]["deadlines"], [{"date": "2026-11-07", "what": "Продлить проверку цен"}])
+        # Unchanged today is not redone; once the day is over it is redone once as a finished day.
+        self.assertEqual(SUMMARIZER.due_days(self.root, SUMMARIZER.day_inputs(self.root, [today]), None, today), [])
+        tomorrow = (datetime.now(timezone.utc).date() + timedelta(days=1)).isoformat()
+        self.assertEqual(SUMMARIZER.due_days(self.root, SUMMARIZER.day_inputs(self.root, [today]), None, tomorrow), [today])
 
     def test_runs_summarize_newest_days_first_and_only_once(self):
         self.assertEqual(self._run("--max-days", "1"), 0)
@@ -165,8 +202,12 @@ class SummarizerTest(unittest.TestCase):
         self.assertEqual(self._status()["pending"], 1)
         summary = self._summary(self.yesterday)
         self.assertEqual(summary["day"], "Главное: стало удобнее")
-        self.assertEqual(summary["projects"], {"command-center": ["Command Center: стало удобнее"],
+        self.assertEqual(summary["projects"], {"command-center": ["Command Center: стало удобнее", "Поставили задачу"],
                                                "jarvis": ["JARVIS: стало удобнее"]})
+        self.assertFalse(summary["in_progress"])
+        self.assertEqual(summary["schema"], 2)
+        self.assertEqual(summary["details"]["command-center"]["lead"], "Command Center работает")
+        self.assertEqual(summary["details"]["jarvis"]["you"], [])
         call = self._calls()[0]
         self.assertEqual(Path(call["cwd"]).resolve(), (self.root / "summarizer").resolve())
         self.assertIn("--system-prompt", call["args"])

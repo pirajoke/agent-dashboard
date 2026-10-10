@@ -378,6 +378,72 @@ class ProjectionTest(unittest.TestCase):
             self.assertNotIn(private, public)
         self.assertNotIn("summary", work_projection(self.root, now=self.now, owner=False)["day"])
 
+    def _write_paper_summary(self, day, details, headline="Главное за день", in_progress=False):
+        path = self.root / "summaries" / f"{day}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({
+            "schema": 2, "date": day, "generated_at": "2026-10-09T03:00:00Z", "day": headline, "in_progress": in_progress,
+            "projects": {pid: (d.get("agents") or []) + (d.get("you") or []) for pid, d in details.items()},
+            "details": details}, ensure_ascii=False), encoding="utf-8")
+
+    def test_newspaper_opens_on_the_newest_day_with_work(self):
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True)
+        self.assertEqual(payload["selected_date"], "2026-10-08")  # nothing yet today
+        paper = payload["paper"]
+        self.assertEqual((paper["date"], paper["is_today"], paper["headline"]), ("2026-10-08", False, None))
+        self.assertEqual([a["id"] for a in paper["articles"]], ["command-center", "jarvis"])  # busiest first
+        hub = next(a for a in paper["articles"] if a["id"] == "command-center")
+        self.assertFalse(hub["written"])
+        self.assertEqual(hub["topics"], ["private topic"])  # no summary yet: what the sessions were about
+        self.assertEqual(hub["merged"][0]["number"], 49)
+        self.assertEqual([q["id"] for q in paper["quiet"]], ["mydictionary"])
+        self.assertEqual(paper["quiet"][0]["waiting_count"], 1)  # the open Lexi PR waits for Mark
+        self.assertEqual(paper["quiet"][0]["last_date"], "2026-09-25")
+
+        self._write_day("mac-mini", "2026-10-09", [{
+            "tool": "claude", "session_id": "today", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+            "start": "2026-10-09T07:00:00Z", "end": "2026-10-09T07:30:00Z", "active_minutes": 30, "prompts": 1,
+            "topic": "t", "intervals": [["2026-10-09T07:00:00Z", "2026-10-09T07:30:00Z"]]}])
+        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
+        self.assertEqual((paper["date"], paper["is_today"]), ("2026-10-09", True))
+        self.assertEqual([a["id"] for a in paper["articles"]], ["mydictionary"])
+        self.assertEqual(work_projection(self.root, now=self.now, owner=True, edition=True,
+                                         selected="2026-10-08")["paper"]["date"], "2026-10-08")
+
+    def test_newspaper_reads_what_claude_wrote(self):
+        self._write_paper_summary("2026-10-05", {"jarvis": {
+            "lead": "Голос в работе", "you": [], "agents": ["Начали голосовой режим"], "next": ["Проверить голос"],
+            "deadlines": [{"date": "2026-11-07", "what": "Продлить проверку цен"}, {"date": "2026-10-01", "what": "Прошло"}]}})
+        self._write_paper_summary("2026-10-08", {
+            "jarvis": {"lead": "Бот отвечает голосом", "you": ["Решили оставить голос"], "agents": ["Ответы стали быстрее"],
+                       "next": [], "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
+            "command-center": {"lead": "Появились итоги дня", "you": [], "agents": ["Итоги дня на сайте"],
+                               "next": ["Сохранить токен на Mac mini"], "deadlines": []},
+        }, headline="Голос и итоги дня")
+        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
+        self.assertEqual(paper["headline"], "Голос и итоги дня")
+        articles = {a["id"]: a for a in paper["articles"]}
+        jarvis = articles["jarvis"]
+        self.assertTrue(jarvis["written"])
+        self.assertEqual((jarvis["lead"], jarvis["you"], jarvis["agents"]),
+                         ("Бот отвечает голосом", ["Решили оставить голос"], ["Ответы стали быстрее"]))
+        self.assertEqual(jarvis["next"], ["Проверить голос"])  # no new next steps: the latest known ones
+        self.assertEqual(articles["command-center"]["next"], ["Сохранить токен на Mac mini"])
+        self.assertEqual(paper["deadlines"], [
+            {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "jarvis", "project": "JARVIS"},
+            {"date": "2026-11-07", "what": "Продлить проверку цен", "project_id": "jarvis", "project": "JARVIS"},
+        ])  # past ones dropped, every summary in the window counts
+
+    def test_newspaper_is_owner_only(self):
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Бот отвечает голосом", "you": [], "agents": ["Быстрее"],
+                                                            "next": [], "deadlines": []}})
+        public = work_projection(self.root, now=self.now, owner=False, edition=True)
+        self.assertNotIn("paper", public)
+        text = json.dumps(public, ensure_ascii=False)
+        for private in ("Бот отвечает голосом", "JARVIS", "private topic"):
+            self.assertNotIn(private, text)
+        self.assertNotIn("paper", work_projection(self.root, now=self.now, owner=True))  # only when asked
+
     def test_product_mapping_follows_platforms(self):
         from dashboard_builder.daily_work import product_for
         self.assertEqual(product_for("FINANCIAL OS", None)["id"], "financial")
@@ -437,6 +503,24 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         server = (BUILDER_DIR / "dashboard-server-m4.py").read_text(encoding="utf-8")
         self.assertIn('"/api/work/daily"', server)
         self.assertIn("owner=self._dashboard_run_authorized()", server)
+        self.assertIn("edition=(query.get('edition') or ['0'])[0] == '1'", server)
+
+    def test_dashboard_opens_on_the_newspaper(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('<div id="section-today" class="section active" lang="ru">', html)
+        self.assertIn("new URLSearchParams({ days: '30', edition: '1' })", html)
+        self.assertIn("function renderPaper()", html)
+        for label in ("'Вы'", "'Агенты'", "'Дальше'", "'Сроки'", "'Ждёт вашего решения'", ">Остальные проекты<"):
+            self.assertIn(label, html)
+        # Without the owner token the newspaper shows only the day's numbers.
+        self.assertIn("if (!data.owner_view || !paper)", html)
+        self.assertIn("Газету видит только владелец", html)
+        # Service counters moved from the header into «Техника».
+        header = html[html.index('<div class="header">'):html.index('<nav class="nav-pills cc-main-nav"')]
+        self.assertNotIn('id="stat-services"', header)
+        machines = html[html.index('<section id="section-machines"'):html.index('<nav class="nav-pills cc-machine-nav"')]
+        self.assertIn('id="stat-services"', machines)
+        self.assertIn('id="stat-hooks"', machines)
 
 
 if __name__ == "__main__":
