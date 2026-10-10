@@ -6663,8 +6663,10 @@ function mmBullets(bullets) {
 function mmSummaryPending(data) {
   const status = data.summaries_status;
   if (status && status.ok === false) {
-    const why = String(status.reason || '').startsWith('claude_not_found')
-      ? 'на Mac mini не найден Claude Code'
+    const reason = String(status.reason || '');
+    const why = reason.startsWith('claude_not_found') ? 'на Mac mini не найден Claude Code'
+      : reason.startsWith('claude_auth_failed') ? 'Claude на Mac mini не вошёл в аккаунт'
+      : reason.startsWith('claude_too_old') ? 'Claude Code на Mac mini устарел, его нужно обновить'
       : 'Claude не ответил';
     return `Итог этого дня ещё не готов: последняя попытка не удалась (${why}). Повтор каждые 3 часа.`;
   }

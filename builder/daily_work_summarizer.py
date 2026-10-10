@@ -19,6 +19,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -44,6 +45,11 @@ MAX_BULLETS = 4
 BULLET_LIMIT = 220
 CLI_DIRS = [HOME / ".local" / "bin", HOME / ".claude" / "local", Path("/opt/homebrew/bin"), Path("/usr/local/bin"),
             HOME / ".npm-global" / "bin", HOME / ".bun" / "bin"]
+# A launchd job can't always read the login keychain where `claude` keeps its
+# sign-in. A long-lived token from `claude setup-token` saved here is passed to
+# the CLI as CLAUDE_CODE_OAUTH_TOKEN instead.
+TOKEN_FILE = Path(os.environ.get("DAILY_SUMMARY_TOKEN_FILE") or HOME / ".agent-bridge" / "claude_oauth_token")
+AUTH_ERROR = re.compile(r"\b401\b|authenticat|not logged in|/login", re.IGNORECASE)
 
 SYSTEM_PROMPT = """Ты пишешь короткие итоги рабочего дня для Марка, владельца нескольких продуктов. \
 Он не хочет технических деталей: ему нужно понять, что изменилось в его продуктах за день.
@@ -150,14 +156,27 @@ def find_cli(explicit: str | None) -> str | None:
     return shutil.which("claude", path=search)
 
 
+def token_env() -> dict[str, str]:
+    if os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        return {}
+    try:
+        token = TOKEN_FILE.read_text(encoding="utf-8").strip()
+    except OSError:
+        return {}
+    return {"CLAUDE_CODE_OAUTH_TOKEN": token} if token else {}
+
+
 def call_claude(cli: str, model: str, system: str, prompt: str, workdir: Path) -> str:
     """Run one headless Claude Code turn and return its text."""
-    env = {**os.environ, "PATH": os.pathsep.join([str(Path(cli).parent), os.environ.get("PATH", "")] + [str(d) for d in CLI_DIRS])}
+    # The prompt carries PR and session text, so no attempt may give the model
+    # tools or MCP servers, and hooks or other subprocesses Claude starts must
+    # not inherit the saved token.
+    env = {**os.environ, **token_env(), "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB": "1",
+           "PATH": os.pathsep.join([str(Path(cli).parent), os.environ.get("PATH", "")] + [str(d) for d in CLI_DIRS])}
     workdir.mkdir(parents=True, exist_ok=True)
-    base = [cli, "-p", "--output-format", "json", "--model", model]
-    # Older CLI versions lack some flags; retry with the bare minimum then.
-    attempts = [base + ["--system-prompt", system, "--tools", "", "--no-session-persistence"], base]
-    last_error = "claude_failed"
+    base = [cli, "-p", "--output-format", "json", "--model", model, "--tools", "", "--strict-mcp-config"]
+    # Older CLI versions lack some flags; retry without the optional ones then.
+    attempts = [base + ["--system-prompt", system, "--no-session-persistence"], base]
     for index, args in enumerate(attempts):
         text = prompt if index == 0 else system + "\n\n" + prompt
         try:
@@ -167,18 +186,24 @@ def call_claude(cli: str, model: str, system: str, prompt: str, workdir: Path) -
             raise RuntimeError("claude_timeout") from None
         except OSError as error:
             raise RuntimeError(f"claude_not_runnable: {error.strerror}") from None
-        if result.returncode == 0:
-            try:
-                envelope = json.loads(result.stdout)
-            except json.JSONDecodeError:
-                return result.stdout
-            if isinstance(envelope, dict) and envelope.get("is_error"):
-                raise RuntimeError("claude_error: " + str(envelope.get("result") or "")[:200])
+        try:
+            envelope = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            envelope = None
+        failed = isinstance(envelope, dict) and bool(envelope.get("is_error"))
+        if result.returncode == 0 and not failed:
             return str(envelope.get("result") or "") if isinstance(envelope, dict) else result.stdout
-        last_error = "claude_failed: " + " ".join((result.stderr or result.stdout).split())[:200]
+        detail = " ".join((str(envelope.get("result") or "") if failed else (result.stderr or result.stdout)).split())[:200]
+        if AUTH_ERROR.search(detail) or AUTH_ERROR.search(result.stderr or ""):
+            raise RuntimeError("claude_auth_failed: " + detail)
+        if failed:
+            raise RuntimeError("claude_error: " + detail)
         if "unknown option" not in (result.stderr or "").lower():
-            break
-    raise RuntimeError(last_error)
+            raise RuntimeError("claude_failed: " + detail)
+        if index == len(attempts) - 1:
+            # Too old to switch tools off: never run it with tools instead.
+            raise RuntimeError("claude_too_old: " + detail)
+    raise RuntimeError("claude_failed")
 
 
 def parse_summary(text: str, ids: set[str]) -> dict[str, Any]:
