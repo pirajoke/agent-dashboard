@@ -11,7 +11,7 @@ Single-page HTML dashboard showing all agents, projects, orchestrator state, liv
 
 Claude сам, без отдельного подтверждения, сливает свой PR, если:
 
-- **каждый** изменённый файл PR лежит в `builder/` (проверка: `gh api repos/pirajoke/agent-dashboard/pulls/<N>/files --jq '.[].filename'`), но не в механике выката и доступа: `builder/deploy_to_scripts.sh`, `builder/auto_deploy.py`, `builder/dashboard-rebuild.sh`, `builder/install_*.sh`, `builder/launchd/`, `builder/mm-command-center-auth`;
+- **каждый** изменённый файл PR лежит в `builder/` (проверка: `gh api --paginate repos/pirajoke/agent-dashboard/pulls/<N>/files --jq '.[].filename'`), но не в механике выката и доступа: `builder/deploy_to_scripts.sh`, `builder/auto_deploy.py`, `builder/dashboard-rebuild.sh`, `builder/install_*.sh`, `builder/launchd/`, `builder/mm-command-center-auth`;
 - PR не ослабляет доступ: что было видно только с токеном владельца, остаётся только с ним;
 - CI зелёный на текущей голове PR;
 - замечания ревью (Codex) на этой голове разобраны: исправлены или отвечены, открытых тредов нет;
