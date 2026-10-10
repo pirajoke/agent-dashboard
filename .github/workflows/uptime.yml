@@ -1,0 +1,64 @@
+name: Uptime
+
+# External ping for the Mac mini. If its public endpoints stop answering, this opens an
+# "uptime" issue (GitHub notifies the owner) and, when TG_BOT_TOKEN / TG_CHAT_ID secrets
+# exist, sends a Telegram message. It closes the issue and reports recovery when they return.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+      TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+    steps:
+      - name: Probe endpoints
+        id: probe
+        run: |
+          down=""
+          for url in https://command.meshly.fr/ https://mydictionary.meshly.fr/health; do
+            ok=""
+            for attempt in 1 2 3; do
+              code=$(curl -s -o /dev/null -m 15 -w '%{http_code}' "$url" || true)
+              if [ "$code" -ge 200 ] 2>/dev/null && [ "$code" -lt 400 ]; then ok=1; break; fi
+              sleep 20
+            done
+            echo "$url -> ${code:-000}"
+            [ -z "$ok" ] && down="$down $url (HTTP ${code:-000})"
+          done
+          echo "down=${down# }" >> "$GITHUB_OUTPUT"
+
+      - name: Open or close the uptime issue
+        env:
+          DOWN: ${{ steps.probe.outputs.down }}
+        run: |
+          tg() {
+            [ -n "$TG_BOT_TOKEN" ] && [ -n "$TG_CHAT_ID" ] || return 0
+            curl -s -m 15 -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TG_CHAT_ID}" --data-urlencode "text=$1" >/dev/null || true
+          }
+          gh label create uptime --color B60205 --description "External uptime ping" 2>/dev/null || true
+          open=$(gh issue list --label uptime --state open --json number -q '.[0].number')
+          if [ -n "$DOWN" ] && [ -z "$open" ]; then
+            gh issue create --label uptime --title "Mac mini unreachable from outside" \
+              --body "Failed after 3 attempts at $(date -u '+%F %H:%M') UTC: $DOWN"
+            tg "🚨 Внешний пинг: Mac mini не отвечает снаружи. $DOWN"
+          elif [ -z "$DOWN" ] && [ -n "$open" ]; then
+            gh issue close "$open" --comment "Back up at $(date -u '+%F %H:%M') UTC."
+            tg "✅ Внешний пинг: Mac mini снова отвечает."
+          fi
