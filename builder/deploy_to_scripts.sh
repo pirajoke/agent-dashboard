@@ -63,6 +63,12 @@ if [[ "${DASHBOARD_INSTALL_DAILY_WORK:-1}" == "1" ]]; then
   DAILY_WORK_INSTALL_DIR="$SCRIPTS_DIR" "$SRC_DIR/install_daily_work_collector.sh" --machine mac-mini --github --summaries
 fi
 
+# Record what is deployed now, before the agent starts (RunAtLoad), so the auto-deploy agent compares main against it.
+DEPLOYED_SHA="${AUTO_DEPLOY_DEPLOYED_SHA:-$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)}"
+if [[ -n "$DEPLOYED_SHA" ]]; then
+  python3 "$SRC_DIR/auto_deploy.py" --record "$DEPLOYED_SHA"
+fi
+
 # Merged code reaches the site by itself: the auto-deploy agent watches main.
 # It runs this script with DASHBOARD_INSTALL_AUTO_DEPLOY=0 so it never reloads itself mid-run.
 AUTO_DEPLOY_LABEL="com.pirajoke.dashboard-auto-deploy"
@@ -75,12 +81,6 @@ if [[ "${DASHBOARD_INSTALL_AUTO_DEPLOY:-1}" == "1" ]]; then
   mv "$AUTO_DEPLOY_PLIST.tmp" "$AUTO_DEPLOY_PLIST"
   launchctl bootout "gui/$(id -u)/$AUTO_DEPLOY_LABEL" >/dev/null 2>&1 || true
   launchctl bootstrap "gui/$(id -u)" "$AUTO_DEPLOY_PLIST"
-fi
-
-# Record what is deployed now, so the auto-deploy agent compares main against it.
-DEPLOYED_SHA="${AUTO_DEPLOY_DEPLOYED_SHA:-$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)}"
-if [[ -n "$DEPLOYED_SHA" ]]; then
-  python3 "$SRC_DIR/auto_deploy.py" --record "$DEPLOYED_SHA"
 fi
 
 echo "Dashboard builder deployed to $SCRIPTS_DIR"

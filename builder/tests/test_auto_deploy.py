@@ -116,6 +116,8 @@ class DeployScriptWiringTest(unittest.TestCase):
         self.assertIn('cp "$SRC_DIR/auto_deploy.py"', script)
         self.assertIn("DASHBOARD_INSTALL_AUTO_DEPLOY", script)
         self.assertIn("auto_deploy.py\" --record", script)
+        # The agent starts at load, so the deployed commit must be recorded first.
+        self.assertLess(script.index("--record"), script.index('launchctl bootstrap "gui/$(id -u)" "$AUTO_DEPLOY_PLIST"'))
         self.assertTrue((BUILDER_DIR / "launchd" / "com.pirajoke.dashboard-auto-deploy.plist.template").exists())
 
 
