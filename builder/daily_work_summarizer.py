@@ -49,6 +49,7 @@ CLI_DIRS = [HOME / ".local" / "bin", HOME / ".claude" / "local", Path("/opt/home
 # sign-in. A long-lived token from `claude setup-token` saved here is passed to
 # the CLI as CLAUDE_CODE_OAUTH_TOKEN instead.
 TOKEN_FILE = Path(os.environ.get("DAILY_SUMMARY_TOKEN_FILE") or HOME / ".agent-bridge" / "claude_oauth_token")
+SECRET = re.compile(r"sk-ant-[A-Za-z0-9_-]+|\b[Bb]earer\s+\S+")
 AUTH_ERROR = re.compile(r"\b401\b|authenticat|not logged in|/login", re.IGNORECASE)
 
 SYSTEM_PROMPT = """Ты пишешь короткие итоги рабочего дня для Марка, владельца нескольких продуктов. \
@@ -156,14 +157,29 @@ def find_cli(explicit: str | None) -> str | None:
     return shutil.which("claude", path=search)
 
 
+def saved_token_parts() -> list[str]:
+    try:
+        return TOKEN_FILE.read_text(encoding="utf-8").split()
+    except OSError:
+        return []
+
+
 def token_env() -> dict[str, str]:
     if os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
         return {}
-    try:
-        token = TOKEN_FILE.read_text(encoding="utf-8").strip()
-    except OSError:
-        return {}
+    # A token copied from a wrapped terminal line comes with spaces and line
+    # breaks inside; the token itself never has any.
+    token = "".join(saved_token_parts())
     return {"CLAUDE_CODE_OAUTH_TOKEN": token} if token else {}
+
+
+def redact(text: str) -> str:
+    """Keep the token out of anything written to the status file or the log."""
+    parts = saved_token_parts()
+    secrets = parts + ["".join(parts), os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "")]
+    for secret in sorted({s for s in secrets if len(s) >= 4}, key=len, reverse=True):
+        text = text.replace(secret, "[token]")
+    return SECRET.sub("[token]", text)
 
 
 def call_claude(cli: str, model: str, system: str, prompt: str, workdir: Path) -> str:
@@ -193,7 +209,7 @@ def call_claude(cli: str, model: str, system: str, prompt: str, workdir: Path) -
         failed = isinstance(envelope, dict) and bool(envelope.get("is_error"))
         if result.returncode == 0 and not failed:
             return str(envelope.get("result") or "") if isinstance(envelope, dict) else result.stdout
-        detail = " ".join((str(envelope.get("result") or "") if failed else (result.stderr or result.stdout)).split())[:200]
+        detail = redact(" ".join((str(envelope.get("result") or "") if failed else (result.stderr or result.stdout)).split()))[:200]
         if AUTH_ERROR.search(detail) or AUTH_ERROR.search(result.stderr or ""):
             raise RuntimeError("claude_auth_failed: " + detail)
         if failed:
@@ -293,7 +309,7 @@ def main(argv: list[str] | None = None) -> int:
         try:
             summary = summarize_day(cli, args.model, day, products, args.out / WORKDIR_NAME)
         except (RuntimeError, ValueError) as error:
-            status.update(ok=False, reason=str(error)[:240])
+            status.update(ok=False, reason=redact(str(error))[:240])
             break
         # Projects still left out after a retry stay without bullets for this
         # input; they are listed rather than retried every run.
