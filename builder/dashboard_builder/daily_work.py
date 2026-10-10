@@ -26,6 +26,7 @@ FORGOTTEN_AFTER = timedelta(days=7)
 BRANCH_LOOKBACK = timedelta(days=30)
 MAIN_BRANCHES = {"main", "master", "head", "develop", "dev", "trunk"}
 LIST_LIMIT = 12
+TODO_LIMIT = 8
 PROJECT_DAY_LIMIT = 30
 # Products as Command Center's Platforms tab shows them; the mascot is the
 # Platforms SVG symbol (cc-mascot-<mascot>). Sessions and PRs are matched by
@@ -209,6 +210,19 @@ def _pr_view(pr: dict) -> dict[str, Any]:
     return {key: pr.get(key) for key in ("repo", "number", "title", "url", "draft", "created_at", "updated_at", "merged_at", "closed_at")}
 
 
+def _issue_view(issue: dict) -> dict[str, Any]:
+    return {key: issue.get(key) for key in ("repo", "number", "title", "url", "updated_at")}
+
+
+def _latest_next(summaries: dict[str, dict[str, Any]] | None, product_id: str, days: list[str]) -> list[str]:
+    """Next steps from the newest summary of these days that named any."""
+    for day in reversed(days):
+        details = _details((summaries or {}).get(day), product_id)
+        if details and details["next"]:
+            return details["next"]
+    return []
+
+
 def _project_rows(sessions: list[dict], gh: dict[str, list]) -> list[dict[str, Any]]:
     grouped: dict[str, list[dict]] = defaultdict(list)
     for record in sessions:
@@ -325,8 +339,17 @@ def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], gi
         for pr in github.get("prs") or []:
             if isinstance(pr, dict) and pr.get("state") == "open" and pr.get("repo") in repo_product:
                 open_prs[repo_product[pr["repo"]]].append(pr)
+    # Open GitHub issues are the project's to-do list (the vault routes tasks to the owning repo's issues).
+    open_issues: dict[str, list[dict]] = defaultdict(list)
+    if isinstance(github, dict) and github.get("ok"):
+        for issue in github.get("open_issues") or []:
+            repo = issue.get("repo") if isinstance(issue, dict) else None
+            product_id = repo_product.get(repo) or (product_for(None, repo)["id"] if repo else None)
+            if product_id in products:
+                open_issues[product_id].append(issue)
     for item in products.values():
         item["open_prs"] = sorted(open_prs.get(item["id"], []), key=lambda pr: pr.get("updated_at") or "", reverse=True)
+        item["open_issues"] = sorted(open_issues.get(item["id"], []), key=lambda issue: issue.get("updated_at") or "", reverse=True)
         item["loose"] = [entry_ for entry_ in loose if entry_.get("repo") in item["repos"]
                          or (entry_.get("project") and entry_.get("project") in item["projects"])]
     return products
@@ -413,6 +436,9 @@ def _project_detail(item: dict[str, Any], series_days: list[str],
             break
     detail["timeline"] = timeline
     detail["open_prs_list"] = [_pr_view(pr) for pr in item["open_prs"]]
+    detail["open_issues_list"] = [_issue_view(issue) for issue in item["open_issues"][:TODO_LIMIT]]
+    detail["open_issues_count"] = len(item["open_issues"])
+    detail["next_steps"] = _latest_next(summaries, item["id"], series_days)
     detail["loose_list"] = item["loose"][:LIST_LIMIT]
     return detail
 
@@ -450,10 +476,9 @@ def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str
     past = [day for day in series_days if day <= edition]
     articles, quiet, deadlines = [], [], {}
     for product_id, item in portfolio.items():
-        known = [details for details in (_details(summaries.get(day), product_id) for day in reversed(past)) if details]
-        latest = known[0] if known else None
+        latest = next((details for details in (_details(summaries.get(day), product_id) for day in reversed(past)) if details), None)
         # Next steps stay up until a later summary names new ones.
-        latest_next = next((details["next"] for details in known if details["next"]), [])
+        latest_next = _latest_next(summaries, product_id, past)
         for day in series_days:
             for deadline in (_details(summaries.get(day), product_id) or {}).get("deadlines", []):
                 if deadline["date"] >= today:
@@ -461,7 +486,9 @@ def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str
                                                                                    "project": item["name"]}
         waiting = [_pr_view(pr) for pr in item["open_prs"] if not pr.get("draft")]
         base = {"id": product_id, "name": item["name"], "mascot": item["mascot"], "description": item.get("description"),
-                "waiting": waiting[:3], "waiting_count": len(waiting)}
+                "waiting": waiting[:3], "waiting_count": len(waiting),
+                "issues": [_issue_view(issue) for issue in item["open_issues"][:TODO_LIMIT]],
+                "issues_count": len(item["open_issues"])}
         if _has_activity(item, edition):
             records = item["sessions_by_day"].get(edition, [])
             prs = item["prs_by_day"].get(edition) or {"merged": [], "opened": [], "closed_unmerged": []}
@@ -483,7 +510,7 @@ def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str
             })
         else:
             last_day = next((day for day in reversed(past) if _has_activity(item, day)), None)
-            if not last_day and not waiting:
+            if not last_day and not waiting and not item["open_issues"]:
                 continue
             quiet.append({**base, "last_date": last_day, "lead": (latest or {}).get("lead"),
                           "next": latest_next,

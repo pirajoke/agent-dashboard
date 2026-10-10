@@ -57,7 +57,7 @@ TOKEN_FILE = Path(os.environ.get("DAILY_SUMMARY_TOKEN_FILE") or HOME / ".agent-b
 SECRET = re.compile(r"sk-ant-[A-Za-z0-9_-]+|\b[Bb]earer\s+\S+")
 AUTH_ERROR = re.compile(r"\b401\b|authenticat|not logged in|/login", re.IGNORECASE)
 
-SYSTEM_PROMPT = """Ты пишешь утреннюю газету для Марка, владельца нескольких продуктов: что за день \
+SYSTEM_PROMPT = """Ты пишешь короткие новости дня для Марка, владельца нескольких продуктов: что за день \
 произошло в каждом его проекте. Он не хочет технических деталей: ему нужно понять, что изменилось, \
 кто что сделал и что дальше.
 

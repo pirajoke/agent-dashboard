@@ -436,6 +436,30 @@ class ProjectionTest(unittest.TestCase):
             {"date": "2026-11-07", "what": "Продлить проверку цен", "project_id": "jarvis", "project": "JARVIS"},
         ])  # past ones dropped, every summary in the window counts, same words in two projects kept apart
 
+    def test_open_issues_are_the_project_todo(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["open_issues"] = [
+            {"repo": "pirajoke/jarvis", "number": 7, "title": "Голос в машине", "url": "https://github.com/pirajoke/jarvis/issues/7",
+             "created_at": "2026-10-01T09:00:00Z", "updated_at": "2026-10-08T09:00:00Z"},
+            {"repo": "pirajoke/lexi", "number": 3, "title": "Продлить цены", "url": "https://github.com/pirajoke/lexi/issues/3",
+             "created_at": "2026-10-01T09:00:00Z", "updated_at": "2026-10-02T09:00:00Z"},
+            {"repo": "pirajoke/unknown-repo", "number": 1, "title": "Чужое", "url": "https://github.com/pirajoke/unknown-repo/issues/1",
+             "created_at": "2026-10-01T09:00:00Z", "updated_at": "2026-10-02T09:00:00Z"},
+        ]
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Голос", "you": [], "agents": ["Быстрее"],
+                                                            "next": ["Проверить голос"], "deadlines": []}})
+        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
+        jarvis = next(a for a in paper["articles"] if a["id"] == "jarvis")
+        self.assertEqual(([i["number"] for i in jarvis["issues"]], jarvis["issues_count"]), ([7], 1))
+        lexi = next(q for q in paper["quiet"] if q["id"] == "mydictionary")
+        self.assertEqual([i["title"] for i in lexi["issues"]], ["Продлить цены"])
+        self.assertNotIn("Чужое", json.dumps(paper, ensure_ascii=False))  # a repo with no product stays out
+        project = work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]
+        self.assertEqual((project["open_issues_count"], project["next_steps"]), (1, ["Проверить голос"]))
+        public = json.dumps(work_projection(self.root, now=self.now, owner=False, edition=True, project="jarvis"), ensure_ascii=False)
+        self.assertNotIn("Голос в машине", public)
+
     def test_newspaper_counts_a_day_with_only_a_closed_pr(self):
         github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
         github["prs"].append({"repo": "pirajoke/jarvis", "number": 141, "title": "Dropped", "url": "https://github.com/pirajoke/jarvis/pull/141",
@@ -516,18 +540,23 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn("owner=self._dashboard_run_authorized()", server)
         self.assertIn("edition=(query.get('edition') or ['0'])[0] == '1'", server)
 
-    def test_dashboard_opens_on_the_newspaper(self):
+    def test_dashboard_opens_on_project_news(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
         self.assertIn('<div id="section-today" class="section active" lang="ru">', html)
         self.assertIn("new URLSearchParams({ days: '30', edition: '1' })", html)
         self.assertIn("function renderPaper()", html)
         self.assertIn("day.prs_closed_unmerged", html)  # a closed-only day is a working day too
         self.assertIn("if (request !== paperRequest) return;", html)  # the newest request wins
-        for label in ("'Вы'", "'Агенты'", "'Дальше'", "'Сроки'", "'Ждёт вашего решения'", ">Остальные проекты<"):
+        for label in ("'Вы'", "'Агенты'", "'Следующие шаги'", "'Ждёт вашего решения'", "'Задачи на GitHub'",
+                      "Задачи проекта", ">Остальные проекты<"):
             self.assertIn(label, html)
-        # Without the owner token the newspaper shows only the day's numbers.
+        # Every news item drills down to that day's technical details on the project page.
+        self.assertIn("openProject(link.dataset.project, link.dataset.day || null)", html)
+        self.assertIn("if (day) mmRevealDay(day);", html)
+        self.assertIn("${mmTodo(p)}", html)  # the project page carries the same to-do
+        # Without the owner token the page shows only the day's numbers.
         self.assertIn("if (!data.owner_view || !paper)", html)
-        self.assertIn("Газету видит только владелец", html)
+        self.assertIn("Новости по проектам видит только владелец", html)
         # Service counters moved from the header into «Техника».
         header = html[html.index('<div class="header">'):html.index('<nav class="nav-pills cc-main-nav"')]
         self.assertNotIn('id="stat-services"', header)
