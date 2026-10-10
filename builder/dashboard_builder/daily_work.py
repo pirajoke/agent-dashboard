@@ -334,6 +334,18 @@ def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], gi
                 item["repos"].add(repo)
                 repo_product.setdefault(repo, item["id"])
                 item["prs_by_day"][day][kind].append(pr)
+    # A known product whose only news is an open issue still gets its to-do; unknown repos stay out.
+    known = {product["id"] for product in PRODUCTS}
+    if isinstance(github, dict) and github.get("ok"):
+        for issue in github.get("open_issues") or []:
+            repo = issue.get("repo") if isinstance(issue, dict) else None
+            if not repo or repo in repo_product:
+                continue
+            product = product_for(None, repo)
+            if product["id"] in known or product["id"] in products:
+                item = entry(product)
+                item["repos"].add(repo)
+                repo_product[repo] = item["id"]
     open_prs: dict[str, list[dict]] = defaultdict(list)
     if isinstance(github, dict) and github.get("ok"):
         for pr in github.get("prs") or []:
@@ -344,7 +356,7 @@ def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], gi
     if isinstance(github, dict) and github.get("ok"):
         for issue in github.get("open_issues") or []:
             repo = issue.get("repo") if isinstance(issue, dict) else None
-            product_id = repo_product.get(repo) or (product_for(None, repo)["id"] if repo else None)
+            product_id = repo_product.get(repo)
             if product_id in products:
                 open_issues[product_id].append(issue)
     for item in products.values():
