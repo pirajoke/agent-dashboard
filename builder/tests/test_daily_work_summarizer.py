@@ -30,13 +30,17 @@ FAKE_CLAUDE = '''#!/usr/bin/env python3
 import json, os, sys
 args, text = sys.argv[1:], sys.stdin.read()
 with open(os.environ["FAKE_CLAUDE_LOG"], "a", encoding="utf-8") as log:
-    log.write(json.dumps({"args": args, "cwd": os.getcwd(), "stdin": text}, ensure_ascii=False) + "\\n")
+    log.write(json.dumps({"args": args, "cwd": os.getcwd(), "stdin": text,
+                          "token": os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")}, ensure_ascii=False) + "\\n")
 mode = os.environ.get("FAKE_CLAUDE_MODE", "ok")
 if mode == "old" and "--no-session-persistence" in args:
     sys.stderr.write("error: unknown option '--no-session-persistence'\\n")
     sys.exit(1)
+if mode == "auth":
+    print(json.dumps({"type": "result", "is_error": True, "result": "Failed to authenticate. API Error: 401"}))
+    sys.exit(1)
 if mode == "error":
-    print(json.dumps({"type": "result", "is_error": True, "result": "Not logged in. Please run /login"}))
+    print(json.dumps({"type": "result", "is_error": True, "result": "Overloaded, try again later"}))
     sys.exit(0)
 body = text[text.index("Активность за"):]
 products = json.loads(body[body.index("["):body.rindex("]") + 1])
@@ -81,8 +85,13 @@ class SummarizerTest(unittest.TestCase):
         self.log = Path(self.tmp.name) / "calls.jsonl"
         self.env = patch.dict(os.environ, {"FAKE_CLAUDE_LOG": str(self.log), "FAKE_CLAUDE_MODE": "ok"})
         self.env.start()
+        os.environ.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
+        self.token_file = Path(self.tmp.name) / "claude_oauth_token"
+        self.token = patch.object(SUMMARIZER, "TOKEN_FILE", self.token_file)
+        self.token.start()
 
     def tearDown(self):
+        self.token.stop()
         self.env.stop()
         self.tmp.cleanup()
 
@@ -208,11 +217,26 @@ class SummarizerTest(unittest.TestCase):
         self.assertEqual(self._run(), 1)
         status = self._status()
         self.assertFalse(status["ok"])
-        self.assertTrue(status["reason"].startswith("claude_error: Not logged in"))
+        self.assertEqual(status["reason"], "claude_error: Overloaded, try again later")
         self.assertEqual(status["written"], [])
         self.assertEqual(status["pending"], 2)
         self.assertEqual(len(self._calls()), 1)  # stops at the first failure
         self.assertFalse((self.root / "summaries" / f"{self.yesterday}.json").exists())
+
+    def test_saved_token_is_passed_to_the_cli(self):
+        self.assertEqual(self._run("--max-days", "1"), 0)
+        self.assertIsNone(self._calls()[0]["token"])  # no token file: the CLI uses its own sign-in
+        self.token_file.write_text("sk-ant-oat01-test\n", encoding="utf-8")
+        self.assertEqual(self._run("--max-days", "1"), 0)
+        self.assertEqual(self._calls()[-1]["token"], "sk-ant-oat01-test")
+        self.assertNotIn("sk-ant-oat01-test", json.dumps(self._status()))
+
+    def test_failed_sign_in_is_named_in_status(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "auth"
+        self.assertEqual(self._run(), 1)
+        status = self._status()
+        self.assertTrue(status["reason"].startswith("claude_auth_failed: Failed to authenticate"))
+        self.assertEqual(len(self._calls()), 1)  # no retry with older flags for a sign-in problem
 
     def test_missing_cli_is_reported(self):
         with patch.object(SUMMARIZER, "find_cli", return_value=None), patch("sys.stdout"):
