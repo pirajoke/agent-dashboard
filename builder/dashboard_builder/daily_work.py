@@ -504,9 +504,10 @@ def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
         summary = summaries.get(day)
         projects = []
         for product_id, item in portfolio.items():
-            bullets = _bullets(summary, product_id) or []
-            if not bullets and not _has_activity(item, day):
+            # A summary left over after its sessions were re-attributed is not news on its own.
+            if not _has_activity(item, day):
                 continue
+            bullets = _bullets(summary, product_id) or []
             records = item["sessions_by_day"].get(day, [])
             prs = item["prs_by_day"].get(day) or {"merged": [], "opened": [], "closed_unmerged": []}
             topics = list(dict.fromkeys(str(r["topic"]).strip() for r in records if isinstance(r.get("topic"), str) and r["topic"].strip()))

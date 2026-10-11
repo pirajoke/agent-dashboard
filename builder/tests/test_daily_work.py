@@ -421,9 +421,15 @@ class ProjectionTest(unittest.TestCase):
             "command-center": {"lead": "Появились итоги дня", "you": [], "agents": ["Итоги дня на сайте"],
                                "next": ["Сохранить токен на Mac mini"],
                                "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
+            "mydictionary": {"lead": "Старое", "you": [], "agents": ["Устаревший итог"], "next": [], "deadlines": []},
         }, headline="Голос и итоги дня", in_progress=True)
+        self._write_paper_summary("2026-10-04", {"jarvis": {"lead": "Старое", "you": [], "agents": ["Устаревший итог"],
+                                                            "next": [], "deadlines": []}})
         payload = work_projection(self.root, now=self.now, owner=True, edition=True)
         days = {day["date"]: day for day in payload["feed"]}
+        # A summary without work behind it that day (sessions moved elsewhere) is not shown.
+        self.assertNotIn("2026-10-04", days)
+        self.assertNotIn("Устаревший итог", json.dumps(payload["feed"], ensure_ascii=False))
         day = days["2026-10-08"]
         self.assertEqual((day["headline"], day["in_progress"], day["written_at"]), ("Голос и итоги дня", True, "2026-10-09T03:00:00Z"))
         projects = {p["id"]: p for p in day["projects"]}
