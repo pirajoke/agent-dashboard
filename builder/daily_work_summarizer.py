@@ -7,8 +7,8 @@ changed since its last summary, it gives Claude the day's real activity per
 product (session titles, what Mark asked, the agent's last reply, PR titles
 and descriptions) and stores, per project, a one-line lead, what Mark did,
 what the agents did, next steps and dated deadlines in product language in
-``<out>/summaries/<day>.json``. The «Сегодня» newspaper and MAIN MANAGER read
-them. Today is summarized again whenever its activity changes, and once more
+``<out>/summaries/<day>.json``. «По дням» (the first screen) and MAIN MANAGER
+read them. Today is summarized again whenever its activity changes, and once more
 after it ends.
 
 Claude is called through the Claude Code CLI already signed in on this Mac
