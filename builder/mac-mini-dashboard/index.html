@@ -3152,6 +3152,17 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-summary-name small { color: var(--mm-muted); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
 .mm-summary-empty { margin: 0; color: var(--mm-muted); font-size: 14px; line-height: 1.5; }
 .mm-day-lead { margin: 6px 0 4px; }
+/* Project page: «По дням» first, everything else folded under one row. */
+.mm-panel.mm-project-more { padding: 0; }
+.mm-project-more > summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-height: 56px; padding: 15px 20px; font-size: 16px; font-weight: 650; list-style: none; border-radius: 14px; cursor: pointer; }
+.mm-project-more > summary::-webkit-details-marker { display: none; }
+.mm-project-more > summary::after { content: '›'; margin-left: auto; color: var(--mm-muted); font-size: 22px; line-height: 1; transition: transform .15s; }
+.mm-project-more[open] > summary::after { transform: rotate(90deg); }
+.mm-project-more > summary:hover { background: color-mix(in srgb, var(--mm-surface-hover) 55%, transparent); }
+.mm-project-more[open] > summary { border-bottom: 1px solid var(--mm-line); border-radius: 14px 14px 0 0; }
+.mm-project-more > summary span { color: var(--mm-muted); font-size: 13px; font-weight: 500; }
+.mm-project-more-body { padding: 20px; }
+.mm-chart-box { position: relative; margin-bottom: 24px; }
 .mm-day-lead + .mm-more { margin-top: 8px; }
 /* An open day already lists its bullets; the first one need not repeat in the header. */
 .mm-group-row.has-summary[open] > summary .mm-group-note { display: none; }
@@ -3229,106 +3240,61 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-project-card:hover, .mm-project-card:hover .mm-project-art svg { transform: none; }
 }
 
-/* «Сегодня»: short news per project, first screen. Base Command Center look. */
+/* «По дням», the first screen: the project page's day rows across all projects, in the MAIN MANAGER look.
+   The big navigation steps back while it is open; the other sections are one small link row. */
 .machines-stats { justify-content: flex-start; margin-bottom: 20px; }
-.np { max-width: 980px; }
-.np [hidden] { display: none !important; }
-.np-top { margin-bottom: 18px; }
-.np-top-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
-.np-title { font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
-.np-daynav { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text2); }
-.np-daynav button { display: grid; place-items: center; flex: none; width: 34px; height: 34px; font-size: 18px; line-height: 1; color: var(--text); background: var(--card); border: 1px solid var(--border2); border-radius: 50%; cursor: pointer; }
-.np-daynav button:hover:not(:disabled) { border-color: var(--accent); }
-.np-daynav button:disabled { opacity: .35; cursor: default; }
-.np button:focus-visible, .np a:focus-visible, .np summary:focus-visible { outline: 3px solid rgba(234,179,8,0.45); outline-offset: 2px; }
-.np-headline { margin-top: 10px; font-size: 17px; font-weight: 500; line-height: 1.45; }
-.np-meta { margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--text2); }
-.np-meta.is-warn { color: #9A5B00; }
-.np-deadlines { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 14px; padding: 10px 14px; background: var(--accent-bg); border: 1px solid rgba(234,179,8,0.32); border-radius: var(--radius-sm); }
-.np-deadlines h3 { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #7A5A00; }
-.np-deadlines ul { display: flex; flex-wrap: wrap; gap: 4px 16px; list-style: none; }
-.np-deadlines li { font-size: 14px; line-height: 1.45; }
-.np-articles { display: grid; gap: 14px; }
-.np-article { padding: 18px 20px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
-.np-head { display: flex; align-items: center; gap: 12px; }
-.np-head > div { min-width: 0; }
-.np-head h3 { font-size: 18px; font-weight: 700; line-height: 1.25; }
-.np-head h3 a { color: inherit; text-decoration: none; }
-.np-head h3 a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.np-facts { margin-top: 2px; font-size: 12px; color: var(--text2); }
-.np-facts span { white-space: nowrap; }
-.np-art { display: grid; place-items: center; flex: none; width: 44px; height: 44px; background: var(--np-tint, var(--bg2)); border-radius: 10px; }
-.np-art svg { width: 38px; height: 38px; }
-.np-initials { font-size: 15px; font-weight: 700; color: var(--text2); }
-.np-art.tint-command-center { --np-tint: var(--accent-bg); }
-.np-art.tint-financial { --np-tint: #FEF3C7; }
-.np-art.tint-mydictionary { --np-tint: var(--blue-bg); }
-.np-art.tint-health { --np-tint: var(--red-bg); }
-.np-art.tint-ai-singularity { --np-tint: #F5F3FF; }
-.np-art.tint-context-news { --np-tint: var(--orange-bg); }
-.np-art.tint-accountable { --np-tint: var(--green-bg); }
-.np-art.tint-jarvis { --np-tint: #F1F5F9; }
-.np-lead { margin-top: 12px; font-size: 16px; font-weight: 600; line-height: 1.4; }
-.np-lead.is-pending { font-size: 14px; font-weight: 400; font-style: italic; color: var(--text2); }
-.np-news { margin-top: 8px; list-style: none; border-top: 1px solid var(--border); }
-.np-news a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 9px 4px; font-size: 15px; line-height: 1.4; color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border); }
-.np-news a:hover { background: var(--bg2); }
-.np-news a > span:nth-child(2) { overflow-wrap: anywhere; }
-.np-who { min-width: 58px; padding: 2px 7px; text-align: center; font-size: 11px; font-weight: 600; color: var(--text2); white-space: nowrap; background: var(--bg2); border-radius: 6px; }
-.np-who.is-you { color: #7A5A00; background: var(--accent-bg); }
-.np-who.is-agents { color: #1D4ED8; background: var(--blue-bg); }
-.np-go { color: var(--muted); }
-.np-due { margin-top: 10px; font-size: 13px; line-height: 1.45; color: #9A3412; }
-.np-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px 16px; margin-top: 12px; }
-.np-todo { order: 0; }
-.np-todo[open] { flex-basis: 100%; order: 2; }
-.np-todo summary { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; font-size: 13px; font-weight: 600; list-style: none; background: var(--bg2); border-radius: 10px; cursor: pointer; }
-.np-todo summary::-webkit-details-marker { display: none; }
-.np-todo summary::after { content: '▾'; color: var(--text2); }
-.np-todo[open] summary::after { content: '▴'; }
-.np-todo summary b { padding: 1px 7px; font-size: 12px; color: #7A5A00; background: var(--accent-bg); border-radius: 6px; }
-.np-todo-body { display: grid; gap: 12px; margin-top: 10px; padding: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-.np-todo-group h4 { margin-bottom: 6px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text2); }
-.np-todo-group ul { display: grid; gap: 6px; list-style: none; }
-.np-todo-group li { position: relative; padding-left: 22px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
-.np-todo-group li::before { content: ''; position: absolute; top: .2em; left: 2px; width: 11px; height: 11px; border: 1.5px solid var(--border2); border-radius: 3px; }
-.np-todo-group a { color: var(--text); text-decoration: underline; text-decoration-color: var(--border2); text-underline-offset: 3px; }
-.np-todo-group a:hover { text-decoration-color: var(--accent); }
-.np-todo-group small { color: var(--text2); }
-.np-todo-empty { font-size: 14px; color: var(--text2); }
-.np-link { display: inline-flex; align-items: center; min-height: 36px; order: 1; font-size: 13px; font-weight: 600; color: #8A6500; text-decoration: none; }
-.np-link:hover { text-decoration: underline; }
-.np-empty { padding: 24px 20px; font-size: 15px; line-height: 1.5; text-align: center; color: var(--text2); background: var(--card); border: 1px dashed var(--border2); border-radius: var(--radius); }
-.np-empty b { display: block; margin-bottom: 4px; font-size: 17px; color: var(--text); }
-.np-quiet { margin-top: 26px; }
-.np-quiet h3 { padding-bottom: 8px; font-size: 16px; font-weight: 700; border-bottom: 1px solid var(--border2); }
-.np-quiet ul { list-style: none; }
-.np-quiet-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 4px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--border); }
-.np-quiet-row:hover { background: var(--bg2); }
-.np-quiet-row b { font-size: 15px; font-weight: 600; }
-.np-quiet-row p { margin-top: 2px; font-size: 13px; line-height: 1.45; color: var(--text2); overflow-wrap: anywhere; }
-.np-quiet-when { font-size: 12px; text-align: right; color: var(--text2); }
-.np-device { margin-top: 26px; padding: 14px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+.container:has(> #section-today.active) > .cc-main-nav { display: none; }
+.mm-os.dp { display: block; min-height: 0; max-width: 980px; padding: 24px 28px 28px; }
+.dp-top { margin-bottom: 16px; }
+.dp-title { font-size: 26px; font-weight: 750; line-height: 1.25; letter-spacing: -.01em; }
+.dp-lede { margin-top: 4px; color: var(--mm-muted); font-size: 14px; }
+.dp-more { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 8px 0 0 -8px; color: var(--mm-muted); font-size: 13px; }
+.dp-more span { margin: 0 4px 0 8px; }
+.dp-more button { min-height: 32px; padding: 4px 8px; color: var(--mm-accent); border-radius: 8px; font-size: 13px; font-weight: 600; }
+.dp-more button:hover { background: var(--mm-surface-hover); }
+.mm-os.dp .mm-notice { margin: 0 0 16px; }
+.dp-deadlines { margin-bottom: 16px; padding: 12px 16px; background: var(--mm-warning-soft); border-radius: 12px; }
+.dp-deadlines h3 { margin-bottom: 4px; color: var(--mm-warning); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.dp-deadlines ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.dp-headline { margin: 10px 0 2px; font-size: 16px; font-weight: 650; line-height: 1.4; }
+.dp-project { padding: 12px 0; border-bottom: 1px solid var(--mm-line); }
+.dp-project:last-of-type { border-bottom: 0; }
+.dp-project-name { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.dp-project-name small { margin-left: auto; color: var(--mm-muted); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.dp-project .mm-project-art { width: 30px; height: 30px; border-radius: 8px; }
+.dp-project .mm-project-art svg { width: 26px; height: 26px; }
+.dp-project .mm-art-initials { width: 26px; height: 26px; border-radius: 7px; font-size: 10px; }
+.dp-pending { color: var(--mm-muted); font-size: 13.5px; line-height: 1.5; }
+.dp-tech { display: grid; gap: 12px; padding-top: 4px; }
+.dp-tech-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; font-size: 13px; }
+.dp-tech-row b { font-size: 14px; }
+.dp-tech-row > span { color: var(--mm-muted); }
+.dp-tech-row > a { margin-left: auto; font-weight: 600; }
+.dp-tech .mm-group-foot { flex-basis: 100%; padding-top: 6px; }
+.dp-foot { margin-top: 14px; color: var(--mm-muted); font-size: 12.5px; }
+.np-device { margin-top: 22px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; }
 .np-device-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
 .np-device h3 { font-size: 15px; font-weight: 700; }
-.np-device p { margin-top: 2px; font-size: 13px; line-height: 1.45; color: var(--text2); }
-.np-device button { min-height: 36px; padding: 0 14px; font: inherit; font-size: 13px; font-weight: 600; color: var(--text); background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; cursor: pointer; }
-.np-device button:hover { border-color: var(--accent); }
+.np-device p { margin-top: 2px; color: var(--mm-muted); font-size: 13px; line-height: 1.45; }
+.mm-os .np-device button { min-height: 36px; padding: 0 14px; font-size: 13px; font-weight: 600; background: var(--mm-surface-hover); border: 1px solid var(--mm-control-line); border-radius: 10px; }
+.mm-os .np-device button:hover { border-color: var(--mm-accent); }
 .np-device-qr { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-top: 14px; }
 .np-device-qr > div:last-child { flex: 1 1 200px; }
 .np-device-qr button { margin-top: 10px; }
 .np-qr { flex: none; width: 220px; height: 220px; padding: 0; background: #fff; border-radius: 8px; }
 .np-qr svg { display: block; width: 100%; height: 100%; }
-.np-chip { display: inline-block; margin-top: 4px; padding: 2px 8px; font-weight: 600; color: #7A5A00; white-space: nowrap; background: var(--accent-bg); border-radius: 6px; }
+@media (max-width: 760px) {
+  .mm-os.dp { padding: 18px 14px 20px; }
+  .dp-title { font-size: 23px; }
+  .dp-tech-row > a { margin-left: 0; flex-basis: 100%; }
+  .mm-project-more > summary { padding: 12px 14px; }
+  .mm-project-more-body { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-project-more > summary::after { transition: none; }
+}
 @media (max-width: 600px) {
   .cc-main-nav .nav-pill:first-child { grid-column: 1 / -1; }
-  .np-title { font-size: 24px; }
-  .np-headline { font-size: 16px; }
-  .np-article { padding: 14px; }
-  .np-news a { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
-  .np-news .np-who { grid-column: 1 / -1; justify-self: start; min-width: 0; }
-  .np-quiet-row { grid-template-columns: 44px minmax(0, 1fr); }
-  .np-quiet-when { grid-column: 2; text-align: left; }
 }
 </style>
 </head>
@@ -3492,37 +3458,35 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
-    <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span> Сегодня</button>
+    <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span> По дням</button>
     <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span> MAIN MANAGER <span class="pill-badge">день</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Техника</button>
   </nav>
 
-  <!-- ═══════════════ СЕГОДНЯ: короткие новости по проектам ═══════════════ -->
+  <!-- ═══════════════ ПО ДНЯМ: что сделано за каждый день, простыми словами ═══════════════ -->
   <div id="section-today" class="section active" lang="ru">
-    <div class="np" role="region" aria-labelledby="np-title">
-      <header class="np-top">
-        <div class="np-top-row">
-          <h2 class="np-title" id="np-title">Сегодня</h2>
-          <div class="np-daynav">
-            <button type="button" id="np-prev" aria-label="Предыдущий рабочий день" disabled>‹</button>
-            <span id="np-date">—</span>
-            <button type="button" id="np-next" aria-label="Следующий рабочий день" disabled>›</button>
-          </div>
+    <div class="mm-os dp" id="dp-os" role="region" aria-labelledby="dp-title">
+      <header class="dp-top">
+        <div>
+          <h2 class="dp-title" id="dp-title">По дням</h2>
+          <p class="dp-lede">Что сделано за каждый день, простыми словами. Цифры и PR лежат в «Технических деталях» дня.</p>
         </div>
-        <p class="np-headline" id="np-headline" hidden></p>
-        <p class="np-meta" id="np-meta" role="status" aria-live="polite">Загружаю новости…</p>
+        <nav class="dp-more" aria-label="Другие разделы">
+          <span>Другие разделы:</span>
+          <button type="button" onclick="showSection('work')">MAIN MANAGER</button>
+          <button type="button" onclick="showSection('agents')">Agents</button>
+          <button type="button" onclick="showSection('platforms')">Platforms</button>
+          <button type="button" onclick="showSection('machines')">Техника</button>
+        </nav>
       </header>
-      <section class="np-deadlines" id="np-deadlines" aria-labelledby="np-deadlines-title" hidden>
-        <h3 id="np-deadlines-title">Сроки</h3>
-        <ul id="np-deadline-list"></ul>
+      <p class="mm-notice" id="dp-meta" role="status" aria-live="polite">Загружаю дни…</p>
+      <section class="dp-deadlines" id="dp-deadlines" aria-labelledby="dp-deadlines-title" hidden>
+        <h3 id="dp-deadlines-title">Сроки</h3>
+        <ul id="dp-deadline-list"></ul>
       </section>
-      <div class="np-articles" id="np-articles"></div>
-      <section class="np-quiet" id="np-quiet" aria-labelledby="np-quiet-title" hidden>
-        <h3 id="np-quiet-title">Остальные проекты</h3>
-        <ul id="np-quiet-list"></ul>
-      </section>
+      <div class="mm-group-rows" id="dp-days"></div>
       <section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>
         <div class="np-device-row">
           <div>
@@ -4679,7 +4643,7 @@ function showSection(name) {
   if (name === 'logs' && !currentLogService) loadLogTabs();
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
-  if (name === 'today') setTimeout(() => loadPaper(paperDate), 0);
+  if (name === 'today') setTimeout(loadDays, 0);
 }
 
 const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
@@ -7413,30 +7377,37 @@ function renderProjectPage() {
         <div class="mm-chip-row">${where}</div>
       </div>
     </section>
-    <div class="mm-stats">${stats.map(stat => `
-      <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
-    </div>
-    ${mmTodo(p)}
-    <section class="mm-panel" aria-labelledby="mm-project-chart-title">
-      <div class="mm-section-heading">
-        <div><h3 id="mm-project-chart-title">Работа по дням <span>30 дней</span></h3><p class="mm-section-note">Нажми на столбик, чтобы открыть этот день ниже.</p></div>
-        <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
-      </div>
-      <div class="mm-chart" id="mm-project-chart"></div>
-      <div class="mm-chart mm-chart-prs" id="mm-project-chart-prs"></div>
-      <div class="mm-tooltip" role="tooltip" hidden></div>
-    </section>
-    <div class="mm-section-heading"><div><h3>Что получилось <span>${merged.length}</span></h3><p class="mm-section-note">PR, смёрдженные за 30 дней.</p></div></div>
-    <div class="mm-outcomes">${merged.length ? merged.map(pr => mmPrAction(pr, 'merged')).join('') : '<span class="mm-chip">За 30 дней PR не смёрджено</span>'}</div>
-    ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
-    <div class="mm-group-rows mm-block">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}
     <div class="mm-section-heading"><div><h3>По дням <span>${p.timeline.length}</span></h3><p class="mm-section-note">Итог каждого дня простыми словами. Сессии, PR и команды лежат в технических деталях.</p></div></div>
-    <div class="mm-group-rows">${p.timeline.map((day, index) => mmProjectDay(day, index < 3)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>`;
+    <div class="mm-group-rows mm-block">${p.timeline.map((day, index) => mmProjectDay(day, index < 3)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>
+    <details class="mm-panel mm-project-more" id="mm-project-more">
+      <summary>Цифры, задачи и график <span>${mmEsc(`${workMinutes(p.total_minutes)} за 30 дней · задач ${p.open_prs_list.length + p.next_steps.length + p.open_issues_count}`)}</span></summary>
+      <div class="mm-project-more-body">
+      <div class="mm-stats">${stats.map(stat => `
+        <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
+      </div>
+      ${mmTodo(p)}
+      <section class="mm-chart-box" aria-labelledby="mm-project-chart-title">
+        <div class="mm-section-heading">
+          <div><h3 id="mm-project-chart-title">Работа по дням <span>30 дней</span></h3><p class="mm-section-note">Нажми на столбик, чтобы открыть этот день выше.</p></div>
+          <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
+        </div>
+        <div class="mm-chart" id="mm-project-chart"></div>
+        <div class="mm-chart mm-chart-prs" id="mm-project-chart-prs"></div>
+        <div class="mm-tooltip" role="tooltip" hidden></div>
+      </section>
+      <div class="mm-section-heading"><div><h3>Что получилось <span>${merged.length}</span></h3><p class="mm-section-note">PR, смёрдженные за 30 дней.</p></div></div>
+      <div class="mm-outcomes">${merged.length ? merged.map(pr => mmPrAction(pr, 'merged')).join('') : '<span class="mm-chip">За 30 дней PR не смёрджено</span>'}</div>
+      ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
+      <div class="mm-group-rows">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}
+      </div>
+    </details>`;
   document.getElementById('mm-project-back').addEventListener('click', () => mmShowView('projects'));
+  // The chart needs its width, so it is drawn when the folded block opens.
+  document.getElementById('mm-project-more').addEventListener('toggle', event => { if (event.target.open) renderProjectChart(); });
   renderProjectChart();
 }
 
-// A news item in «Сегодня» opens its day here, technical details unfolded.
+// A project in «По дням» on the first screen opens its day here, technical details unfolded.
 function mmRevealDay(day) {
   const row = document.getElementById(`mm-day-${day}`);
   if (!row) return;
@@ -7496,33 +7467,17 @@ window.addEventListener('resize', () => {
   mmResizeTimer = setTimeout(mmRedrawCharts, 150);
 });
 // ── End MAIN MANAGER ──
-// ── «Сегодня»: short news per project ──
-// What happened in each product that day, written by Claude on the Mac mini from real activity
-// (sessions, asks, merged PRs). Every news item opens that day's technical details; every project
-// has its own to-do: PRs waiting for Mark, next steps and open GitHub issues. Owner only; others see
-// just the day's numbers.
+// ── «По дням»: the first screen ──
+// Mark (2026-10-11): what got done each day, in plain words, is what matters; everything else is one
+// click away. The last 14 days with work, newest first, in the same rows as «По дням» on a project
+// page: Claude's bullets per project, numbers and PRs folded into «Технические детали», each project
+// there opening that day on its page. Owner only; others see just the newest working day's numbers.
 const NP_MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-const NP_WEEKDAYS = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
-const NP_REFRESH_MS = 5 * 60 * 1000;
-let paperData = null;
-let paperDate = null; // a day the reader picked; null follows the newest day with work
-let paperLoading = null; // the day being fetched ('' for the newest), to skip duplicate requests
-let paperRequest = 0;
-let paperShown = null; // paperDate of the edition on screen
-
-function npDayLine(iso) {
-  const date = mmDate(iso);
-  return `${NP_WEEKDAYS[date.getDay()]}, ${date.getDate()} ${NP_MONTHS[date.getMonth()]}`;
-}
-
-function npDayName(iso, series) {
-  const last = series[series.length - 1]?.date;
-  const prev = series[series.length - 2]?.date;
-  if (iso === last) return 'Сегодня';
-  if (iso === prev) return 'Вчера';
-  const date = mmDate(iso);
-  return `${date.getDate()} ${NP_MONTHS[date.getMonth()]}`;
-}
+const DP_REFRESH_MS = 5 * 60 * 1000;
+const DP_OPEN_DAYS = 3;
+let dpData = null;
+let dpLoading = false;
+const dpOpen = {}; // rows the reader opened or closed, by id, kept across refreshes
 
 function npDue(iso, today) {
   const days = Math.round((mmDate(iso) - mmDate(today)) / 86400000);
@@ -7533,181 +7488,146 @@ function npDue(iso, today) {
   return `${when}, через ${days} дн`;
 }
 
-function npWorkDays(data) {
-  const today = data.series[data.series.length - 1]?.date;
-  return data.series
-    .filter(day => day.sessions || day.prs_merged || day.prs_opened || day.prs_closed_unmerged
-      || day.date === today || day.date === data.selected_date)
-    .map(day => day.date);
+// Same light or dark choice as MAIN MANAGER (its switch is per browser).
+function dpTheme() {
+  let saved = null;
+  try { saved = window.localStorage.getItem(MM_THEME_KEY); } catch (error) { saved = null; }
+  const os = document.getElementById('dp-os');
+  if (saved === 'dark' || saved === 'light') os.dataset.theme = saved;
+  else delete os.dataset.theme;
 }
 
-function npArt(item) {
-  const tint = MM_TINTS.has(item.id) ? item.id : 'other';
-  const inner = item.mascot
-    ? `<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-${mmEsc(item.mascot)}"/></svg>`
-    : `<span class="np-initials">${mmEsc(mmInitials(item.name))}</span>`;
-  return `<span class="np-art tint-${tint}" aria-hidden="true">${inner}</span>`;
-}
-
-function npHref(id, day) {
-  return `?tab=work&amp;project=${encodeURIComponent(id)}${day ? `&amp;day=${encodeURIComponent(day)}` : ''}`;
-}
-
-function npLink(id, day, inner, cls) {
-  return `<a class="${cls}" href="${npHref(id, day)}" data-project="${mmEsc(id)}"${day ? ` data-day="${mmEsc(day)}"` : ''}>${inner}</a>`;
-}
-
-function npGithubLink(item, fallback) {
-  const title = mmEsc(compactText(item.title || fallback, 90));
-  const url = mmGithubUrl(item.url);
-  return url ? `<a href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${title}</a>` : title;
-}
-
-function npTodoCount(item) {
-  return item.waiting_count + item.next.length + item.issues_count;
-}
-
-function npTodo(item) {
-  const groups = [];
-  if (item.waiting_count) {
-    const more = item.waiting_count > item.waiting.length ? `<li><small>и ещё ${item.waiting_count - item.waiting.length}</small></li>` : '';
-    groups.push(['Ждёт вашего решения', item.waiting.map(pr => `<li>${npGithubLink(pr, `PR #${pr.number ?? ''}`)}</li>`).join('') + more]);
-  }
-  if (item.next.length) groups.push(['Следующие шаги', item.next.map(text => `<li>${mmEsc(text)}</li>`).join('')]);
-  if (item.issues_count) {
-    const more = item.issues_count > item.issues.length ? `<li><small>и ещё ${item.issues_count - item.issues.length}</small></li>` : '';
-    groups.push(['Задачи на GitHub', item.issues.map(issue => `<li>${npGithubLink(issue, `Задача #${issue.number ?? ''}`)}</li>`).join('') + more]);
-  }
-  const body = groups.length
-    ? groups.map(([title, rows]) => `<div class="np-todo-group"><h4>${mmEsc(title)}</h4><ul>${rows}</ul></div>`).join('')
-    : '<p class="np-todo-empty">Открытых задач нет.</p>';
-  const count = npTodoCount(item);
-  return `<details class="np-todo"><summary>Задачи проекта${count ? ` <b>${count}</b>` : ''}</summary><div class="np-todo-body">${body}</div></details>`;
-}
-
-function npArticle(item, day, today) {
-  const facts = [];
-  if (item.minutes) facts.push(`${workMinutes(item.minutes)} работы`);
-  if (item.merged.length) facts.push(`слито PR: ${item.merged.length}`);
-  if (item.opened.length) facts.push(`открыто PR: ${item.opened.length}`);
-  if (item.closed.length) facts.push(`закрыто без слияния: ${item.closed.length}`);
-  const news = [];
-  let lead = '';
-  if (item.written) {
-    if (item.lead) lead = `<p class="np-lead">${mmEsc(item.lead)}</p>`;
-    item.you.forEach(text => news.push(['Вы', 'is-you', text]));
-    item.agents.forEach(text => news.push(['Агенты', 'is-agents', text]));
-  } else if (item.agents.length) {
-    // An older summary: what got done, without who did what.
-    item.agents.forEach(text => news.push(['Сделано', '', text]));
-  } else {
-    lead = '<p class="np-lead is-pending">Пересказ ещё не готов, пока только факты.</p>';
-    item.topics.forEach(text => news.push(['Работа', '', text]));
-    item.merged.forEach(pr => news.push(['Слито', '', pr.title || `PR #${pr.number ?? ''}`]));
-    item.opened.forEach(pr => news.push(['Открыт PR', '', pr.title || `PR #${pr.number ?? ''}`]));
-    item.closed.forEach(pr => news.push(['Закрыт', '', pr.title || `PR #${pr.number ?? ''}`]));
-  }
-  const list = news.length ? `<ul class="np-news">${news.map(([who, cls, text]) => `<li>${npLink(item.id, day,
-    `<span class="np-who ${cls}">${mmEsc(who)}</span><span>${mmEsc(text)}</span><span class="np-go" aria-hidden="true">›</span>`, '')}</li>`).join('')}</ul>` : '';
-  const due = item.deadlines.map(d => `<p class="np-due"><b>Срок ${mmEsc(npDue(d.date, today))}:</b> ${mmEsc(d.what)}</p>`).join('');
-  return `
-    <article class="np-article">
-      <header class="np-head">
-        ${npArt(item)}
-        <div>
-          <h3>${npLink(item.id, null, mmEsc(item.name), '')}</h3>
-          ${facts.length ? `<p class="np-facts">${facts.map(fact => `<span>${mmEsc(fact)}</span>`).join(' · ')}</p>` : ''}
-        </div>
-      </header>
-      ${lead}
-      ${list}
-      ${due}
-      <div class="np-actions">
-        ${npTodo(item)}
-        ${npLink(item.id, day, 'Технические детали дня →', 'np-link')}
-      </div>
-    </article>`;
-}
-
-function npQuietRow(item, series) {
-  const when = item.last_date ? `работа ${npDayName(item.last_date, series).toLowerCase()}` : 'за 30 дней не трогали';
-  const line = item.next.length ? `Дальше: ${item.next[0]}` : (item.lead || item.description || '');
-  const count = npTodoCount(item);
-  const chip = count ? `<br><span class="np-chip">задач: ${count}</span>` : '';
-  return `<li>${npLink(item.id, null, `
-    ${npArt(item)}
-    <span><b>${mmEsc(item.name)}</b>${line ? `<p>${mmEsc(line)}</p>` : ''}</span>
-    <span class="np-quiet-when">${mmEsc(when)}${chip}</span>`, 'np-quiet-row')}</li>`;
-}
-
-function npMeta(data, paper) {
-  const parts = [];
-  let warn = false;
-  if (!paperDate && !paper.is_today) parts.push('Сегодня работы ещё не было, это новости последнего рабочего дня.');
-  if (paper.written_at) {
-    parts.push(`Пересказ написал Claude ${mmAgo(paper.written_at)}${paper.in_progress ? ', день ещё идёт и он допишет' : ''}.`);
-  } else if (paper.articles.length) {
-    const status = data.summaries_status;
-    warn = Boolean(status && status.ok === false);
-    parts.push(warn ? mmSummaryPending(data, 'Пересказ дня') : 'Пересказ пишет Claude на Mac mini, проверка каждые 3 часа.');
-  }
-  if (data.state === 'stale') {
-    warn = true;
-    parts.push(`Данные устарели: последний сбор ${mmAgo(data.collected_at)}.`);
-  } else if (data.collected_at) {
-    parts.push(`Данные обновлены ${mmAgo(data.collected_at)}.`);
-  }
-  return { text: parts.join(' '), warn };
-}
-
-function npSetMeta(text, warn) {
-  const meta = document.getElementById('np-meta');
+function dpSetMeta(text, state = '') {
+  const meta = document.getElementById('dp-meta');
   meta.textContent = text;
-  meta.classList.toggle('is-warn', Boolean(warn));
+  meta.hidden = !text;
+  meta.className = `mm-notice${state ? ` ${state}` : ''}`;
 }
 
-function renderPaper() {
-  const data = paperData;
-  const days = npWorkDays(data);
-  const index = days.indexOf(data.selected_date);
-  document.getElementById('np-date').textContent = npDayLine(data.selected_date);
-  document.getElementById('np-title').textContent = npDayName(data.selected_date, data.series);
-  document.getElementById('np-prev').disabled = index <= 0;
-  document.getElementById('np-next').disabled = index < 0 || index >= days.length - 1;
-  const headline = document.getElementById('np-headline');
-  const articles = document.getElementById('np-articles');
-  const deadlines = document.getElementById('np-deadlines');
-  const quiet = document.getElementById('np-quiet');
-  const paper = data.paper;
-  if (!data.owner_view || !paper) {
+function dpFacts(day) {
+  // PR counts as in each project's line: a PR opened and merged the same day counts as merged only.
+  const count = key => day.projects.reduce((sum, item) => sum + item[key].length, 0);
+  const merged = count('merged');
+  const opened = count('opened');
+  const closed = count('closed');
+  return [
+    day.claude_minutes ? `Claude ${workMinutes(day.claude_minutes)}` : '',
+    day.codex_minutes ? `Codex ${workMinutes(day.codex_minutes)}` : '',
+    day.sessions ? `${day.sessions} сесс.` : '',
+    merged ? `смёрджено ${merged}` : '',
+    opened ? `открыто PR ${opened}` : '',
+    closed ? `закрыто без merge ${closed}` : '',
+  ].filter(Boolean).join(' · ');
+}
+
+function dpProject(item) {
+  let body = mmBullets(item.bullets);
+  if (!item.bullets.length) {
+    // No summary for this project yet: what the sessions were about, or its PRs. Never invented text.
+    const prs = [...item.merged, ...item.opened, ...item.closed].map(pr => pr.title || `PR #${pr.number ?? ''}`);
+    const facts = (item.topics.length ? item.topics : prs).map(text => compactText(text, 90));
+    body = `<p class="dp-pending">Пересказа ещё нет.${facts.length ? ` ${item.topics.length ? 'Над чем работали' : 'PR'}: ${mmEsc(facts.join('; '))}.` : ''}</p>`;
+  }
+  return `<section class="dp-project">
+    <h4 class="dp-project-name">${mmArt(item)}<span>${mmEsc(item.name)}</span>${item.minutes ? `<small>${mmEsc(workMinutes(item.minutes))}</small>` : ''}</h4>
+    ${body}
+  </section>`;
+}
+
+function dpTech(day) {
+  const rows = day.projects.map(item => {
+    const facts = [
+      item.minutes ? `${workMinutes(item.minutes)} работы` : '',
+      item.sessions ? `${item.sessions} сесс.` : '',
+      item.merged.length ? `смёрджено ${item.merged.length}` : '',
+      item.opened.length ? `открыто PR ${item.opened.length}` : '',
+      item.closed.length ? `закрыто без merge ${item.closed.length}` : '',
+      item.commands ? `команд в инфраструктуре ${item.commands}` : '',
+    ].filter(Boolean).join(' · ');
+    const prs = [
+      ...item.merged.map(pr => mmPrAction(pr, 'merged')),
+      ...item.opened.map(pr => mmPrAction(pr, 'open')),
+      ...item.closed.map(pr => mmPrAction(pr, 'closed')),
+    ];
+    const href = `?tab=work&amp;project=${encodeURIComponent(item.id)}&amp;day=${encodeURIComponent(day.date)}`;
+    return `<div class="dp-tech-row"><b>${mmEsc(item.name)}</b>${facts ? `<span>${mmEsc(facts)}</span>` : ''}
+      <a href="${href}" data-project="${mmEsc(item.id)}" data-day="${mmEsc(day.date)}">Открыть день в проекте →</a>
+      ${prs.length ? `<div class="mm-group-foot">${prs.join('')}</div>` : ''}</div>`;
+  }).join('');
+  const id = `dp-tech-${day.date}`;
+  const note = dpFacts(day);
+  return `<details class="mm-more" id="${mmEsc(id)}"${dpOpen[id] ? ' open' : ''}>
+    <summary>Технические детали${note ? ` · ${mmEsc(note)}` : ''}</summary>
+    <div class="dp-tech">${rows}</div>
+  </details>`;
+}
+
+function dpDay(day, index, data) {
+  const id = `dp-day-${day.date}`;
+  const open = id in dpOpen ? dpOpen[id] : index < DP_OPEN_DAYS;
+  const written = day.projects.some(item => item.bullets.length);
+  const first = day.headline || day.projects.find(item => item.bullets.length)?.bullets[0] || '';
+  const dot = day.claude_minutes || day.codex_minutes ? (day.claude_minutes >= day.codex_minutes ? 'claude' : 'codex') : 'cat-pr';
+  const failed = Boolean(data.summaries_status && data.summaries_status.ok === false);
+  let status = '';
+  if (!written) {
+    status = `<p class="dp-pending mm-day-lead">${mmEsc(day.is_today && !failed
+      ? 'Итог за сегодня Claude напишет позже, он проверяет каждые 3 часа.'
+      : mmSummaryPending(data))}</p>`;
+  } else if (day.in_progress) {
+    status = '<p class="dp-pending">День ещё идёт, Claude допишет итог.</p>';
+  }
+  return `<details class="mm-group-row${first ? ' has-summary' : ''}" id="${mmEsc(id)}"${open ? ' open' : ''}>
+    <summary>
+      <span class="mm-dot ${dot}" aria-hidden="true"></span>
+      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(mmDayHeading(day.date))}</span><span class="mm-group-note">${mmEsc(first || dpFacts(day))}</span></span>
+      <span class="mm-group-aside">${day.total_minutes ? mmEsc(workMinutes(day.total_minutes)) : '—'}<small>${day.total_minutes ? 'работы' : 'только GitHub'}</small></span>
+      <span class="mm-chevron" aria-hidden="true">›</span>
+    </summary>
+    <div class="mm-group-body">
+      ${day.headline ? `<p class="dp-headline">${mmEsc(day.headline)}</p>` : ''}
+      ${status}
+      ${day.projects.map(dpProject).join('')}
+      ${dpTech(day)}
+    </div>
+  </details>`;
+}
+
+function dpMeta(data) {
+  if (data.state === 'stale') return dpSetMeta(`Данные устарели: последний сбор ${mmAgo(data.collected_at)}.`, 'stale');
+  const status = data.summaries_status;
+  if (status && status.ok === false) return dpSetMeta(mmSummaryPending(data, 'Итог дня'), 'stale');
+  dpSetMeta(data.collected_at ? `Данные обновлены ${mmAgo(data.collected_at)}. Итоги дней пишет Claude на Mac mini, проверка каждые 3 часа.` : '');
+}
+
+function renderDays() {
+  const data = dpData;
+  dpTheme();
+  const host = document.getElementById('dp-days');
+  const deadlines = document.getElementById('dp-deadlines');
+  if (!data.owner_view || !data.feed) {
     const day = data.day;
-    headline.hidden = true;
     deadlines.hidden = true;
-    quiet.hidden = true;
-    npSetMeta(data.state === 'stale' ? `Данные устарели: последний сбор ${mmAgo(data.collected_at)}.` : '', data.state === 'stale');
+    dpSetMeta(data.state === 'stale' ? `Данные устарели: последний сбор ${mmAgo(data.collected_at)}.` : '', data.state === 'stale' ? 'stale' : '');
     npDeviceSetup(false);
-    articles.innerHTML = `<div class="np-empty"><b>Новости по проектам видит только владелец</b>
-      ${mmEsc(`За день: ${workMinutes(day.total_minutes)} работы, проектов: ${day.project_count}, слито PR: ${day.prs_merged}.`)}
+    host.innerHTML = `<div class="mm-empty"><b>Итоги по дням видит только владелец</b><br>
+      ${mmEsc(`${mmDayHeading(day.date)}: ${workMinutes(day.total_minutes)} работы, проектов: ${day.project_count}, слито PR: ${day.prs_merged}.`)}
       <br>На этом устройстве нет ключа владельца. Телефон подключается с Mac, где проекты уже видны: внизу этой страницы нажмите «Открыть на телефоне» и наведите камеру на QR-код.</div>`;
     return;
   }
-  headline.hidden = !paper.headline;
-  headline.textContent = paper.headline || '';
-  const meta = npMeta(data, paper);
-  npSetMeta(meta.text, meta.warn);
-  const today = data.series[data.series.length - 1]?.date || paper.date;
-  deadlines.hidden = !paper.deadlines.length;
-  document.getElementById('np-deadline-list').innerHTML = paper.deadlines.map(d => `
+  dpMeta(data);
+  const today = data.series[data.series.length - 1]?.date;
+  deadlines.hidden = !data.deadlines.length;
+  document.getElementById('dp-deadline-list').innerHTML = data.deadlines.map(d => `
     <li><b>${mmEsc(npDue(d.date, today))}</b> · ${mmEsc(d.project)}: ${mmEsc(d.what)}</li>`).join('');
-  if (paper.articles.length) {
-    articles.innerHTML = paper.articles.map(item => npArticle(item, paper.date, today)).join('');
-  } else if (data.state === 'empty') {
-    articles.innerHTML = '<div class="np-empty"><b>Новостей пока нет</b>Сборщик работы ещё не присылал данные с компьютеров.</div>';
+  if (data.feed.length) {
+    host.innerHTML = data.feed.map((day, index) => dpDay(day, index, data)).join('')
+      + '<p class="dp-foot">Здесь последние 14 дней. Дни раньше есть на страницах проектов в MAIN MANAGER.</p>';
   } else {
-    articles.innerHTML = `<div class="np-empty"><b>${paper.is_today ? 'Сегодня работы ещё не было' : 'В этот день работы не было'}</b>Ни сессий с Claude и Codex, ни PR.</div>`;
+    host.innerHTML = `<p class="mm-empty">${data.state === 'empty'
+      ? 'Сборщик работы ещё не присылал данные с компьютеров.'
+      : 'За 14 дней ни сессий с Claude и Codex, ни PR.'}</p>`;
   }
-  quiet.hidden = !paper.quiet.length;
-  document.getElementById('np-quiet-list').innerHTML = paper.quiet.map(item => npQuietRow(item, data.series)).join('');
   npDeviceSetup(true);
 }
 
@@ -7756,50 +7676,39 @@ function npHideQr() {
   document.getElementById('np-device-show').hidden = false;
 }
 
-async function loadPaper(date) {
-  // A newer request (an arrow click during a refresh) wins; only the latest one renders.
-  if (paperLoading === (date || '')) return;
-  paperLoading = date || '';
-  const request = ++paperRequest;
-  const params = new URLSearchParams({ days: '30', edition: '1' });
-  if (date) params.set('date', date);
+async function loadDays() {
+  if (dpLoading) return;
+  dpLoading = true;
   try {
+    const params = new URLSearchParams({ days: '30', edition: '1' });
     const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
-    if (request !== paperRequest) return;
-    paperData = data;
-    paperShown = date || null;
-    renderPaper();
+    dpData = data;
+    renderDays();
   } catch (error) {
-    if (request === paperRequest && paperData) {
-      // Keep the edition on screen, say so, and let the arrows and refresh go on from it.
-      paperDate = paperShown;
-      npSetMeta('Не удалось получить новости с сервера Command Center, показываю последние полученные.', true);
-    } else if (request === paperRequest) {
-      document.getElementById('np-articles').innerHTML = '';
-      npSetMeta('Не удалось получить новости с сервера Command Center. Ничего не показываю, чтобы не гадать.', true);
+    if (dpData) {
+      // Keep the days on screen and say so; the next refresh tries again.
+      dpSetMeta('Не удалось обновить дни с сервера Command Center, показываю последние полученные.', 'error');
+    } else {
+      document.getElementById('dp-days').innerHTML = '';
+      dpSetMeta('Не удалось получить дни с сервера Command Center. Ничего не показываю, чтобы не гадать.', 'error');
     }
   } finally {
-    if (request === paperRequest) paperLoading = null;
+    dpLoading = false;
   }
-}
-
-function shiftPaperDay(step) {
-  if (!paperData) return;
-  const days = npWorkDays(paperData);
-  const index = days.indexOf(paperData.selected_date) + step;
-  if (index < 0 || index >= days.length) return;
-  paperDate = days[index];
-  loadPaper(paperDate);
 }
 
 document.getElementById('np-device-show').addEventListener('click', npShowQr);
 document.getElementById('np-device-hide').addEventListener('click', npHideQr);
 document.addEventListener('visibilitychange', () => { if (document.hidden) npHideQr(); });
-document.getElementById('np-prev').addEventListener('click', () => shiftPaperDay(-1));
-document.getElementById('np-next').addEventListener('click', () => shiftPaperDay(1));
-// News, project names and «Технические детали» open the project page in MAIN MANAGER, at that day.
+// A day or its technical details stay as the reader left them when the list refreshes.
+document.getElementById('dp-days').addEventListener('click', event => {
+  const summary = event.target.closest('summary');
+  const row = summary && summary.parentElement;
+  if (row && row.id) dpOpen[row.id] = !row.open; // the click is about to flip it
+});
+// «Открыть день в проекте» opens that day on the project page in MAIN MANAGER, details unfolded.
 document.getElementById('section-today').addEventListener('click', event => {
   const link = event.target.closest('a[data-project]');
   if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
@@ -7815,10 +7724,10 @@ document.getElementById('section-today').addEventListener('click', event => {
   setTimeout(() => openProject(link.dataset.project, link.dataset.day || null), 0);
 });
 setInterval(() => {
-  if (!document.hidden && document.getElementById('section-today').classList.contains('active')) loadPaper(paperDate);
-}, NP_REFRESH_MS);
-if (document.getElementById('section-today').classList.contains('active')) loadPaper(paperDate);
-// ── End «Сегодня» ──
+  if (!document.hidden && document.getElementById('section-today').classList.contains('active')) loadDays();
+}, DP_REFRESH_MS);
+if (document.getElementById('section-today').classList.contains('active')) loadDays();
+// ── End «По дням» ──
 </script>
 <script>
 /* QR codes for «Открыть на телефоне»: qrcode-generator 2.0.4, Copyright (c) 2009 Kazuhiko Arase,

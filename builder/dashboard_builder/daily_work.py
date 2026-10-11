@@ -27,6 +27,7 @@ BRANCH_LOOKBACK = timedelta(days=30)
 MAIN_BRANCHES = {"main", "master", "head", "develop", "dev", "trunk"}
 LIST_LIMIT = 12
 TODO_LIMIT = 8
+FEED_DAYS = 14  # the summarizer writes the last 14 days
 PROJECT_DAY_LIMIT = 30
 # Products as Command Center's Platforms tab shows them; the mascot is the
 # Platforms SVG symbol (cc-mascot-<mascot>). Sessions and PRs are matched by
@@ -477,67 +478,64 @@ def _has_activity(item: dict[str, Any], day: str) -> bool:
     return bool(item["sessions_by_day"].get(day)) or bool(prs and any(prs.values()))
 
 
-def _paper(edition: str, today: str, series_days: list[str], portfolio: dict[str, dict[str, Any]],
-           summaries: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    """The «Сегодня» newspaper for one day: an article per product that had work, the rest in brief.
-
-    Text comes only from the summaries Claude wrote from real activity; without one, an article
-    falls back to session titles and PR counts. Deadlines are only the dated ones in summaries.
-    """
-    summary = summaries.get(edition)
-    past = [day for day in series_days if day <= edition]
-    articles, quiet, deadlines = [], [], {}
+def _upcoming_deadlines(summaries: dict[str, dict[str, Any]], portfolio: dict[str, dict[str, Any]],
+                        series_days: list[str], today: str) -> list[dict[str, Any]]:
+    """Dated deadlines Claude found in the window's summaries that have not passed yet."""
+    deadlines: dict[tuple, dict[str, Any]] = {}
     for product_id, item in portfolio.items():
-        latest = next((details for details in (_details(summaries.get(day), product_id) for day in reversed(past)) if details), None)
-        # Next steps stay up until a later summary names new ones.
-        latest_next = _latest_next(summaries, product_id, past)
         for day in series_days:
             for deadline in (_details(summaries.get(day), product_id) or {}).get("deadlines", []):
                 if deadline["date"] >= today:
                     deadlines[(product_id, deadline["date"], deadline["what"])] = {**deadline, "project_id": product_id,
                                                                                    "project": item["name"]}
-        waiting = [_pr_view(pr) for pr in item["open_prs"] if not pr.get("draft")]
-        base = {"id": product_id, "name": item["name"], "mascot": item["mascot"], "description": item.get("description"),
-                "waiting": waiting[:3], "waiting_count": len(waiting),
-                "issues": [_issue_view(issue) for issue in item["open_issues"][:TODO_LIMIT]],
-                "issues_count": len(item["open_issues"])}
-        if _has_activity(item, edition):
-            records = item["sessions_by_day"].get(edition, [])
-            prs = item["prs_by_day"].get(edition) or {"merged": [], "opened": [], "closed_unmerged": []}
-            details = _details(summary, product_id) or {}
+    return sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:8]
+
+
+def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
+          summaries: dict[str, dict[str, Any]], today: str) -> list[dict[str, Any]]:
+    """«По дням», the first screen: each day with work, newest first, in Claude's plain words per project.
+
+    Only real activity: a day without sessions or PRs is left out. A project without a summary that
+    day gets what its sessions were about instead; PRs and numbers go to the technical details.
+    """
+    feed = []
+    for totals in reversed(series[-FEED_DAYS:]):
+        day = totals["date"]
+        summary = summaries.get(day)
+        projects = []
+        for product_id, item in portfolio.items():
+            # A summary left over after its sessions were re-attributed is not news on its own.
+            if not _has_activity(item, day):
+                continue
+            bullets = _bullets(summary, product_id) or []
+            records = item["sessions_by_day"].get(day, [])
+            prs = item["prs_by_day"].get(day) or {"merged": [], "opened": [], "closed_unmerged": []}
             topics = list(dict.fromkeys(str(r["topic"]).strip() for r in records if isinstance(r.get("topic"), str) and r["topic"].strip()))
-            articles.append({
-                **base,
+            projects.append({
+                "id": product_id, "name": item["name"], "mascot": item["mascot"],
                 "minutes": _union_minutes(p for r in records for p in _session_intervals(r)),
                 "sessions": len(records),
+                "bullets": bullets,
+                "topics": [] if bullets else topics[:4],
                 "merged": [_pr_view(pr) for pr in prs["merged"]],
                 "opened": [_pr_view(pr) for pr in prs["opened"] if pr not in prs["merged"]],
                 "closed": [_pr_view(pr) for pr in prs["closed_unmerged"]],
-                "topics": topics[:4],
-                "written": bool(details),
-                "lead": details.get("lead"),
-                "you": details.get("you", []),
-                "agents": details.get("agents") or ([] if details else (_bullets(summary, product_id) or [])),
-                "next": details.get("next") or latest_next,
-                "deadlines": [d for d in details.get("deadlines", []) if d["date"] >= today],
+                "commands": sum(1 for r in records for action in r.get("infra_actions") or [] if isinstance(action, dict)),
             })
-        else:
-            last_day = next((day for day in reversed(past) if _has_activity(item, day)), None)
-            if not last_day and not waiting and not item["open_issues"]:
-                continue
-            quiet.append({**base, "last_date": last_day, "lead": (latest or {}).get("lead"),
-                          "next": latest_next,
-                          "deadlines": [d for d in (latest or {}).get("deadlines", []) if d["date"] >= today]})
-    articles.sort(key=lambda a: (a["minutes"], len(a["merged"]), a["sessions"]), reverse=True)
-    quiet.sort(key=lambda q: q["last_date"] or "", reverse=True)
-    return {
-        "date": edition, "is_today": edition == today,
-        "headline": (summary or {}).get("day") if isinstance((summary or {}).get("day"), str) else None,
-        "written_at": (summary or {}).get("generated_at"),
-        "in_progress": bool((summary or {}).get("in_progress")),
-        "articles": articles, "quiet": quiet,
-        "deadlines": sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:8],
-    }
+        if not projects:
+            continue
+        projects.sort(key=lambda p: (p["minutes"], len(p["merged"]), p["sessions"]), reverse=True)
+        headline = (summary or {}).get("day")
+        feed.append({
+            "date": day, "is_today": day == today,
+            "headline": headline.strip() if isinstance(headline, str) and headline.strip() else None,
+            "written_at": (summary or {}).get("generated_at"),
+            "in_progress": bool((summary or {}).get("in_progress")),
+            **{key: totals[key] for key in ("total_minutes", "claude_minutes", "codex_minutes", "sessions",
+                                            "prs_merged", "prs_opened", "prs_closed_unmerged")},
+            "projects": projects,
+        })
+    return feed
 
 
 def _age_days(moment: datetime | None, now: datetime) -> int | None:
@@ -547,8 +545,8 @@ def _age_days(moment: datetime | None, now: datetime) -> int | None:
 def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFAULT_DAYS,
                     selected: str | None = None, owner: bool = False, project: str | None = None,
                     edition: bool = False) -> dict[str, Any]:
-    """MAIN MANAGER payload. ``edition`` asks for the «Сегодня» newspaper: without a chosen
-    day it opens on the newest day with work (today once anything happened today)."""
+    """MAIN MANAGER payload. ``edition`` asks for «По дням», the first screen: the last days with
+    work in plain words; without a chosen day ``day`` is the newest day with work."""
     now = now or datetime.now(timezone.utc)
     tz = now.astimezone().tzinfo
     today = now.astimezone(tz).date()
@@ -666,7 +664,8 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         payload["sources"] = sources
         payload["projects"] = summaries
         if edition:
-            payload["paper"] = _paper(selected_day, today.isoformat(), series_days, portfolio, day_summaries)
+            payload["feed"] = _feed(series, portfolio, day_summaries, today.isoformat())
+            payload["deadlines"] = _upcoming_deadlines(day_summaries, portfolio, series_days, today.isoformat())
         if project:
             payload["project"] = _project_detail(portfolio[project], series_days, day_summaries) if project in portfolio else None
     else:

@@ -187,15 +187,15 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 matches.append(declarations)
         return "\n".join(matches)
 
-    def test_ac_1_top_navigation_opens_on_the_newspaper_and_machines_are_nested(self):
+    def test_ac_1_top_navigation_opens_on_the_days_and_machines_are_nested(self):
         parser = self._dashboard()
 
-        # Mark (2026-10-10): the first screen is a plain-language newspaper; the
-        # technical machine pages move to the last tab, «Техника».
+        # Mark (2026-10-11): the first screen is «По дням», what got done each day in
+        # plain words; the technical machine pages stay in the last tab, «Техника».
         self.assertEqual(
             [(item["target"], item["text"]) for item in parser.navigation],
             [
-                ("today", "Сегодня"),
+                ("today", "По дням"),
                 ("work", "MAIN MANAGER"),
                 ("agents", "Agents"),
                 ("platforms", "Platforms"),
@@ -203,7 +203,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             ],
         )
 
-    def test_ac_2_newspaper_is_default_and_legacy_tabs_cannot_be_selected(self):
+    def test_ac_2_days_are_default_and_legacy_tabs_cannot_be_selected(self):
         parser = self._dashboard()
         active_navigation = [
             item["target"] for item in parser.navigation if item["active"]

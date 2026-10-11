@@ -386,31 +386,32 @@ class ProjectionTest(unittest.TestCase):
             "projects": {pid: (d.get("agents") or []) + (d.get("you") or []) for pid, d in details.items()},
             "details": details}, ensure_ascii=False), encoding="utf-8")
 
-    def test_newspaper_opens_on_the_newest_day_with_work(self):
+    def test_days_list_the_newest_work_first(self):
         payload = work_projection(self.root, now=self.now, owner=True, edition=True)
-        self.assertEqual(payload["selected_date"], "2026-10-08")  # nothing yet today
-        paper = payload["paper"]
-        self.assertEqual((paper["date"], paper["is_today"], paper["headline"]), ("2026-10-08", False, None))
-        self.assertEqual([a["id"] for a in paper["articles"]], ["command-center", "jarvis"])  # busiest first
-        hub = next(a for a in paper["articles"] if a["id"] == "command-center")
-        self.assertFalse(hub["written"])
+        feed = payload["feed"]
+        # Only days with work, newest first; nothing yet today; older than 14 days is left out.
+        self.assertEqual([day["date"] for day in feed], ["2026-10-08", "2026-10-07", "2026-10-06", "2026-10-05"])
+        day = feed[0]
+        self.assertEqual((day["is_today"], day["headline"], day["total_minutes"], day["prs_merged"]), (False, None, 105, 1))
+        self.assertEqual([p["id"] for p in day["projects"]], ["command-center", "jarvis"])  # busiest first
+        hub = day["projects"][0]
+        self.assertEqual((hub["minutes"], hub["sessions"], hub["bullets"]), (60, 2, []))
         self.assertEqual(hub["topics"], ["private topic"])  # no summary yet: what the sessions were about
         self.assertEqual(hub["merged"][0]["number"], 49)
-        self.assertEqual([q["id"] for q in paper["quiet"]], ["mydictionary"])
-        self.assertEqual(paper["quiet"][0]["waiting_count"], 1)  # the open Lexi PR waits for Mark
-        self.assertEqual(paper["quiet"][0]["last_date"], "2026-09-25")
+        closed = feed[1]["projects"]
+        self.assertEqual(([p["id"] for p in closed], closed[0]["closed"][0]["number"], closed[0]["minutes"]), (["jarvis"], 140, 0))
 
         self._write_day("mac-mini", "2026-10-09", [{
             "tool": "claude", "session_id": "today", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
             "start": "2026-10-09T07:00:00Z", "end": "2026-10-09T07:30:00Z", "active_minutes": 30, "prompts": 1,
-            "topic": "t", "intervals": [["2026-10-09T07:00:00Z", "2026-10-09T07:30:00Z"]]}])
-        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
-        self.assertEqual((paper["date"], paper["is_today"]), ("2026-10-09", True))
-        self.assertEqual([a["id"] for a in paper["articles"]], ["mydictionary"])
-        self.assertEqual(work_projection(self.root, now=self.now, owner=True, edition=True,
-                                         selected="2026-10-08")["paper"]["date"], "2026-10-08")
+            "topic": "t", "intervals": [["2026-10-09T07:00:00Z", "2026-10-09T07:30:00Z"]],
+            "infra_actions": [{"at": "2026-10-09T07:10:00Z", "command": "launchctl kickstart x"}]}])
+        today = work_projection(self.root, now=self.now, owner=True, edition=True)["feed"][0]
+        self.assertEqual((today["date"], today["is_today"], [p["id"] for p in today["projects"]]),
+                         ("2026-10-09", True, ["mydictionary"]))
+        self.assertEqual(today["projects"][0]["commands"], 1)
 
-    def test_newspaper_reads_what_claude_wrote(self):
+    def test_days_read_what_claude_wrote(self):
         self._write_paper_summary("2026-10-05", {"jarvis": {
             "lead": "Голос в работе", "you": [], "agents": ["Начали голосовой режим"], "next": ["Проверить голос"],
             "deadlines": [{"date": "2026-11-07", "what": "Продлить проверку цен"}, {"date": "2026-10-01", "what": "Прошло"}]}})
@@ -420,17 +421,24 @@ class ProjectionTest(unittest.TestCase):
             "command-center": {"lead": "Появились итоги дня", "you": [], "agents": ["Итоги дня на сайте"],
                                "next": ["Сохранить токен на Mac mini"],
                                "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
-        }, headline="Голос и итоги дня")
-        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
-        self.assertEqual(paper["headline"], "Голос и итоги дня")
-        articles = {a["id"]: a for a in paper["articles"]}
-        jarvis = articles["jarvis"]
-        self.assertTrue(jarvis["written"])
-        self.assertEqual((jarvis["lead"], jarvis["you"], jarvis["agents"]),
-                         ("Бот отвечает голосом", ["Решили оставить голос"], ["Ответы стали быстрее"]))
-        self.assertEqual(jarvis["next"], ["Проверить голос"])  # no new next steps: the latest known ones
-        self.assertEqual(articles["command-center"]["next"], ["Сохранить токен на Mac mini"])
-        self.assertEqual(paper["deadlines"], [
+            "mydictionary": {"lead": "Старое", "you": [], "agents": ["Устаревший итог"], "next": [], "deadlines": []},
+        }, headline="Голос и итоги дня", in_progress=True)
+        self._write_paper_summary("2026-10-04", {"jarvis": {"lead": "Старое", "you": [], "agents": ["Устаревший итог"],
+                                                            "next": [], "deadlines": []}})
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True)
+        days = {day["date"]: day for day in payload["feed"]}
+        # A summary without work behind it that day (sessions moved elsewhere) is not shown.
+        self.assertNotIn("2026-10-04", days)
+        self.assertNotIn("Устаревший итог", json.dumps(payload["feed"], ensure_ascii=False))
+        day = days["2026-10-08"]
+        self.assertEqual((day["headline"], day["in_progress"], day["written_at"]), ("Голос и итоги дня", True, "2026-10-09T03:00:00Z"))
+        projects = {p["id"]: p for p in day["projects"]}
+        self.assertEqual(projects["jarvis"]["bullets"], ["Ответы стали быстрее", "Решили оставить голос"])
+        self.assertEqual(projects["jarvis"]["topics"], [])  # Claude's words replace the session titles
+        self.assertEqual(projects["command-center"]["bullets"], ["Итоги дня на сайте"])
+        self.assertEqual(days["2026-10-05"]["projects"][0]["bullets"], ["Начали голосовой режим"])
+        self.assertIsNone(days["2026-10-07"]["headline"])
+        self.assertEqual(payload["deadlines"], [
             {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "command-center", "project": "Command Center"},
             {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "jarvis", "project": "JARVIS"},
             {"date": "2026-11-07", "what": "Продлить проверку цен", "project_id": "jarvis", "project": "JARVIS"},
@@ -449,14 +457,12 @@ class ProjectionTest(unittest.TestCase):
         (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
         self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Голос", "you": [], "agents": ["Быстрее"],
                                                             "next": ["Проверить голос"], "deadlines": []}})
-        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
-        jarvis = next(a for a in paper["articles"] if a["id"] == "jarvis")
-        self.assertEqual(([i["number"] for i in jarvis["issues"]], jarvis["issues_count"]), ([7], 1))
-        lexi = next(q for q in paper["quiet"] if q["id"] == "mydictionary")
-        self.assertEqual([i["title"] for i in lexi["issues"]], ["Продлить цены"])
-        self.assertNotIn("Чужое", json.dumps(paper, ensure_ascii=False))  # a repo with no product stays out
         project = work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]
-        self.assertEqual((project["open_issues_count"], project["next_steps"]), (1, ["Проверить голос"]))
+        self.assertEqual(([i["number"] for i in project["open_issues_list"]], project["open_issues_count"], project["next_steps"]),
+                         ([7], 1, ["Проверить голос"]))
+        lexi = work_projection(self.root, now=self.now, owner=True, edition=True, project="mydictionary")
+        self.assertEqual([i["title"] for i in lexi["project"]["open_issues_list"]], ["Продлить цены"])
+        self.assertNotIn("Чужое", json.dumps(lexi, ensure_ascii=False))  # a repo with no product stays out
         public = json.dumps(work_projection(self.root, now=self.now, owner=False, edition=True, project="jarvis"), ensure_ascii=False)
         self.assertNotIn("Голос в машине", public)
 
@@ -467,31 +473,32 @@ class ProjectionTest(unittest.TestCase):
              "created_at": "2026-07-01T09:00:00Z", "updated_at": "2026-07-02T09:00:00Z"},
         ]
         (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
-        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
-        accountable = next(q for q in paper["quiet"] if q["id"] == "accountable")
-        self.assertEqual(([i["number"] for i in accountable["issues"]], accountable["last_date"]), ([4], None))
-        project = work_projection(self.root, now=self.now, owner=True, project="accountable")["project"]
-        self.assertEqual((project["open_issues_count"], project["total_minutes"]), (1, 0))
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True, project="accountable")
+        self.assertIn("accountable", {item["id"] for item in payload["projects"]})
+        self.assertNotIn("accountable", {p["id"] for day in payload["feed"] for p in day["projects"]})  # no work, no day
+        self.assertEqual((payload["project"]["open_issues_count"], payload["project"]["total_minutes"]), (1, 0))
 
-    def test_newspaper_counts_a_day_with_only_a_closed_pr(self):
+    def test_days_count_a_day_with_only_a_closed_pr(self):
         github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
         github["prs"].append({"repo": "pirajoke/jarvis", "number": 141, "title": "Dropped", "url": "https://github.com/pirajoke/jarvis/pull/141",
                               "state": "closed", "created_at": "2026-10-08T10:00:00Z", "updated_at": "2026-10-09T07:00:00Z",
                               "closed_at": "2026-10-09T07:00:00Z", "merged_at": None})
         (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
-        paper = work_projection(self.root, now=self.now, owner=True, edition=True)["paper"]
-        self.assertEqual((paper["date"], [a["id"] for a in paper["articles"]]), ("2026-10-09", ["jarvis"]))
-        self.assertEqual([pr["number"] for pr in paper["articles"][0]["closed"]], [141])  # the only fact that day
+        day = work_projection(self.root, now=self.now, owner=True, edition=True)["feed"][0]
+        self.assertEqual((day["date"], day["total_minutes"], [p["id"] for p in day["projects"]]), ("2026-10-09", 0, ["jarvis"]))
+        self.assertEqual([pr["number"] for pr in day["projects"][0]["closed"]], [141])  # the only fact that day
 
-    def test_newspaper_is_owner_only(self):
+    def test_days_are_owner_only(self):
         self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Бот отвечает голосом", "you": [], "agents": ["Быстрее"],
-                                                            "next": [], "deadlines": []}})
+                                                            "next": [], "deadlines": [{"date": "2026-10-20", "what": "Показать"}]}})
         public = work_projection(self.root, now=self.now, owner=False, edition=True)
-        self.assertNotIn("paper", public)
+        self.assertNotIn("feed", public)
+        self.assertNotIn("deadlines", public)
+        self.assertEqual(public["day"]["date"], "2026-10-08")  # the newest working day's numbers only
         text = json.dumps(public, ensure_ascii=False)
-        for private in ("Бот отвечает голосом", "JARVIS", "private topic"):
+        for private in ("Быстрее", "Показать", "JARVIS", "private topic"):
             self.assertNotIn(private, text)
-        self.assertNotIn("paper", work_projection(self.root, now=self.now, owner=True))  # only when asked
+        self.assertNotIn("feed", work_projection(self.root, now=self.now, owner=True))  # only when asked
 
     def test_product_mapping_follows_platforms(self):
         from dashboard_builder.daily_work import product_for
@@ -554,25 +561,36 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn("owner=self._dashboard_run_authorized()", server)
         self.assertIn("edition=(query.get('edition') or ['0'])[0] == '1'", server)
 
-    def test_dashboard_opens_on_project_news(self):
+    def test_dashboard_opens_on_the_days(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        # Mark (2026-10-11): «По дням» is the first thing he sees, in the MAIN MANAGER rows he liked.
         self.assertIn('<div id="section-today" class="section active" lang="ru">', html)
+        self.assertIn('<div class="mm-os dp" id="dp-os" role="region" aria-labelledby="dp-title">', html)
+        self.assertIn('<h2 class="dp-title" id="dp-title">По дням</h2>', html)
         self.assertIn("new URLSearchParams({ days: '30', edition: '1' })", html)
-        self.assertIn("function renderPaper()", html)
-        self.assertIn("day.prs_closed_unmerged", html)  # a closed-only day is a working day too
-        self.assertIn("if (request !== paperRequest) return;", html)  # the newest request wins
-        self.assertIn("paperDate = paperShown;", html)  # a failed day keeps the edition on screen
-        for label in ("'Вы'", "'Агенты'", "'Следующие шаги'", "'Ждёт вашего решения'", "'Задачи на GitHub'",
-                      "Задачи проекта", ">Остальные проекты<"):
-            self.assertIn(label, html)
-        # Every news item drills down to that day's technical details on the project page.
+        self.assertIn("function renderDays()", html)
+        self.assertIn("data.feed.map((day, index) => dpDay(day, index, data))", html)
+        self.assertIn("index < DP_OPEN_DAYS", html)
+        self.assertIn("<summary>Технические детали", html)
+        # Everything else is one small link row; the big navigation steps back on this screen only.
+        self.assertIn('<nav class="dp-more" aria-label="Другие разделы">', html)
+        for section in ("work", "agents", "platforms", "machines"):
+            self.assertIn(f"""<button type="button" onclick="showSection('{section}')">""", html)
+        self.assertIn(".container:has(> #section-today.active) > .cc-main-nav { display: none; }", html)
+        # A project's technical line opens that day on its project page, details unfolded.
         self.assertIn("openProject(link.dataset.project, link.dataset.day || null)", html)
         self.assertIn("if (day) mmRevealDay(day);", html)
-        self.assertIn("${mmTodo(p)}", html)  # the project page carries the same to-do
+        # The project page starts with «По дням»; numbers, the to-do and the chart are folded below it.
+        page = html[html.index("function renderProjectPage()"):html.index("function mmRevealDay(")]
+        self.assertLess(page.index("<h3>По дням"), page.index('<details class="mm-panel mm-project-more"'))
+        self.assertLess(page.index('<details class="mm-panel mm-project-more"'), page.index("${mmTodo(p)}"))
+        self.assertIn("if (event.target.open) renderProjectChart();", page)
         # Without the owner token the page shows only the day's numbers.
-        self.assertIn("if (!data.owner_view || !paper)", html)
-        self.assertIn("Новости по проектам видит только владелец", html)
+        self.assertIn("if (!data.owner_view || !data.feed)", html)
+        self.assertIn("Итоги по дням видит только владелец", html)
         self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
+        for gone in ("renderPaper", "np-articles", "Остальные проекты"):
+            self.assertNotIn(gone, html)
 
     def test_owner_browser_can_open_the_phone_by_qr(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
