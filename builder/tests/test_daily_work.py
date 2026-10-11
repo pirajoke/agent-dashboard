@@ -572,6 +572,22 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         # Without the owner token the page shows only the day's numbers.
         self.assertIn("if (!data.owner_view || !paper)", html)
         self.assertIn("Новости по проектам видит только владелец", html)
+        self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
+
+    def test_owner_browser_can_open_the_phone_by_qr(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('<section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>', html)
+        # Shown only to a browser on command.meshly.fr that already holds the owner key.
+        self.assertIn("ownerView && IS_PUBLIC_DASHBOARD && npOwnerKey() && typeof ccQrcode === 'function'", html)
+        self.assertIn("npDeviceSetup(false);", html)
+        # The code is the usual login link the page already accepts; it hides itself again.
+        self.assertIn("`${window.location.origin}/#dashboard_run_token=${encodeURIComponent(key)}`", html)
+        self.assertIn("params.get('dashboard_run_token')", html)
+        self.assertIn("npQrTimer = setTimeout(npHideQr, 120000);", html)
+        self.assertIn("if (document.hidden) npHideQr();", html)
+        # The QR library is inline (only index.html is deployed) and carries its licence notice.
+        self.assertIn("qrcode-generator 2.0.4, Copyright (c) 2009 Kazuhiko Arase", html)
+        self.assertIn("const ccQrcode=", html)
         # Service counters moved from the header into «Техника».
         header = html[html.index('<div class="header">'):html.index('<nav class="nav-pills cc-main-nav"')]
         self.assertNotIn('id="stat-services"', header)
