@@ -7565,7 +7565,7 @@ function mmProjectDay(day, open) {
       <thead><tr><th>Время</th><th>Инструмент</th><th>Что делал</th><th class="num">Мин</th></tr></thead>
       <tbody>${day.sessions.map(s => `<tr>
         <td class="cell-date" data-label="Время">${mmEsc(mmTime(s.start))}–${mmEsc(mmTime(s.end))}</td>
-        <td data-label="Инструмент"><b>${s.tool === 'claude' ? 'Claude' : 'Codex'}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
+        <td data-label="Инструмент"><b>${s.app === 'chatgpt' ? 'ChatGPT' : (s.tool === 'claude' ? 'Claude' : 'Codex')}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
         <td data-label="Что делал">${mmEsc(compactText(s.topic || '—', 160))}</td>
         <td class="num" data-label="Мин">${s.active_minutes}</td>
       </tr>`).join('')}</tbody></table></div>` : '';
@@ -7691,7 +7691,8 @@ function renderProjectChart() {
 function mmRenderSources() {
   const parts = [];
   const machines = dailyWorkData?.sources?.machines || [];
-  if (machines.length) parts.push(`Логи: ${machines.map(m => `${m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
+  // The ChatGPT export is not a machine: its time is when Mark exported it.
+  if (machines.length) parts.push(`Логи: ${machines.map(m => `${m.machine === 'chatgpt' ? 'выгрузка ChatGPT' : m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
   const github = dailyWorkData?.sources?.github;
   if (github) parts.push(github.ok ? `GitHub ${mmAgo(github.collected_at)}` : 'GitHub ещё не собран');
   const infraMachines = infraData?.machines || [];

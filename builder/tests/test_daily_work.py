@@ -136,6 +136,63 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(record["asks"], ["Объедини вкладки"])
         self.assertEqual(record["outcome"], "Вкладки объединены, тесты зелёные")
 
+    def test_chatgpt_export_is_read_once_per_export(self):
+        os.environ["TZ"] = "UTC"
+        time.tzset()
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        t0 = (now - timedelta(days=1)).replace(hour=10, minute=0, second=0)
+
+        def node(role, minutes, text, **meta):
+            return {"message": {"author": {"role": role}, "create_time": (t0 + timedelta(minutes=minutes)).timestamp(),
+                                "content": {"content_type": "text", "parts": [text]}, "metadata": meta}}
+
+        conversations = [
+            {"id": "c1", "title": "Запуск магазина", "update_time": (t0 + timedelta(minutes=20)).timestamp(),
+             "conversation_template_id": "g-p-abc123def456", "mapping": {
+                 "a": {"message": None}, "b": node("system", 0, "system prompt"),
+                 "c": node("user", 1, "Составь план запуска магазина"), "d": node("assistant", 4, "План из пяти шагов готов"),
+                 "e": node("user", 9, "скрытое", is_visually_hidden_from_conversation=True),
+                 "f": node("user", 15, "Добавь бюджет на рекламу"), "g": node("assistant", 20, "Бюджет добавлен: 300 евро")}},
+            {"id": "c2", "title": "Пост для LinkedIn", "update_time": (t0 + timedelta(minutes=50)).timestamp(), "mapping": {
+                "a": node("user", 40, "Напиши пост про запуск"), "b": node("assistant", 50, "Пост готов")}},
+            {"id": "old", "title": "Старое", "update_time": (now - timedelta(days=200)).timestamp(), "mapping": {
+                "a": {"message": {"author": {"role": "user"}, "create_time": (now - timedelta(days=200)).timestamp(),
+                                  "content": {"parts": ["давно"]}}}}},
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            exports = home / "ChatGPT-export"
+            exports.mkdir()
+            import zipfile
+            with zipfile.ZipFile(exports / "chatgpt-export.zip", "w") as archive:
+                archive.writestr("conversations.json", json.dumps(conversations, ensure_ascii=False))
+                archive.writestr("user.json", "{}")
+            out = home / "daily-work"
+            out.mkdir()
+            (out / "chatgpt_projects.json").write_text(json.dumps({"g-p-abc123def456": "SHOPIFY"}), encoding="utf-8")
+            since = now - timedelta(days=45)
+            first = COLLECTOR.import_chatgpt_export(out, since, [exports, home / "missing"])
+            again = COLLECTOR.import_chatgpt_export(out, since, [exports])
+            day = (t0.date()).isoformat()
+            data = json.loads((out / "sessions" / "chatgpt" / f"{day}.json").read_text(encoding="utf-8"))
+            projection = work_projection(out, now=now, owner=True)
+        self.assertEqual((first["fresh"], first["conversations"], again["fresh"]), (True, 2, False))
+        records = {r["project"]: r for r in data["sessions"]}
+        shop = records["ChatGPT · SHOPIFY"]
+        self.assertEqual((shop["app"], shop["tool"], shop["topic"]), ("chatgpt", "codex", "Запуск магазина"))
+        self.assertEqual(shop["asks"], ["Составь план запуска магазина", "Добавь бюджет на рекламу"])  # hidden one left out
+        self.assertEqual(shop["outcome"], "Бюджет добавлен: 300 евро")
+        self.assertEqual(shop["active_minutes"], 20)
+        self.assertEqual(records["ChatGPT · без проекта"]["topic"], "Пост для LinkedIn")
+        self.assertEqual(data["machine"], "chatgpt")
+        names = {item["name"] for item in projection["projects"]}
+        self.assertTrue({"ChatGPT · SHOPIFY", "ChatGPT · без проекта"} <= names)
+
+    def test_no_chatgpt_export_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = COLLECTOR.import_chatgpt_export(Path(tmp), datetime.now(timezone.utc), [Path(tmp) / "none"])
+        self.assertEqual(result, {"ok": False, "reason": "export_not_found"})
+
     def test_chatgpt_app_projects_are_labelled(self):
         name = COLLECTOR.project_name
         self.assertEqual(name("/Users/mark/Documents/ChatGPT/SHOPIFY", None), "ChatGPT · SHOPIFY")
