@@ -156,8 +156,10 @@ def run(
         # First run before any recorded deploy: deploy what main has now.
         changed = ["builder/"]
     elif deployed == head:
-        save_state(state, state_dir)
-        return "up_to_date"
+        if is_healthy():
+            save_state(state, state_dir)
+            return "up_to_date"
+        changed = ["builder/"]
     else:
         try:
             changed = changed_between(deployed, head)
@@ -188,13 +190,15 @@ def run(
         state.update(deployed_sha=head, deployed_at=now_iso(), last_result="deployed")
         state.pop("waiting_sha", None)
         state.pop("waiting_reason", None)
+        state.pop("failed_sha", None)
+        state.pop("failed_at", None)
         save_state(state, state_dir)
         append_log({"at": now_iso(), "sha": head, "from": deployed, "result": "deployed"}, state_dir)
         return "deployed"
 
     reason = "deploy_failed" if not ok else "health_failed"
     rollback = "none"
-    if deployed:
+    if deployed and deployed != head:
         back_ok, back_output = do_deploy(deployed)
         rollback = "ok" if back_ok and is_healthy() else "failed"
         output = f"{output}\n--- rollback ---\n{back_output}"

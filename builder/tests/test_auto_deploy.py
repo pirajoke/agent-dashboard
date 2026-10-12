@@ -47,6 +47,69 @@ class AutoDeployRunTest(unittest.TestCase):
         self.assertEqual(self._run("aaa"), "up_to_date")
         self.assertEqual(self.deploys, [])
 
+    def test_up_to_date_but_unhealthy_redeploys_current_main(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.health = [False, True]
+
+        outcome = self._run("aaa")
+
+        self.assertNotEqual(outcome, "up_to_date")
+        self.assertEqual(self.deploys, ["aaa"])
+
+    def test_failed_same_sha_repair_is_not_rolled_back_or_retried(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.health = [False]
+        self.deploy_ok["aaa"] = False
+
+        first_outcome = self._run("aaa")
+        first_deploys = list(self.deploys)
+        first_state = self._state()
+        first_log = (self.state_dir / "deploys.jsonl").read_text().splitlines()
+
+        self.health = [False]
+        second_outcome = self._run("aaa")
+        second_log = (self.state_dir / "deploys.jsonl").read_text().splitlines()
+
+        self.assertTrue(first_outcome.startswith("deploy_failed"))
+        self.assertEqual(first_state["failed_sha"], "aaa")
+        self.assertTrue(first_state["last_result"].startswith("deploy_failed"))
+        self.assertEqual(
+            {
+                "first_deploys": first_deploys,
+                "first_log_count": len(first_log),
+                "second_outcome": second_outcome,
+                "all_deploys": self.deploys,
+                "second_log_count": len(second_log),
+            },
+            {
+                "first_deploys": ["aaa"],
+                "first_log_count": 1,
+                "second_outcome": "skipped_failed",
+                "all_deploys": ["aaa"],
+                "second_log_count": 1,
+            },
+        )
+
+    def test_successful_same_sha_repair_clears_stale_failure_state(self):
+        AUTO.save_state(
+            {
+                "deployed_sha": "aaa",
+                "failed_sha": "older-sha",
+                "failed_at": "2026-10-12T00:00:00Z",
+                "last_result": "deploy_failed_rollback_failed",
+            },
+            self.state_dir,
+        )
+        self.health = [False, True]
+
+        self.assertEqual(self._run("aaa"), "deployed")
+
+        state = self._state()
+        self.assertEqual(self.deploys, ["aaa"])
+        self.assertEqual(state["last_result"], "deployed")
+        self.assertNotIn("failed_sha", state)
+        self.assertNotIn("failed_at", state)
+
     def test_generated_files_only_move_the_marker(self):
         AUTO.record_deployed("aaa", self.state_dir)
         self.assertEqual(self._run("bbb", changed=("index.html", "live-feed.json")), "no_builder_changes")
@@ -119,6 +182,19 @@ class DeployScriptWiringTest(unittest.TestCase):
         # The agent starts at load, so the deployed commit must be recorded first.
         self.assertLess(script.index("--record"), script.index('launchctl bootstrap "gui/$(id -u)" "$AUTO_DEPLOY_PLIST"'))
         self.assertTrue((BUILDER_DIR / "launchd" / "com.pirajoke.dashboard-auto-deploy.plist.template").exists())
+
+    def test_deploy_script_restarts_or_bootstraps_dashboard_server(self):
+        script = (BUILDER_DIR / "deploy_to_scripts.sh").read_text()
+        fragments = (
+            'SERVER_PLIST="$HOME/Library/LaunchAgents/$SERVER_LABEL.plist"',
+            'if launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then',
+            'launchctl kickstart -k "gui/$(id -u)/$SERVER_LABEL"',
+            'elif [[ -f "$SERVER_PLIST" ]]; then',
+            'launchctl bootstrap "gui/$(id -u)" "$SERVER_PLIST"',
+        )
+        for fragment in fragments:
+            self.assertIn(fragment, script)
+        self.assertEqual(sorted(map(script.index, fragments)), list(map(script.index, fragments)))
 
 
 if __name__ == "__main__":
