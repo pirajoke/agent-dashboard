@@ -136,6 +136,16 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(record["asks"], ["Объедини вкладки"])
         self.assertEqual(record["outcome"], "Вкладки объединены, тесты зелёные")
 
+    def test_chatgpt_app_projects_are_labelled(self):
+        name = COLLECTOR.project_name
+        self.assertEqual(name("/Users/mark/Documents/ChatGPT/SHOPIFY", None), "ChatGPT · SHOPIFY")
+        self.assertEqual(name("/Users/mark/Documents/ChatGPT/LYBOV LINKEDIN/notes", None), "ChatGPT · LYBOV LINKEDIN")
+        # A chat outside a project gets a folder named by its id or «new-chat»: grouped, not listed one by one.
+        for folder in ("39f9f538-1c2d-4e5f-8a9b-0c1d2e3f4a5b", "new-chat", "New Chat 2", ""):
+            self.assertEqual(name(f"/Users/mark/Documents/ChatGPT/{folder}".rstrip("/"), None), "ChatGPT · без проекта")
+        self.assertEqual(name("/Users/mark/Documents/ChatGPT/SHOPIFY", "pirajoke/shop"), "shop")  # a repo wins
+        self.assertEqual(name("/Users/mark/Projects/ChatGPT", None), "ChatGPT")  # not the app's folder
+
     def test_existing_folder_outside_git_is_not_matched_to_a_clone(self):
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
@@ -653,6 +663,9 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual(product_for("health-os", None)["mascot"], "health")
         other = product_for("skills-library", None)
         self.assertEqual((other["id"], other["mascot"]), ("p-skillslibrary", None))
+        # Cyrillic names keep their letters, so two ChatGPT projects do not merge into one.
+        self.assertNotEqual(product_for("ChatGPT · Любовь", None)["id"], product_for("ChatGPT · без проекта", None)["id"])
+        self.assertEqual(product_for("ChatGPT · SHOPIFY", None)["name"], "ChatGPT · SHOPIFY")
         self.assertIsNone(other["description"])
         self.assertEqual(product_for(None, "pirajoke/ai-singularity-news-bot")["id"], "context-news")
         self.assertEqual(product_for("ai-singularity", None)["id"], "ai-singularity")
