@@ -3025,13 +3025,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-workspace { min-width: 0; display: flex; flex-direction: column; }
 .mm-topbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; background: var(--mm-surface); border-bottom: 1px solid var(--mm-line); }
 .mm-module { font-size: 17px; font-weight: 600; }
-.mm-day-picker { display: flex; align-items: center; gap: 8px; }
-.mm-round { display: grid; place-items: center; width: 44px; height: 44px; color: var(--mm-ink); border: 1px solid var(--mm-control-line) !important; border-radius: 999px; font-size: 22px; line-height: 1; }
-.mm-round:hover:not(:disabled) { background: var(--mm-surface-hover); }
-.mm-round:disabled { opacity: .35; cursor: default; }
-.mm-day-label { display: grid; min-width: 112px; text-align: center; line-height: 1.3; }
-.mm-day-label b { font-size: 15px; font-weight: 650; }
-.mm-day-label small { color: var(--mm-muted); font-size: 12px; }
 .mm-notice { margin: 20px 32px 0; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
 .mm-notice.live { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
 .mm-notice.stale, .mm-notice.empty, .mm-notice.error { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
@@ -3190,15 +3183,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-bullets { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .mm-bullets li { position: relative; padding-left: 16px; font-size: 14px; line-height: 1.5; }
 .mm-bullets li::before { content: ""; position: absolute; top: .6em; left: 2px; width: 6px; height: 6px; background: var(--mm-accent); border-radius: 50%; }
-.mm-summary-headline { margin-bottom: 16px; font-size: 17px; font-weight: 650; line-height: 1.4; }
-.mm-summary-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.mm-summary-item { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; align-items: start; padding: 14px; color: var(--mm-ink) !important; text-decoration: none !important; border: 1px solid var(--mm-line); border-radius: 12px; transition: border-color .15s ease, background .15s ease; }
-.mm-summary-item:hover { background: var(--mm-surface-hover); border-color: var(--mm-control-line); }
 .mm-project-art.is-mini { width: 52px; height: 52px; border-radius: 12px; }
 .mm-project-art.is-mini svg { width: 42px; height: 42px; }
 .mm-project-art.is-mini .mm-art-initials { width: 36px; height: 36px; font-size: 13px; border-radius: 10px; }
-.mm-summary-name { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 15px; font-weight: 700; }
-.mm-summary-name small { color: var(--mm-muted); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
 .mm-summary-empty { margin: 0; color: var(--mm-muted); font-size: 14px; line-height: 1.5; }
 .mm-day-lead { margin: 6px 0 4px; }
 /* Project page: «По дням» first, everything else folded under one row. */
@@ -3278,8 +3265,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-project-art.is-hero svg { width: 84px; height: 84px; }
   .mm-project-hero-body { padding: 16px; }
   .mm-project-title { font-size: 24px; }
-  .mm-summary-list { grid-template-columns: minmax(0, 1fr); }
-  .mm-summary-item { grid-template-columns: 44px minmax(0, 1fr); gap: 12px; padding: 12px; }
   .mm-project-art.is-mini { width: 44px; height: 44px; }
   .mm-project-art.is-mini svg { width: 36px; height: 36px; }
   .mm-group-body { padding: 2px 14px 12px; }
@@ -3499,7 +3484,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
     <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span><span class="cc-tab-label" data-tab-label="today">По дням</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span><span class="pill-badge">день</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Agents</span><span class="pill-badge" id="agents-badge">pixel</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Platforms</span><span class="pill-badge">7</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
@@ -3678,7 +3663,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
         <nav class="mm-nav" aria-label="Разделы MAIN MANAGER">
           <button type="button" data-mm-view="projects" aria-pressed="true"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg></span><span>Проекты</span><b id="mm-projects-nav-count">0</b></button>
-          <button type="button" data-mm-view="overview" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span>Обзор дня</span></button>
           <button type="button" data-mm-view="loose" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 2 2 3-4m-5 9 2 2 3-4m-5 9 2 2 3-4M12 6h9M12 13h9M12 20h9"/></svg></span><span>Хвосты</span><b id="mm-loose-count">0</b></button>
           <button type="button" data-mm-view="infra" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg></span><span>Изменения</span><b id="mm-infra-count">0</b></button>
         </nav>
@@ -3690,11 +3674,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <div class="mm-workspace">
         <header class="mm-topbar">
           <h2 class="mm-module" id="mm-view-title">Проекты</h2>
-          <div class="mm-day-picker" id="mm-day-picker" role="group" aria-label="Выбор дня" hidden>
-            <button type="button" class="mm-round" id="mm-prev-day" aria-label="Предыдущий день">‹</button>
-            <span class="mm-day-label"><b id="mm-day-label">Вчера</b><small id="mm-day-date">—</small></span>
-            <button type="button" class="mm-round" id="mm-next-day" aria-label="Следующий день">›</button>
-          </div>
         </header>
         <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
         <div class="mm-main">
@@ -3711,33 +3690,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
           <div class="mm-view" data-mm-panel="project" hidden>
             <div id="mm-project-page"></div>
-          </div>
-
-          <div class="mm-view" data-mm-panel="overview" hidden>
-            <section class="mm-panel" id="mm-day-summary-panel" aria-labelledby="mm-day-summary-title" hidden>
-              <div class="mm-section-heading">
-                <div><h3 id="mm-day-summary-title">Итог дня</h3><p class="mm-section-note">Что изменилось в продуктах, простыми словами. Пишет Claude по сессиям и PR этого дня.</p></div>
-              </div>
-              <div id="mm-day-summary"></div>
-            </section>
-            <div class="mm-stats" id="mm-stats" aria-label="Итоги выбранного дня"></div>
-            <section class="mm-panel" aria-labelledby="mm-traction-title">
-              <div class="mm-section-heading">
-                <div><h3 id="mm-traction-title">Traction <span>30 дней</span></h3><p class="mm-section-note">Часы работы по дням. Нажми на столбик, чтобы открыть этот день.</p></div>
-                <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
-              </div>
-              <div class="mm-chart" id="mm-chart"></div>
-              <div class="mm-chart mm-chart-prs" id="mm-chart-prs"></div>
-              <div class="mm-tooltip" id="mm-tooltip" role="tooltip" hidden></div>
-              <details class="mm-more">
-                <summary>Таблица по дням</summary>
-                <div class="mm-table-scroll" id="mm-series-table"></div>
-              </details>
-            </section>
-            <div class="mm-section-heading">
-              <div><h3>Над чем работал <span id="mm-projects-count"></span></h3><p class="mm-section-note">Проект открывает свои сессии и PR за этот день.</p></div>
-            </div>
-            <div class="mm-group-rows" id="mm-projects"></div>
           </div>
 
           <div class="mm-view" data-mm-panel="loose" hidden>
@@ -6990,7 +6942,7 @@ const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
 const MM_THEME_KEY = 'command-center.main-manager.theme';
 const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-const MM_VIEW_TITLES = { projects: 'Проекты', project: 'Проект', overview: 'Обзор дня', loose: 'Хвосты', infra: 'Изменения в инфраструктуре' };
+const MM_VIEW_TITLES = { projects: 'Проекты', project: 'Проект', loose: 'Хвосты', infra: 'Изменения в инфраструктуре' };
 // Platforms products that have their own mascot tint; anything else uses the neutral tint.
 const MM_TINTS = new Set(['command-center', 'financial', 'mydictionary', 'health', 'ai-singularity', 'context-news', 'accountable', 'jarvis']);
 let dailyWorkData = null;
@@ -7099,8 +7051,6 @@ function mmInit() {
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
     button.addEventListener('click', () => mmShowView(button.dataset.mmView));
   });
-  document.getElementById('mm-prev-day').addEventListener('click', () => shiftWorkDay(-1));
-  document.getElementById('mm-next-day').addEventListener('click', () => shiftWorkDay(1));
   document.getElementById('mm-loose-filter').addEventListener('click', event => {
     const button = event.target.closest('[data-filter]');
     if (!button) return;
@@ -7119,16 +7069,15 @@ function mmInit() {
     mmProjectSort = button.dataset.sort;
     if (dailyWorkData) renderProjectCards(dailyWorkData);
   });
-  ['mm-project-grid', 'mm-day-summary'].forEach(id => document.getElementById(id).addEventListener('click', event => {
+  document.getElementById('mm-project-grid').addEventListener('click', event => {
     const card = event.target.closest('[data-project]');
     if (!card || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
     event.preventDefault();
     openProject(card.dataset.project);
-  }));
+  });
 }
 
 function mmRedrawCharts() {
-  if (mmView === 'overview' && dailyWorkData) renderWorkChart(dailyWorkData);
   if (mmView === 'project') renderProjectChart();
 }
 
@@ -7157,7 +7106,6 @@ function mmShowView(view) {
     panel.hidden = panel.dataset.mmPanel !== view;
   });
   document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
-  document.getElementById('mm-day-picker').hidden = view !== 'overview';
   if (view !== 'project') mmSetProjectUrl(null);
   mmRenderNotice();
   mmRedrawCharts();
@@ -7218,14 +7166,6 @@ async function loadInfraChanges() {
   mmRenderSources();
 }
 
-function shiftWorkDay(step) {
-  if (!dailyWorkData) return;
-  const days = dailyWorkData.series.map(day => day.date);
-  const index = days.indexOf(dailyWorkDate) + step;
-  if (index < 0 || index >= days.length) return;
-  loadDailyWork(days[index]);
-}
-
 function mmRenderNotice(errorText) {
   const notice = document.getElementById('mm-state');
   if (errorText) {
@@ -7262,20 +7202,8 @@ function mmRenderNotice(errorText) {
 function renderDailyWork() {
   const data = dailyWorkData;
   if (!data) return;
-  const day = data.day;
-  const days = data.series.map(item => item.date);
-  const index = days.indexOf(day.date);
-  document.getElementById('mm-day-label').textContent = mmDayTitle(day.date, data.series);
-  document.getElementById('mm-day-date').textContent = mmDayShort(day.date) + (day.is_today ? ' · идёт' : '');
-  document.getElementById('mm-prev-day').disabled = index <= 0;
-  document.getElementById('mm-next-day').disabled = index >= days.length - 1;
   document.getElementById('mm-loose-count').textContent = data.dropped_count + data.forgot_count;
   mmRenderNotice();
-  renderDaySummary(data);
-  renderWorkStats(data);
-  renderWorkChart(data);
-  renderWorkSeriesTable(data);
-  renderWorkProjects(data);
   renderLoose(data);
   renderProjectCards(data);
   mmRenderSources();
@@ -7298,58 +7226,6 @@ function mmSummaryPending(data, subject = 'Итог этого дня') {
   return 'Итог этого дня ещё не готов. Его пишет Claude на Mac mini, проверка каждые 3 часа.';
 }
 
-function renderDaySummary(data) {
-  const panel = document.getElementById('mm-day-summary-panel');
-  const host = document.getElementById('mm-day-summary');
-  panel.hidden = !data.owner_view;
-  if (!data.owner_view) return;
-  const day = data.day;
-  const summary = day.summary;
-  document.getElementById('mm-day-summary-title').textContent = `Итог: ${mmDayHeading(day.date).toLowerCase()}`;
-  if (!summary || !summary.projects.length) {
-    let text;
-    if (day.is_today) text = 'Итог за сегодня появится после конца дня.';
-    else if (!day.sessions && !day.prs_merged && !day.prs_opened) text = 'В этот день работы не было.';
-    else text = mmSummaryPending(data);
-    host.innerHTML = `<p class="mm-summary-empty">${mmEsc(text)}</p>`;
-    return;
-  }
-  host.innerHTML = `
-    ${summary.headline ? `<p class="mm-summary-headline">${mmEsc(summary.headline)}</p>` : ''}
-    <div class="mm-summary-list">${summary.projects.map(item => `
-      <a class="mm-summary-item" href="?tab=work&amp;project=${encodeURIComponent(item.id)}" data-project="${mmEsc(item.id)}">
-        ${mmArt(item, 'is-mini')}
-        <span>
-          <span class="mm-summary-name">${mmEsc(item.name)}${item.minutes ? `<small>${mmEsc(workMinutes(item.minutes))}</small>` : ''}</span>
-          ${mmBullets(item.bullets)}
-        </span>
-      </a>`).join('')}
-    </div>`;
-}
-
-function renderWorkStats(data) {
-  const day = data.day;
-  const last7 = data.traction.last_7;
-  const prev7 = data.traction.previous_7;
-  const delta = last7.total_minutes - prev7.total_minutes;
-  const trend = !prev7.total_minutes ? '' : (delta >= 0 ? 'is-up' : 'is-down');
-  const deltaText = prev7.total_minutes
-    ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе`
-    : 'прошлой недели в данных нет';
-  const stats = [
-    { label: 'Время работы', value: workMinutes(day.total_minutes), note: `оценка · проектов: ${day.project_count}` },
-    { label: 'Claude · Codex', value: `${workHours(day.claude_minutes)} · ${workHours(day.codex_minutes)} ч`, note: `${day.sessions} сессий · ${day.prompts} промптов`, dots: true },
-    { label: 'PR смёрджено', value: String(day.prs_merged), note: `открыто ${day.prs_opened} · брошено ${day.prs_closed_unmerged}` },
-    { label: 'Последние 7 дней', value: `${workHours(last7.total_minutes)} ч`, note: `${deltaText} · серия ${data.traction.streak_days} дн`, cls: trend },
-  ];
-  document.getElementById('mm-stats').innerHTML = stats.map(stat => `
-    <div class="mm-stat">
-      <span>${stat.dots ? '<i class="claude"></i><i class="codex"></i>' : ''}${mmEsc(stat.label)}</span>
-      <strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong>
-      <small>${mmEsc(stat.note)}</small>
-    </div>`).join('');
-}
-
 function mmNiceStep(maxHours) {
   if (maxHours <= 2) return 0.5;
   if (maxHours <= 5) return 1;
@@ -7360,16 +7236,6 @@ function mmNiceStep(maxHours) {
 function mmRoundedTop(x, y, width, height, radius) {
   const r = Math.min(radius, width / 2, height);
   return `M${x},${y + height}V${y + r}Q${x},${y} ${x + r},${y}H${x + width - r}Q${x + width},${y} ${x + width},${y + r}V${y + height}Z`;
-}
-
-function renderWorkChart(data) {
-  mmDrawChart({
-    host: document.getElementById('mm-chart'),
-    prHost: document.getElementById('mm-chart-prs'),
-    series: data.series,
-    selectedDate: data.selected_date,
-    onPick: date => loadDailyWork(date),
-  });
 }
 
 function mmDrawChart({ host, prHost, series, selectedDate, onPick }) {
@@ -7473,72 +7339,6 @@ function showWorkTooltip(day, target) {
 
 function hideWorkTooltip() {
   document.querySelectorAll('#mm-os .mm-tooltip').forEach(tip => { tip.hidden = true; });
-}
-
-function renderWorkSeriesTable(data) {
-  const rows = data.series.slice().reverse().map(day => `<tr>
-      <td class="cell-date" data-label="День">${mmEsc(mmDayShort(day.date))}</td>
-      <td class="num" data-label="Всего">${mmEsc(workMinutes(day.total_minutes))}</td>
-      <td class="num" data-label="Claude">${mmEsc(workMinutes(day.claude_minutes))}</td>
-      <td class="num" data-label="Codex">${mmEsc(workMinutes(day.codex_minutes))}</td>
-      <td class="num" data-label="Сессии">${day.sessions}</td>
-      <td class="num" data-label="PR merged">${day.prs_merged}</td>
-      <td class="num" data-label="Коммиты">${day.commits}</td>
-    </tr>`).join('');
-  document.getElementById('mm-series-table').innerHTML = `<table class="mm-data-table">
-    <thead><tr><th>День</th><th class="num">Всего</th><th class="num">Claude</th><th class="num">Codex</th><th class="num">Сессии</th><th class="num">PR merged</th><th class="num">Коммиты</th></tr></thead>
-    <tbody>${rows}</tbody></table>`;
-}
-
-function renderWorkProjects(data) {
-  const host = document.getElementById('mm-projects');
-  const projects = data.day.projects;
-  document.getElementById('mm-projects-count').textContent = data.day.project_count || '';
-  if (!data.owner_view) {
-    host.innerHTML = `<p class="mm-empty">Проектов: ${data.day.project_count}. Названия видны только владельцу.</p>`;
-    return;
-  }
-  if (!projects || !projects.length) {
-    host.innerHTML = '<p class="mm-empty">В этот день сессий Claude и Codex не найдено.</p>';
-    return;
-  }
-  const sessions = data.day.sessions_detail || [];
-  host.innerHTML = projects.map((p, index) => {
-    const dominant = p.claude_minutes >= p.codex_minutes ? 'claude' : 'codex';
-    const note = [
-      p.claude_minutes ? `Claude ${workMinutes(p.claude_minutes)}` : '',
-      p.codex_minutes ? `Codex ${workMinutes(p.codex_minutes)}` : '',
-      `${p.sessions} сесс.`,
-      p.merged.length ? `смёрджено ${p.merged.length}` : '',
-    ].filter(Boolean).join(' · ');
-    const own = sessions.filter(s => s.project === p.project);
-    const outcome = [
-      ...p.merged.map(pr => mmPrAction(pr, 'merged')),
-      ...p.opened.filter(pr => !p.merged.some(m => m.number === pr.number)).map(pr => mmPrAction(pr, 'open')),
-      ...p.branches.map(branch => `<span class="mm-chip">⑂ ${mmEsc(branch)}</span>`),
-    ];
-    return `<details class="mm-group-row"${index === 0 ? ' open' : ''}>
-      <summary>
-        <span class="mm-dot ${dominant}" aria-hidden="true"></span>
-        <span class="mm-group-main"><span class="mm-group-title">${mmEsc(p.project)}</span><span class="mm-group-note">${mmEsc(p.repo ? `${p.repo} · ${note}` : note)}</span></span>
-        <span class="mm-group-aside">${mmEsc(workMinutes(p.total_minutes))}<small>${p.prompts} промпт.</small></span>
-        <span class="mm-chevron" aria-hidden="true">›</span>
-      </summary>
-      <div class="mm-group-body">
-        <div class="mm-group-foot">${outcome.length ? outcome.join('') : '<span class="mm-chip">без PR и без отдельной ветки</span>'}</div>
-        <div class="mm-table-scroll"><table class="mm-data-table">
-          <thead><tr><th>Время</th><th>Инструмент</th><th>Тема</th><th class="num">Мин</th><th class="num">Промпты</th></tr></thead>
-          <tbody>${own.map(s => `<tr>
-            <td class="cell-date" data-label="Время">${mmEsc(mmTime(s.start))}–${mmEsc(mmTime(s.end))}</td>
-            <td data-label="Инструмент"><b>${s.tool === 'claude' ? 'Claude' : 'Codex'}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
-            <td data-label="Тема">${mmEsc(compactText(s.topic || '—', 140))}</td>
-            <td class="num" data-label="Мин">${s.active_minutes}</td>
-            <td class="num" data-label="Промпты">${s.prompts}</td>
-          </tr>`).join('')}</tbody>
-        </table></div>
-      </div>
-    </details>`;
-  }).join('');
 }
 
 function mmLooseRow(item, bucket) {

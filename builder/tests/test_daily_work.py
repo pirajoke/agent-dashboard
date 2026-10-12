@@ -541,9 +541,10 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn('data-mm-view="projects"', html)
         self.assertIn('<use href="#cc-mascot-${mmEsc(item.mascot)}"/>', html)
         self.assertIn("project: id", html)
-        # Plain-language day summary and project descriptions.
-        self.assertIn('id="mm-day-summary"', html)
-        self.assertIn("function renderDaySummary(data)", html)
+        # The plain-language day summary lives only in «По дням», not again in MAIN MANAGER.
+        self.assertIn('id="dp-days"', html)
+        self.assertNotIn('data-mm-view="overview"', html)
+        self.assertNotIn('id="mm-day-summary"', html)
         self.assertIn("mm-project-desc", html)
         self.assertIn("Технические детали", html)
 
