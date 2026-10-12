@@ -99,6 +99,76 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(lexi["project"], "lexi")
         self.assertEqual(lexi["active_minutes"], 10)
 
+    def test_newer_codex_rollouts_keep_asks_replies_and_the_repo(self):
+        os.environ["TZ"] = "UTC"
+        time.tzset()
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            clone = home / "clones" / "agent-dashboard"
+            (clone / ".git").mkdir(parents=True)
+            t0 = datetime(2026, 10, 12, 10, 0, tzinfo=timezone.utc)
+            path = home / "rollout-new.jsonl"
+            _write_jsonl(path, [
+                # The working folder is a file:// URI to a worktree that is gone by now.
+                {"timestamp": _iso(t0), "type": "session_meta", "payload": {
+                    "id": "n1", "cwd": "file:///nonexistent/tmp/agent-dashboard-unified-tabs-v1",
+                    "agent_path": "/root/dashboard_pr_gate"}},
+                {"timestamp": _iso(t0), "type": "response_item", "payload": {
+                    "type": "message", "role": "user", "content": [{"type": "input_text", "text": "# AGENTS.md instructions"}]}},
+                {"timestamp": _iso(t0 + timedelta(minutes=1)), "type": "response_item", "payload": {
+                    "type": "message", "role": "user", "content": [{"type": "input_text", "text": "Объедини вкладки"}]}},
+                {"timestamp": _iso(t0 + timedelta(minutes=5)), "type": "response_item", "payload": {
+                    "type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "Смотрю код"}]}},
+                {"timestamp": _iso(t0 + timedelta(minutes=9)), "type": "event_msg", "payload": {
+                    "type": "task_complete", "last_agent_message": "Вкладки объединены, тесты зелёные"}},
+            ])
+            with patch.object(COLLECTOR, "CLONE_PARENTS", [home / "clones"]), \
+                    patch.object(COLLECTOR, "_git_remote",
+                                 lambda cwd: "pirajoke/agent-dashboard" if cwd == str(clone) else None), \
+                    patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                sessions = COLLECTOR.parse_codex_file(path)
+        session = sessions[0]
+        self.assertEqual(session.cwd, "/nonexistent/tmp/agent-dashboard-unified-tabs-v1")
+        self.assertEqual(session.repo, "pirajoke/agent-dashboard")
+        self.assertEqual(session.topic, "Объедини вкладки")
+        record = COLLECTOR.day_records(sessions, {"2026-10-12"})["2026-10-12"][0]
+        self.assertEqual(record["project"], "agent-dashboard")
+        self.assertEqual(record["asks"], ["Объедини вкладки"])
+        self.assertEqual(record["outcome"], "Вкладки объединены, тесты зелёные")
+
+    def test_existing_folder_outside_git_is_not_matched_to_a_clone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            clone = home / "clones" / "agent-dashboard"
+            (clone / ".git").mkdir(parents=True)
+            notes = home / "agent-dashboard-notes"
+            notes.mkdir()
+            with patch.object(COLLECTOR, "CLONE_PARENTS", [home / "clones"]), \
+                    patch.object(COLLECTOR, "_git_remote",
+                                 lambda cwd: "pirajoke/agent-dashboard" if cwd == str(clone) else None), \
+                    patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                self.assertIsNone(COLLECTOR.repo_for_cwd(str(notes)))
+                self.assertEqual(COLLECTOR.repo_for_cwd(str(home / "agent-dashboard-gone-v1")), "pirajoke/agent-dashboard")
+
+    def test_codex_sub_agent_without_asks_is_named_by_its_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rollout-sub.jsonl"
+            t0 = datetime(2026, 10, 12, 10, 0, tzinfo=timezone.utc)
+            _write_jsonl(path, [
+                {"timestamp": _iso(t0), "type": "session_meta", "payload": {
+                    "id": "s1", "cwd": "/nonexistent/x", "agent_path": "/root/health_proxy_final_review"}},
+                {"timestamp": _iso(t0 + timedelta(minutes=2)), "type": "event_msg", "payload": {"type": "task_started"}},
+            ])
+            with patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                session = COLLECTOR.parse_codex_file(path)[0]
+        self.assertEqual(session.topic, "health proxy final review")
+        self.assertEqual(session.asks, [])
+
+    def test_ssh_host_alias_remotes_resolve(self):
+        self.assertEqual(COLLECTOR.repo_from_remote("git@github.com-agent-dashboard:pirajoke/agent-dashboard.git"),
+                         "pirajoke/agent-dashboard")
+        self.assertEqual(COLLECTOR.normalize_cwd("file:///Users/me/MAIN%20MANAGER"), "/Users/me/MAIN MANAGER")
+
 
     def test_day_records_keep_asks_and_last_reply_for_the_summary(self):
         os.environ["TZ"] = "UTC"
