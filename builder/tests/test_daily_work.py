@@ -142,51 +142,65 @@ class CollectorParsingTest(unittest.TestCase):
         now = datetime.now(timezone.utc).replace(microsecond=0)
         t0 = (now - timedelta(days=1)).replace(hour=10, minute=0, second=0)
 
-        def node(role, minutes, text, **meta):
-            return {"message": {"author": {"role": role}, "create_time": (t0 + timedelta(minutes=minutes)).timestamp(),
-                                "content": {"content_type": "text", "parts": [text]}, "metadata": meta}}
+        def node(role, minutes, text, parent=None, **meta):
+            return {"parent": parent, "message": {
+                "author": {"role": role}, "create_time": (t0 + timedelta(minutes=minutes)).timestamp(),
+                "content": {"content_type": "text", "parts": [text]}, "metadata": meta}}
 
-        conversations = [
-            {"id": "c1", "title": "Запуск магазина", "update_time": (t0 + timedelta(minutes=20)).timestamp(),
-             "conversation_template_id": "g-p-abc123def456", "mapping": {
-                 "a": {"message": None}, "b": node("system", 0, "system prompt"),
-                 "c": node("user", 1, "Составь план запуска магазина"), "d": node("assistant", 4, "План из пяти шагов готов"),
-                 "e": node("user", 9, "скрытое", is_visually_hidden_from_conversation=True),
-                 "f": node("user", 15, "Добавь бюджет на рекламу"), "g": node("assistant", 20, "Бюджет добавлен: 300 евро")}},
-            {"id": "c2", "title": "Пост для LinkedIn", "update_time": (t0 + timedelta(minutes=50)).timestamp(), "mapping": {
-                "a": node("user", 40, "Напиши пост про запуск"), "b": node("assistant", 50, "Пост готов")}},
-            {"id": "old", "title": "Старое", "update_time": (now - timedelta(days=200)).timestamp(), "mapping": {
-                "a": {"message": {"author": {"role": "user"}, "create_time": (now - timedelta(days=200)).timestamp(),
-                                  "content": {"parts": ["давно"]}}}}},
-        ]
+        shop = {"id": "c1", "title": "Запуск магазина", "update_time": (t0 + timedelta(minutes=20)).timestamp(),
+                "conversation_template_id": "g-p-abc123def456", "current_node": "g", "mapping": {
+                    "a": {"message": None, "parent": None}, "b": node("system", 0, "system prompt", "a"),
+                    "c": node("user", 1, "Составь план запуска магазина", "b"),
+                    "d": node("assistant", 4, "План из пяти шагов готов", "c"),
+                    "e": node("user", 9, "скрытое", "d", is_visually_hidden_from_conversation=True),
+                    "f": node("user", 15, "Добавь бюджет на рекламу", "e"),
+                    "g": node("assistant", 20, "Бюджет добавлен: 300 евро", "f"),
+                    # An edited prompt: the old branch stays in the export but is not the conversation.
+                    "x": node("user", 14, "Старый вариант вопроса", "e"), "y": node("assistant", 16, "Старый ответ", "x")}}
+        post = {"id": "c2", "title": "Пост для LinkedIn", "update_time": (t0 - timedelta(days=1, minutes=-50)).timestamp(),
+                "mapping": {"a": node("user", 40 - 1440, "Напиши пост про запуск"), "b": node("assistant", 50 - 1440, "Пост готов")}}
+        old = {"id": "old", "title": "Старое", "update_time": (now - timedelta(days=200)).timestamp(), "mapping": {
+            "a": {"message": {"author": {"role": "user"}, "create_time": (now - timedelta(days=200)).timestamp(),
+                              "content": {"parts": ["давно"]}}}}}
         with tempfile.TemporaryDirectory() as tmp:
             home = Path(tmp)
             exports = home / "ChatGPT-export"
             exports.mkdir()
             import zipfile
-            with zipfile.ZipFile(exports / "chatgpt-export.zip", "w") as archive:
-                archive.writestr("conversations.json", json.dumps(conversations, ensure_ascii=False))
-                archive.writestr("user.json", "{}")
+
+            def export(name, conversations):
+                with zipfile.ZipFile(exports / name, "w") as archive:
+                    archive.writestr("conversations.json", json.dumps(conversations, ensure_ascii=False))
+                    archive.writestr("user.json", "{}")
+                os.utime(exports / name, (time.time() + len(name), time.time() + len(name)))
+
+            export("chatgpt-export.zip", [shop, post, old])
             out = home / "daily-work"
             out.mkdir()
-            (out / "chatgpt_projects.json").write_text(json.dumps({"g-p-abc123def456": "SHOPIFY"}), encoding="utf-8")
             since = now - timedelta(days=45)
             first = COLLECTOR.import_chatgpt_export(out, since, [exports, home / "missing"])
             again = COLLECTOR.import_chatgpt_export(out, since, [exports])
-            day = (t0.date()).isoformat()
+            day, post_day = t0.date().isoformat(), (t0 - timedelta(days=1)).date().isoformat()
             data = json.loads((out / "sessions" / "chatgpt" / f"{day}.json").read_text(encoding="utf-8"))
             projection = work_projection(out, now=now, owner=True)
-        self.assertEqual((first["fresh"], first["conversations"], again["fresh"]), (True, 2, False))
-        records = {r["project"]: r for r in data["sessions"]}
-        shop = records["ChatGPT · SHOPIFY"]
-        self.assertEqual((shop["app"], shop["tool"], shop["topic"]), ("chatgpt", "codex", "Запуск магазина"))
-        self.assertEqual(shop["asks"], ["Составь план запуска магазина", "Добавь бюджет на рекламу"])  # hidden one left out
-        self.assertEqual(shop["outcome"], "Бюджет добавлен: 300 евро")
-        self.assertEqual(shop["active_minutes"], 20)
-        self.assertEqual(records["ChatGPT · без проекта"]["topic"], "Пост для LinkedIn")
+            # Naming the project later rewrites the days with the name.
+            (out / "chatgpt_projects.json").write_text(json.dumps({"g-p-abc123def456": "SHOPIFY"}), encoding="utf-8")
+            renamed = COLLECTOR.import_chatgpt_export(out, since, [exports])
+            named = json.loads((out / "sessions" / "chatgpt" / f"{day}.json").read_text(encoding="utf-8"))
+            # A newer export without the LinkedIn chat empties its day.
+            export("chatgpt-export-newer.zip", [shop])
+            newer = COLLECTOR.import_chatgpt_export(out, since, [exports])
+            emptied = json.loads((out / "sessions" / "chatgpt" / f"{post_day}.json").read_text(encoding="utf-8"))
+        self.assertEqual((first["fresh"], first["conversations"], again["fresh"], again["needs_push"]), (True, 2, False, True))
+        record = data["sessions"][0]
+        self.assertEqual((record["project"], record["app"], record["tool"], record["topic"]),
+                         ("ChatGPT · проект def456", "chatgpt", "codex", "Запуск магазина"))
+        self.assertEqual(record["asks"], ["Составь план запуска магазина", "Добавь бюджет на рекламу"])  # no hidden, no old branch
+        self.assertEqual((record["outcome"], record["active_minutes"]), ("Бюджет добавлен: 300 евро", 20))
         self.assertEqual(data["machine"], "chatgpt")
-        names = {item["name"] for item in projection["projects"]}
-        self.assertTrue({"ChatGPT · SHOPIFY", "ChatGPT · без проекта"} <= names)
+        self.assertTrue({"ChatGPT · проект def456", "ChatGPT · без проекта"} <= {item["name"] for item in projection["projects"]})
+        self.assertEqual((renamed["fresh"], named["sessions"][0]["project"]), (True, "ChatGPT · SHOPIFY"))
+        self.assertEqual((newer["days"], emptied["sessions"]), (sorted([day, post_day]), []))
 
     def test_no_chatgpt_export_is_reported(self):
         with tempfile.TemporaryDirectory() as tmp:

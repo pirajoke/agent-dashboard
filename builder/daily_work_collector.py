@@ -785,6 +785,24 @@ def _chatgpt_text(content: object) -> str:
     return text if isinstance(text, str) else ""
 
 
+def _active_messages(conversation: dict[str, Any], mapping: dict[str, Any]) -> list[Any]:
+    """The messages of the visible conversation: edited prompts and regenerated answers stay in
+    ``mapping`` on abandoned branches, so the parent chain from ``current_node`` is followed."""
+    node_id = conversation.get("current_node")
+    if not isinstance(node_id, str) or node_id not in mapping:
+        return [node.get("message") for node in mapping.values() if isinstance(node, dict)]
+    chain: list[Any] = []
+    seen: set[str] = set()
+    while isinstance(node_id, str) and node_id in mapping and node_id not in seen:
+        seen.add(node_id)
+        node = mapping[node_id]
+        if not isinstance(node, dict):
+            break
+        chain.append(node.get("message"))
+        node_id = node.get("parent")
+    return chain[::-1]
+
+
 def parse_chatgpt_conversation(conversation: dict[str, Any], names: dict[str, str]) -> Session | None:
     """One chat as one session: its messages are the events, its title the topic."""
     session_id = conversation.get("conversation_id") or conversation.get("id")
@@ -799,8 +817,7 @@ def parse_chatgpt_conversation(conversation: dict[str, Any], names: dict[str, st
     else:
         session.project = CHATGPT_NO_PROJECT
     session.topic = redact_topic(conversation.get("title"))
-    for node in mapping.values():
-        message = node.get("message") if isinstance(node, dict) else None
+    for message in _active_messages(conversation, mapping):
         if not isinstance(message, dict):
             continue
         created = message.get("create_time")
@@ -829,16 +846,17 @@ def import_chatgpt_export(out_dir: Path, since: datetime, dirs: list[Path] | Non
     if export is None:
         return {"ok": False, "reason": "export_not_found"}
     stat = export.stat()
-    marker = {"source": export.name, "size": stat.st_size, "mtime": int(stat.st_mtime)}
+    given_names = {key: value.strip() for key, value in sorted(_read_day_file(out_dir / CHATGPT_PROJECT_NAMES).items())
+                   if isinstance(value, str) and value.strip()}
+    # A new export or a renamed project rewrites the days.
+    marker = {"source": export.name, "size": stat.st_size, "mtime": int(stat.st_mtime), "names": given_names}
     state_path = out_dir / "chatgpt-export.json"
     state = _read_day_file(state_path)
     if {key: state.get(key) for key in marker} == marker:
         # Already read; its days are pushed again only if the last push did not get through.
-        return {"ok": True, "export": export.name, "fresh": False, "days": state.get("days", []),
+        return {"ok": True, "export": export.name, "fresh": False, "days": state.get("push_days", []),
                 "needs_push": not state.get("pushed")}
-    names = _export_project_names(export)
-    names.update({key: value for key, value in _read_day_file(out_dir / CHATGPT_PROJECT_NAMES).items()
-                  if isinstance(value, str) and value.strip()})
+    names = {**_export_project_names(export), **given_names}
     sessions: list[Session] = []
     try:
         for member in _export_members(export):
@@ -854,14 +872,17 @@ def import_chatgpt_export(out_dir: Path, since: datetime, dirs: list[Path] | Non
     by_day = day_records(sessions, days)
     exported_at = iso_z(datetime.fromtimestamp(stat.st_mtime, timezone.utc))
     machine_dir = out_dir / "sessions" / CHATGPT_MACHINE
-    for day in sorted(by_day):
+    # A day the newer export no longer has (its chats were deleted) is emptied here and on the Mac mini.
+    emptied = {day for day in state.get("days") or [] if day in days} - set(by_day)
+    push_days = sorted(set(by_day) | emptied)
+    for day in push_days:
         write_json(machine_dir / f"{day}.json", {
             "schema": SCHEMA, "date": day, "machine": CHATGPT_MACHINE, "collected_at": exported_at,
-            "sources": {"chatgpt": {"ok": True, "export": export.name}}, "sessions": by_day[day],
+            "sources": {"chatgpt": {"ok": True, "export": export.name}}, "sessions": by_day.get(day, []),
         })
     write_json(state_path, {**marker, "imported_at": iso_z(datetime.now(timezone.utc)), "days": sorted(by_day),
-                            "conversations": len(sessions), "pushed": False})
-    return {"ok": True, "export": export.name, "fresh": True, "days": sorted(by_day), "conversations": len(sessions),
+                            "push_days": push_days, "conversations": len(sessions), "pushed": False})
+    return {"ok": True, "export": export.name, "fresh": True, "days": push_days, "conversations": len(sessions),
             "needs_push": True}
 
 
