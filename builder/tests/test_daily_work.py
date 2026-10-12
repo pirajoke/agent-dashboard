@@ -572,11 +572,26 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn("data.feed.map((day, index) => dpDay(day, index, data))", html)
         self.assertIn("index < DP_OPEN_DAYS", html)
         self.assertIn("<summary>Технические детали", html)
-        # Everything else is one small link row; the big navigation steps back on this screen only.
-        self.assertIn('<nav class="dp-more" aria-label="Другие разделы">', html)
-        for section in ("work", "agents", "platforms", "machines"):
-            self.assertIn(f"""<button type="button" onclick="showSection('{section}')">""", html)
-        self.assertIn(".container:has(> #section-today.active) > .cc-main-nav { display: none; }", html)
+        # «По дням» stays inside the same top-level shell instead of replacing it
+        # with a second, differently styled navigation row.
+        primary_nav = '<nav class="nav-pills cc-main-nav" aria-label="Command Center sections">'
+        self.assertEqual(html.count(primary_nav), 1)
+        self.assertLess(html.index(primary_nav), html.index('<div id="section-today"'))
+        today = html[
+            html.index('<div id="section-today"') : html.index(
+                '<section id="section-platforms"'
+            )
+        ]
+        obsolete_replacements = []
+        if '<nav class="dp-more" aria-label="Другие разделы">' in today:
+            obsolete_replacements.append("the dp-more replacement navigation")
+        if ".container:has(> #section-today.active) > .cc-main-nav { display: none; }" in html:
+            obsolete_replacements.append("the CSS rule that hides the primary navigation")
+        self.assertEqual(
+            obsolete_replacements,
+            [],
+            "the shared primary navigation must remain visible on «По дням»",
+        )
         # A project's technical line opens that day on its project page, details unfolded.
         self.assertIn("openProject(link.dataset.project, link.dataset.day || null)", html)
         self.assertIn("if (day) mmRevealDay(day);", html)
