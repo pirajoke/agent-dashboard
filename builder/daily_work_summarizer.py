@@ -33,9 +33,11 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from dashboard_builder.daily_work import (  # noqa: E402
-    _bucket_github, _project_portfolio, _read_json, _session_intervals, _union_minutes, load_sessions)
+    _bucket_github, _project_portfolio, _quick_look, _read_json, _session_intervals, _union_minutes, load_sessions)
 
 SCHEMA = 2
+# Raised when the instructions change, so the last two weeks are written again (newest first).
+PROMPT_VERSION = 2
 HOME = Path.home()
 DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
 # Claude runs in <out>/summarizer; daily_work_collector.py skips sessions there (SUMMARIZER_DIRNAME).
@@ -78,8 +80,14 @@ SYSTEM_PROMPT = """Ты пишешь короткие новости дня дл
 
 Правила:
 - Каждый пункт короче 120 символов, по-русски, без эмодзи и вводных слов. you и agents в прошедшем времени.
+- Конкретно: каждый пункт называет, что именно появилось или изменилось и что это даёт: какой экран, отчёт, \
+кнопка, бот или уведомление, что он теперь делает. Пример: не «улучшили отчёты», а «появился годовой налоговый \
+отчёт в Excel: доходы, налог и расходы в рублях».
 - Переводи технический язык в продуктовый. Никаких имён файлов, функций, веток, номеров PR, команд, путей, хостов, библиотек и сокращений вроде CI, API, launchd. Пример: не «добавили KeepAlive в launchd-plist», а «бот сам поднимается после сбоя».
+- Названия и описания PR часто на английском: пересказывай их по-русски.
 - Только то, что следует из данных. Ничего не придумывай. Если работа не закончена, так и скажи: «начали…», «подготовили, ждёт проверки». Если было только обсуждение или разбор, напиши, что выяснили или решили.
+- Не пиши о времени работы, числе сессий и о том, что агенты «работали» или что «результат не указан». \
+Если по проекту в данных нет ничего конкретного, верни для него пустые you, agents и next: такой проект не покажут.
 - Если день ещё идёт, пиши о том, что уже сделано к этому часу.
 - day: одна фраза о главном за день по всем проектам.
 
@@ -123,7 +131,8 @@ def day_inputs(root: Path, days: list[str]) -> dict[str, list[dict[str, Any]]]:
         for item in portfolio.values():
             records = item["sessions_by_day"].get(day, [])
             prs = item["prs_by_day"].get(day) or {"merged": [], "opened": [], "closed_unmerged": []}
-            if not records and not any(prs.values()):
+            # No activity, or bare minutes that only produce «агенты работали, результат не указан».
+            if _quick_look(records, prs):
                 continue
             merged = prs["merged"]
             products.append({
@@ -270,13 +279,15 @@ def _deadlines(value: Any) -> list[dict[str, str]]:
 
 
 def parse_summary(text: str, ids: set[str]) -> dict[str, Any]:
+    """Bullets per project. A project answered with empty lists had nothing concrete that day and is
+    kept in ``quiet``, so it is neither shown nor asked about again."""
     start, end = text.find("{"), text.rfind("}")
     if start < 0 or end <= start:
         raise ValueError("no JSON in the answer")
     data = json.loads(text[start:end + 1])
     if not isinstance(data, dict) or not isinstance(data.get("projects"), dict):
         raise ValueError("answer has no projects")
-    projects, details = {}, {}
+    projects, details, quiet = {}, {}, []
     for product_id, entry in data["projects"].items():
         if product_id not in ids:
             continue
@@ -288,16 +299,21 @@ def parse_summary(text: str, ids: set[str]) -> dict[str, Any]:
         # "projects" keeps the short "what was done" list the project feed shows.
         done = (agents + you)[:MAX_BULLETS]
         if not done:
+            quiet.append(product_id)
             continue
         projects[product_id] = done
         lead = _lines(entry.get("lead"), 1)
         details[product_id] = {"lead": lead[0] if lead else None, "you": you, "agents": agents,
                                "next": _lines(entry.get("next"), MAX_SIDE), "deadlines": _deadlines(entry.get("deadlines"))}
-    if not projects:
-        raise ValueError("answer has no bullets")
+    if not projects and not quiet:
+        raise ValueError("answer has no projects from the input")
     headline = data.get("day")
     return {"day": " ".join(headline.split())[:BULLET_LIMIT] if isinstance(headline, str) and headline.strip() else None,
-            "projects": projects, "details": details}
+            "projects": projects, "details": details, "quiet": sorted(quiet)}
+
+
+def _answered(summary: dict[str, Any]) -> set[str]:
+    return set(summary["projects"]) | set(summary["quiet"])
 
 
 def summarize_day(cli: str, model: str, day: str, products: list[dict[str, Any]], workdir: Path,
@@ -306,14 +322,14 @@ def summarize_day(cli: str, model: str, day: str, products: list[dict[str, Any]]
     ids = {product["id"] for product in products}
     prompt = user_prompt(day, products, in_progress)
     summary = parse_summary(call_claude(cli, model, SYSTEM_PROMPT, prompt, workdir), ids)
-    missing = sorted(ids - set(summary["projects"]))
+    missing = sorted(ids - _answered(summary))
     if missing:
         retry_prompt = prompt + "\n\nВ прошлом ответе не было проектов: " + ", ".join(missing) + ". Ответь по всем проектам из входа."
         try:
             retry = parse_summary(call_claude(cli, model, SYSTEM_PROMPT, retry_prompt, workdir), ids)
         except (RuntimeError, ValueError):
             retry = None
-        if retry and len(retry["projects"]) > len(summary["projects"]):
+        if retry and len(_answered(retry)) > len(_answered(summary)):
             summary = retry
     return summary
 
@@ -326,7 +342,8 @@ def due_days(out: Path, inputs: dict[str, list[dict[str, Any]]], force: str | No
     for day in sorted(inputs, reverse=True):
         existing = _read_json(out / "summaries" / f"{day}.json")
         if (force == day or not isinstance(existing, dict) or existing.get("input_hash") != input_hash(inputs[day])
-                or existing.get("schema") != SCHEMA or (existing.get("in_progress") and day != today)):
+                or existing.get("schema") != SCHEMA or existing.get("prompt_version") != PROMPT_VERSION
+                or (existing.get("in_progress") and day != today)):
             due.append(day)
     return due
 
@@ -374,9 +391,10 @@ def main(argv: list[str] | None = None) -> int:
         # Projects still left out after a retry stay without bullets for this
         # input; they are listed rather than retried every run.
         write_json(args.out / "summaries" / f"{day}.json", {
-            "schema": SCHEMA, "date": day, "generated_at": iso_z(datetime.now(timezone.utc)), "model": args.model,
+            "schema": SCHEMA, "prompt_version": PROMPT_VERSION, "date": day,
+            "generated_at": iso_z(datetime.now(timezone.utc)), "model": args.model,
             "input_hash": input_hash(products), "in_progress": day == today, **summary,
-            "missing": sorted(ids - set(summary["projects"])),
+            "missing": sorted(ids - _answered(summary)),
         })
         status["written"].append(day)
     status["pending"] = len([day for day in outstanding if day not in status["written"]])

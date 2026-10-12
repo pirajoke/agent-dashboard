@@ -476,7 +476,7 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual([p["id"] for p in day["projects"]], ["command-center", "jarvis"])  # busiest first
         hub = day["projects"][0]
         self.assertEqual((hub["minutes"], hub["sessions"], hub["bullets"]), (60, 2, []))
-        self.assertEqual(hub["topics"], ["private topic"])  # no summary yet: what the sessions were about
+        self.assertFalse(hub["quiet"])  # no summary yet: named until Claude retells it
         self.assertEqual(hub["merged"][0]["number"], 49)
         closed = feed[1]["projects"]
         self.assertEqual(([p["id"] for p in closed], closed[0]["closed"][0]["number"], closed[0]["minutes"]), (["jarvis"], 140, 0))
@@ -514,7 +514,7 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual((day["headline"], day["in_progress"], day["written_at"]), ("Голос и итоги дня", True, "2026-10-09T03:00:00Z"))
         projects = {p["id"]: p for p in day["projects"]}
         self.assertEqual(projects["jarvis"]["bullets"], ["Ответы стали быстрее", "Решили оставить голос"])
-        self.assertEqual(projects["jarvis"]["topics"], [])  # Claude's words replace the session titles
+        self.assertFalse(projects["jarvis"]["quiet"])
         self.assertEqual(projects["command-center"]["bullets"], ["Итоги дня на сайте"])
         self.assertEqual(days["2026-10-05"]["projects"][0]["bullets"], ["Начали голосовой режим"])
         self.assertIsNone(days["2026-10-07"]["headline"])
@@ -523,6 +523,82 @@ class ProjectionTest(unittest.TestCase):
             {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "jarvis", "project": "JARVIS"},
             {"date": "2026-11-07", "what": "Продлить проверку цен", "project_id": "jarvis", "project": "JARVIS"},
         ])  # past ones dropped, every summary in the window counts, same words in two projects kept apart
+
+    def test_quick_looks_and_empty_retellings_are_not_news(self):
+        self._write_day("mac-mini", "2026-10-04", [{
+            "tool": "codex", "session_id": "peek", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+            "start": "2026-10-04T09:00:00Z", "end": "2026-10-04T09:01:00Z", "active_minutes": 1, "prompts": 1,
+            "topic": "peek", "intervals": [["2026-10-04T09:00:00Z", "2026-10-04T09:01:00Z"]]}])
+        self._write_day("macbook-pro", "2026-10-08", [
+            {"tool": "claude", "session_id": "j", "project": "jarvis", "repo": "pirajoke/jarvis", "branch": "feat/voice",
+             "start": "2026-10-08T11:00:00Z", "end": "2026-10-08T11:45:00Z", "active_minutes": 45, "prompts": 3, "topic": "t",
+             "intervals": [["2026-10-08T11:00:00Z", "2026-10-08T11:45:00Z"]]},
+            {"tool": "codex", "session_id": "l", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+             "start": "2026-10-08T12:00:00Z", "end": "2026-10-08T12:02:00Z", "active_minutes": 2, "prompts": 1, "topic": "t",
+             "intervals": [["2026-10-08T12:00:00Z", "2026-10-08T12:02:00Z"]]},
+        ])
+        path = self.root / "summaries" / "2026-10-08.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"schema": 2, "date": "2026-10-08", "day": "Итоги дня",
+                                    "projects": {"command-center": ["Появились итоги дня"]},
+                                    "details": {"command-center": {"lead": None, "you": [], "agents": ["Появились итоги дня"],
+                                                                   "next": [], "deadlines": []}},
+                                    "quiet": ["jarvis"]}, ensure_ascii=False), encoding="utf-8")
+        feed = work_projection(self.root, now=self.now, owner=True, edition=True)["feed"]
+        self.assertNotIn("2026-10-04", [day["date"] for day in feed])  # one minute in one project only
+        projects = {p["id"]: p for p in feed[0]["projects"]}
+        self.assertEqual({pid: p["quiet"] for pid, p in projects.items()},
+                         {"command-center": False, "jarvis": True, "mydictionary": True})
+
+    def test_todo_lists_what_waits_on_mark(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["prs"].append({"repo": "pirajoke/jarvis", "number": 150, "title": "Draft", "url": "https://github.com/pirajoke/jarvis/pull/150",
+                              "state": "open", "draft": True, "created_at": "2026-10-08T09:00:00Z", "updated_at": "2026-10-08T09:00:00Z",
+                              "closed_at": None, "merged_at": None})
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        self._write_paper_summary("2026-10-05", {"jarvis": {
+            "lead": None, "you": [], "agents": ["Начали голос"], "next": ["Старый шаг"], "deadlines": []}})
+        self._write_paper_summary("2026-10-08", {
+            "jarvis": {"lead": None, "you": [], "agents": ["Голос готов"], "next": [],
+                       "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
+            "command-center": {"lead": None, "you": [], "agents": ["Итоги дня"], "next": ["Сохранить токен"], "deadlines": []},
+        })
+        todo = {item["id"]: item for item in work_projection(self.root, now=self.now, owner=True)["todo"]}
+        # The nearest deadline first; the newest summary decides the next steps, an older list is not reused.
+        self.assertEqual(list(todo), ["jarvis", "command-center", "mydictionary"])
+        self.assertEqual((todo["jarvis"]["next"], todo["jarvis"]["deadlines"], todo["jarvis"]["open_prs"], todo["jarvis"]["drafts"]),
+                         ([], [{"date": "2026-10-20", "what": "Показать друзьям"}], [], 1))
+        self.assertEqual((todo["command-center"]["next"], todo["command-center"]["next_from"]), (["Сохранить токен"], "2026-10-08"))
+        self.assertEqual(([pr["number"] for pr in todo["mydictionary"]["open_prs"]], todo["mydictionary"]["loose"]), ([12], 2))
+        public = work_projection(self.root, now=self.now, owner=False)
+        self.assertNotIn("todo", public)
+
+    def test_todo_keeps_old_ready_prs_and_every_deadline(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["prs"].append({"repo": "pirajoke/quiet-repo", "number": 3, "title": "Ready long ago",
+                              "url": "https://github.com/pirajoke/quiet-repo/pull/3", "state": "open",
+                              "created_at": "2026-07-01T09:00:00Z", "updated_at": "2026-07-02T09:00:00Z",
+                              "closed_at": None, "merged_at": None})
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        deadlines = [{"date": f"2026-10-{day}", "what": f"Срок {day}"} for day in range(10, 20)]
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": None, "you": [], "agents": ["Голос"], "next": [],
+                                                            "deadlines": deadlines}})
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True)
+        todo = {item["id"]: item for item in payload["todo"]}
+        self.assertEqual([pr["number"] for pr in todo["p-quietrepo"]["open_prs"]], [3])  # no activity in the window
+        self.assertEqual(len(todo["jarvis"]["deadlines"]), 10)
+        self.assertEqual(len(payload["deadlines"]), 8)  # the banner in «По дням» stays short
+
+    def test_a_quick_look_with_an_old_summary_is_still_quiet(self):
+        self._write_day("mac-mini", "2026-10-06", [{
+            "tool": "codex", "session_id": "peek", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+            "start": "2026-10-06T09:00:00Z", "end": "2026-10-06T09:01:00Z", "active_minutes": 1, "prompts": 1,
+            "topic": "peek", "intervals": [["2026-10-06T09:00:00Z", "2026-10-06T09:01:00Z"]]}])
+        self._write_paper_summary("2026-10-06", {"mydictionary": {"lead": None, "you": [], "agents": ["Агенты работали"],
+                                                                  "next": [], "deadlines": []}})
+        day = {d["date"]: d for d in work_projection(self.root, now=self.now, owner=True, edition=True)["feed"]}["2026-10-06"]
+        lexi = {p["id"]: p for p in day["projects"]}["mydictionary"]
+        self.assertEqual((lexi["bullets"], lexi["quiet"]), ([], True))
 
     def test_open_issues_are_the_project_todo(self):
         github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
@@ -620,8 +696,12 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn('id="section-work"', html)
         self.assertIn("/api/work/daily", html)
         self.assertIn("'work'].includes(INITIAL_SECTION)", html)
+        # MAIN MANAGER is the to-do list (Mark, 2026-10-12): no project cards repeating the days.
+        self.assertIn('data-mm-view="todo"', html)
+        self.assertIn("renderTodo(data);", html)
+        self.assertNotIn("mm-project-grid", html)
+        self.assertNotIn('data-mm-view="projects"', html)
         # Projects reuse the Platforms mascots and open a per-project page.
-        self.assertIn('data-mm-view="projects"', html)
         self.assertIn('<use href="#cc-mascot-${mmEsc(item.mascot)}"/>', html)
         self.assertIn("project: id", html)
         # The plain-language day summary lives only in «По дням», not again in MAIN MANAGER.

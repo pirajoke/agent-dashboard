@@ -180,6 +180,18 @@ class SummarizerTest(unittest.TestCase):
             "lead": "Бот отвечает голосом", "you": ["Решили оставить голос", "Проверили", "Приняли"], "agents": [],
             "next": ["Проверить на телефоне"], "deadlines": [{"date": "2026-11-07", "what": "Продлить"}]})
         self.assertNotIn("lexi", summary["details"])  # nothing done: no entry
+        self.assertEqual(summary["quiet"], ["lexi"])  # answered, so it is not asked about again
+
+    def test_an_answer_with_nothing_concrete_is_kept_as_quiet(self):
+        text = json.dumps({"day": "Мелочи", "projects": {"jarvis": {"lead": None, "you": [], "agents": [], "next": []}}})
+        summary = SUMMARIZER.parse_summary(text, {"jarvis"})
+        self.assertEqual((summary["projects"], summary["quiet"]), ({}, ["jarvis"]))
+
+    def test_quick_looks_are_not_retold(self):
+        day = self.before
+        untitled = {**self._session("jarvis", "pirajoke/jarvis", day, 14, 25), "topic": None}
+        self._write_day(day, [self._session("lexi", "pirajoke/lexi", day, 10, 2), untitled])
+        self.assertEqual(SUMMARIZER.day_inputs(self.root, [day]), {})  # two minutes, and a session with nothing in it
 
     def test_today_is_summarized_and_redone_after_it_ends(self):
         today = datetime.now(timezone.utc).date().isoformat()
@@ -212,6 +224,12 @@ class SummarizerTest(unittest.TestCase):
         path = self.root / "summaries" / f"{day}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"schema": 1, "input_hash": SUMMARIZER.input_hash(inputs[day])}), encoding="utf-8")
+        self.assertEqual(SUMMARIZER.due_days(self.root, inputs, None), [day])
+        # New instructions are a new prompt version: days written with the old ones are redone.
+        current = {"schema": SUMMARIZER.SCHEMA, "prompt_version": SUMMARIZER.PROMPT_VERSION, "input_hash": SUMMARIZER.input_hash(inputs[day])}
+        path.write_text(json.dumps(current), encoding="utf-8")
+        self.assertEqual(SUMMARIZER.due_days(self.root, inputs, None), [])
+        path.write_text(json.dumps({**current, "prompt_version": SUMMARIZER.PROMPT_VERSION - 1}), encoding="utf-8")
         self.assertEqual(SUMMARIZER.due_days(self.root, inputs, None), [day])
 
     def test_runs_summarize_newest_days_first_and_only_once(self):

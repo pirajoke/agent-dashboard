@@ -58,9 +58,24 @@ under «Цифры, задачи и график».
 Data comes from `/api/work/daily?edition=1` (`feed` and `deadlines` in
 `dashboard_builder/daily_work.py`, owner token only). The text is written by
 `daily_work_summarizer.py` on the Mac mini, for today as well, rewritten while
-the day goes on. Without a summary a project shows what its sessions were
-about, never invented text. Without the owner token the page shows only the
-newest working day's totals.
+the day goes on. Each bullet names what appeared or changed; a project with
+nothing concrete is answered empty and kept in the summary's `quiet` list.
+Quick looks (under 3 minutes, or sessions with no title, ask or reply, and no
+PR) are not sent to Claude and not listed; a day of only those is left out.
+A project still waiting for its retelling is only named in one line, never
+described with invented text. `PROMPT_VERSION` in the summarizer goes up when
+the instructions change, so the last two weeks are rewritten. Without the
+owner token the page shows only the newest working day's totals.
 
-Technical pages moved to the last tab, «Техника» (machines, services, ports);
-MAIN MANAGER keeps the charts, loose ends and the infrastructure change log.
+Technical pages moved to the last tab, «Техника» (machines, services, ports).
+
+## MAIN MANAGER: what waits on Mark
+
+Mark (2026-10-12): «По дням» and MAIN MANAGER must not show the same thing.
+«По дням» says what was done; MAIN MANAGER (`?tab=work`) opens on «Дела», only
+what waits on Mark, per project: dated deadlines, next steps from the
+project's newest summary of the last 7 days, and PRs ready to merge (drafts
+are only counted), nearest deadline first (`todo` in `/api/work/daily`, owner
+only). «Хвосты» lists loose ends and «Изменения» the infrastructure change
+log. Project pages are reached from «Дела» and from the technical details in
+«По дням».

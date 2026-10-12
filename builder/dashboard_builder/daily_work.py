@@ -28,6 +28,11 @@ MAIN_BRANCHES = {"main", "master", "head", "develop", "dev", "trunk"}
 LIST_LIMIT = 12
 TODO_LIMIT = 8
 FEED_DAYS = 14  # the summarizer writes the last 14 days
+# A project with fewer minutes than this and no PR that day was a quick look, not work: it is
+# not retold (daily_work_summarizer.py) and not listed in «По дням», only counted in the numbers.
+NOISE_MINUTES = 3
+# «Дела» takes next steps only from a summary this recent; older ones are probably done or stale.
+TODO_NEXT_DAYS = 7
 PROJECT_DAY_LIMIT = 30
 # Products as Command Center's Platforms tab shows them; the mascot is the
 # Platforms SVG symbol (cc-mascot-<mascot>). Sessions and PRs are matched by
@@ -224,6 +229,27 @@ def _latest_next(summaries: dict[str, dict[str, Any]] | None, product_id: str, d
     return []
 
 
+def _quick_look(records: list[dict], prs: dict[str, list]) -> bool:
+    """Nothing to retell: no PR, and under NOISE_MINUTES of work or no session with a title, an ask or
+    a reply. The summarizer skips these and «По дням» does not list them."""
+    if any(prs.values()):
+        return False
+    minutes = _union_minutes(p for r in records for p in _session_intervals(r))
+    return minutes < NOISE_MINUTES or not any(r.get(key) for r in records for key in ("topic", "asks", "outcome"))
+
+
+def _current_next(summaries: dict[str, dict[str, Any]], product_id: str, days: list[str]) -> tuple[str | None, list[str]]:
+    """Next steps from the project's newest summary in the last TODO_NEXT_DAYS days, with its day.
+
+    Unlike _latest_next, an older list is not reached for: when the newest summary names no next
+    step, nothing is pending from the summaries."""
+    for day in reversed(days[-TODO_NEXT_DAYS:]):
+        details = _details(summaries.get(day), product_id)
+        if details:
+            return (day, details["next"]) if details["next"] else (None, [])
+    return None, []
+
+
 def _project_rows(sessions: list[dict], gh: dict[str, list]) -> list[dict[str, Any]]:
     grouped: dict[str, list[dict]] = defaultdict(list)
     for record in sessions:
@@ -337,6 +363,15 @@ def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], gi
                 item["repos"].add(repo)
                 repo_product.setdefault(repo, item["id"])
                 item["prs_by_day"][day][kind].append(pr)
+    # A PR waiting for a merge waits on Mark even when it was opened before the window and its repo
+    # had no other news, so its product is added for «Дела».
+    if isinstance(github, dict) and github.get("ok"):
+        for pr in github.get("prs") or []:
+            repo = pr.get("repo") if isinstance(pr, dict) else None
+            if repo and pr.get("state") == "open" and repo not in repo_product:
+                item = entry(product_for(None, repo))
+                item["repos"].add(repo)
+                repo_product[repo] = item["id"]
     # A known product whose only news is an open issue still gets its to-do; unknown repos stay out.
     known = {product["id"] for product in PRODUCTS}
     if isinstance(github, dict) and github.get("ok"):
@@ -481,8 +516,9 @@ def _has_activity(item: dict[str, Any], day: str) -> bool:
 
 
 def _upcoming_deadlines(summaries: dict[str, dict[str, Any]], portfolio: dict[str, dict[str, Any]],
-                        series_days: list[str], today: str) -> list[dict[str, Any]]:
-    """Dated deadlines Claude found in the window's summaries that have not passed yet."""
+                        series_days: list[str], today: str, limit: int | None = 8) -> list[dict[str, Any]]:
+    """Dated deadlines Claude found in the window's summaries that have not passed yet, nearest first;
+    ``limit`` is for the banner in «По дням», «Дела» takes them all."""
     deadlines: dict[tuple, dict[str, Any]] = {}
     for product_id, item in portfolio.items():
         for day in series_days:
@@ -490,15 +526,16 @@ def _upcoming_deadlines(summaries: dict[str, dict[str, Any]], portfolio: dict[st
                 if deadline["date"] >= today:
                     deadlines[(product_id, deadline["date"], deadline["what"])] = {**deadline, "project_id": product_id,
                                                                                    "project": item["name"]}
-    return sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:8]
+    return sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:limit]
 
 
 def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
           summaries: dict[str, dict[str, Any]], today: str) -> list[dict[str, Any]]:
     """«По дням», the first screen: each day with work, newest first, in Claude's plain words per project.
 
-    Only real activity: a day without sessions or PRs is left out. A project without a summary that
-    day gets what its sessions were about instead; PRs and numbers go to the technical details.
+    Only real activity: a day without sessions or PRs, or with quick looks only, is left out. Projects
+    Claude has not retold yet are only named; quick looks and projects with nothing concrete are
+    ``quiet`` and appear only in the technical details, with the PRs and numbers.
     """
     feed = []
     for totals in reversed(series[-FEED_DAYS:]):
@@ -509,22 +546,27 @@ def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
             # A summary left over after its sessions were re-attributed is not news on its own.
             if not _has_activity(item, day):
                 continue
-            bullets = _bullets(summary, product_id) or []
             records = item["sessions_by_day"].get(day, [])
             prs = item["prs_by_day"].get(day) or {"merged": [], "opened": [], "closed_unmerged": []}
-            topics = list(dict.fromkeys(str(r["topic"]).strip() for r in records if isinstance(r.get("topic"), str) and r["topic"].strip()))
+            minutes = _union_minutes(p for r in records for p in _session_intervals(r))
+            # Not news: a quick look without a PR (also when a summary written before that rule still has
+            # bullets for it), or a project Claude found nothing concrete to say about.
+            quick = _quick_look(records, prs)
+            bullets = [] if quick else (_bullets(summary, product_id) or [])
+            quiet = quick or (not bullets and product_id in ((summary or {}).get("quiet") or []))
             projects.append({
                 "id": product_id, "name": item["name"], "mascot": item["mascot"],
-                "minutes": _union_minutes(p for r in records for p in _session_intervals(r)),
+                "minutes": minutes,
                 "sessions": len(records),
                 "bullets": bullets,
-                "topics": [] if bullets else topics[:4],
+                "quiet": quiet,
                 "merged": [_pr_view(pr) for pr in prs["merged"]],
                 "opened": [_pr_view(pr) for pr in prs["opened"] if pr not in prs["merged"]],
                 "closed": [_pr_view(pr) for pr in prs["closed_unmerged"]],
                 "commands": sum(1 for r in records for action in r.get("infra_actions") or [] if isinstance(action, dict)),
             })
-        if not projects:
+        # A day of quick looks only is not news either; the project pages still list it.
+        if all(project["quiet"] for project in projects):
             continue
         projects.sort(key=lambda p: (p["minutes"], len(p["merged"]), p["sessions"]), reverse=True)
         headline = (summary or {}).get("day")
@@ -538,6 +580,36 @@ def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
             "projects": projects,
         })
     return feed
+
+
+def _todo(portfolio: dict[str, dict[str, Any]], summaries: dict[str, dict[str, Any]],
+          series_days: list[str], today: str) -> list[dict[str, Any]]:
+    """MAIN MANAGER «Дела»: per project, what waits on Mark now. No day history, that is «По дням».
+
+    Next steps come from the newest recent summary, deadlines from the summaries, PRs waiting for
+    a merge (not drafts) from GitHub; loose ends are only counted here, «Хвосты» lists them.
+    """
+    deadlines = _upcoming_deadlines(summaries, portfolio, series_days, today, limit=None)
+    items = []
+    for product_id, item in portfolio.items():
+        since, steps = _current_next(summaries, product_id, series_days)
+        # Drafts are still being worked on; only PRs marked ready wait for a merge.
+        ready = [pr for pr in item["open_prs"] if not pr.get("draft")]
+        entry = {
+            "id": product_id, "name": item["name"], "mascot": item["mascot"],
+            "next": steps, "next_from": since,
+            "deadlines": [{"date": d["date"], "what": d["what"]} for d in deadlines if d["project_id"] == product_id],
+            "open_prs": [_pr_view(pr) for pr in ready[:TODO_LIMIT]],
+            "open_prs_count": len(ready),
+            "drafts": len(item["open_prs"]) - len(ready),
+            "loose": len(item["loose"]),
+        }
+        if entry["next"] or entry["deadlines"] or entry["open_prs"]:
+            items.append(entry)
+    # Nearest deadline first, then the projects with the most waiting.
+    items.sort(key=lambda e: (e["deadlines"][0]["date"] if e["deadlines"] else "9999-12-31",
+                              -(len(e["next"]) + e["open_prs_count"]), e["name"]))
+    return items
 
 
 def _age_days(moment: datetime | None, now: datetime) -> int | None:
@@ -665,6 +737,7 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         payload["forgot"] = forgot[:LIST_LIMIT]
         payload["sources"] = sources
         payload["projects"] = summaries
+        payload["todo"] = _todo(portfolio, day_summaries, series_days, today.isoformat())
         if edition:
             payload["feed"] = _feed(series, portfolio, day_summaries, today.isoformat())
             payload["deadlines"] = _upcoming_deadlines(day_summaries, portfolio, series_days, today.isoformat())
