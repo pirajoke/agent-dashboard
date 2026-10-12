@@ -299,7 +299,9 @@ def product_for(project: object, repo: object) -> dict[str, Any]:
         if any(match in key for key in keys for match in product["match"]):
             return {key: product[key] for key in ("id", "name", "mascot", "description")}
     name = str(project or (str(repo).rsplit("/", 1)[-1] if repo else "") or "без проекта")
-    return {"id": "p-" + (_norm(name) or "other"), "name": name, "mascot": None, "description": None}
+    # Cyrillic letters are kept, so «ChatGPT · Любовь» and «ChatGPT · без проекта» stay apart.
+    slug = re.sub(r"[^0-9a-zа-яё]", "", name.lower())
+    return {"id": "p-" + (slug or "other"), "name": name, "mascot": None, "description": None}
 
 
 def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], github: dict | None,

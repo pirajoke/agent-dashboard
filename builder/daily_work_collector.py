@@ -32,8 +32,9 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
-# 3: asks, replies and folders from the newer Codex rollouts; older days are collected again.
-SCHEMA = 3
+# 3: asks, replies and folders from the newer Codex rollouts; 4: ChatGPT app projects are named
+# «ChatGPT · <project>». Older days are collected again.
+SCHEMA = 4
 HOME = Path.home()
 DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
 CLAUDE_DIRS = [HOME / ".claude" / "projects", HOME / ".config" / "claude" / "projects"]
@@ -304,9 +305,30 @@ def repo_for_cwd(cwd: str | None) -> str | None:
     return _REMOTE_CACHE[cwd]
 
 
+# The ChatGPT app works in ~/Documents/ChatGPT/<project>; a chat outside a project gets a folder
+# named by its id or «new-chat», which says nothing, so those are grouped together.
+CHATGPT_PROJECT = "ChatGPT · {}"
+CHATGPT_NO_PROJECT = "ChatGPT · без проекта"
+_CHAT_ID_RE = re.compile(r"^(?:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}|new[-_ ]?chat(?:[-_ ]?\d+)?)$", re.IGNORECASE)
+
+
+def _chatgpt_project(cwd: str) -> str | None:
+    parts = Path(cwd).parts
+    for index in range(1, len(parts)):
+        if parts[index] == "ChatGPT" and parts[index - 1] == "Documents":
+            folder = parts[index + 1] if index + 1 < len(parts) else ""
+            if not folder or _CHAT_ID_RE.match(folder):
+                return CHATGPT_NO_PROJECT
+            return CHATGPT_PROJECT.format(folder)
+    return None
+
+
 def project_name(cwd: str | None, repo: str | None) -> str:
     if repo:
         return repo.split("/", 1)[1]
+    chatgpt = _chatgpt_project(cwd) if cwd else None
+    if chatgpt:
+        return chatgpt
     if cwd:
         name = Path(cwd).name
         if name and Path(cwd) != HOME:
