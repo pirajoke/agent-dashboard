@@ -32,7 +32,8 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
-SCHEMA = 2
+# 3: asks, replies and folders from the newer Codex rollouts; older days are collected again.
+SCHEMA = 3
 HOME = Path.home()
 DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
 CLAUDE_DIRS = [HOME / ".claude" / "projects", HOME / ".config" / "claude" / "projects"]
@@ -295,7 +296,8 @@ def repo_for_cwd(cwd: str | None) -> str | None:
         repo = None
         if Path(cwd).is_dir():
             repo = _git_remote(cwd)
-        if repo is None and Path(cwd) != HOME and Path(cwd).name:
+        elif not Path(cwd).exists() and Path(cwd).name:
+            # Only a folder that is gone (a deleted worktree); an existing folder outside git stays unmatched.
             clone = _clone_for_name(Path(cwd).name)
             repo = _git_remote(str(clone)) if clone else None
         _REMOTE_CACHE[cwd] = repo

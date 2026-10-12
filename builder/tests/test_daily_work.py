@@ -136,6 +136,20 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(record["asks"], ["Объедини вкладки"])
         self.assertEqual(record["outcome"], "Вкладки объединены, тесты зелёные")
 
+    def test_existing_folder_outside_git_is_not_matched_to_a_clone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            clone = home / "clones" / "agent-dashboard"
+            (clone / ".git").mkdir(parents=True)
+            notes = home / "agent-dashboard-notes"
+            notes.mkdir()
+            with patch.object(COLLECTOR, "CLONE_PARENTS", [home / "clones"]), \
+                    patch.object(COLLECTOR, "_git_remote",
+                                 lambda cwd: "pirajoke/agent-dashboard" if cwd == str(clone) else None), \
+                    patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                self.assertIsNone(COLLECTOR.repo_for_cwd(str(notes)))
+                self.assertEqual(COLLECTOR.repo_for_cwd(str(home / "agent-dashboard-gone-v1")), "pirajoke/agent-dashboard")
+
     def test_codex_sub_agent_without_asks_is_named_by_its_task(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "rollout-sub.jsonl"
