@@ -361,6 +361,15 @@ def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], gi
                 item["repos"].add(repo)
                 repo_product.setdefault(repo, item["id"])
                 item["prs_by_day"][day][kind].append(pr)
+    # A PR waiting for a merge waits on Mark even when it was opened before the window and its repo
+    # had no other news, so its product is added for «Дела».
+    if isinstance(github, dict) and github.get("ok"):
+        for pr in github.get("prs") or []:
+            repo = pr.get("repo") if isinstance(pr, dict) else None
+            if repo and pr.get("state") == "open" and repo not in repo_product:
+                item = entry(product_for(None, repo))
+                item["repos"].add(repo)
+                repo_product[repo] = item["id"]
     # A known product whose only news is an open issue still gets its to-do; unknown repos stay out.
     known = {product["id"] for product in PRODUCTS}
     if isinstance(github, dict) and github.get("ok"):
@@ -505,8 +514,9 @@ def _has_activity(item: dict[str, Any], day: str) -> bool:
 
 
 def _upcoming_deadlines(summaries: dict[str, dict[str, Any]], portfolio: dict[str, dict[str, Any]],
-                        series_days: list[str], today: str) -> list[dict[str, Any]]:
-    """Dated deadlines Claude found in the window's summaries that have not passed yet."""
+                        series_days: list[str], today: str, limit: int | None = 8) -> list[dict[str, Any]]:
+    """Dated deadlines Claude found in the window's summaries that have not passed yet, nearest first;
+    ``limit`` is for the banner in «По дням», «Дела» takes them all."""
     deadlines: dict[tuple, dict[str, Any]] = {}
     for product_id, item in portfolio.items():
         for day in series_days:
@@ -514,7 +524,7 @@ def _upcoming_deadlines(summaries: dict[str, dict[str, Any]], portfolio: dict[st
                 if deadline["date"] >= today:
                     deadlines[(product_id, deadline["date"], deadline["what"])] = {**deadline, "project_id": product_id,
                                                                                    "project": item["name"]}
-    return sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:8]
+    return sorted(deadlines.values(), key=lambda d: (d["date"], d["project"]))[:limit]
 
 
 def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
@@ -534,12 +544,14 @@ def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
             # A summary left over after its sessions were re-attributed is not news on its own.
             if not _has_activity(item, day):
                 continue
-            bullets = _bullets(summary, product_id) or []
             records = item["sessions_by_day"].get(day, [])
             prs = item["prs_by_day"].get(day) or {"merged": [], "opened": [], "closed_unmerged": []}
             minutes = _union_minutes(p for r in records for p in _session_intervals(r))
-            # Not news: a quick look without a PR, or a project Claude found nothing concrete to say about.
-            quiet = not bullets and (_quick_look(records, prs) or product_id in ((summary or {}).get("quiet") or []))
+            # Not news: a quick look without a PR (also when a summary written before that rule still has
+            # bullets for it), or a project Claude found nothing concrete to say about.
+            quick = _quick_look(records, prs)
+            bullets = [] if quick else (_bullets(summary, product_id) or [])
+            quiet = quick or (not bullets and product_id in ((summary or {}).get("quiet") or []))
             projects.append({
                 "id": product_id, "name": item["name"], "mascot": item["mascot"],
                 "minutes": minutes,
@@ -575,7 +587,7 @@ def _todo(portfolio: dict[str, dict[str, Any]], summaries: dict[str, dict[str, A
     Next steps come from the newest recent summary, deadlines from the summaries, PRs waiting for
     a merge (not drafts) from GitHub; loose ends are only counted here, «Хвосты» lists them.
     """
-    deadlines = _upcoming_deadlines(summaries, portfolio, series_days, today)
+    deadlines = _upcoming_deadlines(summaries, portfolio, series_days, today, limit=None)
     items = []
     for product_id, item in portfolio.items():
         since, steps = _current_next(summaries, product_id, series_days)

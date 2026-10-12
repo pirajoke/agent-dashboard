@@ -563,6 +563,33 @@ class ProjectionTest(unittest.TestCase):
         public = work_projection(self.root, now=self.now, owner=False)
         self.assertNotIn("todo", public)
 
+    def test_todo_keeps_old_ready_prs_and_every_deadline(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["prs"].append({"repo": "pirajoke/quiet-repo", "number": 3, "title": "Ready long ago",
+                              "url": "https://github.com/pirajoke/quiet-repo/pull/3", "state": "open",
+                              "created_at": "2026-07-01T09:00:00Z", "updated_at": "2026-07-02T09:00:00Z",
+                              "closed_at": None, "merged_at": None})
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        deadlines = [{"date": f"2026-10-{day}", "what": f"Срок {day}"} for day in range(10, 20)]
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": None, "you": [], "agents": ["Голос"], "next": [],
+                                                            "deadlines": deadlines}})
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True)
+        todo = {item["id"]: item for item in payload["todo"]}
+        self.assertEqual([pr["number"] for pr in todo["p-quietrepo"]["open_prs"]], [3])  # no activity in the window
+        self.assertEqual(len(todo["jarvis"]["deadlines"]), 10)
+        self.assertEqual(len(payload["deadlines"]), 8)  # the banner in «По дням» stays short
+
+    def test_a_quick_look_with_an_old_summary_is_still_quiet(self):
+        self._write_day("mac-mini", "2026-10-06", [{
+            "tool": "codex", "session_id": "peek", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+            "start": "2026-10-06T09:00:00Z", "end": "2026-10-06T09:01:00Z", "active_minutes": 1, "prompts": 1,
+            "topic": "peek", "intervals": [["2026-10-06T09:00:00Z", "2026-10-06T09:01:00Z"]]}])
+        self._write_paper_summary("2026-10-06", {"mydictionary": {"lead": None, "you": [], "agents": ["Агенты работали"],
+                                                                  "next": [], "deadlines": []}})
+        day = {d["date"]: d for d in work_projection(self.root, now=self.now, owner=True, edition=True)["feed"]}["2026-10-06"]
+        lexi = {p["id"]: p for p in day["projects"]}["mydictionary"]
+        self.assertEqual((lexi["bullets"], lexi["quiet"]), ([], True))
+
     def test_open_issues_are_the_project_todo(self):
         github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
         github["open_issues"] = [
