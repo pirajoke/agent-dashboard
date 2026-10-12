@@ -50,12 +50,29 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 /* Nav */
 .nav-pills { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); padding: 4px; border-radius: 12px; width: fit-content; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .nav-pills::-webkit-scrollbar { display: none; }
-.nav-pill { flex: 0 0 auto; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; transition: all 0.2s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.nav-pill { flex: 0 0 auto; min-height: 44px; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .nav-pill:hover { color: var(--text); }
 .nav-pill:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
 .nav-pill.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .nav-pill .pill-icon { font-size: 16px; }
 .nav-pill .pill-badge { font-size: 11px; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+.tab-name-customizer { margin: -18px 0 24px; }
+.tab-name-customizer > button,
+.tab-name-actions button { min-height: 44px; padding: 9px 14px; border: 1px solid var(--border2); border-radius: 10px; background: var(--card); color: var(--text2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease; }
+.tab-name-customizer > button:hover,
+.tab-name-actions button:hover { color: var(--text); border-color: var(--accent); }
+.tab-name-customizer button:focus-visible,
+.tab-name-field input:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
+.tab-name-editor { max-width: 760px; margin-top: 10px; padding: 16px; border: 1px solid var(--border2); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
+.tab-name-editor[hidden] { display: none !important; }
+.tab-name-editor-title { display: block; margin-bottom: 12px; font-size: 14px; }
+.tab-name-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.tab-name-field { display: grid; gap: 5px; color: var(--text2); font-size: 12px; }
+.tab-name-field input { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px; }
+.tab-name-field input[aria-invalid="true"] { border-color: var(--red); }
+.tab-name-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.tab-name-actions button[type="submit"] { color: #765800; border-color: rgba(234,179,8,0.55); background: var(--accent-bg); }
+.tab-name-status { min-height: 20px; margin-top: 8px; color: var(--text2); font-size: 12px; line-height: 1.5; }
 
 /* Cards */
 .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 24px; transition: box-shadow 0.2s; }
@@ -275,6 +292,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   --platform-tint: var(--bg2);
   position: relative;
   min-width: 0;
+  touch-action: pan-y;
   grid-column: span 2;
   display: flex;
   flex-direction: column;
@@ -286,6 +304,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .platform-entry:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.platform-entry.is-reordering { touch-action: none; user-select: none; -webkit-user-select: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(234,179,8,0.2), var(--shadow-lg); }
 .platform-entry.priority {
   grid-column: span 5;
   display: grid;
@@ -323,6 +342,31 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-weight: 700;
 }
 .platform-entry.priority .platform-index { color: #9A7100; }
+.platform-reorder-controls {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  left: 6px;
+  display: flex;
+  gap: 2px;
+}
+.platform-reorder-control {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.92);
+  color: var(--text2);
+  font: 700 17px/1 'Inter', -apple-system, sans-serif;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.platform-reorder-control:hover { color: #9A7100; border-color: rgba(234,179,8,0.55); background: #fff; }
+.platform-reorder-control:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
+.platform-order-status { min-height: 20px; margin: -8px 0 12px; color: var(--text2); font-size: 12px; line-height: 1.5; }
 .platform-content {
   min-width: 0;
   display: flex;
@@ -407,6 +451,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
 @media (max-width: 760px) {
   .header-mascot { width: 44px; height: 44px; }
+  .tab-name-fields { grid-template-columns: 1fr; }
   .platforms-header { grid-template-columns: minmax(0, 1fr) 84px; gap: 14px; padding: 18px; }
   .platforms-hero-mascot { display: block; width: 84px; height: 84px; grid-column: 2; grid-row: 1; }
   .platforms-legend { grid-column: 1 / -1; }
@@ -433,9 +478,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .nav-pill,
+  .tab-name-customizer > button,
+  .tab-name-actions button,
   .platform-entry,
   .platform-art svg,
-  .platform-link { transition: none; }
+  .platform-link,
+  .platform-reorder-control { transition: none; }
   .platform-entry:hover,
   .platform-link:hover { transform: none; }
   .platform-entry:hover .platform-art svg { transform: none; }
@@ -2875,8 +2924,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .agents-pipeline > summary { cursor:pointer; min-height:44px; font-size:14px; color:var(--text2); }
 .agents-pipeline .jarvis-hud-card, .agents-pipeline .jarvis-hud-card.hud-collapsed { position:relative; top:auto; left:auto; width:100%; max-height:none; margin-top:10px; }
 @media (max-width:600px) {
-  .cc-main-nav { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
-  .cc-main-nav .nav-pill { justify-content:center; min-width:0; padding:10px 8px; }
+  .cc-main-nav { display:flex; width:100%; flex-wrap:nowrap; overflow-x:auto; }
+  .cc-main-nav .nav-pill { justify-content:center; min-width:max-content; padding:10px 14px; }
   .decision-head { flex-wrap:wrap; gap:8px; }
   .decision-head h2 { font-size:24px; }
   .decision-card { padding:18px 14px; }
@@ -3240,18 +3289,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-project-card:hover, .mm-project-card:hover .mm-project-art svg { transform: none; }
 }
 
-/* «По дням», the first screen: the project page's day rows across all projects, in the MAIN MANAGER look.
-   The big navigation steps back while it is open; the other sections are one small link row. */
+/* «По дням», the first screen: the project page's day rows across all projects, in the MAIN MANAGER look. */
 .machines-stats { justify-content: flex-start; margin-bottom: 20px; }
-.container:has(> #section-today.active) > .cc-main-nav { display: none; }
 .mm-os.dp { display: block; min-height: 0; max-width: 980px; padding: 24px 28px 28px; }
 .dp-top { margin-bottom: 16px; }
 .dp-title { font-size: 26px; font-weight: 750; line-height: 1.25; letter-spacing: -.01em; }
 .dp-lede { margin-top: 4px; color: var(--mm-muted); font-size: 14px; }
-.dp-more { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 8px 0 0 -8px; color: var(--mm-muted); font-size: 13px; }
-.dp-more span { margin: 0 4px 0 8px; }
-.dp-more button { min-height: 32px; padding: 4px 8px; color: var(--mm-accent); border-radius: 8px; font-size: 13px; font-weight: 600; }
-.dp-more button:hover { background: var(--mm-surface-hover); }
 .mm-os.dp .mm-notice { margin: 0 0 16px; }
 .dp-deadlines { margin-bottom: 16px; padding: 12px 16px; background: var(--mm-warning-soft); border-radius: 12px; }
 .dp-deadlines h3 { margin-bottom: 4px; color: var(--mm-warning); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -3292,9 +3335,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 }
 @media (prefers-reduced-motion: reduce) {
   .mm-project-more > summary::after { transition: none; }
-}
-@media (max-width: 600px) {
-  .cc-main-nav .nav-pill:first-child { grid-column: 1 / -1; }
 }
 </style>
 </head>
@@ -3458,12 +3498,25 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
-    <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span> По дням</button>
-    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span> MAIN MANAGER <span class="pill-badge">день</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span> Agents <span class="pill-badge" id="agents-badge">pixel</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span> Platforms <span class="pill-badge">7</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span> Техника</button>
+    <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span><span class="cc-tab-label" data-tab-label="today">По дням</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span><span class="pill-badge">день</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Agents</span><span class="pill-badge" id="agents-badge">pixel</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Platforms</span><span class="pill-badge">7</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
+  <div class="tab-name-customizer">
+    <button type="button" id="edit-tab-names" data-tab-rename>Переименовать вкладки</button>
+    <form class="tab-name-editor" id="tab-name-editor" aria-labelledby="tab-name-editor-title" hidden>
+      <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
+      <div class="tab-name-fields" id="tab-name-fields"></div>
+      <div class="tab-name-actions">
+        <button type="submit">Сохранить</button>
+        <button type="button" id="cancel-tab-names">Отмена</button>
+        <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
+      </div>
+      <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    </form>
+  </div>
 
   <!-- ═══════════════ ПО ДНЯМ: что сделано за каждый день, простыми словами ═══════════════ -->
   <div id="section-today" class="section active" lang="ru">
@@ -3473,13 +3526,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           <h2 class="dp-title" id="dp-title">По дням</h2>
           <p class="dp-lede">Что сделано за каждый день, простыми словами. Цифры и PR лежат в «Технических деталях» дня.</p>
         </div>
-        <nav class="dp-more" aria-label="Другие разделы">
-          <span>Другие разделы:</span>
-          <button type="button" onclick="showSection('work')">MAIN MANAGER</button>
-          <button type="button" onclick="showSection('agents')">Agents</button>
-          <button type="button" onclick="showSection('platforms')">Platforms</button>
-          <button type="button" onclick="showSection('machines')">Техника</button>
-        </nav>
       </header>
       <p class="mm-notice" id="dp-meta" role="status" aria-live="polite">Загружаю дни…</p>
       <section class="dp-deadlines" id="dp-deadlines" aria-labelledby="dp-deadlines-title" hidden>
@@ -3522,8 +3568,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
       <svg class="platforms-hero-mascot" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-hub"/></svg>
     </div>
 
+    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Hold a card, then drag it, or use its arrow buttons to change the order.</p>
     <div class="platform-directory">
       <article class="platform-entry priority" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
+        <div class="platform-reorder-controls" aria-label="Move JobRadar / Financial OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move JobRadar / Financial OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move JobRadar / Financial OS later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
         <div class="platform-content">
@@ -3537,6 +3585,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </article>
       <article class="platform-entry priority" data-platform-id="mydictionary" data-platform-name="Lexi">
+        <div class="platform-reorder-controls" aria-label="Move Lexi"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Lexi earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Lexi later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
         <span class="platform-index">02</span>
         <div class="platform-content">
@@ -3550,6 +3599,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </article>
       <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
+        <div class="platform-reorder-controls" aria-label="Move Health OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Health OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Health OS later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
         <span class="platform-index">03</span>
         <div class="platform-content">
@@ -3562,6 +3612,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </article>
       <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
+        <div class="platform-reorder-controls" aria-label="Move AI Singularity"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move AI Singularity earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move AI Singularity later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
         <span class="platform-index">04</span>
         <div class="platform-content">
@@ -3574,6 +3625,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </article>
       <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
+        <div class="platform-reorder-controls" aria-label="Move Context News France"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Context News France earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Context News France later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
         <span class="platform-index">05</span>
         <div class="platform-content">
@@ -3586,6 +3638,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </article>
       <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
+        <div class="platform-reorder-controls" aria-label="Move Accountable OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Accountable OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Accountable OS later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
         <span class="platform-index">06</span>
         <div class="platform-content">
@@ -3598,6 +3651,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </article>
       <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
+        <div class="platform-reorder-controls" aria-label="Move JARVIS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move JARVIS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move JARVIS later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
         <span class="platform-index">07</span>
         <div class="platform-content">
@@ -4267,9 +4321,9 @@ const PRO_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
   ? `${DASHBOARD_API}/api/pro`
   : 'http://100.74.94.2:8880';
 const PRO_API_PATH_PREFIX = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE) ? '' : '/api';
-const MAC_MINI_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
-  ? DASHBOARD_API
-  : 'http://100.77.209.73:8880';
+const MAC_MINI_API = IS_FILE_DASHBOARD
+  ? 'http://100.77.209.73:8880'
+  : (IS_LOCALHOST_PAGE ? LOCAL_API : DASHBOARD_API);
 const BRIDGE_TASKS_API = (!IS_FILE_DASHBOARD && !IS_LOCALHOST_PAGE)
   ? `${DASHBOARD_API}/api/bridge/tasks`
   : 'http://100.77.209.73:7777/api/bridge/tasks';
@@ -4310,7 +4364,35 @@ const JARVIS_HUD_COLLAPSED_KEY = 'command-center.jarvis-hud-collapsed';
 const JARVIS_BUDGET_KEY = 'command-center.jarvis-budget';
 const JARVIS_RUN_TOKEN_KEY = 'command-center.jarvis-run-token';
 const JARVIS_LAST_RUN_KEY = 'command-center.jarvis-last-run';
-let currentJarvisRunId = localStorage.getItem(JARVIS_LAST_RUN_KEY) || '';
+
+function safeStorageGet(key, fallback = '') {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value === null ? fallback : value;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function safeStorageSet(key, value) {
+  try {
+    window.localStorage.setItem(key, String(value));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function safeStorageRemove(key) {
+  try {
+    window.localStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+let currentJarvisRunId = safeStorageGet(JARVIS_LAST_RUN_KEY, '');
 let lastJarvisTaskText = '';
 let jarvisRunTimer = null;
 let jarvisPingAttemptId = 0;
@@ -4373,11 +4455,10 @@ function saveOwnerDecisionToken() {
   const input = document.getElementById('decision-owner-token');
   const token = input.value.trim();
   if (!token) return;
-  try {
-    localStorage.setItem(JARVIS_RUN_TOKEN_KEY, token);
+  if (safeStorageSet(JARVIS_RUN_TOKEN_KEY, token)) {
     input.value = '';
     refreshOwnerDecisions(true);
-  } catch (_error) {
+  } else {
     document.getElementById('decision-notice').textContent = 'Браузер не разрешил сохранить токен.';
   }
 }
@@ -4615,6 +4696,420 @@ function initOwnerDecisions() {
   });
 }
 
+// Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
+const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
+const TAB_NAME_MAX_CODE_POINTS = 32;
+const TAB_NAME_ROUTES = Object.freeze(['today', 'work', 'agents', 'platforms', 'machines']);
+const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
+  const label = document.querySelector(`[data-tab-label="${route}"]`);
+  return [route, label ? label.textContent.trim() : route];
+})));
+let activeTabNames = { ...TAB_NAME_DEFAULTS };
+
+function sanitizeTabName(value) {
+  const normalized = String(value ?? '').normalize('NFC')
+    .replace(/\p{Default_Ignorable_Code_Point}+/gu, '')
+    .replace(/[\u0000-\u001F\u007F-\u009F\u061C\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, '')
+    .replace(/\s+/gu, ' ')
+    .trim();
+  return Array.from(normalized).slice(0, TAB_NAME_MAX_CODE_POINTS).join('').trim();
+}
+
+function tabNameIdentity(value) {
+  return sanitizeTabName(value).normalize('NFKC').toLocaleLowerCase();
+}
+
+function tabNamesAreUnique(names) {
+  const seen = new Set();
+  return TAB_NAME_ROUTES.every(route => {
+    const identity = tabNameIdentity(names[route]);
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+}
+
+function readTabNames() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TAB_NAME_STORAGE_KEY) || '{}');
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return { ...TAB_NAME_DEFAULTS };
+    const names = { ...TAB_NAME_DEFAULTS };
+    TAB_NAME_ROUTES.forEach(route => {
+      if (typeof saved[route] !== 'string') return;
+      names[route] = sanitizeTabName(saved[route]) || TAB_NAME_DEFAULTS[route];
+    });
+    return tabNamesAreUnique(names) ? names : { ...TAB_NAME_DEFAULTS };
+  } catch (error) {
+    return { ...TAB_NAME_DEFAULTS };
+  }
+}
+
+function renderTabNames(names) {
+  document.querySelectorAll('[data-tab-label]').forEach(label => {
+    const route = label.dataset.tabLabel;
+    label.textContent = names[route] || TAB_NAME_DEFAULTS[route] || route;
+  });
+}
+
+function setTabNameStatus(message, isError = false) {
+  const status = document.getElementById('tab-name-status');
+  status.textContent = message;
+  status.style.color = isError ? 'var(--red)' : 'var(--text2)';
+}
+
+function populateTabNameEditor() {
+  const fields = document.getElementById('tab-name-fields');
+  fields.replaceChildren();
+  TAB_NAME_ROUTES.forEach(route => {
+    const field = document.createElement('label');
+    field.className = 'tab-name-field';
+    const caption = document.createElement('span');
+    caption.textContent = TAB_NAME_DEFAULTS[route];
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = activeTabNames[route];
+    input.dataset.tabNameInput = route;
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    input.maxLength = 64;
+    input.setAttribute('aria-label', `Новое название для ${TAB_NAME_DEFAULTS[route]}`);
+    field.append(caption, input);
+    fields.append(field);
+  });
+}
+
+function openTabNameEditor() {
+  const editor = document.getElementById('tab-name-editor');
+  populateTabNameEditor();
+  setTabNameStatus('До 32 символов. Пустое поле вернёт стандартное название.');
+  editor.hidden = false;
+  document.getElementById('edit-tab-names').setAttribute('aria-expanded', 'true');
+  editor.querySelector('input')?.focus();
+}
+
+function closeTabNameEditor() {
+  document.getElementById('tab-name-editor').hidden = true;
+  const trigger = document.getElementById('edit-tab-names');
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.focus();
+}
+
+function saveTabNames(event) {
+  event.preventDefault();
+  const names = {};
+  const identities = new Map();
+  document.querySelectorAll('[data-tab-name-input]').forEach(input => {
+    input.removeAttribute('aria-invalid');
+    const route = input.dataset.tabNameInput;
+    const name = sanitizeTabName(input.value) || TAB_NAME_DEFAULTS[route];
+    names[route] = name;
+    input.value = name;
+    const identity = tabNameIdentity(name);
+    const duplicateRoutes = identities.get(identity) || [];
+    duplicateRoutes.push(route);
+    identities.set(identity, duplicateRoutes);
+  });
+  const duplicateRoutes = new Set(
+    Array.from(identities.values()).filter(routes => routes.length > 1).flat()
+  );
+  if (duplicateRoutes.size) {
+    duplicateRoutes.forEach(route => {
+      document.querySelector(`[data-tab-name-input="${route}"]`)?.setAttribute('aria-invalid', 'true');
+    });
+    setTabNameStatus('Названия не должны повторяться.', true);
+    return;
+  }
+  let persisted = true;
+  try {
+    localStorage.setItem(TAB_NAME_STORAGE_KEY, JSON.stringify(names));
+  } catch (error) {
+    persisted = false;
+  }
+  activeTabNames = names;
+  renderTabNames(activeTabNames);
+  setTabNameStatus(persisted
+    ? 'Названия сохранены в этом браузере.'
+    : 'Названия применены, но браузер не разрешил сохранить их.', !persisted);
+}
+
+function resetTabNames() {
+  let cleared = true;
+  try {
+    localStorage.removeItem(TAB_NAME_STORAGE_KEY);
+  } catch (error) {
+    cleared = false;
+  }
+  activeTabNames = { ...TAB_NAME_DEFAULTS };
+  renderTabNames(activeTabNames);
+  populateTabNameEditor();
+  setTabNameStatus(cleared
+    ? 'Стандартные названия восстановлены.'
+    : 'Названия сброшены сейчас, но браузер не разрешил очистить сохранённую копию.', !cleared);
+}
+
+activeTabNames = readTabNames();
+renderTabNames(activeTabNames);
+document.getElementById('edit-tab-names').setAttribute('aria-expanded', 'false');
+document.getElementById('edit-tab-names').addEventListener('click', openTabNameEditor);
+document.getElementById('tab-name-editor').addEventListener('submit', saveTabNames);
+document.getElementById('cancel-tab-names').addEventListener('click', closeTabNameEditor);
+document.getElementById('reset-tab-names').addEventListener('click', resetTabNames);
+
+// Platform order is local-only. Restore known IDs once and append any newly shipped cards.
+const PLATFORM_ORDER_STORAGE_KEY = 'command-center.platform-order.v1';
+const PLATFORM_LONG_PRESS_MS = 500;
+const PLATFORM_LONG_PRESS_MOVE_PX = 12;
+const platformDirectory = document.querySelector('.platform-directory');
+const PLATFORM_CANONICAL_IDS = Object.freeze(platformDirectory
+  ? Array.from(platformDirectory.querySelectorAll('.platform-entry'), card => card.dataset.platformId)
+  : []);
+let platformPointerState = null;
+
+function platformCards() {
+  return platformDirectory ? Array.from(platformDirectory.querySelectorAll('.platform-entry')) : [];
+}
+
+function readPlatformOrder() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLATFORM_ORDER_STORAGE_KEY) || '[]');
+    if (!Array.isArray(saved)) return [...PLATFORM_CANONICAL_IDS];
+    const known = new Set(PLATFORM_CANONICAL_IDS);
+    const restored = [];
+    saved.forEach(id => {
+      if (typeof id === 'string' && known.has(id) && !restored.includes(id)) restored.push(id);
+    });
+    PLATFORM_CANONICAL_IDS.forEach(id => {
+      if (!restored.includes(id)) restored.push(id);
+    });
+    return restored;
+  } catch (error) {
+    return [...PLATFORM_CANONICAL_IDS];
+  }
+}
+
+function renumberPlatforms() {
+  platformCards().forEach((card, index) => {
+    const number = card.querySelector('.platform-index');
+    if (number) number.textContent = String(index + 1).padStart(2, '0');
+  });
+}
+
+function applyPlatformOrder(order) {
+  if (!platformDirectory) return;
+  const cardsById = new Map(platformCards().map(card => [card.dataset.platformId, card]));
+  const note = platformDirectory.querySelector('.platform-note');
+  order.forEach(id => {
+    const card = cardsById.get(id);
+    if (card) platformDirectory.insertBefore(card, note);
+  });
+  renumberPlatforms();
+}
+
+function savePlatformOrder() {
+  try {
+    localStorage.setItem(PLATFORM_ORDER_STORAGE_KEY, JSON.stringify(
+      platformCards().map(card => card.dataset.platformId)
+    ));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function announcePlatformOrder(card, prefix = 'Moved') {
+  const cards = platformCards();
+  const position = cards.indexOf(card) + 1;
+  const name = card.dataset.platformName || card.dataset.platformId;
+  document.getElementById('platform-order-status').textContent =
+    `${prefix} ${name}: position ${position} of ${cards.length}.`;
+}
+
+function movePlatformByButton(event) {
+  const button = event.target.closest('[data-platform-move]');
+  if (!button || !platformDirectory?.contains(button)) return;
+  const card = button.closest('.platform-entry');
+  const cards = platformCards();
+  const index = cards.indexOf(card);
+  const direction = button.dataset.platformMove;
+  if (direction === 'previous' && index > 0) {
+    cards[index - 1].before(card);
+  } else if (direction === 'next' && index >= 0 && index < cards.length - 1) {
+    cards[index + 1].after(card);
+  } else {
+    announcePlatformOrder(card, direction === 'previous' ? 'Already first —' : 'Already last —');
+    return;
+  }
+  renumberPlatforms();
+  const persisted = savePlatformOrder();
+  announcePlatformOrder(card, persisted ? 'Moved' : 'Moved for this visit only —');
+  button.focus();
+}
+
+function clearPlatformLongPressTimer() {
+  if (!platformPointerState?.timer) return;
+  clearTimeout(platformPointerState.timer);
+  platformPointerState.timer = null;
+}
+
+function releasePlatformPointerCapture(state) {
+  if (!state?.captureTarget) return;
+  try {
+    if (state.captureTarget.hasPointerCapture(state.pointerId)) {
+      state.captureTarget.releasePointerCapture(state.pointerId);
+    }
+  } catch (error) { /* pointer capture is best-effort */ }
+}
+
+function beginPlatformLongPress(event) {
+  if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  if (event.target.closest('a, button, input, textarea, select, summary')) return;
+  const card = event.target.closest('.platform-entry');
+  if (!card || !platformDirectory.contains(card)) return;
+  if (platformPointerState) cancelPlatformLongPress();
+  const state = {
+    pointerId: event.pointerId,
+    captureTarget: platformDirectory,
+    card,
+    startX: event.clientX,
+    startY: event.clientY,
+    initialOrder: platformCards().map(item => item.dataset.platformId),
+    active: false,
+    changed: false,
+    timer: null,
+  };
+  platformPointerState = state;
+  // Capture synchronously on the stable directory. Reordering a card in the live DOM
+  // can detach its descendants briefly, so a descendant is not a safe capture target.
+  try { platformDirectory.setPointerCapture(state.pointerId); } catch (error) { /* optional */ }
+  state.timer = window.setTimeout(() => {
+    if (platformPointerState !== state) return;
+    state.active = true;
+    state.timer = null;
+    card.classList.add('is-reordering');
+    card.setAttribute('aria-grabbed', 'true');
+    announcePlatformOrder(card, 'Reordering');
+  }, PLATFORM_LONG_PRESS_MS);
+}
+
+function cancelActivePlatformTouchMove(event) {
+  const state = platformPointerState;
+  if (!state?.active || (event.touches && event.touches.length !== 1)) return;
+  if (event.cancelable) event.preventDefault();
+}
+
+function movePlatformLongPress(event) {
+  const state = platformPointerState;
+  if (!state || event.pointerId !== state.pointerId) return;
+  const distance = Math.hypot(event.clientX - state.startX, event.clientY - state.startY);
+  if (!state.active) {
+    if (distance > PLATFORM_LONG_PRESS_MOVE_PX) {
+      clearPlatformLongPressTimer();
+      platformPointerState = null;
+      releasePlatformPointerCapture(state);
+    }
+    return;
+  }
+  if (event.cancelable) event.preventDefault();
+  const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.platform-entry');
+  if (!target || target === state.card || !platformDirectory.contains(target)) return;
+  const cards = platformCards();
+  const sourceIndex = cards.indexOf(state.card);
+  const targetIndex = cards.indexOf(target);
+  if (sourceIndex < targetIndex) target.after(state.card);
+  else target.before(state.card);
+  state.changed = true;
+  renumberPlatforms();
+}
+
+function commitPlatformLongPress(event) {
+  const state = platformPointerState;
+  if (!state || event.pointerId !== state.pointerId) return;
+  clearPlatformLongPressTimer();
+  if (state.active && event.cancelable) event.preventDefault();
+  state.card.classList.remove('is-reordering');
+  state.card.removeAttribute('aria-grabbed');
+  platformPointerState = null;
+  releasePlatformPointerCapture(state);
+  if (!state.active) return;
+  const finalOrder = platformCards().map(card => card.dataset.platformId);
+  const orderChanged = state.changed && finalOrder.some((id, index) => id !== state.initialOrder[index]);
+  if (!orderChanged) {
+    announcePlatformOrder(state.card, 'Order unchanged —');
+    return;
+  }
+  const persisted = savePlatformOrder();
+  announcePlatformOrder(state.card, persisted ? 'Moved' : 'Moved for this visit only —');
+}
+
+function cancelPlatformLongPress(event) {
+  const state = platformPointerState;
+  if (!state) return;
+  if (event?.pointerId != null && event.pointerId !== state.pointerId) return;
+  // A stale descendant may bubble a capture-loss event while the stable directory
+  // still owns this pointer. Only loss from the active capture target cancels.
+  if (event?.type === 'lostpointercapture' && event.target !== state.captureTarget) return;
+  clearPlatformLongPressTimer();
+  try {
+    applyPlatformOrder(state.initialOrder);
+  } finally {
+    state.card.classList.remove('is-reordering');
+    state.card.removeAttribute('aria-grabbed');
+    platformPointerState = null;
+    releasePlatformPointerCapture(state);
+  }
+  if (state.active && state.changed) announcePlatformOrder(state.card, 'Cancelled — restored');
+}
+
+function leavePendingPlatformLongPress(event) {
+  const state = platformPointerState;
+  if (!state || state.active || event.pointerId !== state.pointerId) return;
+  clearPlatformLongPressTimer();
+  platformPointerState = null;
+  releasePlatformPointerCapture(state);
+}
+
+function finishPlatformPointerUp(event) {
+  const state = platformPointerState;
+  if (!state || event.pointerId !== state.pointerId) return;
+  if (state.active) {
+    commitPlatformLongPress(event);
+    return;
+  }
+  clearPlatformLongPressTimer();
+  platformPointerState = null;
+  releasePlatformPointerCapture(state);
+}
+
+function finishPlatformPointerCancel(event) {
+  const state = platformPointerState;
+  if (!state || event.pointerId !== state.pointerId) return;
+  if (state.active) {
+    cancelPlatformLongPress(event);
+    return;
+  }
+  clearPlatformLongPressTimer();
+  platformPointerState = null;
+  releasePlatformPointerCapture(state);
+}
+
+applyPlatformOrder(readPlatformOrder());
+if (platformDirectory) {
+  platformDirectory.addEventListener('click', movePlatformByButton);
+  platformDirectory.addEventListener('pointerdown', beginPlatformLongPress);
+  platformDirectory.addEventListener('pointermove', movePlatformLongPress, { passive: false });
+  platformDirectory.addEventListener('touchmove', cancelActivePlatformTouchMove, { passive: false });
+  platformDirectory.addEventListener('pointerup', commitPlatformLongPress);
+  platformDirectory.addEventListener('pointercancel', cancelPlatformLongPress);
+  platformDirectory.addEventListener('lostpointercapture', cancelPlatformLongPress);
+  platformDirectory.addEventListener('pointerleave', leavePendingPlatformLongPress);
+}
+window.addEventListener('pointerup', finishPlatformPointerUp);
+window.addEventListener('pointercancel', finishPlatformPointerCancel);
+window.addEventListener('blur', cancelPlatformLongPress);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) cancelPlatformLongPress();
+});
+
 // Navigation
 function showSection(name) {
   const isMachine = ['mac-mini', 'air', 'pro'].includes(name);
@@ -4677,7 +5172,7 @@ function clampNumber(value, min, max, fallback = min) {
 
 function loadPixelAgentsView() {
   try {
-    const saved = JSON.parse(localStorage.getItem(PIXEL_AGENTS_VIEW_KEY) || '{}');
+    const saved = JSON.parse(safeStorageGet(PIXEL_AGENTS_VIEW_KEY, '{}'));
     pixelAgentsView.x = clampNumber(saved.x, -3000, 3000, 0);
     pixelAgentsView.y = clampNumber(saved.y, -3000, 3000, 0);
     pixelAgentsView.scale = clampNumber(saved.scale, 0.65, 1.85, 1);
@@ -4689,7 +5184,7 @@ function loadPixelAgentsView() {
 }
 
 function savePixelAgentsView() {
-  localStorage.setItem(PIXEL_AGENTS_VIEW_KEY, JSON.stringify({
+  return safeStorageSet(PIXEL_AGENTS_VIEW_KEY, JSON.stringify({
     x: Math.round(pixelAgentsView.x),
     y: Math.round(pixelAgentsView.y),
     scale: Number(pixelAgentsView.scale.toFixed(2)),
@@ -4799,7 +5294,7 @@ function applyJarvisHudState(collapsed) {
   card.classList.toggle('hud-collapsed', collapsed);
   button.textContent = collapsed ? 'Show' : 'Hide';
   button.title = collapsed ? 'Show pipeline controls' : 'Hide pipeline controls';
-  localStorage.setItem(JARVIS_HUD_COLLAPSED_KEY, collapsed ? '1' : '0');
+  safeStorageSet(JARVIS_HUD_COLLAPSED_KEY, collapsed ? '1' : '0');
 }
 
 function toggleJarvisHud() {
@@ -4808,21 +5303,22 @@ function toggleJarvisHud() {
 }
 
 function initJarvisHud() {
-  applyJarvisHudState(localStorage.getItem(JARVIS_HUD_COLLAPSED_KEY) === '1');
+  applyJarvisHudState(safeStorageGet(JARVIS_HUD_COLLAPSED_KEY, '0') === '1');
 }
 
 function getJarvisBudget() {
-  const value = document.getElementById('jarvis-budget-select')?.value || localStorage.getItem(JARVIS_BUDGET_KEY) || 'normal';
+  const value = document.getElementById('jarvis-budget-select')?.value
+    || safeStorageGet(JARVIS_BUDGET_KEY, 'normal');
   return ['cheap', 'normal', 'deep'].includes(value) ? value : 'normal';
 }
 
 function initJarvisBudget() {
   const select = document.getElementById('jarvis-budget-select');
   if (!select) return;
-  const saved = localStorage.getItem(JARVIS_BUDGET_KEY);
+  const saved = safeStorageGet(JARVIS_BUDGET_KEY, '');
   if (['cheap', 'normal', 'deep'].includes(saved)) select.value = saved;
   select.addEventListener('change', () => {
-    localStorage.setItem(JARVIS_BUDGET_KEY, getJarvisBudget());
+    safeStorageSet(JARVIS_BUDGET_KEY, getJarvisBudget());
   });
 }
 
@@ -4873,14 +5369,14 @@ function notifyPixelAgentsPin(isPinned) {
 }
 
 function togglePixelAgentsPin() {
-  const current = localStorage.getItem(PIXEL_AGENTS_PIN_KEY) === '1';
+  const current = safeStorageGet(PIXEL_AGENTS_PIN_KEY, '0') === '1';
   const next = !current;
-  localStorage.setItem(PIXEL_AGENTS_PIN_KEY, next ? '1' : '0');
+  safeStorageSet(PIXEL_AGENTS_PIN_KEY, next ? '1' : '0');
   applyPixelAgentsPin(next);
 }
 
 function initPixelAgentsPin() {
-  const isPinned = localStorage.getItem(PIXEL_AGENTS_PIN_KEY) === '1';
+  const isPinned = safeStorageGet(PIXEL_AGENTS_PIN_KEY, '0') === '1';
   const frame = document.querySelector('.pixel-agents-frame');
   if (frame) {
     frame.addEventListener('load', () => notifyPixelAgentsPin(isPinned));
@@ -5038,7 +5534,7 @@ function renderJarvisHumanSummary(data) {
 
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
-  const token = localStorage.getItem(JARVIS_RUN_TOKEN_KEY);
+  const token = safeStorageGet(JARVIS_RUN_TOKEN_KEY, '');
   if (token) headers['X-Dashboard-Run-Token'] = token;
   return headers;
 }
@@ -5053,7 +5549,7 @@ function initJarvisRunTokenFromHash() {
     ''
   ).trim();
   if (!token) return false;
-  localStorage.setItem(JARVIS_RUN_TOKEN_KEY, token);
+  if (!safeStorageSet(JARVIS_RUN_TOKEN_KEY, token)) return false;
   const cleanUrl = `${window.location.pathname}${window.location.search || ''}`;
   window.history.replaceState(null, '', cleanUrl);
   return true;
@@ -5070,7 +5566,7 @@ function showJarvisTokenBox(show) {
   const box = document.getElementById('jarvis-token-box');
   const mode = document.getElementById('jarvis-run-mode');
   const runButton = document.getElementById('jarvis-run-button');
-  const hasToken = Boolean(localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
+  const hasToken = Boolean(safeStorageGet(JARVIS_RUN_TOKEN_KEY, ''));
   const locked = IS_PUBLIC_DASHBOARD && !hasToken;
   if (box) box.classList.toggle('hidden', !show);
   if (mode) {
@@ -5103,7 +5599,10 @@ function saveDashboardRunToken() {
     setJarvisRunStatus('Paste dashboard token first, or run the helper command shown above.', 'error');
     return;
   }
-  localStorage.setItem(JARVIS_RUN_TOKEN_KEY, token);
+  if (!safeStorageSet(JARVIS_RUN_TOKEN_KEY, token)) {
+    setJarvisRunStatus('This browser does not allow local token storage.', 'error');
+    return;
+  }
   if (input) input.value = '';
   showJarvisTokenBox(false);
   setJarvisRunStatus('Token saved. Checking access...', 'starting');
@@ -5720,7 +6219,7 @@ function renderJarvisRunStatus(data) {
 }
 
 async function verifyDashboardRunToken() {
-  const hasToken = Boolean(localStorage.getItem(JARVIS_RUN_TOKEN_KEY));
+  const hasToken = Boolean(safeStorageGet(JARVIS_RUN_TOKEN_KEY, ''));
   if (!hasToken && IS_PUBLIC_DASHBOARD) {
     renderPipelineAccessHelp('No token saved yet.');
     return;
@@ -5739,7 +6238,7 @@ async function verifyDashboardRunToken() {
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      localStorage.removeItem(JARVIS_RUN_TOKEN_KEY);
+      safeStorageRemove(JARVIS_RUN_TOKEN_KEY);
       showJarvisTokenBox(true);
       setJarvisRunStatus('Token is missing or wrong. Run the auth helper again.', 'error');
       return;
@@ -5784,7 +6283,7 @@ async function runJarvisPipeline() {
     setJarvisRunStatus('Write a task first.', 'error');
     return;
   }
-  if (IS_PUBLIC_DASHBOARD && !localStorage.getItem(JARVIS_RUN_TOKEN_KEY)) {
+  if (IS_PUBLIC_DASHBOARD && !safeStorageGet(JARVIS_RUN_TOKEN_KEY, '')) {
     renderPipelineAccessHelp('Unlock this browser before launching agents.');
     document.getElementById('jarvis-token-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
@@ -5801,7 +6300,7 @@ async function runJarvisPipeline() {
     });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
-      localStorage.removeItem(JARVIS_RUN_TOKEN_KEY);
+      safeStorageRemove(JARVIS_RUN_TOKEN_KEY);
       renderPipelineAccessHelp(data.message || 'Public launch is locked. Save the dashboard token once.');
       return;
     }
@@ -5814,7 +6313,7 @@ async function runJarvisPipeline() {
       return;
     }
     currentJarvisRunId = data.run_id;
-    localStorage.setItem(JARVIS_LAST_RUN_KEY, currentJarvisRunId);
+    safeStorageSet(JARVIS_LAST_RUN_KEY, currentJarvisRunId);
     renderJarvisRunStatus(data);
     refreshJarvisHistory();
     scheduleJarvisRunPoll();
@@ -6430,19 +6929,28 @@ function startDrag(widget, grid) {
   }, { once: true });
 }
 
+function readDashboardLayouts() {
+  try {
+    const layouts = JSON.parse(safeStorageGet('dashboard-layouts', '{}'));
+    return layouts && typeof layouts === 'object' && !Array.isArray(layouts) ? layouts : {};
+  } catch (error) {
+    return {};
+  }
+}
+
 function saveLayout(grid) {
   const gridId = grid.id;
   const order = [...grid.querySelectorAll('.drag-widget')].map(w => w.dataset.widget);
-  const layouts = JSON.parse(localStorage.getItem('dashboard-layouts') || '{}');
+  const layouts = readDashboardLayouts();
   layouts[gridId] = order;
-  localStorage.setItem('dashboard-layouts', JSON.stringify(layouts));
+  safeStorageSet('dashboard-layouts', JSON.stringify(layouts));
 }
 
 function restoreLayout(grid) {
   const gridId = grid.id;
-  const layouts = JSON.parse(localStorage.getItem('dashboard-layouts') || '{}');
+  const layouts = readDashboardLayouts();
   const order = layouts[gridId];
-  if (!order) return;
+  if (!Array.isArray(order)) return;
   const widgets = {};
   grid.querySelectorAll('.drag-widget').forEach(w => { widgets[w.dataset.widget] = w; });
   order.forEach(name => {
@@ -7637,7 +8145,7 @@ function renderDays() {
 let npQrTimer = null;
 
 function npOwnerKey() {
-  try { return localStorage.getItem(JARVIS_RUN_TOKEN_KEY) || ''; } catch (error) { return ''; }
+  return safeStorageGet(JARVIS_RUN_TOKEN_KEY, '');
 }
 
 function npDeviceSetup(ownerView) {
