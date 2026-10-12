@@ -277,7 +277,7 @@ def _project_rows(sessions: list[dict], gh: dict[str, list]) -> list[dict[str, A
 
 def _session_rows(sessions: list[dict]) -> list[dict[str, Any]]:
     rows = [
-        {key: record.get(key) for key in ("tool", "machine", "project", "repo", "branch", "start", "end", "active_minutes", "prompts", "topic")}
+        {key: record.get(key) for key in ("tool", "app", "machine", "project", "repo", "branch", "start", "end", "active_minutes", "prompts", "topic")}
         for record in sessions
     ]
     rows.sort(key=lambda row: row.get("start") or "")

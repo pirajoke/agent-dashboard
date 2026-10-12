@@ -79,3 +79,23 @@ are only counted), nearest deadline first (`todo` in `/api/work/daily`, owner
 only). «Хвосты» lists loose ends and «Изменения» the infrastructure change
 log. Project pages are reached from «Дела» and from the technical details in
 «По дням».
+
+## ChatGPT work
+
+Mark builds many projects in ChatGPT (2026-10-12). Two sources reach the day
+summaries, both through `daily_work_collector.py` on the MacBook:
+
+- The ChatGPT desktop app works in `~/Documents/ChatGPT/<project>`; those
+  sessions are named «ChatGPT · <project>», and chats outside a project (folders
+  named by an id or `new-chat`) are grouped as «ChatGPT · без проекта».
+- Chats on chatgpt.com and the phone keep no local logs. The data export
+  (Settings → Data controls → Export data) is read from `~/ChatGPT-export`
+  (or `~/Downloads`, which macOS may keep closed to a launchd job), once per new
+  export, into `sessions/chatgpt/<day>.json` and pushed to the Mac mini. Each
+  chat is one session: its title is the topic, a few redacted asks and the last
+  reply feed the summarizer. ChatGPT projects are named from the export when it
+  lists them, else from `chatgpt_projects.json` in the daily-work folder
+  (`{"g-p-…": "SHOPIFY"}`), else «ChatGPT · проект <id>». `--no-chatgpt-export`
+  switches the import off.
+
+In session tables these show as «ChatGPT»; their time counts with Codex.
