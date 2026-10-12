@@ -38,7 +38,7 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
         match = re.search(rf"{re.escape(selector)}\s*\{{([^}}]*)\}}", self.html)
         return match.group(1) if match else ""
 
-    def test_ac_1_local_command_center_uses_reachable_loopback_health_api(self):
+    def test_ac_1_mac_mini_endpoint_contract_uses_proxy_for_served_pages(self):
         endpoint_contract = re.search(
             r"(const IS_FILE_DASHBOARD = .*?"
             r"const MAC_MINI_API = .*?;)",
@@ -49,29 +49,61 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
             endpoint_contract,
             "the dashboard must expose one deterministic Mac mini endpoint contract",
         )
+        action_contract = re.search(
+            r"(async function miniAction\([^)]*\)\s*\{[\s\S]*?\n\})",
+            self.html,
+        )
+        self.assertIsNotNone(action_contract, "missing Mac mini service action handler")
 
-        javascript = "\n".join(
+        cases = (
+            ("http://localhost:7777/", "http://localhost:7777"),
+            ("http://127.0.0.1:7777/", "http://127.0.0.1:7777"),
+            ("https://command.meshly.fr/", "https://command.meshly.fr"),
             (
-                "const window = { location: new URL("
-                + json.dumps("http://localhost:7777/")
-                + ") };",
-                endpoint_contract.group(1),
-                "process.stdout.write(`${MAC_MINI_API}/api/all`);",
-            )
-        )
-        result = subprocess.run(
-            ["node", "-e", javascript],
-            check=True,
-            capture_output=True,
-            text=True,
+                "file:///dashboard/index.html",
+                "http://100.77.209.73:8880",
+            ),
         )
 
-        self.assertEqual(
-            result.stdout,
-            "http://localhost:8880/api/all",
-            "a page on localhost:7777 must read Mac mini telemetry from the "
-            "working loopback health API, never the unreachable Tailscale address",
-        )
+        for page_url, expected_base in cases:
+            with self.subTest(page_url=page_url):
+                javascript = "\n".join(
+                    (
+                        "const window = { location: new URL("
+                        + json.dumps(page_url)
+                        + ") };",
+                        endpoint_contract.group(1),
+                        "const calls = [];",
+                        "const fetch = async (url, options) => "
+                        "calls.push([url, options.method]);",
+                        "const setTimeout = () => 0;",
+                        "const refreshMini = () => {};",
+                        action_contract.group(1),
+                        "miniAction('health-gateway', 'start').then(() => "
+                        "process.stdout.write(JSON.stringify({"
+                        "read: `${MAC_MINI_API}/api/all`, action: calls[0]})));",
+                    )
+                )
+                result = subprocess.run(
+                    ["node", "-e", javascript],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(
+                    json.loads(result.stdout),
+                    {
+                        "read": f"{expected_base}/api/all",
+                        "action": [
+                            f"{expected_base}/api/service/health-gateway/start",
+                            "POST",
+                        ],
+                    },
+                    "served pages must send Mac mini reads and actions through "
+                    "their same-origin dashboard proxy; file dashboards retain "
+                    "the direct Tailscale endpoint",
+                )
 
     def test_ac_3_platform_cards_reorder_by_long_press_and_keyboard_locally(self):
         platform_ids = re.findall(
