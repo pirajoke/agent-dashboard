@@ -54,7 +54,8 @@ PR_BODY_LIMIT = 900
 # Day files older than SCHEMA are rewritten once inside this window, so the
 # summarizer gets asks and replies for the last two weeks.
 UPGRADE_DAYS = 14
-REMOTE_RE = re.compile(r"github\.com[:/]+([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?$")
+# Also ssh host aliases such as git@github.com-agent-dashboard:owner/repo.git (one deploy key per repo).
+REMOTE_RE = re.compile(r"github\.com(?:-[A-Za-z0-9_.-]+)?[:/]+([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?$")
 SECRET_PATTERNS = [
     re.compile(r"sk-(?:proj-)?[A-Za-z0-9_-]{20,}"),
     re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
@@ -248,20 +249,55 @@ def repo_from_remote(url: object) -> str | None:
 _REMOTE_CACHE: dict[str, str | None] = {}
 
 
+# Where local clones live; a deleted worktree like /tmp/agent-dashboard-fix-v1 maps to the
+# clone whose folder name starts its name.
+CLONE_PARENTS = [HOME, HOME / "Projects", HOME / "Documents" / "GitHub"]
+
+
+def normalize_cwd(cwd: object) -> str | None:
+    """Codex now writes the working folder as a file:// URI."""
+    if not isinstance(cwd, str) or not cwd:
+        return None
+    if cwd.startswith("file://"):
+        cwd = urllib.parse.unquote(urllib.parse.urlparse(cwd).path)
+    return cwd.rstrip("/") or "/"
+
+
+def _git_remote(cwd: str) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", cwd, "remote", "get-url", "origin"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return repo_from_remote(result.stdout) if result.returncode == 0 else None
+
+
+def _clone_for_name(name: str) -> Path | None:
+    best: Path | None = None
+    for parent in CLONE_PARENTS:
+        try:
+            children = list(parent.iterdir())
+        except OSError:
+            continue
+        for child in children:
+            if (name == child.name or name.startswith(child.name + "-")) and (child / ".git").exists():
+                if best is None or len(child.name) > len(best.name):
+                    best = child
+    return best
+
+
 def repo_for_cwd(cwd: str | None) -> str | None:
     if not cwd:
         return None
     if cwd not in _REMOTE_CACHE:
         repo = None
         if Path(cwd).is_dir():
-            try:
-                result = subprocess.run(
-                    ["git", "-C", cwd, "remote", "get-url", "origin"],
-                    capture_output=True, text=True, timeout=5, check=False,
-                )
-                repo = repo_from_remote(result.stdout) if result.returncode == 0 else None
-            except (OSError, subprocess.SubprocessError):
-                repo = None
+            repo = _git_remote(cwd)
+        if repo is None and Path(cwd) != HOME and Path(cwd).name:
+            clone = _clone_for_name(Path(cwd).name)
+            repo = _git_remote(str(clone)) if clone else None
         _REMOTE_CACHE[cwd] = repo
     return _REMOTE_CACHE[cwd]
 
@@ -454,41 +490,110 @@ def _codex_command(payload: dict[str, Any]) -> str | None:
     return command if isinstance(command, str) else None
 
 
+def _codex_text(content: object) -> str:
+    if not isinstance(content, list):
+        return ""
+    return " ".join(part.get("text", "") for part in content
+                    if isinstance(part, dict) and part.get("type") in {"input_text", "output_text", "text", "Text"})
+
+
+def _codex_task_topic(agent_path: object) -> str | None:
+    """A sub-agent's task name, e.g. "/root/dashboard_pr_gate" -> "dashboard pr gate"."""
+    if not isinstance(agent_path, str) or "/" not in agent_path.strip("/"):
+        return None
+    return redact_topic(agent_path.rstrip("/").rsplit("/", 1)[-1].replace("_", " ").replace("-", " "))
+
+
+def _codex_work_cwd(payload: dict[str, Any]) -> str | None:
+    """Where a tool call ran: Codex sessions often start in the home folder and work in a repo."""
+    item = payload.get("item") if isinstance(payload.get("item"), dict) else {}
+    if payload.get("type") == "item_completed" and item.get("type") == "CommandExecution":
+        cwd = item.get("cwd")
+        return cwd if isinstance(cwd, str) else None
+    if payload.get("type") == "function_call":
+        try:
+            args = json.loads(payload.get("arguments") or "")
+        except (TypeError, json.JSONDecodeError):
+            return None
+        cwd = args.get("workdir") if isinstance(args, dict) else None
+        return cwd if isinstance(cwd, str) else None
+    return None
+
+
 def parse_codex_file(path: Path) -> list[Session]:
     session = Session("codex", path.stem)
+    # Newer rollouts drop the user_message / agent_message events and keep only the
+    # response items, so collect those too and use them when the events are missing.
+    item_asks: list[tuple[datetime, str]] = []
+    item_replies: list[tuple[datetime, object]] = []
+    has_ask_events = has_reply_events = False
+    task_topic: str | None = None
+    work_dirs: dict[str, int] = {}
     for record in iter_jsonl(path):
         payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
         if record.get("type") == "session_meta" or ("id" in record and "instructions" in record):
             meta = payload or record
             session.session_id = str(meta.get("id") or session.session_id)
             if isinstance(meta.get("cwd"), str):
-                session.cwd = meta["cwd"]
+                session.cwd = normalize_cwd(meta["cwd"])
             git = meta.get("git") if isinstance(meta.get("git"), dict) else {}
             session.repo = repo_from_remote(git.get("repository_url")) or session.repo
             if isinstance(git.get("branch"), str) and git["branch"]:
                 session.branch = git["branch"]
+            task_topic = _codex_task_topic(meta.get("agent_path")) or task_topic
         if record.get("type") == "turn_context" and isinstance(payload.get("cwd"), str):
-            session.cwd = session.cwd or payload["cwd"]
+            session.cwd = session.cwd or normalize_cwd(payload["cwd"])
         moment = parse_ts(record.get("timestamp"))
         if moment is None:
             continue
         session.events.append(moment)
+        work_dir = normalize_cwd(_codex_work_cwd(payload))
+        if work_dir:
+            work_dirs[work_dir] = work_dirs.get(work_dir, 0) + 1
         if record.get("type") == "response_item":
             action = infra_action(_codex_command(payload), moment)
             if action:
                 session.infra_actions.append(action)
+            if payload.get("type") == "message" and payload.get("role") == "user":
+                item_asks.append((moment, _codex_text(payload.get("content"))))
+            if payload.get("type") == "message" and payload.get("role") == "assistant":
+                item_replies.append((moment, _codex_text(payload.get("content"))))
+        if record.get("type") == "event_msg" and payload.get("type") == "task_complete":
+            item_replies.append((moment, payload.get("last_agent_message")))
         if record.get("type") == "event_msg" and payload.get("type") == "agent_message":
+            has_reply_events = True
             session.note_reply(moment, payload.get("message"))
         text = _codex_prompt_text(record)
         if text is not None:
-            topic = redact_topic(text)
-            if topic:
-                session.prompts.append(moment)
-                session.topic = session.topic or topic
-                session.note_ask(moment, text)
+            has_ask_events = True
+            _codex_note_prompt(session, moment, text)
+    if not has_ask_events:
+        for moment, text in item_asks:
+            _codex_note_prompt(session, moment, text)
+    if not has_reply_events:
+        for moment, text in item_replies:
+            session.note_reply(moment, text)
+    session.topic = session.topic or task_topic
+    if work_dirs and (not session.cwd or Path(session.cwd) == HOME):
+        session.cwd = max(work_dirs, key=lambda cwd: (Path(cwd) != HOME, work_dirs[cwd]))
     if session.repo is None:
         session.repo = repo_for_cwd(session.cwd)
+    if session.repo is None:
+        # Started in a plain folder but worked inside a repo below it.
+        for work_dir in sorted(work_dirs, key=work_dirs.get, reverse=True):
+            repo = repo_for_cwd(work_dir)
+            if repo:
+                session.cwd, session.repo = work_dir, repo
+                break
     return [session] if session.events else []
+
+
+def _codex_note_prompt(session: Session, moment: datetime, text: str) -> None:
+    topic = redact_topic(text)
+    if topic:
+        session.prompts.append(moment)
+        session.topic = session.topic or topic
+        session.note_ask(moment, text)
 
 
 def collect_sessions(since: datetime, out_dir: Path = DEFAULT_OUT) -> tuple[list[Session], dict[str, Any]]:
