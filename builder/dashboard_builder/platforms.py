@@ -304,7 +304,7 @@ def build_platform_hub_html(registry=PLATFORM_REGISTRY) -> str:
     <div class="platform-group">
         <div class="platform-group-head">
             <h3>Primary products</h3>
-            <span>2 current lanes</span>
+            <span>{len(primary)} current lanes</span>
         </div>
         <div class="platform-primary-grid">{primary_html}</div>
     </div>
@@ -312,7 +312,7 @@ def build_platform_hub_html(registry=PLATFORM_REGISTRY) -> str:
     <div class="platform-group platform-group-active">
         <div class="platform-group-head">
             <h3>Active systems</h3>
-            <span>5 maintained surfaces</span>
+            <span>{len(active)} maintained surfaces</span>
         </div>
         <div class="platform-system-list">{active_html}</div>
     </div>

@@ -139,6 +139,8 @@ class PlatformHubContractTests(unittest.TestCase):
         html = self.platforms.build_platform_hub_html()
         self.assertEqual(html.count('data-platform-tier="primary"'), 2)
         self.assertEqual(html.count('data-platform-tier="active"'), len(EXPECTED_PLATFORM_IDS) - 2)
+        self.assertIn("<span>2 current lanes</span>", html)
+        self.assertIn(f"<span>{len(EXPECTED_PLATFORM_IDS) - 2} maintained surfaces</span>", html)
         self.assertLess(html.index("Primary products"), html.index("Active systems"))
 
     def test_ac_cc_3_registry_uses_exact_current_destinations(self):
