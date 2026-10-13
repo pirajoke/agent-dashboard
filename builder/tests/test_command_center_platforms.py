@@ -40,6 +40,11 @@ EXPECTED_PLATFORMS = {
         ("http://127.0.0.1:4174",),
     ),
     "jarvis": ("JARVIS", ("https://t.me/max_jarvis_hoian_bot",)),
+    "property-os": ("Property OS", ("https://properties.meshly.fr/",)),
+    "pixel-agents": ("Pixel Agents", ("https://pixel-agents.meshly.fr/",)),
+    "closeness-mirror": ("Зеркало Контакта", ("http://127.0.0.1:3051",)),
+    "sushi-parisien": ("Sushi Parisien", ("http://127.0.0.1:8890",)),
+    "n8n": ("n8n", ("http://127.0.0.1:5678",)),
 }
 
 
@@ -169,7 +174,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
                         self.assertEqual(parsed.scheme, "https")
                         self.assertIn(
                             parsed.hostname,
-                            {"t.me", "health.meshly.fr"},
+                            {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr"},
                         )
 
     def test_platform_directory_is_responsive_keyboard_safe_and_motion_safe(self):
