@@ -25,6 +25,7 @@ from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
+from dashboard_builder import cf_access
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.department_campus import (
@@ -1539,8 +1540,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raise ValueError(f"request body too large; max {max_bytes} bytes")
         return json.loads(self.rfile.read(length)) if length else {}
 
+    def _cloudflare_owner(self) -> bool:
+        """Owner signed in through Cloudflare Access with an allowed e-mail.
+
+        Writes also need a same-site Origin: the Access cookie rides along on
+        cross-site form posts, the owner token header never does.
+        """
+        if not cf_access.owner_email(self.headers):
+            return False
+        if getattr(self, "command", "").upper() in {"POST", "PUT", "PATCH", "DELETE"}:
+            return self.headers.get("Origin", "") == f"https://{self._host_name()}"
+        return True
+
     def _dashboard_run_authorized(self) -> bool:
         if not self._is_public_request():
+            return True
+        if self._cloudflare_owner():
             return True
         write_method = getattr(self, "command", "").upper() in {
             "POST",
@@ -2243,8 +2258,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._json_response(200, payload)
 
     def _decision_owner_authorized(self) -> bool:
-        # New choice records require the existing owner token on every host.
-        # Never infer authority from a caller-controlled Host header.
+        # New choice records require the owner token or a verified Cloudflare
+        # Access sign-in. Never infer authority from a caller-controlled Host header.
+        if self._cloudflare_owner():
+            return True
         try:
             expected = _dashboard_run_token(create_if_missing=False)
         except (OSError, RuntimeError):

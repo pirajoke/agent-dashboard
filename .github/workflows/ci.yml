@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+      - name: Install test dependencies
+        run: python3 -m pip install --quiet cryptography
       - name: Run unit tests
         run: PYTHONPATH=builder python3 -m unittest discover -s builder/tests -v
       - name: Compile builder
