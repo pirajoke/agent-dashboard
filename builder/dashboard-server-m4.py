@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
+from dashboard_builder.cloudflare_access import AccessGate, configured_access_app, discover_access_app
 from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
@@ -69,6 +70,16 @@ HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstri
 AIR_HEALTH_API_URL = os.environ.get("AIR_HEALTH_API_URL", "http://100.118.34.14:8880").rstrip("/")
 PRO_HEALTH_API_URL = os.environ.get("PRO_HEALTH_API_URL", "http://100.74.94.2:8880").rstrip("/")
 PUBLIC_HOSTS = {"command.meshly.fr"}
+# Behind Cloudflare Access the owner signs in once (a code to their Gmail or Google sign-in)
+# instead of carrying the owner key in every browser. See dashboard_builder/cloudflare_access.py.
+CLOUDFLARE_ACCESS_FILE = HOME / ".agent-bridge" / "cloudflare_access.json"
+
+
+def _owner_access_app(host: str):
+    return configured_access_app(CLOUDFLARE_ACCESS_FILE) or discover_access_app(host)
+
+
+OWNER_ACCESS = AccessGate(sorted(PUBLIC_HOSTS)[0], discover=_owner_access_app)
 PUBLIC_API_PATHS = {
     "/api/health",
     "/api/system",
@@ -1539,8 +1550,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raise ValueError(f"request body too large; max {max_bytes} bytes")
         return json.loads(self.rfile.read(length)) if length else {}
 
+    def _cloudflare_access_owner(self) -> bool:
+        """Signed in through Cloudflare Access: its login policy lets only the owner through."""
+        token = self.headers.get("Cf-Access-Jwt-Assertion", "").strip()
+        if not token:
+            return False
+        if getattr(self, "command", "").upper() in {"POST", "PUT", "PATCH", "DELETE"}:
+            # The Access cookie also rides on requests other sites start; writes must come from this page.
+            if self.headers.get("Origin", "") not in {f"https://{host}" for host in PUBLIC_HOSTS}:
+                return False
+        return OWNER_ACCESS.owner_email(token) is not None
+
     def _dashboard_run_authorized(self) -> bool:
         if not self._is_public_request():
+            return True
+        if self._cloudflare_access_owner():
             return True
         write_method = getattr(self, "command", "").upper() in {
             "POST",
@@ -2243,8 +2267,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._json_response(200, payload)
 
     def _decision_owner_authorized(self) -> bool:
-        # New choice records require the existing owner token on every host.
+        # New choice records require the owner token or a Cloudflare Access sign-in on every host.
         # Never infer authority from a caller-controlled Host header.
+        if self._cloudflare_access_owner():
+            return True
         try:
             expected = _dashboard_run_token(create_if_missing=False)
         except (OSError, RuntimeError):
