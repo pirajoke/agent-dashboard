@@ -39,6 +39,25 @@ Current JARVIS card source:
 - `builder/dashboard_builder/now.py`
 - `builder/dashboard-assets/style.css`
 
+## Owner sign-in through Cloudflare Access
+
+On command.meshly.fr the owner no longer needs the owner key in each browser
+once a Cloudflare Access application guards the host (Zero Trust → Access
+controls → Applications, login by a one-time code to Mark's Gmail or Google
+sign-in, policy allowing only his address). Cloudflare then signs every request
+it lets through (`Cf-Access-Jwt-Assertion`), and the server
+(`dashboard_builder/cloudflare_access.py`) treats a valid token for this
+application as the owner: everything is shown, no key, no QR. Whoever the
+Access policy lets in is the owner, so keep that policy to Mark alone.
+
+Nothing to configure: the team domain and the application's audience tag come
+from Cloudflare's own login redirect for command.meshly.fr, the signing keys
+from `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`, and RS256 is
+checked with the standard library. If that redirect can't be read,
+`~/.agent-bridge/cloudflare_access.json` (`{"team": "<team>.cloudflareaccess.com",
+"aud": "<AUD tag>"}`) names them instead. Writes also need the page itself as
+`Origin`. Without Access the owner key works exactly as before.
+
 ## «По дням»: the first screen
 
 Mark (2026-10-11): the day-by-day list is what matters, the rest is not needed
