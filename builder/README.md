@@ -76,7 +76,8 @@ Mark (2026-10-12): «По дням» and MAIN MANAGER must not show the same thi
 what waits on Mark, per project: dated deadlines, next steps from the
 project's newest summary of the last 7 days, and PRs ready to merge (drafts
 are only counted), nearest deadline first (`todo` in `/api/work/daily`, owner
-only). «Хвосты» lists loose ends and «Изменения» the infrastructure change
+only), then «Хвосты», the loose ends, in the same list (2026-10-13: one list
+of what waits on Mark, as he chose). «Изменения» is the infrastructure change
 log. Project pages are reached from «Дела» and from the technical details in
 «По дням».
 

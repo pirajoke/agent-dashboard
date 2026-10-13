@@ -587,7 +587,7 @@ def _todo(portfolio: dict[str, dict[str, Any]], summaries: dict[str, dict[str, A
     """MAIN MANAGER «Дела»: per project, what waits on Mark now. No day history, that is «По дням».
 
     Next steps come from the newest recent summary, deadlines from the summaries, PRs waiting for
-    a merge (not drafts) from GitHub; loose ends are only counted here, «Хвосты» lists them.
+    a merge (not drafts) from GitHub; loose ends are only counted here, the «Хвосты» block under the list shows them.
     """
     deadlines = _upcoming_deadlines(summaries, portfolio, series_days, today, limit=None)
     items = []
