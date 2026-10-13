@@ -279,6 +279,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-weight: 700;
   letter-spacing: 0.25px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .platform-access-icon { width: 14px; height: 14px; flex: 0 0 auto; }
 .platform-access.private { background: var(--accent-bg); color: #9A7100; border-color: rgba(234,179,8,0.28); }
@@ -286,6 +287,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .platform-directory {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* Every row as tall as the tallest card, so all cards are one size. */
+  grid-auto-rows: 1fr;
   gap: 16px;
 }
 .platform-entry {
@@ -421,6 +424,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-size: 12px;
   font-weight: 700;
   line-height: 1.25;
+  white-space: nowrap;
   text-decoration: none;
   transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
@@ -431,11 +435,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   outline-offset: 3px;
 }
 .platform-note {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 16px;
   padding: 12px 14px;
   border: 1px dashed rgba(234,179,8,0.45);
   border-radius: 12px;
@@ -469,7 +472,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .platform-entry.priority .platform-content { padding: 14px 14px 14px 12px; }
   .platform-entry.priority .platform-name { font-size: 17px; }
   .platform-links { align-items: stretch; flex-direction: column; }
-  .platform-link { max-width: 100%; overflow-wrap: anywhere; }
+  .platform-link { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
 }
 
 @media (max-width: 360px) {
@@ -3732,8 +3735,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </article>
 
-      <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
     </div>
+    <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
   </section>
 
   <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
