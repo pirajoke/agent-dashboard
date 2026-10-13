@@ -30,6 +30,12 @@ class ProcessLabelTest(unittest.TestCase):
         self.assertEqual(_short_cmd("node /Users/me/app/server.js --port 3000"), "node server.js --port 3000")
         self.assertNotIn("/Users/", _mcp_label("node /Users/me/tool/dist/run.js --mcp"))
 
+    def test_paths_inside_option_values_are_cut_too(self):
+        command = "node /usr/local/lib/node_modules/example/dist/server.js --mcp --config=/Users/alice/private.json"
+        self.assertEqual(_short_cmd(command), "node server.js --mcp --config=private.json")
+        self.assertNotIn("/Users/", _mcp_label(command))
+        self.assertEqual(_short_cmd("tool --root file:///Users/alice/notes -I~/lib:/opt/x"), "tool --root notes -Ilib:x")
+
 
 if __name__ == "__main__":
     unittest.main()

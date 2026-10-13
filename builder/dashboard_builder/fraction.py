@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -29,7 +30,7 @@ def _get_claude_sessions() -> list[dict]:
         rss_kb = int(parts[5]) if parts[5].isdigit() else 0
         ram_mb = round(rss_kb / 1024)
         started = parts[8]
-        cmd = " ".join(parts[10:])[:80]
+        cmd = _short_cmd(" ".join(parts[10:]))[:80]
         sessions.append({
             "pid": pid, "cpu": cpu, "mem_pct": mem_pct,
             "ram_mb": ram_mb, "started": started, "cmd": cmd,
@@ -38,9 +39,13 @@ def _get_claude_sessions() -> list[dict]:
     return sessions
 
 
+# An absolute or home path anywhere in a token: after "=", ":" or "file://", or the whole token.
+_PATH_RE = re.compile(r"(?:file://)?[~/][^\s=:,;'\"]*")
+
+
 def _short_cmd(cmd: str) -> str:
-    """A process command line without local folders: absolute paths keep only their last part."""
-    return " ".join(Path(token).name if token.startswith(("/", "~")) else token for token in cmd.split())
+    """A process command line without local folders: every path keeps only its last part."""
+    return _PATH_RE.sub(lambda m: Path(m.group(0).removeprefix("file://")).name, cmd)
 
 
 def _mcp_label(cmd: str) -> str:
