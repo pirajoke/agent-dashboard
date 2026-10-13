@@ -7479,7 +7479,8 @@ function mmTodoItem(item, today) {
 function renderTodo(data) {
   const host = document.getElementById('mm-todo-list');
   const items = data.todo || [];
-  document.getElementById('mm-todo-count').textContent = data.owner_view ? items.length : 0;
+  // The one «Дела» badge counts the loose ends too, now that they sit in the same view.
+  document.getElementById('mm-todo-count').textContent = (data.owner_view ? items.length : 0) + data.dropped_count + data.forgot_count;
   document.getElementById('mm-todo-total').textContent = data.owner_view && items.length ? items.length : '';
   if (!data.owner_view) {
     host.innerHTML = '<p class="mm-empty">Дела по проектам видны только владельцу.</p>';
