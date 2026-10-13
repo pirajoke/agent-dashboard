@@ -4,6 +4,14 @@ Static publishing surface and Python builder for an agent-orchestration command 
 
 The public repository contains the builder, a generated static snapshot, and privacy-focused tests. Live owner actions require an explicitly configured loopback service and are not available from the public GitHub Pages view.
 
+## Agent operating contract
+
+[AGENTS.md](AGENTS.md) is the shared project contract for Claude, Codex, and
+other agents. It defines the visual portfolio model, resumable multi-hour work,
+coordination, truthful status, privacy, and verification. [CLAUDE.md](CLAUDE.md)
+imports that contract and retains the runtime reference. The product requirements
+in these documents are not evidence that a background executor or feature is live.
+
 ## Repository map
 
 | Path | Purpose |
