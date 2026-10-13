@@ -3044,7 +3044,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-section-heading h3 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
 .mm-section-heading h3 span { margin-left: 6px; color: var(--mm-muted); font-size: 14px; font-weight: 400; letter-spacing: 0; }
 .mm-section-note { margin-top: 4px; max-width: 640px; color: var(--mm-muted); font-size: 13px; }
-.mm-loose-note { margin: -8px 0 18px; }
 .mm-chart-legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--mm-muted); font-size: 13px; }
 .mm-chart-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; }
 .mm-os i.claude { background: var(--mm-claude); }
@@ -3162,7 +3161,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-todo-item .mm-bullets, .mm-todo-item .mm-outcomes { margin-bottom: 12px; }
 .mm-todo-item .mm-todo-group:last-child .mm-bullets, .mm-todo-item .mm-todo-group:last-child .mm-outcomes { margin-bottom: 4px; }
 .mm-due b { color: var(--mm-warning); font-weight: 650; }
-.mm-todo-foot { margin-top: 16px; }
+.mm-loose-heading { margin-top: 32px; }
 .mm-block { margin-bottom: 28px; }
 .mm-project-desc { margin-top: 2px; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; }
 .mm-project-hero .mm-project-desc { max-width: 64ch; margin: 2px 0 4px; font-size: 15px; }
@@ -3633,7 +3632,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
         <nav class="mm-nav" aria-label="Разделы MAIN MANAGER">
           <button type="button" data-mm-view="todo" aria-pressed="true"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.5"/></svg></span><span>Дела</span><b id="mm-todo-count">0</b></button>
-          <button type="button" data-mm-view="loose" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 6 2 2 3-4m-5 9 2 2 3-4m-5 9 2 2 3-4M12 6h9M12 13h9M12 20h9"/></svg></span><span>Хвосты</span><b id="mm-loose-count">0</b></button>
           <button type="button" data-mm-view="infra" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg></span><span>Изменения</span><b id="mm-infra-count">0</b></button>
         </nav>
         <div class="mm-sidebar-bottom">
@@ -3652,20 +3650,19 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
               <div><h3>Ждёт вас <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги из итогов дня и PR, готовые к слиянию. Что уже сделано, смотрите «По дням».</p></div>
             </div>
             <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
-          </div>
-
-          <div class="mm-view" data-mm-panel="project" hidden>
-            <div id="mm-project-page"></div>
-          </div>
-
-          <div class="mm-view" data-mm-panel="loose" hidden>
-            <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр">
+            <div class="mm-section-heading mm-loose-heading">
+              <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p></div>
+            </div>
+            <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр хвостов">
               <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
               <button type="button" data-filter="dropped" aria-pressed="false">Сбросил <span id="mm-loose-dropped">0</span></button>
               <button type="button" data-filter="forgot" aria-pressed="false">Забыл <span id="mm-loose-forgot">0</span></button>
             </div>
-            <p class="mm-section-note mm-loose-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p>
             <div class="mm-group-rows" id="mm-loose"></div>
+          </div>
+
+          <div class="mm-view" data-mm-panel="project" hidden>
+            <div id="mm-project-page"></div>
           </div>
 
           <div class="mm-view" data-mm-panel="infra" hidden>
@@ -6908,7 +6905,7 @@ const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
 const MM_THEME_KEY = 'command-center.main-manager.theme';
 const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-const MM_VIEW_TITLES = { todo: 'Дела', project: 'Проект', loose: 'Хвосты', infra: 'Изменения в инфраструктуре' };
+const MM_VIEW_TITLES = { todo: 'Дела', project: 'Проект', infra: 'Изменения в инфраструктуре' };
 // Platforms products that have their own mascot tint; anything else uses the neutral tint.
 const MM_TINTS = new Set(['command-center', 'financial', 'mydictionary', 'health', 'ai-singularity', 'context-news', 'accountable', 'jarvis']);
 let dailyWorkData = null;
@@ -7029,11 +7026,10 @@ function mmInit() {
     renderInfra(infraData);
   });
   document.getElementById('mm-todo-list').addEventListener('click', event => {
-    const link = event.target.closest('[data-project], [data-mm-goto]');
+    const link = event.target.closest('[data-project]');
     if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
     event.preventDefault();
-    if (link.dataset.mmGoto) mmShowView(link.dataset.mmGoto);
-    else openProject(link.dataset.project);
+    openProject(link.dataset.project);
   });
 }
 
@@ -7162,7 +7158,6 @@ function mmRenderNotice(errorText) {
 function renderDailyWork() {
   const data = dailyWorkData;
   if (!data) return;
-  document.getElementById('mm-loose-count').textContent = data.dropped_count + data.forgot_count;
   mmRenderNotice();
   renderLoose(data);
   renderTodo(data);
@@ -7333,7 +7328,9 @@ function mmLooseRow(item, bucket) {
 function renderLoose(data) {
   const host = document.getElementById('mm-loose');
   if (!data) return;
-  document.getElementById('mm-loose-all').textContent = data.dropped_count + data.forgot_count;
+  const looseTotal = data.dropped_count + data.forgot_count;
+  document.getElementById('mm-loose-total').textContent = looseTotal || '';
+  document.getElementById('mm-loose-all').textContent = looseTotal;
   document.getElementById('mm-loose-dropped').textContent = data.dropped_count;
   document.getElementById('mm-loose-forgot').textContent = data.forgot_count;
   document.querySelectorAll('#mm-loose-filter [data-filter]').forEach(button => {
@@ -7489,13 +7486,9 @@ function renderTodo(data) {
     return;
   }
   const today = data.series[data.series.length - 1]?.date;
-  const loose = data.dropped_count + data.forgot_count;
-  const looseLine = loose
-    ? `<p class="mm-section-note mm-todo-foot">Ещё хвостов: ${loose}. Брошенные ветки и PR без движения: <a href="?tab=work" data-mm-goto="loose">открыть «Хвосты»</a>.</p>`
-    : '';
   host.innerHTML = (items.length
     ? items.map(item => mmTodoItem(item, today)).join('')
-    : '<p class="mm-empty">Сейчас ничего не ждёт вас: нет сроков, следующих шагов и PR, готовых к слиянию.</p>') + looseLine;
+    : '<p class="mm-empty">Сейчас ничего не ждёт вас: нет сроков, следующих шагов и PR, готовых к слиянию.</p>');
 }
 
 async function openProject(id, day = null) {

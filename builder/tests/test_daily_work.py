@@ -772,6 +772,10 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn("renderTodo(data);", html)
         self.assertNotIn("mm-project-grid", html)
         self.assertNotIn('data-mm-view="projects"', html)
+        # Loose ends are part of the same list (2026-10-13), not a separate view.
+        self.assertNotIn('data-mm-view="loose"', html)
+        todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="project"')]
+        self.assertIn('id="mm-loose"', todo_panel)
         # Projects reuse the Platforms mascots and open a per-project page.
         self.assertIn('<use href="#cc-mascot-${mmEsc(item.mascot)}"/>', html)
         self.assertIn("project: id", html)
