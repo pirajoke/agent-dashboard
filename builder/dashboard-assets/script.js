@@ -3734,7 +3734,8 @@ setInterval(refreshLocalServices, 15000);
     const MANAGER_VISUAL_CLASSES = ['is-idle', 'is-queued', 'is-working', 'is-done', 'is-decision', 'is-error'];
     let theaterTasks = [];
     let theaterSelectedId = null;
-    let theaterAnimationStarted = false;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let theaterFrame = 0;
 
     const escTheater = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -4001,17 +4002,35 @@ setInterval(refreshLocalServices, 15000);
         return ((now + seed) % duration) / duration;
     }
 
-    function animateTheater() {
-        const now = Date.now();
-        document.querySelectorAll('.theater-runner').forEach((runner) => {
+    function placeTheaterRunners(now) {
+        const runners = document.querySelectorAll('.theater-runner');
+        runners.forEach((runner) => {
             const route = String(runner.dataset.route || 'USER,JARVIS,BRIDGE,BUILDER').split(',');
             const point = routePoint(route, progressForRunner(runner, now));
             runner.style.left = `${point.x}%`;
             runner.style.top = `${point.y}%`;
             runner.style.transform = 'translate(-50%, -50%)';
         });
-        requestAnimationFrame(animateTheater);
+        return runners.length;
     }
+
+    // Runners move only while there are runners and motion is allowed;
+    // with reduced motion they are placed once and stay still.
+    function animateTheater() {
+        theaterFrame = 0;
+        if (!placeTheaterRunners(Date.now()) || reducedMotion.matches) return;
+        theaterFrame = requestAnimationFrame(animateTheater);
+    }
+
+    function startTheaterAnimation() {
+        if (theaterFrame) return;
+        if (reducedMotion.matches) {
+            placeTheaterRunners(Date.now());
+            return;
+        }
+        theaterFrame = requestAnimationFrame(animateTheater);
+    }
+    reducedMotion.addEventListener?.('change', startTheaterAnimation);
 
     function updateTheaterPeople(tasks, selectedTask) {
         const personState = {};
@@ -4079,10 +4098,7 @@ setInterval(refreshLocalServices, 15000);
                     <span class="theater-runner-label">focus task</span>
                 </button>`;
         }).join('');
-        if (!theaterAnimationStarted) {
-            theaterAnimationStarted = true;
-            requestAnimationFrame(animateTheater);
-        }
+        startTheaterAnimation();
     }
 
     function renderTheaterCurrent(task) {
