@@ -38,6 +38,22 @@ def _get_claude_sessions() -> list[dict]:
     return sessions
 
 
+def _short_cmd(cmd: str) -> str:
+    """A process command line without local folders: absolute paths keep only their last part."""
+    return " ".join(Path(token).name if token.startswith(("/", "~")) else token for token in cmd.split())
+
+
+def _mcp_label(cmd: str) -> str:
+    """Name an unknown MCP server by the argument that names it, never by its install path."""
+    for token in cmd.split():
+        if token.startswith("-"):
+            continue
+        for part in reversed(Path(token).parts):
+            if "mcp" in part.lower():
+                return f"MCP: {part[:40]}"
+    return f"MCP: {_short_cmd(cmd)[:40]}"
+
+
 def _get_node_processes() -> list[dict]:
     """Find all Node.js processes (MCP servers, Codex, etc)."""
     lines = _run("ps aux | grep '[n]ode'")
@@ -56,7 +72,7 @@ def _get_node_processes() -> list[dict]:
 
         # Classify
         ptype = "node"
-        label = cmd_full[:60]
+        label = _short_cmd(cmd_full)[:60]
         if "mcp" in cmd_full.lower() or "mcp-remote" in cmd_full:
             ptype = "mcp"
             # Extract MCP server name
@@ -71,7 +87,7 @@ def _get_node_processes() -> list[dict]:
             elif "pencil" in cmd_full:
                 label = "MCP: Pencil"
             else:
-                label = f"MCP: {cmd_full[:40]}"
+                label = _mcp_label(cmd_full)
         elif "codex" in cmd_full.lower():
             ptype = "codex"
             label = "OpenAI Codex"
