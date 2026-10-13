@@ -110,7 +110,7 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
             r'<article\b[^>]*\bdata-platform-id="([^"]+)"',
             self.html,
         )
-        self.assertEqual(len(platform_ids), 7)
+        self.assertEqual(len(platform_ids), 12)
         self.assertEqual(len(set(platform_ids)), len(platform_ids))
 
         storage_ref = (

@@ -279,13 +279,16 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-weight: 700;
   letter-spacing: 0.25px;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 .platform-access-icon { width: 14px; height: 14px; flex: 0 0 auto; }
 .platform-access.private { background: var(--accent-bg); color: #9A7100; border-color: rgba(234,179,8,0.28); }
 .platform-access.public { background: var(--green-bg); color: #16803A; border-color: rgba(34,197,94,0.24); }
 .platform-directory {
   display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  /* Every row as tall as the tallest card, so all cards are one size. */
+  grid-auto-rows: 1fr;
   gap: 16px;
 }
 .platform-entry {
@@ -293,7 +296,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   position: relative;
   min-width: 0;
   touch-action: pan-y;
-  grid-column: span 2;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
@@ -318,6 +320,11 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .platform-entry[data-platform-id="context-news"] { --platform-tint: var(--orange-bg); }
 .platform-entry[data-platform-id="accountable"] { --platform-tint: var(--green-bg); }
 .platform-entry[data-platform-id="jarvis"] { --platform-tint: #F1F5F9; }
+.platform-entry[data-platform-id="property-os"] { --platform-tint: #FEF9C3; }
+.platform-entry[data-platform-id="pixel-agents"] { --platform-tint: #ECFDF5; }
+.platform-entry[data-platform-id="closeness-mirror"] { --platform-tint: #EEF2FF; }
+.platform-entry[data-platform-id="sushi-parisien"] { --platform-tint: #FFF7ED; }
+.platform-entry[data-platform-id="n8n"] { --platform-tint: #FDF2F8; }
 .platform-art {
   display: grid;
   place-items: center;
@@ -417,6 +424,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-size: 12px;
   font-weight: 700;
   line-height: 1.25;
+  white-space: nowrap;
   text-decoration: none;
   transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
@@ -427,11 +435,10 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   outline-offset: 3px;
 }
 .platform-note {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 4px;
+  margin-top: 16px;
   padding: 12px 14px;
   border: 1px dashed rgba(234,179,8,0.45);
   border-radius: 12px;
@@ -444,9 +451,6 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 @media (max-width: 1100px) {
   .platforms-header { grid-template-columns: minmax(0, 1fr) auto; }
   .platforms-hero-mascot { display: none; }
-  .platform-directory { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .platform-entry.priority { grid-column: span 6; }
-  .platform-entry { grid-column: span 2; }
 }
 
 @media (max-width: 760px) {
@@ -468,7 +472,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .platform-entry.priority .platform-content { padding: 14px 14px 14px 12px; }
   .platform-entry.priority .platform-name { font-size: 17px; }
   .platform-links { align-items: stretch; flex-direction: column; }
-  .platform-link { max-width: 100%; overflow-wrap: anywhere; }
+  .platform-link { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
 }
 
 @media (max-width: 360px) {
@@ -3409,6 +3413,54 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <circle cx="106" cy="43" r="5" fill="#86EFAC" stroke="#1A1A1A" stroke-width="3"/>
   </symbol>
   <!-- JARVIS: a butler bot with a bow tie -->
+  <!-- Property OS: a little house with keys -->
+  <symbol id="cc-mascot-property" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M22 56 L60 24 L98 56" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M30 52 V100 a4 4 0 0 0 4 4 H86 a4 4 0 0 0 4 -4 V52 L60 30 Z" fill="#FDE68A" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <use href="#cc-face" transform="translate(60 64)"/>
+    <rect x="52" y="80" width="16" height="24" rx="3" fill="#F59E0B" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="96" cy="88" r="7" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M96 95 V108 M96 102 h5" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <!-- Pixel Agents: a pixel buddy -->
+  <symbol id="cc-mascot-pixel" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="28" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <rect x="32" y="26" width="56" height="52" rx="6" fill="#A7F3D0" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="44" y="42" width="8" height="8" fill="#1A1A1A"/><rect x="68" y="42" width="8" height="8" fill="#1A1A1A"/>
+    <rect x="52" y="60" width="16" height="5" fill="#1A1A1A"/>
+    <rect x="40" y="78" width="40" height="20" rx="3" fill="#34D399" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="42" y="98" width="10" height="8" fill="#1A1A1A"/><rect x="68" y="98" width="10" height="8" fill="#1A1A1A"/>
+    <rect x="56" y="14" width="8" height="12" fill="#1A1A1A"/><rect x="52" y="8" width="16" height="8" fill="#F472B6" stroke="#1A1A1A" stroke-width="2"/>
+  </symbol>
+  <!-- Closeness Mirror: two hearts in a mirror -->
+  <symbol id="cc-mascot-mirror" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="111" rx="24" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <ellipse cx="60" cy="50" rx="32" ry="38" fill="#E0E7FF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M60 88 V104 M46 106 h28" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M47 46c-6-5-12-1-11 5 1 5 11 11 11 11s10-6 11-11c1-6-5-10-11-5z" fill="#F87171" stroke="#1A1A1A" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M73 46c-6-5-12-1-11 5 1 5 11 11 11 11s10-6 11-11c1-6-5-10-11-5z" fill="#FCA5A5" stroke="#1A1A1A" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M40 26 Q46 20 54 20" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+  </symbol>
+  <!-- Sushi Parisien: a happy nigiri -->
+  <symbol id="cc-mascot-sushi" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="108" rx="34" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <rect x="24" y="62" width="72" height="38" rx="18" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M20 66 C24 42 96 42 100 66 C88 60 32 60 20 66 Z" fill="#FB923C" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M40 52 l8 8 M58 49 l8 9 M76 52 l6 7" stroke="#FFEDD5" stroke-width="3" stroke-linecap="round"/>
+    <use href="#cc-face" transform="translate(60 80)"/>
+    <rect x="54" y="58" width="12" height="42" fill="#1E293B" opacity=".9"/>
+  </symbol>
+  <!-- n8n: connected automation nodes -->
+  <symbol id="cc-mascot-n8n" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M30 60 H52 M68 60 Q80 60 84 44 M68 60 Q80 60 84 76" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="22" cy="60" r="10" fill="#FBCFE8" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="44" y="44" width="32" height="32" rx="10" fill="#F472B6" stroke="#1A1A1A" stroke-width="3"/>
+    <use href="#cc-face" transform="translate(60 58) scale(.7)"/>
+    <circle cx="92" cy="40" r="10" fill="#FBCFE8" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="92" cy="80" r="10" fill="#FBCFE8" stroke="#1A1A1A" stroke-width="3"/>
+  </symbol>
   <symbol id="cc-mascot-jarvis" viewBox="0 0 120 120">
     <ellipse cx="60" cy="111" rx="28" ry="5" fill="#1A1A1A" opacity=".08"/>
     <path d="M60 22V12" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
@@ -3455,7 +3507,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span><span class="cc-tab-label" data-tab-label="today">По дням</span></button>
     <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Agents</span><span class="pill-badge" id="agents-badge">pixel</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Platforms</span><span class="pill-badge">7</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Platforms</span><span class="pill-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
   <div class="tab-name-customizer">
@@ -3524,7 +3576,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
     <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Hold a card, then drag it, or use its arrow buttons to change the order.</p>
     <div class="platform-directory">
-      <article class="platform-entry priority" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
+      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
         <div class="platform-reorder-controls" aria-label="Move JobRadar / Financial OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move JobRadar / Financial OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move JobRadar / Financial OS later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
@@ -3538,7 +3590,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           </div>
         </div>
       </article>
-      <article class="platform-entry priority" data-platform-id="mydictionary" data-platform-name="Lexi">
+      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi">
         <div class="platform-reorder-controls" aria-label="Move Lexi"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Lexi earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Lexi later">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
         <span class="platform-index">02</span>
@@ -3617,9 +3669,74 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
           </div>
         </div>
       </article>
+      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS">
+        <div class="platform-reorder-controls" aria-label="Move Property OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Property OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Property OS later">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-property"/></svg></div>
+        <span class="platform-index">08</span>
+        <div class="platform-content">
+          <span class="platform-tag">Active system</span>
+          <h3 class="platform-name">Property OS</h3>
+          <p class="platform-description">Rentals, payments and repairs for the Nice properties.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://properties.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Public web</span> Open</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents">
+        <div class="platform-reorder-controls" aria-label="Move Pixel Agents"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Pixel Agents earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Pixel Agents later">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-pixel"/></svg></div>
+        <span class="platform-index">09</span>
+        <div class="platform-content">
+          <span class="platform-tag">Active system</span>
+          <h3 class="platform-name">Pixel Agents</h3>
+          <p class="platform-description">The agents' pixel office: who is working on what right now.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://pixel-agents.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Public web</span> Open</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта">
+        <div class="platform-reorder-controls" aria-label="Move Зеркало Контакта"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Зеркало Контакта earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Зеркало Контакта later">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-mirror"/></svg></div>
+        <span class="platform-index">10</span>
+        <div class="platform-content">
+          <span class="platform-tag">Active system</span>
+          <h3 class="platform-name">Зеркало Контакта</h3>
+          <p class="platform-description">Pair chat with AI hints for better communication between partners.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:3051" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open app</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien">
+        <div class="platform-reorder-controls" aria-label="Move Sushi Parisien"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Sushi Parisien earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Sushi Parisien later">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-sushi"/></svg></div>
+        <span class="platform-index">11</span>
+        <div class="platform-content">
+          <span class="platform-tag">Active system</span>
+          <h3 class="platform-name">Sushi Parisien</h3>
+          <p class="platform-description">Website of the sushi house in Paris 8e.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8890" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open site</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n">
+        <div class="platform-reorder-controls" aria-label="Move n8n"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move n8n earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move n8n later">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-n8n"/></svg></div>
+        <span class="platform-index">12</span>
+        <div class="platform-content">
+          <span class="platform-tag">Active system</span>
+          <h3 class="platform-name">n8n</h3>
+          <p class="platform-description">Workflow automations on the Mac mini.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:5678" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open editor</a>
+          </div>
+        </div>
+      </article>
 
-      <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
     </div>
+    <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
   </section>
 
   <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
