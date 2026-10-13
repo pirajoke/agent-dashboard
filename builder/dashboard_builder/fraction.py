@@ -120,7 +120,7 @@ def _get_python_processes() -> list[dict]:
         cmd_full = " ".join(parts[10:])
         if "build-agent-dashboard" in cmd_full:
             continue  # Skip self
-        label = cmd_full[:60]
+        label = _short_cmd(cmd_full)[:60]
         if "live-feed" in cmd_full:
             label = "generate-live-feed.py"
         elif "alert-monitor" in cmd_full:
