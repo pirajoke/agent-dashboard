@@ -7314,16 +7314,29 @@ function renderGrowth(data) {
     grid.innerHTML = '';
     return;
   }
-  state.className = 'mm-notice live';
-  state.textContent = `Источник: ${data.source}. Время — работа Claude и Codex в связанных проектах за ${data.window_days} дней.`;
+  const updated = data.note_updated_at ? mmDayShort(data.note_updated_at.slice(0, 10)) : null;
+  if (data.state === 'stale') {
+    state.className = 'mm-notice stale';
+    state.textContent = `Заметка не менялась ${data.note_age_days} дн. (с ${updated}): отметки шагов могут быть устаревшими. Источник: ${data.source}.`;
+  } else {
+    state.className = 'mm-notice live';
+    state.textContent = `Источник: ${data.source}, обновлена ${updated}. Время — работа Claude и Codex в связанных проектах за ${data.window_days} дней.`;
+  }
   const areas = data.areas || [];
   const steps = areas.reduce((sum, area) => sum + area.progress.total, 0);
   const done = areas.reduce((sum, area) => sum + area.progress.done, 0);
-  const minutes = areas.reduce((sum, area) => sum + (area.minutes_30d || 0), 0);
+  const linked = areas.filter(area => area.linked);
+  const minutes = linked.reduce((sum, area) => sum + (area.minutes_30d || 0), 0);
+  // A share only with steps to count; time only when it was measured (AGENTS.md: unknown is not 0).
+  const timeStat = !linked.length
+    ? { value: '—', note: 'проекты не связаны' }
+    : data.time_available
+      ? { value: workMinutes(minutes), note: 'в связанных проектах' }
+      : { value: 'Неизвестно', note: 'нет данных о работе' };
   summary.innerHTML = [
     { label: 'Направлений', value: String(areas.length), note: 'в заметке' },
-    { label: 'Шагов сделано', value: `${done} из ${steps}`, note: steps ? `${Math.round(done / steps * 100)}% пути` : 'шагов пока нет' },
-    { label: 'Время за 30 дней', value: workMinutes(minutes), note: 'в связанных проектах' },
+    { label: 'Шагов сделано', value: steps ? `${done} из ${steps}` : '—', note: steps ? `${Math.round(done / steps * 100)}% пути` : 'шагов пока нет' },
+    { label: 'Время за 30 дней', ...timeStat },
   ].map(stat => `<div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong>${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('');
   if (!areas.length) {
     grid.innerHTML = '<p class="growth-empty">В заметке пока нет направлений. Добавьте раздел «## Название» со списком шагов.</p>';
@@ -7332,20 +7345,28 @@ function renderGrowth(data) {
   grid.innerHTML = areas.map(area => {
     const picture = GROWTH_PICTURES.includes(area.picture) ? area.picture : 'growth';
     const total = area.progress.total;
-    const percent = total ? Math.round(area.progress.done / total * 100) : 0;
-    const time = area.minutes_30d == null
+    // No steps, no denominator: no ring and no «0%», just the state.
+    const ring = total
+      ? `<div class="growth-ring" style="--p:${Math.round(area.progress.done / total * 100)}" role="img" aria-label="Сделано ${area.progress.done} из ${total} шагов"><span>${Math.round(area.progress.done / total * 100)}%</span></div>`
+      : '';
+    const progress = total
+      ? `<span class="growth-chip">${area.progress.done} из ${total} шагов</span>`
+      : '<span class="growth-chip is-muted">Шагов пока нет</span>';
+    const time = !area.linked
       ? '<span class="growth-chip is-muted">Проекты не связаны</span>'
-      : `<span class="growth-chip">${mmEsc(workMinutes(area.minutes_30d))} за 30 дней</span>`;
+      : area.minutes_30d == null
+        ? '<span class="growth-chip is-muted">Время неизвестно</span>'
+        : `<span class="growth-chip">${mmEsc(workMinutes(area.minutes_30d))} за 30 дней</span>`;
     const steps = area.steps.length
       ? `<ul class="growth-steps">${area.steps.map(step => `<li class="${step.done ? 'is-done' : ''}">${mmEsc(step.text)}</li>`).join('')}</ul>`
-      : '<p class="growth-why">Шагов пока нет.</p>';
+      : '<p class="growth-why">Добавьте шаги в заметку, чтобы видеть прогресс.</p>';
     return `<article class="growth-card" data-picture="${picture}">
       <div class="growth-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-growth-${picture}"/></svg>
-        <div class="growth-ring" style="--p:${percent}" role="img" aria-label="Сделано ${area.progress.done} из ${total} шагов"><span>${percent}%</span></div></div>
+        ${ring}</div>
       <div class="growth-body">
         <h3 class="growth-title">${mmEsc(area.title)}</h3>
         ${area.why ? `<p class="growth-why">${mmEsc(area.why)}</p>` : ''}
-        <div class="growth-meta"><span class="growth-chip">${area.progress.done} из ${total} шагов</span>${time}</div>
+        <div class="growth-meta">${progress}${time}</div>
         ${steps}
       </div>
     </article>`;

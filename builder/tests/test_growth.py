@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timezone
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -66,7 +67,48 @@ class GrowthTest(unittest.TestCase):
         self.assertEqual(digital["progress"], {"done": 1, "total": 3})
         self.assertEqual(digital["minutes_30d"], 120)
         self.assertEqual(empty["progress"], {"done": 0, "total": 0})
+        self.assertTrue(data["time_available"])
+        self.assertFalse(pe["linked"])
         self.assertNotIn("projects", digital)
+
+    def test_broken_session_files_and_records_are_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            note.write_text(NOTE, encoding="utf-8")
+            _day(root, "macbook-pro", "2026-10-10", [None, "x", {"project": "SHOPIFY", "active_minutes": 45}])
+            for day, body in (("2026-10-11", '{"sessions": {"project": "SHOPIFY"}}'), ("2026-10-12", "[1, 2]"),
+                              ("2026-10-13", "{not json")):
+                (root / "sessions" / "macbook-pro" / f"{day}.json").write_text(body, encoding="utf-8")
+            data = growth_projection(note, root, owner=True, today=date(2026, 10, 14))
+        self.assertTrue(data["time_available"])
+        self.assertEqual(data["areas"][1]["minutes_30d"], 45)
+
+    def test_missing_work_log_is_unknown_time_not_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            note.write_text(NOTE, encoding="utf-8")
+            data = growth_projection(note, root / "no-daily-work", owner=True, today=date(2026, 10, 14))
+        self.assertFalse(data["time_available"])
+        digital = data["areas"][1]
+        self.assertTrue(digital["linked"])
+        self.assertIsNone(digital["minutes_30d"])
+
+    def test_note_untouched_for_a_month_is_stale(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            note.write_text(NOTE, encoding="utf-8")
+            changed = datetime(2026, 9, 1, 12, 0, tzinfo=timezone.utc).timestamp()
+            os.utime(note, (changed, changed))
+            stale = growth_projection(note, root, owner=True, today=date(2026, 10, 14))
+            fresh = growth_projection(note, root, owner=True, today=date(2026, 9, 20))
+        self.assertEqual(stale["state"], "stale")
+        self.assertEqual(stale["note_age_days"], 43)
+        self.assertTrue(stale["note_updated_at"].startswith("2026-09-01"))
+        self.assertIn("observed_at", stale)
+        self.assertEqual(fresh["state"], "live")
 
     def test_public_view_is_a_count_and_missing_note_is_empty(self):
         with tempfile.TemporaryDirectory() as tmp:
