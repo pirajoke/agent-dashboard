@@ -5171,6 +5171,8 @@ document.getElementById('reset-tab-names').addEventListener('click', resetTabNam
 const PLATFORM_ORDER_STORAGE_KEY = 'command-center.platform-order.v1';
 const PLATFORM_LONG_PRESS_MS = 500;
 const PLATFORM_LONG_PRESS_MOVE_PX = 12;
+const PLATFORM_AUTOSCROLL_EDGE_PX = 72;
+const PLATFORM_AUTOSCROLL_MAX_PX = 16;
 const platformDirectory = document.querySelector('.platform-directory');
 const PLATFORM_CANONICAL_IDS = Object.freeze(platformDirectory
   ? Array.from(platformDirectory.querySelectorAll('.platform-entry'), card => card.dataset.platformId)
@@ -5302,7 +5304,75 @@ function flipPlatformCards(mutate, except) {
   });
 }
 
+// Hit-test on layout boxes, not on what is drawn: a neighbour still gliding to its new
+// place would otherwise be hit at its old spot and swap straight back.
+function platformCardAtPoint(x, y) {
+  return platformCards().find(card => {
+    const box = platformLayoutBox(card);
+    return x >= box.left && x <= box.left + card.offsetWidth
+      && y >= box.top && y <= box.top + card.offsetHeight;
+  }) || null;
+}
+
+function reorderPlatformAt(state, x, y) {
+  const target = platformCardAtPoint(x, y);
+  if (!target || target === state.card) return;
+  const cards = platformCards();
+  const sourceIndex = cards.indexOf(state.card);
+  const targetIndex = cards.indexOf(target);
+  // Move the neighbours, not the held card: taking the card under the finger out of
+  // the page makes a phone drop the touch, start scrolling and undo the move.
+  flipPlatformCards(() => {
+    if (sourceIndex < targetIndex) state.card.before(...cards.slice(sourceIndex + 1, targetIndex + 1));
+    else state.card.after(...cards.slice(targetIndex, sourceIndex));
+  }, state.card);
+  followPlatformPointer(state, x, y);
+  state.changed = true;
+  renumberPlatforms();
+}
+
+function platformScrollContainer() {
+  for (let node = platformDirectory.parentElement; node && node !== document.body; node = node.parentElement) {
+    const overflowY = getComputedStyle(node).overflowY;
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) return node;
+  }
+  return null;
+}
+
+// Near the top or bottom edge the page scrolls by itself, so on a phone a card can
+// travel the whole list, not only the cards on screen.
+function startPlatformAutoScroll(state) {
+  const scroller = platformScrollContainer();
+  const step = () => {
+    if (platformPointerState !== state || !state.active) return;
+    const box = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+    const top = Math.max(box.top, 0);
+    const bottom = Math.min(box.bottom, window.innerHeight);
+    const edge = PLATFORM_AUTOSCROLL_EDGE_PX;
+    let delta = 0;
+    if (state.lastY < top + edge) {
+      delta = -Math.ceil(PLATFORM_AUTOSCROLL_MAX_PX * Math.min(1, (top + edge - state.lastY) / edge));
+    } else if (state.lastY > bottom - edge) {
+      delta = Math.ceil(PLATFORM_AUTOSCROLL_MAX_PX * Math.min(1, (state.lastY - (bottom - edge)) / edge));
+    }
+    if (delta) {
+      const target = scroller || document.scrollingElement || document.documentElement;
+      const before = target.scrollTop;
+      if (scroller) scroller.scrollTop += delta;
+      else window.scrollBy(0, delta);
+      if (target.scrollTop !== before) {
+        followPlatformPointer(state, state.lastX, state.lastY);
+        reorderPlatformAt(state, state.lastX, state.lastY);
+      }
+    }
+    state.frame = window.requestAnimationFrame(step);
+  };
+  state.frame = window.requestAnimationFrame(step);
+}
+
 function settlePlatformCard(state) {
+  if (state.frame) window.cancelAnimationFrame(state.frame);
+  state.frame = null;
   platformDirectory.classList.remove('is-arranging');
   const card = state.card;
   const from = card.style.transform;
@@ -5330,6 +5400,7 @@ function beginPlatformLongPress(event) {
     active: false,
     changed: false,
     timer: null,
+    frame: null,
   };
   platformPointerState = state;
   state.timer = window.setTimeout(() => {
@@ -5347,8 +5418,11 @@ function beginPlatformLongPress(event) {
     card.classList.add('is-reordering');
     card.setAttribute('aria-grabbed', 'true');
     if (navigator.vibrate) navigator.vibrate(12);
+    state.lastX = state.startX;
+    state.lastY = state.startY;
     followPlatformPointer(state, state.startX, state.startY);
     announcePlatformOrder(card, 'Перемещаю:');
+    startPlatformAutoScroll(state);
   }, PLATFORM_LONG_PRESS_MS);
 }
 
@@ -5371,21 +5445,10 @@ function movePlatformLongPress(event) {
     return;
   }
   if (event.cancelable) event.preventDefault();
+  state.lastX = event.clientX;
+  state.lastY = event.clientY;
   followPlatformPointer(state, event.clientX, event.clientY);
-  state.card.style.visibility = 'hidden';
-  const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.platform-entry');
-  state.card.style.visibility = '';
-  if (!target || target === state.card || !platformDirectory.contains(target)) return;
-  const cards = platformCards();
-  const sourceIndex = cards.indexOf(state.card);
-  const targetIndex = cards.indexOf(target);
-  flipPlatformCards(() => {
-    if (sourceIndex < targetIndex) target.after(state.card);
-    else target.before(state.card);
-  }, state.card);
-  followPlatformPointer(state, event.clientX, event.clientY);
-  state.changed = true;
-  renumberPlatforms();
+  reorderPlatformAt(state, event.clientX, event.clientY);
 }
 
 function commitPlatformLongPress(event) {
