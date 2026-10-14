@@ -16,6 +16,9 @@ It never loads a job it has not seen running, so services that are off stay off.
 service for good, switch it off with ``launchctl disable gui/$(id -u)/<label>``; a plain
 ``launchctl bootout`` is undone within 5 minutes.
 
+If auto-deploy rolls back to a release that has no watchdog, the next run removes its own
+LaunchAgent, so a rollback takes the watchdog away too.
+
 State: ~/.agent-bridge/launchd-watchdog/state.json. Log: ~/.agent-bridge/launchd-watchdog/events.jsonl.
 """
 from __future__ import annotations
@@ -33,6 +36,10 @@ from dashboard_builder.service_status import parse_launchctl_disabled, parse_lau
 HOME = Path.home()
 LAUNCH_AGENTS_DIR = Path(os.environ.get("LAUNCHD_WATCHDOG_AGENTS_DIR", HOME / "Library" / "LaunchAgents"))
 STATE_DIR = Path(os.environ.get("LAUNCHD_WATCHDOG_STATE_DIR", HOME / ".agent-bridge" / "launchd-watchdog"))
+DEPLOY_STATE_FILE = Path(
+    os.environ.get("LAUNCHD_WATCHDOG_DEPLOY_STATE", HOME / ".agent-bridge" / "auto-deploy" / "state.json")
+)
+REPO_DIR = Path(os.environ.get("LAUNCHD_WATCHDOG_REPO_DIR", HOME / "agent-dashboard"))
 SELF_LABEL = "com.pirajoke.launchd-watchdog"
 PREFIXES = ("com.pirajoke.", "homebrew.mxcl.")
 RECHECK_SECONDS = 30
@@ -106,6 +113,28 @@ def launchd_state() -> tuple[set[str] | None, set[str] | None]:
     return (loaded or None), parse_launchctl_disabled(disabled_raw)
 
 
+def release_has_watchdog(state_file: Path = DEPLOY_STATE_FILE, repo: Path = REPO_DIR) -> bool | None:
+    """Whether the deployed commit ships this watchdog; None when that cannot be told."""
+    try:
+        sha = json.loads(state_file.read_text()).get("deployed_sha")
+    except (OSError, ValueError, AttributeError):
+        return None
+    if not isinstance(sha, str) or not sha:
+        return None
+    code, _ = run(["git", "-C", str(repo), "cat-file", "-e", f"{sha}^{{commit}}"])
+    if code != 0:
+        return None
+    code, _ = run(["git", "-C", str(repo), "cat-file", "-e", f"{sha}:builder/launchd_watchdog.py"])
+    return code == 0
+
+
+def remove_self(agents_dir: Path, state_dir: Path) -> None:
+    """Rolled back to a release without the watchdog: take its LaunchAgent away."""
+    (agents_dir / f"{SELF_LABEL}.plist").unlink(missing_ok=True)
+    log_event({"label": SELF_LABEL, "result": "removed", "output": "deployed release has no watchdog"}, state_dir)
+    run(["launchctl", "bootout", f"gui/{os.getuid()}/{SELF_LABEL}"])
+
+
 def bootstrap(plist: Path) -> tuple[bool, str]:
     code, output = run(["launchctl", "bootstrap", f"gui/{os.getuid()}", str(plist)])
     return code == 0, output[-300:]
@@ -118,7 +147,12 @@ def run_once(
     read_launchd=launchd_state,
     load=bootstrap,
     sleep=time.sleep,
+    in_release=release_has_watchdog,
+    remove=remove_self,
 ) -> dict:
+    if in_release() is False:
+        remove(agents_dir, state_dir)
+        return {"status": "removed"}
     loaded, disabled = read_launchd()
     if loaded is None or disabled is None:
         # launchctl did not answer: change nothing rather than guess.

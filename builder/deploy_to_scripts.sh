@@ -60,8 +60,19 @@ if [[ "${DASHBOARD_INSTALL_STATUS_PUBLISHER:-1}" == "1" ]]; then
   launchctl bootstrap "gui/$(id -u)" "$PUBLISHER_PLIST"
 fi
 
+if [[ "${DASHBOARD_INSTALL_DAILY_WORK:-1}" == "1" ]]; then
+  DAILY_WORK_INSTALL_DIR="$SCRIPTS_DIR" "$SRC_DIR/install_daily_work_collector.sh" --machine mac-mini --github --summaries
+fi
+
+# Record what is deployed now, before the agent starts (RunAtLoad), so the auto-deploy agent compares main against it.
+DEPLOYED_SHA="${AUTO_DEPLOY_DEPLOYED_SHA:-$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)}"
+if [[ -n "$DEPLOYED_SHA" ]]; then
+  python3 "$SRC_DIR/auto_deploy.py" --record "$DEPLOYED_SHA"
+fi
+
 # After a power loss launchd may not load every service at login (2026-10-12). The watchdog loads
-# back the services it has seen running; see launchd_watchdog.py.
+# back the services it has seen running; see launchd_watchdog.py. Installed after the deployed commit
+# is recorded: the watchdog removes itself when that commit does not ship it (a rollback).
 WATCHDOG_LABEL="com.pirajoke.launchd-watchdog"
 WATCHDOG_PLIST="$HOME/Library/LaunchAgents/$WATCHDOG_LABEL.plist"
 if [[ "${DASHBOARD_INSTALL_LAUNCHD_WATCHDOG:-1}" == "1" ]]; then
@@ -72,16 +83,6 @@ if [[ "${DASHBOARD_INSTALL_LAUNCHD_WATCHDOG:-1}" == "1" ]]; then
   mv "$WATCHDOG_PLIST.tmp" "$WATCHDOG_PLIST"
   launchctl bootout "gui/$(id -u)/$WATCHDOG_LABEL" >/dev/null 2>&1 || true
   launchctl bootstrap "gui/$(id -u)" "$WATCHDOG_PLIST"
-fi
-
-if [[ "${DASHBOARD_INSTALL_DAILY_WORK:-1}" == "1" ]]; then
-  DAILY_WORK_INSTALL_DIR="$SCRIPTS_DIR" "$SRC_DIR/install_daily_work_collector.sh" --machine mac-mini --github --summaries
-fi
-
-# Record what is deployed now, before the agent starts (RunAtLoad), so the auto-deploy agent compares main against it.
-DEPLOYED_SHA="${AUTO_DEPLOY_DEPLOYED_SHA:-$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)}"
-if [[ -n "$DEPLOYED_SHA" ]]; then
-  python3 "$SRC_DIR/auto_deploy.py" --record "$DEPLOYED_SHA"
 fi
 
 # Merged code reaches the site by itself: the auto-deploy agent watches main.

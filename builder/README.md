@@ -48,7 +48,8 @@ unloaded. `launchd_watchdog.py` (launchd `com.pirajoke.launchd-watchdog`, at log
 It never loads a job it has not seen running, so services that are off stay off.
 
 To stop a service for good, use `launchctl disable gui/$(id -u)/<label>`; the watchdog then
-forgets it. A plain `launchctl bootout` is undone within 5 minutes. State and log:
+forgets it. A plain `launchctl bootout` is undone within 5 minutes. If auto-deploy rolls back to a
+release without the watchdog, its next run removes its own LaunchAgent. State and log:
 `~/.agent-bridge/launchd-watchdog/`.
 
 Before the login nothing runs: with FileVault on, the Mac mini waits for the password after a
