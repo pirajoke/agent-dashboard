@@ -267,7 +267,7 @@ health check и разрешённый rollback. Не расширяй его м
 
 Claude сам, без отдельного подтверждения, сливает свой PR, если:
 
-- PR не трогает вход и доступ: `builder/mm-command-center-auth/`,
+- PR не трогает вход и доступ: `builder/mm-command-center-auth`,
   `builder/dashboard_builder/cloudflare_access.py`, проверки владельца и токенов
   в `builder/dashboard-server-m4.py` (`_dashboard_run_authorized`,
   `_decision_owner_authorized`, `PUBLIC_HOSTS`, `OWNER_ACCESS`);
