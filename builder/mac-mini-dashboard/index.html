@@ -95,7 +95,7 @@ try {
   --radius: 14px;
   --radius-sm: 10px;
   --cc-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  --cc-tabbar: 64px;
+  --cc-tabbar: 70px; /* phone tab bar: icon plus a label of up to two lines */
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { width: 100%; overflow-x: hidden; }
@@ -3397,7 +3397,8 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .cc-side .cc-main-nav .nav-pill.active { background: none; }
   .cc-side .cc-main-nav .nav-pill:hover { background: none; }
   .cc-main-nav .pill-badge { display: none; }
-  .cc-main-nav .cc-tab-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Five tabs on a phone: a long label («MAIN MANAGER») wraps to two lines instead of being cut. */
+  .cc-main-nav .cc-tab-label { display: -webkit-box; max-width: 100%; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.15; text-align: center; white-space: normal; overflow-wrap: anywhere; font-size: 10.5px; }
   .cc-side .tab-name-editor { left: 12px; right: 12px; bottom: calc(var(--cc-tabbar) + 12px + env(safe-area-inset-bottom)); width: auto; max-height: 70vh; overflow-y: auto; }
   .cc-main .cc-page-title { font-size: 25px; }
   .cc-page-lede { font-size: 14px; }
@@ -3427,7 +3428,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 :root[data-theme="dark"] .growth-card { --growth-tint: rgba(255,255,255,.06) !important; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .growth-card { --growth-tint: rgba(255,255,255,.06) !important; } }
 .growth-art { position: relative; display: grid; place-items: center; height: 150px; background: var(--growth-tint); }
-.growth-art svg { width: 116px; height: 116px; }
+.growth-art svg { width: 116px; height: 116px; color: var(--mm-ink); } /* outlines follow the theme: dark on light, light on dark */
 .growth-ring { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%;
   background: conic-gradient(var(--mm-accent) calc(var(--p) * 1%), var(--mm-line) 0); }
 .growth-ring span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--mm-surface); color: var(--mm-ink); font-size: 12.5px; font-weight: 700; }
@@ -3640,58 +3641,58 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   <symbol id="cc-icon-growth" viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4 3-7 8-7 0 4-3 7-8 7zM12 15c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <!-- «Точки роста» pictures -->
   <symbol id="cc-growth-pe" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="110" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <rect x="22" y="44" width="76" height="54" rx="10" fill="#F5C542" stroke="#1A1A1A" stroke-width="3"/>
-    <path d="M46 44v-8a6 6 0 0 1 6-6h16a6 6 0 0 1 6 6v8" fill="none" stroke="#1A1A1A" stroke-width="3"/>
-    <path d="M22 64h76" stroke="#1A1A1A" stroke-width="3"/>
-    <rect x="54" y="58" width="12" height="12" rx="3" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.6"/>
+    <ellipse cx="60" cy="110" rx="30" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="22" y="44" width="76" height="54" rx="10" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
+    <path d="M46 44v-8a6 6 0 0 1 6-6h16a6 6 0 0 1 6 6v8" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M22 64h76" stroke="currentColor" stroke-width="3"/>
+    <rect x="54" y="58" width="12" height="12" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="2.6"/>
     <path d="M32 90l14-10 10 6 18-14" fill="none" stroke="#16A34A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M70 72h6v6" fill="none" stroke="#16A34A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
   <symbol id="cc-growth-digital" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="110" rx="28" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <rect x="36" y="14" width="44" height="84" rx="9" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <ellipse cx="60" cy="110" rx="28" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="36" y="14" width="44" height="84" rx="9" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
     <rect x="42" y="24" width="32" height="44" rx="4" fill="#BBF7D0"/>
     <path d="M50 50l6 6 12-14" fill="none" stroke="#16A34A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="58" cy="86" r="3" fill="#1A1A1A"/>
-    <circle cx="90" cy="80" r="12" fill="#F5C542" stroke="#1A1A1A" stroke-width="3"/>
-    <path d="M90 73v14M86 77h6a3 3 0 0 1 0 6h-4" fill="none" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round"/>
-    <circle cx="26" cy="60" r="9" fill="#F5C542" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="58" cy="86" r="3" fill="currentColor"/>
+    <circle cx="90" cy="80" r="12" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
+    <path d="M90 73v14M86 77h6a3 3 0 0 1 0 6h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="26" cy="60" r="9" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
   </symbol>
   <symbol id="cc-growth-research" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="110" rx="26" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <path d="M48 18h24M52 18v28L32 92a8 8 0 0 0 7 12h42a8 8 0 0 0 7-12L68 46V18" fill="#EDE9FE" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="110" rx="26" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M48 18h24M52 18v28L32 92a8 8 0 0 0 7 12h42a8 8 0 0 0 7-12L68 46V18" fill="#EDE9FE" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
     <path d="M38 80h44l5 10a6 6 0 0 1-5 8H38a6 6 0 0 1-5-8z" fill="#A78BFA"/>
-    <circle cx="54" cy="70" r="4" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/><circle cx="66" cy="62" r="3" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/>
-    <path d="M92 22l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#F5C542" stroke="#1A1A1A" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="54" cy="70" r="4" fill="#FFFFFF" stroke="currentColor" stroke-width="2"/><circle cx="66" cy="62" r="3" fill="#FFFFFF" stroke="currentColor" stroke-width="2"/>
+    <path d="M92 22l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#F5C542" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
   </symbol>
   <symbol id="cc-growth-podcast" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="110" rx="26" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <rect x="44" y="14" width="32" height="54" rx="16" fill="#F9A8D4" stroke="#1A1A1A" stroke-width="3"/>
-    <path d="M44 34h10M44 46h10M66 34h10M66 46h10" stroke="#1A1A1A" stroke-width="2.4" stroke-linecap="round"/>
-    <path d="M32 54a28 28 0 0 0 56 0M60 82v18M44 102h32" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="60" cy="110" rx="26" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="44" y="14" width="32" height="54" rx="16" fill="#F9A8D4" stroke="currentColor" stroke-width="3"/>
+    <path d="M44 34h10M44 46h10M66 34h10M66 46h10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M32 54a28 28 0 0 0 56 0M60 82v18M44 102h32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
     <path d="M18 40q-6 12 0 24M102 40q6 12 0 24" fill="none" stroke="#DB2777" stroke-width="3" stroke-linecap="round"/>
   </symbol>
   <symbol id="cc-growth-design" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="108" rx="32" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <path d="M22 44a8 8 0 0 1 8-8h12l6-10h24l6 10h12a8 8 0 0 1 8 8v44a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8z" fill="#BAE6FD" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
-    <circle cx="60" cy="66" r="18" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
-    <circle cx="60" cy="66" r="9" fill="#0EA5E9" stroke="#1A1A1A" stroke-width="2.4"/>
-    <circle cx="86" cy="48" r="4" fill="#F5C542" stroke="#1A1A1A" stroke-width="2"/>
+    <ellipse cx="60" cy="108" rx="32" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M22 44a8 8 0 0 1 8-8h12l6-10h24l6 10h12a8 8 0 0 1 8 8v44a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8z" fill="#BAE6FD" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="60" cy="66" r="18" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
+    <circle cx="60" cy="66" r="9" fill="#0EA5E9" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="86" cy="48" r="4" fill="#F5C542" stroke="currentColor" stroke-width="2"/>
   </symbol>
   <symbol id="cc-growth-coworking" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="110" rx="34" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <path d="M18 104V40l42-22 42 22v64" fill="#FED7AA" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
-    <rect x="30" y="50" width="16" height="14" rx="2" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.4"/>
-    <rect x="74" y="50" width="16" height="14" rx="2" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2.4"/>
-    <rect x="50" y="76" width="20" height="28" rx="3" fill="#F97316" stroke="#1A1A1A" stroke-width="2.6"/>
-    <circle cx="38" cy="86" r="5" fill="#1A1A1A"/><circle cx="82" cy="86" r="5" fill="#1A1A1A"/>
+    <ellipse cx="60" cy="110" rx="34" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M18 104V40l42-22 42 22v64" fill="#FED7AA" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="30" y="50" width="16" height="14" rx="2" fill="#FFFFFF" stroke="currentColor" stroke-width="2.4"/>
+    <rect x="74" y="50" width="16" height="14" rx="2" fill="#FFFFFF" stroke="currentColor" stroke-width="2.4"/>
+    <rect x="50" y="76" width="20" height="28" rx="3" fill="#F97316" stroke="currentColor" stroke-width="2.6"/>
+    <circle cx="38" cy="86" r="5" fill="currentColor"/><circle cx="82" cy="86" r="5" fill="currentColor"/>
   </symbol>
   <symbol id="cc-growth-growth" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="108" rx="28" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <path d="M40 86h40l-4 18H44z" fill="#F97316" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M60 86V46" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
-    <path d="M60 58c0-16 12-26 30-26 0 16-12 26-30 26zM60 70c0-12-9-20-24-20 0 12 9 20 24 20z" fill="#86EFAC" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="108" rx="28" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M40 86h40l-4 18H44z" fill="#F97316" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M60 86V46" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M60 58c0-16 12-26 30-26 0 16-12 26-30 26zM60 70c0-12-9-20-24-20 0 12 9 20 24 20z" fill="#86EFAC" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
   </symbol>
   <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
