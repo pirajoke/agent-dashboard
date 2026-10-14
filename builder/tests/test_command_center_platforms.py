@@ -114,12 +114,13 @@ class CommandCenterPlatformsTests(unittest.TestCase):
         cls.parser.feed(cls.html)
 
     def test_historical_command_center_identity_is_preserved(self):
-        self.assertIn("Hello, Maxim", self.html)
+        # Mark 2026-10-14: one design for every tab, in Russian.
+        self.assertIn("Привет, Максим", self.html)
         for target, label in (
             ("mac-mini", "Mac Mini"),
             ("air", "Air"),
             ("pro", "Pro"),
-            ("agents", "Agents"),
+            ("agents", "Агенты"),
         ):
             self.assertIn(target, self.parser.nav_targets)
             self.assertIn(label, self.parser.nav_targets[target])
@@ -127,7 +128,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
     def test_platforms_is_a_reachable_top_level_surface(self):
         self.assertEqual(self.parser.platform_section_count, 1)
         self.assertIn("platforms", self.parser.nav_targets)
-        self.assertIn("Platforms", self.parser.nav_targets["platforms"])
+        self.assertIn("Платформы", self.parser.nav_targets["platforms"])
 
         initial_guard = re.search(
             r"\[([^\]]+)\]\.includes\(INITIAL_SECTION\)",

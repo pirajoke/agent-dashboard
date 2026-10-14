@@ -1,40 +1,105 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Command Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+// One light or dark choice for the whole Command Center, per browser, set before the first paint.
+try {
+  const savedTheme = localStorage.getItem('command-center.main-manager.theme');
+  if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.dataset.theme = savedTheme;
+} catch (error) { /* the system theme applies */ }
+</script>
 <style>
+/* One design for every tab (Mark 2026-10-14): the Property OS tokens of MAIN MANAGER, light and dark,
+   with one switch for the whole page. The older names (--bg, --card, --text…) point at them. */
 :root {
-  --bg: #FAF9F6;
-  --bg2: #F5F3EF;
-  --card: #FFFFFF;
-  --border: rgba(0,0,0,0.06);
-  --border2: rgba(0,0,0,0.1);
-  --text: #1A1A1A;
-  --text2: #6B6B6B;
-  --muted: #9CA3AF;
-  --accent: #EAB308;
-  --accent2: #F5C542;
-  --accent-bg: #FEF9E7;
-  --green: #22C55E;
-  --green-bg: #F0FDF4;
-  --red: #EF4444;
-  --red-bg: #FEF2F2;
-  --blue: #3B82F6;
-  --blue-bg: #EFF6FF;
-  --purple: #8B5CF6;
-  --orange: #F97316;
-  --orange-bg: #FFF7ED;
-  --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
-  --shadow-lg: 0 4px 24px rgba(0,0,0,0.06);
-  --radius: 16px;
+  color-scheme: light;
+  --mm-background: #f8f3ea;
+  --mm-surface: #fffcf6;
+  --mm-ink: #24292b;
+  --mm-muted: #6c6a63;
+  --mm-line: #e6dccc;
+  --mm-accent: #0a7f93;
+  --mm-surface-hover: #f1eadf;
+  --mm-control-line: #d4c6b1;
+  --mm-selection: #e0f2f4;
+  --mm-danger: #b8321a;
+  --mm-success: #1d7a46;
+  --mm-warning: #a35a0c;
+  --mm-info: #2f63a8;
+  --mm-violet: #6b4fbf;
+  --mm-success-soft: #e3f3e8;
+  --mm-warning-soft: #fbedd9;
+  --mm-danger-soft: #f9e3dd;
+  --mm-info-soft: #e5edf8;
+  --mm-claude: #c9652a;
+  --mm-codex: #0e9fb5;
+  --mm-pr: #a8a094;
+  --mm-tint-command-center: #dff0f2; --mm-tint-financial: #fdf1c7; --mm-tint-mydictionary: #e7effb; --mm-tint-health: #fbe7e7;
+  --mm-tint-ai-singularity: #f0edfd; --mm-tint-context-news: #fcecda; --mm-tint-accountable: #e2f3e7; --mm-tint-jarvis: #ebeff3; --mm-tint-other: #f1eadf;
+  --mm-tint-property-os: #fbf3cf; --mm-tint-pixel-agents: #e1f4ec; --mm-tint-closeness-mirror: #eceefb; --mm-tint-sushi-parisien: #fcebe0; --mm-tint-n8n: #fae8f1;
+  --mm-shadow: 0 6px 20px rgb(60 45 20 / .12);
+  --mm-shadow-soft: 0 1px 2px rgb(60 45 20 / .06), 0 4px 12px rgb(60 45 20 / .06);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
+    --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
+    --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-info: #84b4f0; --mm-violet: #b6a2f2;
+    --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12; --mm-danger-soft: #3d1d17; --mm-info-soft: #172a42;
+    --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+    --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
+    --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
+    --mm-tint-property-os: #383114; --mm-tint-pixel-agents: #163226; --mm-tint-closeness-mirror: #24284a; --mm-tint-sushi-parisien: #3a2619; --mm-tint-n8n: #3a1d2b;
+    --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
+  --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
+  --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-info: #84b4f0; --mm-violet: #b6a2f2;
+  --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12; --mm-danger-soft: #3d1d17; --mm-info-soft: #172a42;
+  --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
+  --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
+  --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
+  --mm-tint-property-os: #383114; --mm-tint-pixel-agents: #163226; --mm-tint-closeness-mirror: #24284a; --mm-tint-sushi-parisien: #3a2619; --mm-tint-n8n: #3a1d2b;
+  --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
+}
+:root {
+  --bg: var(--mm-background);
+  --bg2: var(--mm-surface-hover);
+  --card: var(--mm-surface);
+  --border: var(--mm-line);
+  --border2: var(--mm-control-line);
+  --text: var(--mm-ink);
+  --text2: var(--mm-muted);
+  --muted: var(--mm-muted);
+  --accent: var(--mm-accent);
+  --accent2: var(--mm-accent);
+  --accent-bg: var(--mm-selection);
+  --green: var(--mm-success);
+  --green-bg: var(--mm-success-soft);
+  --red: var(--mm-danger);
+  --red-bg: var(--mm-danger-soft);
+  --blue: var(--mm-info);
+  --blue-bg: var(--mm-info-soft);
+  --purple: var(--mm-violet);
+  --orange: var(--mm-warning);
+  --orange-bg: var(--mm-warning-soft);
+  --shadow: var(--mm-shadow-soft);
+  --shadow-lg: var(--mm-shadow);
+  --radius: 14px;
   --radius-sm: 10px;
+  --cc-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --cc-tabbar: 64px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { width: 100%; overflow-x: hidden; }
-body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; overflow-x: hidden; }
+body { font-family: var(--cc-font); background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; overflow-x: hidden; }
 
 .container { width: 100%; max-width: 1400px; min-width: 0; margin: 0 auto; padding: 32px 40px; }
 
@@ -52,7 +117,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .nav-pills::-webkit-scrollbar { display: none; }
 .nav-pill { flex: 0 0 auto; min-height: 44px; padding: 10px 24px; border-radius: 10px; font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .nav-pill:hover { color: var(--text); }
-.nav-pill:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
+.nav-pill:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .nav-pill.active { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .nav-pill .pill-icon { font-size: 16px; }
 .nav-pill .pill-badge { font-size: 11px; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 6px; font-weight: 600; }
@@ -62,7 +127,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .tab-name-customizer > button:hover,
 .tab-name-actions button:hover { color: var(--text); border-color: var(--accent); }
 .tab-name-customizer button:focus-visible,
-.tab-name-field input:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
+.tab-name-field input:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .tab-name-editor { max-width: 760px; margin-top: 10px; padding: 16px; border: 1px solid var(--border2); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
 .tab-name-editor[hidden] { display: none !important; }
 .tab-name-editor-title { display: block; margin-bottom: 12px; font-size: 14px; }
@@ -71,7 +136,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .tab-name-field input { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px; }
 .tab-name-field input[aria-invalid="true"] { border-color: var(--red); }
 .tab-name-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.tab-name-actions button[type="submit"] { color: #765800; border-color: rgba(234,179,8,0.55); background: var(--accent-bg); }
+.tab-name-actions button[type="submit"] { color: var(--mm-accent); border-color: var(--mm-accent); background: var(--accent-bg); }
 .tab-name-status { min-height: 20px; margin-top: 8px; color: var(--text2); font-size: 12px; line-height: 1.5; }
 
 /* Cards */
@@ -85,7 +150,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .machine-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
 .machine-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
 .machine-icon.mini { background: var(--blue-bg); }
-.machine-icon.air { background: var(--purple); background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+.machine-icon.air { background: var(--mm-tint-ai-singularity); }
 .machine-name { font-size: 18px; font-weight: 700; }
 .machine-status { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
 .machine-info { flex: 1; }
@@ -220,7 +285,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   overflow: hidden;
 }
 .platforms-eyebrow {
-  color: #9A7100;
+  color: var(--mm-accent);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.9px;
@@ -282,8 +347,8 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   white-space: nowrap;
 }
 .platform-access-icon { width: 14px; height: 14px; flex: 0 0 auto; }
-.platform-access.private { background: var(--accent-bg); color: #9A7100; border-color: rgba(234,179,8,0.28); }
-.platform-access.public { background: var(--green-bg); color: #16803A; border-color: rgba(34,197,94,0.24); }
+.platform-access.private { background: var(--mm-warning-soft); color: var(--mm-warning); border-color: transparent; }
+.platform-access.public { background: var(--mm-success-soft); color: var(--mm-success); border-color: transparent; }
 .platform-directory {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -306,25 +371,25 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .platform-entry:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-.platform-entry.is-reordering { touch-action: none; user-select: none; -webkit-user-select: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(234,179,8,0.2), var(--shadow-lg); }
+.platform-entry.is-reordering { touch-action: none; user-select: none; -webkit-user-select: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--mm-selection), var(--shadow-lg); }
 .platform-entry.priority {
   grid-column: span 5;
   display: grid;
   grid-template-columns: 188px minmax(0, 1fr);
-  border-color: rgba(234,179,8,0.32);
+  border-color: var(--mm-control-line);
 }
-.platform-entry[data-platform-id="financial"] { --platform-tint: #FEF3C7; }
-.platform-entry[data-platform-id="mydictionary"] { --platform-tint: var(--blue-bg); }
-.platform-entry[data-platform-id="health"] { --platform-tint: var(--red-bg); }
-.platform-entry[data-platform-id="ai-singularity"] { --platform-tint: #F5F3FF; }
-.platform-entry[data-platform-id="context-news"] { --platform-tint: var(--orange-bg); }
-.platform-entry[data-platform-id="accountable"] { --platform-tint: var(--green-bg); }
-.platform-entry[data-platform-id="jarvis"] { --platform-tint: #F1F5F9; }
-.platform-entry[data-platform-id="property-os"] { --platform-tint: #FEF9C3; }
-.platform-entry[data-platform-id="pixel-agents"] { --platform-tint: #ECFDF5; }
-.platform-entry[data-platform-id="closeness-mirror"] { --platform-tint: #EEF2FF; }
-.platform-entry[data-platform-id="sushi-parisien"] { --platform-tint: #FFF7ED; }
-.platform-entry[data-platform-id="n8n"] { --platform-tint: #FDF2F8; }
+.platform-entry[data-platform-id="financial"] { --platform-tint: var(--mm-tint-financial); }
+.platform-entry[data-platform-id="mydictionary"] { --platform-tint: var(--mm-tint-mydictionary); }
+.platform-entry[data-platform-id="health"] { --platform-tint: var(--mm-tint-health); }
+.platform-entry[data-platform-id="ai-singularity"] { --platform-tint: var(--mm-tint-ai-singularity); }
+.platform-entry[data-platform-id="context-news"] { --platform-tint: var(--mm-tint-context-news); }
+.platform-entry[data-platform-id="accountable"] { --platform-tint: var(--mm-tint-accountable); }
+.platform-entry[data-platform-id="jarvis"] { --platform-tint: var(--mm-tint-jarvis); }
+.platform-entry[data-platform-id="property-os"] { --platform-tint: var(--mm-tint-property-os); }
+.platform-entry[data-platform-id="pixel-agents"] { --platform-tint: var(--mm-tint-pixel-agents); }
+.platform-entry[data-platform-id="closeness-mirror"] { --platform-tint: var(--mm-tint-closeness-mirror); }
+.platform-entry[data-platform-id="sushi-parisien"] { --platform-tint: var(--mm-tint-sushi-parisien); }
+.platform-entry[data-platform-id="n8n"] { --platform-tint: var(--mm-tint-n8n); }
 .platform-art {
   display: grid;
   place-items: center;
@@ -348,7 +413,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   font-size: 11px;
   font-weight: 700;
 }
-.platform-entry.priority .platform-index { color: #9A7100; }
+.platform-entry.priority .platform-index { color: var(--mm-accent); }
 .platform-reorder-controls {
   position: absolute;
   z-index: 2;
@@ -363,16 +428,16 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   width: 44px;
   min-width: 44px;
   height: 44px;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid var(--mm-control-line);
   border-radius: 10px;
-  background: rgba(255,255,255,0.92);
+  background: color-mix(in srgb, var(--mm-surface) 92%, transparent);
   color: var(--text2);
   font: 700 17px/1 'Inter', -apple-system, sans-serif;
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
-.platform-reorder-control:hover { color: #9A7100; border-color: rgba(234,179,8,0.55); background: #fff; }
-.platform-reorder-control:focus-visible { outline: 3px solid rgba(234,179,8,0.38); outline-offset: 2px; }
+.platform-reorder-control:hover { color: var(--mm-accent); border-color: var(--mm-accent); background: var(--mm-surface); }
+.platform-reorder-control:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .platform-order-status { min-height: 20px; margin: -8px 0 12px; color: var(--text2); font-size: 12px; line-height: 1.5; }
 .platform-content {
   min-width: 0;
@@ -391,7 +456,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   letter-spacing: 0.6px;
   text-transform: uppercase;
 }
-.platform-entry.priority .platform-tag { color: #9A7100; }
+.platform-entry.priority .platform-tag { color: var(--mm-accent); }
 .platform-name {
   font-size: 16px;
   font-weight: 750;
@@ -429,9 +494,9 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 .platform-link::after { content: '\2197'; color: var(--muted); }
-.platform-link:hover { color: #9A7100; border-color: rgba(234,179,8,0.55); transform: translateY(-1px); }
+.platform-link:hover { color: var(--mm-accent); border-color: var(--mm-accent); transform: translateY(-1px); }
 .platform-link:focus-visible {
-  outline: 3px solid rgba(234,179,8,0.34);
+  outline: 2px solid var(--mm-accent);
   outline-offset: 3px;
 }
 .platform-note {
@@ -440,7 +505,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   gap: 10px;
   margin-top: 16px;
   padding: 12px 14px;
-  border: 1px dashed rgba(234,179,8,0.45);
+  border: 1px dashed var(--mm-control-line);
   border-radius: 12px;
   color: var(--text2);
   font-size: 12px;
@@ -2942,62 +3007,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .decision-review { padding:14px; }
   .cc-subnav button { flex:1 1 auto; padding:10px 12px; }
 }
-/* MAIN MANAGER: Property OS visual language, scoped to this section only. */
+/* MAIN MANAGER: the Property OS look, which every tab now shares (tokens on :root). */
 .mm-os {
-  color-scheme: light;
-  --mm-background: #f8f3ea;
-  --mm-surface: #fffcf6;
-  --mm-ink: #24292b;
-  --mm-muted: #6c6a63;
-  --mm-line: #e6dccc;
-  --mm-accent: #0a7f93;
-  --mm-surface-hover: #f1eadf;
-  --mm-control-line: #d4c6b1;
-  --mm-selection: #e0f2f4;
-  --mm-danger: #b8321a;
-  --mm-success: #1d7a46;
-  --mm-warning: #a35a0c;
-  --mm-success-soft: #e3f3e8;
-  --mm-warning-soft: #fbedd9;
-  --mm-claude: #c9652a;
-  --mm-codex: #0e9fb5;
-  --mm-pr: #a8a094;
-  --mm-tint-command-center: #dff0f2; --mm-tint-financial: #fdf1c7; --mm-tint-mydictionary: #e7effb; --mm-tint-health: #fbe7e7;
-  --mm-tint-ai-singularity: #f0edfd; --mm-tint-context-news: #fcecda; --mm-tint-accountable: #e2f3e7; --mm-tint-jarvis: #ebeff3; --mm-tint-other: #f1eadf;
-  --mm-shadow: 0 6px 20px rgb(60 45 20 / .12);
-  --mm-shadow-soft: 0 1px 2px rgb(60 45 20 / .06), 0 4px 12px rgb(60 45 20 / .06);
-  --mm-nav-height: 74px;
-  display: grid;
-  grid-template-columns: 218px minmax(0, 1fr);
-  min-height: 70vh;
-  overflow: hidden;
-  font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  display: block;
   color: var(--mm-ink);
-  background: var(--mm-background);
-  border: 1px solid var(--mm-line);
-  border-radius: 14px;
-}
-@media (prefers-color-scheme: dark) {
-  .mm-os:not([data-theme="light"]) {
-    color-scheme: dark;
-    --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
-    --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
-    --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
-    --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
-    --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
-    --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
-    --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
-  }
-}
-.mm-os[data-theme="dark"] {
-  color-scheme: dark;
-  --mm-background: #171512; --mm-surface: #221f1a; --mm-ink: #f1ece4; --mm-muted: #a69d90; --mm-line: #332e27;
-  --mm-accent: #3cc7d9; --mm-surface-hover: #2b2721; --mm-control-line: #4a4238; --mm-selection: #123a40;
-  --mm-danger: #ff8a73; --mm-success: #5fcf8f; --mm-warning: #f0a24e; --mm-success-soft: #16301f; --mm-warning-soft: #3a2a12;
-  --mm-claude: #d4733a; --mm-codex: #159aad; --mm-pr: #6f675c;
-  --mm-tint-command-center: #15353a; --mm-tint-financial: #3a3016; --mm-tint-mydictionary: #1b2b40; --mm-tint-health: #3b2023;
-  --mm-tint-ai-singularity: #2a2542; --mm-tint-context-news: #3a2a19; --mm-tint-accountable: #183424; --mm-tint-jarvis: #262c34; --mm-tint-other: #2b2721;
-  --mm-shadow: 0 6px 20px rgb(0 0 0 / .45); --mm-shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 12px rgb(0 0 0 / .25);
+  font-size: 15px;
+  line-height: 1.5;
 }
 .mm-os *, .mm-os *::before, .mm-os *::after { box-sizing: border-box; }
 .mm-os [hidden] { display: none !important; }
@@ -3007,32 +3022,12 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .mm-os :where(a):hover { text-decoration: underline; }
 .mm-os :focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
 
-.mm-sidebar { display: flex; flex-direction: column; padding: 24px 16px; background: var(--mm-surface); border-right: 1px solid var(--mm-line); }
-.mm-brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
-.mm-brand-mark { display: grid; place-items: center; width: 36px; height: 36px; flex: none; color: #fffcf6; background: var(--mm-accent); border-radius: 10px; }
-.mm-brand-mark svg { width: 20px; height: 20px; }
-.mm-brand b { display: block; font-size: 14px; font-weight: 700; letter-spacing: .02em; }
-.mm-brand small { display: block; color: var(--mm-muted); font-size: 12px; }
-.mm-nav { display: flex; flex-direction: column; gap: 4px; margin-top: 28px; }
-.mm-nav button { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 10px 12px; color: var(--mm-muted); font-size: 14px; text-align: left; border-radius: 8px; white-space: nowrap; }
-.mm-nav button:hover { background: var(--mm-surface-hover); }
-.mm-nav button[aria-pressed="true"] { background: var(--mm-selection); color: var(--mm-accent); font-weight: 600; }
-.mm-nav button > span:first-child { display: grid; place-items: center; width: 24px; }
-.mm-nav svg { width: 24px; height: 24px; }
-.mm-nav b { margin-left: auto; padding: 0 6px; border-radius: 3px; font-size: 12px; background: var(--mm-selection); color: var(--mm-accent); }
-.mm-sidebar-bottom { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid var(--mm-line); }
-.mm-sidebar-button { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 0; color: var(--mm-muted); font-size: 13px; text-align: left; }
-.mm-sidebar-button svg { width: 18px; height: 18px; flex: none; }
-.mm-sidebar-button:hover { color: var(--mm-ink); }
-.mm-sidebar-bottom p { margin-top: 10px; color: var(--mm-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
-
-.mm-workspace { min-width: 0; display: flex; flex-direction: column; }
-.mm-topbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 32px; background: var(--mm-surface); border-bottom: 1px solid var(--mm-line); }
-.mm-module { font-size: 17px; font-weight: 600; }
-.mm-notice { margin: 20px 32px 0; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
+.mm-nav { margin: 0 0 18px; }
+.mm-notice { margin: 0 0 20px; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
 .mm-notice.live { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
 .mm-notice.stale, .mm-notice.empty, .mm-notice.error { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
-.mm-main { padding: 24px 32px 40px; }
+.mm-main { padding: 0; }
+.mm-sources { margin-top: 28px; color: var(--mm-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 
 .mm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
 .mm-stat { min-width: 0; padding: 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
@@ -3210,25 +3205,11 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-data-table .num { text-align: left; }
 }
 @media (max-width: 760px) {
-  #section-work.active { padding-bottom: calc(var(--mm-nav-height, 74px) + env(safe-area-inset-bottom)); }
-  .mm-os { display: flex; flex-direction: column; border-radius: 12px; }
-  /* Brand on top, sources and theme switch after the content, nav as the bottom tab bar. */
-  .mm-sidebar { display: contents; }
-  .mm-brand { order: 0; padding: 14px 16px; background: var(--mm-surface); border-bottom: 1px solid var(--mm-line); }
-  .mm-workspace { order: 1; }
-  .mm-sidebar-bottom { order: 2; display: flex; flex-direction: column; align-items: flex-start; margin: 0; padding: 8px 16px 16px; background: var(--mm-surface); border-top: 1px solid var(--mm-line); }
-  .mm-sidebar-bottom p { margin-top: 0; }
   .mm-filter-tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 20px; padding: 0 16px; scrollbar-width: none; }
   .mm-filter-tabs::-webkit-scrollbar { display: none; }
   .mm-filter-tabs button { flex: none; white-space: nowrap; }
-  .mm-nav { position: fixed; inset: auto 0 0; z-index: 40; height: calc(var(--mm-nav-height) + env(safe-area-inset-bottom)); flex-direction: row; justify-content: space-around; gap: 0; margin: 0; padding: 8px 4px calc(8px + env(safe-area-inset-bottom)); background: var(--mm-background); border-top: 1px solid var(--mm-line); }
-  #section-work:not(.active) .mm-nav { display: none; }
-  .mm-nav button { flex: 1; flex-direction: column; justify-content: center; gap: 2px; padding: 4px; font-size: 11px; position: relative; }
-  .mm-nav button[aria-pressed="true"] { background: none; }
-  .mm-nav b { position: absolute; top: 2px; left: calc(50% + 8px); margin: 0; }
-  .mm-topbar { flex-wrap: wrap; padding: 10px 16px; }
-  .mm-notice { margin: 16px 16px 0; }
-  .mm-main { padding: 16px 16px 28px; }
+  .mm-nav { display: flex; width: 100%; }
+  .mm-nav button { flex: 1 1 0; justify-content: center; padding: 8px 6px; }
   .mm-panel { padding: 16px; }
   .mm-section-heading { flex-direction: column; gap: 8px; }
   .mm-stat { padding: 14px; }
@@ -3247,33 +3228,15 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   .mm-chevron { transition: none; }
 }
 
-/* «По дням», the first screen: the project page's day rows across all projects, in the MAIN MANAGER look. */
-.machines-stats { justify-content: flex-start; margin-bottom: 20px; }
-.mm-os.dp { display: block; min-height: 0; max-width: 980px; padding: 24px 28px 28px; }
-.dp-top { margin-bottom: 16px; }
-.dp-title { font-size: 26px; font-weight: 750; line-height: 1.25; letter-spacing: -.01em; }
-.dp-lede { margin-top: 4px; color: var(--mm-muted); font-size: 14px; }
-.mm-os.dp .mm-notice { margin: 0 0 16px; }
-.dp-deadlines { margin-bottom: 16px; padding: 12px 16px; background: var(--mm-warning-soft); border-radius: 12px; }
-.dp-deadlines h3 { margin-bottom: 4px; color: var(--mm-warning); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.dp-deadlines ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
-.dp-headline { margin: 10px 0 2px; font-size: 16px; font-weight: 650; line-height: 1.4; }
-.dp-project { padding: 12px 0; border-bottom: 1px solid var(--mm-line); }
+/* «Дела»: one block per project with what waits on Mark. */
+.dp-project { padding: 14px 0; border-bottom: 1px solid var(--mm-line); }
 .dp-project:last-of-type { border-bottom: 0; }
 .dp-project-name { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 15px; font-weight: 700; }
 .dp-project-name small { margin-left: auto; color: var(--mm-muted); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
 .dp-project .mm-project-art { width: 30px; height: 30px; border-radius: 8px; }
 .dp-project .mm-project-art svg { width: 26px; height: 26px; }
 .dp-project .mm-art-initials { width: 26px; height: 26px; border-radius: 7px; font-size: 10px; }
-.dp-pending { color: var(--mm-muted); font-size: 13.5px; line-height: 1.5; }
-.dp-tech { display: grid; gap: 12px; padding-top: 4px; }
-.dp-tech-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; font-size: 13px; }
-.dp-tech-row b { font-size: 14px; }
-.dp-tech-row > span { color: var(--mm-muted); }
-.dp-tech-row > a { margin-left: auto; font-weight: 600; }
-.dp-tech .mm-group-foot { flex-basis: 100%; padding-top: 6px; }
-.dp-foot { margin-top: 14px; color: var(--mm-muted); font-size: 12.5px; }
-.np-device { margin-top: 22px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; }
+.np-device { margin-top: 18px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; }
 .np-device-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
 .np-device h3 { font-size: 15px; font-weight: 700; }
 .np-device p { margin-top: 2px; color: var(--mm-muted); font-size: 13px; line-height: 1.45; }
@@ -3285,14 +3248,169 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 .np-qr { flex: none; width: 220px; height: 220px; padding: 0; background: #fff; border-radius: 8px; }
 .np-qr svg { display: block; width: 100%; height: 100%; }
 @media (max-width: 760px) {
-  .mm-os.dp { padding: 18px 14px 20px; }
-  .dp-title { font-size: 23px; }
-  .dp-tech-row > a { margin-left: 0; flex-basis: 100%; }
   .mm-project-more > summary { padding: 12px 14px; }
   .mm-project-more-body { padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mm-project-more > summary::after { transition: none; }
+}
+
+/* ── App shell (Mark 2026-10-14, «унифицированный дизайн для каждого момента»): one sidebar, one page
+   header, one set of tabs and one theme for every section. On a phone the sidebar becomes a top bar
+   and a bottom tab bar. ── */
+.cc-visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.container.cc-app { --cc-side-width: 252px; display: grid; grid-template-columns: var(--cc-side-width) minmax(0, 1fr); max-width: none; min-height: 100vh; padding: 0;
+  /* the sidebar colour runs the full page height, also past the sticky sidebar itself */
+  background: linear-gradient(to right, var(--mm-surface) calc(var(--cc-side-width) - 1px), var(--mm-line) calc(var(--cc-side-width) - 1px), var(--mm-line) var(--cc-side-width), transparent var(--cc-side-width)); }
+.cc-side { position: sticky; top: 0; display: flex; flex-direction: column; height: 100vh; min-width: 0; padding: 22px 14px 16px; overflow-y: auto; background: var(--mm-surface); border-right: 1px solid var(--mm-line); }
+.cc-side .header { margin: 0 0 26px; padding: 0 6px; }
+.cc-side .header-hello { gap: 10px; }
+.cc-side .header-mascot { width: 46px; height: 46px; padding: 3px; background: #e6f3f4; border-radius: 14px; }
+.cc-side .header-left h1 { font-size: 17px; font-weight: 750; line-height: 1.25; letter-spacing: -.01em; }
+.cc-side .header-left .subtitle { margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
+.cc-side .cc-main-nav { display: flex; flex-direction: column; gap: 2px; width: auto; max-width: none; margin: 0; padding: 0; overflow: visible; background: none; border-radius: 0; }
+.cc-side .cc-main-nav .nav-pill { width: 100%; min-width: 0; min-height: 44px; justify-content: flex-start; gap: 12px; padding: 10px 12px; color: var(--mm-muted); font-size: 14.5px; font-weight: 550; border-radius: 10px; }
+.cc-side .cc-main-nav .nav-pill:hover { color: var(--mm-ink); background: var(--mm-surface-hover); }
+.cc-side .cc-main-nav .nav-pill.active { color: var(--mm-accent); background: var(--mm-selection); box-shadow: none; font-weight: 650; }
+.cc-main-nav .pill-icon svg { width: 22px; height: 22px; }
+.cc-main-nav .pill-badge { margin-left: auto; padding: 1px 8px; color: var(--mm-muted); background: var(--mm-surface-hover); border-radius: 999px; font-size: 11.5px; font-weight: 650; }
+.cc-main-nav .pill-badge:empty { display: none; }
+.cc-main-nav .nav-pill.active .pill-badge { color: var(--mm-accent); background: var(--mm-surface); }
+.cc-side-foot { display: grid; gap: 2px; margin-top: auto; padding: 14px 0 0; border-top: 1px solid var(--mm-line); }
+.cc-side-button,
+.cc-side .tab-name-customizer > button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 12px; color: var(--mm-muted); font: inherit; font-size: 13px; font-weight: 500; text-align: left; background: none; border: 0; border-radius: 10px; cursor: pointer; }
+.cc-side-button:hover,
+.cc-side .tab-name-customizer > button:hover { color: var(--mm-ink); background: var(--mm-surface-hover); }
+.cc-side-button svg { width: 18px; height: 18px; flex: none; }
+.cc-side .tab-name-customizer { margin: 0; }
+.cc-side .tab-name-editor { position: fixed; z-index: 60; left: 264px; bottom: 16px; width: min(560px, calc(100vw - 284px)); max-width: none; margin: 0; box-shadow: var(--mm-shadow); }
+.cc-side .footer { justify-content: flex-start; gap: 8px; margin: 4px 0 0; padding: 6px 12px; color: var(--mm-muted); font-size: 12px; }
+.cc-main { min-width: 0; padding: 32px 40px 56px; }
+.cc-main > .section { max-width: 1280px; margin: 0 auto; }
+.cc-main > #section-agents { max-width: 1440px; }
+.cc-main :focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
+
+/* The page header every section starts with. */
+.cc-page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; margin-bottom: 20px; }
+.cc-main .cc-page-title { margin: 0; color: var(--mm-ink); font-size: 30px; font-weight: 750; line-height: 1.2; letter-spacing: -.02em; }
+.cc-page-lede { max-width: 700px; margin-top: 6px; color: var(--mm-muted); font-size: 14.5px; line-height: 1.5; }
+
+/* Tabs inside a section: one segmented control. */
+.cc-tabs,
+.cc-main .cc-subnav,
+.cc-main .nav-pills.cc-machine-nav { display: inline-flex; flex-wrap: nowrap; gap: 4px; width: fit-content; max-width: 100%; margin: 0 0 20px; padding: 4px; overflow-x: auto; background: var(--mm-surface-hover); border: 1px solid var(--mm-line); border-radius: 12px; scrollbar-width: none; }
+.cc-tabs::-webkit-scrollbar { display: none; }
+.cc-tabs button,
+.cc-main .cc-subnav button,
+.cc-main .cc-machine-nav .nav-pill { display: inline-flex; flex: none; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px; color: var(--mm-muted); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; background: none; border: 0; border-radius: 9px; box-shadow: none; cursor: pointer; }
+.cc-tabs button:hover,
+.cc-main .cc-machine-nav .nav-pill:hover { color: var(--mm-ink); }
+.cc-tabs button[aria-pressed="true"],
+.cc-main .cc-subnav button[aria-pressed="true"],
+.cc-main .cc-machine-nav .nav-pill.active { color: var(--mm-ink); background: var(--mm-surface); border-color: transparent; box-shadow: var(--mm-shadow-soft); }
+.cc-tabs b,
+.cc-main .cc-machine-nav .pill-badge,
+#decision-count:not(:empty) { min-width: 22px; padding: 0 7px; color: var(--mm-accent); background: var(--mm-selection); border-radius: 999px; font-size: 12px; font-weight: 650; text-align: center; }
+
+/* Sections in the shared look. */
+.cc-main .platforms-header { display: flex; grid-template-columns: none; margin-bottom: 14px; padding: 0; overflow: visible; background: none; border: 0; border-radius: 0; }
+.cc-main .platforms-legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.cc-main .platforms-legend li { display: inline-flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 12px 6px 8px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; }
+.cc-main .platforms-legend li svg { width: 18px; height: 18px; }
+.cc-main .platforms-legend li strong { font-size: 12.5px; }
+.cc-main .platforms-legend li small { color: var(--mm-muted); font-size: 12px; }
+.cc-main .platform-order-status { margin: 0 0 12px; color: var(--mm-muted); }
+.platform-entry { border-color: var(--mm-line); box-shadow: none; }
+.platform-entry:hover { border-color: var(--mm-control-line); box-shadow: var(--mm-shadow-soft); }
+.platform-tag { color: var(--mm-muted); letter-spacing: .05em; }
+.platform-index { color: var(--mm-muted); opacity: .8; }
+.platform-link { border-color: var(--mm-control-line); }
+@media (hover: hover) {
+  .platform-reorder-controls { opacity: 0; transition: opacity .15s ease; }
+  .platform-entry:hover .platform-reorder-controls,
+  .platform-entry:focus-within .platform-reorder-controls,
+  .platform-entry.is-reordering .platform-reorder-controls { opacity: 1; }
+}
+.cc-main .machines-stats { gap: 28px; margin: 0; }
+.cc-main .machines-stats .stat-value { font-size: 28px; font-weight: 750; line-height: 1.1; }
+.cc-main .machines-stats .stat-label { color: var(--mm-muted); font-size: 12px; letter-spacing: 0; text-transform: none; }
+.card { border-color: var(--mm-line); box-shadow: none; }
+.card:hover { box-shadow: var(--mm-shadow-soft); }
+.machine-header { border-bottom-color: var(--mm-line); }
+#agents-campus .pixel-agents-shell { border-radius: 14px; }
+
+/* «Проекты»: the project board in MAIN MANAGER. */
+.mm-map-stats { margin-bottom: 26px; }
+.mm-map-group { margin-bottom: 30px; }
+.mm-map-group-head { margin-bottom: 12px; }
+.mm-map-group-head h3 { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+.mm-map-group-head h3 span { margin-left: 4px; color: var(--mm-muted); font-size: 14px; font-weight: 500; }
+.mm-map-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.mm-os a.mm-map-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; text-decoration: none; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.mm-os a.mm-map-card:hover { text-decoration: none; border-color: var(--mm-control-line); box-shadow: var(--mm-shadow-soft); transform: translateY(-1px); }
+.mm-map-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mm-map-top .mm-project-art { width: 52px; height: 52px; border-radius: 14px; }
+.mm-map-top .mm-project-art svg { width: 44px; height: 44px; }
+.mm-map-top .mm-art-initials { width: 36px; height: 36px; border-radius: 10px; font-size: 13px; }
+.mm-map-head { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+.mm-map-name { overflow: hidden; font-size: 16px; font-weight: 700; line-height: 1.3; white-space: nowrap; text-overflow: ellipsis; }
+.mm-map-when { display: flex; align-items: center; gap: 7px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-map-when i { flex: none; width: 8px; height: 8px; background: var(--mm-control-line); border-radius: 50%; }
+.mm-map-when i.is-today { background: var(--mm-success); box-shadow: 0 0 0 3px var(--mm-success-soft); }
+.mm-map-when i.is-week { background: var(--mm-accent); }
+.mm-map-go { flex: none; color: var(--mm-muted); font-size: 22px; line-height: 1; }
+.mm-map-last { display: -webkit-box; overflow: hidden; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.mm-map-last b { font-weight: 650; }
+.mm-map-last.is-desc { color: var(--mm-muted); }
+.mm-spark { display: block; padding-top: 2px; }
+.mm-spark-bars { display: flex; align-items: flex-end; gap: 3px; height: 52px; }
+.mm-spark-bars i { position: relative; flex: 1 1 0; min-width: 0; background: color-mix(in srgb, var(--mm-accent) 62%, var(--mm-surface)); border-radius: 4px 4px 1px 1px; }
+.mm-spark-bars i.is-empty { background: var(--mm-line); }
+.mm-spark-bars i.is-today:not(.is-empty) { background: var(--mm-accent); }
+.mm-spark-bars i.has-pr::after { content: ""; position: absolute; bottom: -8px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; background: var(--mm-success); border-radius: 50%; }
+.mm-spark-axis { display: flex; justify-content: space-between; margin-top: 11px; color: var(--mm-muted); font-size: 11.5px; }
+.mm-map-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
+.mm-chip.is-accent { color: var(--mm-accent); background: var(--mm-selection); border-color: transparent; }
+.mm-map-paused .mm-map-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.mm-os a.mm-map-card.is-paused { gap: 8px; padding: 12px 14px; background: color-mix(in srgb, var(--mm-surface) 55%, transparent); }
+.mm-map-card.is-paused .mm-project-art { width: 40px; height: 40px; border-radius: 11px; }
+.mm-map-card.is-paused .mm-project-art svg { width: 34px; height: 34px; }
+.mm-map-card.is-paused .mm-map-name { font-size: 15px; }
+.mm-map-card.is-paused .mm-map-last { font-size: 13px; -webkit-line-clamp: 1; }
+.mm-chart-box { margin-bottom: 24px; }
+
+@media (max-width: 1100px) {
+  .container.cc-app { --cc-side-width: 216px; }
+  .cc-main { padding: 28px 28px 48px; }
+}
+@media (max-width: 760px) {
+  .container.cc-app { display: flex; flex-direction: column; min-height: 0; background: none; padding-bottom: calc(var(--cc-tabbar) + env(safe-area-inset-bottom)); }
+  .cc-side { display: contents; }
+  .cc-side .header { position: sticky; top: 0; z-index: 30; order: 0; margin: 0; padding: 10px 16px; background: color-mix(in srgb, var(--mm-surface) 94%, transparent); border-bottom: 1px solid var(--mm-line); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .cc-side .header-mascot { width: 34px; height: 34px; }
+  .cc-side .header-left h1 { font-size: 16px; }
+  .cc-main { order: 1; padding: 18px 16px 24px; }
+  .cc-side-foot { order: 2; margin: 0 16px 20px; padding: 10px 0 0; }
+  .cc-side .cc-main-nav { position: fixed; inset: auto 0 0; z-index: 40; flex-direction: row; gap: 0; height: calc(var(--cc-tabbar) + env(safe-area-inset-bottom)); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); background: var(--mm-surface); border-top: 1px solid var(--mm-line); }
+  .cc-side .cc-main-nav .nav-pill { position: relative; flex: 1 1 0; flex-direction: column; justify-content: center; gap: 3px; min-height: 0; padding: 4px 2px; font-size: 11px; font-weight: 600; }
+  .cc-side .cc-main-nav .nav-pill.active { background: none; }
+  .cc-side .cc-main-nav .nav-pill:hover { background: none; }
+  .cc-main-nav .pill-badge { display: none; }
+  .cc-main-nav .cc-tab-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cc-side .tab-name-editor { left: 12px; right: 12px; bottom: calc(var(--cc-tabbar) + 12px + env(safe-area-inset-bottom)); width: auto; max-height: 70vh; overflow-y: auto; }
+  .cc-main .cc-page-title { font-size: 25px; }
+  .cc-page-lede { font-size: 14px; }
+  .cc-page-head { margin-bottom: 16px; }
+  .cc-main .cc-subnav, .cc-main .nav-pills.cc-machine-nav { display: flex; width: 100%; }
+  .cc-main .cc-subnav button, .cc-main .cc-machine-nav .nav-pill { flex: 1 1 auto; justify-content: center; padding: 8px 10px; }
+  .mm-map-grid, .mm-map-paused .mm-map-grid { grid-template-columns: 1fr; }
+  .cc-tabs.mm-nav { display: flex; width: 100%; }
+  .cc-tabs.mm-nav button { flex: 1 1 auto; justify-content: center; gap: 6px; padding: 8px 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-os a.mm-map-card, .platform-reorder-controls { transition: none; }
+  .mm-os a.mm-map-card:hover { transform: none; }
 }
 </style>
 </head>
@@ -3490,55 +3608,278 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
   <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
-<div class="container">
+<div class="container cc-app">
+  <aside class="cc-side" aria-label="Command Center">
   <!-- Header -->
   <div class="header">
     <div class="header-left header-hello">
       <svg class="header-mascot" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-hub"/></svg>
       <div>
-        <h1>Hello, Maxim</h1>
-        <div class="subtitle" id="header-subtitle"></div>
+        <h1>Привет, Максим</h1>
+        <div class="subtitle" id="cc-today"></div>
+        <div class="subtitle" id="header-subtitle" hidden></div>
       </div>
     </div>
   </div>
 
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
-    <button class="nav-pill active" type="button" aria-controls="section-today" aria-pressed="true" onclick="showSection('today')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-today"/></svg></span><span class="cc-tab-label" data-tab-label="today">По дням</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-work" aria-pressed="false" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Agents</span><span class="pill-badge" id="agents-badge">pixel</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Platforms</span><span class="pill-badge">12</span></button>
+    <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
-  <div class="tab-name-customizer">
-    <button type="button" id="edit-tab-names" data-tab-rename>Переименовать вкладки</button>
-    <form class="tab-name-editor" id="tab-name-editor" aria-labelledby="tab-name-editor-title" hidden>
-      <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
-      <div class="tab-name-fields" id="tab-name-fields"></div>
-      <div class="tab-name-actions">
-        <button type="submit">Сохранить</button>
-        <button type="button" id="cancel-tab-names">Отмена</button>
-        <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
-      </div>
-      <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
-    </form>
+  <div class="cc-side-foot">
+    <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
+    <div class="tab-name-customizer">
+      <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Переименовать вкладки</span></button>
+      <form class="tab-name-editor" id="tab-name-editor" aria-labelledby="tab-name-editor-title" hidden>
+        <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
+        <div class="tab-name-fields" id="tab-name-fields"></div>
+        <div class="tab-name-actions">
+          <button type="submit">Сохранить</button>
+          <button type="button" id="cancel-tab-names">Отмена</button>
+          <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
+        </div>
+        <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
+      </form>
+    </div>
+    <!-- Footer -->
+    <div class="footer">
+      <div class="live-dot"></div>
+      <span>На связи</span>
+      <span id="last-update">—</span>
+    </div>
   </div>
+  </aside>
 
-  <!-- ═══════════════ ПО ДНЯМ: что сделано за каждый день, простыми словами ═══════════════ -->
-  <div id="section-today" class="section active" lang="ru">
-    <div class="mm-os dp" id="dp-os" role="region" aria-labelledby="dp-title">
-      <header class="dp-top">
+  <main class="cc-main">
+  <!-- ═══════════════ PLATFORMS ═══════════════ -->
+  <section id="section-platforms" class="section" aria-labelledby="platforms-title">
+    <header class="cc-page-head platforms-header">
+      <div>
+        <h2 class="cc-page-title platforms-title" id="platforms-title">Платформы</h2>
+        <p class="cc-page-lede">Все продукты, админки и Telegram-боты в одном месте. Всё работает на Mac mini, закрытые ссылки открываются через SSH-туннель по Tailscale.</p>
+      </div>
+    </header>
+    <ul class="platforms-legend" aria-label="Как открывается каждая ссылка">
+      <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg><strong>Telegram</strong><small>бот открывается сразу</small></li>
+      <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg><strong>Сайт</strong><small>в любом браузере</small></li>
+      <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Закрыто · SSH</strong><small>сначала SSH-туннель</small></li>
+    </ul>
+
+    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её или нажмите её стрелки.</p>
+    <div class="platform-directory">
+      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
+        <div class="platform-reorder-controls" aria-label="Порядок: JobRadar / Financial OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JobRadar / Financial OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JobRadar / Financial OS: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
+        <span class="platform-index">01</span>
+        <div class="platform-content">
+          <span class="platform-tag">Главный продукт</span>
+          <h3 class="platform-name">JobRadar / Financial OS</h3>
+          <p class="platform-description">Главный продукт: поиск работы и финансы.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8792" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Админка</a>
+            <a class="platform-link" href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi">
+        <div class="platform-reorder-controls" aria-label="Порядок: Lexi"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Lexi: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Lexi: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
+        <span class="platform-index">02</span>
+        <div class="platform-content">
+          <span class="platform-tag">Главный продукт</span>
+          <h3 class="platform-name">Lexi</h3>
+          <p class="platform-description">Бот для изучения языков Lexi (раньше MyDictionary) и его закрытая админка.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8791/admin" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Админка</a>
+            <a class="platform-link" href="https://t.me/my_dictionnary_tg_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
+        <div class="platform-reorder-controls" aria-label="Порядок: Health OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Health OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Health OS: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
+        <span class="platform-index">03</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">Health OS</h3>
+          <p class="platform-description">Пространство здоровья. Работает ли оно, видно после открытия публичного адреса.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://health.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
+        <div class="platform-reorder-controls" aria-label="Порядок: AI Singularity"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="AI Singularity: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="AI Singularity: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
+        <span class="platform-index">04</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">AI Singularity</h3>
+          <p class="platform-description">Закрытое приложение на Mac mini.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8790" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
+        <div class="platform-reorder-controls" aria-label="Порядок: Context News France"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Context News France: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Context News France: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
+        <span class="platform-index">05</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">Context News France</h3>
+          <p class="platform-description">Персональные подборки новостей от Telegram-бота Context News.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://t.me/contextnews_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
+        <div class="platform-reorder-controls" aria-label="Порядок: Accountable OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Accountable OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Accountable OS: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
+        <span class="platform-index">06</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">Accountable OS</h3>
+          <p class="platform-description">Закрытое пространство личной ответственности на Mac mini.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
+        <div class="platform-reorder-controls" aria-label="Порядок: JARVIS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JARVIS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JARVIS: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
+        <span class="platform-index">07</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">JARVIS</h3>
+          <p class="platform-description">Личный ассистент в Telegram.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://t.me/max_jarvis_hoian_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS">
+        <div class="platform-reorder-controls" aria-label="Порядок: Property OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Property OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Property OS: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-property"/></svg></div>
+        <span class="platform-index">08</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">Property OS</h3>
+          <p class="platform-description">Аренда, платежи и ремонт квартир в Ницце.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://properties.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents">
+        <div class="platform-reorder-controls" aria-label="Порядок: Pixel Agents"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Pixel Agents: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Pixel Agents: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-pixel"/></svg></div>
+        <span class="platform-index">09</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">Pixel Agents</h3>
+          <p class="platform-description">Пиксельный офис агентов: кто над чем работает прямо сейчас.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="https://pixel-agents.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта">
+        <div class="platform-reorder-controls" aria-label="Порядок: Зеркало Контакта"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Зеркало Контакта: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Зеркало Контакта: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-mirror"/></svg></div>
+        <span class="platform-index">10</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">Зеркало Контакта</h3>
+          <p class="platform-description">Чат для пары с подсказками ИИ, чтобы лучше понимать друг друга.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:3051" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien">
+        <div class="platform-reorder-controls" aria-label="Порядок: Sushi Parisien"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Sushi Parisien: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Sushi Parisien: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-sushi"/></svg></div>
+        <span class="platform-index">11</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">Sushi Parisien</h3>
+          <p class="platform-description">Сайт суши-ресторана в 8-м округе Парижа.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:8890" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть сайт</a>
+          </div>
+        </div>
+      </article>
+      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n">
+        <div class="platform-reorder-controls" aria-label="Порядок: n8n"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="n8n: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="n8n: ниже">↓</button></div>
+        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-n8n"/></svg></div>
+        <span class="platform-index">12</span>
+        <div class="platform-content">
+          <span class="platform-tag">Работает</span>
+          <h3 class="platform-name">n8n</h3>
+          <p class="platform-description">Автоматизации на Mac mini.</p>
+          <div class="platform-links">
+            <a class="platform-link" href="http://127.0.0.1:5678" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Редактор</a>
+          </div>
+        </div>
+      </article>
+
+    </div>
+    <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Закрытые ссылки ведут на локальный адрес и открываются только через ваш SSH-туннель. Этот список не проверяет, работает ли сервис прямо сейчас.</span></p>
+  </section>
+
+  <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
+  <section id="section-work" class="section active" aria-labelledby="mm-title">
+    <div class="mm-os" id="mm-os">
+      <header class="cc-page-head">
         <div>
-          <h2 class="dp-title" id="dp-title">По дням</h2>
-          <p class="dp-lede">Что сделано за каждый день, простыми словами. Цифры и PR лежат в «Технических деталях» дня.</p>
+          <h2 class="cc-page-title" id="mm-title">MAIN MANAGER</h2>
+          <p class="cc-page-lede">Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.</p>
         </div>
       </header>
-      <p class="mm-notice" id="dp-meta" role="status" aria-live="polite">Загружаю дни…</p>
-      <section class="dp-deadlines" id="dp-deadlines" aria-labelledby="dp-deadlines-title" hidden>
-        <h3 id="dp-deadlines-title">Сроки</h3>
-        <ul id="dp-deadline-list"></ul>
-      </section>
-      <div class="mm-group-rows" id="dp-days"></div>
+      <nav class="cc-tabs mm-nav" aria-label="Разделы MAIN MANAGER">
+        <button type="button" data-mm-view="map" aria-pressed="true">Проекты <b id="mm-map-count">0</b></button>
+        <button type="button" data-mm-view="todo" aria-pressed="false">Дела <b id="mm-todo-count">0</b></button>
+        <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
+      </nav>
+      <h3 class="cc-visually-hidden" id="mm-view-title">Проекты</h3>
+      <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
+      <div class="mm-main">
+        <div class="mm-view" data-mm-panel="map">
+          <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
+        </div>
+
+        <div class="mm-view" data-mm-panel="todo" hidden>
+          <div class="mm-section-heading">
+            <div><h3>Ждёт вас <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги из итогов дня и PR, готовые к слиянию.</p></div>
+          </div>
+          <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
+          <div class="mm-section-heading mm-loose-heading">
+            <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p></div>
+          </div>
+          <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр хвостов">
+            <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
+            <button type="button" data-filter="dropped" aria-pressed="false">Сбросил <span id="mm-loose-dropped">0</span></button>
+            <button type="button" data-filter="forgot" aria-pressed="false">Забыл <span id="mm-loose-forgot">0</span></button>
+          </div>
+          <div class="mm-group-rows" id="mm-loose"></div>
+        </div>
+
+        <div class="mm-view" data-mm-panel="project" hidden>
+          <div id="mm-project-page"></div>
+        </div>
+
+        <div class="mm-view" data-mm-panel="infra" hidden>
+          <div class="mm-filter-tabs" id="mm-infra-filter" role="group" aria-label="Тип изменения"></div>
+          <div class="mm-group-rows" id="mm-infra"></div>
+        </div>
+      </div>
+      <p class="mm-sources" id="mm-sources">Источники загружаются…</p>
       <section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>
         <div class="np-device-row">
           <div>
@@ -3556,263 +3897,36 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
         </div>
       </section>
     </div>
-  </div>
-
-  <!-- ═══════════════ PLATFORMS ═══════════════ -->
-  <section id="section-platforms" class="section" aria-labelledby="platforms-title">
-    <div class="platforms-header platforms-hero">
-      <div class="platforms-hero-copy">
-        <div class="platforms-eyebrow">Common Center directory</div>
-        <h2 class="platforms-title" id="platforms-title">Platforms</h2>
-        <p class="platforms-copy">Every product, admin surface and Telegram bot in one place. Everything runs on the Mac mini; private links open through an SSH tunnel over Tailscale.</p>
-      </div>
-      <ul class="platforms-legend platforms-howto" aria-label="How each access type opens">
-        <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg><strong>Telegram</strong><small>Opens the bot right away</small></li>
-        <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg><strong>Public web</strong><small>Opens in any browser</small></li>
-        <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Private · SSH</strong><small>Start your SSH tunnel first</small></li>
-      </ul>
-      <svg class="platforms-hero-mascot" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-hub"/></svg>
-    </div>
-
-    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Hold a card, then drag it, or use its arrow buttons to change the order.</p>
-    <div class="platform-directory">
-      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
-        <div class="platform-reorder-controls" aria-label="Move JobRadar / Financial OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move JobRadar / Financial OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move JobRadar / Financial OS later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
-        <span class="platform-index">01</span>
-        <div class="platform-content">
-          <span class="platform-tag">Priority product</span>
-          <h3 class="platform-name">JobRadar / Financial OS</h3>
-          <p class="platform-description">Priority product lane for job discovery and finance operations.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8792" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Admin</a>
-            <a class="platform-link" href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi">
-        <div class="platform-reorder-controls" aria-label="Move Lexi"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Lexi earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Lexi later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
-        <span class="platform-index">02</span>
-        <div class="platform-content">
-          <span class="platform-tag">Priority product</span>
-          <h3 class="platform-name">Lexi</h3>
-          <p class="platform-description">Lexi language-learning bot (formerly MyDictionary) and its private administration.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8791/admin" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Admin</a>
-            <a class="platform-link" href="https://t.me/my_dictionnary_tg_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
-        <div class="platform-reorder-controls" aria-label="Move Health OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Health OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Health OS later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
-        <span class="platform-index">03</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">Health OS</h3>
-          <p class="platform-description">Health workspace. Availability is checked after opening the public route.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="https://health.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Public web</span> Open</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
-        <div class="platform-reorder-controls" aria-label="Move AI Singularity"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move AI Singularity earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move AI Singularity later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
-        <span class="platform-index">04</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">AI Singularity</h3>
-          <p class="platform-description">Private application surface on the Mac mini.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8790" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open app</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
-        <div class="platform-reorder-controls" aria-label="Move Context News France"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Context News France earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Context News France later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
-        <span class="platform-index">05</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">Context News France</h3>
-          <p class="platform-description">Personalized news digests delivered by the Context News Telegram bot.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="https://t.me/contextnews_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
-        <div class="platform-reorder-controls" aria-label="Move Accountable OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Accountable OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Accountable OS later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
-        <span class="platform-index">06</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">Accountable OS</h3>
-          <p class="platform-description">Private accountability workspace on the Mac mini.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open app</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
-        <div class="platform-reorder-controls" aria-label="Move JARVIS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move JARVIS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move JARVIS later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
-        <span class="platform-index">07</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">JARVIS</h3>
-          <p class="platform-description">Personal assistant interface in Telegram.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="https://t.me/max_jarvis_hoian_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Open bot</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS">
-        <div class="platform-reorder-controls" aria-label="Move Property OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Property OS earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Property OS later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-property"/></svg></div>
-        <span class="platform-index">08</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">Property OS</h3>
-          <p class="platform-description">Rentals, payments and repairs for the Nice properties.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="https://properties.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Public web</span> Open</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents">
-        <div class="platform-reorder-controls" aria-label="Move Pixel Agents"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Pixel Agents earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Pixel Agents later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-pixel"/></svg></div>
-        <span class="platform-index">09</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">Pixel Agents</h3>
-          <p class="platform-description">The agents' pixel office: who is working on what right now.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="https://pixel-agents.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Public web</span> Open</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта">
-        <div class="platform-reorder-controls" aria-label="Move Зеркало Контакта"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Зеркало Контакта earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Зеркало Контакта later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-mirror"/></svg></div>
-        <span class="platform-index">10</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">Зеркало Контакта</h3>
-          <p class="platform-description">Pair chat with AI hints for better communication between partners.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:3051" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open app</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien">
-        <div class="platform-reorder-controls" aria-label="Move Sushi Parisien"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move Sushi Parisien earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move Sushi Parisien later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-sushi"/></svg></div>
-        <span class="platform-index">11</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">Sushi Parisien</h3>
-          <p class="platform-description">Website of the sushi house in Paris 8e.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8890" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open site</a>
-          </div>
-        </div>
-      </article>
-      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n">
-        <div class="platform-reorder-controls" aria-label="Move n8n"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Move n8n earlier">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Move n8n later">↓</button></div>
-        <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-n8n"/></svg></div>
-        <span class="platform-index">12</span>
-        <div class="platform-content">
-          <span class="platform-tag">Active system</span>
-          <h3 class="platform-name">n8n</h3>
-          <p class="platform-description">Workflow automations on the Mac mini.</p>
-          <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:5678" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Private · SSH</span> Open editor</a>
-          </div>
-        </div>
-      </article>
-
-    </div>
-    <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Private links use the local loopback address and become available only through your authenticated SSH tunnel. This directory does not claim live health.</span></p>
   </section>
 
-  <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
-  <section id="section-work" class="section" aria-labelledby="mm-title">
-    <div class="mm-os" id="mm-os">
-      <aside class="mm-sidebar">
-        <div class="mm-brand">
-          <span class="mm-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>
-          <span><b id="mm-title">MAIN MANAGER</b><small>Command Center</small></span>
+  <section id="section-machines" class="section" aria-labelledby="machines-title">
+    <header class="cc-page-head">
+      <div>
+        <h2 class="cc-page-title" id="machines-title">Техника</h2>
+        <p class="cc-page-lede">Mac mini, MacBook Air и MacBook Pro: нагрузка, сервисы и хуки.</p>
+      </div>
+      <div class="header-stats machines-stats">
+        <div class="stat-box">
+          <div class="stat-value" id="stat-services">-</div>
+          <div class="stat-label">сервисов</div>
         </div>
-        <nav class="mm-nav" aria-label="Разделы MAIN MANAGER">
-          <button type="button" data-mm-view="todo" aria-pressed="true"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16 9.5"/></svg></span><span>Дела</span><b id="mm-todo-count">0</b></button>
-          <button type="button" data-mm-view="infra" aria-pressed="false"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg></span><span>Изменения</span><b id="mm-infra-count">0</b></button>
-        </nav>
-        <div class="mm-sidebar-bottom">
-          <button type="button" id="mm-theme-toggle" class="mm-sidebar-button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
-          <p id="mm-sources">Источники загружаются…</p>
-        </div>
-      </aside>
-      <div class="mm-workspace">
-        <header class="mm-topbar">
-          <h2 class="mm-module" id="mm-view-title">Дела</h2>
-        </header>
-        <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
-        <div class="mm-main">
-          <div class="mm-view" data-mm-panel="todo">
-            <div class="mm-section-heading">
-              <div><h3>Ждёт вас <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги из итогов дня и PR, готовые к слиянию. Что уже сделано, смотрите «По дням».</p></div>
-            </div>
-            <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
-            <div class="mm-section-heading mm-loose-heading">
-              <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p></div>
-            </div>
-            <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр хвостов">
-              <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
-              <button type="button" data-filter="dropped" aria-pressed="false">Сбросил <span id="mm-loose-dropped">0</span></button>
-              <button type="button" data-filter="forgot" aria-pressed="false">Забыл <span id="mm-loose-forgot">0</span></button>
-            </div>
-            <div class="mm-group-rows" id="mm-loose"></div>
-          </div>
-
-          <div class="mm-view" data-mm-panel="project" hidden>
-            <div id="mm-project-page"></div>
-          </div>
-
-          <div class="mm-view" data-mm-panel="infra" hidden>
-            <div class="mm-filter-tabs" id="mm-infra-filter" role="group" aria-label="Тип изменения"></div>
-            <div class="mm-group-rows" id="mm-infra"></div>
-          </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-hooks">5</div>
+          <div class="stat-label">хуков</div>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section id="section-machines" class="section" aria-label="Техника">
-    <div class="header-stats machines-stats">
-      <div class="stat-box">
-        <div class="stat-value" id="stat-services">-</div>
-        <div class="stat-label">Services</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-value" id="stat-hooks">5</div>
-        <div class="stat-label">Hooks</div>
-      </div>
-    </div>
-    <nav class="nav-pills cc-machine-nav" aria-label="Computers">
+    </header>
+    <nav class="nav-pills cc-machine-nav" aria-label="Компьютеры">
     <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
-      <span class="pill-icon">🖥</span> Mac Mini
+      Mac Mini
       <span class="pill-badge" id="mini-badge">offline</span>
     </button>
     <button class="nav-pill" type="button" aria-controls="section-air" aria-pressed="false" onclick="showSection('air')">
-      <span class="pill-icon">💻</span> Air
+      Air
       <span class="pill-badge" id="air-badge">-</span>
     </button>
     <button class="nav-pill" type="button" aria-controls="section-pro" aria-pressed="false" onclick="showSection('pro')">
-      <span class="pill-icon">💼</span> Pro
+      Pro
       <span class="pill-badge" id="pro-badge">-</span>
     </button>
     </nav>
@@ -4017,7 +4131,13 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
 
   <!-- ═══════════════ AGENTS ═══════════════ -->
   <div id="section-agents" class="section">
-    <div class="cc-subnav" aria-label="Agents views">
+    <header class="cc-page-head">
+      <div>
+        <h2 class="cc-page-title" id="agents-title">Агенты</h2>
+        <p class="cc-page-lede">Кампус отделов: кто над чем работает сейчас. Решения, которые ждут вас, на второй вкладке.</p>
+      </div>
+    </header>
+    <div class="cc-subnav cc-tabs" aria-label="Виды агентов">
       <button type="button" aria-controls="agents-campus" aria-pressed="true" onclick="showAgentsView('campus')">Кампус отделов</button>
       <button type="button" aria-controls="agents-decisions" aria-pressed="false" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
     </div>
@@ -4055,20 +4175,20 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
             type="button"
             onclick="togglePixelAgentsMove()"
             aria-pressed="false"
-            title="Switch between interacting with Pixel Verse and moving the map"
-          >Move</button>
-          <button class="pixel-control-btn" type="button" onclick="zoomPixelAgents(-0.12)" title="Zoom out">−</button>
-          <button class="pixel-control-btn" type="button" onclick="resetPixelAgentsView()" title="Reset view">Reset</button>
-          <button class="pixel-control-btn" type="button" onclick="zoomPixelAgents(0.12)" title="Zoom in">+</button>
+            title="Переключить: управлять кампусом или двигать карту"
+          >Двигать</button>
+          <button class="pixel-control-btn" type="button" onclick="zoomPixelAgents(-0.12)" title="Отдалить" aria-label="Отдалить">−</button>
+          <button class="pixel-control-btn" type="button" onclick="resetPixelAgentsView()" title="Вернуть вид">Сброс</button>
+          <button class="pixel-control-btn" type="button" onclick="zoomPixelAgents(0.12)" title="Приблизить" aria-label="Приблизить">+</button>
           <button
             class="pixel-pin-btn"
             id="pixel-agents-pin"
             type="button"
             onclick="togglePixelAgentsPin()"
             aria-pressed="false"
-            title="Lock dashboard size without changing current view"
-          >📌 Pin</button>
-          <a id="pixel-agents-fullscreen" target="_blank" rel="noreferrer">Full screen</a>
+            title="Закрепить размер, не меняя вид"
+          >📌 Закрепить</button>
+          <a id="pixel-agents-fullscreen" target="_blank" rel="noreferrer">На весь экран</a>
         </div>
       </div>
       <div class="pixel-agents-viewport" id="pixel-agents-viewport" aria-label="Moveable Pixel Agents view">
@@ -4330,12 +4450,7 @@ body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); c
     </div>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    <div class="live-dot"></div>
-    <span>Live</span>
-    <span id="last-update">—</span>
-  </div>
+  </main>
 </div>
 
 <script>
@@ -4731,7 +4846,7 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['today', 'work', 'agents', 'platforms', 'machines']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'agents', 'platforms', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -4948,12 +5063,12 @@ function savePlatformOrder() {
   }
 }
 
-function announcePlatformOrder(card, prefix = 'Moved') {
+function announcePlatformOrder(card, prefix = 'Перемещено:') {
   const cards = platformCards();
   const position = cards.indexOf(card) + 1;
   const name = card.dataset.platformName || card.dataset.platformId;
   document.getElementById('platform-order-status').textContent =
-    `${prefix} ${name}: position ${position} of ${cards.length}.`;
+    `${prefix} ${name}, место ${position} из ${cards.length}.`;
 }
 
 function movePlatformByButton(event) {
@@ -4968,12 +5083,12 @@ function movePlatformByButton(event) {
   } else if (direction === 'next' && index >= 0 && index < cards.length - 1) {
     cards[index + 1].after(card);
   } else {
-    announcePlatformOrder(card, direction === 'previous' ? 'Already first —' : 'Already last —');
+    announcePlatformOrder(card, direction === 'previous' ? 'Уже первая:' : 'Уже последняя:');
     return;
   }
   renumberPlatforms();
   const persisted = savePlatformOrder();
-  announcePlatformOrder(card, persisted ? 'Moved' : 'Moved for this visit only —');
+  announcePlatformOrder(card, persisted ? 'Перемещено:' : 'Перемещено до перезагрузки:');
   button.focus();
 }
 
@@ -5019,7 +5134,7 @@ function beginPlatformLongPress(event) {
     state.timer = null;
     card.classList.add('is-reordering');
     card.setAttribute('aria-grabbed', 'true');
-    announcePlatformOrder(card, 'Reordering');
+    announcePlatformOrder(card, 'Перемещаю:');
   }, PLATFORM_LONG_PRESS_MS);
 }
 
@@ -5066,11 +5181,11 @@ function commitPlatformLongPress(event) {
   const finalOrder = platformCards().map(card => card.dataset.platformId);
   const orderChanged = state.changed && finalOrder.some((id, index) => id !== state.initialOrder[index]);
   if (!orderChanged) {
-    announcePlatformOrder(state.card, 'Order unchanged —');
+    announcePlatformOrder(state.card, 'Порядок не изменился:');
     return;
   }
   const persisted = savePlatformOrder();
-  announcePlatformOrder(state.card, persisted ? 'Moved' : 'Moved for this visit only —');
+  announcePlatformOrder(state.card, persisted ? 'Перемещено:' : 'Перемещено до перезагрузки:');
 }
 
 function cancelPlatformLongPress(event) {
@@ -5089,7 +5204,7 @@ function cancelPlatformLongPress(event) {
     platformPointerState = null;
     releasePlatformPointerCapture(state);
   }
-  if (state.active && state.changed) announcePlatformOrder(state.card, 'Cancelled — restored');
+  if (state.active && state.changed) announcePlatformOrder(state.card, 'Отменено, порядок вернулся:');
 }
 
 function leavePendingPlatformLongPress(event) {
@@ -5142,6 +5257,41 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) cancelPlatformLongPress();
 });
 
+// Light or dark for the whole Command Center (Mark 2026-10-14: one design everywhere). The choice is per
+// browser and set before the first paint in <head>; without one the system setting applies. The key is
+// the one MAIN MANAGER used, so an earlier choice there carries over.
+const CC_THEME_KEY = 'command-center.main-manager.theme';
+
+function ccIsDark() {
+  const theme = document.documentElement.dataset.theme;
+  if (theme) return theme === 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+function ccSyncThemeButton() {
+  const button = document.getElementById('cc-theme-toggle');
+  const dark = ccIsDark();
+  button.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  button.querySelector('span').textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+}
+
+// The date under the greeting, in Russian. The frozen machine renderers keep writing their English date
+// into the hidden #header-subtitle, so the sidebar has its own line.
+function ccRenderToday() {
+  const today = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('cc-today').textContent = today.charAt(0).toUpperCase() + today.slice(1);
+}
+ccRenderToday();
+setInterval(ccRenderToday, 60 * 1000);
+
+document.getElementById('cc-theme-toggle').addEventListener('click', () => {
+  document.documentElement.dataset.theme = ccIsDark() ? 'light' : 'dark';
+  try { window.localStorage.setItem(CC_THEME_KEY, document.documentElement.dataset.theme); } catch (error) { /* per-browser convenience only */ }
+  ccSyncThemeButton();
+});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ccSyncThemeButton);
+ccSyncThemeButton();
+
 // Navigation
 function showSection(name) {
   const isMachine = ['mac-mini', 'air', 'pro'].includes(name);
@@ -5170,12 +5320,16 @@ function showSection(name) {
   if (name === 'logs' && !currentLogService) loadLogTabs();
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
-  if (name === 'today') setTimeout(loadDays, 0);
 }
 
-const INITIAL_SECTION = new URLSearchParams(window.location.search).get('tab');
-if (['today', 'mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work'].includes(INITIAL_SECTION)) {
+// MAIN MANAGER is the first screen. «По дням» was removed on 2026-10-14 (Mark: MAIN MANAGER already says
+// what it said), so its old links (?tab=today) open MAIN MANAGER.
+const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
+const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
+} else {
+  showSection('work');
 }
 
 function initPixelAgentsFrame() {
@@ -5238,7 +5392,7 @@ function setPixelAgentsMove(enabled) {
   if (button) {
     button.classList.toggle('active', pixelAgentsView.moving);
     button.setAttribute('aria-pressed', pixelAgentsView.moving ? 'true' : 'false');
-    button.textContent = pixelAgentsView.moving ? 'Interact' : 'Move';
+    button.textContent = pixelAgentsView.moving ? 'Управлять' : 'Двигать';
     button.title = pixelAgentsView.moving
       ? 'Drag the Pixel Agents screen. Click again to interact with agents.'
       : 'Turn on map dragging. This helps inside Telegram.';
@@ -5382,10 +5536,10 @@ function applyPixelAgentsPin(isPinned) {
   shell.classList.toggle('is-pinned', isPinned);
   button.classList.toggle('active', isPinned);
   button.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
-  button.textContent = isPinned ? '📌 Locked' : '📌 Pin';
+  button.textContent = isPinned ? '📌 Закреплено' : '📌 Закрепить';
   button.title = isPinned
-    ? 'Current dashboard size is locked. Click to unlock.'
-    : 'Lock current dashboard size without moving it';
+    ? 'Размер закреплён. Нажмите, чтобы открепить.'
+    : 'Закрепить размер, не меняя вид';
 
   requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
   notifyPixelAgentsPin(isPinned);
@@ -6830,7 +6984,7 @@ function renderIslandTask(task, statusData) {
   const counts = statusData?.tasks || {};
   const countText = Object.entries(counts).map(([k, v]) => `${k}: ${v}`).join(' · ') || 'live';
   document.getElementById('island-flow-updated').textContent = countText;
-  document.getElementById('agents-badge').textContent = counts.running ? `${counts.running} run` : (counts.failed ? `${counts.failed} failed` : 'live');
+  document.getElementById('agents-badge').textContent = counts.running ? `в работе ${counts.running}` : (counts.failed ? `ошибок ${counts.failed}` : '');
   updateIslandDocks();
 }
 
@@ -6995,7 +7149,7 @@ function refreshAll() {
   refreshAir();
   refreshMini();
   refreshPro();
-  document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+  document.getElementById('last-update').textContent = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
 renderHeaderDate();
@@ -7019,17 +7173,18 @@ const DAILY_WORK_API = (!IS_FILE_DASHBOARD)
 const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/infra/changes`
   : 'https://command.meshly.fr/api/infra/changes';
-const MM_THEME_KEY = 'command-center.main-manager.theme';
 const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-const MM_VIEW_TITLES = { todo: 'Дела', project: 'Проект', infra: 'Изменения в инфраструктуре' };
+const MM_VIEW_TITLES = { map: 'Проекты', todo: 'Дела', project: 'Проект', infra: 'Изменения в инфраструктуре' };
 // Platforms products that have their own mascot tint; anything else uses the neutral tint.
 const MM_TINTS = new Set(['command-center', 'financial', 'mydictionary', 'health', 'ai-singularity', 'context-news', 'accountable', 'jarvis']);
+const MM_REFRESH_MS = 5 * 60 * 1000;
 let dailyWorkData = null;
 let dailyWorkDate = null;
 let dailyWorkLoading = false;
 let infraData = null;
-let mmView = 'todo';
+let mmView = 'map';
+let mmReturnView = 'map'; // the view a project page was opened from; its back button returns there
 let mmProjectId = null;
 let mmProjectData = null;
 let mmLooseFilter = 'all';
@@ -7115,18 +7270,6 @@ function mmHeaders() {
 function mmInit() {
   if (mmInitialised) return;
   mmInitialised = true;
-  const os = document.getElementById('mm-os');
-  let savedTheme = null;
-  try { savedTheme = window.localStorage.getItem(MM_THEME_KEY); } catch (error) { savedTheme = null; }
-  if (savedTheme === 'dark' || savedTheme === 'light') os.dataset.theme = savedTheme;
-  mmSyncThemeButton();
-  document.getElementById('mm-theme-toggle').addEventListener('click', () => {
-    const dark = mmIsDark();
-    os.dataset.theme = dark ? 'light' : 'dark';
-    try { window.localStorage.setItem(MM_THEME_KEY, os.dataset.theme); } catch (error) { /* per-browser convenience only */ }
-    mmSyncThemeButton();
-    mmRedrawCharts();
-  });
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
     button.addEventListener('click', () => mmShowView(button.dataset.mmView));
   });
@@ -7142,36 +7285,31 @@ function mmInit() {
     mmInfraFilter = button.dataset.filter;
     renderInfra(infraData);
   });
-  document.getElementById('mm-todo-list').addEventListener('click', event => {
+  // A project name in «Дела» or a card on the board opens its page; a modified click opens a new tab.
+  ['mm-todo-list', 'mm-map'].forEach(id => document.getElementById(id).addEventListener('click', event => {
     const link = event.target.closest('[data-project]');
     if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
     event.preventDefault();
     openProject(link.dataset.project);
-  });
+  }));
+  // The board, «Дела» and «Изменения» refresh while MAIN MANAGER is on screen.
+  setInterval(() => {
+    if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
+    loadDailyWork();
+    loadInfraChanges();
+  }, MM_REFRESH_MS);
 }
 
 function mmRedrawCharts() {
   if (mmView === 'project') renderProjectChart();
 }
 
-function mmIsDark() {
-  const os = document.getElementById('mm-os');
-  if (os.dataset.theme) return os.dataset.theme === 'dark';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-}
-
-function mmSyncThemeButton() {
-  const button = document.getElementById('mm-theme-toggle');
-  const dark = mmIsDark();
-  button.setAttribute('aria-pressed', dark ? 'true' : 'false');
-  button.querySelector('span').textContent = dark ? 'Светлая тема' : 'Тёмная тема';
-}
-
 function mmShowView(view) {
   if (!MM_VIEW_TITLES[view]) return;
   mmView = view;
-  // A project page lives under «Дела» in the navigation.
-  const navView = view === 'project' ? 'todo' : view;
+  if (view === 'map' || view === 'todo') mmReturnView = view;
+  // A project page stays under the view it was opened from.
+  const navView = view === 'project' ? mmReturnView : view;
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
     button.setAttribute('aria-pressed', button.dataset.mmView === navView ? 'true' : 'false');
   });
@@ -7219,7 +7357,8 @@ async function loadDailyWork(date) {
     renderDailyWork();
   } catch (error) {
     dailyWorkData = null;
-    mmRenderNotice('Не удалось получить итоги дня с сервера Command Center. Цифры не показываю, чтобы не гадать.');
+    npDeviceSetup(false);
+    mmRenderNotice('Не удалось получить проекты с сервера Command Center. Цифры не показываю, чтобы не гадать.');
   } finally {
     dailyWorkLoading = false;
   }
@@ -7267,7 +7406,7 @@ function mmRenderNotice(errorText) {
       : `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
   }
   if (!source.owner_view) {
-    text += ' Подробности видны только на устройстве владельца. Телефон подключается с Mac, где проекты уже видны: «Открыть на телефоне» внизу первого экрана.';
+    text += ' Подробности видны только на устройстве владельца. Телефон подключается с Mac, где проекты уже видны: «Открыть на телефоне» внизу MAIN MANAGER.';
   }
   notice.textContent = text;
 }
@@ -7276,9 +7415,11 @@ function renderDailyWork() {
   const data = dailyWorkData;
   if (!data) return;
   mmRenderNotice();
+  renderMap(data);
   renderLoose(data);
   renderTodo(data);
   mmRenderSources();
+  npDeviceSetup(data.owner_view);
 }
 
 function mmBullets(bullets) {
@@ -7352,7 +7493,7 @@ function mmDrawChart({ host, prHost, series, selectedDate, onPick }) {
     if (selected || (!nearSelected && i % labelEvery === (series.length - 1) % labelEvery)) {
       parts.push(`<text class="${selected ? 'is-current' : ''}" x="${cx}" y="${height - 6}" text-anchor="middle">${mmEsc(mmDayShort(day.date))}</text>`);
     }
-    parts.push(`<rect class="mm-bar-hit" data-index="${i}" tabindex="0" role="button" aria-label="${mmEsc(`${mmDayShort(day.date)}: ${workMinutes(day.total_minutes)}, PR смёрджено ${day.prs_merged}`)}" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}"/>`);
+    parts.push(`<rect class="mm-bar-hit" data-index="${i}" tabindex="0" role="button" aria-label="${mmEsc(`${mmDayShort(day.date)}: ${workMinutes(day.total_minutes)}, слито PR: ${day.prs_merged}`)}" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}"/>`);
   });
   host.innerHTML = `<svg viewBox="0 0 ${width} ${height}" height="${height}" role="img" aria-label="Часы работы с Claude и Codex за 30 дней">${parts.join('')}</svg>`;
 
@@ -7373,8 +7514,8 @@ function mmDrawChart({ host, prHost, series, selectedDate, onPick }) {
       prParts.push(`<text class="is-current" x="${cx}" y="${baseY - h - 4}" text-anchor="middle">${day.prs_merged}</text>`);
     }
   });
-  prParts.push(`<text x="${pad.left}" y="${prHeight - 4}">PR смёрджено за день</text>`);
-  prHost.innerHTML = `<svg viewBox="0 0 ${width} ${prHeight}" height="${prHeight}" role="img" aria-label="Смёрдженные PR по дням">${prParts.join('')}</svg>`;
+  prParts.push(`<text x="${pad.left}" y="${prHeight - 4}">слито PR за день</text>`);
+  prHost.innerHTML = `<svg viewBox="0 0 ${width} ${prHeight}" height="${prHeight}" role="img" aria-label="Слитые PR по дням">${prParts.join('')}</svg>`;
 
   host.querySelectorAll('.mm-bar-hit').forEach(hit => {
     const day = series[Number(hit.dataset.index)];
@@ -7401,7 +7542,7 @@ function showWorkTooltip(day, target) {
     <div class="row"><span><i class="claude mm-tip-dot"></i>Claude</span><span>${mmEsc(workMinutes(day.claude_minutes))}</span></div>
     <div class="row"><span><i class="codex mm-tip-dot"></i>Codex</span><span>${mmEsc(workMinutes(day.codex_minutes))}</span></div>
     <div class="row"><span>Сессий · промптов</span><span>${day.sessions} · ${day.prompts}</span></div>
-    <div class="row"><span>PR смёрджено</span><span>${day.prs_merged}</span></div>`;
+    <div class="row"><span>Слито PR</span><span>${day.prs_merged}</span></div>`;
   tip.hidden = false;
   const rect = target.getBoundingClientRect();
   const left = Math.min(panel.width - tip.offsetWidth - 8, Math.max(8, rect.left - panel.left + rect.width / 2 - tip.offsetWidth / 2));
@@ -7591,8 +7732,7 @@ function mmTodoItem(item, today) {
   </section>`;
 }
 
-// MAIN MANAGER (2026-10-12, Mark chose «Список дел»): only what waits on Mark now, per project.
-// What got done lives in «По дням» alone, so nothing here retells a day.
+// «Дела» (2026-10-12, Mark chose «Список дел»): only what waits on Mark now, per project.
 function renderTodo(data) {
   const host = document.getElementById('mm-todo-list');
   const items = data.todo || [];
@@ -7607,6 +7747,109 @@ function renderTodo(data) {
   host.innerHTML = (items.length
     ? items.map(item => mmTodoItem(item, today)).join('')
     : '<p class="mm-empty">Сейчас ничего не ждёт вас: нет сроков, следующих шагов и PR, готовых к слиянию.</p>');
+}
+
+// «Проекты» (Mark 2026-10-14: «чтобы была визуализация проекта, который я делаю»): every project as a
+// card with its last two weeks of work and what waits on Mark, newest work first; a card opens its page.
+const MM_MAP_DAYS = 14;
+
+function mmSum(values) {
+  return values.reduce((sum, value) => sum + (Number(value) || 0), 0);
+}
+
+// Two weeks of work as small bars on one scale for all cards, so a busy project looks busier; a dot
+// under a bar marks a day with a merged PR. The hover title gives the day's numbers.
+function mmSpark(p, dates, scale) {
+  const days = dates.slice(-MM_MAP_DAYS);
+  const minutes = p.daily_minutes.slice(-MM_MAP_DAYS);
+  const prs = p.daily_prs_merged.slice(-MM_MAP_DAYS);
+  const bars = days.map((date, i) => {
+    const value = minutes[i] || 0;
+    const height = value ? Math.max(10, Math.round((value / scale) * 100)) : 6;
+    const cls = [value ? '' : 'is-empty', i === days.length - 1 ? 'is-today' : '', prs[i] ? 'has-pr' : ''].filter(Boolean).join(' ');
+    const label = `${mmDayShort(date)}: ${value ? workMinutes(value) : 'без работы'}${prs[i] ? `, слито PR: ${prs[i]}` : ''}`;
+    return `<i class="${cls}" style="height:${height}%" title="${mmEsc(label)}"></i>`;
+  }).join('');
+  return `<span class="mm-spark"><span class="mm-spark-bars">${bars}</span>
+    <span class="mm-spark-axis" aria-hidden="true"><span>${mmEsc(mmDayShort(days[0]))}</span><span>сегодня</span></span></span>`;
+}
+
+function mmMapCard(p, todo, dates, scale, today) {
+  const offset = mmDayOffset(p.last_activity);
+  const active = offset !== null && offset < 7;
+  const pulse = offset === null ? '' : (offset <= 0 ? 'is-today' : (active ? 'is-week' : ''));
+  const week = mmSum(p.daily_minutes.slice(-7));
+  const when = [p.last_activity ? mmRelDay(p.last_activity) : 'без активности', week ? `${workMinutes(week)} за 7 дней` : '']
+    .filter(Boolean).join(' · ');
+  const last = active ? p.last_summary : null;
+  const text = last
+    ? `<span class="mm-map-last"><b>${mmEsc(mmDayHeading(last.date))}:</b> ${mmEsc(last.bullets[0])}</span>`
+    : (p.description ? `<span class="mm-map-last is-desc">${mmEsc(p.description)}</span>` : '');
+  const chips = [];
+  if (todo) {
+    if (todo.deadlines.length) chips.push(`<span class="mm-chip is-warn">срок ${mmEsc(npDue(todo.deadlines[0].date, today))}</span>`);
+    if (todo.open_prs_count) chips.push(`<span class="mm-chip is-accent">PR к слиянию: ${todo.open_prs_count}</span>`);
+    if (todo.next.length) chips.push(`<span class="mm-chip">шагов: ${todo.next.length}</span>`);
+  }
+  if (p.loose) chips.push(`<span class="mm-chip">хвостов: ${p.loose}</span>`);
+  return `<a class="mm-map-card${active ? '' : ' is-paused'}" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${when}`)}">
+    <span class="mm-map-top">${mmArt(p)}<span class="mm-map-head"><span class="mm-map-name">${mmEsc(p.name)}</span>
+      <span class="mm-map-when"><i class="${pulse}" aria-hidden="true"></i>${mmEsc(when)}</span></span><span class="mm-map-go" aria-hidden="true">›</span></span>
+    ${text}
+    ${active ? mmSpark(p, dates, scale) : ''}
+    ${chips.length ? `<span class="mm-map-foot">${chips.join('')}</span>` : ''}
+  </a>`;
+}
+
+function renderMap(data) {
+  const host = document.getElementById('mm-map');
+  const series = data.series || [];
+  const last7 = series.slice(-7);
+  const prev7 = series.slice(-14, -7);
+  const week = mmSum(last7.map(day => day.total_minutes));
+  const prevWeek = mmSum(prev7.map(day => day.total_minutes));
+  const delta = week - prevWeek;
+  const projects = data.owner_view ? (data.projects || []) : [];
+  const todo = data.owner_view ? (data.todo || []) : [];
+  const isActive = p => {
+    const offset = mmDayOffset(p.last_activity);
+    return offset !== null && offset < 7;
+  };
+  const active = projects.filter(isActive);
+  const paused = projects.filter(p => !isActive(p));
+  document.getElementById('mm-map-count').textContent = data.owner_view ? projects.length : (data.project_total || 0);
+  const stats = [
+    data.owner_view
+      ? { label: 'В работе', value: String(active.length), note: `проектов за 7 дней · всего ${projects.length}` }
+      : { label: 'Проектов', value: String(data.project_total || 0), note: 'с работой за 30 дней' },
+    { label: 'Работа за 7 дней', value: workMinutes(week), note: prevWeek ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе` : 'прошлой недели в данных нет', cls: prevWeek ? (delta >= 0 ? 'is-up' : 'is-down') : '' },
+    data.owner_view
+      ? { label: 'Ждёт вас', value: String(todo.length), note: `сроков: ${mmSum(todo.map(item => item.deadlines.length))} · PR к слиянию: ${mmSum(todo.map(item => item.open_prs_count))}` }
+      : { label: 'Хвосты', value: String(data.dropped_count + data.forgot_count), note: `сбросил ${data.dropped_count} · забыл ${data.forgot_count}` },
+    { label: 'Слито PR за 7 дней', value: String(mmSum(last7.map(day => day.prs_merged))), note: `за 30 дней: ${mmSum(series.map(day => day.prs_merged))}` },
+  ];
+  const statsHtml = `<div class="mm-stats mm-map-stats">${stats.map(stat => `
+    <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
+  </div>`;
+  if (!data.owner_view) {
+    host.innerHTML = `${statsHtml}<p class="mm-empty">Карточки проектов видны только владельцу.</p>`;
+    return;
+  }
+  if (!projects.length) {
+    host.innerHTML = `${statsHtml}<p class="mm-empty">${data.state === 'empty' ? 'Сборщик работы ещё не присылал данные с компьютеров.' : 'За 30 дней работы по проектам не было.'}</p>`;
+    return;
+  }
+  const dates = series.map(day => day.date);
+  const today = dates[dates.length - 1];
+  const todoById = Object.fromEntries(todo.map(item => [item.id, item]));
+  const scale = Math.max(60, ...active.map(p => Math.max(0, ...p.daily_minutes.slice(-MM_MAP_DAYS))));
+  const group = (title, note, items, cls) => (items.length ? `<section class="mm-map-group ${cls}" aria-label="${mmEsc(title)}">
+      <div class="mm-map-group-head"><h3>${mmEsc(title)} <span>${items.length}</span></h3><p class="mm-section-note">${mmEsc(note)}</p></div>
+      <div class="mm-map-grid">${items.map(p => mmMapCard(p, todoById[p.id], dates, scale, today)).join('')}</div>
+    </section>` : '');
+  host.innerHTML = statsHtml
+    + group('В работе', 'Была работа за последние 7 дней. Столбики — часы за две недели, точка — слитый PR.', active, 'mm-map-active')
+    + group('На паузе', 'Без работы больше недели.', paused, 'mm-map-paused');
 }
 
 async function openProject(id, day = null) {
@@ -7634,7 +7877,7 @@ async function openProject(id, day = null) {
     }
     mmProjectData = { ...data.project, dates: data.series.map(day => day.date) };
     renderProjectPage();
-    if (day) mmRevealDay(day);
+    if (day) mmOpenHistoryDay(day);
   } catch (error) {
     if (mmProjectId === id) page.innerHTML = '<p class="mm-empty">Не удалось получить проект с сервера Command Center.</p>';
   }
@@ -7661,7 +7904,7 @@ function mmProjectDay(day, open) {
     day.claude_minutes ? `Claude ${workMinutes(day.claude_minutes)}` : '',
     day.codex_minutes ? `Codex ${workMinutes(day.codex_minutes)}` : '',
     day.sessions.length ? `${day.sessions.length} сесс.` : '',
-    day.merged.length ? `смёрджено ${day.merged.length}` : '',
+    day.merged.length ? `слито PR ${day.merged.length}` : '',
     day.opened.length ? `открыто PR ${day.opened.length}` : '',
     day.closed_unmerged.length ? `закрыто без merge ${day.closed_unmerged.length}` : '',
     day.commands.length ? `команд в инфраструктуре ${day.commands.length}` : '',
@@ -7713,13 +7956,13 @@ function renderProjectPage() {
   const stats = [
     { label: 'За 30 дней', value: workMinutes(p.total_minutes), note: `Claude ${workMinutes(p.claude_minutes)} · Codex ${workMinutes(p.codex_minutes)}` },
     { label: 'Последние 7 дней', value: workMinutes(week), note: prev ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе` : 'прошлой недели в данных нет', cls: prev ? (delta >= 0 ? 'is-up' : 'is-down') : '' },
-    { label: 'PR смёрджено', value: String(p.prs_merged), note: `открыто сейчас: ${p.prs_open}` },
+    { label: 'Слито PR', value: String(p.prs_merged), note: `открыто сейчас: ${p.prs_open}` },
     { label: 'Дней в работе', value: `${p.active_days} из 30`, note: `${p.sessions} сессий · ${p.prompts} промптов` },
   ];
   const merged = p.timeline.flatMap(day => day.merged);
   const where = (p.repos.length ? p.repos : p.projects).map(name => `<span class="mm-chip">${mmEsc(name)}</span>`).join('');
   page.innerHTML = `
-    <button type="button" class="mm-back" id="mm-project-back"><span aria-hidden="true">‹</span> К делам</button>
+    <button type="button" class="mm-back" id="mm-project-back"><span aria-hidden="true">‹</span> ${mmReturnView === 'todo' ? 'К делам' : 'К проектам'}</button>
     <section class="mm-project-hero">
       ${mmArt(p, 'is-hero')}
       <div class="mm-project-hero-body">
@@ -7729,44 +7972,43 @@ function renderProjectPage() {
         <div class="mm-chip-row">${where}</div>
       </div>
     </section>
-    <div class="mm-section-heading"><div><h3>По дням <span>${p.timeline.length}</span></h3><p class="mm-section-note">Итог каждого дня простыми словами. Сессии, PR и команды лежат в технических деталях.</p></div></div>
-    <div class="mm-group-rows mm-block">${p.timeline.map((day, index) => mmProjectDay(day, index < 3)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>
-    <details class="mm-panel mm-project-more" id="mm-project-more">
-      <summary>Цифры, задачи и график <span>${mmEsc(`${workMinutes(p.total_minutes)} за 30 дней · задач ${p.open_prs_list.length + p.next_steps.length + p.open_issues_count}`)}</span></summary>
+    <div class="mm-stats">${stats.map(stat => `
+      <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
+    </div>
+    <div class="mm-panel">${mmTodo(p)}</div>
+    <section class="mm-panel mm-chart-box" aria-labelledby="mm-project-chart-title">
+      <div class="mm-section-heading">
+        <div><h3 id="mm-project-chart-title">Работа по дням <span>30 дней</span></h3><p class="mm-section-note">Нажмите на столбик, чтобы открыть этот день в истории ниже.</p></div>
+        <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
+      </div>
+      <div class="mm-chart" id="mm-project-chart"></div>
+      <div class="mm-chart mm-chart-prs" id="mm-project-chart-prs"></div>
+      <div class="mm-tooltip" role="tooltip" hidden></div>
+    </section>
+    <div class="mm-section-heading"><div><h3>Что получилось <span>${merged.length}</span></h3><p class="mm-section-note">PR, слитые за 30 дней.</p></div></div>
+    <div class="mm-outcomes">${merged.length ? merged.map(pr => mmPrAction(pr, 'merged')).join('') : '<span class="mm-chip">За 30 дней PR не слито</span>'}</div>
+    <details class="mm-panel mm-project-more" id="mm-project-history">
+      <summary>История по дням <span>${mmEsc(`дней с работой: ${p.timeline.length} · итоги, сессии, PR и команды`)}</span></summary>
       <div class="mm-project-more-body">
-      <div class="mm-stats">${stats.map(stat => `
-        <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
+        <div class="mm-group-rows">${p.timeline.map((day, index) => mmProjectDay(day, index === 0)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>
       </div>
-      ${mmTodo(p)}
-      <section class="mm-chart-box" aria-labelledby="mm-project-chart-title">
-        <div class="mm-section-heading">
-          <div><h3 id="mm-project-chart-title">Работа по дням <span>30 дней</span></h3><p class="mm-section-note">Нажми на столбик, чтобы открыть этот день выше.</p></div>
-          <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
-        </div>
-        <div class="mm-chart" id="mm-project-chart"></div>
-        <div class="mm-chart mm-chart-prs" id="mm-project-chart-prs"></div>
-        <div class="mm-tooltip" role="tooltip" hidden></div>
-      </section>
-      <div class="mm-section-heading"><div><h3>Что получилось <span>${merged.length}</span></h3><p class="mm-section-note">PR, смёрдженные за 30 дней.</p></div></div>
-      <div class="mm-outcomes">${merged.length ? merged.map(pr => mmPrAction(pr, 'merged')).join('') : '<span class="mm-chip">За 30 дней PR не смёрджено</span>'}</div>
-      ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
-      <div class="mm-group-rows">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}
-      </div>
-    </details>`;
-  document.getElementById('mm-project-back').addEventListener('click', () => mmShowView('todo'));
-  // The chart needs its width, so it is drawn when the folded block opens.
-  document.getElementById('mm-project-more').addEventListener('toggle', event => { if (event.target.open) renderProjectChart(); });
+    </details>
+    ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
+    <div class="mm-group-rows">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}`;
+  document.getElementById('mm-project-back').addEventListener('click', () => mmShowView(mmReturnView));
   renderProjectChart();
 }
 
-// A project in «По дням» on the first screen opens its day here, technical details unfolded.
-function mmRevealDay(day) {
+// Opens one day in the project's history, technical details unfolded (links with ?day=, chart bars).
+function mmOpenHistoryDay(day, smooth = false) {
   const row = document.getElementById(`mm-day-${day}`);
   if (!row) return;
+  const history = document.getElementById('mm-project-history');
+  if (history) history.open = true;
   row.open = true;
   const tech = row.querySelector('details.mm-more');
   if (tech) tech.open = true;
-  row.scrollIntoView({ block: 'start' });
+  row.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
 }
 
 function mmTodo(p) {
@@ -7791,12 +8033,7 @@ function renderProjectChart() {
     prHost: document.getElementById('mm-project-chart-prs'),
     series: mmProjectSeries(mmProjectData),
     selectedDate: null,
-    onPick: date => {
-      const row = document.getElementById(`mm-day-${date}`);
-      if (!row) return;
-      row.open = true;
-      row.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    },
+    onPick: date => mmOpenHistoryDay(date, true),
   });
 }
 
@@ -7820,17 +8057,8 @@ window.addEventListener('resize', () => {
   mmResizeTimer = setTimeout(mmRedrawCharts, 150);
 });
 // ── End MAIN MANAGER ──
-// ── «По дням»: the first screen ──
-// Mark (2026-10-11): what got done each day, in plain words, is what matters; everything else is one
-// click away. The last 14 days with work, newest first, in the same rows as «По дням» on a project
-// page: Claude's bullets per project, numbers and PRs folded into «Технические детали», each project
-// there opening that day on its page. Owner only; others see just the newest working day's numbers.
+// ── «Открыть на телефоне» and deadline wording ──
 const NP_MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-const DP_REFRESH_MS = 5 * 60 * 1000;
-const DP_OPEN_DAYS = 3;
-let dpData = null;
-let dpLoading = false;
-const dpOpen = {}; // rows the reader opened or closed, by id, kept across refreshes
 
 function npDue(iso, today) {
   const days = Math.round((mmDate(iso) - mmDate(today)) / 86400000);
@@ -7839,154 +8067,6 @@ function npDue(iso, today) {
   if (days <= 0) return `${when}, сегодня`;
   if (days === 1) return `${when}, завтра`;
   return `${when}, через ${days} дн`;
-}
-
-// Same light or dark choice as MAIN MANAGER (its switch is per browser).
-function dpTheme() {
-  let saved = null;
-  try { saved = window.localStorage.getItem(MM_THEME_KEY); } catch (error) { saved = null; }
-  const os = document.getElementById('dp-os');
-  if (saved === 'dark' || saved === 'light') os.dataset.theme = saved;
-  else delete os.dataset.theme;
-}
-
-function dpSetMeta(text, state = '') {
-  const meta = document.getElementById('dp-meta');
-  meta.textContent = text;
-  meta.hidden = !text;
-  meta.className = `mm-notice${state ? ` ${state}` : ''}`;
-}
-
-function dpFacts(day) {
-  // PR counts as in each project's line: a PR opened and merged the same day counts as merged only.
-  const count = key => day.projects.reduce((sum, item) => sum + item[key].length, 0);
-  const merged = count('merged');
-  const opened = count('opened');
-  const closed = count('closed');
-  return [
-    day.claude_minutes ? `Claude ${workMinutes(day.claude_minutes)}` : '',
-    day.codex_minutes ? `Codex ${workMinutes(day.codex_minutes)}` : '',
-    day.sessions ? `${day.sessions} сесс.` : '',
-    merged ? `смёрджено ${merged}` : '',
-    opened ? `открыто PR ${opened}` : '',
-    closed ? `закрыто без merge ${closed}` : '',
-  ].filter(Boolean).join(' · ');
-}
-
-function dpProject(item) {
-  return `<section class="dp-project">
-    <h4 class="dp-project-name">${mmArt(item)}<span>${mmEsc(item.name)}</span>${item.minutes ? `<small>${mmEsc(workMinutes(item.minutes))}</small>` : ''}</h4>
-    ${mmBullets(item.bullets)}
-  </section>`;
-}
-
-// Only projects Claude retold get a block. Those still waiting for a retelling are named in one line;
-// quick looks and projects with nothing concrete (``quiet``) are left to the technical details.
-function dpProjects(day) {
-  const written = day.projects.filter(item => item.bullets.length);
-  const waiting = day.projects.filter(item => !item.bullets.length && !item.quiet);
-  const names = mmEsc(waiting.map(item => item.name).join(', '));
-  const rest = waiting.length
-    ? `<p class="dp-pending dp-waiting">${written.length ? 'Ещё без итога' : 'Проекты'}: ${names}.</p>`
-    : '';
-  return written.map(dpProject).join('') + rest;
-}
-
-function dpTech(day) {
-  const rows = day.projects.map(item => {
-    const facts = [
-      item.minutes ? `${workMinutes(item.minutes)} работы` : '',
-      item.sessions ? `${item.sessions} сесс.` : '',
-      item.merged.length ? `смёрджено ${item.merged.length}` : '',
-      item.opened.length ? `открыто PR ${item.opened.length}` : '',
-      item.closed.length ? `закрыто без merge ${item.closed.length}` : '',
-      item.commands ? `команд в инфраструктуре ${item.commands}` : '',
-    ].filter(Boolean).join(' · ');
-    const prs = [
-      ...item.merged.map(pr => mmPrAction(pr, 'merged')),
-      ...item.opened.map(pr => mmPrAction(pr, 'open')),
-      ...item.closed.map(pr => mmPrAction(pr, 'closed')),
-    ];
-    const href = `?tab=work&amp;project=${encodeURIComponent(item.id)}&amp;day=${encodeURIComponent(day.date)}`;
-    return `<div class="dp-tech-row"><b>${mmEsc(item.name)}</b>${facts ? `<span>${mmEsc(facts)}</span>` : ''}
-      <a href="${href}" data-project="${mmEsc(item.id)}" data-day="${mmEsc(day.date)}">Открыть день в проекте →</a>
-      ${prs.length ? `<div class="mm-group-foot">${prs.join('')}</div>` : ''}</div>`;
-  }).join('');
-  const id = `dp-tech-${day.date}`;
-  const note = dpFacts(day);
-  return `<details class="mm-more" id="${mmEsc(id)}"${dpOpen[id] ? ' open' : ''}>
-    <summary>Технические детали${note ? ` · ${mmEsc(note)}` : ''}</summary>
-    <div class="dp-tech">${rows}</div>
-  </details>`;
-}
-
-function dpDay(day, index, data) {
-  const id = `dp-day-${day.date}`;
-  const open = id in dpOpen ? dpOpen[id] : index < DP_OPEN_DAYS;
-  const written = day.projects.some(item => item.bullets.length);
-  const first = day.headline || day.projects.find(item => item.bullets.length)?.bullets[0] || '';
-  const dot = day.claude_minutes || day.codex_minutes ? (day.claude_minutes >= day.codex_minutes ? 'claude' : 'codex') : 'cat-pr';
-  const failed = Boolean(data.summaries_status && data.summaries_status.ok === false);
-  let status = '';
-  if (!written) {
-    status = `<p class="dp-pending mm-day-lead">${mmEsc(day.is_today && !failed
-      ? 'Итог за сегодня Claude напишет позже, он проверяет каждые 3 часа.'
-      : mmSummaryPending(data))}</p>`;
-  } else if (day.in_progress) {
-    status = '<p class="dp-pending">День ещё идёт, Claude допишет итог.</p>';
-  }
-  return `<details class="mm-group-row${first ? ' has-summary' : ''}" id="${mmEsc(id)}"${open ? ' open' : ''}>
-    <summary>
-      <span class="mm-dot ${dot}" aria-hidden="true"></span>
-      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(mmDayHeading(day.date))}</span><span class="mm-group-note">${mmEsc(first || dpFacts(day))}</span></span>
-      <span class="mm-group-aside">${day.total_minutes ? mmEsc(workMinutes(day.total_minutes)) : '—'}<small>${day.total_minutes ? 'работы' : 'только GitHub'}</small></span>
-      <span class="mm-chevron" aria-hidden="true">›</span>
-    </summary>
-    <div class="mm-group-body">
-      ${day.headline ? `<p class="dp-headline">${mmEsc(day.headline)}</p>` : ''}
-      ${status}
-      ${dpProjects(day)}
-      ${dpTech(day)}
-    </div>
-  </details>`;
-}
-
-function dpMeta(data) {
-  if (data.state === 'stale') return dpSetMeta(`Данные устарели: последний сбор ${mmAgo(data.collected_at)}.`, 'stale');
-  const status = data.summaries_status;
-  if (status && status.ok === false) return dpSetMeta(mmSummaryPending(data, 'Итог дня'), 'stale');
-  dpSetMeta(data.collected_at ? `Данные обновлены ${mmAgo(data.collected_at)}. Итоги дней пишет Claude на Mac mini, проверка каждые 3 часа.` : '');
-}
-
-function renderDays() {
-  const data = dpData;
-  dpTheme();
-  const host = document.getElementById('dp-days');
-  const deadlines = document.getElementById('dp-deadlines');
-  if (!data.owner_view || !data.feed) {
-    const day = data.day;
-    deadlines.hidden = true;
-    dpSetMeta(data.state === 'stale' ? `Данные устарели: последний сбор ${mmAgo(data.collected_at)}.` : '', data.state === 'stale' ? 'stale' : '');
-    npDeviceSetup(false);
-    host.innerHTML = `<div class="mm-empty"><b>Итоги по дням видит только владелец</b><br>
-      ${mmEsc(`${mmDayHeading(day.date)}: ${workMinutes(day.total_minutes)} работы, проектов: ${day.project_count}, слито PR: ${day.prs_merged}.`)}
-      <br>На этом устройстве нет ключа владельца. Телефон подключается с Mac, где проекты уже видны: внизу этой страницы нажмите «Открыть на телефоне» и наведите камеру на QR-код.</div>`;
-    return;
-  }
-  dpMeta(data);
-  const today = data.series[data.series.length - 1]?.date;
-  deadlines.hidden = !data.deadlines.length;
-  document.getElementById('dp-deadline-list').innerHTML = data.deadlines.map(d => `
-    <li><b>${mmEsc(npDue(d.date, today))}</b> · ${mmEsc(d.project)}: ${mmEsc(d.what)}</li>`).join('');
-  if (data.feed.length) {
-    host.innerHTML = data.feed.map((day, index) => dpDay(day, index, data)).join('')
-      + '<p class="dp-foot">Здесь последние 14 дней. Дни раньше есть на страницах проектов в MAIN MANAGER.</p>';
-  } else {
-    host.innerHTML = `<p class="mm-empty">${data.state === 'empty'
-      ? 'Сборщик работы ещё не присылал данные с компьютеров.'
-      : 'За 14 дней ни сессий с Claude и Codex, ни PR.'}</p>`;
-  }
-  npDeviceSetup(true);
 }
 
 // «Открыть на телефоне»: a browser that already holds the owner key shows it as a QR code with the
@@ -8034,58 +8114,10 @@ function npHideQr() {
   document.getElementById('np-device-show').hidden = false;
 }
 
-async function loadDays() {
-  if (dpLoading) return;
-  dpLoading = true;
-  try {
-    const params = new URLSearchParams({ days: '30', edition: '1' });
-    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
-    dpData = data;
-    renderDays();
-  } catch (error) {
-    if (dpData) {
-      // Keep the days on screen and say so; the next refresh tries again.
-      dpSetMeta('Не удалось обновить дни с сервера Command Center, показываю последние полученные.', 'error');
-    } else {
-      document.getElementById('dp-days').innerHTML = '';
-      dpSetMeta('Не удалось получить дни с сервера Command Center. Ничего не показываю, чтобы не гадать.', 'error');
-    }
-  } finally {
-    dpLoading = false;
-  }
-}
-
 document.getElementById('np-device-show').addEventListener('click', npShowQr);
 document.getElementById('np-device-hide').addEventListener('click', npHideQr);
 document.addEventListener('visibilitychange', () => { if (document.hidden) npHideQr(); });
-// A day or its technical details stay as the reader left them when the list refreshes.
-document.getElementById('dp-days').addEventListener('click', event => {
-  const summary = event.target.closest('summary');
-  const row = summary && summary.parentElement;
-  if (row && row.id) dpOpen[row.id] = !row.open; // the click is about to flip it
-});
-// «Открыть день в проекте» opens that day on the project page in MAIN MANAGER, details unfolded.
-document.getElementById('section-today').addEventListener('click', event => {
-  const link = event.target.closest('a[data-project]');
-  if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
-  event.preventDefault();
-  try {
-    const url = new URL(window.location.href);
-    url.searchParams.set('tab', 'work');
-    if (link.dataset.day) url.searchParams.set('day', link.dataset.day);
-    else url.searchParams.delete('day');
-    window.history.replaceState(null, '', url);
-  } catch (error) { /* the link is a convenience only */ }
-  showSection('work');
-  setTimeout(() => openProject(link.dataset.project, link.dataset.day || null), 0);
-});
-setInterval(() => {
-  if (!document.hidden && document.getElementById('section-today').classList.contains('active')) loadDays();
-}, DP_REFRESH_MS);
-if (document.getElementById('section-today').classList.contains('active')) loadDays();
-// ── End «По дням» ──
+// ── End «Открыть на телефоне» ──
 </script>
 <script>
 /* QR codes for «Открыть на телефоне»: qrcode-generator 2.0.4, Copyright (c) 2009 Kazuhiko Arase,

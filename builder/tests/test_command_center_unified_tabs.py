@@ -292,8 +292,8 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
         self.assertTrue(
             save_result
             and re.search(
-                rf"{re.escape(save_result)}\s*\?\s*['\"]Moved['\"]\s*:\s*"
-                r"['\"]Moved for this visit only",
+                rf"{re.escape(save_result)}\s*\?\s*['\"]Перемещено:['\"]\s*:\s*"
+                r"['\"]Перемещено до перезагрузки",
                 pointerup_source,
             )
             and not re.search(
@@ -602,7 +602,8 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
         )
         self.assertIsNotNone(nav_match)
         nav = nav_match.group(1)
-        routes = ("today", "work", "agents", "platforms", "machines")
+        # Mark 2026-10-14: «По дням» (today) is gone, MAIN MANAGER is the first tab.
+        routes = ("work", "agents", "platforms", "machines")
 
         for route in routes:
             with self.subTest(route=route):
