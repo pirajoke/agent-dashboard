@@ -95,7 +95,7 @@ try {
   --radius: 14px;
   --radius-sm: 10px;
   --cc-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  --cc-tabbar: 64px;
+  --cc-tabbar: 70px; /* phone tab bar: icon plus a label of up to two lines */
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { width: 100%; overflow-x: hidden; }
@@ -3397,7 +3397,8 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .cc-side .cc-main-nav .nav-pill.active { background: none; }
   .cc-side .cc-main-nav .nav-pill:hover { background: none; }
   .cc-main-nav .pill-badge { display: none; }
-  .cc-main-nav .cc-tab-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Five tabs on a phone: a long label («MAIN MANAGER») wraps to two lines instead of being cut. */
+  .cc-main-nav .cc-tab-label { display: -webkit-box; max-width: 100%; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.15; text-align: center; white-space: normal; overflow-wrap: anywhere; font-size: 10.5px; }
   .cc-side .tab-name-editor { left: 12px; right: 12px; bottom: calc(var(--cc-tabbar) + 12px + env(safe-area-inset-bottom)); width: auto; max-height: 70vh; overflow-y: auto; }
   .cc-main .cc-page-title { font-size: 25px; }
   .cc-page-lede { font-size: 14px; }
@@ -3412,6 +3413,38 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .mm-os a.mm-map-card, .platform-reorder-controls { transition: none; }
   .mm-os a.mm-map-card:hover { transform: none; }
 }
+
+/* «Точки роста»: what Mark wants to learn, read from his Obsidian note. */
+.growth-summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.growth-summary .mm-stat { flex: 1 1 160px; }
+.growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.growth-card { --growth-tint: var(--mm-selection); display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.growth-card[data-picture="pe"] { --growth-tint: #FEF3C7; }
+.growth-card[data-picture="digital"] { --growth-tint: #DCFCE7; }
+.growth-card[data-picture="research"] { --growth-tint: #EDE9FE; }
+.growth-card[data-picture="podcast"] { --growth-tint: #FCE7F3; }
+.growth-card[data-picture="design"] { --growth-tint: #E0F2FE; }
+.growth-card[data-picture="coworking"] { --growth-tint: #FFEDD5; }
+:root[data-theme="dark"] .growth-card { --growth-tint: rgba(255,255,255,.06) !important; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .growth-card { --growth-tint: rgba(255,255,255,.06) !important; } }
+.growth-art { position: relative; display: grid; place-items: center; height: 150px; background: var(--growth-tint); }
+.growth-art svg { width: 116px; height: 116px; color: var(--mm-ink); } /* outlines follow the theme: dark on light, light on dark */
+.growth-ring { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%;
+  background: conic-gradient(var(--mm-accent) calc(var(--p) * 1%), var(--mm-line) 0); }
+.growth-ring span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--mm-surface); color: var(--mm-ink); font-size: 12.5px; font-weight: 700; }
+.growth-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; }
+.growth-title { margin: 0; color: var(--mm-ink); font-size: 17px; font-weight: 700; line-height: 1.3; }
+.growth-why { margin: 0; color: var(--mm-muted); font-size: 13.5px; line-height: 1.5; }
+.growth-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.growth-chip { padding: 3px 9px; border-radius: 999px; background: var(--mm-selection); color: var(--mm-ink); font-size: 12px; font-weight: 600; }
+.growth-chip.is-muted { color: var(--mm-muted); font-weight: 500; }
+.growth-steps { display: grid; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
+.growth-steps li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; }
+.growth-steps li::before { content: ""; width: 14px; height: 14px; margin-top: 2px; border: 1.6px solid var(--mm-control-line); border-radius: 4px; }
+.growth-steps li.is-done { color: var(--mm-muted); text-decoration: line-through; }
+.growth-steps li.is-done::before { background: var(--mm-success); border-color: var(--mm-success); }
+.growth-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-line); border-radius: 14px; }
+@media (max-width: 760px) { .growth-grid { grid-template-columns: 1fr; } .growth-art { height: 120px; } .growth-art svg { width: 92px; height: 92px; } }
 </style>
 </head>
 <body>
@@ -3605,6 +3638,62 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="cc-icon-today" viewBox="0 0 24 24"><path d="M5 5h11v14H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Zm11 4h3a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h5M8 12.5h5M8 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="cc-icon-growth" viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4 3-7 8-7 0 4-3 7-8 7zM12 15c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <!-- «Точки роста» pictures -->
+  <symbol id="cc-growth-pe" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="30" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="22" y="44" width="76" height="54" rx="10" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
+    <path d="M46 44v-8a6 6 0 0 1 6-6h16a6 6 0 0 1 6 6v8" fill="none" stroke="currentColor" stroke-width="3"/>
+    <path d="M22 64h76" stroke="currentColor" stroke-width="3"/>
+    <rect x="54" y="58" width="12" height="12" rx="3" fill="#FFFFFF" stroke="currentColor" stroke-width="2.6"/>
+    <path d="M32 90l14-10 10 6 18-14" fill="none" stroke="#16A34A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 72h6v6" fill="none" stroke="#16A34A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="cc-growth-digital" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="28" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="36" y="14" width="44" height="84" rx="9" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
+    <rect x="42" y="24" width="32" height="44" rx="4" fill="#BBF7D0"/>
+    <path d="M50 50l6 6 12-14" fill="none" stroke="#16A34A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="58" cy="86" r="3" fill="currentColor"/>
+    <circle cx="90" cy="80" r="12" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
+    <path d="M90 73v14M86 77h6a3 3 0 0 1 0 6h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="26" cy="60" r="9" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
+  </symbol>
+  <symbol id="cc-growth-research" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="26" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M48 18h24M52 18v28L32 92a8 8 0 0 0 7 12h42a8 8 0 0 0 7-12L68 46V18" fill="#EDE9FE" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M38 80h44l5 10a6 6 0 0 1-5 8H38a6 6 0 0 1-5-8z" fill="#A78BFA"/>
+    <circle cx="54" cy="70" r="4" fill="#FFFFFF" stroke="currentColor" stroke-width="2"/><circle cx="66" cy="62" r="3" fill="#FFFFFF" stroke="currentColor" stroke-width="2"/>
+    <path d="M92 22l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#F5C542" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="cc-growth-podcast" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="26" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="44" y="14" width="32" height="54" rx="16" fill="#F9A8D4" stroke="currentColor" stroke-width="3"/>
+    <path d="M44 34h10M44 46h10M66 34h10M66 46h10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M32 54a28 28 0 0 0 56 0M60 82v18M44 102h32" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M18 40q-6 12 0 24M102 40q6 12 0 24" fill="none" stroke="#DB2777" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="cc-growth-design" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="108" rx="32" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M22 44a8 8 0 0 1 8-8h12l6-10h24l6 10h12a8 8 0 0 1 8 8v44a8 8 0 0 1-8 8H30a8 8 0 0 1-8-8z" fill="#BAE6FD" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="60" cy="66" r="18" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
+    <circle cx="60" cy="66" r="9" fill="#0EA5E9" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="86" cy="48" r="4" fill="#F5C542" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="cc-growth-coworking" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="34" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M18 104V40l42-22 42 22v64" fill="#FED7AA" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="30" y="50" width="16" height="14" rx="2" fill="#FFFFFF" stroke="currentColor" stroke-width="2.4"/>
+    <rect x="74" y="50" width="16" height="14" rx="2" fill="#FFFFFF" stroke="currentColor" stroke-width="2.4"/>
+    <rect x="50" y="76" width="20" height="28" rx="3" fill="#F97316" stroke="currentColor" stroke-width="2.6"/>
+    <circle cx="38" cy="86" r="5" fill="currentColor"/><circle cx="82" cy="86" r="5" fill="currentColor"/>
+  </symbol>
+  <symbol id="cc-growth-growth" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="108" rx="28" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M40 86h40l-4 18H44z" fill="#F97316" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M60 86V46" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M60 58c0-16 12-26 30-26 0 16-12 26-30 26zM60 70c0-12-9-20-24-20 0 12 9 20 24 20z" fill="#86EFAC" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+  </symbol>
   <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
@@ -3625,6 +3714,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
     <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
@@ -3897,6 +3987,18 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
         </div>
       </section>
     </div>
+  </section>
+
+  <section id="section-growth" class="section" aria-labelledby="growth-title">
+    <header class="cc-page-head">
+      <div>
+        <h2 class="cc-page-title" id="growth-title">Мои точки роста</h2>
+        <p class="cc-page-lede">Что хочу изучить и развить, но не успеваю. Список живёт в Obsidian, в заметке «ТОЧКИ-РОСТА»: отмечайте там шаги, и прогресс здесь посчитается сам.</p>
+      </div>
+    </header>
+    <p class="mm-notice" id="growth-state" role="status" aria-live="polite">Загружаю точки роста…</p>
+    <div class="growth-summary" id="growth-summary"></div>
+    <div class="growth-grid" id="growth-grid"></div>
   </section>
 
   <section id="section-machines" class="section" aria-labelledby="machines-title">
@@ -4846,7 +4948,7 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'agents', 'platforms', 'machines']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -5320,13 +5422,14 @@ function showSection(name) {
   if (name === 'logs' && !currentLogService) loadLogTabs();
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
+  if (name === 'growth') setTimeout(loadGrowth, 0);
 }
 
 // MAIN MANAGER is the first screen. «По дням» was removed on 2026-10-14 (Mark: MAIN MANAGER already says
 // what it said), so its old links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 } else {
   showSection('work');
@@ -7165,6 +7268,110 @@ initPixelAgentsPin();
 initDragDrop();
 setInterval(refreshAll, 5000);
 setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000);
+
+// ── «Точки роста» ──
+// Areas Mark wants to grow into, read by the server from his Obsidian note. Progress is the share of
+// ticked steps; time is real work in linked projects over 30 days, or nothing when no project is linked.
+const GROWTH_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/growth`
+  : 'https://command.meshly.fr/api/growth';
+const GROWTH_PICTURES = ['pe', 'digital', 'research', 'podcast', 'design', 'coworking', 'growth'];
+let growthLoading = false;
+
+async function loadGrowth() {
+  if (growthLoading) return;
+  growthLoading = true;
+  const state = document.getElementById('growth-state');
+  try {
+    const response = await fetch(GROWTH_API, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    renderGrowth(data);
+  } catch (error) {
+    state.className = 'mm-notice error';
+    state.textContent = 'Не удалось получить точки роста с сервера Command Center. Ничего не показываю, чтобы не гадать.';
+    document.getElementById('growth-summary').innerHTML = '';
+    document.getElementById('growth-grid').innerHTML = '';
+  } finally {
+    growthLoading = false;
+  }
+}
+
+function renderGrowth(data) {
+  const state = document.getElementById('growth-state');
+  const summary = document.getElementById('growth-summary');
+  const grid = document.getElementById('growth-grid');
+  summary.innerHTML = '';
+  if (data.state === 'empty') {
+    state.className = 'mm-notice';
+    state.textContent = 'Заметки «ТОЧКИ-РОСТА» в Obsidian пока нет.';
+    grid.innerHTML = '';
+    return;
+  }
+  if (!data.owner_view) {
+    state.className = 'mm-notice';
+    state.textContent = `Точек роста: ${data.count}. Сами направления видны только после входа владельца.`;
+    grid.innerHTML = '';
+    return;
+  }
+  const updated = data.note_updated_at ? mmDayShort(data.note_updated_at.slice(0, 10)) : null;
+  if (data.state === 'stale') {
+    state.className = 'mm-notice stale';
+    state.textContent = `Заметка не менялась ${data.note_age_days} дн. (с ${updated}): отметки шагов могут быть устаревшими. Источник: ${data.source}.`;
+  } else {
+    state.className = 'mm-notice live';
+    state.textContent = `Источник: ${data.source}, обновлена ${updated}. Время — работа Claude и Codex в связанных проектах за ${data.window_days} дней.`;
+  }
+  const areas = data.areas || [];
+  const steps = areas.reduce((sum, area) => sum + area.progress.total, 0);
+  const done = areas.reduce((sum, area) => sum + area.progress.done, 0);
+  const linked = areas.filter(area => area.linked);
+  const minutes = linked.reduce((sum, area) => sum + (area.minutes_30d || 0), 0);
+  // A share only with steps to count; time only when it was measured (AGENTS.md: unknown is not 0).
+  const timeStat = !linked.length
+    ? { value: '—', note: 'проекты не связаны' }
+    : data.time_available
+      ? { value: workMinutes(minutes), note: 'в связанных проектах' }
+      : { value: 'Неизвестно', note: 'нет данных о работе' };
+  summary.innerHTML = [
+    { label: 'Направлений', value: String(areas.length), note: 'в заметке' },
+    { label: 'Шагов сделано', value: steps ? `${done} из ${steps}` : '—', note: steps ? `${Math.round(done / steps * 100)}% пути` : 'шагов пока нет' },
+    { label: 'Время за 30 дней', ...timeStat },
+  ].map(stat => `<div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong>${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('');
+  if (!areas.length) {
+    grid.innerHTML = '<p class="growth-empty">В заметке пока нет направлений. Добавьте раздел «## Название» со списком шагов.</p>';
+    return;
+  }
+  grid.innerHTML = areas.map(area => {
+    const picture = GROWTH_PICTURES.includes(area.picture) ? area.picture : 'growth';
+    const total = area.progress.total;
+    // No steps, no denominator: no ring and no «0%», just the state.
+    const ring = total
+      ? `<div class="growth-ring" style="--p:${Math.round(area.progress.done / total * 100)}" role="img" aria-label="Сделано ${area.progress.done} из ${total} шагов"><span>${Math.round(area.progress.done / total * 100)}%</span></div>`
+      : '';
+    const progress = total
+      ? `<span class="growth-chip">${area.progress.done} из ${total} шагов</span>`
+      : '<span class="growth-chip is-muted">Шагов пока нет</span>';
+    const time = !area.linked
+      ? '<span class="growth-chip is-muted">Проекты не связаны</span>'
+      : area.minutes_30d == null
+        ? '<span class="growth-chip is-muted">Время неизвестно</span>'
+        : `<span class="growth-chip">${mmEsc(workMinutes(area.minutes_30d))} за 30 дней</span>`;
+    const steps = area.steps.length
+      ? `<ul class="growth-steps">${area.steps.map(step => `<li class="${step.done ? 'is-done' : ''}">${mmEsc(step.text)}</li>`).join('')}</ul>`
+      : '<p class="growth-why">Добавьте шаги в заметку, чтобы видеть прогресс.</p>';
+    return `<article class="growth-card" data-picture="${picture}">
+      <div class="growth-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-growth-${picture}"/></svg>
+        ${ring}</div>
+      <div class="growth-body">
+        <h3 class="growth-title">${mmEsc(area.title)}</h3>
+        ${area.why ? `<p class="growth-why">${mmEsc(area.why)}</p>` : ''}
+        <div class="growth-meta">${progress}${time}</div>
+        ${steps}
+      </div>
+    </article>`;
+  }).join('');
+}
 
 // ── MAIN MANAGER ──
 const DAILY_WORK_API = (!IS_FILE_DASHBOARD)
