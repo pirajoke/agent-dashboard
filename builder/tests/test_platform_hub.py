@@ -48,21 +48,21 @@ EXPECTED_LINKS = {
         "https://t.me/JobsRadarS_bot",
     ),
     "mydictionary": (
-        "http://127.0.0.1:8791/admin",
+        "https://mydictionary.meshly.fr/admin",
         "https://t.me/my_dictionnary_tg_bot",
     ),
     "health-os": ("https://health.meshly.fr/",),
-    "ai-singularity": ("http://127.0.0.1:8790",),
+    "ai-singularity": ("https://singularity.meshly.fr/",),
     "context-news": ("https://t.me/contextnews_bot",),
-    "accountable-os": ("http://127.0.0.1:4174",),
+    "accountable-os": ("https://accountable.meshly.fr/",),
     "jarvis": ("https://t.me/max_jarvis_hoian_bot",),
     "property-os": ("https://properties.meshly.fr/",),
     "pixel-agents": ("https://pixel-agents.meshly.fr/",),
     "closeness-mirror": ("http://127.0.0.1:3051",),
-    "sushi-parisien": ("http://127.0.0.1:8890",),
+    "sushi-parisien": ("https://sushi-parisien.meshly.fr/",),
     "n8n": ("http://127.0.0.1:5678",),
 }
-EXPECTED_LOOPBACK_PORTS = (7777, 8792, 8791, 8790, 4174, 3051, 8890, 5678)
+EXPECTED_LOOPBACK_PORTS = (7777, 8792, 3051, 5678)
 REQUIRED_PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 REQUIRED_ACTION_FIELDS = ("label", "url", "access")
 

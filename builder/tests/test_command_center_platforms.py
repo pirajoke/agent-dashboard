@@ -22,14 +22,14 @@ EXPECTED_PLATFORMS = {
     "mydictionary": (
         "Lexi",
         (
-            "http://127.0.0.1:8791/admin",
+            "https://mydictionary.meshly.fr/admin",
             "https://t.me/my_dictionnary_tg_bot",
         ),
     ),
     "health": ("Health OS", ("https://health.meshly.fr/",)),
     "ai-singularity": (
         "AI Singularity",
-        ("http://127.0.0.1:8790",),
+        ("https://singularity.meshly.fr/",),
     ),
     "context-news": (
         "Context News France",
@@ -37,13 +37,13 @@ EXPECTED_PLATFORMS = {
     ),
     "accountable": (
         "Accountable OS",
-        ("http://127.0.0.1:4174",),
+        ("https://accountable.meshly.fr/",),
     ),
     "jarvis": ("JARVIS", ("https://t.me/max_jarvis_hoian_bot",)),
     "property-os": ("Property OS", ("https://properties.meshly.fr/",)),
     "pixel-agents": ("Pixel Agents", ("https://pixel-agents.meshly.fr/",)),
     "closeness-mirror": ("Зеркало Контакта", ("http://127.0.0.1:3051",)),
-    "sushi-parisien": ("Sushi Parisien", ("http://127.0.0.1:8890",)),
+    "sushi-parisien": ("Sushi Parisien", ("https://sushi-parisien.meshly.fr/",)),
     "n8n": ("n8n", ("http://127.0.0.1:5678",)),
 }
 
@@ -175,7 +175,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
                         self.assertEqual(parsed.scheme, "https")
                         self.assertIn(
                             parsed.hostname,
-                            {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr"},
+                            {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr"},
                         )
 
     def test_platform_directory_is_responsive_keyboard_safe_and_motion_safe(self):
