@@ -13,56 +13,23 @@ from .department_campus import build_department_campus_html
 from .platforms import build_platform_hub_html
 
 
-def _build_project_row(p: dict, completed: bool = False) -> str:
-    if completed:
-        status_class = "done"
-    else:
-        s = p["status"].lower()
-        if s == "active":
-            status_class = "active"
-        elif s in ("idea", "planned"):
-            status_class = "idea"
-        else:
-            status_class = "other"
-    agents_str = ", ".join(p["agents"]) if p["agents"] else "—"
-    na = p["next_action"]
-    if len(na) > 80:
-        na = na[:77] + "..."
-    progress = 0
-    total = p["open_todos"] + p["closed_todos"]
-    if total > 0:
-        progress = round(p["closed_todos"] / total * 100)
-    if progress >= 75:
-        pfill_class = "pfill pfill-high"
-    elif progress >= 40:
-        pfill_class = "pfill pfill-mid"
-    else:
-        pfill_class = "pfill pfill-low"
-    fresh = p.get("freshness_days", 999)
-    fresh_label = f"{fresh}d" if fresh < 999 else "—"
-    fresh_class = "fresh-hot" if fresh <= 3 else ("fresh-warm" if fresh <= 14 else "fresh-cold")
-    actions = ""
-    if not completed:
-        actions = f"""<td class="actions-col">
-                <button class="qa-btn" onclick="window.open('obsidian://open?vault=ObsidianVault&file=20-Projects/{p["name"]}/Tech-Base/TODO.md')" title="Open TODO">📋</button>
-            </td>"""
-    else:
-        actions = '<td class="actions-col"></td>'
+def _build_projects_section(active_count: int, completed_count: int) -> str:
+    """The Projects section of the page, which is also published on GitHub Pages.
 
-    return f"""
-        <tr>
-            <td class="proj-name">{p["name"]}</td>
-            <td><span class="status-pill status-{status_class}">{p["status"]}</span></td>
-            <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">{p["open_todos"] if not completed else p["closed_todos"]}</td>
-            <td>
-                <div class="pbar"><div class="{pfill_class}" style="width:{progress}%"></div></div>
-                <span class="ptxt">{progress}%</span>
-            </td>
-            <td class="{fresh_class}">{fresh_label}</td>
-            <td class="next-action">{na}</td>
-            <td class="agents-col">{agents_str}</td>
-            {actions}
-    </tr>"""
+    It holds counts only. Project names, task text and Obsidian vault paths are private
+    (AGENTS.md §10): Mark sees them in MAIN MANAGER on command.meshly.fr after sign-in.
+    """
+    return f"""<!-- Projects Section -->
+<div class="section" id="projects">
+    <div class="section-head">
+        <div class="section-dot" style="background:var(--green)"></div>
+        <div class="section-title">Projects</div>
+        <div class="section-count">{active_count} active</div>
+    </div>
+    <div class="proj-details">
+        <p style="margin:0;padding:0.9rem 1.2rem;color:var(--dim);font-size:0.8rem;line-height:1.5">В работе {active_count}, завершено {completed_count}. Названия и задачи проектов видны только в MAIN MANAGER на command.meshly.fr после входа.</p>
+    </div>
+</div>"""
 
 
 def _build_builder_dialogue_html() -> str:
@@ -104,8 +71,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
     # Projects
     active_projs = [p for p in projects if is_project_active(p)]
     completed_projs = [p for p in projects if not is_project_active(p)]
-    project_rows = "".join(_build_project_row(p) for p in active_projs)
-    completed_rows = "".join(_build_project_row(p, completed=True) for p in completed_projs)
+    projects_html = _build_projects_section(len(active_projs), len(completed_projs))
 
     css_text = (ASSETS_DIR / "style.css").read_text()
     js_text = (ASSETS_DIR / "script.js").read_text()
@@ -225,41 +191,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 
 {workshop_html}
 
-<!-- Projects Section -->
-<div class="section" id="projects">
-    <div class="section-head">
-        <div class="section-dot" style="background:var(--green)"></div>
-        <div class="section-title">Projects</div>
-        <div class="section-count">{len(active_projs)} active</div>
-    </div>
-    <details class="proj-details" open>
-        <summary class="proj-summary">
-            <span class="section-title">Active</span>
-            <span class="section-count">{len(active_projs)}</span>
-            <span class="proj-chevron"></span>
-        </summary>
-        <div class="tbl-wrap">
-        <table>
-        <thead><tr><th>Project</th><th>Status</th><th>Open</th><th>Progress</th><th>Fresh</th><th>Next Action</th><th>Agents</th><th></th></tr></thead>
-        <tbody>{project_rows}</tbody>
-        </table>
-        </div>
-    </details>
-    <details class="proj-details">
-        <summary class="proj-summary">
-            <div class="section-dot" style="background:var(--dim)"></div>
-            <span class="section-title">Done</span>
-            <span class="section-count">{len(completed_projs)}</span>
-            <span class="proj-chevron"></span>
-        </summary>
-        <div class="tbl-wrap">
-        <table>
-        <thead><tr><th>Project</th><th>Status</th><th>Done</th><th>Progress</th><th>Last</th><th>Final State</th><th>Agents</th><th></th></tr></thead>
-        <tbody>{completed_rows}</tbody>
-        </table>
-        </div>
-    </details>
-</div>
+{projects_html}
 
 <!-- System Section -->
 <div class="section" id="system">
