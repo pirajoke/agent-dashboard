@@ -428,24 +428,30 @@ def _launchctl_disabled(uid: int) -> dict[str, bool]:
 # launchd state for the Mac mini service list, read at most every few seconds.
 LAUNCHD_STATE_TTL_SECONDS = 10
 _LAUNCHD_STATE_LOCK = threading.Lock()
-_LAUNCHD_STATE: dict[str, object] = {"read_at": 0.0, "loaded": {}, "disabled": set()}
+_LAUNCHD_STATE: dict[str, object] = {"read_at": 0.0, "loaded": {}, "disabled": None}
 
 
-def _launchd_state() -> tuple[dict, set]:
+def _launchd_state() -> tuple[dict, set | None]:
+    """Loaded jobs and switched-off labels; a failed read keeps the last answer launchctl gave."""
     with _LAUNCHD_STATE_LOCK:
         if time.monotonic() - float(_LAUNCHD_STATE["read_at"]) > LAUNCHD_STATE_TTL_SECONDS:
             uid = os.getuid()
-            _LAUNCHD_STATE["loaded"] = parse_launchctl_list(_run_text(["launchctl", "list"], timeout=10))
-            _LAUNCHD_STATE["disabled"] = parse_launchctl_disabled(_run_text(["launchctl", "print-disabled", f"gui/{uid}"]))
+            loaded = parse_launchctl_list(_run_text(["launchctl", "list"], timeout=10))
+            disabled = parse_launchctl_disabled(_run_text(["launchctl", "print-disabled", f"gui/{uid}"]))
+            if loaded:
+                _LAUNCHD_STATE["loaded"] = loaded
+            if disabled is not None:
+                _LAUNCHD_STATE["disabled"] = disabled
             _LAUNCHD_STATE["read_at"] = time.monotonic()
-        return dict(_LAUNCHD_STATE["loaded"]), set(_LAUNCHD_STATE["disabled"])
+        disabled = _LAUNCHD_STATE["disabled"]
+        return dict(_LAUNCHD_STATE["loaded"]), (set(disabled) if disabled is not None else None)
 
 
 def _mini_services_payload(data):
     """Keep only real problems in the Mac mini service list (see dashboard_builder.service_status)."""
     loaded, disabled = _launchd_state()
-    if not loaded:
-        return data  # launchctl did not answer: show the health API as it is
+    if not loaded or disabled is None:
+        return data  # launchctl has not answered yet: show the health API as it is
     return normalize_payload(data, loaded=loaded, disabled=disabled)
 
 

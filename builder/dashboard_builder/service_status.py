@@ -40,8 +40,10 @@ def parse_launchctl_list(raw: str) -> dict[str, int | None]:
     return loaded
 
 
-def parse_launchctl_disabled(raw: str) -> set[str]:
-    """``launchctl print-disabled gui/<uid>`` → labels switched off."""
+def parse_launchctl_disabled(raw: str) -> set[str] | None:
+    """``launchctl print-disabled gui/<uid>`` → labels switched off, None if launchctl did not answer."""
+    if "disabled services" not in raw:
+        return None
     disabled = set()
     for line in raw.splitlines():
         match = re.search(r'"([^"]+)"\s*=>\s*(disabled|true|enabled|false)', line)

@@ -117,6 +117,7 @@ class LaunchdParsingTests(unittest.TestCase):
             "}\n"
         )
         self.assertEqual(parse_launchctl_disabled(raw), {"com.pirajoke.obsidian-tg-bot", "com.pirajoke.old"})
+        self.assertIsNone(parse_launchctl_disabled(""))
 
     def test_plist_schedule(self):
         cases = {
@@ -161,8 +162,31 @@ class ServerServiceListTests(unittest.TestCase):
 
     def test_list_is_unchanged_when_launchctl_does_not_answer(self):
         health = {"services_detailed": [svc("com.pirajoke.obsidian-tg-bot")]}
-        response = self._get("/api/all", public=False, health=health, launchd=({}, set()))
-        self.assertEqual(response["payload"]["services_detailed"], health["services_detailed"])
+        for launchd in (({}, set()), ({"com.pirajoke.jarvis-bot": 0}, None)):
+            with self.subTest(launchd=launchd):
+                response = self._get("/api/all", public=False, health=health, launchd=launchd)
+                self.assertEqual(response["payload"]["services_detailed"], health["services_detailed"])
+
+
+class LaunchdStateTests(unittest.TestCase):
+    def setUp(self):
+        SERVER._LAUNCHD_STATE.update(read_at=0.0, loaded={}, disabled=None)
+        self.addCleanup(SERVER._LAUNCHD_STATE.update, read_at=0.0, loaded={}, disabled=None)
+
+    def _read(self, list_out: str, disabled_out: str):
+        def run_text(cmd, timeout=5):
+            return list_out if cmd[1] == "list" else disabled_out
+
+        SERVER._LAUNCHD_STATE["read_at"] = 0.0
+        with patch.object(SERVER, "_run_text", side_effect=run_text):
+            return SERVER._launchd_state()
+
+    def test_failed_print_disabled_keeps_the_last_answer(self):
+        listing = "PID\tStatus\tLabel\n774\t0\tcom.pirajoke.jarvis-bot\n"
+        good = 'disabled services = {\n\t"com.pirajoke.obsidian-tg-bot" => disabled\n}\n'
+        self.assertEqual(self._read(listing, ""), ({"com.pirajoke.jarvis-bot": 0}, None))
+        self.assertEqual(self._read(listing, good)[1], {"com.pirajoke.obsidian-tg-bot"})
+        self.assertEqual(self._read(listing, "")[1], {"com.pirajoke.obsidian-tg-bot"})
 
 
 if __name__ == "__main__":
