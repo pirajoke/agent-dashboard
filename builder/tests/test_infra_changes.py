@@ -259,6 +259,9 @@ class CommandCenterMainManagerTest(unittest.TestCase):
         self.assertIn(':root[data-theme="dark"] {', html)
         self.assertIn("  --bg: var(--mm-background);", html)
         self.assertNotIn(".mm-os {\n  color-scheme: light;", html)
+        # On a phone the page background shows behind every tab, so it follows the theme too.
+        self.assertIn("@media (max-width: 760px) {\n  body { background: var(--mm-background); }", html)
+        self.assertNotIn("body { background: #FBFAF7; }", html)
 
     def test_server_exposes_infra_endpoint(self):
         server = (BUILDER_DIR / "dashboard-server-m4.py").read_text(encoding="utf-8")
