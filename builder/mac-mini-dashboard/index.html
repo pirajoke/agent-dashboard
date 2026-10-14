@@ -5340,8 +5340,10 @@ function platformScrollContainer() {
 }
 
 // Near the top or bottom edge the page scrolls by itself, so on a phone a card can
-// travel the whole list, not only the cards on screen.
+// travel the whole list, not only the cards on screen. With reduced motion the page
+// stays still; the card moves among the cards on screen, or by its ↑↓ buttons.
 function startPlatformAutoScroll(state) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const scroller = platformScrollContainer();
   const step = () => {
     if (platformPointerState !== state || !state.active) return;
