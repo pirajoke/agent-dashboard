@@ -29,6 +29,7 @@ from dashboard_builder.owner_decisions import (
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
+from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
@@ -422,6 +423,36 @@ def _launchctl_disabled(uid: int) -> dict[str, bool]:
         if match:
             flags[match.group(1)] = match.group(2) == "disabled"
     return flags
+
+
+# launchd state for the Mac mini service list, read at most every few seconds.
+LAUNCHD_STATE_TTL_SECONDS = 10
+_LAUNCHD_STATE_LOCK = threading.Lock()
+_LAUNCHD_STATE: dict[str, object] = {"read_at": 0.0, "loaded": {}, "disabled": None}
+
+
+def _launchd_state() -> tuple[dict, set | None]:
+    """Loaded jobs and switched-off labels; a failed read keeps the last answer launchctl gave."""
+    with _LAUNCHD_STATE_LOCK:
+        if time.monotonic() - float(_LAUNCHD_STATE["read_at"]) > LAUNCHD_STATE_TTL_SECONDS:
+            uid = os.getuid()
+            loaded = parse_launchctl_list(_run_text(["launchctl", "list"], timeout=10))
+            disabled = parse_launchctl_disabled(_run_text(["launchctl", "print-disabled", f"gui/{uid}"]))
+            if loaded:
+                _LAUNCHD_STATE["loaded"] = loaded
+            if disabled is not None:
+                _LAUNCHD_STATE["disabled"] = disabled
+            _LAUNCHD_STATE["read_at"] = time.monotonic()
+        disabled = _LAUNCHD_STATE["disabled"]
+        return dict(_LAUNCHD_STATE["loaded"]), (set(disabled) if disabled is not None else None)
+
+
+def _mini_services_payload(data):
+    """Keep only real problems in the Mac mini service list (see dashboard_builder.service_status)."""
+    loaded, disabled = _launchd_state()
+    if not loaded or disabled is None:
+        return data  # launchctl has not answered yet: show the health API as it is
+    return normalize_payload(data, loaded=loaded, disabled=disabled)
 
 
 def _local_service_snapshot() -> dict:
@@ -2547,6 +2578,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 suffix = f"?{parsed.query}" if parsed.query else ""
                 data = _health_request("GET", f"{parsed.path}{suffix}")
+                if parsed.path in {"/api/all", "/api/services/detailed"}:
+                    data = _mini_services_payload(data)
                 if self._is_public_request():
                     data = _public_dashboard_payload(data)
                 self._json_response(200, data)
