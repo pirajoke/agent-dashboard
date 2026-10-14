@@ -6,10 +6,12 @@
 <title>Command Center</title>
 <script>
 // One light or dark choice for the whole Command Center, per browser, set before the first paint.
+// Light unless this browser picked dark (Mark 2026-10-14: light by default, whatever the system says).
+// A new key, so an older dark pick from before that decision does not stick.
+document.documentElement.dataset.theme = 'light';
 try {
-  const savedTheme = localStorage.getItem('command-center.main-manager.theme');
-  if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.dataset.theme = savedTheme;
-} catch (error) { /* the system theme applies */ }
+  if (localStorage.getItem('command-center.theme.v2') === 'dark') document.documentElement.dataset.theme = 'dark';
+} catch (error) { /* stays light */ }
 </script>
 <style>
 /* One design for every tab (Mark 2026-10-14): the Property OS tokens of MAIN MANAGER, light and dark,
@@ -5407,9 +5409,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Light or dark for the whole Command Center (Mark 2026-10-14: one design everywhere). The choice is per
-// browser and set before the first paint in <head>; without one the system setting applies. The key is
-// the one MAIN MANAGER used, so an earlier choice there carries over.
-const CC_THEME_KEY = 'command-center.main-manager.theme';
+// browser and set before the first paint in <head>; without one the page is light (Mark 2026-10-14).
+const CC_THEME_KEY = 'command-center.theme.v2';
 
 function ccIsDark() {
   const theme = document.documentElement.dataset.theme;
