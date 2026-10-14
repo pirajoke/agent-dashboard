@@ -11,7 +11,8 @@ import unittest
 BUILDER_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BUILDER_DIR))
 
-from dashboard_builder.growth import growth_projection, parse_note  # noqa: E402
+from dashboard_builder.growth import PICTURES, growth_projection, parse_note  # noqa: E402
+import re  # noqa: E402
 
 NOTE = """# Мои точки роста
 > intro
@@ -48,6 +49,27 @@ class GrowthTest(unittest.TestCase):
         self.assertEqual([s["done"] for s in areas[1]["steps"]], [True, False, False])
         self.assertEqual(areas[1]["projects"], ["shopify", "tiktokshop"])
         self.assertEqual(areas[2]["picture"], "growth")
+
+    def test_title_picks_a_picture_when_the_note_names_none(self):
+        areas = parse_note("""## Трейдинг и инвестиции
+## Сертификат PMP
+## Электроника и роботы
+## AI-агенты
+- Картинка: chart
+## Дизайн-агентство
+## Личный бренд
+## Свой подход к агентам
+- Картинка: podcast
+""")
+        self.assertEqual([a["picture"] for a in areas],
+                         ["trading", "pmp", "robots", "agents", "design", "podcast", "podcast"])
+
+    def test_every_picture_has_a_drawing_on_the_page(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        drawn = set(re.findall(r'<symbol id="cc-growth-([a-z]+)"', html))
+        listed = set(re.findall(r"'([a-z]+)'", re.search(r"const GROWTH_PICTURES = \[(.*?)\];", html).group(1)))
+        self.assertEqual(PICTURES, drawn)
+        self.assertEqual(PICTURES, listed)
 
     def test_owner_sees_progress_and_real_time_only_for_linked_projects(self):
         with tempfile.TemporaryDirectory() as tmp:

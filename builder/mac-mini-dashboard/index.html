@@ -3425,6 +3425,10 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .growth-card[data-picture="podcast"] { --growth-tint: #FCE7F3; }
 .growth-card[data-picture="design"] { --growth-tint: #E0F2FE; }
 .growth-card[data-picture="coworking"] { --growth-tint: #FFEDD5; }
+.growth-card[data-picture="trading"] { --growth-tint: #CCFBF1; }
+.growth-card[data-picture="pmp"] { --growth-tint: #E0E7FF; }
+.growth-card[data-picture="robots"] { --growth-tint: #FEE2E2; }
+.growth-card[data-picture="agents"] { --growth-tint: #ECFCCB; }
 :root[data-theme="dark"] .growth-card { --growth-tint: rgba(255,255,255,.06) !important; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .growth-card { --growth-tint: rgba(255,255,255,.06) !important; } }
 .growth-art { position: relative; display: grid; place-items: center; height: 150px; background: var(--growth-tint); }
@@ -3687,6 +3691,49 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
     <rect x="74" y="50" width="16" height="14" rx="2" fill="#FFFFFF" stroke="currentColor" stroke-width="2.4"/>
     <rect x="50" y="76" width="20" height="28" rx="3" fill="#F97316" stroke="currentColor" stroke-width="2.6"/>
     <circle cx="38" cy="86" r="5" fill="currentColor"/><circle cx="82" cy="86" r="5" fill="currentColor"/>
+  </symbol>
+  <symbol id="cc-growth-trading" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="32" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="16" y="18" width="88" height="70" rx="9" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
+    <path d="M60 88v14M44 104h32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M34 46v30M52 40v30M70 32v28M88 26v22" stroke="#1E293B" stroke-width="2" stroke-linecap="round"/>
+    <rect x="29" y="52" width="10" height="16" rx="2" fill="#F87171" stroke="#1E293B" stroke-width="2.4"/>
+    <rect x="47" y="46" width="10" height="18" rx="2" fill="#4ADE80" stroke="#1E293B" stroke-width="2.4"/>
+    <rect x="65" y="38" width="10" height="16" rx="2" fill="#4ADE80" stroke="#1E293B" stroke-width="2.4"/>
+    <rect x="83" y="30" width="10" height="13" rx="2" fill="#4ADE80" stroke="#1E293B" stroke-width="2.4"/>
+  </symbol>
+  <symbol id="cc-growth-pmp" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="32" ry="5" fill="currentColor" opacity=".08"/>
+    <rect x="14" y="22" width="80" height="64" rx="6" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
+    <rect x="21" y="29" width="66" height="50" rx="3" fill="none" stroke="#818CF8" stroke-width="2"/>
+    <path d="M30 42h40M30 52h30M30 62h22" stroke="#1E293B" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M80 86l-6 18 8-4 5 7 4-19zM96 86l6 18-8-4-5 7-4-19z" fill="#6366F1" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+    <circle cx="88" cy="76" r="14" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
+    <path d="M82 76l4 4 8-9" fill="none" stroke="#1E293B" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="cc-growth-robots" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="30" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M60 20v10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="16" r="5" fill="#F87171" stroke="currentColor" stroke-width="2.4"/>
+    <rect x="24" y="46" width="8" height="16" rx="3" fill="#93C5FD" stroke="currentColor" stroke-width="2.4"/>
+    <rect x="88" y="46" width="8" height="16" rx="3" fill="#93C5FD" stroke="currentColor" stroke-width="2.4"/>
+    <rect x="31" y="30" width="58" height="46" rx="12" fill="#BFDBFE" stroke="currentColor" stroke-width="3"/>
+    <rect x="38" y="38" width="44" height="28" rx="8" fill="#1E293B" stroke="currentColor" stroke-width="2.4"/>
+    <circle cx="50" cy="51" r="5" fill="#5EEAD4"/><circle cx="70" cy="51" r="5" fill="#5EEAD4"/>
+    <path d="M53 60q7 4 14 0" fill="none" stroke="#5EEAD4" stroke-width="2.4" stroke-linecap="round"/>
+    <rect x="40" y="80" width="40" height="24" rx="8" fill="#BFDBFE" stroke="currentColor" stroke-width="3"/>
+    <circle cx="60" cy="92" r="5" fill="#F5C542" stroke="#1E293B" stroke-width="2.2"/>
+  </symbol>
+  <symbol id="cc-growth-agents" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="110" rx="32" ry="5" fill="currentColor" opacity=".08"/>
+    <path d="M60 58L28 30M60 58L92 30M60 58L30 90M60 58L90 90" stroke="currentColor" stroke-width="2.6" stroke-dasharray="4 4"/>
+    <circle cx="28" cy="30" r="12" fill="#86EFAC" stroke="currentColor" stroke-width="3"/>
+    <circle cx="92" cy="30" r="12" fill="#F9A8D4" stroke="currentColor" stroke-width="3"/>
+    <circle cx="30" cy="90" r="12" fill="#93C5FD" stroke="currentColor" stroke-width="3"/>
+    <circle cx="90" cy="90" r="12" fill="#F5C542" stroke="currentColor" stroke-width="3"/>
+    <rect x="42" y="42" width="36" height="32" rx="10" fill="#FFFFFF" stroke="currentColor" stroke-width="3"/>
+    <circle cx="53" cy="56" r="3.5" fill="#1E293B"/><circle cx="67" cy="56" r="3.5" fill="#1E293B"/>
+    <path d="M54 65q6 4 12 0" fill="none" stroke="#1E293B" stroke-width="2.4" stroke-linecap="round"/>
   </symbol>
   <symbol id="cc-growth-growth" viewBox="0 0 120 120">
     <ellipse cx="60" cy="108" rx="28" ry="5" fill="currentColor" opacity=".08"/>
@@ -7275,7 +7322,7 @@ setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000
 const GROWTH_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/growth`
   : 'https://command.meshly.fr/api/growth';
-const GROWTH_PICTURES = ['pe', 'digital', 'research', 'podcast', 'design', 'coworking', 'growth'];
+const GROWTH_PICTURES = ['pe', 'digital', 'research', 'podcast', 'design', 'coworking', 'trading', 'pmp', 'robots', 'agents', 'growth'];
 let growthLoading = false;
 
 async function loadGrowth() {

@@ -11,6 +11,8 @@ the dashboard: he edits it there, and the dashboard only reads it. Each area is 
     - [x] Разобрать модели сделок
     - [ ] Заполнить тезис покупки
 
+``Картинка`` is optional: without a known one, the title picks the picture.
+
 Progress is the share of ticked steps, and only exists once an area has steps. Time is
 the real work of the last 30 days in the projects an area names, taken from the Daily
 Work session files; an area with no linked project, or no session files to read, has
@@ -26,7 +28,20 @@ from pathlib import Path
 from typing import Any
 
 NOTE_FILE = Path.home() / "ObsidianVault" / "AMBITIONS-DREAMS" / "ТОЧКИ-РОСТА.md"
-PICTURES = {"pe", "digital", "research", "podcast", "design", "coworking", "growth"}
+PICTURES = {"pe", "digital", "research", "podcast", "design", "coworking", "trading", "pmp", "robots", "agents", "growth"}
+# Without a known «Картинка:», the title picks one. Order matters: «Дизайн-агентство» is design, not agents.
+_PICTURE_HINTS = (
+    ("design", ("дизайн", "design")),
+    ("research", ("исследован", "research", "наук")),
+    ("trading", ("трейд", "trading", "инвест", "бирж")),
+    ("pmp", ("pmp", "сертифик", "проектн", "project manag")),
+    ("robots", ("робот", "электрон", "robot", "arduino")),
+    ("agents", ("агент", "agent")),
+    ("pe", ("private equity", "венчур", "покупк", "сделк")),
+    ("digital", ("digital", "монетиз", "tiktok", "shopify", "магазин")),
+    ("podcast", ("подкаст", "podcast", "бренд")),
+    ("coworking", ("коворкинг", "cowork")),
+)
 TIME_WINDOW_DAYS = 30
 NOTE_STALE_DAYS = 30
 _STEP_RE = re.compile(r"^\s*[-*]\s+\[( |x|X)\]\s+(.+?)\s*$")
@@ -53,6 +68,14 @@ def _slug(title: str, used: set[str]) -> str:
     return slug
 
 
+def _guess_picture(title: str) -> str:
+    lowered = title.lower()
+    for picture, hints in _PICTURE_HINTS:
+        if any(hint in lowered for hint in hints):
+            return picture
+    return "growth"
+
+
 def parse_note(text: str) -> list[dict[str, Any]]:
     areas: list[dict[str, Any]] = []
     used: set[str] = set()
@@ -60,7 +83,7 @@ def parse_note(text: str) -> list[dict[str, Any]]:
     for line in text.splitlines():
         if line.startswith("## "):
             title = _clean(line[3:], 80)
-            current = {"id": _slug(title, used), "title": title, "why": "", "picture": "growth",
+            current = {"id": _slug(title, used), "title": title, "why": "", "picture": _guess_picture(title),
                        "projects": [], "steps": []}
             areas.append(current)
             continue
@@ -76,7 +99,8 @@ def parse_note(text: str) -> list[dict[str, Any]]:
         name, value = meta.group(1).lower(), meta.group(2)
         if name == "картинка":
             picture = value.strip().lower()
-            current["picture"] = picture if picture in PICTURES else "growth"
+            if picture in PICTURES:
+                current["picture"] = picture
         elif name == "зачем":
             current["why"] = _clean(value)
         elif name == "проекты":
