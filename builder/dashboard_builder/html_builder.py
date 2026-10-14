@@ -13,12 +13,23 @@ from .department_campus import build_department_campus_html
 from .platforms import build_platform_hub_html
 
 
-def _build_projects_section(active_count: int, completed_count: int) -> str:
+def _is_project_finished(p: dict) -> bool:
+    """Finished only when the vault says so: a done status, or every TODO closed."""
+    if p.get("status", "").lower() in ("done", "completed", "archived"):
+        return True
+    return p["open_todos"] == 0 and p["closed_todos"] > 0
+
+
+def _build_projects_section(active_count: int, finished_count: int, unknown_count: int) -> str:
     """The Projects section of the page, which is also published on GitHub Pages.
 
     It holds counts only. Project names, task text and Obsidian vault paths are private
     (AGENTS.md §10): Mark sees them in MAIN MANAGER on command.meshly.fr after sign-in.
+    A project with no status and no TODOs is counted as unknown, never as finished.
     """
+    counts = f"В работе {active_count}, завершено {finished_count}"
+    if unknown_count:
+        counts += f", без статуса {unknown_count}"
     return f"""<!-- Projects Section -->
 <div class="section" id="projects">
     <div class="section-head">
@@ -27,7 +38,7 @@ def _build_projects_section(active_count: int, completed_count: int) -> str:
         <div class="section-count">{active_count} active</div>
     </div>
     <div class="proj-details">
-        <p style="margin:0;padding:0.9rem 1.2rem;color:var(--dim);font-size:0.8rem;line-height:1.5">В работе {active_count}, завершено {completed_count}. Названия и задачи проектов видны только в MAIN MANAGER на command.meshly.fr после входа.</p>
+        <p style="margin:0;padding:0.9rem 1.2rem;color:var(--dim);font-size:0.8rem;line-height:1.5">{counts}. Названия и задачи проектов видны только в MAIN MANAGER на command.meshly.fr после входа.</p>
     </div>
 </div>"""
 
@@ -70,8 +81,9 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 
     # Projects
     active_projs = [p for p in projects if is_project_active(p)]
-    completed_projs = [p for p in projects if not is_project_active(p)]
-    projects_html = _build_projects_section(len(active_projs), len(completed_projs))
+    finished_count = sum(1 for p in projects if not is_project_active(p) and _is_project_finished(p))
+    unknown_count = len(projects) - len(active_projs) - finished_count
+    projects_html = _build_projects_section(len(active_projs), finished_count, unknown_count)
 
     css_text = (ASSETS_DIR / "style.css").read_text()
     js_text = (ASSETS_DIR / "script.js").read_text()

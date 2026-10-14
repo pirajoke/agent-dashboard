@@ -30,6 +30,15 @@ DONE = {
     "next_action": "—",
     "freshness_days": 40,
 }
+UNKNOWN = {
+    "name": "GRACHEV-AI-STUDIO",
+    "status": "—",
+    "open_todos": 0,
+    "closed_todos": 0,
+    "agents": [],
+    "next_action": "—",
+    "freshness_days": 999,
+}
 VAULT_PATH_MARKERS = ("obsidian://", "Tech-Base/TODO.md", "20-Projects/")
 
 
@@ -43,6 +52,12 @@ class PublicPagePrivacyTest(unittest.TestCase):
             self.assertNotIn(private, html)
         self.assertIn('<div class="section-count">1 active</div>', html)
         self.assertIn("В работе 1, завершено 1.", html)
+
+    def test_project_without_status_is_unknown_not_finished(self):
+        html = build_html([ACTIVE, DONE, UNKNOWN], "2026-10-14 12:00:00 UTC")
+
+        self.assertNotIn("GRACHEV-AI-STUDIO", html)
+        self.assertIn("В работе 1, завершено 1, без статуса 1.", html)
 
     def test_published_snapshot_has_no_vault_paths(self):
         snapshot = PUBLIC_SNAPSHOT.read_text(encoding="utf-8")
