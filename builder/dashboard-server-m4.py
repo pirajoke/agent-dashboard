@@ -28,6 +28,7 @@ from dashboard_builder.owner_decisions import (
 )
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.infra_changes import infra_projection
+from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
@@ -98,6 +99,7 @@ PUBLIC_BRIDGE_PATHS = {
     "/api/manager/departments",
     "/api/work/daily",
     "/api/infra/changes",
+    "/api/growth",
 }
 PUBLIC_FILE_PATHS = {
     "/",
@@ -2426,6 +2428,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         self._json_response(200, payload)
 
+    def _handle_growth(self):
+        # «Точки роста» from the Obsidian note; the public view is a count only.
+        try:
+            payload = growth_projection(GROWTH_NOTE_FILE, DAILY_WORK_DIR, owner=self._dashboard_run_authorized())
+        except Exception:
+            self._json_response(200, {"ok": False, "state": "unavailable", "reason": "growth_unreadable"})
+            return
+        self._json_response(200, payload)
+
     def _handle_infra_changes(self, parsed):
         # Owner view adds the timeline itself; the public view is counts only.
         query = parse_qs(parsed.query)
@@ -2561,6 +2572,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/infra/changes':
             self._handle_infra_changes(parsed)
+            return
+        if parsed.path == '/api/growth':
+            self._handle_growth()
             return
         if parsed.path == '/api/manager/events':
             try:

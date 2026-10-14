@@ -766,7 +766,7 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn('aria-controls="section-work"', html)
         self.assertIn('id="section-work"', html)
         self.assertIn("/api/work/daily", html)
-        self.assertIn("'work'].includes(INITIAL_SECTION)", html)
+        self.assertRegex(html, r"'work'[^\]]*\]\.includes\(INITIAL_SECTION\)")
         # MAIN MANAGER (Mark, 2026-10-14: «чтобы была визуализация проекта, который я делаю»):
         # the project board first, then «Дела» (2026-10-12) and «Изменения».
         self.assertIn('<button type="button" data-mm-view="map" aria-pressed="true">', html)

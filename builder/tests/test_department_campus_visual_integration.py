@@ -202,11 +202,12 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
 
         # Mark (2026-10-14): MAIN MANAGER is the first screen and «По дням» is gone, since
         # MAIN MANAGER already says it; the tabs are in Russian; the technical machine pages
-        # stay in the last tab, «Техника».
+        # stay in the last tab, «Техника». «Точки роста» (Mark 2026-10-14) follows MAIN MANAGER.
         self.assertEqual(
             [(item["target"], item["text"]) for item in parser.navigation],
             [
                 ("work", "MAIN MANAGER"),
+                ("growth", "Точки роста"),
                 ("agents", "Агенты"),
                 ("platforms", "Платформы"),
                 ("machines", "Техника"),
@@ -232,7 +233,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "platforms", "work"],
+            ["mac-mini", "air", "pro", "machines", "agents", "platforms", "work", "growth"],
         )
         self.assertIn(
             'aria-controls="agents-campus" aria-pressed="true"',

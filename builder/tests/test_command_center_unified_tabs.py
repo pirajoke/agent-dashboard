@@ -603,7 +603,7 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
         self.assertIsNotNone(nav_match)
         nav = nav_match.group(1)
         # Mark 2026-10-14: «По дням» (today) is gone, MAIN MANAGER is the first tab.
-        routes = ("work", "agents", "platforms", "machines")
+        routes = ("work", "growth", "agents", "platforms", "machines")
 
         for route in routes:
             with self.subTest(route=route):
