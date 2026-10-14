@@ -5332,13 +5332,14 @@ function beginPlatformLongPress(event) {
     timer: null,
   };
   platformPointerState = state;
-  // Capture synchronously on the stable directory. Reordering a card in the live DOM
-  // can detach its descendants briefly, so a descendant is not a safe capture target.
-  try { platformDirectory.setPointerCapture(state.pointerId); } catch (error) { /* optional */ }
   state.timer = window.setTimeout(() => {
     if (platformPointerState !== state) return;
     state.active = true;
     state.timer = null;
+    // Capture only once the long press fires: capturing at pointerdown would retarget a
+    // short tap's click to the directory, and links would stop opening. Capture on the
+    // stable directory, since reordering can briefly detach a card's descendants.
+    try { platformDirectory.setPointerCapture(state.pointerId); } catch (error) { /* optional */ }
     const rect = card.getBoundingClientRect();
     state.grabX = state.startX - rect.left;
     state.grabY = state.startY - rect.top;
