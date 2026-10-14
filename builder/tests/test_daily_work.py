@@ -767,11 +767,13 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn('id="section-work"', html)
         self.assertIn("/api/work/daily", html)
         self.assertIn("'work'].includes(INITIAL_SECTION)", html)
-        # MAIN MANAGER is the to-do list (Mark, 2026-10-12): no project cards repeating the days.
+        # MAIN MANAGER (Mark, 2026-10-14: «чтобы была визуализация проекта, который я делаю»):
+        # the project board first, then «Дела» (2026-10-12) and «Изменения».
+        self.assertIn('<button type="button" data-mm-view="map" aria-pressed="true">', html)
         self.assertIn('data-mm-view="todo"', html)
+        self.assertIn('data-mm-view="infra"', html)
+        self.assertIn("renderMap(data);", html)
         self.assertIn("renderTodo(data);", html)
-        self.assertNotIn("mm-project-grid", html)
-        self.assertNotIn('data-mm-view="projects"', html)
         # Loose ends are part of the same list (2026-10-13), not a separate view.
         self.assertNotIn('data-mm-view="loose"', html)
         todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="project"')]
@@ -780,8 +782,11 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         # Projects reuse the Platforms mascots and open a per-project page.
         self.assertIn('<use href="#cc-mascot-${mmEsc(item.mascot)}"/>', html)
         self.assertIn("project: id", html)
-        # The plain-language day summary lives only in «По дням», not again in MAIN MANAGER.
-        self.assertIn('id="dp-days"', html)
+        # No separate day summary (Mark, 2026-10-14: MAIN MANAGER already says it): no «По дням»
+        # feed and no summary view; a day's bullets stay in each project's history.
+        self.assertNotIn('id="section-today"', html)
+        self.assertNotIn('id="dp-days"', html)
+        self.assertNotIn("edition: '1'", html)
         self.assertNotIn('data-mm-view="overview"', html)
         self.assertNotIn('id="mm-day-summary"', html)
         self.assertIn("mm-project-desc", html)
@@ -801,50 +806,38 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn("owner=self._dashboard_run_authorized()", server)
         self.assertIn("edition=(query.get('edition') or ['0'])[0] == '1'", server)
 
-    def test_dashboard_opens_on_the_days(self):
+    def test_dashboard_opens_on_main_manager_in_one_design(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
-        # Mark (2026-10-11): «По дням» is the first thing he sees, in the MAIN MANAGER rows he liked.
-        self.assertIn('<div id="section-today" class="section active" lang="ru">', html)
-        self.assertIn('<div class="mm-os dp" id="dp-os" role="region" aria-labelledby="dp-title">', html)
-        self.assertIn('<h2 class="dp-title" id="dp-title">По дням</h2>', html)
-        self.assertIn("new URLSearchParams({ days: '30', edition: '1' })", html)
-        self.assertIn("function renderDays()", html)
-        self.assertIn("data.feed.map((day, index) => dpDay(day, index, data))", html)
-        self.assertIn("index < DP_OPEN_DAYS", html)
-        self.assertIn("<summary>Технические детали", html)
-        # «По дням» stays inside the same top-level shell instead of replacing it
-        # with a second, differently styled navigation row.
+        # Mark (2026-10-14): «Нам не нужна сводка дня … сделай, чтобы это было красиво, унифицировано по
+        # дизайну». MAIN MANAGER is the first screen; old «По дням» links (?tab=today) open it.
+        self.assertIn('<section id="section-work" class="section active" aria-labelledby="mm-title">', html)
+        self.assertIn("const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;", html)
+        self.assertIn("  showSection('work');\n}", html)
+        # One app shell: the only primary navigation sits in the sidebar, the sections in the page.
         primary_nav = '<nav class="nav-pills cc-main-nav" aria-label="Command Center sections">'
         self.assertEqual(html.count(primary_nav), 1)
-        self.assertLess(html.index(primary_nav), html.index('<div id="section-today"'))
-        today = html[
-            html.index('<div id="section-today"') : html.index(
-                '<section id="section-platforms"'
-            )
-        ]
-        obsolete_replacements = []
-        if '<nav class="dp-more" aria-label="Другие разделы">' in today:
-            obsolete_replacements.append("the dp-more replacement navigation")
-        if ".container:has(> #section-today.active) > .cc-main-nav { display: none; }" in html:
-            obsolete_replacements.append("the CSS rule that hides the primary navigation")
-        self.assertEqual(
-            obsolete_replacements,
-            [],
-            "the shared primary navigation must remain visible on «По дням»",
-        )
-        # A project's technical line opens that day on its project page, details unfolded.
-        self.assertIn("openProject(link.dataset.project, link.dataset.day || null)", html)
-        self.assertIn("if (day) mmRevealDay(day);", html)
-        # The project page starts with «По дням»; numbers, the to-do and the chart are folded below it.
-        page = html[html.index("function renderProjectPage()"):html.index("function mmRevealDay(")]
-        self.assertLess(page.index("<h3>По дням"), page.index('<details class="mm-panel mm-project-more"'))
-        self.assertLess(page.index('<details class="mm-panel mm-project-more"'), page.index("${mmTodo(p)}"))
-        self.assertIn("if (event.target.open) renderProjectChart();", page)
-        # Without the owner token the page shows only the day's numbers.
-        self.assertIn("if (!data.owner_view || !data.feed)", html)
-        self.assertIn("Итоги по дням видит только владелец", html)
+        self.assertLess(html.index('<aside class="cc-side"'), html.index(primary_nav))
+        self.assertLess(html.index(primary_nav), html.index('<main class="cc-main">'))
+        self.assertLess(html.index('<main class="cc-main">'), html.index('<section id="section-work"'))
+        # Every section opens with the same page header, and one switch sets light or dark for all.
+        for title_id in ("mm-title", "agents-title", "platforms-title", "machines-title"):
+            self.assertRegex(html, rf'<h2 class="cc-page-title[^"]*" id="{title_id}">')
+        self.assertIn('id="cc-theme-toggle"', html)
+        self.assertNotIn('id="mm-theme-toggle"', html)
+        # The board: a card per project with two weeks of work and what waits on Mark.
+        self.assertIn("function renderMap(data)", html)
+        self.assertIn("const MM_MAP_DAYS = 14;", html)
+        self.assertIn("${active ? mmSpark(p, dates, scale) : ''}", html)
+        self.assertIn("Карточки проектов видны только владельцу.", html)
+        # A link with ?day= opens that day in the project's history, details unfolded.
+        self.assertIn("if (day) mmOpenHistoryDay(day);", html)
+        # The project page shows its numbers, tasks and chart first; the day history is folded below.
+        page = html[html.index("function renderProjectPage()"):html.index("function mmOpenHistoryDay(")]
+        self.assertLess(page.index("${mmTodo(p)}"), page.index('id="mm-project-chart"'))
+        self.assertLess(page.index('id="mm-project-chart"'), page.index('<details class="mm-panel mm-project-more" id="mm-project-history">'))
+        self.assertIn("<summary>Технические детали", html)
         self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
-        for gone in ("renderPaper", "np-articles", "Остальные проекты"):
+        for gone in ("renderPaper", "np-articles", "Остальные проекты", "function renderDays()", "dpDay(", "loadDays"):
             self.assertNotIn(gone, html)
 
     def test_owner_browser_can_open_the_phone_by_qr(self):
