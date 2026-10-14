@@ -3327,11 +3327,25 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-tag { color: var(--mm-muted); letter-spacing: .05em; }
 .platform-index { color: var(--mm-muted); opacity: .8; }
 .platform-link { border-color: var(--mm-control-line); }
+/* Arrows stay for keyboard use; a phone reorders by long press, like the iPhone home screen. */
+.platform-reorder-controls { opacity: 0; transition: opacity .15s ease; }
+.platform-entry:focus-within .platform-reorder-controls { opacity: 1; }
 @media (hover: hover) {
-  .platform-reorder-controls { opacity: 0; transition: opacity .15s ease; }
-  .platform-entry:hover .platform-reorder-controls,
-  .platform-entry:focus-within .platform-reorder-controls,
-  .platform-entry.is-reordering .platform-reorder-controls { opacity: 1; }
+  .platform-entry:hover .platform-reorder-controls { opacity: 1; }
+}
+.platform-entry { -webkit-touch-callout: none; }
+.platform-directory.is-arranging { user-select: none; -webkit-user-select: none; }
+.platform-directory.is-arranging .platform-reorder-controls { opacity: 0; }
+.platform-directory.is-arranging .platform-entry:not(.is-reordering) { animation: platform-jiggle .28s ease-in-out infinite alternate; }
+.platform-directory.is-arranging .platform-entry:nth-child(2n):not(.is-reordering) { animation-delay: -.14s; }
+.platform-directory.is-arranging .platform-entry.is-reordering {
+  z-index: 20; transition: none; cursor: grabbing;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .18), 0 0 0 3px var(--mm-selection);
+}
+.platform-directory.is-arranging .platform-entry.is-reordering a { pointer-events: none; }
+@keyframes platform-jiggle { from { rotate: -.8deg; } to { rotate: .8deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .platform-directory.is-arranging .platform-entry:not(.is-reordering) { animation: none; }
 }
 .cc-main .machines-stats { gap: 28px; margin: 0; }
 .cc-main .machines-stats .stat-value { font-size: 28px; font-weight: 750; line-height: 1.1; }
@@ -3832,7 +3846,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
           <h3 class="platform-name">Lexi</h3>
           <p class="platform-description">Бот для изучения языков Lexi (раньше MyDictionary) и его закрытая админка.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8791/admin" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Админка</a>
+            <a class="platform-link" href="https://mydictionary.meshly.fr/admin" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Админка</a>
             <a class="platform-link" href="https://t.me/my_dictionnary_tg_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
@@ -3859,7 +3873,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
           <h3 class="platform-name">AI Singularity</h3>
           <p class="platform-description">Закрытое приложение на Mac mini.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8790" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть</a>
+            <a class="platform-link" href="https://singularity.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
       </article>
@@ -3885,7 +3899,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
           <h3 class="platform-name">Accountable OS</h3>
           <p class="platform-description">Закрытое пространство личной ответственности на Mac mini.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть</a>
+            <a class="platform-link" href="https://accountable.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
       </article>
@@ -3950,7 +3964,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
           <h3 class="platform-name">Sushi Parisien</h3>
           <p class="platform-description">Сайт суши-ресторана в 8-м округе Парижа.</p>
           <div class="platform-links">
-            <a class="platform-link" href="http://127.0.0.1:8890" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть сайт</a>
+            <a class="platform-link" href="https://sushi-parisien.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть сайт</a>
           </div>
         </div>
       </article>
@@ -5258,9 +5272,51 @@ function releasePlatformPointerCapture(state) {
   } catch (error) { /* pointer capture is best-effort */ }
 }
 
+// The dragged card follows the finger: its layout box (offsetLeft/Top, not affected by
+// transforms) plus a translate that puts the grabbed point under the pointer.
+function platformLayoutBox(card) {
+  const parent = card.offsetParent || document.body;
+  const origin = parent.getBoundingClientRect();
+  return { left: origin.left + card.offsetLeft - parent.scrollLeft, top: origin.top + card.offsetTop - parent.scrollTop };
+}
+
+function followPlatformPointer(state, x, y) {
+  const box = platformLayoutBox(state.card);
+  const dx = x - state.grabX - box.left;
+  const dy = y - state.grabY - box.top;
+  state.card.style.transform = `translate(${dx}px, ${dy}px) scale(1.04)`;
+}
+
+// Neighbours glide to their new places (FLIP) instead of jumping.
+function flipPlatformCards(mutate, except) {
+  const before = new Map(platformCards().filter(card => card !== except).map(card => [card, card.getBoundingClientRect()]));
+  mutate();
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  before.forEach((rect, card) => {
+    const after = card.getBoundingClientRect();
+    const dx = rect.left - after.left;
+    const dy = rect.top - after.top;
+    if (!dx && !dy) return;
+    card.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
+      { duration: 220, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+  });
+}
+
+function settlePlatformCard(state) {
+  platformDirectory.classList.remove('is-arranging');
+  const card = state.card;
+  const from = card.style.transform;
+  card.style.transform = '';
+  if (from && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    card.animate([{ transform: from }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.2, .8, .2, 1)' });
+  }
+}
+
+let platformSuppressClickUntil = 0;
+
 function beginPlatformLongPress(event) {
   if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
-  if (event.target.closest('a, button, input, textarea, select, summary')) return;
+  if (event.target.closest('button, input, textarea, select, summary')) return;
   const card = event.target.closest('.platform-entry');
   if (!card || !platformDirectory.contains(card)) return;
   if (platformPointerState) cancelPlatformLongPress();
@@ -5283,8 +5339,14 @@ function beginPlatformLongPress(event) {
     if (platformPointerState !== state) return;
     state.active = true;
     state.timer = null;
+    const rect = card.getBoundingClientRect();
+    state.grabX = state.startX - rect.left;
+    state.grabY = state.startY - rect.top;
+    platformDirectory.classList.add('is-arranging');
     card.classList.add('is-reordering');
     card.setAttribute('aria-grabbed', 'true');
+    if (navigator.vibrate) navigator.vibrate(12);
+    followPlatformPointer(state, state.startX, state.startY);
     announcePlatformOrder(card, 'Перемещаю:');
   }, PLATFORM_LONG_PRESS_MS);
 }
@@ -5308,13 +5370,19 @@ function movePlatformLongPress(event) {
     return;
   }
   if (event.cancelable) event.preventDefault();
+  followPlatformPointer(state, event.clientX, event.clientY);
+  state.card.style.visibility = 'hidden';
   const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.platform-entry');
+  state.card.style.visibility = '';
   if (!target || target === state.card || !platformDirectory.contains(target)) return;
   const cards = platformCards();
   const sourceIndex = cards.indexOf(state.card);
   const targetIndex = cards.indexOf(target);
-  if (sourceIndex < targetIndex) target.after(state.card);
-  else target.before(state.card);
+  flipPlatformCards(() => {
+    if (sourceIndex < targetIndex) target.after(state.card);
+    else target.before(state.card);
+  }, state.card);
+  followPlatformPointer(state, event.clientX, event.clientY);
   state.changed = true;
   renumberPlatforms();
 }
@@ -5324,6 +5392,10 @@ function commitPlatformLongPress(event) {
   if (!state || event.pointerId !== state.pointerId) return;
   clearPlatformLongPressTimer();
   if (state.active && event.cancelable) event.preventDefault();
+  if (state.active) {
+    settlePlatformCard(state);
+    platformSuppressClickUntil = Date.now() + 400;
+  }
   state.card.classList.remove('is-reordering');
   state.card.removeAttribute('aria-grabbed');
   platformPointerState = null;
@@ -5350,6 +5422,7 @@ function cancelPlatformLongPress(event) {
   try {
     applyPlatformOrder(state.initialOrder);
   } finally {
+    if (state.active) settlePlatformCard(state);
     state.card.classList.remove('is-reordering');
     state.card.removeAttribute('aria-grabbed');
     platformPointerState = null;
@@ -5393,6 +5466,16 @@ function finishPlatformPointerCancel(event) {
 applyPlatformOrder(readPlatformOrder());
 if (platformDirectory) {
   platformDirectory.addEventListener('click', movePlatformByButton);
+  // A link under the finger must not open when a long press ends a drag.
+  platformDirectory.addEventListener('click', event => {
+    if (Date.now() < platformSuppressClickUntil && event.target.closest('a')) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, true);
+  platformDirectory.addEventListener('contextmenu', event => {
+    if (platformPointerState) event.preventDefault();
+  });
   platformDirectory.addEventListener('pointerdown', beginPlatformLongPress);
   platformDirectory.addEventListener('pointermove', movePlatformLongPress, { passive: false });
   platformDirectory.addEventListener('touchmove', cancelActivePlatformTouchMove, { passive: false });

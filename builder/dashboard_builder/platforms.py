@@ -28,9 +28,9 @@ PLATFORM_REGISTRY = (
         "name": "Lexi",
         "description": "Lexi language-learning bot (formerly MyDictionary) and its administration.",
         "tier": "primary",
-        "status": "Private Mac mini + Telegram",
+        "status": "Public HTTPS + Telegram",
         "actions": (
-            {"label": "Open admin", "url": "http://127.0.0.1:8791/admin", "access": "private"},
+            {"label": "Open admin", "url": "https://mydictionary.meshly.fr/admin", "access": "public"},
             {"label": "Open Lexi bot", "url": "https://t.me/my_dictionnary_tg_bot", "access": "telegram"},
         ),
     },
@@ -49,9 +49,9 @@ PLATFORM_REGISTRY = (
         "name": "AI Singularity",
         "description": "Private publishing and content operations surface.",
         "tier": "active",
-        "status": "Private Mac mini",
+        "status": "Public HTTPS destination",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:8790", "access": "private"},
+            {"label": "Open workspace", "url": "https://singularity.meshly.fr/", "access": "public"},
         ),
     },
     {
@@ -69,9 +69,9 @@ PLATFORM_REGISTRY = (
         "name": "Accountable OS",
         "description": "Private accountability and operating-rhythm workspace.",
         "tier": "active",
-        "status": "Private Mac mini",
+        "status": "Public HTTPS destination",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:4174", "access": "private"},
+            {"label": "Open workspace", "url": "https://accountable.meshly.fr/", "access": "public"},
         ),
     },
     {
@@ -119,9 +119,9 @@ PLATFORM_REGISTRY = (
         "name": "Sushi Parisien",
         "description": "Website of the sushi house in Paris 8e.",
         "tier": "active",
-        "status": "Private Mac mini",
+        "status": "Public HTTPS destination",
         "actions": (
-            {"label": "Open site", "url": "http://127.0.0.1:8890", "access": "private"},
+            {"label": "Open site", "url": "https://sushi-parisien.meshly.fr/", "access": "public"},
         ),
     },
     {
@@ -139,7 +139,9 @@ PLATFORM_REGISTRY = (
 
 _PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 _ACTION_FIELDS = ("label", "url", "access")
-_APPROVED_HTTPS_HOSTS = {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr"}
+_APPROVED_HTTPS_HOSTS = {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr",
+                         "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr",
+                         "sushi-parisien.meshly.fr"}
 _APPROVED_ACCESS = {"private", "public", "telegram"}
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 _SENSITIVE_COPY = re.compile(
