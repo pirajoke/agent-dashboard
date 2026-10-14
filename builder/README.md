@@ -39,6 +39,23 @@ Current JARVIS card source:
 - `builder/dashboard_builder/now.py`
 - `builder/dashboard-assets/style.css`
 
+## Services come back after a reboot
+
+On 2026-10-12 the Mac mini lost power, and after the login launchd left many LaunchAgents
+unloaded. `launchd_watchdog.py` (launchd `com.pirajoke.launchd-watchdog`, at login and every
+5 minutes, installed by `deploy_to_scripts.sh`) remembers every `com.pirajoke.*` and
+`homebrew.mxcl.*` job it has seen loaded and loads back the ones launchd does not have.
+It never loads a job it has not seen running, so services that are off stay off.
+
+To stop a service for good, use `launchctl disable gui/$(id -u)/<label>`; the watchdog then
+forgets it. A plain `launchctl bootout` is undone within 5 minutes. If auto-deploy rolls back to a
+release without the watchdog, its next run removes its own LaunchAgent. State and log:
+`~/.agent-bridge/launchd-watchdog/`.
+
+Before the login nothing runs: with FileVault on, the Mac mini waits for the password after a
+power loss. If macOS blocks a job under System Settings → General → Login Items & Extensions →
+«Allow in the background», the watchdog is blocked too, so that switch must stay on.
+
 ## Owner sign-in through Cloudflare Access
 
 On command.meshly.fr the owner no longer needs the owner key in each browser
