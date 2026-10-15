@@ -15,7 +15,7 @@ EXPECTED_PLATFORMS = {
     "financial": (
         "JobRadar / Financial OS",
         (
-            "http://127.0.0.1:8792",
+            "https://jobradar.meshly.fr/",
             "https://t.me/JobsRadarS_bot",
         ),
     ),
@@ -175,7 +175,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
                         self.assertEqual(parsed.scheme, "https")
                         self.assertIn(
                             parsed.hostname,
-                            {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr"},
+                            {"t.me", "jobradar.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr"},
                         )
 
     def test_platform_directory_is_responsive_keyboard_safe_and_motion_safe(self):

@@ -17,9 +17,9 @@ PLATFORM_REGISTRY = (
         "name": "JobRadar / Financial OS",
         "description": "Job discovery and the financial operations workspace.",
         "tier": "primary",
-        "status": "Private Mac mini + Telegram",
+        "status": "Public HTTPS + Telegram",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:8792", "access": "private"},
+            {"label": "Open JobRadar", "url": "https://jobradar.meshly.fr/", "access": "public"},
             {"label": "Open JobRadar bot", "url": "https://t.me/JobsRadarS_bot", "access": "telegram"},
         ),
     },
@@ -139,7 +139,7 @@ PLATFORM_REGISTRY = (
 
 _PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 _ACTION_FIELDS = ("label", "url", "access")
-_APPROVED_HTTPS_HOSTS = {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr",
+_APPROVED_HTTPS_HOSTS = {"t.me", "jobradar.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr",
                          "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr",
                          "sushi-parisien.meshly.fr"}
 _APPROVED_ACCESS = {"private", "public", "telegram"}
