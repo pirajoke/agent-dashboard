@@ -1,8 +1,8 @@
 name: Uptime
 
-# External ping for the Mac mini. If its public endpoints stop answering, this opens an
-# "uptime" issue (GitHub notifies the owner) and, when TG_BOT_TOKEN / TG_CHAT_ID secrets
-# exist, sends a Telegram message. It closes the issue and reports recovery when they return.
+# External ping for the Mac mini. Command Center sits behind Cloudflare Access, so a 302 login
+# redirect is not health: the workflow needs a service token and requires JSON HTTP 200 from
+# the origin-backed /api/health route.
 
 on:
   schedule:
@@ -27,25 +27,19 @@ jobs:
       TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
       TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
     steps:
+      - uses: actions/checkout@v7
+
       - name: Probe endpoints
         id: probe
-        run: |
-          down=""
-          for url in https://command.meshly.fr/ https://mydictionary.meshly.fr/health; do
-            ok=""
-            for attempt in 1 2 3; do
-              code=$(curl -s -o /dev/null -m 15 -w '%{http_code}' "$url" || true)
-              if [ "$code" -ge 200 ] 2>/dev/null && [ "$code" -lt 400 ]; then ok=1; break; fi
-              sleep 20
-            done
-            echo "$url -> ${code:-000}"
-            [ -z "$ok" ] && down="$down $url (HTTP ${code:-000})"
-          done
-          echo "down=${down# }" >> "$GITHUB_OUTPUT"
+        env:
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: python3 .github/scripts/uptime_probe.py
 
       - name: Open or close the uptime issue
         env:
           DOWN: ${{ steps.probe.outputs.down }}
+          UNCONFIGURED: ${{ steps.probe.outputs.unconfigured }}
         run: |
           tg() {
             [ -n "$TG_BOT_TOKEN" ] && [ -n "$TG_CHAT_ID" ] || return 0
@@ -54,10 +48,29 @@ jobs:
           }
           gh label create uptime --color B60205 --description "External uptime ping" 2>/dev/null || true
           open=$(gh issue list --label uptime --state open --json number -q '.[0].number')
-          if [ -n "$DOWN" ] && [ -z "$open" ]; then
-            gh issue create --label uptime --title "Mac mini unreachable from outside" \
-              --body "Failed after 3 attempts at $(date -u '+%F %H:%M') UTC: $DOWN"
-            tg "🚨 Внешний пинг: Mac mini не отвечает снаружи. $DOWN"
+          if [ -n "$DOWN" ]; then
+            title="Mac mini unreachable from outside"
+            body="Failed after 3 attempts at $(date -u '+%F %H:%M') UTC: $DOWN"
+            if [ -n "$UNCONFIGURED" ]; then
+              body="$body. Monitor configuration also needs attention: $UNCONFIGURED"
+            fi
+            if [ -z "$open" ]; then
+              gh issue create --label uptime --title "$title" --body "$body"
+              tg "🚨 Внешний пинг: Mac mini не отвечает снаружи. $DOWN"
+            elif [ "$(gh issue view "$open" --json title -q .title)" != "$title" ]; then
+              gh issue edit "$open" --title "$title" --body "$body"
+              tg "🚨 Внешний пинг: Mac mini не отвечает снаружи. $DOWN"
+            fi
+          elif [ -n "$UNCONFIGURED" ]; then
+            title="External uptime monitor needs configuration"
+            body="Monitoring is fail-closed at $(date -u '+%F %H:%M') UTC: $UNCONFIGURED. Create a Cloudflare Access service token, allow it for command.meshly.fr, then add CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET as Actions secrets."
+            if [ -z "$open" ]; then
+              gh issue create --label uptime --title "$title" --body "$body"
+              tg "⚠️ Внешний пинг Command Center не настроен: нужен Cloudflare Access service token."
+            elif [ "$(gh issue view "$open" --json title -q .title)" != "$title" ]; then
+              gh issue edit "$open" --title "$title" --body "$body"
+              tg "⚠️ Внешний пинг Command Center не настроен: нужен Cloudflare Access service token."
+            fi
           elif [ -z "$DOWN" ] && [ -n "$open" ]; then
             gh issue close "$open" --comment "Back up at $(date -u '+%F %H:%M') UTC."
             tg "✅ Внешний пинг: Mac mini снова отвечает."
