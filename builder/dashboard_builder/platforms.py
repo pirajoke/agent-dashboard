@@ -28,9 +28,9 @@ PLATFORM_REGISTRY = (
         "name": "Lexi",
         "description": "Lexi language-learning bot (formerly MyDictionary) and its administration.",
         "tier": "primary",
-        "status": "Private Mac mini + Telegram",
+        "status": "Public HTTPS + Telegram",
         "actions": (
-            {"label": "Open admin", "url": "http://127.0.0.1:8791/admin", "access": "private"},
+            {"label": "Open admin", "url": "https://mydictionary.meshly.fr/admin", "access": "public"},
             {"label": "Open Lexi bot", "url": "https://t.me/my_dictionnary_tg_bot", "access": "telegram"},
         ),
     },
@@ -49,9 +49,9 @@ PLATFORM_REGISTRY = (
         "name": "AI Singularity",
         "description": "Private publishing and content operations surface.",
         "tier": "active",
-        "status": "Private Mac mini",
+        "status": "Public HTTPS destination",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:8790", "access": "private"},
+            {"label": "Open workspace", "url": "https://singularity.meshly.fr/", "access": "public"},
         ),
     },
     {
@@ -69,9 +69,9 @@ PLATFORM_REGISTRY = (
         "name": "Accountable OS",
         "description": "Private accountability and operating-rhythm workspace.",
         "tier": "active",
-        "status": "Private Mac mini",
+        "status": "Public HTTPS destination",
         "actions": (
-            {"label": "Open workspace", "url": "http://127.0.0.1:4174", "access": "private"},
+            {"label": "Open workspace", "url": "https://accountable.meshly.fr/", "access": "public"},
         ),
     },
     {
@@ -84,12 +84,64 @@ PLATFORM_REGISTRY = (
             {"label": "Open JARVIS", "url": "https://t.me/max_jarvis_hoian_bot", "access": "telegram"},
         ),
     },
+    {
+        "id": "property-os",
+        "name": "Property OS",
+        "description": "Rentals, payments and repairs for the Nice properties.",
+        "tier": "active",
+        "status": "Public HTTPS destination",
+        "actions": (
+            {"label": "Open Property OS", "url": "https://properties.meshly.fr/", "access": "public"},
+        ),
+    },
+    {
+        "id": "pixel-agents",
+        "name": "Pixel Agents",
+        "description": "The agents' pixel office: who is working on what right now.",
+        "tier": "active",
+        "status": "Public HTTPS destination",
+        "actions": (
+            {"label": "Open Pixel Agents", "url": "https://pixel-agents.meshly.fr/", "access": "public"},
+        ),
+    },
+    {
+        "id": "closeness-mirror",
+        "name": "Зеркало Контакта",
+        "description": "Pair chat with AI hints for better communication between partners.",
+        "tier": "active",
+        "status": "Private Mac mini",
+        "actions": (
+            {"label": "Open app", "url": "http://127.0.0.1:3051", "access": "private"},
+        ),
+    },
+    {
+        "id": "sushi-parisien",
+        "name": "Sushi Parisien",
+        "description": "Website of the sushi house in Paris 8e.",
+        "tier": "active",
+        "status": "Public HTTPS destination",
+        "actions": (
+            {"label": "Open site", "url": "https://sushi-parisien.meshly.fr/", "access": "public"},
+        ),
+    },
+    {
+        "id": "n8n",
+        "name": "n8n",
+        "description": "Workflow automations on the Mac mini.",
+        "tier": "active",
+        "status": "Private Mac mini",
+        "actions": (
+            {"label": "Open editor", "url": "http://127.0.0.1:5678", "access": "private"},
+        ),
+    },
 )
 
 
 _PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 _ACTION_FIELDS = ("label", "url", "access")
-_APPROVED_HTTPS_HOSTS = {"t.me", "health.meshly.fr"}
+_APPROVED_HTTPS_HOSTS = {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr",
+                         "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr",
+                         "sushi-parisien.meshly.fr"}
 _APPROVED_ACCESS = {"private", "public", "telegram"}
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 _SENSITIVE_COPY = re.compile(
@@ -245,7 +297,7 @@ def build_platform_hub_html(registry=PLATFORM_REGISTRY) -> str:
     return f'''<section class="platform-hub section" id="common-center" aria-labelledby="common-center-title">
     <header class="platform-hero">
         <div>
-            <p class="platform-eyebrow">Portfolio switchboard · 7 surfaces</p>
+            <p class="platform-eyebrow">Portfolio switchboard · {len(registry)} surfaces</p>
             <h2 id="common-center-title">Common Center</h2>
         </div>
         <p class="platform-intro">One calm entry point for the products that matter now and the systems that keep them moving.</p>
@@ -254,7 +306,7 @@ def build_platform_hub_html(registry=PLATFORM_REGISTRY) -> str:
     <div class="platform-group">
         <div class="platform-group-head">
             <h3>Primary products</h3>
-            <span>2 current lanes</span>
+            <span>{len(primary)} current lanes</span>
         </div>
         <div class="platform-primary-grid">{primary_html}</div>
     </div>
@@ -262,7 +314,7 @@ def build_platform_hub_html(registry=PLATFORM_REGISTRY) -> str:
     <div class="platform-group platform-group-active">
         <div class="platform-group-head">
             <h3>Active systems</h3>
-            <span>5 maintained surfaces</span>
+            <span>{len(active)} maintained surfaces</span>
         </div>
         <div class="platform-system-list">{active_html}</div>
     </div>

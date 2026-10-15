@@ -1,0 +1,148 @@
+from __future__ import annotations
+
+from datetime import date, datetime, timezone
+import json
+import os
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+BUILDER_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(BUILDER_DIR))
+
+from dashboard_builder.growth import PICTURES, growth_projection, parse_note  # noqa: E402
+import re  # noqa: E402
+
+NOTE = """# Мои точки роста
+> intro
+
+## Private Equity
+- Картинка: pe
+- Зачем: Понять сделки ([[Some Note|заметка]]).
+- [x] Разобрать модели сделок
+- [ ] Заполнить тезис
+
+## Digital-монетизация
+- Картинка: digital
+- Проекты: shopify, TikTok Shop
+- [X] Посчитать юнит-экономику
+- [ ] Первая продажа
+- [ ] Эксперимент
+
+## Без шагов
+- Картинка: unknown-picture
+"""
+
+
+def _day(root: Path, machine: str, day: str, sessions: list[dict]) -> None:
+    path = root / "sessions" / machine / f"{day}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"sessions": sessions}), encoding="utf-8")
+
+
+class GrowthTest(unittest.TestCase):
+    def test_note_becomes_areas_with_steps_and_pictures(self):
+        areas = parse_note(NOTE)
+        self.assertEqual([a["title"] for a in areas], ["Private Equity", "Digital-монетизация", "Без шагов"])
+        self.assertEqual(areas[0]["why"], "Понять сделки (заметка).")
+        self.assertEqual([s["done"] for s in areas[1]["steps"]], [True, False, False])
+        self.assertEqual(areas[1]["projects"], ["shopify", "tiktokshop"])
+        self.assertEqual(areas[2]["picture"], "growth")
+
+    def test_title_picks_a_picture_when_the_note_names_none(self):
+        areas = parse_note("""## Трейдинг и инвестиции
+## Сертификат PMP
+## Электроника и роботы
+## AI-агенты
+- Картинка: chart
+## Дизайн-агентство
+## Личный бренд
+## Свой подход к агентам
+- Картинка: podcast
+""")
+        self.assertEqual([a["picture"] for a in areas],
+                         ["trading", "pmp", "robots", "agents", "design", "podcast", "podcast"])
+
+    def test_every_picture_has_a_drawing_on_the_page(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        drawn = set(re.findall(r'<symbol id="cc-growth-([a-z]+)"', html))
+        listed = set(re.findall(r"'([a-z]+)'", re.search(r"const GROWTH_PICTURES = \[(.*?)\];", html).group(1)))
+        self.assertEqual(PICTURES, drawn)
+        self.assertEqual(PICTURES, listed)
+
+    def test_owner_sees_progress_and_real_time_only_for_linked_projects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            note.write_text(NOTE, encoding="utf-8")
+            _day(root, "macbook-pro", "2026-10-10", [
+                {"project": "SHOPIFY", "active_minutes": 90},
+                {"project": "TIKTOK SHOP", "active_minutes": 30},
+                {"project": "financial-os", "active_minutes": 500},
+            ])
+            _day(root, "macbook-pro", "2026-08-01", [{"project": "SHOPIFY", "active_minutes": 999}])  # too old
+            data = growth_projection(note, root, owner=True, today=date(2026, 10, 14))
+        pe, digital, empty = data["areas"]
+        self.assertEqual(pe["progress"], {"done": 1, "total": 2})
+        self.assertIsNone(pe["minutes_30d"])  # no linked project: unknown, not zero
+        self.assertEqual(digital["progress"], {"done": 1, "total": 3})
+        self.assertEqual(digital["minutes_30d"], 120)
+        self.assertEqual(empty["progress"], {"done": 0, "total": 0})
+        self.assertTrue(data["time_available"])
+        self.assertFalse(pe["linked"])
+        self.assertNotIn("projects", digital)
+
+    def test_broken_session_files_and_records_are_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            note.write_text(NOTE, encoding="utf-8")
+            _day(root, "macbook-pro", "2026-10-10", [None, "x", {"project": "SHOPIFY", "active_minutes": 45}])
+            for day, body in (("2026-10-11", '{"sessions": {"project": "SHOPIFY"}}'), ("2026-10-12", "[1, 2]"),
+                              ("2026-10-13", "{not json")):
+                (root / "sessions" / "macbook-pro" / f"{day}.json").write_text(body, encoding="utf-8")
+            data = growth_projection(note, root, owner=True, today=date(2026, 10, 14))
+        self.assertTrue(data["time_available"])
+        self.assertEqual(data["areas"][1]["minutes_30d"], 45)
+
+    def test_missing_work_log_is_unknown_time_not_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            note.write_text(NOTE, encoding="utf-8")
+            data = growth_projection(note, root / "no-daily-work", owner=True, today=date(2026, 10, 14))
+        self.assertFalse(data["time_available"])
+        digital = data["areas"][1]
+        self.assertTrue(digital["linked"])
+        self.assertIsNone(digital["minutes_30d"])
+
+    def test_note_untouched_for_a_month_is_stale(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            note.write_text(NOTE, encoding="utf-8")
+            changed = datetime(2026, 9, 1, 12, 0, tzinfo=timezone.utc).timestamp()
+            os.utime(note, (changed, changed))
+            stale = growth_projection(note, root, owner=True, today=date(2026, 10, 14))
+            fresh = growth_projection(note, root, owner=True, today=date(2026, 9, 20))
+        self.assertEqual(stale["state"], "stale")
+        self.assertEqual(stale["note_age_days"], 43)
+        self.assertTrue(stale["note_updated_at"].startswith("2026-09-01"))
+        self.assertIn("observed_at", stale)
+        self.assertEqual(fresh["state"], "live")
+
+    def test_public_view_is_a_count_and_missing_note_is_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "note.md"
+            self.assertEqual(growth_projection(note, root, owner=True)["state"], "empty")
+            note.write_text(NOTE, encoding="utf-8")
+            public = growth_projection(note, root, owner=False)
+        self.assertEqual(public["count"], 3)
+        self.assertEqual(public["areas"], [])
+        self.assertNotIn("Private Equity", json.dumps(public, ensure_ascii=False))
+
+
+if __name__ == "__main__":
+    unittest.main()

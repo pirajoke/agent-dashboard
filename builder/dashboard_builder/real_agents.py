@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .config import HEALTH_DIR, ORCH_FILE
+from .fraction import _mcp_label
 
 
 def _run(cmd: str) -> str:
@@ -67,7 +68,7 @@ def _count_mcp_servers() -> list[dict]:
             elif "pencil" in cmd:
                 name = "Pencil"
             else:
-                name = cmd[:30]
+                name = _mcp_label(cmd).removeprefix("MCP: ")[:30]
             servers.append({"name": name, "pid": p["pid"], "ram_mb": p["ram_mb"]})
     return servers
 

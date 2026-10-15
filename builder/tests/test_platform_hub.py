@@ -22,6 +22,11 @@ EXPECTED_PLATFORM_IDS = (
     "context-news",
     "accountable-os",
     "jarvis",
+    "property-os",
+    "pixel-agents",
+    "closeness-mirror",
+    "sushi-parisien",
+    "n8n",
 )
 EXPECTED_PLATFORM_NAMES = (
     "JobRadar / Financial OS",
@@ -31,6 +36,11 @@ EXPECTED_PLATFORM_NAMES = (
     "Context News France",
     "Accountable OS",
     "JARVIS",
+    "Property OS",
+    "Pixel Agents",
+    "Зеркало Контакта",
+    "Sushi Parisien",
+    "n8n",
 )
 EXPECTED_LINKS = {
     "financial-os": (
@@ -38,16 +48,21 @@ EXPECTED_LINKS = {
         "https://t.me/JobsRadarS_bot",
     ),
     "mydictionary": (
-        "http://127.0.0.1:8791/admin",
+        "https://mydictionary.meshly.fr/admin",
         "https://t.me/my_dictionnary_tg_bot",
     ),
     "health-os": ("https://health.meshly.fr/",),
-    "ai-singularity": ("http://127.0.0.1:8790",),
+    "ai-singularity": ("https://singularity.meshly.fr/",),
     "context-news": ("https://t.me/contextnews_bot",),
-    "accountable-os": ("http://127.0.0.1:4174",),
+    "accountable-os": ("https://accountable.meshly.fr/",),
     "jarvis": ("https://t.me/max_jarvis_hoian_bot",),
+    "property-os": ("https://properties.meshly.fr/",),
+    "pixel-agents": ("https://pixel-agents.meshly.fr/",),
+    "closeness-mirror": ("http://127.0.0.1:3051",),
+    "sushi-parisien": ("https://sushi-parisien.meshly.fr/",),
+    "n8n": ("http://127.0.0.1:5678",),
 }
-EXPECTED_LOOPBACK_PORTS = (7777, 8792, 8791, 8790, 4174)
+EXPECTED_LOOPBACK_PORTS = (7777, 8792, 3051, 5678)
 REQUIRED_PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 REQUIRED_ACTION_FIELDS = ("label", "url", "access")
 
@@ -102,12 +117,12 @@ class PlatformHubContractTests(unittest.TestCase):
     def _mutable_registry(self):
         return deepcopy(list(self._registry()))
 
-    def test_ac_cc_1_registry_is_the_exact_seven_surface_release(self):
+    def test_ac_cc_1_registry_is_the_exact_surface_release(self):
         registry = self._registry()
         self.assertIsInstance(registry, (tuple, list))
         self.assertEqual(tuple(item["id"] for item in registry), EXPECTED_PLATFORM_IDS)
         self.assertEqual(tuple(item["name"] for item in registry), EXPECTED_PLATFORM_NAMES)
-        self.assertEqual(len(registry), 7)
+        self.assertEqual(len(registry), 12)
         for platform in registry:
             with self.subTest(platform=platform.get("id")):
                 for field in REQUIRED_PLATFORM_FIELDS:
@@ -123,7 +138,9 @@ class PlatformHubContractTests(unittest.TestCase):
 
         html = self.platforms.build_platform_hub_html()
         self.assertEqual(html.count('data-platform-tier="primary"'), 2)
-        self.assertEqual(html.count('data-platform-tier="active"'), 5)
+        self.assertEqual(html.count('data-platform-tier="active"'), len(EXPECTED_PLATFORM_IDS) - 2)
+        self.assertIn("<span>2 current lanes</span>", html)
+        self.assertIn(f"<span>{len(EXPECTED_PLATFORM_IDS) - 2} maintained surfaces</span>", html)
         self.assertLess(html.index("Primary products"), html.index("Active systems"))
 
     def test_ac_cc_3_registry_uses_exact_current_destinations(self):
@@ -353,7 +370,7 @@ class PlatformHubIntegrationTests(unittest.TestCase):
             with self.subTest(snapshot="built" if markup is built else "static"):
                 self.assertIn("<title>Common Center</title>", markup)
                 self.assertIn('href="#common-center"', markup)
-                self.assertEqual(markup.count('data-platform-id="'), 7)
+                self.assertEqual(markup.count('data-platform-id="'), 12)
                 for platform_id, platform_name in zip(EXPECTED_PLATFORM_IDS, EXPECTED_PLATFORM_NAMES):
                     self.assertEqual(markup.count(f'data-platform-id="{platform_id}"'), 1)
                     self.assertIn(platform_name, markup)

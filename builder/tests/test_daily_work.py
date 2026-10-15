@@ -99,6 +99,157 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(lexi["project"], "lexi")
         self.assertEqual(lexi["active_minutes"], 10)
 
+    def test_newer_codex_rollouts_keep_asks_replies_and_the_repo(self):
+        os.environ["TZ"] = "UTC"
+        time.tzset()
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            clone = home / "clones" / "agent-dashboard"
+            (clone / ".git").mkdir(parents=True)
+            t0 = datetime(2026, 10, 12, 10, 0, tzinfo=timezone.utc)
+            path = home / "rollout-new.jsonl"
+            _write_jsonl(path, [
+                # The working folder is a file:// URI to a worktree that is gone by now.
+                {"timestamp": _iso(t0), "type": "session_meta", "payload": {
+                    "id": "n1", "cwd": "file:///nonexistent/tmp/agent-dashboard-unified-tabs-v1",
+                    "agent_path": "/root/dashboard_pr_gate"}},
+                {"timestamp": _iso(t0), "type": "response_item", "payload": {
+                    "type": "message", "role": "user", "content": [{"type": "input_text", "text": "# AGENTS.md instructions"}]}},
+                {"timestamp": _iso(t0 + timedelta(minutes=1)), "type": "response_item", "payload": {
+                    "type": "message", "role": "user", "content": [{"type": "input_text", "text": "Объедини вкладки"}]}},
+                {"timestamp": _iso(t0 + timedelta(minutes=5)), "type": "response_item", "payload": {
+                    "type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "Смотрю код"}]}},
+                {"timestamp": _iso(t0 + timedelta(minutes=9)), "type": "event_msg", "payload": {
+                    "type": "task_complete", "last_agent_message": "Вкладки объединены, тесты зелёные"}},
+            ])
+            with patch.object(COLLECTOR, "CLONE_PARENTS", [home / "clones"]), \
+                    patch.object(COLLECTOR, "_git_remote",
+                                 lambda cwd: "pirajoke/agent-dashboard" if cwd == str(clone) else None), \
+                    patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                sessions = COLLECTOR.parse_codex_file(path)
+        session = sessions[0]
+        self.assertEqual(session.cwd, "/nonexistent/tmp/agent-dashboard-unified-tabs-v1")
+        self.assertEqual(session.repo, "pirajoke/agent-dashboard")
+        self.assertEqual(session.topic, "Объедини вкладки")
+        record = COLLECTOR.day_records(sessions, {"2026-10-12"})["2026-10-12"][0]
+        self.assertEqual(record["project"], "agent-dashboard")
+        self.assertEqual(record["asks"], ["Объедини вкладки"])
+        self.assertEqual(record["outcome"], "Вкладки объединены, тесты зелёные")
+
+    def test_chatgpt_export_is_read_once_per_export(self):
+        os.environ["TZ"] = "UTC"
+        time.tzset()
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        t0 = (now - timedelta(days=1)).replace(hour=10, minute=0, second=0)
+
+        def node(role, minutes, text, parent=None, **meta):
+            return {"parent": parent, "message": {
+                "author": {"role": role}, "create_time": (t0 + timedelta(minutes=minutes)).timestamp(),
+                "content": {"content_type": "text", "parts": [text]}, "metadata": meta}}
+
+        shop = {"id": "c1", "title": "Запуск магазина", "update_time": (t0 + timedelta(minutes=20)).timestamp(),
+                "conversation_template_id": "g-p-abc123def456", "current_node": "g", "mapping": {
+                    "a": {"message": None, "parent": None}, "b": node("system", 0, "system prompt", "a"),
+                    "c": node("user", 1, "Составь план запуска магазина", "b"),
+                    "d": node("assistant", 4, "План из пяти шагов готов", "c"),
+                    "e": node("user", 9, "скрытое", "d", is_visually_hidden_from_conversation=True),
+                    "f": node("user", 15, "Добавь бюджет на рекламу", "e"),
+                    "g": node("assistant", 20, "Бюджет добавлен: 300 евро", "f"),
+                    # An edited prompt: the old branch stays in the export but is not the conversation.
+                    "x": node("user", 14, "Старый вариант вопроса", "e"), "y": node("assistant", 16, "Старый ответ", "x")}}
+        post = {"id": "c2", "title": "Пост для LinkedIn", "update_time": (t0 - timedelta(days=1, minutes=-50)).timestamp(),
+                "mapping": {"a": node("user", 40 - 1440, "Напиши пост про запуск"), "b": node("assistant", 50 - 1440, "Пост готов")}}
+        old = {"id": "old", "title": "Старое", "update_time": (now - timedelta(days=200)).timestamp(), "mapping": {
+            "a": {"message": {"author": {"role": "user"}, "create_time": (now - timedelta(days=200)).timestamp(),
+                              "content": {"parts": ["давно"]}}}}}
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            exports = home / "ChatGPT-export"
+            exports.mkdir()
+            import zipfile
+
+            def export(name, conversations):
+                with zipfile.ZipFile(exports / name, "w") as archive:
+                    archive.writestr("conversations.json", json.dumps(conversations, ensure_ascii=False))
+                    archive.writestr("user.json", "{}")
+                os.utime(exports / name, (time.time() + len(name), time.time() + len(name)))
+
+            export("chatgpt-export.zip", [shop, post, old])
+            out = home / "daily-work"
+            out.mkdir()
+            since = now - timedelta(days=45)
+            first = COLLECTOR.import_chatgpt_export(out, since, [exports, home / "missing"])
+            again = COLLECTOR.import_chatgpt_export(out, since, [exports])
+            day, post_day = t0.date().isoformat(), (t0 - timedelta(days=1)).date().isoformat()
+            data = json.loads((out / "sessions" / "chatgpt" / f"{day}.json").read_text(encoding="utf-8"))
+            projection = work_projection(out, now=now, owner=True)
+            # Naming the project later rewrites the days with the name.
+            (out / "chatgpt_projects.json").write_text(json.dumps({"g-p-abc123def456": "SHOPIFY"}), encoding="utf-8")
+            renamed = COLLECTOR.import_chatgpt_export(out, since, [exports])
+            named = json.loads((out / "sessions" / "chatgpt" / f"{day}.json").read_text(encoding="utf-8"))
+            # A newer export without the LinkedIn chat empties its day.
+            export("chatgpt-export-newer.zip", [shop])
+            newer = COLLECTOR.import_chatgpt_export(out, since, [exports])
+            emptied = json.loads((out / "sessions" / "chatgpt" / f"{post_day}.json").read_text(encoding="utf-8"))
+        self.assertEqual((first["fresh"], first["conversations"], again["fresh"], again["needs_push"]), (True, 2, False, True))
+        record = data["sessions"][0]
+        self.assertEqual((record["project"], record["app"], record["tool"], record["topic"]),
+                         ("ChatGPT · проект def456", "chatgpt", "codex", "Запуск магазина"))
+        self.assertEqual(record["asks"], ["Составь план запуска магазина", "Добавь бюджет на рекламу"])  # no hidden, no old branch
+        self.assertEqual((record["outcome"], record["active_minutes"]), ("Бюджет добавлен: 300 евро", 20))
+        self.assertEqual(data["machine"], "chatgpt")
+        self.assertTrue({"ChatGPT · проект def456", "ChatGPT · без проекта"} <= {item["name"] for item in projection["projects"]})
+        self.assertEqual((renamed["fresh"], named["sessions"][0]["project"]), (True, "ChatGPT · SHOPIFY"))
+        self.assertEqual((newer["days"], emptied["sessions"]), (sorted([day, post_day]), []))
+
+    def test_no_chatgpt_export_is_reported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = COLLECTOR.import_chatgpt_export(Path(tmp), datetime.now(timezone.utc), [Path(tmp) / "none"])
+        self.assertEqual(result, {"ok": False, "reason": "export_not_found"})
+
+    def test_chatgpt_app_projects_are_labelled(self):
+        name = COLLECTOR.project_name
+        self.assertEqual(name("/Users/mark/Documents/ChatGPT/SHOPIFY", None), "ChatGPT · SHOPIFY")
+        self.assertEqual(name("/Users/mark/Documents/ChatGPT/LYBOV LINKEDIN/notes", None), "ChatGPT · LYBOV LINKEDIN")
+        # A chat outside a project gets a folder named by its id or «new-chat»: grouped, not listed one by one.
+        for folder in ("39f9f538-1c2d-4e5f-8a9b-0c1d2e3f4a5b", "new-chat", "New Chat 2", ""):
+            self.assertEqual(name(f"/Users/mark/Documents/ChatGPT/{folder}".rstrip("/"), None), "ChatGPT · без проекта")
+        self.assertEqual(name("/Users/mark/Documents/ChatGPT/SHOPIFY", "pirajoke/shop"), "shop")  # a repo wins
+        self.assertEqual(name("/Users/mark/Projects/ChatGPT", None), "ChatGPT")  # not the app's folder
+
+    def test_existing_folder_outside_git_is_not_matched_to_a_clone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            clone = home / "clones" / "agent-dashboard"
+            (clone / ".git").mkdir(parents=True)
+            notes = home / "agent-dashboard-notes"
+            notes.mkdir()
+            with patch.object(COLLECTOR, "CLONE_PARENTS", [home / "clones"]), \
+                    patch.object(COLLECTOR, "_git_remote",
+                                 lambda cwd: "pirajoke/agent-dashboard" if cwd == str(clone) else None), \
+                    patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                self.assertIsNone(COLLECTOR.repo_for_cwd(str(notes)))
+                self.assertEqual(COLLECTOR.repo_for_cwd(str(home / "agent-dashboard-gone-v1")), "pirajoke/agent-dashboard")
+
+    def test_codex_sub_agent_without_asks_is_named_by_its_task(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rollout-sub.jsonl"
+            t0 = datetime(2026, 10, 12, 10, 0, tzinfo=timezone.utc)
+            _write_jsonl(path, [
+                {"timestamp": _iso(t0), "type": "session_meta", "payload": {
+                    "id": "s1", "cwd": "/nonexistent/x", "agent_path": "/root/health_proxy_final_review"}},
+                {"timestamp": _iso(t0 + timedelta(minutes=2)), "type": "event_msg", "payload": {"type": "task_started"}},
+            ])
+            with patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                session = COLLECTOR.parse_codex_file(path)[0]
+        self.assertEqual(session.topic, "health proxy final review")
+        self.assertEqual(session.asks, [])
+
+    def test_ssh_host_alias_remotes_resolve(self):
+        self.assertEqual(COLLECTOR.repo_from_remote("git@github.com-agent-dashboard:pirajoke/agent-dashboard.git"),
+                         "pirajoke/agent-dashboard")
+        self.assertEqual(COLLECTOR.normalize_cwd("file:///Users/me/MAIN%20MANAGER"), "/Users/me/MAIN MANAGER")
+
 
     def test_day_records_keep_asks_and_last_reply_for_the_summary(self):
         os.environ["TZ"] = "UTC"
@@ -378,6 +529,204 @@ class ProjectionTest(unittest.TestCase):
             self.assertNotIn(private, public)
         self.assertNotIn("summary", work_projection(self.root, now=self.now, owner=False)["day"])
 
+    def _write_paper_summary(self, day, details, headline="Главное за день", in_progress=False):
+        path = self.root / "summaries" / f"{day}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({
+            "schema": 2, "date": day, "generated_at": "2026-10-09T03:00:00Z", "day": headline, "in_progress": in_progress,
+            "projects": {pid: (d.get("agents") or []) + (d.get("you") or []) for pid, d in details.items()},
+            "details": details}, ensure_ascii=False), encoding="utf-8")
+
+    def test_days_list_the_newest_work_first(self):
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True)
+        feed = payload["feed"]
+        # Only days with work, newest first; nothing yet today; older than 14 days is left out.
+        self.assertEqual([day["date"] for day in feed], ["2026-10-08", "2026-10-07", "2026-10-06", "2026-10-05"])
+        day = feed[0]
+        self.assertEqual((day["is_today"], day["headline"], day["total_minutes"], day["prs_merged"]), (False, None, 105, 1))
+        self.assertEqual([p["id"] for p in day["projects"]], ["command-center", "jarvis"])  # busiest first
+        hub = day["projects"][0]
+        self.assertEqual((hub["minutes"], hub["sessions"], hub["bullets"]), (60, 2, []))
+        self.assertFalse(hub["quiet"])  # no summary yet: named until Claude retells it
+        self.assertEqual(hub["merged"][0]["number"], 49)
+        closed = feed[1]["projects"]
+        self.assertEqual(([p["id"] for p in closed], closed[0]["closed"][0]["number"], closed[0]["minutes"]), (["jarvis"], 140, 0))
+
+        self._write_day("mac-mini", "2026-10-09", [{
+            "tool": "claude", "session_id": "today", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+            "start": "2026-10-09T07:00:00Z", "end": "2026-10-09T07:30:00Z", "active_minutes": 30, "prompts": 1,
+            "topic": "t", "intervals": [["2026-10-09T07:00:00Z", "2026-10-09T07:30:00Z"]],
+            "infra_actions": [{"at": "2026-10-09T07:10:00Z", "command": "launchctl kickstart x"}]}])
+        today = work_projection(self.root, now=self.now, owner=True, edition=True)["feed"][0]
+        self.assertEqual((today["date"], today["is_today"], [p["id"] for p in today["projects"]]),
+                         ("2026-10-09", True, ["mydictionary"]))
+        self.assertEqual(today["projects"][0]["commands"], 1)
+
+    def test_days_read_what_claude_wrote(self):
+        self._write_paper_summary("2026-10-05", {"jarvis": {
+            "lead": "Голос в работе", "you": [], "agents": ["Начали голосовой режим"], "next": ["Проверить голос"],
+            "deadlines": [{"date": "2026-11-07", "what": "Продлить проверку цен"}, {"date": "2026-10-01", "what": "Прошло"}]}})
+        self._write_paper_summary("2026-10-08", {
+            "jarvis": {"lead": "Бот отвечает голосом", "you": ["Решили оставить голос"], "agents": ["Ответы стали быстрее"],
+                       "next": [], "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
+            "command-center": {"lead": "Появились итоги дня", "you": [], "agents": ["Итоги дня на сайте"],
+                               "next": ["Сохранить токен на Mac mini"],
+                               "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
+            "mydictionary": {"lead": "Старое", "you": [], "agents": ["Устаревший итог"], "next": [], "deadlines": []},
+        }, headline="Голос и итоги дня", in_progress=True)
+        self._write_paper_summary("2026-10-04", {"jarvis": {"lead": "Старое", "you": [], "agents": ["Устаревший итог"],
+                                                            "next": [], "deadlines": []}})
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True)
+        days = {day["date"]: day for day in payload["feed"]}
+        # A summary without work behind it that day (sessions moved elsewhere) is not shown.
+        self.assertNotIn("2026-10-04", days)
+        self.assertNotIn("Устаревший итог", json.dumps(payload["feed"], ensure_ascii=False))
+        day = days["2026-10-08"]
+        self.assertEqual((day["headline"], day["in_progress"], day["written_at"]), ("Голос и итоги дня", True, "2026-10-09T03:00:00Z"))
+        projects = {p["id"]: p for p in day["projects"]}
+        self.assertEqual(projects["jarvis"]["bullets"], ["Ответы стали быстрее", "Решили оставить голос"])
+        self.assertFalse(projects["jarvis"]["quiet"])
+        self.assertEqual(projects["command-center"]["bullets"], ["Итоги дня на сайте"])
+        self.assertEqual(days["2026-10-05"]["projects"][0]["bullets"], ["Начали голосовой режим"])
+        self.assertIsNone(days["2026-10-07"]["headline"])
+        self.assertEqual(payload["deadlines"], [
+            {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "command-center", "project": "Command Center"},
+            {"date": "2026-10-20", "what": "Показать друзьям", "project_id": "jarvis", "project": "JARVIS"},
+            {"date": "2026-11-07", "what": "Продлить проверку цен", "project_id": "jarvis", "project": "JARVIS"},
+        ])  # past ones dropped, every summary in the window counts, same words in two projects kept apart
+
+    def test_quick_looks_and_empty_retellings_are_not_news(self):
+        self._write_day("mac-mini", "2026-10-04", [{
+            "tool": "codex", "session_id": "peek", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+            "start": "2026-10-04T09:00:00Z", "end": "2026-10-04T09:01:00Z", "active_minutes": 1, "prompts": 1,
+            "topic": "peek", "intervals": [["2026-10-04T09:00:00Z", "2026-10-04T09:01:00Z"]]}])
+        self._write_day("macbook-pro", "2026-10-08", [
+            {"tool": "claude", "session_id": "j", "project": "jarvis", "repo": "pirajoke/jarvis", "branch": "feat/voice",
+             "start": "2026-10-08T11:00:00Z", "end": "2026-10-08T11:45:00Z", "active_minutes": 45, "prompts": 3, "topic": "t",
+             "intervals": [["2026-10-08T11:00:00Z", "2026-10-08T11:45:00Z"]]},
+            {"tool": "codex", "session_id": "l", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+             "start": "2026-10-08T12:00:00Z", "end": "2026-10-08T12:02:00Z", "active_minutes": 2, "prompts": 1, "topic": "t",
+             "intervals": [["2026-10-08T12:00:00Z", "2026-10-08T12:02:00Z"]]},
+        ])
+        path = self.root / "summaries" / "2026-10-08.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"schema": 2, "date": "2026-10-08", "day": "Итоги дня",
+                                    "projects": {"command-center": ["Появились итоги дня"]},
+                                    "details": {"command-center": {"lead": None, "you": [], "agents": ["Появились итоги дня"],
+                                                                   "next": [], "deadlines": []}},
+                                    "quiet": ["jarvis"]}, ensure_ascii=False), encoding="utf-8")
+        feed = work_projection(self.root, now=self.now, owner=True, edition=True)["feed"]
+        self.assertNotIn("2026-10-04", [day["date"] for day in feed])  # one minute in one project only
+        projects = {p["id"]: p for p in feed[0]["projects"]}
+        self.assertEqual({pid: p["quiet"] for pid, p in projects.items()},
+                         {"command-center": False, "jarvis": True, "mydictionary": True})
+
+    def test_todo_lists_what_waits_on_mark(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["prs"].append({"repo": "pirajoke/jarvis", "number": 150, "title": "Draft", "url": "https://github.com/pirajoke/jarvis/pull/150",
+                              "state": "open", "draft": True, "created_at": "2026-10-08T09:00:00Z", "updated_at": "2026-10-08T09:00:00Z",
+                              "closed_at": None, "merged_at": None})
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        self._write_paper_summary("2026-10-05", {"jarvis": {
+            "lead": None, "you": [], "agents": ["Начали голос"], "next": ["Старый шаг"], "deadlines": []}})
+        self._write_paper_summary("2026-10-08", {
+            "jarvis": {"lead": None, "you": [], "agents": ["Голос готов"], "next": [],
+                       "deadlines": [{"date": "2026-10-20", "what": "Показать друзьям"}]},
+            "command-center": {"lead": None, "you": [], "agents": ["Итоги дня"], "next": ["Сохранить токен"], "deadlines": []},
+        })
+        todo = {item["id"]: item for item in work_projection(self.root, now=self.now, owner=True)["todo"]}
+        # The nearest deadline first; the newest summary decides the next steps, an older list is not reused.
+        self.assertEqual(list(todo), ["jarvis", "command-center", "mydictionary"])
+        self.assertEqual((todo["jarvis"]["next"], todo["jarvis"]["deadlines"], todo["jarvis"]["open_prs"], todo["jarvis"]["drafts"]),
+                         ([], [{"date": "2026-10-20", "what": "Показать друзьям"}], [], 1))
+        self.assertEqual((todo["command-center"]["next"], todo["command-center"]["next_from"]), (["Сохранить токен"], "2026-10-08"))
+        self.assertEqual(([pr["number"] for pr in todo["mydictionary"]["open_prs"]], todo["mydictionary"]["loose"]), ([12], 2))
+        public = work_projection(self.root, now=self.now, owner=False)
+        self.assertNotIn("todo", public)
+
+    def test_todo_keeps_old_ready_prs_and_every_deadline(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["prs"].append({"repo": "pirajoke/quiet-repo", "number": 3, "title": "Ready long ago",
+                              "url": "https://github.com/pirajoke/quiet-repo/pull/3", "state": "open",
+                              "created_at": "2026-07-01T09:00:00Z", "updated_at": "2026-07-02T09:00:00Z",
+                              "closed_at": None, "merged_at": None})
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        deadlines = [{"date": f"2026-10-{day}", "what": f"Срок {day}"} for day in range(10, 20)]
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": None, "you": [], "agents": ["Голос"], "next": [],
+                                                            "deadlines": deadlines}})
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True)
+        todo = {item["id"]: item for item in payload["todo"]}
+        self.assertEqual([pr["number"] for pr in todo["p-quietrepo"]["open_prs"]], [3])  # no activity in the window
+        self.assertEqual(len(todo["jarvis"]["deadlines"]), 10)
+        self.assertEqual(len(payload["deadlines"]), 8)  # the banner in «По дням» stays short
+
+    def test_a_quick_look_with_an_old_summary_is_still_quiet(self):
+        self._write_day("mac-mini", "2026-10-06", [{
+            "tool": "codex", "session_id": "peek", "project": "lexi", "repo": "pirajoke/lexi", "branch": "main",
+            "start": "2026-10-06T09:00:00Z", "end": "2026-10-06T09:01:00Z", "active_minutes": 1, "prompts": 1,
+            "topic": "peek", "intervals": [["2026-10-06T09:00:00Z", "2026-10-06T09:01:00Z"]]}])
+        self._write_paper_summary("2026-10-06", {"mydictionary": {"lead": None, "you": [], "agents": ["Агенты работали"],
+                                                                  "next": [], "deadlines": []}})
+        day = {d["date"]: d for d in work_projection(self.root, now=self.now, owner=True, edition=True)["feed"]}["2026-10-06"]
+        lexi = {p["id"]: p for p in day["projects"]}["mydictionary"]
+        self.assertEqual((lexi["bullets"], lexi["quiet"]), ([], True))
+
+    def test_open_issues_are_the_project_todo(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["open_issues"] = [
+            {"repo": "pirajoke/jarvis", "number": 7, "title": "Голос в машине", "url": "https://github.com/pirajoke/jarvis/issues/7",
+             "created_at": "2026-10-01T09:00:00Z", "updated_at": "2026-10-08T09:00:00Z"},
+            {"repo": "pirajoke/lexi", "number": 3, "title": "Продлить цены", "url": "https://github.com/pirajoke/lexi/issues/3",
+             "created_at": "2026-10-01T09:00:00Z", "updated_at": "2026-10-02T09:00:00Z"},
+            {"repo": "pirajoke/unknown-repo", "number": 1, "title": "Чужое", "url": "https://github.com/pirajoke/unknown-repo/issues/1",
+             "created_at": "2026-10-01T09:00:00Z", "updated_at": "2026-10-02T09:00:00Z"},
+        ]
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Голос", "you": [], "agents": ["Быстрее"],
+                                                            "next": ["Проверить голос"], "deadlines": []}})
+        project = work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]
+        self.assertEqual(([i["number"] for i in project["open_issues_list"]], project["open_issues_count"], project["next_steps"]),
+                         ([7], 1, ["Проверить голос"]))
+        lexi = work_projection(self.root, now=self.now, owner=True, edition=True, project="mydictionary")
+        self.assertEqual([i["title"] for i in lexi["project"]["open_issues_list"]], ["Продлить цены"])
+        self.assertNotIn("Чужое", json.dumps(lexi, ensure_ascii=False))  # a repo with no product stays out
+        public = json.dumps(work_projection(self.root, now=self.now, owner=False, edition=True, project="jarvis"), ensure_ascii=False)
+        self.assertNotIn("Голос в машине", public)
+
+    def test_a_known_project_with_only_an_open_issue_keeps_its_todo(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["open_issues"] = [
+            {"repo": "pirajoke/accountable-os", "number": 4, "title": "Декларация URSSAF", "url": "https://github.com/pirajoke/accountable-os/issues/4",
+             "created_at": "2026-07-01T09:00:00Z", "updated_at": "2026-07-02T09:00:00Z"},
+        ]
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        payload = work_projection(self.root, now=self.now, owner=True, edition=True, project="accountable")
+        self.assertIn("accountable", {item["id"] for item in payload["projects"]})
+        self.assertNotIn("accountable", {p["id"] for day in payload["feed"] for p in day["projects"]})  # no work, no day
+        self.assertEqual((payload["project"]["open_issues_count"], payload["project"]["total_minutes"]), (1, 0))
+
+    def test_days_count_a_day_with_only_a_closed_pr(self):
+        github = json.loads((self.root / "github.json").read_text(encoding="utf-8"))
+        github["prs"].append({"repo": "pirajoke/jarvis", "number": 141, "title": "Dropped", "url": "https://github.com/pirajoke/jarvis/pull/141",
+                              "state": "closed", "created_at": "2026-10-08T10:00:00Z", "updated_at": "2026-10-09T07:00:00Z",
+                              "closed_at": "2026-10-09T07:00:00Z", "merged_at": None})
+        (self.root / "github.json").write_text(json.dumps(github), encoding="utf-8")
+        day = work_projection(self.root, now=self.now, owner=True, edition=True)["feed"][0]
+        self.assertEqual((day["date"], day["total_minutes"], [p["id"] for p in day["projects"]]), ("2026-10-09", 0, ["jarvis"]))
+        self.assertEqual([pr["number"] for pr in day["projects"][0]["closed"]], [141])  # the only fact that day
+
+    def test_days_are_owner_only(self):
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": "Бот отвечает голосом", "you": [], "agents": ["Быстрее"],
+                                                            "next": [], "deadlines": [{"date": "2026-10-20", "what": "Показать"}]}})
+        public = work_projection(self.root, now=self.now, owner=False, edition=True)
+        self.assertNotIn("feed", public)
+        self.assertNotIn("deadlines", public)
+        self.assertEqual(public["day"]["date"], "2026-10-08")  # the newest working day's numbers only
+        text = json.dumps(public, ensure_ascii=False)
+        for private in ("Быстрее", "Показать", "JARVIS", "private topic"):
+            self.assertNotIn(private, text)
+        self.assertNotIn("feed", work_projection(self.root, now=self.now, owner=True))  # only when asked
+
     def test_product_mapping_follows_platforms(self):
         from dashboard_builder.daily_work import product_for
         self.assertEqual(product_for("FINANCIAL OS", None)["id"], "financial")
@@ -385,6 +734,9 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual(product_for("health-os", None)["mascot"], "health")
         other = product_for("skills-library", None)
         self.assertEqual((other["id"], other["mascot"]), ("p-skillslibrary", None))
+        # Cyrillic names keep their letters, so two ChatGPT projects do not merge into one.
+        self.assertNotEqual(product_for("ChatGPT · Любовь", None)["id"], product_for("ChatGPT · без проекта", None)["id"])
+        self.assertEqual(product_for("ChatGPT · SHOPIFY", None)["name"], "ChatGPT · SHOPIFY")
         self.assertIsNone(other["description"])
         self.assertEqual(product_for(None, "pirajoke/ai-singularity-news-bot")["id"], "context-news")
         self.assertEqual(product_for("ai-singularity", None)["id"], "ai-singularity")
@@ -414,14 +766,29 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         self.assertIn('aria-controls="section-work"', html)
         self.assertIn('id="section-work"', html)
         self.assertIn("/api/work/daily", html)
-        self.assertIn("'work'].includes(INITIAL_SECTION)", html)
+        self.assertRegex(html, r"'work'[^\]]*\]\.includes\(INITIAL_SECTION\)")
+        # MAIN MANAGER (Mark, 2026-10-14: «чтобы была визуализация проекта, который я делаю»):
+        # the project board first, then «Дела» (2026-10-12) and «Изменения».
+        self.assertIn('<button type="button" data-mm-view="map" aria-pressed="true">', html)
+        self.assertIn('data-mm-view="todo"', html)
+        self.assertIn('data-mm-view="infra"', html)
+        self.assertIn("renderMap(data);", html)
+        self.assertIn("renderTodo(data);", html)
+        # Loose ends are part of the same list (2026-10-13), not a separate view.
+        self.assertNotIn('data-mm-view="loose"', html)
+        todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="project"')]
+        self.assertIn('id="mm-loose"', todo_panel)
+        self.assertIn("(data.owner_view ? items.length : 0) + data.dropped_count + data.forgot_count", html)
         # Projects reuse the Platforms mascots and open a per-project page.
-        self.assertIn('data-mm-view="projects"', html)
         self.assertIn('<use href="#cc-mascot-${mmEsc(item.mascot)}"/>', html)
         self.assertIn("project: id", html)
-        # Plain-language day summary and project descriptions.
-        self.assertIn('id="mm-day-summary"', html)
-        self.assertIn("function renderDaySummary(data)", html)
+        # No separate day summary (Mark, 2026-10-14: MAIN MANAGER already says it): no «По дням»
+        # feed and no summary view; a day's bullets stay in each project's history.
+        self.assertNotIn('id="section-today"', html)
+        self.assertNotIn('id="dp-days"', html)
+        self.assertNotIn("edition: '1'", html)
+        self.assertNotIn('data-mm-view="overview"', html)
+        self.assertNotIn('id="mm-day-summary"', html)
         self.assertIn("mm-project-desc", html)
         self.assertIn("Технические детали", html)
 
@@ -437,6 +804,62 @@ class CommandCenterWorkSectionTest(unittest.TestCase):
         server = (BUILDER_DIR / "dashboard-server-m4.py").read_text(encoding="utf-8")
         self.assertIn('"/api/work/daily"', server)
         self.assertIn("owner=self._dashboard_run_authorized()", server)
+        self.assertIn("edition=(query.get('edition') or ['0'])[0] == '1'", server)
+
+    def test_dashboard_opens_on_main_manager_in_one_design(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        # Mark (2026-10-14): «Нам не нужна сводка дня … сделай, чтобы это было красиво, унифицировано по
+        # дизайну». MAIN MANAGER is the first screen; old «По дням» links (?tab=today) open it.
+        self.assertIn('<section id="section-work" class="section active" aria-labelledby="mm-title">', html)
+        self.assertIn("const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;", html)
+        self.assertIn("  showSection('work');\n}", html)
+        # One app shell: the only primary navigation sits in the sidebar, the sections in the page.
+        primary_nav = '<nav class="nav-pills cc-main-nav" aria-label="Command Center sections">'
+        self.assertEqual(html.count(primary_nav), 1)
+        self.assertLess(html.index('<aside class="cc-side"'), html.index(primary_nav))
+        self.assertLess(html.index(primary_nav), html.index('<main class="cc-main">'))
+        self.assertLess(html.index('<main class="cc-main">'), html.index('<section id="section-work"'))
+        # Every section opens with the same page header, and one switch sets light or dark for all.
+        for title_id in ("mm-title", "agents-title", "platforms-title", "machines-title"):
+            self.assertRegex(html, rf'<h2 class="cc-page-title[^"]*" id="{title_id}">')
+        self.assertIn('id="cc-theme-toggle"', html)
+        self.assertNotIn('id="mm-theme-toggle"', html)
+        # The board: a card per project with two weeks of work and what waits on Mark.
+        self.assertIn("function renderMap(data)", html)
+        self.assertIn("const MM_MAP_DAYS = 14;", html)
+        self.assertIn("${active ? mmSpark(p, dates, scale) : ''}", html)
+        self.assertIn("Карточки проектов видны только владельцу.", html)
+        # A link with ?day= opens that day in the project's history, details unfolded.
+        self.assertIn("if (day) mmOpenHistoryDay(day);", html)
+        # The project page shows its numbers, tasks and chart first; the day history is folded below.
+        page = html[html.index("function renderProjectPage()"):html.index("function mmOpenHistoryDay(")]
+        self.assertLess(page.index("${mmTodo(p)}"), page.index('id="mm-project-chart"'))
+        self.assertLess(page.index('id="mm-project-chart"'), page.index('<details class="mm-panel mm-project-more" id="mm-project-history">'))
+        self.assertIn("<summary>Технические детали", html)
+        self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
+        for gone in ("renderPaper", "np-articles", "Остальные проекты", "function renderDays()", "dpDay(", "loadDays"):
+            self.assertNotIn(gone, html)
+
+    def test_owner_browser_can_open_the_phone_by_qr(self):
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('<section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>', html)
+        # Shown only to a browser on command.meshly.fr that already holds the owner key.
+        self.assertIn("ownerView && IS_PUBLIC_DASHBOARD && npOwnerKey() && typeof ccQrcode === 'function'", html)
+        self.assertIn("npDeviceSetup(false);", html)
+        # The code is the usual login link the page already accepts; it hides itself again.
+        self.assertIn("`${window.location.origin}/#dashboard_run_token=${encodeURIComponent(key)}`", html)
+        self.assertIn("params.get('dashboard_run_token')", html)
+        self.assertIn("npQrTimer = setTimeout(npHideQr, 120000);", html)
+        self.assertIn("if (document.hidden) npHideQr();", html)
+        # The QR library is inline (only index.html is deployed) and carries its licence notice.
+        self.assertIn("qrcode-generator 2.0.4, Copyright (c) 2009 Kazuhiko Arase", html)
+        self.assertIn("const ccQrcode=", html)
+        # Service counters moved from the header into «Техника».
+        header = html[html.index('<div class="header">'):html.index('<nav class="nav-pills cc-main-nav"')]
+        self.assertNotIn('id="stat-services"', header)
+        machines = html[html.index('<section id="section-machines"'):html.index('<nav class="nav-pills cc-machine-nav"')]
+        self.assertIn('id="stat-services"', machines)
+        self.assertIn('id="stat-hooks"', machines)
 
 
 if __name__ == "__main__":

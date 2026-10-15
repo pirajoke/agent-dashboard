@@ -38,3 +38,101 @@ Current JARVIS card source:
 - `builder/dashboard_builder/jarvis_pipeline.py`
 - `builder/dashboard_builder/now.py`
 - `builder/dashboard-assets/style.css`
+
+## Services come back after a reboot
+
+On 2026-10-12 the Mac mini lost power, and after the login launchd left many LaunchAgents
+unloaded. `launchd_watchdog.py` (launchd `com.pirajoke.launchd-watchdog`, at login and every
+5 minutes, installed by `deploy_to_scripts.sh`) remembers every `com.pirajoke.*` and
+`homebrew.mxcl.*` job it has seen loaded and loads back the ones launchd does not have.
+It never loads a job it has not seen running, so services that are off stay off.
+
+To stop a service for good, use `launchctl disable gui/$(id -u)/<label>`; the watchdog then
+forgets it. A plain `launchctl bootout` is undone within 5 minutes. If auto-deploy rolls back to a
+release without the watchdog, its next run removes its own LaunchAgent. State and log:
+`~/.agent-bridge/launchd-watchdog/`.
+
+Before the login nothing runs: with FileVault on, the Mac mini waits for the password after a
+power loss. If macOS blocks a job under System Settings → General → Login Items & Extensions →
+«Allow in the background», the watchdog is blocked too, so that switch must stay on.
+
+## Owner sign-in through Cloudflare Access
+
+On command.meshly.fr the owner no longer needs the owner key in each browser
+once a Cloudflare Access application guards the host (Zero Trust → Access
+controls → Applications, login by a one-time code to Mark's Gmail or Google
+sign-in, policy allowing only his address). Cloudflare then signs every request
+it lets through (`Cf-Access-Jwt-Assertion`), and the server
+(`dashboard_builder/cloudflare_access.py`) treats a valid token for this
+application as the owner: everything is shown, no key, no QR. Whoever the
+Access policy lets in is the owner, so keep that policy to Mark alone.
+
+Nothing to configure: the team domain and the application's audience tag come
+from Cloudflare's own login redirect for command.meshly.fr, the signing keys
+from `https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`, and RS256 is
+checked with the standard library. If that redirect can't be read,
+`~/.agent-bridge/cloudflare_access.json` (`{"team": "<team>.cloudflareaccess.com",
+"aud": "<AUD tag>"}`) names them instead. Writes also need the page itself as
+`Origin`. Without Access the owner key works exactly as before.
+
+## «По дням»: the first screen
+
+Mark (2026-10-11): the day-by-day list is what matters, the rest is not needed
+on the first screen. command.meshly.fr opens on «По дням»
+(`builder/mac-mini-dashboard/index.html`, section `section-today`): the last 14
+days with work, newest first, in the same rows as «По дням» on a project page.
+Each day shows its total work time and, per project, Claude's plain-language
+bullets for that day; «Технические детали» (Claude/Codex time, sessions, PRs,
+infrastructure commands) stay folded, and each project there opens that day on
+its project page. The first three days are open. Dated deadlines from the
+summaries sit above the list. The other sections (MAIN MANAGER, Agents,
+Platforms, Техника) are one small link row at the top; the big navigation shows
+only once you are in one of them. On a project page «По дням» comes right after
+the title; numbers, the project's to-do, the chart and loose ends are folded
+under «Цифры, задачи и график».
+
+Data comes from `/api/work/daily?edition=1` (`feed` and `deadlines` in
+`dashboard_builder/daily_work.py`, owner token only). The text is written by
+`daily_work_summarizer.py` on the Mac mini, for today as well, rewritten while
+the day goes on. Each bullet names what appeared or changed; a project with
+nothing concrete is answered empty and kept in the summary's `quiet` list.
+Quick looks (under 3 minutes, or sessions with no title, ask or reply, and no
+PR) are not sent to Claude and not listed; a day of only those is left out.
+A project still waiting for its retelling is only named in one line, never
+described with invented text. `PROMPT_VERSION` in the summarizer goes up when
+the instructions change, so the last two weeks are rewritten. Without the
+owner token the page shows only the newest working day's totals.
+
+Technical pages moved to the last tab, «Техника» (machines, services, ports).
+
+## MAIN MANAGER: what waits on Mark
+
+Mark (2026-10-12): «По дням» and MAIN MANAGER must not show the same thing.
+«По дням» says what was done; MAIN MANAGER (`?tab=work`) opens on «Дела», only
+what waits on Mark, per project: dated deadlines, next steps from the
+project's newest summary of the last 7 days, and PRs ready to merge (drafts
+are only counted), nearest deadline first (`todo` in `/api/work/daily`, owner
+only), then «Хвосты», the loose ends, in the same list (2026-10-13: one list
+of what waits on Mark, as he chose). «Изменения» is the infrastructure change
+log. Project pages are reached from «Дела» and from the technical details in
+«По дням».
+
+## ChatGPT work
+
+Mark builds many projects in ChatGPT (2026-10-12). Two sources reach the day
+summaries, both through `daily_work_collector.py` on the MacBook:
+
+- The ChatGPT desktop app works in `~/Documents/ChatGPT/<project>`; those
+  sessions are named «ChatGPT · <project>», and chats outside a project (folders
+  named by an id or `new-chat`) are grouped as «ChatGPT · без проекта».
+- Chats on chatgpt.com and the phone keep no local logs. The data export
+  (Settings → Data controls → Export data) is read from `~/ChatGPT-export`
+  (or `~/Downloads`, which macOS may keep closed to a launchd job), once per new
+  export, into `sessions/chatgpt/<day>.json` and pushed to the Mac mini. Each
+  chat is one session: its title is the topic, a few redacted asks and the last
+  reply feed the summarizer. ChatGPT projects are named from the export when it
+  lists them, else from `chatgpt_projects.json` in the daily-work folder
+  (`{"g-p-…": "SHOPIFY"}`), else «ChatGPT · проект <id>». `--no-chatgpt-export`
+  switches the import off.
+
+In session tables these show as «ChatGPT»; their time counts with Codex.

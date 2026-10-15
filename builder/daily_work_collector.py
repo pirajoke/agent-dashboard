@@ -14,6 +14,12 @@ Prompt text is reduced to a short, redacted topic line, plus a few short
 redacted excerpts per day (what Mark asked, the agent's last reply) that only
 ``daily_work_summarizer.py`` on the Mac mini reads to write the plain-language
 day summary. The API never serves those excerpts.
+
+ChatGPT on the web and the phone keeps no local logs. Its data export (Settings
+→ Data controls → Export data), the zip as mailed or unpacked, is read once per
+new export into ``<out>/sessions/chatgpt/<YYYY-MM-DD>.json``. It is looked for in
+~/ChatGPT-export and ~/Downloads; macOS may keep a launchd job out of Downloads,
+so ~/ChatGPT-export is the dependable place.
 """
 from __future__ import annotations
 
@@ -27,12 +33,15 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import zipfile
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
-SCHEMA = 2
+# 3: asks, replies and folders from the newer Codex rollouts; 4: ChatGPT app projects are named
+# «ChatGPT · <project>». Older days are collected again.
+SCHEMA = 4
 HOME = Path.home()
 DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
 CLAUDE_DIRS = [HOME / ".claude" / "projects", HOME / ".config" / "claude" / "projects"]
@@ -54,7 +63,8 @@ PR_BODY_LIMIT = 900
 # Day files older than SCHEMA are rewritten once inside this window, so the
 # summarizer gets asks and replies for the last two weeks.
 UPGRADE_DAYS = 14
-REMOTE_RE = re.compile(r"github\.com[:/]+([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?$")
+# Also ssh host aliases such as git@github.com-agent-dashboard:owner/repo.git (one deploy key per repo).
+REMOTE_RE = re.compile(r"github\.com(?:-[A-Za-z0-9_.-]+)?[:/]+([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?$")
 SECRET_PATTERNS = [
     re.compile(r"sk-(?:proj-)?[A-Za-z0-9_-]{20,}"),
     re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
@@ -248,27 +258,84 @@ def repo_from_remote(url: object) -> str | None:
 _REMOTE_CACHE: dict[str, str | None] = {}
 
 
+# Where local clones live; a deleted worktree like /tmp/agent-dashboard-fix-v1 maps to the
+# clone whose folder name starts its name.
+CLONE_PARENTS = [HOME, HOME / "Projects", HOME / "Documents" / "GitHub"]
+
+
+def normalize_cwd(cwd: object) -> str | None:
+    """Codex now writes the working folder as a file:// URI."""
+    if not isinstance(cwd, str) or not cwd:
+        return None
+    if cwd.startswith("file://"):
+        cwd = urllib.parse.unquote(urllib.parse.urlparse(cwd).path)
+    return cwd.rstrip("/") or "/"
+
+
+def _git_remote(cwd: str) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", cwd, "remote", "get-url", "origin"],
+            capture_output=True, text=True, timeout=5, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return repo_from_remote(result.stdout) if result.returncode == 0 else None
+
+
+def _clone_for_name(name: str) -> Path | None:
+    best: Path | None = None
+    for parent in CLONE_PARENTS:
+        try:
+            children = list(parent.iterdir())
+        except OSError:
+            continue
+        for child in children:
+            if (name == child.name or name.startswith(child.name + "-")) and (child / ".git").exists():
+                if best is None or len(child.name) > len(best.name):
+                    best = child
+    return best
+
+
 def repo_for_cwd(cwd: str | None) -> str | None:
     if not cwd:
         return None
     if cwd not in _REMOTE_CACHE:
         repo = None
         if Path(cwd).is_dir():
-            try:
-                result = subprocess.run(
-                    ["git", "-C", cwd, "remote", "get-url", "origin"],
-                    capture_output=True, text=True, timeout=5, check=False,
-                )
-                repo = repo_from_remote(result.stdout) if result.returncode == 0 else None
-            except (OSError, subprocess.SubprocessError):
-                repo = None
+            repo = _git_remote(cwd)
+        elif not Path(cwd).exists() and Path(cwd).name:
+            # Only a folder that is gone (a deleted worktree); an existing folder outside git stays unmatched.
+            clone = _clone_for_name(Path(cwd).name)
+            repo = _git_remote(str(clone)) if clone else None
         _REMOTE_CACHE[cwd] = repo
     return _REMOTE_CACHE[cwd]
+
+
+# The ChatGPT app works in ~/Documents/ChatGPT/<project>; a chat outside a project gets a folder
+# named by its id or «new-chat», which says nothing, so those are grouped together.
+CHATGPT_PROJECT = "ChatGPT · {}"
+CHATGPT_NO_PROJECT = "ChatGPT · без проекта"
+_CHAT_ID_RE = re.compile(r"^(?:[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}|new[-_ ]?chat(?:[-_ ]?\d+)?)$", re.IGNORECASE)
+
+
+def _chatgpt_project(cwd: str) -> str | None:
+    parts = Path(cwd).parts
+    for index in range(1, len(parts)):
+        if parts[index] == "ChatGPT" and parts[index - 1] == "Documents":
+            folder = parts[index + 1] if index + 1 < len(parts) else ""
+            if not folder or _CHAT_ID_RE.match(folder):
+                return CHATGPT_NO_PROJECT
+            return CHATGPT_PROJECT.format(folder)
+    return None
 
 
 def project_name(cwd: str | None, repo: str | None) -> str:
     if repo:
         return repo.split("/", 1)[1]
+    chatgpt = _chatgpt_project(cwd) if cwd else None
+    if chatgpt:
+        return chatgpt
     if cwd:
         name = Path(cwd).name
         if name and Path(cwd) != HOME:
@@ -333,6 +400,9 @@ class Session:
     def __init__(self, tool: str, session_id: str) -> None:
         self.tool = tool
         self.session_id = session_id
+        # Set for sessions that are not tied to a folder (ChatGPT export); otherwise derived from cwd.
+        self.project: str | None = None
+        self.app: str | None = None
         self.cwd: str | None = None
         self.repo: str | None = None
         self.branch: str | None = None
@@ -454,41 +524,110 @@ def _codex_command(payload: dict[str, Any]) -> str | None:
     return command if isinstance(command, str) else None
 
 
+def _codex_text(content: object) -> str:
+    if not isinstance(content, list):
+        return ""
+    return " ".join(part.get("text", "") for part in content
+                    if isinstance(part, dict) and part.get("type") in {"input_text", "output_text", "text", "Text"})
+
+
+def _codex_task_topic(agent_path: object) -> str | None:
+    """A sub-agent's task name, e.g. "/root/dashboard_pr_gate" -> "dashboard pr gate"."""
+    if not isinstance(agent_path, str) or "/" not in agent_path.strip("/"):
+        return None
+    return redact_topic(agent_path.rstrip("/").rsplit("/", 1)[-1].replace("_", " ").replace("-", " "))
+
+
+def _codex_work_cwd(payload: dict[str, Any]) -> str | None:
+    """Where a tool call ran: Codex sessions often start in the home folder and work in a repo."""
+    item = payload.get("item") if isinstance(payload.get("item"), dict) else {}
+    if payload.get("type") == "item_completed" and item.get("type") == "CommandExecution":
+        cwd = item.get("cwd")
+        return cwd if isinstance(cwd, str) else None
+    if payload.get("type") == "function_call":
+        try:
+            args = json.loads(payload.get("arguments") or "")
+        except (TypeError, json.JSONDecodeError):
+            return None
+        cwd = args.get("workdir") if isinstance(args, dict) else None
+        return cwd if isinstance(cwd, str) else None
+    return None
+
+
 def parse_codex_file(path: Path) -> list[Session]:
     session = Session("codex", path.stem)
+    # Newer rollouts drop the user_message / agent_message events and keep only the
+    # response items, so collect those too and use them when the events are missing.
+    item_asks: list[tuple[datetime, str]] = []
+    item_replies: list[tuple[datetime, object]] = []
+    has_ask_events = has_reply_events = False
+    task_topic: str | None = None
+    work_dirs: dict[str, int] = {}
     for record in iter_jsonl(path):
         payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
         if record.get("type") == "session_meta" or ("id" in record and "instructions" in record):
             meta = payload or record
             session.session_id = str(meta.get("id") or session.session_id)
             if isinstance(meta.get("cwd"), str):
-                session.cwd = meta["cwd"]
+                session.cwd = normalize_cwd(meta["cwd"])
             git = meta.get("git") if isinstance(meta.get("git"), dict) else {}
             session.repo = repo_from_remote(git.get("repository_url")) or session.repo
             if isinstance(git.get("branch"), str) and git["branch"]:
                 session.branch = git["branch"]
+            task_topic = _codex_task_topic(meta.get("agent_path")) or task_topic
         if record.get("type") == "turn_context" and isinstance(payload.get("cwd"), str):
-            session.cwd = session.cwd or payload["cwd"]
+            session.cwd = session.cwd or normalize_cwd(payload["cwd"])
         moment = parse_ts(record.get("timestamp"))
         if moment is None:
             continue
         session.events.append(moment)
+        work_dir = normalize_cwd(_codex_work_cwd(payload))
+        if work_dir:
+            work_dirs[work_dir] = work_dirs.get(work_dir, 0) + 1
         if record.get("type") == "response_item":
             action = infra_action(_codex_command(payload), moment)
             if action:
                 session.infra_actions.append(action)
+            if payload.get("type") == "message" and payload.get("role") == "user":
+                item_asks.append((moment, _codex_text(payload.get("content"))))
+            if payload.get("type") == "message" and payload.get("role") == "assistant":
+                item_replies.append((moment, _codex_text(payload.get("content"))))
+        if record.get("type") == "event_msg" and payload.get("type") == "task_complete":
+            item_replies.append((moment, payload.get("last_agent_message")))
         if record.get("type") == "event_msg" and payload.get("type") == "agent_message":
+            has_reply_events = True
             session.note_reply(moment, payload.get("message"))
         text = _codex_prompt_text(record)
         if text is not None:
-            topic = redact_topic(text)
-            if topic:
-                session.prompts.append(moment)
-                session.topic = session.topic or topic
-                session.note_ask(moment, text)
+            has_ask_events = True
+            _codex_note_prompt(session, moment, text)
+    if not has_ask_events:
+        for moment, text in item_asks:
+            _codex_note_prompt(session, moment, text)
+    if not has_reply_events:
+        for moment, text in item_replies:
+            session.note_reply(moment, text)
+    session.topic = session.topic or task_topic
+    if work_dirs and (not session.cwd or Path(session.cwd) == HOME):
+        session.cwd = max(work_dirs, key=lambda cwd: (Path(cwd) != HOME, work_dirs[cwd]))
     if session.repo is None:
         session.repo = repo_for_cwd(session.cwd)
+    if session.repo is None:
+        # Started in a plain folder but worked inside a repo below it.
+        for work_dir in sorted(work_dirs, key=work_dirs.get, reverse=True):
+            repo = repo_for_cwd(work_dir)
+            if repo:
+                session.cwd, session.repo = work_dir, repo
+                break
     return [session] if session.events else []
+
+
+def _codex_note_prompt(session: Session, moment: datetime, text: str) -> None:
+    topic = redact_topic(text)
+    if topic:
+        session.prompts.append(moment)
+        session.topic = session.topic or topic
+        session.note_ask(moment, text)
 
 
 def collect_sessions(since: datetime, out_dir: Path = DEFAULT_OUT) -> tuple[list[Session], dict[str, Any]]:
@@ -547,10 +686,13 @@ def day_records(sessions: list[Session], days: set[str]) -> dict[str, list[dict[
             if day not in days:
                 continue
             prompts = sum(1 for moment in session.prompts if local_day(moment) == day)
+            project = session.project or project_name(session.cwd, session.repo)
+            app = session.app or ("chatgpt" if project.startswith(CHATGPT_PROJECT.format("")) or project == CHATGPT_NO_PROJECT else None)
             by_day[day].append({
                 "tool": session.tool,
+                **({"app": app} if app else {}),
                 "session_id": session.session_id,
-                "project": project_name(session.cwd, session.repo),
+                "project": project,
                 "repo": session.repo,
                 "branch": session.branch,
                 "start": iso_z(intervals[0][0]),
@@ -566,6 +708,186 @@ def day_records(sessions: list[Session], days: set[str]) -> dict[str, list[dict[
     for records in by_day.values():
         records.sort(key=lambda item: item["start"])
     return by_day
+
+
+# ── ChatGPT data export ──────────────────────────────────────────────────────
+
+CHATGPT_EXPORT_DIRS = [HOME / "ChatGPT-export", HOME / "Downloads"]
+CHATGPT_MACHINE = "chatgpt"
+# Optional names for ChatGPT projects, {"g-p-…": "SHOPIFY"}, when the export does not carry them.
+CHATGPT_PROJECT_NAMES = "chatgpt_projects.json"
+_CONVERSATIONS_RE = re.compile(r"(?:^|/)conversations(?:-\d+)?\.json$")
+
+
+def _export_members(path: Path) -> list[str]:
+    try:
+        if path.is_dir():
+            return [str(p.relative_to(path)) for p in path.rglob("*.json") if _CONVERSATIONS_RE.search(str(p.relative_to(path)))]
+        if path.suffix.lower() == ".zip":
+            with zipfile.ZipFile(path) as archive:
+                return [name for name in archive.namelist() if _CONVERSATIONS_RE.search(name)]
+    except (OSError, zipfile.BadZipFile):
+        pass
+    return []
+
+
+def find_chatgpt_export(dirs: list[Path] | None = None) -> Path | None:
+    """The newest ChatGPT export: each one holds the whole history, so older ones add nothing."""
+    found: list[tuple[float, Path]] = []
+    for directory in dirs if dirs is not None else CHATGPT_EXPORT_DIRS:
+        try:
+            entries = list(directory.iterdir())
+        except OSError:
+            continue
+        for entry in entries:
+            if (entry.is_dir() or entry.suffix.lower() == ".zip") and _export_members(entry):
+                found.append((entry.stat().st_mtime, entry))
+    return max(found)[1] if found else None
+
+
+def _read_export_json(path: Path, member: str) -> Any:
+    if path.is_dir():
+        return json.loads((path / member).read_text(encoding="utf-8"))
+    with zipfile.ZipFile(path) as archive:
+        return json.loads(archive.read(member).decode("utf-8"))
+
+
+def _export_project_names(path: Path) -> dict[str, str]:
+    """Project names if the export lists them (a JSON of objects with a g-p-… id and a name)."""
+    names: dict[str, str] = {}
+    try:
+        members = ([str(p.relative_to(path)) for p in path.rglob("*.json")] if path.is_dir()
+                   else zipfile.ZipFile(path).namelist())
+    except (OSError, zipfile.BadZipFile):
+        return names
+    for member in members:
+        if "project" not in member.lower() or not member.endswith(".json"):
+            continue
+        try:
+            data = _read_export_json(path, member)
+        except (OSError, ValueError, KeyError):
+            continue
+        for item in data if isinstance(data, list) else (data.get("projects") or [] if isinstance(data, dict) else []):
+            if isinstance(item, dict) and str(item.get("id") or "").startswith("g-p-"):
+                name = item.get("name") or item.get("title") or item.get("display_name")
+                if isinstance(name, str) and name.strip():
+                    names[item["id"]] = name.strip()
+    return names
+
+
+def _chatgpt_text(content: object) -> str:
+    if not isinstance(content, dict):
+        return ""
+    parts = content.get("parts")
+    if isinstance(parts, list):
+        return " ".join(part for part in parts if isinstance(part, str))
+    text = content.get("text")
+    return text if isinstance(text, str) else ""
+
+
+def _active_messages(conversation: dict[str, Any], mapping: dict[str, Any]) -> list[Any]:
+    """The messages of the visible conversation: edited prompts and regenerated answers stay in
+    ``mapping`` on abandoned branches, so the parent chain from ``current_node`` is followed."""
+    node_id = conversation.get("current_node")
+    if not isinstance(node_id, str) or node_id not in mapping:
+        return [node.get("message") for node in mapping.values() if isinstance(node, dict)]
+    chain: list[Any] = []
+    seen: set[str] = set()
+    while isinstance(node_id, str) and node_id in mapping and node_id not in seen:
+        seen.add(node_id)
+        node = mapping[node_id]
+        if not isinstance(node, dict):
+            break
+        chain.append(node.get("message"))
+        node_id = node.get("parent")
+    return chain[::-1]
+
+
+def parse_chatgpt_conversation(conversation: dict[str, Any], names: dict[str, str]) -> Session | None:
+    """One chat as one session: its messages are the events, its title the topic."""
+    session_id = conversation.get("conversation_id") or conversation.get("id")
+    mapping = conversation.get("mapping")
+    if not isinstance(session_id, str) or not isinstance(mapping, dict):
+        return None
+    session = Session("codex", f"chatgpt-{session_id}")
+    session.app = "chatgpt"
+    gizmo = conversation.get("conversation_template_id") or conversation.get("gizmo_id")
+    if isinstance(gizmo, str) and gizmo.startswith("g-p-"):
+        session.project = CHATGPT_PROJECT.format(names.get(gizmo) or f"проект {gizmo[-6:]}")
+    else:
+        session.project = CHATGPT_NO_PROJECT
+    session.topic = redact_topic(conversation.get("title"))
+    for message in _active_messages(conversation, mapping):
+        if not isinstance(message, dict):
+            continue
+        created = message.get("create_time")
+        role = (message.get("author") or {}).get("role")
+        if not isinstance(created, (int, float)) or role not in ("user", "assistant"):
+            continue
+        if (message.get("metadata") or {}).get("is_visually_hidden_from_conversation"):
+            continue
+        moment = datetime.fromtimestamp(created, timezone.utc)
+        session.events.append(moment)
+        text = _chatgpt_text(message.get("content"))
+        if role == "user":
+            session.prompts.append(moment)
+            session.note_ask(moment, text)
+        elif text:
+            session.note_reply(moment, text)
+    if not session.events:
+        return None
+    session.asks.sort()
+    return session
+
+
+def import_chatgpt_export(out_dir: Path, since: datetime, dirs: list[Path] | None = None) -> dict[str, Any]:
+    """Write the newest export's chats since ``since`` into <out>/sessions/chatgpt, once per export."""
+    export = find_chatgpt_export(dirs)
+    if export is None:
+        return {"ok": False, "reason": "export_not_found"}
+    stat = export.stat()
+    given_names = {key: value.strip() for key, value in sorted(_read_day_file(out_dir / CHATGPT_PROJECT_NAMES).items())
+                   if isinstance(value, str) and value.strip()}
+    # A new export or a renamed project rewrites the days.
+    marker = {"source": export.name, "size": stat.st_size, "mtime": int(stat.st_mtime), "names": given_names}
+    state_path = out_dir / "chatgpt-export.json"
+    state = _read_day_file(state_path)
+    if {key: state.get(key) for key in marker} == marker:
+        # Already read; its days are pushed again only if the last push did not get through.
+        return {"ok": True, "export": export.name, "fresh": False, "days": state.get("push_days", []),
+                "needs_push": not state.get("pushed")}
+    names = {**_export_project_names(export), **given_names}
+    sessions: list[Session] = []
+    try:
+        for member in _export_members(export):
+            data = _read_export_json(export, member)
+            for conversation in data if isinstance(data, list) else []:
+                if isinstance(conversation, dict) and (conversation.get("update_time") or 0) >= since.timestamp():
+                    session = parse_chatgpt_conversation(conversation, names)
+                    if session:
+                        sessions.append(session)
+    except (OSError, ValueError, KeyError, zipfile.BadZipFile):
+        return {"ok": False, "reason": "export_unreadable", "export": export.name}
+    days = {day.isoformat() for day in _days_between(since.astimezone().date(), datetime.now().astimezone().date())}
+    by_day = day_records(sessions, days)
+    exported_at = iso_z(datetime.fromtimestamp(stat.st_mtime, timezone.utc))
+    machine_dir = out_dir / "sessions" / CHATGPT_MACHINE
+    # A day the newer export no longer has (its chats were deleted) is emptied here and on the Mac mini.
+    emptied = {day for day in state.get("days") or [] if day in days} - set(by_day)
+    push_days = sorted(set(by_day) | emptied)
+    for day in push_days:
+        write_json(machine_dir / f"{day}.json", {
+            "schema": SCHEMA, "date": day, "machine": CHATGPT_MACHINE, "collected_at": exported_at,
+            "sources": {"chatgpt": {"ok": True, "export": export.name}}, "sessions": by_day.get(day, []),
+        })
+    write_json(state_path, {**marker, "imported_at": iso_z(datetime.now(timezone.utc)), "days": sorted(by_day),
+                            "push_days": push_days, "conversations": len(sessions), "pushed": False})
+    return {"ok": True, "export": export.name, "fresh": True, "days": push_days, "conversations": len(sessions),
+            "needs_push": True}
+
+
+def _days_between(first: date, last: date) -> list[date]:
+    return [first + timedelta(days=offset) for offset in range((last - first).days + 1)]
 
 
 # ── GitHub ───────────────────────────────────────────────────────────────────
@@ -768,6 +1090,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--backfill-days", type=int, default=45, help="missing days filled once")
     parser.add_argument("--github", action="store_true", help="also collect GitHub outcomes")
     parser.add_argument("--github-login", default="pirajoke")
+    parser.add_argument("--no-chatgpt-export", dest="chatgpt_export", action="store_false",
+                        help="do not look for a ChatGPT data export")
     parser.add_argument("--push-to", default=None, help="ssh host that receives this machine's files")
     parser.add_argument("--remote-out", default=".agent-bridge/daily-work")
     return parser.parse_args(argv)
@@ -807,6 +1131,12 @@ def main(argv: list[str] | None = None) -> int:
         })
     result: dict[str, Any] = {"ok": True, "machine": machine, "days_written": len(wanted),
                               "sessions": sum(len(v) for v in by_day.values()), "sources": sources}
+    chatgpt_days: list[str] = []
+    if args.chatgpt_export:
+        start = datetime.combine(today - timedelta(days=args.backfill_days), datetime.min.time()).astimezone()
+        chatgpt = import_chatgpt_export(args.out, start)
+        result["chatgpt"] = {key: chatgpt.get(key) for key in ("ok", "reason", "export", "fresh", "conversations") if key in chatgpt}
+        chatgpt_days = chatgpt.get("days", []) if chatgpt.get("needs_push") else []
 
     if args.github:
         since_day = (today - timedelta(days=args.backfill_days)).isoformat()
@@ -827,6 +1157,14 @@ def main(argv: list[str] | None = None) -> int:
             files = [str(machine_dir / f"{day}.json") for day in sorted(wanted)]
             subprocess.run(["scp", "-q", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", *files,
                             f"{args.push_to}:{remote_dir}/"], check=True, timeout=120)
+            if chatgpt_days:
+                chatgpt_remote = f"{args.remote_out.rstrip('/')}/sessions/{CHATGPT_MACHINE}"
+                subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", args.push_to,
+                                f"mkdir -p {chatgpt_remote}"], check=True, timeout=30)
+                chatgpt_files = [str(args.out / "sessions" / CHATGPT_MACHINE / f"{day}.json") for day in chatgpt_days]
+                subprocess.run(["scp", "-q", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", *chatgpt_files,
+                                f"{args.push_to}:{chatgpt_remote}/"], check=True, timeout=300)
+                write_json(args.out / "chatgpt-export.json", {**_read_day_file(args.out / "chatgpt-export.json"), "pushed": True})
             result["pushed"] = True
         except (OSError, subprocess.SubprocessError):
             result["pushed"] = False
