@@ -22,14 +22,14 @@ EXPECTED_PLATFORMS = {
     "mydictionary": (
         "Lexi",
         (
-            "http://127.0.0.1:8791/admin",
+            "https://mydictionary.meshly.fr/admin",
             "https://t.me/my_dictionnary_tg_bot",
         ),
     ),
     "health": ("Health OS", ("https://health.meshly.fr/",)),
     "ai-singularity": (
         "AI Singularity",
-        ("http://127.0.0.1:8790",),
+        ("https://singularity.meshly.fr/",),
     ),
     "context-news": (
         "Context News France",
@@ -37,9 +37,14 @@ EXPECTED_PLATFORMS = {
     ),
     "accountable": (
         "Accountable OS",
-        ("http://127.0.0.1:4174",),
+        ("https://accountable.meshly.fr/",),
     ),
     "jarvis": ("JARVIS", ("https://t.me/max_jarvis_hoian_bot",)),
+    "property-os": ("Property OS", ("https://properties.meshly.fr/",)),
+    "pixel-agents": ("Pixel Agents", ("https://pixel-agents.meshly.fr/",)),
+    "closeness-mirror": ("Зеркало Контакта", ("http://127.0.0.1:3051",)),
+    "sushi-parisien": ("Sushi Parisien", ("https://sushi-parisien.meshly.fr/",)),
+    "n8n": ("n8n", ("http://127.0.0.1:5678",)),
 }
 
 
@@ -109,12 +114,13 @@ class CommandCenterPlatformsTests(unittest.TestCase):
         cls.parser.feed(cls.html)
 
     def test_historical_command_center_identity_is_preserved(self):
-        self.assertIn("Hello, Maxim", self.html)
+        # Mark 2026-10-14: one design for every tab, in Russian.
+        self.assertIn("Привет, Максим", self.html)
         for target, label in (
             ("mac-mini", "Mac Mini"),
             ("air", "Air"),
             ("pro", "Pro"),
-            ("agents", "Agents"),
+            ("agents", "Агенты"),
         ):
             self.assertIn(target, self.parser.nav_targets)
             self.assertIn(label, self.parser.nav_targets[target])
@@ -122,7 +128,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
     def test_platforms_is_a_reachable_top_level_surface(self):
         self.assertEqual(self.parser.platform_section_count, 1)
         self.assertIn("platforms", self.parser.nav_targets)
-        self.assertIn("Platforms", self.parser.nav_targets["platforms"])
+        self.assertIn("Платформы", self.parser.nav_targets["platforms"])
 
         initial_guard = re.search(
             r"\[([^\]]+)\]\.includes\(INITIAL_SECTION\)",
@@ -169,7 +175,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
                         self.assertEqual(parsed.scheme, "https")
                         self.assertIn(
                             parsed.hostname,
-                            {"t.me", "health.meshly.fr"},
+                            {"t.me", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr"},
                         )
 
     def test_platform_directory_is_responsive_keyboard_safe_and_motion_safe(self):

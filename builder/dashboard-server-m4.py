@@ -21,12 +21,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
+from dashboard_builder.cloudflare_access import AccessGate, configured_access_app, discover_access_app
 from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.infra_changes import infra_projection
+from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
+from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
@@ -69,6 +72,16 @@ HEALTH_API_URL = os.environ.get("HEALTH_API_URL", "http://127.0.0.1:8880").rstri
 AIR_HEALTH_API_URL = os.environ.get("AIR_HEALTH_API_URL", "http://100.118.34.14:8880").rstrip("/")
 PRO_HEALTH_API_URL = os.environ.get("PRO_HEALTH_API_URL", "http://100.74.94.2:8880").rstrip("/")
 PUBLIC_HOSTS = {"command.meshly.fr"}
+# Behind Cloudflare Access the owner signs in once (a code to their Gmail or Google sign-in)
+# instead of carrying the owner key in every browser. See dashboard_builder/cloudflare_access.py.
+CLOUDFLARE_ACCESS_FILE = HOME / ".agent-bridge" / "cloudflare_access.json"
+
+
+def _owner_access_app(host: str):
+    return configured_access_app(CLOUDFLARE_ACCESS_FILE) or discover_access_app(host)
+
+
+OWNER_ACCESS = AccessGate(sorted(PUBLIC_HOSTS)[0], discover=_owner_access_app)
 PUBLIC_API_PATHS = {
     "/api/health",
     "/api/system",
@@ -87,6 +100,7 @@ PUBLIC_BRIDGE_PATHS = {
     "/api/manager/departments",
     "/api/work/daily",
     "/api/infra/changes",
+    "/api/growth",
 }
 PUBLIC_FILE_PATHS = {
     "/",
@@ -409,6 +423,36 @@ def _launchctl_disabled(uid: int) -> dict[str, bool]:
         if match:
             flags[match.group(1)] = match.group(2) == "disabled"
     return flags
+
+
+# launchd state for the Mac mini service list, read at most every few seconds.
+LAUNCHD_STATE_TTL_SECONDS = 10
+_LAUNCHD_STATE_LOCK = threading.Lock()
+_LAUNCHD_STATE: dict[str, object] = {"read_at": 0.0, "loaded": {}, "disabled": None}
+
+
+def _launchd_state() -> tuple[dict, set | None]:
+    """Loaded jobs and switched-off labels; a failed read keeps the last answer launchctl gave."""
+    with _LAUNCHD_STATE_LOCK:
+        if time.monotonic() - float(_LAUNCHD_STATE["read_at"]) > LAUNCHD_STATE_TTL_SECONDS:
+            uid = os.getuid()
+            loaded = parse_launchctl_list(_run_text(["launchctl", "list"], timeout=10))
+            disabled = parse_launchctl_disabled(_run_text(["launchctl", "print-disabled", f"gui/{uid}"]))
+            if loaded:
+                _LAUNCHD_STATE["loaded"] = loaded
+            if disabled is not None:
+                _LAUNCHD_STATE["disabled"] = disabled
+            _LAUNCHD_STATE["read_at"] = time.monotonic()
+        disabled = _LAUNCHD_STATE["disabled"]
+        return dict(_LAUNCHD_STATE["loaded"]), (set(disabled) if disabled is not None else None)
+
+
+def _mini_services_payload(data):
+    """Keep only real problems in the Mac mini service list (see dashboard_builder.service_status)."""
+    loaded, disabled = _launchd_state()
+    if not loaded or disabled is None:
+        return data  # launchctl has not answered yet: show the health API as it is
+    return normalize_payload(data, loaded=loaded, disabled=disabled)
 
 
 def _local_service_snapshot() -> dict:
@@ -1539,8 +1583,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             raise ValueError(f"request body too large; max {max_bytes} bytes")
         return json.loads(self.rfile.read(length)) if length else {}
 
+    def _cloudflare_access_owner(self) -> bool:
+        """Signed in through Cloudflare Access: its login policy lets only the owner through."""
+        token = self.headers.get("Cf-Access-Jwt-Assertion", "").strip()
+        if not token:
+            return False
+        if getattr(self, "command", "").upper() in {"POST", "PUT", "PATCH", "DELETE"}:
+            # The Access cookie also rides on requests other sites start; writes must come from this page.
+            if self.headers.get("Origin", "") not in {f"https://{host}" for host in PUBLIC_HOSTS}:
+                return False
+        return OWNER_ACCESS.owner_email(token) is not None
+
     def _dashboard_run_authorized(self) -> bool:
         if not self._is_public_request():
+            return True
+        if self._cloudflare_access_owner():
             return True
         write_method = getattr(self, "command", "").upper() in {
             "POST",
@@ -2243,8 +2300,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self._json_response(200, payload)
 
     def _decision_owner_authorized(self) -> bool:
-        # New choice records require the existing owner token on every host.
+        # New choice records require the owner token or a Cloudflare Access sign-in on every host.
         # Never infer authority from a caller-controlled Host header.
+        if self._cloudflare_access_owner():
+            return True
         try:
             expected = _dashboard_run_token(create_if_missing=False)
         except (OSError, RuntimeError):
@@ -2400,6 +2459,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         self._json_response(200, payload)
 
+    def _handle_growth(self):
+        # «Точки роста» from the Obsidian note; the public view is a count only.
+        try:
+            payload = growth_projection(GROWTH_NOTE_FILE, DAILY_WORK_DIR, owner=self._dashboard_run_authorized())
+        except Exception:
+            self._json_response(200, {"ok": False, "state": "unavailable", "reason": "growth_unreadable"})
+            return
+        self._json_response(200, payload)
+
     def _handle_infra_changes(self, parsed):
         # Owner view adds the timeline itself; the public view is counts only.
         query = parse_qs(parsed.query)
@@ -2510,6 +2578,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 suffix = f"?{parsed.query}" if parsed.query else ""
                 data = _health_request("GET", f"{parsed.path}{suffix}")
+                if parsed.path in {"/api/all", "/api/services/detailed"}:
+                    data = _mini_services_payload(data)
                 if self._is_public_request():
                     data = _public_dashboard_payload(data)
                 self._json_response(200, data)
@@ -2535,6 +2605,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/infra/changes':
             self._handle_infra_changes(parsed)
+            return
+        if parsed.path == '/api/growth':
+            self._handle_growth()
             return
         if parsed.path == '/api/manager/events':
             try:

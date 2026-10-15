@@ -5334,6 +5334,297 @@ tr:last-child td { border-bottom: none; }
     }
 }
 
+/* Embedded Agents view: one existing room, with readable people and folders. */
+.campus-department-picker[hidden] { display: none; }
+.campus-department-picker {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #17171c;
+    color: #d3d0ca;
+    font: 13px 'JetBrains Mono', monospace;
+}
+.campus-department-picker select {
+    min-width: 0;
+    min-height: 44px;
+    flex: 1;
+    max-width: 340px;
+    padding: 8px 12px;
+    border: 1px solid #635f66;
+    border-radius: 4px;
+    background: #242127;
+    color: #f2f0ea;
+    font: inherit;
+}
+.campus-department-picker select:focus-visible { outline: 3px solid #e6a23c; outline-offset: 2px; }
+.is-department-focus .campus-map {
+    display: block;
+    aspect-ratio: auto;
+    min-height: 440px;
+    height: 480px;
+    padding: 14px;
+    image-rendering: pixelated;
+    background-size: var(--campus-room-size);
+    background-position: var(--campus-room-position);
+}
+.is-department-focus .campus-zone {
+    height: 100%;
+    padding: 10px;
+    background: transparent;
+    --campus-project-rail-height: 96px;
+    --campus-project-rail-gap: 24px;
+}
+.is-department-focus .campus-zone[hidden],
+.is-department-focus .campus-boulevard,
+.is-department-focus .campus-route-layer,
+.is-department-focus .campus-waypoint { display: none !important; }
+.is-department-focus .campus-zone h3 { font-size: 14px; padding: 8px 12px; }
+.is-department-focus .campus-subtitle, .is-department-focus .campus-state { font-size: 12px; }
+.is-department-focus .campus-zone-presence strong,
+.is-department-focus .campus-owner-boundary { font-size: 11px; line-height: 1.4; max-width: 180px; }
+.is-department-focus .campus-project-shelf { width: calc(100% - 20px); right: 10px; bottom: 10px; gap: 10px; padding: 8px; }
+.is-department-focus .campus-project-folder { max-width: none; min-height: 76px; padding: 22px 8px 8px; animation: none; }
+.is-department-focus .campus-project-folder strong { font-size: 12px; line-height: 1.2; max-height: none; }
+.is-department-focus .campus-project-folder [data-campus-project-folder-status] { display: block; font-size: 11px; white-space: normal; }
+.is-department-focus .campus-resident,
+.is-department-focus .campus-resident.is-wandering,
+.is-department-focus .campus-resident .campus-resident-sprite { animation: none; }
+.is-department-focus .campus-resident { transform: scale(1.5); }
+.is-department-focus .campus-resident-caption { max-width: 120px; }
+.is-department-focus .campus-resident-caption strong { font-size: 8px; max-width: 115px; }
+.is-department-focus .campus-resident-caption > span { font-size: 7.5px; }
+.is-department-focus .campus-zone-agents { min-height: 0; height: calc(100% - 110px); padding: 30px 8px; align-items: center; }
+.is-department-focus .campus-agent { transform: none; max-width: 150px; padding: 8px; gap: 6px; }
+.is-department-focus .campus-agent strong, .is-department-focus .campus-agent-status { font-size: 11px; }
+.is-department-focus .campus-agent[data-campus-moving="true"] .campus-agent-sprite { animation: campusSpriteStep 0.3s steps(1, end) 2; }
+.is-department-focus .campus-bottom-grid { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 560px) {
+    .is-department-focus .campus-map { height: 470px; min-height: 470px; padding: 8px; }
+    .is-department-focus .campus-zone { padding: 4px; --campus-project-rail-height: 172px; }
+    .is-department-focus .campus-project-shelf { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .is-department-focus .campus-project-shelf[data-campus-project-count="1"] { grid-template-columns: minmax(0, 1fr); min-height: 76px; }
+    .is-department-focus .campus-project-folder strong { font-size: 11px; }
+    .is-department-focus .campus-zone-agents { height: calc(100% - 180px); padding: 40px 4px 10px; }
+    .is-department-focus .campus-head .section-count { width: 100%; font-size: 11px; }
+}
+
+/* Campus 3D scene: a visual mirror; the 2D map below keeps the semantics. */
+.campus-view-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid #635f66;
+    background: #17171c;
+    color: #f2f0ea;
+    cursor: pointer;
+    font: 800 0.72rem 'JetBrains Mono', monospace;
+    letter-spacing: 0.04em;
+}
+
+.campus-view-toggle[aria-pressed="true"] {
+    border-color: #e6a23c;
+    color: #e6a23c;
+}
+
+.campus-view-toggle:focus-visible {
+    outline: 3px solid #e6a23c;
+    outline-offset: 3px;
+}
+
+.campus-stage-3d {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    min-height: 520px;
+    max-height: 860px;
+    overflow: hidden;
+    background: #09090b;
+    border-bottom: 1px solid #343239;
+}
+
+.campus-stage-3d[hidden] {
+    display: none;
+}
+
+.campus-3d-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: pan-y;
+}
+
+.department-campus.is-3d-view .campus-map {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+    aspect-ratio: auto;
+}
+
+.campus-3d-labels {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.campus-3d-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    gap: 1px;
+    max-width: 150px;
+    padding: 3px 7px;
+    border: 1px solid #635f66;
+    background: #17171c;
+    color: #f2f0ea;
+    font: 0.56rem 'JetBrains Mono', ui-monospace, monospace;
+    line-height: 1.25;
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.campus-3d-label[hidden] {
+    display: none;
+}
+
+.campus-3d-label strong,
+.campus-3d-label small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.campus-3d-label strong {
+    font-weight: 800;
+}
+
+.campus-3d-label small {
+    color: #b9b5ae;
+    font-size: 0.52rem;
+}
+
+.campus-3d-label[data-clickable] {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.campus-3d-label.is-department {
+    padding: 4px 9px;
+    border: 2px solid #e6a23c;
+    background: #3a2618;
+    font: 800 0.68rem Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    transform-origin: left bottom;
+}
+
+.campus-3d-label.is-department.has-boundary small {
+    color: #e6a23c;
+}
+
+.campus-3d-label.is-waypoint {
+    border-color: #4f5d70;
+    background: #1d2129;
+}
+
+.campus-3d-label.is-project {
+    max-width: 112px;
+    border-color: #8a6142;
+    background: #2a1d14;
+}
+
+.campus-3d-label.is-project small {
+    color: #a99b8c;
+}
+
+.campus-3d-label.is-live {
+    border-color: #e6a23c;
+}
+
+.campus-3d-label.is-live small {
+    color: #e6a23c;
+}
+
+.campus-3d-label.is-agent {
+    border-color: #4e7a5a;
+}
+
+.campus-3d-label.is-bubble {
+    border: 2px solid #09090b;
+    background: #f2f0ea;
+    color: #09090b;
+}
+
+.campus-3d-labels.is-compact .campus-3d-label.is-project:not(.is-live),
+.campus-3d-labels.is-compact .campus-3d-label.is-agent:not(.is-live) small,
+.campus-3d-labels.is-compact .campus-3d-label.is-department small {
+    display: none;
+}
+
+.campus-3d-labels.is-compact .campus-3d-label {
+    max-width: 96px;
+    padding: 2px 5px;
+    font-size: 0.5rem;
+}
+
+.campus-3d-labels.is-compact .campus-3d-label.is-department {
+    font-size: 0.56rem;
+}
+
+.campus-3d-focus {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 64px;
+    height: 64px;
+    border: 3px solid #e6a23c;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.campus-3d-focus[hidden] {
+    display: none;
+}
+
+.campus-3d-hint {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    margin: 0;
+    padding: 4px 8px;
+    border: 1px solid #343239;
+    background: #17171c;
+    color: #9e9aa0;
+    font: 0.58rem 'JetBrains Mono', ui-monospace, monospace;
+    pointer-events: none;
+}
+
+@media (max-width: 560px) {
+    .campus-stage-3d {
+        aspect-ratio: 4 / 5;
+        min-height: 420px;
+    }
+
+    .campus-3d-hint {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .campus-stage-3d,
+    .campus-stage-3d * {
+        animation: none;
+        transition: none;
+    }
+}
+
 /* ── Agent Theater v2: AI Town-inspired town map ── */
 .theater-layout {
     grid-template-columns: minmax(0, 1.7fr) minmax(330px, 0.58fr);
@@ -7250,11 +7541,11 @@ body {
         </a></li>
         <li><a data-target="#projects" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M2 4l5-2 5 2v8l-5 2-5-2V4z" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="7" y1="2" x2="7" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
-            Projects <span class="nav-count">0</span>
+            Projects <span class="nav-count">29</span>
         </a></li>
         <li><a data-target="#system" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" fill="none" stroke-width="1.2"/><circle cx="8" cy="8" r="2" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="1"/><line x1="8" y1="10" x2="8" y2="14" stroke="currentColor" stroke-width="1"/><line x1="2" y1="8" x2="6" y2="8" stroke="currentColor" stroke-width="1"/><line x1="10" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1"/></svg>
-            System <span class="nav-count">1/5</span>
+            System <span class="nav-count">2/5</span>
         </a></li>
         <li><a data-target="#builder" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><path d="M4 11l-1 3 3-1 7-7-2-2-7 7z" stroke="currentColor" fill="none" stroke-width="1.2"/><path d="M10 3l3 3" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -7266,13 +7557,13 @@ body {
         </a></li>
         <li><a data-target="#costs" href="javascript:void(0)">
             <svg class="nav-icon" viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" fill="none" stroke-width="1.2"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.2"/></svg>
-            Costs <span class="nav-count">$0/mo</span>
+            Costs <span class="nav-count">$243/mo</span>
         </a></li>
     </ul>
     <div class="sidebar-footer">
         <div class="sf-live">
             <span class="live-dot"></span>
-            <span>2026-08-23 12:00:00 ICT</span>
+            <span>2026-10-15 06:35:50 ICT</span>
         </div>
     </div>
 </nav>
@@ -7284,7 +7575,7 @@ body {
 <section class="platform-hub section" id="common-center" aria-labelledby="common-center-title">
     <header class="platform-hero">
         <div>
-            <p class="platform-eyebrow">Portfolio switchboard · 7 surfaces</p>
+            <p class="platform-eyebrow">Portfolio switchboard · 12 surfaces</p>
             <h2 id="common-center-title">Common Center</h2>
         </div>
         <p class="platform-intro">One calm entry point for the products that matter now and the systems that keep them moving.</p>
@@ -7318,14 +7609,14 @@ body {
             data-platform-tier="primary">
         <div class="platform-index" aria-hidden="true">02</div>
         <div class="platform-copy">
-            <p class="platform-status">Private Mac mini + Telegram</p>
+            <p class="platform-status">Public HTTPS + Telegram</p>
             <h3>Lexi</h3>
             <p class="platform-description">Lexi language-learning bot (formerly MyDictionary) and its administration.</p>
         </div>
-        <div class="platform-actions"><a class="platform-action platform-action-private"
-                href="http://127.0.0.1:8791/admin" target="_blank" rel="noopener noreferrer">
+        <div class="platform-actions"><a class="platform-action platform-action-public"
+                href="https://mydictionary.meshly.fr/admin" target="_blank" rel="noopener noreferrer">
                 <span>Open admin</span>
-                <span class="platform-action-access">Private Mac mini</span>
+                <span class="platform-action-access">Public HTTPS</span>
             </a><a class="platform-action platform-action-telegram"
                 href="https://t.me/my_dictionnary_tg_bot" target="_blank" rel="noopener noreferrer">
                 <span>Open Lexi bot</span>
@@ -7337,7 +7628,7 @@ body {
     <div class="platform-group platform-group-active">
         <div class="platform-group-head">
             <h3>Active systems</h3>
-            <span>5 maintained surfaces</span>
+            <span>10 maintained surfaces</span>
         </div>
         <div class="platform-system-list"><article class="platform-entry platform-entry-active"
             data-platform-id="health-os"
@@ -7358,14 +7649,14 @@ body {
             data-platform-tier="active">
         <div class="platform-index" aria-hidden="true">—</div>
         <div class="platform-copy">
-            <p class="platform-status">Private Mac mini</p>
+            <p class="platform-status">Public HTTPS destination</p>
             <h3>AI Singularity</h3>
             <p class="platform-description">Private publishing and content operations surface.</p>
         </div>
-        <div class="platform-actions"><a class="platform-action platform-action-private"
-                href="http://127.0.0.1:8790" target="_blank" rel="noopener noreferrer">
+        <div class="platform-actions"><a class="platform-action platform-action-public"
+                href="https://singularity.meshly.fr/" target="_blank" rel="noopener noreferrer">
                 <span>Open workspace</span>
-                <span class="platform-action-access">Private Mac mini</span>
+                <span class="platform-action-access">Public HTTPS</span>
             </a></div>
     </article><article class="platform-entry platform-entry-active"
             data-platform-id="context-news"
@@ -7386,14 +7677,14 @@ body {
             data-platform-tier="active">
         <div class="platform-index" aria-hidden="true">—</div>
         <div class="platform-copy">
-            <p class="platform-status">Private Mac mini</p>
+            <p class="platform-status">Public HTTPS destination</p>
             <h3>Accountable OS</h3>
             <p class="platform-description">Private accountability and operating-rhythm workspace.</p>
         </div>
-        <div class="platform-actions"><a class="platform-action platform-action-private"
-                href="http://127.0.0.1:4174" target="_blank" rel="noopener noreferrer">
+        <div class="platform-actions"><a class="platform-action platform-action-public"
+                href="https://accountable.meshly.fr/" target="_blank" rel="noopener noreferrer">
                 <span>Open workspace</span>
-                <span class="platform-action-access">Private Mac mini</span>
+                <span class="platform-action-access">Public HTTPS</span>
             </a></div>
     </article><article class="platform-entry platform-entry-active"
             data-platform-id="jarvis"
@@ -7409,6 +7700,76 @@ body {
                 <span>Open JARVIS</span>
                 <span class="platform-action-access">Telegram</span>
             </a></div>
+    </article><article class="platform-entry platform-entry-active"
+            data-platform-id="property-os"
+            data-platform-tier="active">
+        <div class="platform-index" aria-hidden="true">—</div>
+        <div class="platform-copy">
+            <p class="platform-status">Public HTTPS destination</p>
+            <h3>Property OS</h3>
+            <p class="platform-description">Rentals, payments and repairs for the Nice properties.</p>
+        </div>
+        <div class="platform-actions"><a class="platform-action platform-action-public"
+                href="https://properties.meshly.fr/" target="_blank" rel="noopener noreferrer">
+                <span>Open Property OS</span>
+                <span class="platform-action-access">Public HTTPS</span>
+            </a></div>
+    </article><article class="platform-entry platform-entry-active"
+            data-platform-id="pixel-agents"
+            data-platform-tier="active">
+        <div class="platform-index" aria-hidden="true">—</div>
+        <div class="platform-copy">
+            <p class="platform-status">Public HTTPS destination</p>
+            <h3>Pixel Agents</h3>
+            <p class="platform-description">The agents&#x27; pixel office: who is working on what right now.</p>
+        </div>
+        <div class="platform-actions"><a class="platform-action platform-action-public"
+                href="https://pixel-agents.meshly.fr/" target="_blank" rel="noopener noreferrer">
+                <span>Open Pixel Agents</span>
+                <span class="platform-action-access">Public HTTPS</span>
+            </a></div>
+    </article><article class="platform-entry platform-entry-active"
+            data-platform-id="closeness-mirror"
+            data-platform-tier="active">
+        <div class="platform-index" aria-hidden="true">—</div>
+        <div class="platform-copy">
+            <p class="platform-status">Private Mac mini</p>
+            <h3>Зеркало Контакта</h3>
+            <p class="platform-description">Pair chat with AI hints for better communication between partners.</p>
+        </div>
+        <div class="platform-actions"><a class="platform-action platform-action-private"
+                href="http://127.0.0.1:3051" target="_blank" rel="noopener noreferrer">
+                <span>Open app</span>
+                <span class="platform-action-access">Private Mac mini</span>
+            </a></div>
+    </article><article class="platform-entry platform-entry-active"
+            data-platform-id="sushi-parisien"
+            data-platform-tier="active">
+        <div class="platform-index" aria-hidden="true">—</div>
+        <div class="platform-copy">
+            <p class="platform-status">Public HTTPS destination</p>
+            <h3>Sushi Parisien</h3>
+            <p class="platform-description">Website of the sushi house in Paris 8e.</p>
+        </div>
+        <div class="platform-actions"><a class="platform-action platform-action-public"
+                href="https://sushi-parisien.meshly.fr/" target="_blank" rel="noopener noreferrer">
+                <span>Open site</span>
+                <span class="platform-action-access">Public HTTPS</span>
+            </a></div>
+    </article><article class="platform-entry platform-entry-active"
+            data-platform-id="n8n"
+            data-platform-tier="active">
+        <div class="platform-index" aria-hidden="true">—</div>
+        <div class="platform-copy">
+            <p class="platform-status">Private Mac mini</p>
+            <h3>n8n</h3>
+            <p class="platform-description">Workflow automations on the Mac mini.</p>
+        </div>
+        <div class="platform-actions"><a class="platform-action platform-action-private"
+                href="http://127.0.0.1:5678" target="_blank" rel="noopener noreferrer">
+                <span>Open editor</span>
+                <span class="platform-action-access">Private Mac mini</span>
+            </a></div>
     </article></div>
     </div>
 
@@ -7420,7 +7781,7 @@ body {
         </div>
         <div class="platform-command">
             <span>SSH tunnel</span>
-            <code id="common-center-tunnel">ssh -N -L 7777:127.0.0.1:7777 -L 8792:127.0.0.1:8792 -L 8791:127.0.0.1:8791 -L 8790:127.0.0.1:8790 -L 4174:127.0.0.1:4174 pirajoke@maxxs-mac-mini</code>
+            <code id="common-center-tunnel">ssh -N -L 7777:127.0.0.1:7777 -L 8792:127.0.0.1:8792 -L 3051:127.0.0.1:3051 -L 5678:127.0.0.1:5678 pirajoke@maxxs-mac-mini</code>
             <button class="platform-action platform-copy-action" type="button"
                     data-copy="#common-center-tunnel" aria-label="Copy SSH tunnel command"
                     aria-live="polite" aria-atomic="true">Copy</button>
@@ -7433,7 +7794,7 @@ body {
     <div class="topbar-title">Agent Theater</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-08-23 12:00:00 ICT</span>
+        <span class="tm-item">2026-10-15 06:35:50 ICT</span>
     </div>
 </div>
 
@@ -7480,7 +7841,7 @@ body {
             <div class="theater-tree theater-tree-a"></div>
             <div class="theater-tree theater-tree-b"></div>
             <div class="manager-project-stations" aria-label="Project stations">
-
+                
             <div class="manager-project-station" data-manager-station="jarvis"
                 style="--manager-x:14;--manager-y:23">
                 <span aria-hidden="true"></span>
@@ -7555,7 +7916,7 @@ body {
             <div class="theater-station theater-station-prod" style="--x:86;--y:69">Mac Mini</div>
             <div class="theater-station theater-station-memory" style="--x:52;--y:72">Obsidian</div>
             <div class="theater-station theater-station-git" style="--x:24;--y:76">GitHub</div>
-
+            
         <button class="theater-person-card" data-theater-agent="USER" style="--x:12;--y:55" title="You">
             <span class="theater-person" aria-hidden="true">
                 <span class="theater-person-head"></span>
@@ -7706,12 +8067,22 @@ body {
         <div class="campus-subtitle">Проверенные события Главного координатора · только просмотр</div></div>
         <div class="section-count" data-campus-count>7 в команде · все ожидают задач</div>
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
+        <button class="campus-view-toggle" type="button" data-campus-view-toggle
+            aria-pressed="false" aria-label="Объёмный 3D-вид кампуса" hidden>3D</button>
     </div>
     <div class="campus-state" data-campus-state aria-live="polite">Загрузка кампуса…</div>
+    <label class="campus-department-picker" data-campus-department-picker hidden>
+        Отдел <span data-campus-department-picker-slot></span>
+    </label>
+    <div class="campus-stage-3d" data-campus-3d data-campus-3d-state="off" hidden aria-hidden="true">
+        <div class="campus-3d-labels" data-campus-3d-labels></div>
+        <div class="campus-3d-focus" data-campus-3d-focus hidden></div>
+        <p class="campus-3d-hint">Перетащите, чтобы повернуть · папка или сотрудник открывают сведения</p>
+    </div>
     <div class="campus-map" aria-label="Семь отделов Pixel Verse">
         <div class="campus-boulevard" aria-hidden="true"></div>
         <div class="campus-route-layer" data-campus-route-layer aria-hidden="true"></div>
-
+        
         <section class="campus-zone campus-zone-hq" id="campus-zone-hq"
             data-department-id="hq" aria-labelledby="campus-zone-hq-label">
             <header><h3 id="campus-zone-hq-label">Центр управления</h3>
@@ -7722,14 +8093,14 @@ body {
                     <span id="campus-resident-coordinator-status" data-campus-manager-status>ожидает задач</span>
                 </span>
             </div></header>
-
+            
             <div class="campus-resident campus-static-manager" data-campus-roster-agent="COORDINATOR"
                 data-campus-resident-department="hq"
                 data-campus-roster-aliases="coordinator|main manager|supervisor|главный координатор" data-campus-static-manager="true"
                 style="--campus-sprite-x:-192px;--campus-sprite-step-x:-224px;--campus-sprite-y:-192px;--campus-walk-duration:0s;--campus-walk-delay:0s"
                 aria-labelledby="campus-resident-coordinator-name campus-resident-coordinator-status">
                 <span class="campus-resident-sprite campus-manager-sprite" aria-hidden="true"></span>
-
+                
             </div>
             <div class="campus-project-shelf campus-project-rail" data-campus-project-rail data-campus-project-count="1" style="--campus-project-count:1;" aria-label="Проекты отдела">
             <button class="campus-project-folder" type="button"
@@ -7753,14 +8124,14 @@ body {
         <section class="campus-zone campus-zone-sales" id="campus-zone-sales"
             data-department-id="sales" aria-labelledby="campus-zone-sales-label">
             <header><h3 id="campus-zone-sales-label">Sales</h3></header>
-
+            
             <div class="campus-resident is-wandering" data-campus-roster-agent="RESEARCHER"
                 data-campus-resident-department="sales"
                 data-campus-roster-aliases="researcher|editor|sales researcher|market analyst|sales operator"
                 style="--campus-sprite-x:-96px;--campus-sprite-step-x:-128px;--campus-sprite-y:-192px;--campus-walk-duration:11s;--campus-walk-delay:-4s"
                 aria-labelledby="campus-resident-researcher-name campus-resident-researcher-status">
                 <span class="campus-resident-sprite" aria-hidden="true"></span>
-
+                
                 <span class="campus-resident-caption">
                     <strong id="campus-resident-researcher-name">Исследователь</strong>
                     <span id="campus-resident-researcher-status"><i></i>ожидает задач</span>
@@ -7788,14 +8159,14 @@ body {
         <section class="campus-zone campus-zone-development" id="campus-zone-development"
             data-department-id="development" aria-labelledby="campus-zone-development-label">
             <header><h3 id="campus-zone-development-label">Development</h3></header>
-
+            
             <div class="campus-resident is-wandering" data-campus-roster-agent="BUILDER"
                 data-campus-resident-department="development"
                 data-campus-roster-aliases="builder|developer|tester|devops"
                 style="--campus-sprite-x:-288px;--campus-sprite-step-x:-320px;--campus-sprite-y:-192px;--campus-walk-duration:13s;--campus-walk-delay:-7s"
                 aria-labelledby="campus-resident-builder-name campus-resident-builder-status">
                 <span class="campus-resident-sprite" aria-hidden="true"></span>
-
+                
                 <span class="campus-resident-caption">
                     <strong id="campus-resident-builder-name">Разработчик</strong>
                     <span id="campus-resident-builder-status"><i></i>ожидает задач</span>
@@ -7868,14 +8239,14 @@ body {
         <section class="campus-zone campus-zone-design" id="campus-zone-design"
             data-department-id="design" aria-labelledby="campus-zone-design-label">
             <header><h3 id="campus-zone-design-label">Design</h3></header>
-
+            
             <div class="campus-resident is-wandering" data-campus-roster-agent="DESIGNER"
                 data-campus-resident-department="design"
                 data-campus-roster-aliases="designer|design reviewer|ux researcher"
                 style="--campus-sprite-x:-192px;--campus-sprite-step-x:-224px;--campus-sprite-y:-64px;--campus-walk-duration:14s;--campus-walk-delay:-5s"
                 aria-labelledby="campus-resident-designer-name campus-resident-designer-status">
                 <span class="campus-resident-sprite" aria-hidden="true"></span>
-
+                
                 <span class="campus-resident-caption">
                     <strong id="campus-resident-designer-name">Дизайнер</strong>
                     <span id="campus-resident-designer-status"><i></i>ожидает задач</span>
@@ -7903,14 +8274,14 @@ body {
         <section class="campus-zone campus-zone-infrastructure" id="campus-zone-infrastructure"
             data-department-id="infrastructure" aria-labelledby="campus-zone-infrastructure-label">
             <header><h3 id="campus-zone-infrastructure-label">Infrastructure</h3></header>
-
+            
             <div class="campus-resident is-wandering" data-campus-roster-agent="INFRASTRUCTURE"
                 data-campus-resident-department="infrastructure"
                 data-campus-roster-aliases="infrastructure|infrastructure engineer|reliability analyst|operator"
                 style="--campus-sprite-x:-288px;--campus-sprite-step-x:-320px;--campus-sprite-y:-64px;--campus-walk-duration:15s;--campus-walk-delay:-9s"
                 aria-labelledby="campus-resident-infrastructure-name campus-resident-infrastructure-status">
                 <span class="campus-resident-sprite" aria-hidden="true"></span>
-
+                
                 <span class="campus-resident-caption">
                     <strong id="campus-resident-infrastructure-name">Инженер инфраструктуры</strong>
                     <span id="campus-resident-infrastructure-status"><i></i>ожидает задач</span>
@@ -7953,14 +8324,14 @@ body {
         <section class="campus-zone campus-zone-internal" id="campus-zone-internal"
             data-department-id="internal" aria-labelledby="campus-zone-internal-label">
             <header><h3 id="campus-zone-internal-label">Internal</h3></header>
-
+            
             <div class="campus-resident is-wandering" data-campus-roster-agent="VAULT"
                 data-campus-resident-department="internal"
                 data-campus-roster-aliases="vault|vault keeper|internal analyst|knowledge curator|auditor"
                 style="--campus-sprite-x:0px;--campus-sprite-step-x:-32px;--campus-sprite-y:-64px;--campus-walk-duration:12s;--campus-walk-delay:-2s"
                 aria-labelledby="campus-resident-vault-name campus-resident-vault-status">
                 <span class="campus-resident-sprite" aria-hidden="true"></span>
-
+                
                 <span class="campus-resident-caption">
                     <strong id="campus-resident-vault-name">Хранитель знаний</strong>
                     <span id="campus-resident-vault-status"><i></i>ожидает задач</span>
@@ -8003,14 +8374,14 @@ body {
         <section class="campus-zone campus-zone-finance" id="campus-zone-finance"
             data-department-id="finance" aria-labelledby="campus-zone-finance-label">
             <header><h3 id="campus-zone-finance-label">Finance</h3><span class="campus-owner-boundary" aria-label="Требуется разрешение владельца">🔒 owner permission</span></header>
-
+            
             <div class="campus-resident is-wandering" data-campus-roster-agent="ANALYST"
                 data-campus-resident-department="finance"
                 data-campus-roster-aliases="analyst|finance analyst|revenue analyst|bookkeeper"
                 style="--campus-sprite-x:-96px;--campus-sprite-step-x:-128px;--campus-sprite-y:-64px;--campus-walk-duration:10s;--campus-walk-delay:-6s"
                 aria-labelledby="campus-resident-analyst-name campus-resident-analyst-status">
                 <span class="campus-resident-sprite" aria-hidden="true"></span>
-
+                
                 <span class="campus-resident-caption">
                     <strong id="campus-resident-analyst-name">Аналитик</strong>
                     <span id="campus-resident-analyst-status"><i></i>ожидает задач</span>
@@ -8077,7 +8448,7 @@ body {
     <div class="topbar-title">Systems Command Center</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-08-23 12:00:00 ICT</span>
+        <span class="tm-item">2026-10-15 06:35:50 ICT</span>
     </div>
 </div>
 
@@ -8154,7 +8525,7 @@ body {
                 <button class="command-refresh" id="command-refresh" type="button" title="Refresh command center">&#8635;</button>
             </div>
             <div class="command-flow-strip" id="command-flow">
-
+                
         <div class="command-flow-node" data-command-flow-node="USER">
             <strong>You</strong>
             <span>request</span>
@@ -8214,15 +8585,15 @@ body {
     <div class="topbar-title">NOW</div>
     <div class="topbar-meta">
         <span class="tm-item"><span class="live-dot"></span> Live</span>
-        <span class="tm-item">2026-08-23 12:00:00 ICT</span>
+        <span class="tm-item">2026-10-15 06:35:50 ICT</span>
     </div>
 </div>
 
 
     <div class="now-status-bar">
-        <div class="now-dots"></div>
-        <div class="now-check-time">checked: never</div>
-    </div><div class="now-alerts"><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> Claude Code is offline</div><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> JARVIS is offline</div><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> Atlas is offline</div><div class="now-alert now-alert-error"><span class="status-dot dot-red"></span> Dashboard is offline</div></div>
+        <div class="now-dots"><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Storage</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Memory</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Database</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Network</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Services</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Backup</span></div><div class="now-dot-item"><span class="status-dot dot-yellow"></span><span class="now-dot-label">Code Sync</span></div><div class="now-dot-item"><span class="status-dot dot-green"></span><span class="now-dot-label">Locks</span></div></div>
+        <div class="now-check-time">checked: 2026-05-08</div>
+    </div><div class="now-alerts"><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> JARVIS is degraded</div><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Atlas is degraded</div><div class="now-alert now-alert-warn"><span class="status-dot dot-yellow"></span> Dashboard is degraded</div></div>
     <div class="jpipe-card jpipe-red">
         <div class="jpipe-head">
             <div>
@@ -8231,40 +8602,40 @@ body {
             </div>
             <div class="jpipe-state"><span class="status-dot dot-red"></span>attention</div>
         </div>
-        <div class="jpipe-grid"><div class="jpipe-check"><span class="status-dot dot-red"></span><span class="jpipe-check-label">Runtime</span><span class="jpipe-check-detail">pid -</span></div><div class="jpipe-check"><span class="status-dot dot-red"></span><span class="jpipe-check-label">Git</span><span class="jpipe-check-detail">unknown@no git</span></div><div class="jpipe-check"><span class="status-dot dot-red"></span><span class="jpipe-check-label">AIOS</span><span class="jpipe-check-detail">unknown / unknown</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Sources</span><span class="jpipe-check-detail">0 answers</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Contract</span><span class="jpipe-check-detail">no contract</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Linear Sync</span><span class="jpipe-check-detail">db missing</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Webhook</span><span class="jpipe-check-detail">db missing</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Goals</span><span class="jpipe-check-detail">goals.yaml missing</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Deploy</span><span class="jpipe-check-detail">missing</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Human Layer</span><span class="jpipe-check-detail">missing</span></div></div>
+        <div class="jpipe-grid"><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Runtime</span><span class="jpipe-check-detail">pid 26822</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Git</span><span class="jpipe-check-detail">main@358f002</span></div><div class="jpipe-check"><span class="status-dot dot-red"></span><span class="jpipe-check-label">AIOS</span><span class="jpipe-check-detail">unknown / unknown</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Sources</span><span class="jpipe-check-detail">20 answers</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Contract</span><span class="jpipe-check-detail">question → question</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Linear Sync</span><span class="jpipe-check-detail">1/1 linked</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Webhook</span><span class="jpipe-check-detail">ok · stale</span></div><div class="jpipe-check"><span class="status-dot dot-yellow"></span><span class="jpipe-check-label">Goals</span><span class="jpipe-check-detail">2026-07 / expected 2026-10</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Deploy</span><span class="jpipe-check-detail">git script</span></div><div class="jpipe-check"><span class="status-dot dot-green"></span><span class="jpipe-check-label">Human Layer</span><span class="jpipe-check-detail">enabled</span></div></div>
         <div class="jpipe-meta">
-            <div><span>HEAD</span><strong>no git</strong></div>
+            <div><span>HEAD</span><strong>358f002</strong></div>
             <div><span>AIOS</span><strong>unknown/unknown</strong></div>
-            <div><span>Sources</span><strong>0 answers</strong></div>
+            <div><span>Sources</span><strong>20 answers</strong></div>
             <div><span>Started</span><strong>unknown</strong></div>
         </div>
         <div class="jpipe-latest">
             <span>Latest source question</span>
-            <strong>no live source answer yet</strong>
+            <strong>Так, я отметил три вещи, смотри. Первое, я хочу сделать фотосессию Парижа с ф...</strong>
         </div>
         <div class="jpipe-signals">
             <div class="jpipe-signal">
                 <span>Last intake contract</span>
-                <strong>no contract</strong>
-                <em>no intake contract · db missing</em>
+                <strong>question → question</strong>
+                <em>Поставь в календарь · 0.50 / answer</em>
             </div>
             <div class="jpipe-signal">
                 <span>Linear sync</span>
-                <strong>0/0 linked · 0 unsynced</strong>
-                <em>goals.yaml unknown</em>
+                <strong>1/1 linked · 0 unsynced</strong>
+                <em>goals.yaml 2026-07</em>
             </div>
         </div>
         <div class="jpipe-unsynced"><div class="jpipe-empty">No local fallback todos.</div></div>
-        <div class="jpipe-warnings"><div><span class="status-dot dot-yellow"></span>JARVIS runtime checkout is dirty.</div><div><span class="status-dot dot-yellow"></span>goals.yaml stale: goals.yaml missing.</div><div><span class="status-dot dot-yellow"></span>Linear webhook delivery: db missing.</div></div>
+        <div class="jpipe-warnings"><div><span class="status-dot dot-yellow"></span>goals.yaml stale: 2026-07 / expected 2026-10.</div><div><span class="status-dot dot-yellow"></span>Linear webhook delivery: Linear webhook delivery is healthy.</div></div>
         <div class="jpipe-next">Run scripts/deploy_macmini.sh and check launchd logs.</div>
     </div>
     <div class="now-stats">
         <div class="now-stat">
-            <span class="now-stat-val">1/5</span>
+            <span class="now-stat-val">2/5</span>
             <span class="now-stat-lbl">agents</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">0/0</span>
+            <span class="now-stat-val">7/8</span>
             <span class="now-stat-lbl">checks</span>
         </div>
         <div class="now-stat">
@@ -8272,45 +8643,45 @@ body {
             <span class="now-stat-lbl">today</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">42.7h</span>
+            <span class="now-stat-val">39.0h</span>
             <span class="now-stat-lbl">week</span>
         </div>
         <div class="now-stat">
-            <span class="now-stat-val">6.1h</span>
+            <span class="now-stat-val">5.6h</span>
             <span class="now-stat-lbl">avg/day</span>
         </div>
     </div>
     <div class="now-pulse">
         <div class="now-pulse-chart"><div class="now-bar-col">
-            <div class="now-bar-val">3.3</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:32%"></div></div>
+            <div class="now-bar-val">11.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:92%"></div></div>
+            <div class="now-bar-day">Fr</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">7.0</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:58%"></div></div>
+            <div class="now-bar-day">Sa</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">2.7</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:22%"></div></div>
+            <div class="now-bar-day">Su</div>
+        </div><div class="now-bar-col">
+            <div class="now-bar-val">2.7</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:22%"></div></div>
             <div class="now-bar-day">Mo</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">8.8</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:86%"></div></div>
+            <div class="now-bar-val">3.6</div>
+            <div class="now-bar"><div class="now-bar-fill" style="height:30%"></div></div>
             <div class="now-bar-day">Tu</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">10.2</div>
+            <div class="now-bar-val">12.0</div>
             <div class="now-bar"><div class="now-bar-fill" style="height:100%"></div></div>
             <div class="now-bar-day">We</div>
         </div><div class="now-bar-col">
-            <div class="now-bar-val">6.1</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:60%"></div></div>
-            <div class="now-bar-day">Th</div>
-        </div><div class="now-bar-col">
-            <div class="now-bar-val">6.2</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:61%"></div></div>
-            <div class="now-bar-day">Fr</div>
-        </div><div class="now-bar-col">
-            <div class="now-bar-val">8.1</div>
-            <div class="now-bar"><div class="now-bar-fill" style="height:79%"></div></div>
-            <div class="now-bar-day">Sa</div>
-        </div><div class="now-bar-col">
             <div class="now-bar-val">0.0</div>
             <div class="now-bar"><div class="now-bar-fill active" style="height:3%"></div></div>
-            <div class="now-bar-day">Su</div>
+            <div class="now-bar-day">Th</div>
         </div></div>
-
+        
     </div>
 
 
@@ -8358,7 +8729,7 @@ body {
                 <div class="workshop-room workshop-room-runtime" style="left:69%;top:56%">Mac Mini</div>
                 <div class="workshop-room workshop-room-memory" style="left:35%;top:58%">Obsidian</div>
                 <div class="workshop-room workshop-room-git" style="left:8%;top:56%">GitHub</div>
-
+                
         <button class="workshop-agent" data-workshop-agent="ROUTER" style="left:15%;top:22%" title="Router">
             <span class="workshop-figure" aria-hidden="true">
                 <span class="workshop-head"></span>
@@ -8494,35 +8865,11 @@ body {
     <div class="section-head">
         <div class="section-dot" style="background:var(--green)"></div>
         <div class="section-title">Projects</div>
-        <div class="section-count">0 active</div>
+        <div class="section-count">29 active</div>
     </div>
-    <details class="proj-details" open>
-        <summary class="proj-summary">
-            <span class="section-title">Active</span>
-            <span class="section-count">0</span>
-            <span class="proj-chevron"></span>
-        </summary>
-        <div class="tbl-wrap">
-        <table>
-        <thead><tr><th>Project</th><th>Status</th><th>Open</th><th>Progress</th><th>Fresh</th><th>Next Action</th><th>Agents</th><th></th></tr></thead>
-        <tbody></tbody>
-        </table>
-        </div>
-    </details>
-    <details class="proj-details">
-        <summary class="proj-summary">
-            <div class="section-dot" style="background:var(--dim)"></div>
-            <span class="section-title">Done</span>
-            <span class="section-count">0</span>
-            <span class="proj-chevron"></span>
-        </summary>
-        <div class="tbl-wrap">
-        <table>
-        <thead><tr><th>Project</th><th>Status</th><th>Done</th><th>Progress</th><th>Last</th><th>Final State</th><th>Agents</th><th></th></tr></thead>
-        <tbody></tbody>
-        </table>
-        </div>
-    </details>
+    <div class="proj-details">
+        <p style="margin:0;padding:0.9rem 1.2rem;color:var(--dim);font-size:0.8rem;line-height:1.5">В работе 29, завершено 1, без статуса 4. Названия и задачи проектов видны только в MAIN MANAGER на command.meshly.fr после входа.</p>
+    </div>
 </div>
 
 <!-- System Section -->
@@ -8530,22 +8877,33 @@ body {
     <div class="section-head">
         <div class="section-dot" style="background:var(--accent)"></div>
         <div class="section-title">System</div>
-        <div class="section-count">1/5 agents</div>
+        <div class="section-count">2/5 agents</div>
     </div>
-
-
-
+    
+    
+        <div class="sys-m4">
+            <div class="sys-m4-header">
+                <span class="status-dot dot-red"></span>
+                <span class="sys-m4-host">maxxs-mac-mini</span>
+                <span class="sys-m4-uptime">unreachable</span>
+            </div>
+            <div class="sys-m4-stats">
+                <span>LaunchAgents: 0/0</span>
+                <span>Containers: 0/0</span>
+            </div>
+        </div>
+    
     <div class="topo-map">
         <svg viewBox="0 0 620 290" xmlns="http://www.w3.org/2000/svg" class="topo-svg">
-            <line x1="300" y1="40" x2="520" y2="40" stroke="rgba(82,82,91,0.25)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="100" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="300" y2="140" stroke="rgba(82,82,91,0.25)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="500" y2="140" stroke="rgba(82,82,91,0.25)" stroke-width="2" stroke-linecap="round"/><line x1="500" y1="140" x2="500" y2="240" stroke="rgba(82,82,91,0.25)" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="300" cy="40" r="14" fill="#ff6b35" opacity="0.35"/><text x="300" y="68" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CLAUDE</text><circle cx="100" cy="140" r="14" fill="#3fb950" opacity="1"/><text x="100" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CODEX</text><circle cx="100" cy="140" r="14" fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="300" cy="140" r="14" fill="#58a6ff" opacity="0.35"/><text x="300" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">JARVIS</text><circle cx="500" cy="140" r="14" fill="#79c0ff" opacity="0.35"/><text x="500" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">ATLAS</text><circle cx="500" cy="240" r="14" fill="#ffa657" opacity="0.35"/><text x="500" y="268" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">DASHBOARD</text><circle cx="520" cy="40" r="10" fill="#71717a" opacity="0.35"/><text x="520" y="64" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="7.5" font-family="JetBrains Mono, monospace" font-weight="600">MCP</text>
+            <line x1="300" y1="40" x2="520" y2="40" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="100" y2="140" stroke="rgba(34,197,94,0.6)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="300" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="300" y1="40" x2="500" y2="140" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/><line x1="500" y1="140" x2="500" y2="240" stroke="rgba(234,179,8,0.4)" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="300" cy="40" r="14" fill="#ff6b35" opacity="1"/><text x="300" y="68" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CLAUDE</text><circle cx="300" cy="40" r="14" fill="none" stroke="#ff6b35" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="100" cy="140" r="14" fill="#3fb950" opacity="1"/><text x="100" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">CODEX</text><circle cx="100" cy="140" r="14" fill="none" stroke="#3fb950" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="14" to="24" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle><circle cx="300" cy="140" r="14" fill="#58a6ff" opacity="1"/><text x="300" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">JARVIS</text><circle cx="500" cy="140" r="14" fill="#79c0ff" opacity="1"/><text x="500" y="168" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">ATLAS</text><circle cx="500" cy="240" r="14" fill="#ffa657" opacity="1"/><text x="500" y="268" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="9" font-family="JetBrains Mono, monospace" font-weight="600">DASHBOARD</text><circle cx="520" cy="40" r="10" fill="#71717a" opacity="1"/><text x="520" y="64" text-anchor="middle" fill="rgba(228,228,231,0.7)" font-size="7.5" font-family="JetBrains Mono, monospace" font-weight="600">MCP</text><circle cx="520" cy="40" r="10" fill="none" stroke="#71717a" stroke-width="1.5" opacity="0.3"><animate attributeName="r" from="10" to="20" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2s" repeatCount="indefinite"/></circle>
         </svg>
     </div>
     <div class="agents">
-        <div class="ag ag-off">
-            <span class="ag-badge-offline">OFFLINE</span>
+        <div class="ag ag-active">
+            
             <div class="ag-top">
-                <div class="ag-orb ag-orb-off" style="background:#ff6b35">
+                <div class="ag-orb ag-orb-active" style="background:#ff6b35">
                     <div class="ag-orb-ring" style="border-color:#ff6b35"></div>
                     C
                 </div>
@@ -8553,208 +8911,388 @@ body {
                     <div class="ag-name">Claude Code</div>
                     <div class="ag-zone-inline">AI coding sessions + MCP servers</div>
                 </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
+                <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">0 sessions</span><span class="ag-pill">38 MCP servers</span><span class="ag-pill">0 MB RAM</span></div>
-
+            <div class="ag-pills"><span class="ag-pill">22 sessions</span><span class="ag-pill">52 MCP servers</span><span class="ag-pill">949 MB RAM</span></div>
+            
             <details class="ag-sub-expand">
-                <summary class="ag-sub-toggle">Running processes (38)</summary>
+                <summary class="ag-sub-toggle">Running processes (74)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 24004 · 46 MB</span>
+                    <span class="ag-sub-name">Session PID 2577</span>
+                    <span class="ag-sub-detail">CPU 1.3% · 98 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 23610 · 53 MB</span>
+                    <span class="ag-sub-name">Session PID 33903</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 145 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 23536 · 51 MB</span>
+                    <span class="ag-sub-name">Session PID 99603</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 116 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 23364 · 48 MB</span>
+                    <span class="ag-sub-name">Session PID 79274</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 96 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 87947 · 47 MB</span>
+                    <span class="ag-sub-name">Session PID 78238</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 8 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 86713 · 48 MB</span>
+                    <span class="ag-sub-name">Session PID 82281</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 86505 · 48 MB</span>
+                    <span class="ag-sub-name">Session PID 99625</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 80359 · 52 MB</span>
+                    <span class="ag-sub-name">Session PID 99602</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 0 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 80061 · 49 MB</span>
+                    <span class="ag-sub-name">Session PID 3428</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 8 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 79878 · 50 MB</span>
+                    <span class="ag-sub-name">Session PID 3427</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 6 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 71667 · 51 MB</span>
+                    <span class="ag-sub-name">Session PID 2576</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 0 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 65892 · 50 MB</span>
+                    <span class="ag-sub-name">Session PID 2542</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 65105 · 53 MB</span>
+                    <span class="ag-sub-name">Session PID 2519</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 0 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 64214 · 52 MB</span>
+                    <span class="ag-sub-name">Session PID 2513</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 9 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 52037 · 49 MB</span>
+                    <span class="ag-sub-name">Session PID 2512</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 10 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 8094 · 48 MB</span>
+                    <span class="ag-sub-name">Session PID 2423</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 237 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 7398 · 47 MB</span>
+                    <span class="ag-sub-name">Session PID 2338</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 11 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 4967 · 48 MB</span>
+                    <span class="ag-sub-name">Session PID 2332</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 36 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 74026 · 47 MB</span>
+                    <span class="ag-sub-name">Session PID 2330</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 18 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 21902 · 48 MB</span>
+                    <span class="ag-sub-name">Session PID 2329</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 21889 · 48 MB</span>
+                    <span class="ag-sub-name">Session PID 2324</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 131 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 21842 · 47 MB</span>
+                    <span class="ag-sub-name">Session PID 81661</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 21421 · 47 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 79355 · 3 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 19235 · 48 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-pdf-server</span>
+                    <span class="ag-sub-detail">PID 79341 · 5 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 28725 · 20 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 79323 · 3 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 27562 · 22 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 79295 · 4 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 25480 · 22 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 33985 · 3 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 355 · 20 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 33969 · 3 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 95962 · 22 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 33936 · 4 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 70040 · 23 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 85719 · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 55850 · 21 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 85693 · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 54878 · 19 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 85636 · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 47752 · 22 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 85613 · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 50923 · 23 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 85600 · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 26264 · 53 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 85587 · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 25578 · 49 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 85565 · 4 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 25405 · 51 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 85562 · 4 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">MCP: local-runtime</span>
-                    <span class="ag-sub-detail">PID 25035 · 51 MB</span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 85551 · 4 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 76438 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 76403 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 76390 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 76369 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 76353 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 76344 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 58535 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 58522 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 58504 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-pdf-server</span>
+                    <span class="ag-sub-detail">PID 99859 · 4 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 99845 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 99832 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 99772 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 46433 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 46398 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 46377 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 46364 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 46343 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 46339 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 25752 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 25738 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 25716 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 82729 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 82708 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 82690 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 70723 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 70709 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 70683 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 60644 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 60630 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 60605 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-pdf-server</span>
+                    <span class="ag-sub-detail">PID 2692 · 4 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 2664 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server-filesystem</span>
+                    <span class="ag-sub-detail">PID 2650 · 1 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-server</span>
+                    <span class="ag-sub-detail">PID 2599 · 3 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">MCP: mcp-pdf-server</span>
+                    <span class="ag-sub-detail">PID 2596 · 3 MB</span>
                 </div></div>
             </details>
-
+            
         </div>
         <div class="ag ag-active">
-
+            
             <div class="ag-top">
                 <div class="ag-orb ag-orb-active" style="background:#3fb950">
                     <div class="ag-orb-ring" style="border-color:#3fb950"></div>
@@ -8766,223 +9304,128 @@ body {
                 </div>
                 <div class="ag-status"><div class="ag-dot ag-dot-active"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">41 processes</span><span class="ag-pill">7974 MB RAM</span></div>
-
+            <div class="ag-pills"><span class="ag-pill">22 processes</span><span class="ag-pill">1007 MB RAM</span></div>
+            
             <details class="ag-sub-expand">
-                <summary class="ag-sub-toggle">Running processes (41)</summary>
+                <summary class="ag-sub-toggle">Running processes (22)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 50737</span>
-                    <span class="ag-sub-detail">CPU 0.4% · 1714 MB</span>
+                    <span class="ag-sub-name">Codex PID 1720</span>
+                    <span class="ag-sub-detail">CPU 4.0% · 464 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 23877</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 287 MB</span>
+                    <span class="ag-sub-name">Codex PID 1719</span>
+                    <span class="ag-sub-detail">CPU 0.3% · 124 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 21569</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 380 MB</span>
+                    <span class="ag-sub-name">Codex PID 1317</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 51 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 21568</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 143 MB</span>
+                    <span class="ag-sub-name">Codex PID 3225</span>
+                    <span class="ag-sub-detail">CPU 0.1% · 75 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 20003</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 62 MB</span>
+                    <span class="ag-sub-name">Codex PID 63243</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 5 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 84127</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 139 MB</span>
+                    <span class="ag-sub-name">Codex PID 60428</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 38 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 82246</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 142 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 72694</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 134 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 71747</span>
+                    <span class="ag-sub-name">Codex PID 47485</span>
                     <span class="ag-sub-detail">CPU 0.0% · 15 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 71659</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 92 MB</span>
+                    <span class="ag-sub-name">Codex PID 47484</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 21 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 67742</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 134 MB</span>
+                    <span class="ag-sub-name">Codex PID 78517</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 9 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 67650</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 133 MB</span>
+                    <span class="ag-sub-name">Codex PID 86365</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 17 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 60064</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 52 MB</span>
+                    <span class="ag-sub-name">Codex PID 56231</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 10 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 59329</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 135 MB</span>
+                    <span class="ag-sub-name">Codex PID 4799</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 1 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 59166</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 129 MB</span>
+                    <span class="ag-sub-name">Codex PID 3856</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 3 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 59165</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 121 MB</span>
+                    <span class="ag-sub-name">Codex PID 3401</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 9 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 51352</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 115 MB</span>
+                    <span class="ag-sub-name">Codex PID 3399</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 15 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 74029</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 22 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 73996</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 107 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 68463</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 144 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 56952</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 152 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 56918</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 135 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 70016</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 229 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 43069</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 116 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 18314</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 23 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 5339</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 126 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 97342</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 7 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 97341</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 2 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 60758</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 19 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 60757</span>
+                    <span class="ag-sub-name">Codex PID 3254</span>
                     <span class="ag-sub-detail">CPU 0.0% · 13 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 51509</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 54 MB</span>
+                    <span class="ag-sub-name">Codex PID 3220</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 25 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 51276</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 46 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 51036</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 137 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 50763</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 423 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 50734</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 1703 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 50715</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 19 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 50714</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 78 MB</span>
-                </div>
-                <div class="ag-sub-item">
-                    <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 31241</span>
+                    <span class="ag-sub-name">Codex PID 3152</span>
                     <span class="ag-sub-detail">CPU 0.0% · 4 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 26728</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 100 MB</span>
+                    <span class="ag-sub-name">Codex PID 3151</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 2 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 26667</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 329 MB</span>
+                    <span class="ag-sub-name">Codex PID 1858</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 20 MB</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-green"></span>
-                    <span class="ag-sub-name">Codex PID 24946</span>
-                    <span class="ag-sub-detail">CPU 0.0% · 59 MB</span>
+                    <span class="ag-sub-name">Codex PID 1792</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 73 MB</span>
+                </div>
+                <div class="ag-sub-item">
+                    <span class="status-dot dot-green"></span>
+                    <span class="ag-sub-name">Codex PID 1324</span>
+                    <span class="ag-sub-detail">CPU 0.0% · 13 MB</span>
                 </div></div>
             </details>
-
+            
         </div>
-        <div class="ag ag-off">
-            <span class="ag-badge-offline">OFFLINE</span>
+        <div class="ag ag-degraded">
+            <span class="ag-badge-degraded">DEGRADED</span>
             <div class="ag-top">
-                <div class="ag-orb ag-orb-off" style="background:#58a6ff">
+                <div class="ag-orb ag-orb-degraded" style="background:#58a6ff">
                     <div class="ag-orb-ring" style="border-color:#58a6ff"></div>
                     J
                 </div>
@@ -8990,10 +9433,10 @@ body {
                     <div class="ag-name">JARVIS</div>
                     <div class="ag-zone-inline">Voice assistant + bridge infrastructure</div>
                 </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
+                <div class="ag-status"><div class="ag-dot ag-dot-blocked"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">0/5 services</span><span class="ag-pill">no heartbeat</span></div>
-
+            <div class="ag-pills"><span class="ag-pill">2/5 services</span><span class="ag-pill">no heartbeat</span></div>
+            
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (5)</summary>
                 <div class="ag-sub-items">
@@ -9008,12 +9451,12 @@ body {
                     <span class="ag-sub-detail">launchd: jarvis-menubar</span>
                 </div>
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-red"></span>
+                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Bridge API</span>
                     <span class="ag-sub-detail">launchd: bridge-api</span>
                 </div>
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-red"></span>
+                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Bridge Worker</span>
                     <span class="ag-sub-detail">launchd: bridge-worker</span>
                 </div>
@@ -9023,12 +9466,12 @@ body {
                     <span class="ag-sub-detail">launchd: bridge-tunnel</span>
                 </div></div>
             </details>
-
+            
         </div>
-        <div class="ag ag-off">
-            <span class="ag-badge-offline">OFFLINE</span>
+        <div class="ag ag-degraded">
+            <span class="ag-badge-degraded">DEGRADED</span>
             <div class="ag-top">
-                <div class="ag-orb ag-orb-off" style="background:#79c0ff">
+                <div class="ag-orb ag-orb-degraded" style="background:#79c0ff">
                     <div class="ag-orb-ring" style="border-color:#79c0ff"></div>
                     A
                 </div>
@@ -9036,25 +9479,103 @@ body {
                     <div class="ag-name">Atlas</div>
                     <div class="ag-zone-inline">Mac Mini M4 system monitor · daily hygiene</div>
                 </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
+                <div class="ag-status"><div class="ag-dot ag-dot-blocked"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">launchd: off</span><span class="ag-pill">last report: never</span></div>
-
+            <div class="ag-pills"><span class="ag-pill">launchd: idle</span><span class="ag-pill">last report: 160d ago</span></div>
+            
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (1)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-red"></span>
+                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Daily Hygiene Cron</span>
-                    <span class="ag-sub-detail">09:00 KL time · off</span>
+                    <span class="ag-sub-detail">09:00 KL time · idle</span>
                 </div></div>
             </details>
-
+            
+            <details class="sys-atlas-expand">
+                <summary class="sys-expand-sum">Health Checks (7/8)</summary>
+                <div class="sys-health-grid">
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Storage</span>
+                <span class="sys-tile-detail">2% used, 835GB free / 926GB</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Memory</span>
+                <span class="sys-tile-detail">6.4GB free</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Database</span>
+                <span class="sys-tile-detail">pg-main: up, 1 total running</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Network</span>
+                <span class="sys-tile-detail">connected (100.77.209.73)</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Services</span>
+                <span class="sys-tile-detail">22/22 healthy</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Backup</span>
+                <span class="sys-tile-detail">pg-20260508-0300.sql.gz (0.6h ago)</span>
+            </div>
+            <div class="sys-health-tile yellow">
+                <span class="status-dot dot-yellow"></span>
+                <span class="sys-tile-name">Code Sync</span>
+                <span class="sys-tile-detail">64 unpushed commits</span>
+            </div>
+            <div class="sys-health-tile green">
+                <span class="status-dot dot-green"></span>
+                <span class="sys-tile-name">Locks</span>
+                <span class="sys-tile-detail">0 stale</span>
+            </div></div>
+            </details>
+            <details class="sys-atlas-expand">
+                <summary class="sys-expand-sum">Daily Reports (7)</summary>
+                <div class="sys-reports-list">
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-05-08</span>
+                <span class="status-dot dot-yellow"></span>
+                <span class="sys-rpt-score">7/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-05-07</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-05-04</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-05-02</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div>
+            <div class="sys-report">
+                <span class="sys-rpt-date">2026-05-01</span>
+                <span class="status-dot dot-green"></span>
+                <span class="sys-rpt-score">8/8</span>
+                <span class="sys-rpt-tldr">Daily hygiene ran on Mac mini via launchd/Tailscale. The run used LUMUS routing,...</span>
+            </div></div>
+            </details>
         </div>
-        <div class="ag ag-off">
-            <span class="ag-badge-offline">OFFLINE</span>
+        <div class="ag ag-degraded">
+            <span class="ag-badge-degraded">DEGRADED</span>
             <div class="ag-top">
-                <div class="ag-orb ag-orb-off" style="background:#ffa657">
+                <div class="ag-orb ag-orb-degraded" style="background:#ffa657">
                     <div class="ag-orb-ring" style="border-color:#ffa657"></div>
                     D
                 </div>
@@ -9062,17 +9583,17 @@ body {
                     <div class="ag-name">Dashboard</div>
                     <div class="ag-zone-inline">Self-update pipeline · live feed + rebuild</div>
                 </div>
-                <div class="ag-status"><div class="ag-dot ag-dot-idle"></div></div>
+                <div class="ag-status"><div class="ag-dot ag-dot-blocked"></div></div>
             </div>
-            <div class="ag-pills"><span class="ag-pill">feed: off</span><span class="ag-pill">rebuild: off</span></div>
-
+            <div class="ag-pills"><span class="ag-pill">feed: idle</span><span class="ag-pill">rebuild: off</span></div>
+            
             <details class="ag-sub-expand">
                 <summary class="ag-sub-toggle">Running processes (2)</summary>
                 <div class="ag-sub-items">
                 <div class="ag-sub-item">
-                    <span class="status-dot dot-red"></span>
+                    <span class="status-dot dot-green"></span>
                     <span class="ag-sub-name">Live Feed Generator</span>
-                    <span class="ag-sub-detail">launchd · off</span>
+                    <span class="ag-sub-detail">launchd · idle</span>
                 </div>
                 <div class="ag-sub-item">
                     <span class="status-dot dot-red"></span>
@@ -9080,18 +9601,22 @@ body {
                     <span class="ag-sub-detail">launchd · 3x/day</span>
                 </div></div>
             </details>
-
+            
         </div></div>
     <details class="sys-section" open>
-        <summary class="sys-section-sum">Services (2 running)</summary>
-
+        <summary class="sys-section-sum">Services (18 running)</summary>
+        
     <div class="sys-services">
-        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">macbook-pro-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">project-update-webhook</span></div></div>
+        <div class="sys-svc-running"><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker-6</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">job-radar-local</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">ai-singularity-news-web</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">accountable-os</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">closeness-mirror</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-api</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker-2</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">cloudflared-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker-3</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker-4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">dashboard-server-m4</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">mac-mini-health</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">ai-singularity-news-worker</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">ai-singularity-postgres</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">bridge-worker-5</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">pixel-agents</span></div><div class="sys-svc"><span class="status-dot dot-green"></span><span class="sys-svc-name">jarvis-bot</span></div></div>
     </div>
+        <details class="sys-idle-toggle">
+            <summary class="sys-expand-sum">Idle/Stopped (18)</summary>
+            <div class="sys-svc-idle"><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">db-backup</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-work-collector</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">linear-done-notifier</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-data-sync</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-red"></span><span class="sys-svc-name">tgbot-watchdog</span><span class="sys-svc-status">error</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">service-alerts</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">generate-live-feed</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">jarvis-autodeploy</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-hygiene</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">main-manager-status-publisher</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">launchd-watchdog</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">daily-work-summarizer</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">m4-docker-ensure</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">dashboard-auto-deploy</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">infra-change-collector</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">main-manager-portfolio-continuation</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">main-manager-dispatcher</span><span class="sys-svc-status">idle</span></div><div class="sys-svc"><span class="status-dot dot-dim"></span><span class="sys-svc-name">plaud-sync</span><span class="sys-svc-status">idle</span></div></div>
+        </details>
     </details>
     <details class="sys-section">
         <summary class="sys-section-sum">Recent Events (10)</summary>
-        <div class="sys-events"><div class="sys-event"><span class="sys-evt-time">03:10</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div><div class="sys-event"><span class="sys-evt-time">03:09</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div><div class="sys-event"><span class="sys-evt-time">03:08</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div><div class="sys-event"><span class="sys-evt-time">03:07</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div><div class="sys-event"><span class="sys-evt-time">03:06</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div><div class="sys-event"><span class="sys-evt-time">03:05</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div><div class="sys-event"><span class="sys-evt-time">03:04</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div><div class="sys-event"><span class="sys-evt-time">03:03</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">supervisor_error</span><span class="sys-evt-issue">SUPERVISOR</span><span class="sys-evt-agent">SUPERVISOR</span></div></div>
+        <div class="sys-events"><div class="sys-event"><span class="sys-evt-time">19:08</span><span class="sys-evt-dot" style="background:var(--green)"></span><span class="sys-evt-type">task_complete</span><span class="sys-evt-issue">PER-26</span><span class="sys-evt-agent">COORDINATOR</span></div><div class="sys-event"><span class="sys-evt-time">18:39</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-93</span><span class="sys-evt-agent"></span></div><div class="sys-event"><span class="sys-evt-time">18:26</span><span class="sys-evt-dot" style="background:var(--red)"></span><span class="sys-evt-type">task_failed</span><span class="sys-evt-issue">PER-26</span><span class="sys-evt-agent">COORDINATOR</span></div><div class="sys-event"><span class="sys-evt-time">19:03</span><span class="sys-evt-dot" style="background:var(--green)"></span><span class="sys-evt-type">task_complete</span><span class="sys-evt-issue">PER-148</span><span class="sys-evt-agent">COORDINATOR</span></div><div class="sys-event"><span class="sys-evt-time">18:47</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-137</span><span class="sys-evt-agent"></span></div><div class="sys-event"><span class="sys-evt-time">18:34</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-136</span><span class="sys-evt-agent"></span></div><div class="sys-event"><span class="sys-evt-time">18:21</span><span class="sys-evt-dot" style="background:var(--green)"></span><span class="sys-evt-type">task_complete</span><span class="sys-evt-issue">PER-135</span><span class="sys-evt-agent">VAULT</span></div><div class="sys-event"><span class="sys-evt-time">18:03</span><span class="sys-evt-dot" style="background:var(--dim)"></span><span class="sys-evt-type">canary_rejected</span><span class="sys-evt-issue">PER-133</span><span class="sys-evt-agent"></span></div></div>
     </details>
 </div>
 
@@ -9100,14 +9625,14 @@ body {
     <div class="section-head">
         <div class="section-dot" style="background:var(--yellow)"></div>
         <div class="section-title">Costs</div>
-        <div class="section-count">$0/mo</div>
+        <div class="section-count">$243/mo</div>
     </div>
-
-
+    
+    
     <div class="cost-total">
         <div class="cost-total-item">
             <span class="cost-total-lbl">Subscriptions</span>
-            <span class="cost-total-val">$0/mo</span>
+            <span class="cost-total-val">$243/mo</span>
         </div>
         <div class="cost-total-item">
             <span class="cost-total-lbl">AI Token Usage</span>
@@ -9115,18 +9640,88 @@ body {
         </div>
         <div class="cost-total-item cost-total-sum">
             <span class="cost-total-lbl">Total</span>
-            <span class="cost-total-val">$0/mo</span>
+            <span class="cost-total-val">$243/mo</span>
         </div>
     </div>
-
-
+    
+        <div class="cost-orch">
+            <span>Mode: <strong>claude-codex</strong></span>
+            <span>Claude $?/d</span>
+            <span>Codex $?/d</span>
+        </div>
+    
+        <div class="cost-token-card" style="border-left: 3px solid #ff6b35">
+            <div class="cost-token-header">
+                <span class="cost-token-name" style="color:#ff6b35">Claude</span>
+                <span class="cost-token-plan">Max</span>
+            </div>
+            <div class="cost-token-stats">
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">0</div>
+                    <div class="cost-token-lbl">tokens/mo</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">$0</div>
+                    <div class="cost-token-lbl">API-eq</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">0.3x</div>
+                    <div class="cost-token-lbl">savings</div>
+                </div>
+            </div>
+        </div>
+        <div class="cost-token-card" style="border-left: 3px solid #3fb950">
+            <div class="cost-token-header">
+                <span class="cost-token-name" style="color:#3fb950">Codex</span>
+                <span class="cost-token-plan">Plus</span>
+            </div>
+            <div class="cost-token-stats">
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">0</div>
+                    <div class="cost-token-lbl">tokens/mo</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">$0</div>
+                    <div class="cost-token-lbl">API-eq</div>
+                </div>
+                <div class="cost-token-stat">
+                    <div class="cost-token-val">200.5x</div>
+                    <div class="cost-token-lbl">savings</div>
+                </div>
+            </div>
+        </div>
     <details class="cost-subs-details" open>
-        <summary class="sys-expand-sum">Subscriptions (0)</summary>
-        <div class="cost-sub-list"></div>
+        <summary class="sys-expand-sum">Subscriptions (5)</summary>
+        <div class="cost-sub-list">
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">Claude Code</span>
+            <span class="cost-sub-cost">$200</span>
+            <span class="cost-sub-renew renew-normal">Nov 05</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">OpenAI / Codex</span>
+            <span class="cost-sub-cost">$20</span>
+            <span class="cost-sub-renew renew-normal">Nov 10</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">Krisp</span>
+            <span class="cost-sub-cost">$8</span>
+            <span class="cost-sub-renew renew-normal">Nov 01</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">SuperWhisper</span>
+            <span class="cost-sub-cost">$8</span>
+            <span class="cost-sub-renew renew-normal">Nov 01</span>
+        </div>
+        <div class="cost-sub-row">
+            <span class="cost-sub-name">Render</span>
+            <span class="cost-sub-cost">$7</span>
+            <span class="cost-sub-renew renew-normal">Nov 01</span>
+        </div></div>
     </details>
 </div>
 
-<div class="footer">common center v1 // 5 agents // 2026-08-23 12:00:00 ICT</div>
+<div class="footer">common center v1 // 5 agents // 2026-10-15 06:35:50 ICT</div>
 
 </main>
 </div>
@@ -9209,6 +9804,51 @@ body {
     if (!campus) return;
     if (campus.dataset.campusRefreshBound === 'true') return;
     campus.dataset.campusRefreshBound = 'true';
+
+    const focusedDepartment = new URLSearchParams(window.location.search).get('view') === 'department';
+    const departmentSelect = document.createElement('select');
+    departmentSelect.dataset.campusDepartmentSelect = '';
+    departmentSelect.setAttribute('aria-label', 'Выбрать отдел');
+    campus.querySelectorAll('.campus-zone').forEach(zone => {
+        const option = document.createElement('option');
+        option.value = zone.dataset.departmentId;
+        option.textContent = zone.querySelector('h3').textContent;
+        departmentSelect.append(option);
+    });
+    const departmentPicker = campus.querySelector('[data-campus-department-picker]');
+    const departmentCrops = {
+        hq: [56, 547, 238, 283], sales: [146, 112, 342, 223],
+        development: [592, 108, 375, 232], design: [1085, 114, 342, 221],
+        infrastructure: [390, 558, 343, 275], internal: [809, 556, 350, 276],
+        finance: [1238, 554, 223, 277],
+    };
+    function selectCampusDepartment() {
+        if (!focusedDepartment || !departmentSelect) return;
+        const selected = departmentSelect.value;
+        const crop = departmentCrops[selected];
+        if (!crop) return;
+        campus.querySelectorAll('.campus-zone').forEach(zone => {
+            zone.hidden = zone.dataset.departmentId !== selected;
+        });
+        const map = campus.querySelector('.campus-map');
+        const [x, y, width, height] = crop;
+        map.style.setProperty('--campus-room-size', `${1536 / width * 100}% ${1024 / height * 100}%`);
+        map.style.setProperty('--campus-room-position', `${x / (1536 - width) * 100}% ${y / (1024 - height) * 100}%`);
+        notifyCampusContentHeight();
+    }
+    if (focusedDepartment && departmentSelect && departmentPicker) {
+        campus.classList.add('is-department-focus');
+        departmentPicker.querySelector('[data-campus-department-picker-slot]').replaceWith(departmentSelect);
+        departmentPicker.hidden = false;
+        const requested = new URLSearchParams(window.location.search).get('department');
+        departmentSelect.value = Object.hasOwn(departmentCrops, requested) ? requested : 'development';
+        departmentSelect.addEventListener('change', () => {
+            closeCampusDetails(false);
+            closeCampusProjectDetails(false);
+            selectCampusDepartment();
+        });
+        selectCampusDepartment();
+    }
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     campus.dataset.reducedMotion = String(reducedMotion.matches);
@@ -9401,8 +10041,25 @@ body {
         managerPresenceEl.dataset.campusManagerState = event?.status || 'idle';
     }
 
+    let campusQueueUpdatedAt = null;
+
+    function formatCampusQueueTime(value) {
+        const parsed = typeof value === 'string' ? new Date(value) : null;
+        if (!parsed || Number.isNaN(parsed.getTime())) return '';
+        return parsed.toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+
     function setCampusState(state, visibleTasks, agentCount, omittedTasks) {
-        if (stateEl) stateEl.textContent = stateMessages[state] || stateMessages.unavailable;
+        if (stateEl) {
+            const queueTime = state === 'loading' ? '' : formatCampusQueueTime(campusQueueUpdatedAt);
+            const message = stateMessages[state] || stateMessages.unavailable;
+            stateEl.textContent = queueTime ? `${message} · очередь обновлена ${queueTime}` : message;
+        }
         if (countEl) {
             const omitted = omittedTasks > 0 ? ` · скрыто задач: ${omittedTasks}` : '';
             const live = agentCount > 0
@@ -9519,6 +10176,16 @@ body {
 
     function animateCampusJourney(button, shouldAnimate, managerOriginRect) {
         if (reducedMotion.matches || !shouldAnimate) return;
+        if (focusedDepartment) {
+            if (button.getBoundingClientRect().width && typeof button.animate === 'function') {
+                const arrival = button.animate(
+                    [{transform: 'translateX(-18px)', opacity: 0.45}, {transform: 'translateX(0)', opacity: 1}],
+                    {duration: 700, easing: 'ease-out'},
+                );
+                arrival.finished.then(() => { button.dataset.campusMoving = 'false'; }).catch(() => {});
+            }
+            return;
+        }
         if (!managerMarkerEl || !boulevardEl || typeof button.animate !== 'function') return;
         const managerRect = managerOriginRect || managerMarkerEl.getBoundingClientRect();
         const boulevardRect = boulevardEl.getBoundingClientRect();
@@ -9549,6 +10216,12 @@ body {
         button.dataset.campusAgentTrigger = '';
         button.setAttribute('data-campus-destination', destination);
         button.setAttribute('data-campus-moving', String(moving));
+        // Public projection fields only; the 3D scene mirrors these buttons.
+        button.dataset.campusAgentId = String(event.agent_id || '');
+        button.dataset.campusDepartmentId = String(event.department_id || '');
+        button.dataset.campusTaskId = String(event.task_id || '');
+        button.dataset.campusStatus = String(event.status || '');
+        button.dataset.campusProject = String(event.project || '');
         button.setAttribute('aria-label', `${event.role}, ${statusLabels[event.status] || event.status}`);
         button.setAttribute('aria-controls', 'campus-agent-details');
         button.setAttribute('aria-expanded', 'false');
@@ -9636,6 +10309,9 @@ body {
     }
 
     function renderDepartmentCampus(payload) {
+        campusQueueUpdatedAt = typeof payload?.queue_updated_at === 'string'
+            ? payload.queue_updated_at
+            : null;
         const state = payload && typeof payload.state === 'string' ? payload.state : 'unavailable';
         const events = state === 'active' && Array.isArray(payload.events) ? payload.events : [];
         if (
@@ -9687,7 +10363,9 @@ body {
             const folder = projectFolderForEvent(event);
             if (!folder) return;
             activateCampusProjectFolder(folder, event);
-            const destination = destinationForEvent(event);
+            const destination = focusedDepartment
+                ? folder.closest('.campus-zone')?.querySelector('[data-campus-zone-agents]')
+                : destinationForEvent(event);
             if (!destination) return;
             const shouldAnimate = newJourneySignatures.has(journeySignature(event));
             const resident = residentForEvent(event);
@@ -9798,6 +10476,1205 @@ body {
     }
 })();
 // ── End Department Campus ──
+
+// ── Campus 3D Scene ──
+// Read-only 3D mirror of the Department Campus. The semantic 2D campus stays
+// the single source of truth: this block never fetches events itself, it only
+// reads the public state the campus has already rendered. Characters walk only
+// for verified active/testing journeys; idle, stale and unavailable states keep
+// everyone at their own desk and stop the frame loop.
+(function initCampus3dScene() {
+    const campus = document.getElementById('department-campus');
+    if (!campus || campus.dataset.campus3dBound === 'true') return;
+    campus.dataset.campus3dBound = 'true';
+    const stage = campus.querySelector('[data-campus-3d]');
+    const labelsEl = campus.querySelector('[data-campus-3d-labels]');
+    const focusEl = campus.querySelector('[data-campus-3d-focus]');
+    const map = campus.querySelector('.campus-map');
+    const toggle = campus.querySelector('[data-campus-view-toggle]');
+    if (!stage || !labelsEl || !focusEl || !map || !toggle) return;
+    // The focused single-department iframe keeps its 2D room crops.
+    if (new URLSearchParams(window.location.search).get('view') === 'department') return;
+
+    const VIEW_KEY = 'command-center.campus.view';
+    const THREE_URL = new URL('/dashboard-assets/three.module.min.js', window.location.href).href;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function webglSupported() {
+        if (typeof window.WebGLRenderingContext === 'undefined') return false;
+        try {
+            const probe = document.createElement('canvas');
+            const context = probe.getContext('webgl2') || probe.getContext('webgl');
+            context?.getExtension('WEBGL_lose_context')?.loseContext();
+            return Boolean(context);
+        } catch (_error) {
+            return false;
+        }
+    }
+    if (!webglSupported()) return;
+
+    function readViewPreference() {
+        try {
+            return window.localStorage.getItem(VIEW_KEY);
+        } catch (_error) {
+            return null;
+        }
+    }
+
+    function writeViewPreference(view) {
+        try {
+            window.localStorage.setItem(VIEW_KEY, view);
+        } catch (_error) {
+            // Storage can be unavailable; the view then resets on reload.
+        }
+    }
+
+    function postContentHeight() {
+        if (window.parent === window) return;
+        window.queueMicrotask(() => {
+            const height = Math.ceil(campus.getBoundingClientRect().height);
+            if (!Number.isFinite(height) || height <= 0) return;
+            window.parent.postMessage({type: 'pixelAgentsContentHeight', height}, '*');
+        });
+    }
+
+    let scene3d = null;
+    let scenePromise = null;
+    let active = false;
+
+    function applyView(want3d) {
+        active = Boolean(want3d && scene3d);
+        campus.classList.toggle('is-3d-view', active);
+        stage.hidden = !active;
+        toggle.setAttribute('aria-pressed', String(active));
+        toggle.textContent = active ? '2D' : '3D';
+        toggle.setAttribute('aria-label', active ? 'Плоский план кампуса' : 'Объёмный 3D-вид кампуса');
+        if (active) {
+            scene3d.resize();
+            scene3d.sync();
+        } else {
+            focusEl.hidden = true;
+        }
+        postContentHeight();
+    }
+
+    function loadScene() {
+        if (!scenePromise) {
+            stage.setAttribute('data-campus-3d-state', 'loading');
+            scenePromise = import(THREE_URL)
+                .then((THREE) => {
+                    stage.hidden = false;
+                    scene3d = createCampusScene(THREE);
+                    stage.setAttribute('data-campus-3d-state', 'ready');
+                    return scene3d;
+                })
+                .catch(() => {
+                    stage.hidden = true;
+                    stage.setAttribute('data-campus-3d-state', 'unavailable');
+                    toggle.hidden = true;
+                    return null;
+                });
+        }
+        return scenePromise;
+    }
+
+    async function show3d(persist) {
+        const ready = await loadScene();
+        applyView(Boolean(ready));
+        if (persist && ready) writeViewPreference('3d');
+    }
+
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+        if (active) {
+            applyView(false);
+            writeViewPreference('2d');
+            return;
+        }
+        show3d(true);
+    });
+    if (readViewPreference() !== '2d') show3d(false);
+
+    function createCampusScene(THREE) {
+        const STATUS_GLYPHS = {
+            queued: '…', active: '▶', testing: '◎', waiting: '‖', done: '✓', failed: '✕',
+        };
+        const STATUS_COLORS = {
+            queued: 0x9e9aa0, active: 0xe6a23c, testing: 0x6fa8dc,
+            waiting: 0xc792ea, done: 0x5fae74, failed: 0xe06c5a,
+        };
+        const ROUTE_PRECEDENCE = ['testing', 'active', 'done', 'queued', 'waiting', 'failed'];
+        const WALK_SPEED = 4.6;
+        const MEETING_SECONDS = 1.4;
+        const LOOKS = {
+            COORDINATOR: {shirt: '#e6a23c', pants: '#3a2c22', skin: '#e9bf98', hair: '#3b2a20'},
+            RESEARCHER: {shirt: '#d9708f', pants: '#2b2b38', skin: '#f1cdb0', hair: '#c94f7c'},
+            BUILDER: {shirt: '#4f7cc2', pants: '#26262e', skin: '#f0c9a4', hair: '#d7b46a'},
+            DESIGNER: {shirt: '#4e7a5a', pants: '#2d2a26', skin: '#c99068', hair: '#2a2a2a'},
+            INFRASTRUCTURE: {shirt: '#7c838e', pants: '#22252b', skin: '#e3b693', hair: '#e8e6e1'},
+            VAULT: {shirt: '#8a6bb0', pants: '#26242c', skin: '#8d5a3b', hair: '#1f1a17'},
+            ANALYST: {shirt: '#3f9a8f', pants: '#24282a', skin: '#6f4630', hair: '#151515'},
+        };
+        const ROOMS = {
+            sales: {x: -8.25, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
+            development: {x: -0.5, z: -6, w: 8, d: 6.5, tint: '#80553a'},
+            design: {x: 7.75, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
+            hq: {x: -11, z: 6, w: 6, d: 6.5, tint: '#845a3b'},
+            infrastructure: {x: -4.25, z: 6, w: 6.5, d: 6.5, tint: '#6f4a33'},
+            internal: {x: 2.75, z: 6, w: 6.5, d: 6.5, tint: '#7b4f32'},
+            finance: {x: 9.5, z: 6, w: 6, d: 6.5, tint: '#7a5236'},
+        };
+        Object.entries(ROOMS).forEach(([id, room]) => {
+            room.id = id;
+            room.top = room.z < 0;
+            room.farZ = room.z - room.d / 2;
+            room.nearZ = room.z + room.d / 2;
+            room.doorZ = room.top ? room.nearZ : room.farZ;
+            room.doorInner = new THREE.Vector3(room.x, 0, room.top ? room.doorZ - 0.9 : room.doorZ + 0.9);
+            room.doorOuter = new THREE.Vector3(room.x, 0, room.top ? -1.5 : 1.5);
+            room.aisleZ = room.farZ + 2.3;
+        });
+        const WAYPOINTS = {
+            'test-lab': {x: 2.6, z: 0, color: 0x6fa8dc, label: 'Test Lab'},
+            'github-station': {x: 10.4, z: 0, color: 0x5fae74, label: 'GitHub Station'},
+        };
+
+        const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'low-power'});
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.setClearColor(0x09090b, 1);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.domElement.className = 'campus-3d-canvas';
+        stage.prepend(renderer.domElement);
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x09090b, 46, 90);
+        const camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.5, 200);
+        const lookTarget = new THREE.Vector3(-0.8, 0, 0);
+        const view = {azimuth: 0, elevation: 0.9};
+
+        scene.add(new THREE.HemisphereLight(0xfff0db, 0x1b1511, 1.25));
+        const sun = new THREE.DirectionalLight(0xffe0b5, 2.1);
+        sun.position.set(-9, 26, 15);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(2048, 2048);
+        Object.assign(sun.shadow.camera, {left: -19, right: 19, top: 14, bottom: -14, near: 2, far: 70});
+        sun.shadow.bias = -0.0006;
+        sun.shadow.normalBias = 0.02;
+        scene.add(sun);
+
+        const materials = new Map();
+        function material(color, options = {}) {
+            const key = JSON.stringify([color, options]);
+            if (!materials.has(key)) {
+                materials.set(key, new THREE.MeshStandardMaterial({
+                    color, roughness: 0.82, metalness: 0.04, flatShading: true, ...options,
+                }));
+            }
+            return materials.get(key);
+        }
+
+        function box(parent, w, h, d, color, x, y, z, options) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material(color, options));
+            mesh.position.set(x, y + h / 2, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            parent.add(mesh);
+            return mesh;
+        }
+
+        function canvasTexture(size, draw, repeatX, repeatY) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            draw(canvas.getContext('2d'), size);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(repeatX, repeatY);
+            texture.colorSpace = THREE.SRGBColorSpace;
+            texture.anisotropy = 4;
+            return texture;
+        }
+
+        const plankTexture = canvasTexture(128, (ctx, size) => {
+            const rows = 4;
+            for (let row = 0; row < rows; row += 1) {
+                ctx.fillStyle = row % 2 ? '#b98a64' : '#c79a72';
+                ctx.fillRect(0, row * size / rows, size, size / rows);
+                ctx.fillStyle = '#8a6142';
+                ctx.fillRect(0, (row + 1) * size / rows - 2, size, 2);
+                ctx.fillRect((row * 53) % size, row * size / rows, 2, size / rows);
+            }
+        }, 3, 3);
+        const tileTexture = canvasTexture(128, (ctx, size) => {
+            ctx.fillStyle = '#3b352d';
+            ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = '#463f35';
+            ctx.fillRect(3, 3, size / 2 - 6, size / 2 - 6);
+            ctx.fillRect(size / 2 + 3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
+            ctx.fillStyle = '#413a31';
+            ctx.fillRect(size / 2 + 3, 3, size / 2 - 6, size / 2 - 6);
+            ctx.fillRect(3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
+        }, 14, 3);
+
+        // ── Ground and boulevard ──
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(80, 60),
+            material('#121115', {flatShading: false}),
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+        const boulevard = new THREE.Mesh(
+            new THREE.BoxGeometry(29.5, 0.06, 5.5),
+            new THREE.MeshStandardMaterial({map: tileTexture, roughness: 0.95}),
+        );
+        boulevard.position.set(-0.75, 0.03, 0);
+        boulevard.receiveShadow = true;
+        scene.add(boulevard);
+        [-2.82, 2.82].forEach((z) => box(scene, 29.5, 0.1, 0.12, '#5c4a3a', -0.75, 0, z));
+
+        // ── Rooms ──
+        const WALL = '#2a272c';
+        const TRIM = '#5a3b27';
+        const pickRoots = [];
+        const lampLights = [];
+
+        function plant(parent, x, z, scale = 1) {
+            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2 * scale, 0.16 * scale, 0.32 * scale, 8), material('#6b4a35'));
+            pot.position.set(x, 0.16 * scale + 0.12, z);
+            pot.castShadow = true;
+            parent.add(pot);
+            const leaves = new THREE.Mesh(new THREE.IcosahedronGeometry(0.36 * scale, 0), material('#4e7a5a'));
+            leaves.position.set(x, 0.62 * scale + 0.12, z);
+            leaves.castShadow = true;
+            parent.add(leaves);
+            const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.24 * scale, 0), material('#5f9168'));
+            crown.position.set(x + 0.08, 0.92 * scale + 0.12, z - 0.05);
+            crown.castShadow = true;
+            parent.add(crown);
+        }
+
+        function lamp(parent, x, z) {
+            box(parent, 0.08, 1.1, 0.08, '#3a3330', x, 0.12, z);
+            const bulb = new THREE.Mesh(
+                new THREE.SphereGeometry(0.16, 10, 8),
+                material('#ffd28a', {emissive: '#ffb347', emissiveIntensity: 1.6}),
+            );
+            bulb.position.set(x, 1.32, z);
+            parent.add(bulb);
+            const light = new THREE.PointLight(0xffb85c, 5, 6.5, 1.6);
+            light.position.set(x, 1.5, z);
+            parent.add(light);
+            lampLights.push(light);
+        }
+
+        function buildRoom(room) {
+            const group = new THREE.Group();
+            scene.add(group);
+            const floorMaterial = new THREE.MeshStandardMaterial({
+                map: plankTexture, color: room.tint, roughness: 0.9,
+            });
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(room.w, 0.12, room.d), floorMaterial);
+            floor.position.set(room.x, 0.06, room.z);
+            floor.receiveShadow = true;
+            group.add(floor);
+
+            const tall = 1.15;
+            const low = 0.42;
+            const thick = 0.18;
+            const left = room.x - room.w / 2;
+            const right = room.x + room.w / 2;
+            const door = 1.9;
+            const segment = (room.w - door) / 2;
+            // The far wall is tall; the wall facing the camera stays low so the
+            // room interior is always visible.
+            const farHeight = room.top ? tall : tall * 0.85;
+            const nearHeight = low;
+            const farDoor = !room.top;
+            [[room.farZ, farHeight, farDoor], [room.nearZ, nearHeight, !farDoor]].forEach(([z, height, hasDoor]) => {
+                if (hasDoor) {
+                    box(group, segment, height, thick, WALL, left + segment / 2, 0.12, z);
+                    box(group, segment, height, thick, WALL, right - segment / 2, 0.12, z);
+                    box(group, segment, 0.06, thick + 0.04, TRIM, left + segment / 2, 0.12 + height, z);
+                    box(group, segment, 0.06, thick + 0.04, TRIM, right - segment / 2, 0.12 + height, z);
+                } else {
+                    box(group, room.w, height, thick, WALL, room.x, 0.12, z);
+                    box(group, room.w, 0.06, thick + 0.04, TRIM, room.x, 0.12 + height, z);
+                }
+            });
+            [left, right].forEach((x) => {
+                // Side walls taper from the far height to the near height.
+                box(group, thick, farHeight, room.d * 0.5, WALL, x, 0.12, room.farZ + room.d * 0.25);
+                box(group, thick, nearHeight, room.d * 0.5, WALL, x, 0.12, room.nearZ - room.d * 0.25);
+            });
+            plant(group, left + 0.55, room.nearZ - 0.55);
+            plant(group, right - 0.55, room.nearZ - 0.55, 0.85);
+            lamp(group, right - 0.5, room.farZ + 0.55);
+            buildRoomProps(group, room);
+            return group;
+        }
+
+        function buildRoomProps(group, room) {
+            const left = room.x - room.w / 2;
+            const right = room.x + room.w / 2;
+            const midZ = room.z + 0.6;
+            if (room.id === 'hq') {
+                const rug = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.02, 1.8), material('#4e7a5a'));
+                rug.position.set(room.x - 0.6, 0.13, midZ + 0.4);
+                rug.receiveShadow = true;
+                group.add(rug);
+                box(group, 0.9, 0.9, 0.5, '#3a2c22', left + 0.6, 0.12, room.farZ + 0.5);
+            } else if (room.id === 'sales') {
+                box(group, 1.8, 0.4, 0.7, '#3d5f47', left + 1.3, 0.12, midZ + 0.6);
+                box(group, 1.8, 0.45, 0.18, '#355440', left + 1.3, 0.52, midZ + 0.95);
+                box(group, 0.5, 1.5, 1.6, '#5a3b27', right - 0.4, 0.12, midZ - 0.2);
+            } else if (room.id === 'development') {
+                const wallScreen = box(group, 2.4, 0.9, 0.06, '#1c2a24', room.x, 0.5, room.farZ + 0.14, {
+                    emissive: '#2f6b4f', emissiveIntensity: 0.55,
+                });
+                wallScreen.castShadow = false;
+            } else if (room.id === 'design') {
+                box(group, 0.08, 1.4, 0.08, '#5a3b27', right - 1.1, 0.12, midZ);
+                box(group, 1.1, 0.8, 0.06, '#f2f0ea', right - 1.1, 0.75, midZ + 0.06);
+                ['#e6a23c', '#4e7a5a', '#d9708f', '#6fa8dc'].forEach((color, index) => {
+                    box(group, 0.2, 0.2, 0.02, color, right - 1.4 + (index % 2) * 0.55, 0.85 + Math.floor(index / 2) * 0.3, midZ + 0.1);
+                });
+                box(group, 1.2, 0.35, 0.8, '#3d5f47', left + 1.0, 0.12, midZ + 0.7);
+            } else if (room.id === 'infrastructure') {
+                [0, 1, 2].forEach((index) => {
+                    const z = room.z - 0.4 + index * 0.75;
+                    box(group, 0.6, 1.6, 0.6, '#1f2126', left + 0.55, 0.12, z);
+                    [0, 1, 2, 3].forEach((row) => {
+                        box(group, 0.04, 0.05, 0.4, '#6fd39a', left + 0.87, 0.4 + row * 0.32, z, {
+                            emissive: '#3fbf7f', emissiveIntensity: 1.1,
+                        }).castShadow = false;
+                    });
+                });
+            } else if (room.id === 'internal') {
+                [-0.9, 0.9].forEach((offset) => {
+                    box(group, 0.5, 1.6, 1.3, '#5a3b27', right - 0.4, 0.12, room.z + 0.4 + offset);
+                    ['#e6a23c', '#4e7a5a', '#8a6bb0', '#d9708f'].forEach((color, index) => {
+                        box(group, 0.06, 0.28, 1.1, color, right - 0.68, 0.3 + index * 0.34, room.z + 0.4 + offset);
+                    });
+                });
+            } else if (room.id === 'finance') {
+                const safe = box(group, 0.9, 0.95, 0.8, '#4a4d55', left + 0.75, 0.12, midZ, {metalness: 0.45, roughness: 0.5});
+                const dial = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.06, 12), material('#c9a45c', {metalness: 0.6, roughness: 0.4}));
+                dial.rotation.x = Math.PI / 2;
+                dial.position.set(left + 0.75, 0.62, midZ + 0.42);
+                group.add(dial);
+                safe.userData.campusSafe = true;
+                // Owner-permission threshold: a restrained amber frame inside the room.
+                const frame = material('#e6a23c', {emissive: '#e6a23c', emissiveIntensity: 0.35});
+                const inset = 0.35;
+                const fw = room.w - inset * 2;
+                const fd = room.d - inset * 2;
+                [[fw, 0.05, room.x, room.farZ + inset], [fw, 0.05, room.x, room.nearZ - inset]].forEach(([w, d, x, z]) => {
+                    const strip = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, d), frame);
+                    strip.position.set(x, 0.135, z);
+                    group.add(strip);
+                });
+                [room.x - fw / 2, room.x + fw / 2].forEach((x) => {
+                    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, fd), frame);
+                    strip.position.set(x, 0.135, room.z);
+                    group.add(strip);
+                });
+            }
+        }
+
+        Object.values(ROOMS).forEach(buildRoom);
+
+        // ── Shared waypoints ──
+        Object.entries(WAYPOINTS).forEach(([id, waypoint]) => {
+            const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.1, 24), material('#1f1e24'));
+            pad.position.set(waypoint.x, 0.11, waypoint.z);
+            pad.receiveShadow = true;
+            scene.add(pad);
+            const ring = new THREE.Mesh(
+                new THREE.TorusGeometry(1.15, 0.045, 6, 40),
+                material(waypoint.color, {emissive: waypoint.color, emissiveIntensity: 0.7}),
+            );
+            ring.rotation.x = Math.PI / 2;
+            ring.position.set(waypoint.x, 0.18, waypoint.z);
+            scene.add(ring);
+            box(scene, 0.5, 0.75, 0.35, '#2a272c', waypoint.x, 0.16, waypoint.z - 0.85);
+            box(scene, 0.42, 0.26, 0.04, '#111', waypoint.x, 0.62, waypoint.z - 0.66, {
+                emissive: waypoint.color, emissiveIntensity: 0.5,
+            });
+            waypoint.id = id;
+        });
+
+        // ── Desks and project folders (mirrors the 2D project buttons) ──
+        const folderViews = [];
+        const roomFolders = {};
+        campus.querySelectorAll('[data-campus-project-folder]').forEach((el) => {
+            const department = el.dataset.campusProjectDepartment;
+            if (!ROOMS[department]) return;
+            (roomFolders[department] ||= []).push(el);
+        });
+
+        function deskSlots(room, count) {
+            const slots = [];
+            const usable = room.w - 1.2;
+            if (room.top) {
+                for (let index = 0; index < count; index += 1) {
+                    slots.push(room.x - usable / 2 + usable * (index + 0.5) / count);
+                }
+                return slots;
+            }
+            // Bottom rooms keep the boulevard doorway clear.
+            if (count === 1) return [room.x + room.w * 0.22];
+            for (let index = 0; index < count; index += 1) {
+                const side = index % 2 === 0 ? -1 : 1;
+                const rank = Math.floor(index / 2);
+                slots.push(room.x + side * (room.w * 0.27 + rank * 1.4));
+            }
+            return slots.sort((a, b) => a - b);
+        }
+
+        function buildDesk(room, x, folderEl, index) {
+            const group = new THREE.Group();
+            scene.add(group);
+            const isHq = room.id === 'hq';
+            const deskZ = room.farZ + (isHq ? 1.75 : 1.35);
+            const width = isHq ? 1.9 : 1.35;
+            box(group, width, 0.07, 0.72, '#4a2f1f', x, 0.8, deskZ);
+            [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+                box(group, 0.07, 0.68, 0.07, '#3a2418', x + sx * (width / 2 - 0.08), 0.12, deskZ + sz * 0.28);
+            });
+            const screenColor = room.id === 'infrastructure' ? '#3fbf7f' : room.id === 'design' ? '#d9708f' : '#6fa8dc';
+            box(group, 0.62, 0.4, 0.05, '#18181c', x - 0.15, 0.95, deskZ - 0.18);
+            const screen = box(group, 0.54, 0.32, 0.01, '#111', x - 0.15, 0.99, deskZ - 0.15, {
+                emissive: screenColor, emissiveIntensity: 0.45,
+            });
+            screen.castShadow = false;
+            const folder = box(group, 0.36, 0.05, 0.26, '#d9a85b', x + 0.38, 0.87, deskZ + 0.05);
+            folder.material = folder.material.clone();
+            box(group, 0.14, 0.02, 0.26, '#c48f43', x + 0.27, 0.92, deskZ + 0.05);
+            // Chair on the camera side of the desk.
+            // Chair pushed to the side: specialists stand at the desk while working.
+            const chairX = x - width / 2 - 0.2;
+            box(group, 0.5, 0.08, 0.5, '#3d5f47', chairX, 0.5, deskZ + 0.35);
+            box(group, 0.08, 0.5, 0.5, '#355440', chairX - 0.24, 0.58, deskZ + 0.35);
+            box(group, 0.06, 0.38, 0.06, '#222', chairX, 0.12, deskZ + 0.35);
+            group.userData.pickTarget = folderEl;
+            pickRoots.push(group);
+            const workSpot = new THREE.Vector3(x, 0, deskZ + 0.62);
+            const view = {
+                el: folderEl,
+                room,
+                folder,
+                workSpot,
+                meetingSpot: new THREE.Vector3(x + 0.2, 0, deskZ + 2.1),
+                // Crowded rooms stagger their wall signs so names stay readable.
+                labelAnchor: new THREE.Vector3(x, (room.top ? 1.95 : 1.65) + (index % 2) * 0.95, room.farZ),
+                label: null,
+            };
+            folderViews.push(view);
+            return view;
+        }
+
+        Object.values(ROOMS).forEach((room) => {
+            const folders = roomFolders[room.id] || [];
+            deskSlots(room, folders.length).forEach((x, index) => buildDesk(room, x, folders[index], index));
+        });
+        const hqDesk = folderViews.find((view) => view.room.id === 'hq');
+
+        // ── Overlay labels (visual mirror; the 2D map keeps the semantics) ──
+        const labels = [];
+        function addLabel(kind, anchor, target) {
+            const el = document.createElement('span');
+            el.className = `campus-3d-label is-${kind}`;
+            labelsEl.append(el);
+            const label = {el, anchor, visible: true};
+            if (target) {
+                el.dataset.clickable = 'true';
+                el.addEventListener('click', () => target.click());
+            }
+            labels.push(label);
+            return label;
+        }
+        function setLabelText(label, title, detail) {
+            const strong = document.createElement('strong');
+            strong.textContent = title;
+            if (detail) {
+                const small = document.createElement('small');
+                small.textContent = detail;
+                label.el.replaceChildren(strong, small);
+            } else {
+                label.el.replaceChildren(strong);
+            }
+        }
+
+        campus.querySelectorAll('.campus-zone').forEach((zone) => {
+            const room = ROOMS[zone.dataset.departmentId];
+            if (!room) return;
+            const label = addLabel('department', new THREE.Vector3(room.x - room.w / 2 + 0.9, room.top ? 3.8 : 3.6, room.farZ));
+            const boundary = zone.querySelector('.campus-owner-boundary');
+            setLabelText(label, zone.querySelector('h3')?.textContent || room.id, boundary ? boundary.textContent.trim() : '');
+            if (boundary) label.el.classList.add('has-boundary');
+        });
+        Object.values(WAYPOINTS).forEach((waypoint) => {
+            const label = addLabel('waypoint', new THREE.Vector3(waypoint.x, 0.2, waypoint.z - 1.45));
+            setLabelText(label, waypoint.label);
+        });
+        folderViews.forEach((view) => {
+            view.label = addLabel('project', view.labelAnchor, view.el);
+        });
+
+        // ── Characters ──
+        function makePerson(look) {
+            const group = new THREE.Group();
+            const body = new THREE.Group();
+            group.add(body);
+            const limb = (color, w, h, d, x, y) => {
+                const pivot = new THREE.Group();
+                pivot.position.set(x, y, 0);
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material(color));
+                mesh.position.y = -h / 2;
+                mesh.castShadow = true;
+                pivot.add(mesh);
+                body.add(pivot);
+                return pivot;
+            };
+            const legs = [limb(look.pants, 0.15, 0.5, 0.17, -0.1, 0.62), limb(look.pants, 0.15, 0.5, 0.17, 0.1, 0.62)];
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.52, 0.27), material(look.shirt));
+            torso.position.y = 0.88;
+            torso.castShadow = true;
+            body.add(torso);
+            const arms = [limb(look.shirt, 0.12, 0.46, 0.14, -0.29, 1.1), limb(look.shirt, 0.12, 0.46, 0.14, 0.29, 1.1)];
+            arms.forEach((arm) => {
+                const hand = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.1, 0.12), material(look.skin));
+                hand.position.y = -0.5;
+                arm.add(hand);
+            });
+            const head = new THREE.Group();
+            head.position.y = 1.36;
+            body.add(head);
+            const face = new THREE.Mesh(new THREE.IcosahedronGeometry(0.22, 1), material(look.skin));
+            face.castShadow = true;
+            head.add(face);
+            const hair = new THREE.Mesh(
+                new THREE.SphereGeometry(0.235, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.52),
+                material(look.hair),
+            );
+            hair.position.set(0, 0.03, -0.02);
+            hair.rotation.x = -0.25;
+            head.add(hair);
+            [-0.08, 0.08].forEach((x) => {
+                const eye = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.02), material('#1b1b1f'));
+                eye.position.set(x, 0.0, 0.205);
+                head.add(eye);
+            });
+            const ring = new THREE.Mesh(
+                new THREE.RingGeometry(0.36, 0.46, 28),
+                new THREE.MeshBasicMaterial({color: 0xe6a23c, side: THREE.DoubleSide}),
+            );
+            ring.rotation.x = -Math.PI / 2;
+            ring.position.y = 0.15;
+            ring.visible = false;
+            group.add(ring);
+            scene.add(group);
+            return {group, body, legs, arms, head, ring};
+        }
+
+        function residentInfo(agentId) {
+            const resident = campus.querySelector(`[data-campus-roster-agent="${agentId}"]`);
+            if (!resident) return null;
+            const name = agentId === 'COORDINATOR'
+                ? campus.querySelector('[data-campus-manager-name]')?.textContent
+                : resident.querySelector('.campus-resident-caption strong')?.textContent;
+            return {department: resident.dataset.campusResidentDepartment, name: (name || agentId).trim()};
+        }
+
+        const actors = [];
+        const residents = new Map();
+        const liveActors = new Map();
+
+        function createActor(agentId, info) {
+            const person = makePerson(LOOKS[agentId] || LOOKS.BUILDER);
+            const actor = {
+                agentId,
+                name: info?.name || agentId,
+                home: null,
+                homeRoom: info?.department || null,
+                homeFacing: 0,
+                room: info?.department || null,
+                person,
+                position: new THREE.Vector3(),
+                facing: 0,
+                steps: [],
+                mode: 'idle',
+                phase: Math.random() * Math.PI * 2,
+                status: null,
+                destinationKey: null,
+                taskId: null,
+                button: null,
+                label: null,
+                bubble: null,
+            };
+            actor.label = addLabel('agent', {
+                copy: (out) => out.copy(actor.position).setY(1.95),
+            }, null);
+            actor.bubble = addLabel('bubble', {
+                copy: (out) => out.copy(actor.position).setY(2.6),
+            }, null);
+            actor.bubble.visible = false;
+            actor.label.el.addEventListener('click', () => {
+                if (actor.button?.isConnected) actor.button.click();
+            });
+            person.group.userData.pickActor = actor;
+            pickRoots.push(person.group);
+            actors.push(actor);
+            return actor;
+        }
+
+        function placeActor(actor, point, facing) {
+            actor.position.copy(point);
+            actor.facing = facing;
+            actor.steps = [];
+        }
+
+        // One resident per known roster agent, standing in their own room.
+        ['COORDINATOR', 'RESEARCHER', 'BUILDER', 'DESIGNER', 'INFRASTRUCTURE', 'VAULT', 'ANALYST'].forEach((agentId) => {
+            const info = residentInfo(agentId);
+            if (!info || !ROOMS[info.department]) return;
+            const actor = createActor(agentId, info);
+            const room = ROOMS[info.department];
+            if (agentId === 'COORDINATOR' && hqDesk) {
+                actor.home = hqDesk.workSpot.clone();
+                actor.homeFacing = Math.PI;
+            } else {
+                actor.home = new THREE.Vector3(room.x - room.w * 0.2, 0, room.z + room.d * 0.18);
+                actor.homeFacing = 0.35;
+            }
+            placeActor(actor, actor.home, actor.homeFacing);
+            residents.set(agentId, actor);
+        });
+        const coordinator = residents.get('COORDINATOR') || null;
+
+        function roomPath(fromRoom, toRoom) {
+            const points = [];
+            if (fromRoom === toRoom) return points;
+            if (fromRoom && ROOMS[fromRoom]) {
+                points.push(ROOMS[fromRoom].doorInner.clone(), ROOMS[fromRoom].doorOuter.clone());
+            }
+            if (toRoom && ROOMS[toRoom]) {
+                points.push(ROOMS[toRoom].doorOuter.clone(), ROOMS[toRoom].doorInner.clone());
+                points.push(new THREE.Vector3(ROOMS[toRoom].x, 0, ROOMS[toRoom].aisleZ));
+            }
+            return points;
+        }
+
+        function destinationFor(button, slotIndex) {
+            const status = button.dataset.campusStatus;
+            const agentId = button.dataset.campusAgentId;
+            if (agentId === 'COORDINATOR' && coordinator) {
+                return {key: 'hq-desk', point: coordinator.home.clone(), room: 'hq', facing: Math.PI};
+            }
+            const waypointId = button.getAttribute('data-campus-destination');
+            const waypoint = WAYPOINTS[waypointId];
+            if (waypoint) {
+                const offsets = [[-0.5, 0.35], [0.5, 0.35], [0, -0.3], [-0.6, -0.4], [0.6, -0.4]];
+                const [dx, dz] = offsets[slotIndex % offsets.length];
+                return {
+                    key: `${waypointId}:${slotIndex}`,
+                    point: new THREE.Vector3(waypoint.x + dx, 0.06, waypoint.z + dz),
+                    room: null,
+                    facing: 0,
+                };
+            }
+            const desk = folderViews.find((view) => (
+                view.el?.dataset.campusProject === button.dataset.campusProject
+                && view.el?.dataset.campusProjectDepartment === button.dataset.campusDepartmentId
+            ));
+            if (desk) {
+                return {key: `desk:${desk.el.dataset.campusProject}`, point: desk.workSpot.clone(), room: desk.room.id, facing: Math.PI, status};
+            }
+            const room = ROOMS[button.dataset.campusDepartmentId];
+            return room
+                ? {key: `room:${room.id}`, point: new THREE.Vector3(room.x, 0, room.z), room: room.id, facing: 0}
+                : null;
+        }
+
+        function startJourney(actor, destination, taskId) {
+            const steps = [];
+            const pushPoints = (points, room) => points.forEach((point, index) => {
+                steps.push({to: point, room: index === points.length - 1 ? room : undefined});
+            });
+            // Handoff with MAIN MANAGER first: the verified event came from HQ.
+            if (coordinator && actor !== coordinator && hqDesk) {
+                const meeting = hqDesk.meetingSpot.clone();
+                const toHq = roomPath(actor.room, 'hq');
+                toHq.forEach((point) => steps.push({to: point}));
+                steps.push({to: meeting, room: 'hq'});
+                steps.push({pause: MEETING_SECONDS, taskId});
+                pushPoints(roomPath('hq', destination.room), destination.room);
+            } else {
+                pushPoints(roomPath(actor.room, destination.room), destination.room);
+            }
+            steps.push({to: destination.point, room: destination.room, facing: destination.facing});
+            actor.steps = steps;
+            actor.mode = 'walk';
+        }
+
+        // ── Task routes: amber footprints along up to three verified journeys ──
+        const routeGroup = new THREE.Group();
+        scene.add(routeGroup);
+        const routeDot = new THREE.CircleGeometry(0.075, 8);
+        const routeMaterial = new THREE.MeshBasicMaterial({color: 0xe6a23c});
+        function renderRoutes(primaryByTask) {
+            routeGroup.children.forEach((child) => child.dispose?.());
+            routeGroup.clear();
+            primaryByTask.forEach(({destination}) => {
+                if (!destination || !hqDesk) return;
+                const points = [hqDesk.meetingSpot.clone()];
+                points.push(...roomPath('hq', destination.room), destination.point.clone());
+                const dots = [];
+                for (let index = 1; index < points.length; index += 1) {
+                    const from = points[index - 1];
+                    const to = points[index];
+                    const length = from.distanceTo(to);
+                    for (let travelled = 0; travelled < length; travelled += 0.42) {
+                        dots.push(from.clone().lerp(to, travelled / length));
+                    }
+                }
+                if (!dots.length) return;
+                const mesh = new THREE.InstancedMesh(routeDot, routeMaterial, dots.length);
+                const matrix = new THREE.Matrix4();
+                const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+                const scale = new THREE.Vector3(1, 1, 1);
+                dots.forEach((point, index) => {
+                    matrix.compose(point.clone().setY(0.16), rotation, scale);
+                    mesh.setMatrixAt(index, matrix);
+                });
+                routeGroup.add(mesh);
+            });
+        }
+
+        // ── Sync from the rendered 2D campus ──
+        function describeStatus(status, text) {
+            return `${STATUS_GLYPHS[status] || '·'} ${text}`;
+        }
+
+        function sync() {
+            const state = campus.dataset.campusState || 'loading';
+            if (state === 'loading') return;
+            stage.setAttribute('data-campus-3d-live', state);
+
+            folderViews.forEach((view) => {
+                const status = view.el?.dataset.campusProjectStatus || 'idle';
+                const live = status !== 'idle';
+                const statusText = view.el?.querySelector('[data-campus-project-folder-status]')?.textContent || '';
+                view.folder.material.emissive.set(live ? 0xe6a23c : 0x000000);
+                view.folder.material.emissiveIntensity = live ? 0.9 : 0;
+                setLabelText(view.label, view.el?.dataset.campusProjectLabel || '', live ? describeStatus(status, statusText) : statusText);
+                view.label.el.classList.toggle('is-live', live);
+            });
+
+            const buttons = Array.from(campus.querySelectorAll('[data-campus-live-agent]'))
+                .filter((button) => button.dataset.campusAgentId && button.dataset.campusTaskId);
+            const wanted = new Map();
+            buttons.forEach((button) => {
+                wanted.set(`${button.dataset.campusTaskId}|${button.dataset.campusAgentId}`, button);
+            });
+
+            liveActors.forEach((actor, key) => {
+                if (wanted.has(key)) return;
+                liveActors.delete(key);
+                if (residents.get(actor.agentId) === actor) {
+                    // Stale, empty or finished: the resident is simply back at their desk.
+                    actor.status = null;
+                    actor.destinationKey = null;
+                    actor.taskId = null;
+                    actor.button = null;
+                    actor.room = actor.homeRoom;
+                    actor.mode = 'idle';
+                    placeActor(actor, actor.home, actor.homeFacing);
+                } else {
+                    scene.remove(actor.person.group);
+                    actor.label.el.remove();
+                    actor.bubble.el.remove();
+                    labels.splice(labels.indexOf(actor.label), 1);
+                    labels.splice(labels.indexOf(actor.bubble), 1);
+                    pickRoots.splice(pickRoots.indexOf(actor.person.group), 1);
+                    actors.splice(actors.indexOf(actor), 1);
+                }
+            });
+
+            const slotCounters = {};
+            const primaryByTask = new Map();
+            wanted.forEach((button, key) => {
+                const agentId = button.dataset.campusAgentId;
+                const status = button.dataset.campusStatus;
+                let actor = liveActors.get(key);
+                if (!actor) {
+                    const resident = residents.get(agentId);
+                    const residentBusy = Array.from(liveActors.values()).includes(resident);
+                    actor = resident && !residentBusy ? resident : createActor(agentId, residentInfo(agentId));
+                    if (actor !== resident) {
+                        actor.room = actor.homeRoom;
+                        actor.home = resident ? resident.home.clone() : new THREE.Vector3();
+                        placeActor(actor, resident ? resident.position : actor.home, 0);
+                    }
+                    liveActors.set(key, actor);
+                }
+                const slotKey = button.getAttribute('data-campus-destination');
+                slotCounters[slotKey] = (slotCounters[slotKey] || 0) + 1;
+                const destination = destinationFor(button, slotCounters[slotKey] - 1);
+                actor.button = button;
+                actor.taskId = button.dataset.campusTaskId;
+                const role = button.querySelector('strong')?.textContent || actor.name;
+                const statusText = button.querySelector('.campus-agent-status')?.textContent || '';
+                setLabelText(actor.label, role, describeStatus(status, statusText));
+                actor.label.el.dataset.clickable = 'true';
+                actor.label.el.classList.add('is-live');
+                actor.person.ring.visible = true;
+                actor.person.ring.material.color.setHex(STATUS_COLORS[status] || 0xe6a23c);
+                if (!destination) return;
+                const changed = actor.destinationKey !== destination.key || actor.status !== status;
+                const moving = button.dataset.campusMoving === 'true' && !reducedMotion.matches;
+                if (changed && moving && actor !== coordinator) {
+                    startJourney(actor, destination, actor.taskId);
+                } else if (changed) {
+                    placeActor(actor, destination.point, destination.facing);
+                    actor.room = destination.room;
+                }
+                if (!actor.steps.length) actor.mode = 'arrived';
+                actor.status = status;
+                actor.destinationKey = destination.key;
+
+                const taskId = actor.taskId;
+                const current = primaryByTask.get(taskId);
+                const rank = ROUTE_PRECEDENCE.indexOf(status);
+                // Cap new tasks at three lanes, but let a known task take a higher-precedence event.
+                if (agentId !== 'COORDINATOR' && (current ? rank < current.rank : primaryByTask.size < 3)) {
+                    primaryByTask.set(taskId, {rank, destination});
+                }
+            });
+
+            residents.forEach((actor) => {
+                if (Array.from(liveActors.values()).includes(actor)) return;
+                const managerStatus = actor === coordinator
+                    ? campus.querySelector('[data-campus-manager-status]')?.textContent
+                    : null;
+                setLabelText(actor.label, actor.name, `· ${(managerStatus || 'ожидает задач').trim()}`);
+                actor.label.el.classList.remove('is-live');
+                delete actor.label.el.dataset.clickable;
+                actor.person.ring.visible = false;
+            });
+
+            renderRoutes(primaryByTask);
+            stage.setAttribute('data-campus-3d-agents', String(liveActors.size));
+            requestRender();
+        }
+
+        // ── Motion (only verified active/testing work moves) ──
+        const scratch = new THREE.Vector3();
+        function advanceActors(dt, time) {
+            let animating = false;
+            actors.forEach((actor) => {
+                actor.bubble.visible = false;
+            });
+            actors.forEach((actor) => {
+                const step = actor.steps[0];
+                if (step && step.pause !== undefined) {
+                    animating = true;
+                    actor.mode = 'meet';
+                    step.pause -= dt;
+                    if (coordinator) {
+                        actor.facing = Math.atan2(coordinator.position.x - actor.position.x, coordinator.position.z - actor.position.z);
+                        coordinator.facing = actor.facing + Math.PI;
+                        coordinator.meeting = true;
+                        coordinator.bubble.visible = true;
+                        setLabelText(coordinator.bubble, `⇄ ${step.taskId || ''}`);
+                    }
+                    actor.bubble.visible = true;
+                    setLabelText(actor.bubble, `⇄ ${step.taskId || ''}`);
+                    if (step.pause <= 0) {
+                        actor.steps.shift();
+                        if (coordinator) {
+                            coordinator.meeting = false;
+                            coordinator.facing = coordinator.homeFacing;
+                        }
+                    }
+                } else if (step) {
+                    animating = true;
+                    actor.mode = 'walk';
+                    scratch.copy(step.to).sub(actor.position).setY(0);
+                    const distance = scratch.length();
+                    const travel = WALK_SPEED * dt;
+                    if (distance > 0.001) {
+                        actor.facing = Math.atan2(scratch.x, scratch.z);
+                    }
+                    if (distance <= travel) {
+                        actor.position.copy(step.to);
+                        if (step.room !== undefined) actor.room = step.room;
+                        if (step.facing !== undefined) actor.facing = step.facing;
+                        actor.steps.shift();
+                    } else {
+                        actor.position.addScaledVector(scratch.normalize(), travel);
+                    }
+                    actor.phase += dt * 11;
+                }
+                if (!actor.steps.length && actor.mode !== 'idle') {
+                    actor.mode = 'arrived';
+                }
+                const working = actor.mode === 'arrived' && (actor.status === 'active' || actor.status === 'testing');
+                if (working) {
+                    animating = true;
+                    actor.phase += dt * 10;
+                }
+                poseActor(actor, working, time);
+            });
+            return animating;
+        }
+
+        function poseActor(actor, working, time) {
+            const {group, body, legs, arms, head} = actor.person;
+            group.position.copy(actor.position);
+            group.rotation.y = actor.facing;
+            const walking = actor.mode === 'walk' && !reducedMotion.matches;
+            const swing = walking ? Math.sin(actor.phase) * 0.65 : 0;
+            legs[0].rotation.x = swing;
+            legs[1].rotation.x = -swing;
+            arms[0].rotation.x = -swing * 0.8;
+            arms[1].rotation.x = swing * 0.8;
+            body.position.y = walking ? Math.abs(Math.sin(actor.phase)) * 0.06 : 0;
+            head.rotation.y = 0;
+            if (working && !reducedMotion.matches) {
+                arms[0].rotation.x = -1.05 + Math.sin(actor.phase * 1.3) * 0.14;
+                arms[1].rotation.x = -1.05 + Math.sin(actor.phase * 1.3 + 1.8) * 0.14;
+                head.rotation.y = Math.sin(time * 0.9) * 0.18;
+            } else if (actor.mode === 'arrived' && actor.status && actor.status !== 'done') {
+                arms[0].rotation.x = -0.35;
+                arms[1].rotation.x = -0.35;
+            }
+        }
+
+        // ── Camera, picking and frame scheduling ──
+        function updateCamera() {
+            const width = stage.clientWidth || 1;
+            const height = stage.clientHeight || 1;
+            const aspect = width / height;
+            // Portrait stages turn the campus a quarter so the long boulevard
+            // runs down the screen instead of shrinking to fit the width.
+            const narrow = aspect < 1.1;
+            const azimuth = view.azimuth + (narrow ? Math.PI / 2 : 0);
+            const elevation = narrow ? Math.max(view.elevation, 1.12) : view.elevation;
+            const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+            const distance = narrow
+                ? Math.max(23 / (2 * Math.tan(halfFov) * aspect), 31.5 / (2 * Math.tan(halfFov)))
+                : 37 * Math.pow(Math.max(1, 1.78 / aspect), 0.95);
+            camera.aspect = aspect;
+            const planar = Math.cos(elevation) * distance;
+            camera.position.set(
+                lookTarget.x + Math.sin(azimuth) * planar,
+                Math.sin(elevation) * distance,
+                lookTarget.z + Math.cos(azimuth) * planar,
+            );
+            camera.lookAt(lookTarget);
+            camera.updateProjectionMatrix();
+            labelsEl.classList.toggle('is-compact', width < 720);
+        }
+
+        const projected = new THREE.Vector3();
+        let focusAnchor = null;
+        function placeLabels() {
+            const width = stage.clientWidth;
+            const height = stage.clientHeight;
+            labels.forEach((label) => {
+                if (!label.visible) {
+                    label.el.hidden = true;
+                    return;
+                }
+                if (typeof label.anchor.copy === 'function' && !label.anchor.isVector3) {
+                    label.anchor.copy(projected);
+                } else {
+                    projected.copy(label.anchor);
+                }
+                projected.project(camera);
+                const offscreen = projected.z > 1 || Math.abs(projected.x) > 1.2 || Math.abs(projected.y) > 1.2;
+                label.el.hidden = offscreen;
+                if (offscreen) return;
+                const x = (projected.x * 0.5 + 0.5) * width;
+                const y = (-projected.y * 0.5 + 0.5) * height;
+                label.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
+                label.el.style.zIndex = String(Math.round((1 - projected.z) * 100000));
+            });
+            if (focusAnchor) {
+                projected.copy(typeof focusAnchor === 'function' ? focusAnchor() : focusAnchor).project(camera);
+                focusEl.hidden = projected.z > 1;
+                focusEl.style.transform = `translate(${((projected.x * 0.5 + 0.5) * width).toFixed(1)}px, ${((-projected.y * 0.5 + 0.5) * height).toFixed(1)}px) translate(-50%, -50%)`;
+            } else {
+                focusEl.hidden = true;
+            }
+        }
+
+        let frame = 0;
+        let lastFrame = 0;
+        function requestRender() {
+            if (!active || frame) return;
+            frame = window.requestAnimationFrame(renderFrame);
+        }
+        function renderFrame(now) {
+            frame = 0;
+            const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 1 / 60;
+            let animating = false;
+            if (reducedMotion.matches) {
+                actors.forEach((actor) => {
+                    const last = actor.steps.filter((step) => step.to).pop();
+                    if (last) {
+                        placeActor(actor, last.to, last.facing ?? actor.facing);
+                        if (last.room !== undefined) actor.room = last.room;
+                    }
+                    actor.bubble.visible = false;
+                    if (actor.mode === 'walk' || actor.mode === 'meet') actor.mode = 'arrived';
+                    poseActor(actor, false, now / 1000);
+                });
+            } else {
+                animating = advanceActors(dt, now / 1000);
+            }
+            renderer.render(scene, camera);
+            placeLabels();
+            stage.setAttribute('data-campus-3d-animating', String(animating));
+            if (animating && active && !document.hidden) {
+                lastFrame = now;
+                frame = window.requestAnimationFrame(renderFrame);
+            } else {
+                lastFrame = 0;
+            }
+        }
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        function pickAt(clientX, clientY) {
+            const rect = renderer.domElement.getBoundingClientRect();
+            pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(pickRoots, true);
+            for (const hit of hits) {
+                let node = hit.object;
+                while (node) {
+                    if (node.userData.pickActor) {
+                        const button = node.userData.pickActor.button;
+                        return button?.isConnected ? button : null;
+                    }
+                    if (node.userData.pickTarget) return node.userData.pickTarget;
+                    node = node.parent;
+                }
+            }
+            return null;
+        }
+
+        const drag = {id: null, x: 0, y: 0, moved: 0};
+        const canvas = renderer.domElement;
+        canvas.addEventListener('pointerdown', (event) => {
+            drag.id = event.pointerId;
+            drag.x = event.clientX;
+            drag.y = event.clientY;
+            drag.moved = 0;
+        });
+        canvas.addEventListener('pointermove', (event) => {
+            if (drag.id !== event.pointerId) {
+                canvas.style.cursor = pickAt(event.clientX, event.clientY) ? 'pointer' : 'grab';
+                return;
+            }
+            const dx = event.clientX - drag.x;
+            const dy = event.clientY - drag.y;
+            drag.moved += Math.abs(dx) + Math.abs(dy);
+            drag.x = event.clientX;
+            drag.y = event.clientY;
+            if (drag.moved < 6) return;
+            if (!canvas.hasPointerCapture(event.pointerId)) canvas.setPointerCapture(event.pointerId);
+            canvas.style.cursor = 'grabbing';
+            view.azimuth = Math.max(-0.75, Math.min(0.75, view.azimuth - dx * 0.006));
+            if (event.pointerType === 'mouse') {
+                view.elevation = Math.max(0.55, Math.min(1.25, view.elevation + dy * 0.004));
+            }
+            updateCamera();
+            requestRender();
+        });
+        function endDrag(event) {
+            if (drag.id !== event.pointerId) return;
+            const click = drag.moved < 6;
+            drag.id = null;
+            canvas.style.cursor = 'grab';
+            if (click && event.type === 'pointerup') {
+                const target = pickAt(event.clientX, event.clientY);
+                if (target) target.click();
+            }
+        }
+        canvas.addEventListener('pointerup', endDrag);
+        canvas.addEventListener('pointercancel', endDrag);
+        canvas.addEventListener('dblclick', () => {
+            view.azimuth = 0;
+            view.elevation = 0.9;
+            updateCamera();
+            requestRender();
+        });
+
+        // Keyboard focus stays on the semantic 2D controls; mirror it in 3D.
+        campus.addEventListener('focusin', (event) => {
+            if (!active || !map.contains(event.target)) return;
+            const folder = folderViews.find((view) => view.el === event.target);
+            const actor = actors.find((candidate) => candidate.button === event.target);
+            focusAnchor = folder
+                ? folder.labelAnchor.clone().setY(0.9)
+                : actor
+                    ? () => scratch.copy(actor.position).setY(0.9)
+                    : null;
+            requestRender();
+        });
+        campus.addEventListener('focusout', () => {
+            focusAnchor = null;
+            requestRender();
+        });
+
+        let syncQueued = false;
+        const observer = new MutationObserver((records) => {
+            // Ignore the scene's own label updates; only the 2D campus drives sync.
+            if (records.every((record) => stage.contains(record.target))) return;
+            if (syncQueued || !active) return;
+            syncQueued = true;
+            window.queueMicrotask(() => {
+                syncQueued = false;
+                sync();
+            });
+        });
+        observer.observe(campus, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['data-campus-state', 'data-campus-project-status', 'data-campus-manager-state'],
+        });
+        reducedMotion.addEventListener?.('change', requestRender);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) requestRender();
+        });
+
+        function resize() {
+            const width = stage.clientWidth;
+            const height = stage.clientHeight;
+            if (!width || !height) return;
+            renderer.setSize(width, height, false);
+            updateCamera();
+            requestRender();
+        }
+        if (typeof ResizeObserver === 'function') {
+            new ResizeObserver(() => resize()).observe(stage);
+        } else {
+            window.addEventListener('resize', resize);
+        }
+
+        updateCamera();
+        return {resize, sync};
+    }
+})();
+// ── End Campus 3D Scene ──
 
 const GH_REPO = 'pirajoke/agent-dashboard';
 const GH_MODE_PATH = 'mode-request.json';
@@ -10126,13 +12003,21 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         else statusEl.textContent = `green - ${activeTasks} queued`;
     }
 
-    async function refreshMachines() {
+    // A machine that answers neither endpoint is skipped for a while, so an
+    // offline laptop doesn't hold every 7s refresh for its full timeout.
+    const MACHINE_BACKOFF_MIN_MS = 60000;
+    const MACHINE_BACKOFF_MAX_MS = 600000;
+    const machineBackoff = {};
+
+    async function refreshMachines(force = false) {
         const configs = [
             {id: 'mini', label: 'Mac Mini', health: '/api/health', services: '/api/local-services'},
             {id: 'air', label: 'MacBook Air', health: '/api/air/health', services: '/api/air/services/detailed'},
             {id: 'pro', label: 'MacBook Pro', health: '/api/pro/health', services: '/api/pro/services/detailed'},
         ];
         await Promise.all(configs.map(async (cfg) => {
+            const backoff = machineBackoff[cfg.id];
+            if (!force && backoff && Date.now() < backoff.until) return;
             const [healthResult, servicesResult] = await Promise.allSettled([
                 fetchJson(cfg.health, cfg.id === 'air' ? 5500 : 4500),
                 fetchJson(cfg.services, cfg.id === 'air' ? 5500 : 4500),
@@ -10142,6 +12027,12 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
             const error = healthResult.status === 'rejected'
                 ? healthResult.reason
                 : (servicesResult.status === 'rejected' && !health ? servicesResult.reason : null);
+            if (!health && !serviceData) {
+                const delay = Math.min(backoff ? backoff.delay * 2 : MACHINE_BACKOFF_MIN_MS, MACHINE_BACKOFF_MAX_MS);
+                machineBackoff[cfg.id] = {until: Date.now() + delay, delay};
+            } else {
+                delete machineBackoff[cfg.id];
+            }
             renderMachine(cfg.id, cfg.label, health, serviceData, error);
         }));
     }
@@ -10160,14 +12051,29 @@ const LOCAL_API = window.location.hostname === 'localhost' || window.location.ho
         }
     }
 
-    async function refreshCommandCenter() {
+    let refreshInFlight = null;
+    let forcedRefreshQueued = false;
+
+    function refreshCommandCenter(force = false) {
+        if (refreshInFlight) {
+            if (force === true && !forcedRefreshQueued) {
+                forcedRefreshQueued = true;
+                refreshInFlight.then(() => {
+                    forcedRefreshQueued = false;
+                    refreshCommandCenter(true);
+                });
+            }
+            return refreshInFlight;
+        }
         const statusEl = document.getElementById('command-status');
         if (statusEl) statusEl.textContent = 'refreshing';
-        await Promise.all([refreshMachines(), refreshFlow()]);
-        renderOverallStatus();
+        refreshInFlight = Promise.all([refreshMachines(force === true), refreshFlow()])
+            .then(renderOverallStatus)
+            .finally(() => { refreshInFlight = null; });
+        return refreshInFlight;
     }
 
-    document.getElementById('command-refresh')?.addEventListener('click', refreshCommandCenter);
+    document.getElementById('command-refresh')?.addEventListener('click', () => refreshCommandCenter(true));
     window.SystemsCommandCenterRefresh = refreshCommandCenter;
     refreshCommandCenter();
     setInterval(refreshCommandCenter, 7000);
@@ -11556,7 +13462,8 @@ setInterval(refreshLocalServices, 15000);
     const MANAGER_VISUAL_CLASSES = ['is-idle', 'is-queued', 'is-working', 'is-done', 'is-decision', 'is-error'];
     let theaterTasks = [];
     let theaterSelectedId = null;
-    let theaterAnimationStarted = false;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let theaterFrame = 0;
 
     const escTheater = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -11823,17 +13730,35 @@ setInterval(refreshLocalServices, 15000);
         return ((now + seed) % duration) / duration;
     }
 
-    function animateTheater() {
-        const now = Date.now();
-        document.querySelectorAll('.theater-runner').forEach((runner) => {
+    function placeTheaterRunners(now) {
+        const runners = document.querySelectorAll('.theater-runner');
+        runners.forEach((runner) => {
             const route = String(runner.dataset.route || 'USER,JARVIS,BRIDGE,BUILDER').split(',');
             const point = routePoint(route, progressForRunner(runner, now));
             runner.style.left = `${point.x}%`;
             runner.style.top = `${point.y}%`;
             runner.style.transform = 'translate(-50%, -50%)';
         });
-        requestAnimationFrame(animateTheater);
+        return runners.length;
     }
+
+    // Runners move only while there are runners and motion is allowed;
+    // with reduced motion they are placed once and stay still.
+    function animateTheater() {
+        theaterFrame = 0;
+        if (!placeTheaterRunners(Date.now()) || reducedMotion.matches) return;
+        theaterFrame = requestAnimationFrame(animateTheater);
+    }
+
+    function startTheaterAnimation() {
+        if (theaterFrame) return;
+        if (reducedMotion.matches) {
+            placeTheaterRunners(Date.now());
+            return;
+        }
+        theaterFrame = requestAnimationFrame(animateTheater);
+    }
+    reducedMotion.addEventListener?.('change', startTheaterAnimation);
 
     function updateTheaterPeople(tasks, selectedTask) {
         const personState = {};
@@ -11901,10 +13826,7 @@ setInterval(refreshLocalServices, 15000);
                     <span class="theater-runner-label">focus task</span>
                 </button>`;
         }).join('');
-        if (!theaterAnimationStarted) {
-            theaterAnimationStarted = true;
-            requestAnimationFrame(animateTheater);
-        }
+        startTheaterAnimation();
     }
 
     function renderTheaterCurrent(task) {

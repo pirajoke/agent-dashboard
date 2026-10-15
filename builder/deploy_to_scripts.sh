@@ -22,6 +22,7 @@ cp "$SRC_DIR/daily_work_collector.py" "$SCRIPTS_DIR/daily_work_collector.py"
 cp "$SRC_DIR/infra_change_collector.py" "$SCRIPTS_DIR/infra_change_collector.py"
 cp "$SRC_DIR/daily_work_summarizer.py" "$SCRIPTS_DIR/daily_work_summarizer.py"
 cp "$SRC_DIR/auto_deploy.py" "$SCRIPTS_DIR/auto_deploy.py"
+cp "$SRC_DIR/launchd_watchdog.py" "$SCRIPTS_DIR/launchd_watchdog.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
 cp "$SRC_DIR/dashboard-assets/style.css" "$SCRIPTS_DIR/dashboard-assets/style.css"
@@ -41,7 +42,7 @@ chmod +x "$SCRIPTS_DIR/jarvis-pixel-agent-event"
 chmod +x "$LOCAL_BIN_DIR/mm-command-center-auth"
 
 cd "$SCRIPTS_DIR"
-python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manager_status_publisher.py daily_work_collector.py infra_change_collector.py daily_work_summarizer.py auto_deploy.py dashboard_builder/*.py
+python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manager_status_publisher.py daily_work_collector.py infra_change_collector.py daily_work_summarizer.py auto_deploy.py launchd_watchdog.py dashboard_builder/*.py
 python3 build-agent-dashboard.py
 
 if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]]; then
@@ -72,6 +73,21 @@ fi
 DEPLOYED_SHA="${AUTO_DEPLOY_DEPLOYED_SHA:-$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)}"
 if [[ -n "$DEPLOYED_SHA" ]]; then
   python3 "$SRC_DIR/auto_deploy.py" --record "$DEPLOYED_SHA"
+fi
+
+# After a power loss launchd may not load every service at login (2026-10-12). The watchdog loads
+# back the services it has seen running; see launchd_watchdog.py. Installed after the deployed commit
+# is recorded: the watchdog removes itself when that commit does not ship it (a rollback).
+WATCHDOG_LABEL="com.pirajoke.launchd-watchdog"
+WATCHDOG_PLIST="$HOME/Library/LaunchAgents/$WATCHDOG_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_LAUNCHD_WATCHDOG:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$WATCHDOG_LABEL"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$WATCHDOG_LABEL.plist.template" > "$WATCHDOG_PLIST.tmp"
+  plutil -lint "$WATCHDOG_PLIST.tmp" >/dev/null
+  mv "$WATCHDOG_PLIST.tmp" "$WATCHDOG_PLIST"
+  launchctl bootout "gui/$(id -u)/$WATCHDOG_LABEL" >/dev/null 2>&1 || true
+  launchctl bootstrap "gui/$(id -u)" "$WATCHDOG_PLIST"
 fi
 
 # Merged code reaches the site by itself: the auto-deploy agent watches main.

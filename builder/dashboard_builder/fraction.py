@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -29,13 +30,33 @@ def _get_claude_sessions() -> list[dict]:
         rss_kb = int(parts[5]) if parts[5].isdigit() else 0
         ram_mb = round(rss_kb / 1024)
         started = parts[8]
-        cmd = " ".join(parts[10:])[:80]
+        cmd = _short_cmd(" ".join(parts[10:]))[:80]
         sessions.append({
             "pid": pid, "cpu": cpu, "mem_pct": mem_pct,
             "ram_mb": ram_mb, "started": started, "cmd": cmd,
             "type": "claude"
         })
     return sessions
+
+
+# An absolute or home path anywhere in a token: after "=", ":" or "file://", or the whole token.
+_PATH_RE = re.compile(r"(?:file://)?[~/][^\s=:,;'\"]*")
+
+
+def _short_cmd(cmd: str) -> str:
+    """A process command line without local folders: every path keeps only its last part."""
+    return _PATH_RE.sub(lambda m: Path(m.group(0).removeprefix("file://")).name, cmd)
+
+
+def _mcp_label(cmd: str) -> str:
+    """Name an unknown MCP server by the argument that names it, never by its install path."""
+    for token in cmd.split():
+        if token.startswith("-"):
+            continue
+        for part in reversed(Path(token).parts):
+            if "mcp" in part.lower():
+                return f"MCP: {part[:40]}"
+    return f"MCP: {_short_cmd(cmd)[:40]}"
 
 
 def _get_node_processes() -> list[dict]:
@@ -56,7 +77,7 @@ def _get_node_processes() -> list[dict]:
 
         # Classify
         ptype = "node"
-        label = cmd_full[:60]
+        label = _short_cmd(cmd_full)[:60]
         if "mcp" in cmd_full.lower() or "mcp-remote" in cmd_full:
             ptype = "mcp"
             # Extract MCP server name
@@ -71,7 +92,7 @@ def _get_node_processes() -> list[dict]:
             elif "pencil" in cmd_full:
                 label = "MCP: Pencil"
             else:
-                label = f"MCP: {cmd_full[:40]}"
+                label = _mcp_label(cmd_full)
         elif "codex" in cmd_full.lower():
             ptype = "codex"
             label = "OpenAI Codex"
@@ -104,7 +125,7 @@ def _get_python_processes() -> list[dict]:
         cmd_full = " ".join(parts[10:])
         if "build-agent-dashboard" in cmd_full:
             continue  # Skip self
-        label = cmd_full[:60]
+        label = _short_cmd(cmd_full)[:60]
         if "live-feed" in cmd_full:
             label = "generate-live-feed.py"
         elif "alert-monitor" in cmd_full:

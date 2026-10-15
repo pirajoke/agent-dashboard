@@ -30,6 +30,7 @@ class _DashboardParser(HTMLParser):
         self.active_sections: list[str] = []
         self._button: dict[str, object] | None = None
         self._button_span_depth = 0
+        self._button_label_span_depth: int | None = None
         self._main_navigation = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -46,15 +47,21 @@ class _DashboardParser(HTMLParser):
                 "text": [],
             }
             self._button_span_depth = 0
+            self._button_label_span_depth = None
         elif self._button is not None and tag == "span":
             self._button_span_depth += 1
+            if attributes.get("data-tab-label") is not None:
+                self._button_label_span_depth = self._button_span_depth
 
         section_id = attributes.get("id") or ""
-        if tag == "div" and section_id.startswith("section-") and "active" in classes:
+        if tag in ("div", "section") and section_id.startswith("section-") and "active" in classes:
             self.active_sections.append(section_id.removeprefix("section-"))
 
     def handle_data(self, data: str) -> None:
-        if self._button is not None and self._button_span_depth == 0:
+        if self._button is not None and (
+            self._button_span_depth == 0
+            or self._button_label_span_depth is not None
+        ):
             text = self._button["text"]
             assert isinstance(text, list)
             text.append(data)
@@ -65,6 +72,8 @@ class _DashboardParser(HTMLParser):
         if self._button is None:
             return
         if tag == "span" and self._button_span_depth:
+            if self._button_label_span_depth == self._button_span_depth:
+                self._button_label_span_depth = None
             self._button_span_depth -= 1
         elif tag == "button":
             text = self._button["text"]
@@ -73,6 +82,7 @@ class _DashboardParser(HTMLParser):
             self.navigation.append(self._button)
             self._button = None
             self._button_span_depth = 0
+            self._button_label_span_depth = None
 
 
 class _CampusStructureParser(HTMLParser):
@@ -190,15 +200,16 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
     def test_ac_1_top_navigation_opens_on_the_days_and_machines_are_nested(self):
         parser = self._dashboard()
 
-        # Mark (2026-10-11): the first screen is «По дням», what got done each day in
-        # plain words; the technical machine pages stay in the last tab, «Техника».
+        # Mark (2026-10-14): MAIN MANAGER is the first screen and «По дням» is gone, since
+        # MAIN MANAGER already says it; the tabs are in Russian; the technical machine pages
+        # stay in the last tab, «Техника». «Точки роста» (Mark 2026-10-14) follows MAIN MANAGER.
         self.assertEqual(
             [(item["target"], item["text"]) for item in parser.navigation],
             [
-                ("today", "По дням"),
                 ("work", "MAIN MANAGER"),
-                ("agents", "Agents"),
-                ("platforms", "Platforms"),
+                ("growth", "Точки роста"),
+                ("agents", "Агенты"),
+                ("platforms", "Платформы"),
                 ("machines", "Техника"),
             ],
         )
@@ -208,8 +219,8 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         active_navigation = [
             item["target"] for item in parser.navigation if item["active"]
         ]
-        self.assertEqual(active_navigation, ["today"])
-        self.assertEqual(parser.active_sections, ["today"])
+        self.assertEqual(active_navigation, ["work"])
+        self.assertEqual(parser.active_sections, ["work"])
 
         initial_guard = re.search(
             r"\[([^\]]+)\]\.includes\(INITIAL_SECTION\)",
@@ -222,7 +233,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["today", "mac-mini", "air", "pro", "machines", "agents", "platforms", "work"],
+            ["mac-mini", "air", "pro", "machines", "agents", "platforms", "work", "growth"],
         )
         self.assertIn(
             'aria-controls="agents-campus" aria-pressed="true"',

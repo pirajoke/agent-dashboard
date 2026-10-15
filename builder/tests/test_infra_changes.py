@@ -253,9 +253,12 @@ class CommandCenterMainManagerTest(unittest.TestCase):
         self.assertIn('class="mm-os" id="mm-os"', html)
         self.assertIn("/api/infra/changes", html)
         self.assertIn("if (name === 'work') setTimeout(openMainManager, 0);", html)
-        # Property OS tokens live on .mm-os only, never on :root or body.
-        self.assertNotIn(":root { --mm-", html)
-        self.assertIn(".mm-os {\n  color-scheme: light;\n  --mm-background: #f8f3ea;", html)
+        # Mark 2026-10-14 («унифицированный дизайн для каждого момента»): the Property OS tokens of
+        # MAIN MANAGER are the tokens of the whole page now, on :root with one light/dark switch.
+        self.assertIn(":root {\n  color-scheme: light;\n  --mm-background: #f8f3ea;", html)
+        self.assertIn(':root[data-theme="dark"] {', html)
+        self.assertIn("  --bg: var(--mm-background);", html)
+        self.assertNotIn(".mm-os {\n  color-scheme: light;", html)
 
     def test_server_exposes_infra_endpoint(self):
         server = (BUILDER_DIR / "dashboard-server-m4.py").read_text(encoding="utf-8")
