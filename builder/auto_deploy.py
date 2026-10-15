@@ -187,6 +187,9 @@ def run(
         changed = ["builder/"]
     elif deployed == head:
         if is_healthy():
+            state.pop("failed_sha", None)
+            state.pop("failed_at", None)
+            state["last_result"] = "healthy"
             save_state(state, state_dir)
             return "up_to_date"
         changed = ["builder/"]

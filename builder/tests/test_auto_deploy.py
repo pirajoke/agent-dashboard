@@ -110,6 +110,29 @@ class AutoDeployRunTest(unittest.TestCase):
         self.assertNotIn("failed_sha", state)
         self.assertNotIn("failed_at", state)
 
+    def test_independent_recovery_clears_failure_and_allows_a_later_repair(self):
+        AUTO.save_state(
+            {
+                "deployed_sha": "aaa",
+                "failed_sha": "aaa",
+                "failed_at": "2026-10-12T00:00:00Z",
+                "last_result": "deploy_failed_rollback_none",
+            },
+            self.state_dir,
+        )
+        self.health = [True]
+
+        self.assertEqual(self._run("aaa"), "up_to_date")
+
+        state = self._state()
+        self.assertEqual(state["last_result"], "healthy")
+        self.assertNotIn("failed_sha", state)
+        self.assertNotIn("failed_at", state)
+
+        self.health = [False, True]
+        self.assertEqual(self._run("aaa"), "deployed")
+        self.assertEqual(self.deploys, ["aaa"])
+
     def test_generated_files_only_move_the_marker(self):
         AUTO.record_deployed("aaa", self.state_dir)
         self.assertEqual(self._run("bbb", changed=("index.html", "live-feed.json")), "no_builder_changes")
@@ -236,12 +259,20 @@ class DeployScriptWiringTest(unittest.TestCase):
     def test_rebuild_checks_runtime_freshness_before_copying_or_pushing(self):
         script = (BUILDER_DIR / "dashboard-rebuild.sh").read_text()
         guard = 'auto_deploy.py" --can-publish "$REMOTE_SHA"'
+        rebuild = "python3 build-agent-dashboard.py"
         copy = 'cp "$HTML_OUT" "$PUBLISH_WT/index.html"'
         push = "git push origin HEAD:main"
         for fragment in (guard, copy, push):
             self.assertIn(fragment, script)
-        self.assertLess(script.index(guard), script.index(copy))
-        self.assertLess(script.index(guard), script.index(push))
+        publish = script[script.index("# 3. Copy to GitHub Pages repo and push"):]
+        self.assertEqual(publish.count(guard), 2)
+        first_guard = publish.index(guard)
+        rebuild_after_guard = publish.index(rebuild, first_guard)
+        second_guard = publish.index(guard, first_guard + len(guard))
+        self.assertLess(first_guard, rebuild_after_guard)
+        self.assertLess(rebuild_after_guard, second_guard)
+        self.assertLess(second_guard, publish.index(copy))
+        self.assertLess(second_guard, publish.index(push))
 
 
 if __name__ == "__main__":
