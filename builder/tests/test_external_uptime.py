@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import http.client
 from pathlib import Path
 import tempfile
 import unittest
@@ -75,6 +76,18 @@ class UptimeProbeTest(unittest.TestCase):
 
         self.assertEqual(result["down"], ["Command Center: invalid JSON response"])
 
+    def test_truncated_http_body_becomes_down_instead_of_crashing(self):
+        def request(url, headers, timeout):
+            raise http.client.IncompleteRead(b"partial", 10)
+
+        env = {"CF_ACCESS_CLIENT_ID": "client-id", "CF_ACCESS_CLIENT_SECRET": "client-secret"}
+        result = UPTIME.probe_all(env, requester=request, sleep=lambda _: None, attempts=1)
+
+        self.assertEqual(
+            result["down"],
+            ["Command Center: request failed", "My Dictionary: request failed"],
+        )
+
     def test_github_output_separates_down_and_configuration(self):
         result = {
             "down": ["Command Center: HTTP 502"],
@@ -88,6 +101,15 @@ class UptimeProbeTest(unittest.TestCase):
 
         self.assertIn("down=Command Center: HTTP 502", output)
         self.assertIn("unconfigured=Command Center: Cloudflare Access service token missing", output)
+
+    def test_workflow_updates_an_incident_when_the_failure_set_changes(self):
+        workflow = (ROOT / ".github" / "workflows" / "uptime.yml").read_text()
+
+        self.assertIn("sha256sum", workflow)
+        self.assertIn("<!-- uptime-state:$fingerprint -->", workflow)
+        self.assertIn('current_body=$(gh issue view "$open" --json body -q .body)', workflow)
+        self.assertIn('case "$current_body" in', workflow)
+        self.assertGreaterEqual(workflow.count('gh issue edit "$open" --title "$title" --body "$body"'), 2)
 
 
 if __name__ == "__main__":

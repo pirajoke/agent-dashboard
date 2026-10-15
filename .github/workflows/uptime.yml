@@ -48,28 +48,51 @@ jobs:
           }
           gh label create uptime --color B60205 --description "External uptime ping" 2>/dev/null || true
           open=$(gh issue list --label uptime --state open --json number -q '.[0].number')
+          fingerprint=$(printf '%s\n%s\n' "$DOWN" "$UNCONFIGURED" | sha256sum | cut -d ' ' -f1)
           if [ -n "$DOWN" ]; then
             title="Mac mini unreachable from outside"
             body="Failed after 3 attempts at $(date -u '+%F %H:%M') UTC: $DOWN"
             if [ -n "$UNCONFIGURED" ]; then
               body="$body. Monitor configuration also needs attention: $UNCONFIGURED"
             fi
+            body="$body
+
+          <!-- uptime-state:$fingerprint -->"
             if [ -z "$open" ]; then
               gh issue create --label uptime --title "$title" --body "$body"
               tg "🚨 Внешний пинг: Mac mini не отвечает снаружи. $DOWN"
-            elif [ "$(gh issue view "$open" --json title -q .title)" != "$title" ]; then
-              gh issue edit "$open" --title "$title" --body "$body"
-              tg "🚨 Внешний пинг: Mac mini не отвечает снаружи. $DOWN"
+            else
+              current_title=$(gh issue view "$open" --json title -q .title)
+              current_body=$(gh issue view "$open" --json body -q .body)
+              same_state=""
+              case "$current_body" in
+                *"<!-- uptime-state:$fingerprint -->"*) same_state=1 ;;
+              esac
+              if [ "$current_title" != "$title" ] || [ -z "$same_state" ]; then
+                gh issue edit "$open" --title "$title" --body "$body"
+                tg "🚨 Внешний пинг: Mac mini не отвечает снаружи. $DOWN"
+              fi
             fi
           elif [ -n "$UNCONFIGURED" ]; then
             title="External uptime monitor needs configuration"
             body="Monitoring is fail-closed at $(date -u '+%F %H:%M') UTC: $UNCONFIGURED. Create a Cloudflare Access service token, allow it for command.meshly.fr, then add CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET as Actions secrets."
+            body="$body
+
+          <!-- uptime-state:$fingerprint -->"
             if [ -z "$open" ]; then
               gh issue create --label uptime --title "$title" --body "$body"
               tg "⚠️ Внешний пинг Command Center не настроен: нужен Cloudflare Access service token."
-            elif [ "$(gh issue view "$open" --json title -q .title)" != "$title" ]; then
-              gh issue edit "$open" --title "$title" --body "$body"
-              tg "⚠️ Внешний пинг Command Center не настроен: нужен Cloudflare Access service token."
+            else
+              current_title=$(gh issue view "$open" --json title -q .title)
+              current_body=$(gh issue view "$open" --json body -q .body)
+              same_state=""
+              case "$current_body" in
+                *"<!-- uptime-state:$fingerprint -->"*) same_state=1 ;;
+              esac
+              if [ "$current_title" != "$title" ] || [ -z "$same_state" ]; then
+                gh issue edit "$open" --title "$title" --body "$body"
+                tg "⚠️ Внешний пинг Command Center не настроен: нужен Cloudflare Access service token."
+              fi
             fi
           elif [ -z "$DOWN" ] && [ -n "$open" ]; then
             gh issue close "$open" --comment "Back up at $(date -u '+%F %H:%M') UTC."

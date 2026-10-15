@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import http.client
 import os
 from pathlib import Path
 import sys
@@ -56,7 +57,7 @@ def _probe(
                 detail = "invalid JSON response"
             else:
                 return {"name": name, "url": url, "state": "healthy", "detail": "HTTP 200"}
-        except (OSError, urllib.error.URLError):
+        except (OSError, urllib.error.URLError, http.client.HTTPException):
             detail = "request failed"
         if attempt + 1 < attempts:
             sleep(20)
