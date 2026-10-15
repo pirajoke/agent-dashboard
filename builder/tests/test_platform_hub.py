@@ -44,7 +44,7 @@ EXPECTED_PLATFORM_NAMES = (
 )
 EXPECTED_LINKS = {
     "financial-os": (
-        "http://127.0.0.1:8792",
+        "https://jobradar.meshly.fr/",
         "https://t.me/JobsRadarS_bot",
     ),
     "mydictionary": (
@@ -62,7 +62,7 @@ EXPECTED_LINKS = {
     "sushi-parisien": ("https://sushi-parisien.meshly.fr/",),
     "n8n": ("http://127.0.0.1:5678",),
 }
-EXPECTED_LOOPBACK_PORTS = (7777, 8792, 3051, 5678)
+EXPECTED_LOOPBACK_PORTS = (7777, 3051, 5678)
 REQUIRED_PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 REQUIRED_ACTION_FIELDS = ("label", "url", "access")
 
@@ -168,6 +168,7 @@ class PlatformHubContractTests(unittest.TestCase):
     def test_ac_cc_4_explicit_localhost_http_and_approved_https_are_accepted(self):
         registry = self._mutable_registry()
         registry[0]["actions"][0]["url"] = "http://localhost:8792/"
+        registry[0]["actions"][0]["access"] = "private"
         self.platforms.validate_platform_registry(registry)
         html = self.platforms.build_platform_hub_html(registry=registry)
         self.assertIn('href="http://localhost:8792/"', html)
