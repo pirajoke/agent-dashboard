@@ -133,6 +133,11 @@ if [ -d "$REPO_DIR/.git" ]; then
 
     cd "$REPO_DIR"
     git fetch origin main >> "$LOG" 2>&1 || log "WARN: git fetch failed"
+    REMOTE_SHA=$(git rev-parse FETCH_HEAD)
+    if ! PUBLISH_SAFETY=$(python3 "$SCRIPTS/auto_deploy.py" --can-publish "$REMOTE_SHA" 2>&1); then
+        log "Skipping publish: ${PUBLISH_SAFETY:-runtime builder freshness unknown}"
+        exit 0
+    fi
     git worktree add --detach "$PUBLISH_WT" FETCH_HEAD >> "$LOG" 2>&1 || { log "ERROR: publish worktree failed"; exit 1; }
     cp "$HTML_OUT" "$PUBLISH_WT/index.html"
     mkdir -p "$PUBLISH_WT/dashboard-assets"

@@ -173,6 +173,43 @@ class CiStateTest(unittest.TestCase):
         )
 
 
+class PublishSafetyTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.state_dir = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _check(self, remote_sha, changed=()):
+        return AUTO.publish_safety(
+            remote_sha,
+            changed_between=lambda old, new: list(changed),
+            state_dir=self.state_dir,
+        )
+
+    def test_publish_is_blocked_without_a_recorded_runtime(self):
+        self.assertEqual(self._check("bbb"), (False, "runtime_sha_missing"))
+
+    def test_publish_is_allowed_when_runtime_matches_remote_main(self):
+        AUTO.record_deployed("bbb", self.state_dir)
+        self.assertEqual(self._check("bbb"), (True, "runtime_matches_main"))
+
+    def test_publish_is_blocked_while_runtime_lags_builder_changes(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.assertEqual(
+            self._check("bbb", changed=("builder/dashboard_builder/html_builder.py", "index.html")),
+            (False, "runtime_behind_builder"),
+        )
+
+    def test_publish_is_allowed_when_only_generated_files_are_newer(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.assertEqual(
+            self._check("bbb", changed=("index.html", "live-feed.json")),
+            (True, "runtime_matches_builder"),
+        )
+
+
 class DeployScriptWiringTest(unittest.TestCase):
     def test_deploy_script_installs_and_records(self):
         script = (BUILDER_DIR / "deploy_to_scripts.sh").read_text()
@@ -195,6 +232,16 @@ class DeployScriptWiringTest(unittest.TestCase):
         for fragment in fragments:
             self.assertIn(fragment, script)
         self.assertEqual(sorted(map(script.index, fragments)), list(map(script.index, fragments)))
+
+    def test_rebuild_checks_runtime_freshness_before_copying_or_pushing(self):
+        script = (BUILDER_DIR / "dashboard-rebuild.sh").read_text()
+        guard = 'auto_deploy.py" --can-publish "$REMOTE_SHA"'
+        copy = 'cp "$HTML_OUT" "$PUBLISH_WT/index.html"'
+        push = "git push origin HEAD:main"
+        for fragment in (guard, copy, push):
+            self.assertIn(fragment, script)
+        self.assertLess(script.index(guard), script.index(copy))
+        self.assertLess(script.index(guard), script.index(push))
 
 
 if __name__ == "__main__":
