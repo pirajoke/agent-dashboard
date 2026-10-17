@@ -94,6 +94,36 @@ def needs_deploy(changed_files: list[str]) -> bool:
     return any(name.startswith(DEPLOY_PATHS) for name in changed_files)
 
 
+def publish_safety(
+    remote_sha: str,
+    *,
+    changed_between=None,
+    state_dir: Path = STATE_DIR,
+) -> tuple[bool, str]:
+    """Say whether the runtime builder is fresh enough to publish from `remote_sha`.
+
+    The page is built from the installed runtime copy, not from the detached
+    publishing worktree. If main contains builder changes that are newer than
+    the recorded runtime deployment, publishing would put stale HTML on top of
+    the newer source commit.
+    """
+    deployed = load_state(state_dir).get("deployed_sha")
+    if not deployed:
+        return False, "runtime_sha_missing"
+    if deployed == remote_sha:
+        return True, "runtime_matches_main"
+    if changed_between is None:
+        def changed_between(old: str, new: str) -> list[str]:
+            return git("diff", "--name-only", old, new).splitlines()
+    try:
+        changed = changed_between(deployed, remote_sha)
+    except (subprocess.SubprocessError, OSError):
+        return False, "runtime_diff_failed"
+    if needs_deploy(changed):
+        return False, "runtime_behind_builder"
+    return True, "runtime_matches_builder"
+
+
 def healthy(url: str = HEALTH_URL, attempts: int = 6, delay: float = 5.0) -> bool:
     for attempt in range(attempts):
         try:
@@ -156,8 +186,13 @@ def run(
         # First run before any recorded deploy: deploy what main has now.
         changed = ["builder/"]
     elif deployed == head:
-        save_state(state, state_dir)
-        return "up_to_date"
+        if is_healthy():
+            state.pop("failed_sha", None)
+            state.pop("failed_at", None)
+            state["last_result"] = "healthy"
+            save_state(state, state_dir)
+            return "up_to_date"
+        changed = ["builder/"]
     else:
         try:
             changed = changed_between(deployed, head)
@@ -188,13 +223,15 @@ def run(
         state.update(deployed_sha=head, deployed_at=now_iso(), last_result="deployed")
         state.pop("waiting_sha", None)
         state.pop("waiting_reason", None)
+        state.pop("failed_sha", None)
+        state.pop("failed_at", None)
         save_state(state, state_dir)
         append_log({"at": now_iso(), "sha": head, "from": deployed, "result": "deployed"}, state_dir)
         return "deployed"
 
     reason = "deploy_failed" if not ok else "health_failed"
     rollback = "none"
-    if deployed:
+    if deployed and deployed != head:
         back_ok, back_output = do_deploy(deployed)
         rollback = "ok" if back_ok and is_healthy() else "failed"
         output = f"{output}\n--- rollback ---\n{back_output}"
@@ -218,6 +255,10 @@ def main() -> int:
     if len(sys.argv) == 3 and sys.argv[1] == "--record":
         record_deployed(sys.argv[2])
         return 0
+    if len(sys.argv) == 3 and sys.argv[1] == "--can-publish":
+        allowed, reason = publish_safety(sys.argv[2])
+        print(reason)
+        return 0 if allowed else 1
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     lock = STATE_DIR / "lock"
     try:
