@@ -136,3 +136,29 @@ summaries, both through `daily_work_collector.py` on the MacBook:
   switches the import off.
 
 In session tables these show as «ChatGPT»; their time counts with Codex.
+
+
+## Optional owner project navigation
+
+`GET /api/platform-resources` projects `navigation.command_center` from the existing
+Portfolio Registry v2 at `JARVIS_VAULT_ROOT/35-Systems/PORTFOLIO-REGISTRY.json`.
+Every request requires the existing strict owner authority (verified Google Access
+session or owner token), regardless of Host. Anonymous requests return only an
+`owner_required` state without reading the registry. Responses are `no-store`;
+raw registry downloads and filesystem aliases remain blocked even for owners.
+
+The optional block has `verified_at` and `platforms`, keyed by existing runtime
+card IDs. Each card contains up to eight `resources` (`kind`, `label`, `url`,
+`scope`) and an optional short `note`. Kinds are `documents`, `notes`, `code`,
+`tasks`; scopes are `current`, `archive`, `upstream`, `reference`. Only HTTPS
+GitHub and Google Drive links without credentials, ports, query strings or
+fragments are allowed. Invalid entries are isolated; an absent or unreadable
+block produces an honest unavailable/not-configured state. Input is bounded to
+1 MiB, labels to 120 characters, notes to 400 and URLs to 2048.
+
+Real private links belong in the private registry, never this repository or the
+static snapshot. Installing code does not populate the registry. The installed
+cards load links on opening the Platforms tab and recheck while it is visible;
+failed or superseded checks cannot restore old private links. Per-source daily
+collection state is independent of response generation time and is displayed in
+Europe/Paris; public source names remain anonymized.

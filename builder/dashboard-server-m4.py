@@ -27,6 +27,7 @@ from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
 from dashboard_builder.daily_work import work_projection
+from dashboard_builder.platform_resources import platform_resources_projection
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
@@ -1645,8 +1646,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # including through a private Host, HEAD request or filesystem alias.
         try:
             target = Path(self.translate_path(self.path)).resolve()
+            targets = [target]
+            if target.is_dir():
+                # SimpleHTTPRequestHandler selects these implicit index files in
+                # this order. Check the effective file as well as the directory.
+                for name in ("index.html", "index.htm"):
+                    candidate = target / name
+                    if candidate.is_file():
+                        targets.append(candidate.resolve())
+                        break
             private_state = (HOME / '.agent-bridge').resolve()
-            protected = target.is_relative_to(private_state) or target == MANAGER_DECISIONS_FILE.resolve()
+            private_files = {MANAGER_DECISIONS_FILE.resolve(),
+                             (JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json").resolve()}
+            protected = any(path.is_relative_to(private_state) or path in private_files for path in targets)
         except (OSError, ValueError, RuntimeError):
             self.send_error(403, 'Forbidden')
             return None
@@ -2496,6 +2508,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/platform-resources':
+            owner = self._decision_owner_authorized()
+            registry = JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"
+            self._json_response(200, platform_resources_projection(registry, owner=owner))
+            return
         if parsed.path in {'/api/manager/decisions', '/api/manager/decisions/responses'}:
             self._handle_manager_decisions(responses=parsed.path.endswith('/responses'))
             return

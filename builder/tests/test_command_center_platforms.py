@@ -13,9 +13,9 @@ DASHBOARD_PATH = (
 
 EXPECTED_PLATFORMS = {
     "financial": (
-        "JobRadar / Financial OS",
+        "JobRadar",
         (
-            "https://jobradar.meshly.fr/",
+            "https://command.meshly.fr/job-radar/",
             "https://t.me/JobsRadarS_bot",
         ),
     ),
@@ -175,8 +175,24 @@ class CommandCenterPlatformsTests(unittest.TestCase):
                         self.assertEqual(parsed.scheme, "https")
                         self.assertIn(
                             parsed.hostname,
-                            {"t.me", "jobradar.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr"},
+                            {"t.me", "command.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr"},
                         )
+
+    def test_ac_1_accountable_copy_describes_french_micro_bnc(self):
+        card = re.search(r'<article[^>]*data-platform-id="accountable"[\s\S]*?</article>', self.html)
+        self.assertIsNotNone(card)
+        self.assertRegex(card.group(), r"(?i)micro[ -]?BNC")
+        self.assertRegex(card.group(), r"(?i)франц|France|French")
+        self.assertNotIn("личной ответственности", card.group())
+
+    def test_ac_4_each_existing_platform_has_owner_resource_area(self):
+        cards = re.findall(r'<article[^>]*data-platform-id="([^"]+)"([\s\S]*?)</article>', self.html)
+        self.assertEqual(len(cards), 12)
+        for platform_id, card in cards:
+            with self.subTest(platform=platform_id):
+                self.assertRegex(card, r'class="[^"]*platform-resources')
+                self.assertRegex(card, r'aria-live="polite"|role="status"')
+        self.assertIn("/api/platform-resources", self.html)
 
     def test_platform_directory_is_responsive_keyboard_safe_and_motion_safe(self):
         self.assertTrue(
@@ -204,6 +220,143 @@ class CommandCenterPlatformsTests(unittest.TestCase):
             is not None,
             "platform link motion needs a reduced-motion override",
         )
+
+
+class OwnerResourcesBrowserTests(unittest.TestCase):
+    """AC-4/6, EC-2/4: execute the installed JS with a small synthetic DOM.
+
+    The marker-delimited block owns ccRenderPlatformResources(payload) and
+    ccLoadPlatformResources(). Its DOM boundary is data-platform-resources=id.
+    """
+    def run_js(self, action):
+        import json
+        import shutil
+        import subprocess
+        html = DASHBOARD_PATH.read_text(encoding="utf-8")
+        match = re.search(r"// ── Platform resources ──([\s\S]*?)// ── End Platform resources ──", html)
+        self.assertIsNotNone(match, "RED: installed UI lacks owner resource load/render boundary")
+        node = shutil.which("node") or str(Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node")
+        self.assertTrue(Path(node).exists(), "Node runtime required for real browser-function tests")
+        setup = r'''
+const vm = require('vm');
+const esc = text => String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+class Node {
+  constructor(tag='div') { this.tagName=tag; this.children=[]; this.dataset={}; this.attrs={}; this._html=''; this.hidden=false; this.className=''; }
+  set textContent(text) { this._html=esc(text); this.children=[]; }
+  get textContent() { return this._html + this.children.map(x=>x.textContent).join(''); }
+  set innerHTML(html) { this._html=html; this.children=[]; }
+  get innerHTML() { return this._html + this.children.map(x=>x.outerHTML).join(''); }
+  get outerHTML() { const a={...this.attrs}; for(const k of ['href','target','rel','className']) if(this[k]) a[k==='className'?'class':k]=this[k]; return '<'+this.tagName+Object.entries(a).map(([k,v])=>' '+k+'="'+esc(v)+'"').join('')+'>'+this.innerHTML+'</'+this.tagName+'>'; }
+  appendChild(node) { this.children.push(node); return node; }
+  append(...nodes) { nodes.forEach(n=>this.appendChild(typeof n==='string'?Object.assign(new Node('span'),{textContent:n}):n)); }
+  replaceChildren(...nodes) { this._html=''; this.children=[]; this.append(...nodes); }
+  setAttribute(k,v) { this.attrs[k]=v; }
+  getAttribute(k) { if(k==='data-platform-resources') return this.dataset.platformResources; return this.attrs[k]; }
+  addEventListener() {}
+  querySelector() { return this.area || null; }
+}
+const ids=['financial','mydictionary','health','ai-singularity','context-news','accountable','jarvis','property-os','pixel-agents','closeness-mirror','sushi-parisien','n8n'];
+const areas=ids.map(id=>{ const n=new Node(); n.dataset.platformResources=id; return n; });
+const cards=ids.map((id,i)=>{ const n=new Node('article'); n.dataset.platformId=id; n.area=areas[i]; return n; });
+const byId={};
+const document={hidden:false,createElement:t=>new Node(t),createTextNode:t=>Object.assign(new Node('span'),{textContent:t}),
+  querySelectorAll:s=>s.includes('platform-entry')?cards:areas,
+  querySelector:s=>{const i=ids.findIndex(id=>s.includes('"'+id+'"'));return i>=0?areas[i]:null;},
+  getElementById:id=>byId[id]||(byId[id]=new Node()),addEventListener(){}};
+let responseMode='good'; const fetchCalls=[];
+const good={state:'ready',verified_at:'2026-10-19T16:00:00Z',platforms:{financial:{resources:[
+  {kind:'code',scope:'current',label:'Synthetic source',url:'https://github.com/example/navigation-fixture'},
+  {kind:'documents',scope:'archive',label:'Archive fixture',url:'https://drive.google.com/drive/folders/fixture-archive'},
+  {kind:'code',scope:'upstream',label:'Upstream fixture',url:'https://github.com/example/upstream-fixture'},
+  {kind:'notes',scope:'reference',label:'Reference fixture',url:'https://github.com/example/reference-fixture'}]}}};
+const context={document, URL, URLSearchParams,Intl,Date, console, setTimeout:()=>0,clearTimeout(){},setInterval:()=>0,
+  IS_FILE_DASHBOARD:false,DASHBOARD_API:'https://command.meshly.fr',IS_PUBLIC_DASHBOARD:true,
+  window:{location:new URL('https://command.meshly.fr/'),addEventListener(){}},
+  mmEsc:esc,mmHeaders:()=>({'X-Dashboard-Run-Token':'synthetic-owner-token'}),jarvisRunHeaders:()=>({'X-Dashboard-Run-Token':'synthetic-owner-token'}),
+  fetch:async(url,options)=>{fetchCalls.push({url,options});if(responseMode==='network')throw Error('synthetic failure');return {ok:responseMode!=='unauthorized',status:responseMode==='unauthorized'?401:200,json:async()=>responseMode==='good'?good:{state:'owner_required',verified_at:null,platforms:{}}};}};
+vm.createContext(context);
+'''
+        script = setup + "\nvm.runInContext(" + json.dumps(match.group(1)) + ", context);\n" + action
+        run = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        return json.loads(run.stdout)
+
+    def test_ac_4_owner_cards_render_scopes_and_honest_not_linked_state(self):
+        out = self.run_js("context.ccRenderPlatformResources(good);process.stdout.write(JSON.stringify(areas.map(n=>n.innerHTML)));")
+        self.assertIn('https://github.com/example/navigation-fixture', out[0])
+        self.assertIn('Synthetic source', out[0])
+        for word in ('Архив', 'Исходный', 'Справ'):
+            self.assertIn(word.lower(), out[0].lower())
+        self.assertRegex(out[1], r'(?i)не подключ|не привязан|нет ссыл')
+        self.assertNotRegex(out[0], r'<a[^>]+onclick=')
+        for anchor in re.findall(r'<a\b[^>]*>', out[0]):
+            self.assertIn('target="_blank"', anchor)
+            self.assertIn('noopener', anchor)
+            self.assertIn('noreferrer', anchor)
+
+    def test_ec_2_label_and_note_markup_render_as_text(self):
+        out = self.run_js(r'''
+good.platforms.financial.resources[0].label='<img src=x onerror=alert(1)>Label';
+good.platforms.financial.note='<script>alert(2)</script>';
+context.ccRenderPlatformResources(good);
+process.stdout.write(JSON.stringify(areas[0].innerHTML));''')
+        self.assertNotIn('<img', out)
+        self.assertNotIn('<script', out)
+        self.assertIn('&lt;img', out)
+        self.assertIn('&lt;script', out)
+
+    def test_ac_4_ec_4_fetch_uses_owner_headers_and_failure_clears_private_links(self):
+        out = self.run_js(r'''
+(async()=>{await context.ccLoadPlatformResources();const success=areas[0].innerHTML;
+responseMode='network';await context.ccLoadPlatformResources();const failed=areas[0].innerHTML;
+responseMode='good';await context.ccLoadPlatformResources();responseMode='unauthorized';await context.ccLoadPlatformResources();
+process.stdout.write(JSON.stringify({success,failed,denied:areas[0].innerHTML,calls:fetchCalls}));})().catch(e=>{console.error(e);process.exit(1)});''')
+        self.assertIn('https://github.com/example/navigation-fixture', out['success'])
+        for state in ('failed', 'denied'):
+            self.assertNotIn('https://github.com/example/navigation-fixture', out[state])
+            self.assertNotIn('Synthetic source', out[state])
+            self.assertTrue(out[state].strip(), 'Readable failure/auth state required')
+        for call in out['calls']:
+            self.assertTrue(call['url'].endswith('/api/platform-resources'))
+            self.assertEqual(call['options'].get('cache'), 'no-store')
+            self.assertEqual(call['options'].get('headers', {}).get('X-Dashboard-Run-Token'), 'synthetic-owner-token')
+
+    def test_ac_4_auth_loss_without_network_error_clears_private_links(self):
+        out = self.run_js(r'''
+context.ccRenderPlatformResources(good);context.ccRenderPlatformResources({state:'owner_required',verified_at:null,platforms:{}});
+process.stdout.write(JSON.stringify(areas.map(n=>n.innerHTML)));''')
+        self.assertNotIn('https://github.com/example/navigation-fixture', ''.join(out))
+        self.assertTrue(all(s.strip() for s in out))
+
+
+    def test_ac_4_ec_4_delayed_old_success_cannot_restore_links_after_newer_denial(self):
+        out = self.run_js(r'''
+(async()=>{const pending=[];context.fetch=(url,options)=>new Promise(resolve=>pending.push(resolve));
+const old=context.ccLoadPlatformResources();const fresh=context.ccLoadPlatformResources();
+if(pending.length<2){process.stdout.write(JSON.stringify({requests:pending.length}));return;}
+pending[1]({ok:false,status:401,json:async()=>({state:'owner_required',verified_at:null,platforms:{}})});await fresh;
+const denied=areas[0].innerHTML;
+pending[0]({ok:true,status:200,json:async()=>good});await old;
+process.stdout.write(JSON.stringify({requests:pending.length,denied,after:areas[0].innerHTML}));})().catch(e=>{console.error(e);process.exit(1)});''')
+        self.assertEqual(out['requests'], 2, 'New access check must supersede pending older response')
+        self.assertNotIn('https://github.com/example/navigation-fixture', out['after'])
+        self.assertEqual(out['after'], out['denied'])
+
+    def test_ec_2_client_rejects_unsafe_hrefs_independently_of_server(self):
+        out = self.run_js(r'''
+const unsafe=['javascript:alert(1)','file:///fixture','http://github.com/example/repo','https://127.0.0.1/',
+'https://github.com.evil.invalid/','https://user:password@github.com/example/repo','https://github.com:bad/repo',
+'https://github.com:8443/repo','https://github.com/repo?','https://github.com/repo#','https://github.com\\evil/repo',
+'https://github.com/repo%0a','https://github.com/repo%5c',' https://github.com/example/repo','https://github.com/example/repo '];
+const results=unsafe.map(url=>{const payload=JSON.parse(JSON.stringify(good));payload.platforms.financial.resources=[
+{kind:'code',scope:'current',label:'Invalid URL fixture',url},good.platforms.financial.resources[0]];
+context.ccRenderPlatformResources(payload);return areas[0].innerHTML;});
+process.stdout.write(JSON.stringify(results));''')
+        for html in out:
+            with self.subTest(html=html):
+                parser = _CommandCenterParser()
+                links = re.findall(r'<a\b[^>]*href="([^"]*)"', html)
+                self.assertEqual(links, ['https://github.com/example/navigation-fixture'])
 
 
 if __name__ == "__main__":

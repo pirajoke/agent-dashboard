@@ -1,7 +1,9 @@
 """Isolated browser fixtures. Binds loopback, never contacts live services.
 
 Run: PYTHONPATH=builder python3 builder/tests/preview_command_center.py
-The printed local URL accepts ?fixture=empty|stale|unavailable|anonymous|changed.
+The printed local URL accepts ?fixture=ready|google-owner|empty|stale|unavailable|anonymous|changed|long-label|unknown|failure.
+Navigation uses the real strict owner endpoint and synthetic registry only.
+Default navigation has a fresh Mini and stale Pro. No private source is read.
 The default waiting scenario provides one choice and one active task.
 """
 from __future__ import annotations
@@ -20,6 +22,42 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_TOKEN = "isolated-preview-owner"
 STARTED = datetime.now(timezone.utc)
 MODE = "waiting"
+
+
+FIXTURE_STATE = None
+
+
+def prepare_navigation_fixture():
+    if FIXTURE_STATE is None:
+        raise RuntimeError("preview fixture needs its isolated temporary state")
+    path = SERVER.JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {"schema_version": 2, "navigation": {"command_center": {
+        "verified_at": STARTED.isoformat(), "platforms": {
+            "financial": {"resources": [
+                {"kind": "code", "label": "Synthetic project code", "url": "https://github.com/example/navigation-fixture", "scope": "current"},
+                {"kind": "documents", "label": "Synthetic archive", "url": "https://drive.google.com/drive/folders/fixture-archive", "scope": "archive"}],
+                "note": "Only synthetic links; no owner documents."},
+            "pixel-agents": {"resources": [{"kind": "code", "label": "Synthetic upstream source", "url": "https://github.com/example/upstream-fixture", "scope": "upstream"}]}}}}}
+    if MODE == "empty":
+        payload = {"schema_version": 2}
+    elif MODE == "long-label":
+        payload["navigation"]["command_center"]["platforms"]["financial"]["resources"][0]["label"] = '<img src=x onerror=alert(1)> Long synthetic label ' + 'W' * 70
+        payload["navigation"]["command_center"]["platforms"]["financial"]["note"] = '<script>alert(2)</script> This must be displayed as text.'
+    path.write_text("malformed fixture" if MODE == "unavailable" else json.dumps(payload))
+    for name, age in (("mac-mini", 600), ("macbook-pro", 28800)):
+        day = STARTED.date().isoformat()
+        daily = SERVER.DAILY_WORK_DIR / "sessions" / name / f"{day}.json"
+        daily.parent.mkdir(parents=True, exist_ok=True)
+        data = {"schema": 2, "machine": name, "date": day,
+                "collected_at": (STARTED - timedelta(seconds=age)).isoformat(),
+                "sources": {"claude": {"ok": True}, "codex": {"ok": MODE != "failure"}}, "sessions": []}
+        if MODE == "unknown" and name == "macbook-pro":
+            data["collected_at"] = "invalid fixture timestamp"
+        daily.write_text(json.dumps(data))
+    (SERVER.DAILY_WORK_DIR / "github.json").write_text(json.dumps({
+        "ok": MODE != "failure", "collected_at": (STARTED - timedelta(minutes=15)).isoformat(),
+        "prs": [], "commits": [], "open_issues": []}))
 
 
 def fixture_tasks():
@@ -50,6 +88,11 @@ SERVER._dashboard_run_token = lambda **kw: FIXTURE_TOKEN
 
 
 class PreviewHandler(SERVER.Handler):
+    def _cloudflare_access_owner(self):
+        # Only this isolated loopback fixture simulates a Google-authenticated owner.
+        # No actual JWT, Google header, account, or authentication network call.
+        return MODE == "google-owner"
+
     def log_message(self, *_args):
         pass
 
@@ -71,7 +114,7 @@ class PreviewHandler(SERVER.Handler):
         query = parse_qs(parsed.query)
         if parsed.path.startswith('/fixture/'):
             mode = parsed.path.removeprefix('/fixture/')
-            if mode in {'waiting', 'changed', 'empty', 'stale', 'unavailable'}:
+            if mode in {'waiting', 'ready', 'google-owner', 'changed', 'empty', 'stale', 'unavailable', 'anonymous', 'long-label', 'unknown', 'failure'}:
                 MODE = mode
                 self._json_response(200, {'fixture': MODE})
             else:
@@ -84,9 +127,19 @@ class PreviewHandler(SERVER.Handler):
             # telemetry functions remain byte-for-byte the existing source.
             html = html.replace("const IS_LOCALHOST_PAGE = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);", "const IS_LOCALHOST_PAGE = false;")
             html = html.replace("const LOCAL_API = 'http://localhost:8880';", "const LOCAL_API = window.location.origin;")
-            token = "localStorage.removeItem('command-center.jarvis-run-token');" if MODE == "anonymous" else f"localStorage.setItem('command-center.jarvis-run-token', {json.dumps(FIXTURE_TOKEN)});"
+            html = html.replace("const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';", "const IS_PUBLIC_DASHBOARD = true;")
+            token = "localStorage.removeItem('command-center.jarvis-run-token');" if MODE in {"anonymous", "google-owner"} else f"localStorage.setItem('command-center.jarvis-run-token', {json.dumps(FIXTURE_TOKEN)});"
             html = html.replace("<script>", "<script>" + token, 1)
             self.document(html)
+            return
+        if parsed.path == "/api/platform-resources":
+            prepare_navigation_fixture()
+            super().do_GET()  # Exercise the product's strict auth and resource projection.
+            return
+        if parsed.path == "/api/work/daily":
+            prepare_navigation_fixture()
+            self._json_response(200, SERVER.work_projection(SERVER.DAILY_WORK_DIR,
+                now=datetime.now(timezone.utc), owner=self._decision_owner_authorized()))
             return
         if parsed.path in {"/api/manager/decisions", "/api/manager/decisions/responses"}:
             self._handle_manager_decisions(responses=parsed.path.endswith("/responses"))
@@ -128,7 +181,11 @@ class PreviewHandler(SERVER.Handler):
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="command-center-preview-") as state:
-        SERVER.MANAGER_DECISIONS_FILE = Path(state) / "responses.jsonl"
+        FIXTURE_STATE = Path(state)
+        SERVER.MANAGER_DECISIONS_FILE = FIXTURE_STATE / "responses.jsonl"
+        SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
+        SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
+        prepare_navigation_fixture()
         with http.server.ThreadingHTTPServer(("127.0.0.1", 0), PreviewHandler) as server:
             print(f"http://127.0.0.1:{server.server_port}/", flush=True)
             try:

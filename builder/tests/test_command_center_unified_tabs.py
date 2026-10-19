@@ -168,10 +168,12 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
                     and cards_are_focusable
                 )
             ),
+            # The resource GET is independent of order. Inspect only the actual
+            # reorder implementation here, then execute both persistence paths below.
             "no platform-order HTTP persistence": re.search(
-                r"fetch\([^\n]*(?:platform.?order|/api/platform)",
-                self.html,
-                re.IGNORECASE,
+                r"\b(?:fetch|XMLHttpRequest|sendBeacon|WebSocket)\b",
+                self.html[self.html.index("// Platform order is local-only."):
+                          self.html.index("// Light or dark for the whole Command Center")],
             )
             is None
             and re.search(
@@ -187,6 +189,50 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
             [],
             "platform cards need persistent, local-only pointer and keyboard reordering",
         )
+        self._assert_platform_reorder_persistence_is_local()
+
+    def _assert_platform_reorder_persistence_is_local(self):
+        """Execute keyboard and drag commits, proving writes stay in localStorage."""
+        names = ("platformCards", "readPlatformOrder", "renumberPlatforms", "savePlatformOrder",
+                 "announcePlatformOrder", "movePlatformByButton", "commitPlatformLongPress")
+        functions = "\n".join("function " + name + "(" + (
+            "event" if name in ("movePlatformByButton", "commitPlatformLongPress") else
+            "card, prefix = 'Перемещено:'" if name == "announcePlatformOrder" else ""
+        ) + ") {" + self._js_function(name) + "\n}" for name in names)
+        javascript = r'''
+const stored=new Map(), writes=[], network=[];
+const localStorage={getItem:k=>stored.get(k)||null,setItem:(k,v)=>{writes.push([k,v]);stored.set(k,v);}};
+const fetch=(...args)=>{network.push(['fetch',...args]);return Promise.resolve({ok:true});};
+function XMLHttpRequest(){network.push(['xhr']);}
+const navigator={sendBeacon:(...args)=>network.push(['beacon',...args])};
+const PLATFORM_ORDER_STORAGE_KEY='command-center.platform-order.v1';
+const PLATFORM_CANONICAL_IDS=['financial','mydictionary','health'];
+let cards=PLATFORM_CANONICAL_IDS.map(id=>({dataset:{platformId:id,platformName:id},number:{},
+classList:{remove(){}},removeAttribute(){},querySelector(){return this.number;},
+before(card){const from=cards.indexOf(card);cards.splice(from,1);cards.splice(cards.indexOf(this),0,card);},
+after(card){const from=cards.indexOf(card);cards.splice(from,1);cards.splice(cards.indexOf(this)+1,0,card);}}));
+const platformDirectory={querySelectorAll:()=>cards,contains:()=>true};
+const status={textContent:''};const document={getElementById:()=>status};
+let platformPointerState=null, platformSuppressClickUntil=0;
+function clearPlatformLongPressTimer(){}function settlePlatformCard(){}function releasePlatformPointerCapture(){}
+''' + functions + r'''
+const keyboardCard=cards[1];const button={dataset:{platformMove:'previous'},closest:()=>keyboardCard,focus(){}};
+movePlatformByButton({target:{closest:()=>button}});
+const keyboard=JSON.parse(stored.get(PLATFORM_ORDER_STORAGE_KEY));
+const initialOrder=cards.map(c=>c.dataset.platformId);cards=[cards[2],cards[0],cards[1]];
+platformPointerState={pointerId:9,active:true,changed:true,card:cards[0],initialOrder};
+commitPlatformLongPress({pointerId:9,cancelable:true,preventDefault(){}});
+const dragged=JSON.parse(stored.get(PLATFORM_ORDER_STORAGE_KEY));
+process.stdout.write(JSON.stringify({keyboard,dragged,restored:readPlatformOrder(),writes,network}));
+'''
+        result = subprocess.run(["node", "-e", javascript], check=True, capture_output=True, text=True)
+        out = json.loads(result.stdout)
+        self.assertEqual(out["keyboard"], ["mydictionary", "financial", "health"])
+        self.assertEqual(out["dragged"], ["health", "mydictionary", "financial"])
+        self.assertEqual(out["restored"], out["dragged"])
+        self.assertEqual(len(out["writes"]), 2)
+        self.assertTrue(all(key == "command-center.platform-order.v1" for key, _ in out["writes"]))
+        self.assertEqual(out["network"], [], "Order persistence must never leave this browser")
 
     def test_ec_3_mobile_long_press_preserves_scroll_then_cancels_active_touch(self):
         move_handler = self._platform_handler("pointermove")
