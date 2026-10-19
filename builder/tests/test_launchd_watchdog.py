@@ -177,7 +177,7 @@ class DeployInstallsWatchdogTest(unittest.TestCase):
         deploy = (BUILDER_DIR / "deploy_to_scripts.sh").read_text()
         self.assertIn('cp "$SRC_DIR/launchd_watchdog.py" "$SCRIPTS_DIR/launchd_watchdog.py"', deploy)
         self.assertIn("auto_deploy.py launchd_watchdog.py dashboard_builder/*.py", deploy)
-        self.assertIn('launchctl bootstrap "gui/$(id -u)" "$WATCHDOG_PLIST"', deploy)
+        self.assertIn('install_launchd_agent "$WATCHDOG_PLIST.tmp" "$WATCHDOG_PLIST" "$WATCHDOG_LABEL"', deploy)
         # Installed after the deployed commit is recorded, or its first run would see the old release.
         self.assertLess(deploy.index('auto_deploy.py" --record'), deploy.index('"$WATCHDOG_PLIST"'))
         template = plistlib.loads(

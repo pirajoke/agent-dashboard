@@ -304,7 +304,7 @@ class LaunchdAndDeployTests(unittest.TestCase):
         deploy = (BUILDER_DIR / "deploy_to_scripts.sh").read_text()
         self.assertIn("main_manager_status_publisher.py", deploy)
         self.assertIn("com.pirajoke.main-manager-status-publisher", deploy)
-        self.assertIn('launchctl bootstrap "gui/$(id -u)" "$PUBLISHER_PLIST"', deploy)
+        self.assertIn('install_launchd_agent "$PUBLISHER_PLIST.tmp" "$PUBLISHER_PLIST" "$PUBLISHER_LABEL"', deploy)
 
 
 if __name__ == "__main__":
