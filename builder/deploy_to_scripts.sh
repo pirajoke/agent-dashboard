@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_DIR="$REPO_DIR/builder"
+source "$SRC_DIR/launchd/install_agent.sh"
 SCRIPTS_DIR="${DASHBOARD_SCRIPTS_DIR:-$HOME/scripts}"
 PUBLIC_ASSETS_DIR="${DASHBOARD_PUBLIC_ASSETS_DIR:-$HOME/dashboard-assets}"
 MAC_MINI_DASHBOARD_DIR="${MAC_MINI_DASHBOARD_DIR:-$HOME/mac-mini-dashboard}"
@@ -55,9 +56,7 @@ if [[ "${DASHBOARD_INSTALL_STATUS_PUBLISHER:-1}" == "1" ]]; then
   sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
     "$SRC_DIR/launchd/$PUBLISHER_LABEL.plist.template" > "$PUBLISHER_PLIST.tmp"
   plutil -lint "$PUBLISHER_PLIST.tmp" >/dev/null
-  mv "$PUBLISHER_PLIST.tmp" "$PUBLISHER_PLIST"
-  launchctl bootout "gui/$(id -u)/$PUBLISHER_LABEL" >/dev/null 2>&1 || true
-  launchctl bootstrap "gui/$(id -u)" "$PUBLISHER_PLIST"
+  install_launchd_agent "$PUBLISHER_PLIST.tmp" "$PUBLISHER_PLIST" "$PUBLISHER_LABEL"
 fi
 
 if [[ "${DASHBOARD_INSTALL_DAILY_WORK:-1}" == "1" ]]; then
@@ -80,9 +79,7 @@ if [[ "${DASHBOARD_INSTALL_LAUNCHD_WATCHDOG:-1}" == "1" ]]; then
   sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
     "$SRC_DIR/launchd/$WATCHDOG_LABEL.plist.template" > "$WATCHDOG_PLIST.tmp"
   plutil -lint "$WATCHDOG_PLIST.tmp" >/dev/null
-  mv "$WATCHDOG_PLIST.tmp" "$WATCHDOG_PLIST"
-  launchctl bootout "gui/$(id -u)/$WATCHDOG_LABEL" >/dev/null 2>&1 || true
-  launchctl bootstrap "gui/$(id -u)" "$WATCHDOG_PLIST"
+  install_launchd_agent "$WATCHDOG_PLIST.tmp" "$WATCHDOG_PLIST" "$WATCHDOG_LABEL"
 fi
 
 # Merged code reaches the site by itself: the auto-deploy agent watches main.
@@ -94,9 +91,7 @@ if [[ "${DASHBOARD_INSTALL_AUTO_DEPLOY:-1}" == "1" ]]; then
   sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
     "$SRC_DIR/launchd/$AUTO_DEPLOY_LABEL.plist.template" > "$AUTO_DEPLOY_PLIST.tmp"
   plutil -lint "$AUTO_DEPLOY_PLIST.tmp" >/dev/null
-  mv "$AUTO_DEPLOY_PLIST.tmp" "$AUTO_DEPLOY_PLIST"
-  launchctl bootout "gui/$(id -u)/$AUTO_DEPLOY_LABEL" >/dev/null 2>&1 || true
-  launchctl bootstrap "gui/$(id -u)" "$AUTO_DEPLOY_PLIST"
+  install_launchd_agent "$AUTO_DEPLOY_PLIST.tmp" "$AUTO_DEPLOY_PLIST" "$AUTO_DEPLOY_LABEL"
 fi
 
 echo "Dashboard builder deployed to $SCRIPTS_DIR"

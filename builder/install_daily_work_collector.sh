@@ -13,6 +13,7 @@
 set -euo pipefail
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SRC_DIR/launchd/install_agent.sh"
 INSTALL_DIR="${DAILY_WORK_INSTALL_DIR:-$HOME/scripts}"
 
 # Only --machine and --push-to apply to the infra collector; --github is Daily Work only;
@@ -72,9 +73,7 @@ with open(target, "wb") as handle:
     plistlib.dump(plist, handle)
 PY
   plutil -lint "$plist.tmp" >/dev/null
-  mv "$plist.tmp" "$plist"
-  launchctl bootout "gui/$(id -u)/$label" >/dev/null 2>&1 || true
-  launchctl bootstrap "gui/$(id -u)" "$plist"
+  install_launchd_agent "$plist.tmp" "$plist" "$label"
   echo "Installed $label: $plist"
 }
 
