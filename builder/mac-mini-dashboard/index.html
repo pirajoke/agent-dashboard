@@ -353,18 +353,19 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-access.public { background: var(--mm-success-soft); color: var(--mm-success); border-color: transparent; }
 .platform-directory {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  /* Every row as tall as the tallest card, so all cards are one size. */
-  grid-auto-rows: 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  grid-auto-rows: auto;
+  align-items: start;
+  gap: 12px;
 }
 .platform-entry {
   --platform-tint: var(--bg2);
   position: relative;
   min-width: 0;
   touch-action: pan-y;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  align-content: start;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
@@ -375,9 +376,8 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-entry:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 .platform-entry.is-reordering { touch-action: none; user-select: none; -webkit-user-select: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--mm-selection), var(--shadow-lg); }
 .platform-entry.priority {
-  grid-column: span 5;
-  display: grid;
-  grid-template-columns: 188px minmax(0, 1fr);
+  grid-column: auto;
+  grid-template-columns: 80px minmax(0, 1fr);
   border-color: var(--mm-control-line);
 }
 .platform-entry[data-platform-id="financial"] { --platform-tint: var(--mm-tint-financial); }
@@ -395,16 +395,19 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-art {
   display: grid;
   place-items: center;
-  height: 132px;
+  align-self: start;
+  height: 64px;
+  margin: 16px 0 0 12px;
+  border-radius: 12px;
   background: var(--platform-tint);
 }
-.platform-entry.priority .platform-art { height: auto; min-height: 190px; }
+.platform-entry.priority .platform-art { height: 64px; min-height: 0; }
 .platform-art svg {
-  width: 112px;
-  height: 112px;
+  width: 56px;
+  height: 56px;
   transition: transform 0.25s ease;
 }
-.platform-entry.priority .platform-art svg { width: 150px; height: 150px; }
+.platform-entry.priority .platform-art svg { width: 56px; height: 56px; }
 .platform-entry:hover .platform-art svg { transform: translateY(-4px) rotate(-3deg); }
 .platform-index {
   position: absolute;
@@ -446,9 +449,9 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   display: flex;
   flex: 1;
   flex-direction: column;
-  padding: 16px 18px 18px;
+  padding: 16px 16px 12px 12px;
 }
-.platform-entry.priority .platform-content { padding: 22px 24px; justify-content: center; }
+.platform-entry.priority .platform-content { padding: 16px 16px 12px 12px; }
 .platform-tag {
   width: fit-content;
   margin-bottom: 6px;
@@ -464,7 +467,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   font-weight: 750;
   line-height: 1.3;
 }
-.platform-entry.priority .platform-name { font-size: 20px; }
+.platform-entry.priority .platform-name { font-size: 16px; }
 .platform-description {
   margin-top: 4px;
   color: var(--text2);
@@ -475,15 +478,15 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: auto;
-  padding-top: 14px;
+  margin-top: 12px;
+  padding-top: 0;
 }
 .platform-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
-  padding: 5px 12px 5px 6px;
+  min-height: 44px;
+  padding: 7px 10px;
   border: 1px solid var(--border2);
   border-radius: 10px;
   background: var(--card);
@@ -530,22 +533,23 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .platforms-title { font-size: 22px; }
   .platform-directory { grid-template-columns: 1fr; gap: 12px; }
   .platform-entry,
-  .platform-entry.priority { grid-column: auto; display: grid; grid-template-columns: 96px minmax(0, 1fr); }
+  .platform-entry.priority { grid-column: auto; display: grid; grid-template-columns: 80px minmax(0, 1fr); }
   .platform-art,
-  .platform-entry.priority .platform-art { height: auto; min-height: 0; }
+  .platform-entry.priority .platform-art { height: 64px; min-height: 0; }
   .platform-art svg,
-  .platform-entry.priority .platform-art svg { width: 76px; height: 76px; }
+  .platform-entry.priority .platform-art svg { width: 56px; height: 56px; }
   .platform-content,
-  .platform-entry.priority .platform-content { padding: 14px 14px 14px 12px; }
-  .platform-entry.priority .platform-name { font-size: 17px; }
-  .platform-links { align-items: stretch; flex-direction: column; }
+  .platform-entry.priority .platform-content { padding: 16px 16px 12px 12px; }
+  .platform-entry.priority .platform-name { font-size: 16px; }
+  .platform-links { align-items: stretch; flex-direction: row; }
   .platform-link { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
 }
 
 @media (max-width: 360px) {
   .platform-entry,
-  .platform-entry.priority { grid-template-columns: 1fr; }
-  .platform-art { padding: 10px 0; }
+  .platform-entry.priority { grid-template-columns: 64px minmax(0, 1fr); }
+  .platform-art, .platform-entry.priority .platform-art { height: 48px; margin-left: 8px; }
+  .platform-art svg, .platform-entry.priority .platform-art svg { width: 44px; height: 44px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3466,10 +3470,15 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .growth-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-line); border-radius: 14px; }
 @media (max-width: 760px) { .growth-grid { grid-template-columns: 1fr; } .growth-art { height: 120px; } .growth-art svg { width: 92px; height: 92px; } }
 
-.platform-resources { grid-column: 1 / -1; min-width: 0; padding: 12px 18px 18px; border-top: 1px solid var(--border); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
-.platform-resource-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.platform-resources .platform-link { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
-.platform-resource-note { margin: 8px 0 0; color: var(--text-muted); }
+/* Materials have natural height; other cards and rows are not forced to match. */
+.platform-resources { grid-column: 1 / -1; min-width: 0; padding: 0 16px; border-top: 1px solid var(--mm-line); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.platform-resources > span { display: block; padding: 12px 0; color: var(--mm-muted); }
+.platform-resources summary { min-height: 44px; padding: 12px 0; color: var(--mm-ink); font-weight: 650; cursor: pointer; }
+.platform-resources summary:hover { color: var(--mm-accent); }
+.platform-resource-links { display: flex; flex-direction: column; gap: 4px; margin: 0 0 12px; }
+.platform-resources .platform-link { width: 100%; min-height: 44px; padding: 8px 10px; border-color: transparent; border-radius: 6px; background: transparent; white-space: normal; overflow-wrap: anywhere; font-weight: 550; }
+.platform-resources .platform-link:hover { background: var(--mm-surface-hover); border-color: var(--mm-control-line); }
+.platform-resource-note { margin: 0 0 12px; max-width: 65ch; color: var(--mm-muted); }
 
 </style>
 </head>
@@ -6085,15 +6094,22 @@ function ccRenderPlatformResources(payload) {
       links.appendChild(link);
       count++;
     }
-    const status = document.createElement('span');
-    status.textContent = ready ? (count ? 'Материалы проекта' : 'Материалы пока не подключены.') : (states[payload?.state] || states.unavailable);
-    area.appendChild(status);
-    if (count) area.appendChild(links);
+    // Native disclosure keeps links keyboard-accessible without filling every card.
+    // Replacing the area on access loss also removes any expanded private content.
+    const details = count ? document.createElement('details') : null;
+    const status = document.createElement(count ? 'summary' : 'span');
+    status.textContent = ready ? (count ? `Материалы проекта · ${count}` : 'Материалы пока не подключены.') : (states[payload?.state] || states.unavailable);
+    const container = details || area;
+    container.appendChild(status);
     if (ready && typeof entry?.note === 'string' && entry.note.length <= 400 && !/[\p{Cc}\p{Cf}]/u.test(entry.note)) {
       const note = document.createElement('p');
       note.className = 'platform-resource-note';
       note.textContent = entry.note;
-      area.appendChild(note);
+      container.appendChild(note);
+    }
+    if (count) {
+      container.appendChild(links);
+      area.appendChild(details);
     }
   });
 }
