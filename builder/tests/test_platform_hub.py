@@ -29,7 +29,7 @@ EXPECTED_PLATFORM_IDS = (
     "n8n",
 )
 EXPECTED_PLATFORM_NAMES = (
-    "JobRadar / Financial OS",
+    "JobRadar",
     "Lexi",
     "Health OS",
     "AI Singularity",
@@ -44,7 +44,7 @@ EXPECTED_PLATFORM_NAMES = (
 )
 EXPECTED_LINKS = {
     "financial-os": (
-        "https://jobradar.meshly.fr/",
+        "https://command.meshly.fr/job-radar/",
         "https://t.me/JobsRadarS_bot",
     ),
     "mydictionary": (
@@ -153,6 +153,12 @@ class PlatformHubContractTests(unittest.TestCase):
                     for field in REQUIRED_ACTION_FIELDS:
                         self.assertIn(field, action)
                         self.assertTrue(action[field])
+
+    def test_ac_1_accountable_copy_describes_french_micro_bnc(self):
+        description = _platforms_by_id(self._registry())["accountable-os"]["description"]
+        self.assertRegex(description, r"(?i)micro[ -]?BNC")
+        self.assertRegex(description, r"(?i)франц|France|French")
+        self.assertNotIn("accountability", description.lower())
 
     def test_ac_cc_4_external_links_are_semantic_and_hardened(self):
         html = self.platforms.build_platform_hub_html()

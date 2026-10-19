@@ -14,12 +14,12 @@ from urllib.parse import urlsplit
 PLATFORM_REGISTRY = (
     {
         "id": "financial-os",
-        "name": "JobRadar / Financial OS",
-        "description": "Job discovery and the financial operations workspace.",
+        "name": "JobRadar",
+        "description": "Job discovery, applications and career opportunities.",
         "tier": "primary",
         "status": "Public HTTPS + Telegram",
         "actions": (
-            {"label": "Open JobRadar", "url": "https://jobradar.meshly.fr/", "access": "public"},
+            {"label": "Open JobRadar", "url": "https://command.meshly.fr/job-radar/", "access": "public"},
             {"label": "Open JobRadar bot", "url": "https://t.me/JobsRadarS_bot", "access": "telegram"},
         ),
     },
@@ -67,7 +67,7 @@ PLATFORM_REGISTRY = (
     {
         "id": "accountable-os",
         "name": "Accountable OS",
-        "description": "Private accountability and operating-rhythm workspace.",
+        "description": "French Micro BNC financial administration and reporting workspace.",
         "tier": "active",
         "status": "Public HTTPS destination",
         "actions": (
@@ -139,7 +139,7 @@ PLATFORM_REGISTRY = (
 
 _PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 _ACTION_FIELDS = ("label", "url", "access")
-_APPROVED_HTTPS_HOSTS = {"t.me", "jobradar.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr",
+_APPROVED_HTTPS_HOSTS = {"t.me", "command.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr",
                          "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr",
                          "sushi-parisien.meshly.fr"}
 _APPROVED_ACCESS = {"private", "public", "telegram"}

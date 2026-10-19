@@ -3465,6 +3465,12 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .growth-steps li.is-done::before { background: var(--mm-success); border-color: var(--mm-success); }
 .growth-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-line); border-radius: 14px; }
 @media (max-width: 760px) { .growth-grid { grid-template-columns: 1fr; } .growth-art { height: 120px; } .growth-art svg { width: 92px; height: 92px; } }
+
+.platform-resources { grid-column: 1 / -1; min-width: 0; padding: 12px 18px 18px; border-top: 1px solid var(--border); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
+.platform-resource-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.platform-resources .platform-link { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.platform-resource-note { margin: 8px 0 0; color: var(--text-muted); }
+
 </style>
 </head>
 <body>
@@ -3823,19 +3829,20 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 
     <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её или нажмите её стрелки.</p>
     <div class="platform-directory">
-      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar / Financial OS">
-        <div class="platform-reorder-controls" aria-label="Порядок: JobRadar / Financial OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JobRadar / Financial OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JobRadar / Financial OS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar">
+        <div class="platform-reorder-controls" aria-label="Порядок: JobRadar"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JobRadar: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JobRadar: ниже">↓</button></div>
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
         <div class="platform-content">
           <span class="platform-tag">Главный продукт</span>
-          <h3 class="platform-name">JobRadar / Financial OS</h3>
-          <p class="platform-description">Главный продукт: поиск работы и финансы.</p>
+          <h3 class="platform-name">JobRadar</h3>
+          <p class="platform-description">Поиск работы, отклики и карьерные возможности.</p>
           <div class="platform-links">
-            <a class="platform-link" href="https://jobradar.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
+            <a class="platform-link" href="https://command.meshly.fr/job-radar/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
             <a class="platform-link" href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="financial" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi">
         <div class="platform-reorder-controls" aria-label="Порядок: Lexi"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Lexi: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Lexi: ниже">↓</button></div>
@@ -3850,6 +3857,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://t.me/my_dictionnary_tg_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="mydictionary" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
         <div class="platform-reorder-controls" aria-label="Порядок: Health OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Health OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Health OS: ниже">↓</button></div>
@@ -3863,6 +3871,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://health.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="health" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
         <div class="platform-reorder-controls" aria-label="Порядок: AI Singularity"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="AI Singularity: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="AI Singularity: ниже">↓</button></div>
@@ -3876,6 +3885,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://singularity.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="ai-singularity" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
         <div class="platform-reorder-controls" aria-label="Порядок: Context News France"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Context News France: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Context News France: ниже">↓</button></div>
@@ -3889,6 +3899,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://t.me/contextnews_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="context-news" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
         <div class="platform-reorder-controls" aria-label="Порядок: Accountable OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Accountable OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Accountable OS: ниже">↓</button></div>
@@ -3897,11 +3908,12 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
         <div class="platform-content">
           <span class="platform-tag">Работает</span>
           <h3 class="platform-name">Accountable OS</h3>
-          <p class="platform-description">Закрытое пространство личной ответственности на Mac mini.</p>
+          <p class="platform-description">Финансы и административный учёт Micro BNC во Франции.</p>
           <div class="platform-links">
             <a class="platform-link" href="https://accountable.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="accountable" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
         <div class="platform-reorder-controls" aria-label="Порядок: JARVIS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JARVIS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JARVIS: ниже">↓</button></div>
@@ -3915,6 +3927,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://t.me/max_jarvis_hoian_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="jarvis" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS">
         <div class="platform-reorder-controls" aria-label="Порядок: Property OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Property OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Property OS: ниже">↓</button></div>
@@ -3928,6 +3941,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://properties.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="property-os" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents">
         <div class="platform-reorder-controls" aria-label="Порядок: Pixel Agents"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Pixel Agents: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Pixel Agents: ниже">↓</button></div>
@@ -3941,6 +3955,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://pixel-agents.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="pixel-agents" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта">
         <div class="platform-reorder-controls" aria-label="Порядок: Зеркало Контакта"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Зеркало Контакта: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Зеркало Контакта: ниже">↓</button></div>
@@ -3954,6 +3969,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="http://127.0.0.1:3051" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="closeness-mirror" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien">
         <div class="platform-reorder-controls" aria-label="Порядок: Sushi Parisien"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Sushi Parisien: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Sushi Parisien: ниже">↓</button></div>
@@ -3967,6 +3983,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="https://sushi-parisien.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть сайт</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="sushi-parisien" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
       <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n">
         <div class="platform-reorder-controls" aria-label="Порядок: n8n"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="n8n: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="n8n: ниже">↓</button></div>
@@ -3980,6 +3997,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
             <a class="platform-link" href="http://127.0.0.1:5678" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Редактор</a>
           </div>
         </div>
+        <div class="platform-resources" data-platform-resources="n8n" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
 
     </div>
@@ -5620,6 +5638,7 @@ function showSection(name) {
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
+  if (name === 'platforms') setTimeout(ccLoadPlatformResources, 0);
 }
 
 // MAIN MANAGER is the first screen. «По дням» was removed on 2026-10-14 (Mark: MAIN MANAGER already says
@@ -6017,6 +6036,90 @@ function renderJarvisHumanSummary(data) {
     </div>
   `;
 }
+
+// ── Platform resources ──
+let ccResourceGeneration = 0;
+function ccResourceUrl(value) {
+  if (typeof value !== 'string' || !value || value.length > 2048 || value !== value.trim() || /[\s\u0000-\u001f\u007f?#\\]/u.test(value)) return null;
+  try {
+    let decoded = value;
+    for (let i = 0; i < 3; i++) {
+      decoded = decodeURIComponent(decoded);
+      if (/[\u0000-\u001f\u007f\\]/u.test(decoded)) return null;
+    }
+    const url = new URL(value);
+    // Check raw authority too: URL normalizes an explicit :443 port away.
+    const authority = value.match(/^https:\/\/([^/]+)/i)?.[1]?.toLowerCase();
+    if (!['github.com', 'drive.google.com'].includes(authority) || url.protocol !== 'https:' || url.username || url.password || url.port) return null;
+    return value;
+  } catch (_) { return null; }
+}
+function ccRenderPlatformResources(payload) {
+  const ready = payload?.state === 'ready' && payload.platforms && typeof payload.platforms === 'object' && !Array.isArray(payload.platforms);
+  const states = {
+    owner_required: 'Материалы доступны после входа владельца через Google.',
+    not_configured: 'Материалы пока не подключены.',
+    loading: 'Проверяем доступ к материалам…',
+    unavailable: 'Материалы временно недоступны. Откройте раздел ещё раз.',
+  };
+  const kinds = {documents: 'Документы', notes: 'Заметки', code: 'Код', tasks: 'Задачи'};
+  const scopes = {current: '', archive: 'Архив', upstream: 'Исходный проект', reference: 'Справочные материалы'};
+  document.querySelectorAll('[data-platform-resources]').forEach(area => {
+    area.replaceChildren();
+    const entry = ready ? payload.platforms[area.getAttribute('data-platform-resources')] : null;
+    const resources = Array.isArray(entry?.resources) ? entry.resources : [];
+    const links = document.createElement('div');
+    links.className = 'platform-resource-links';
+    let count = 0;
+    for (const item of resources) {
+      if (count >= 8) break;
+      if (!item || !Object.hasOwn(kinds, item.kind) || !Object.hasOwn(scopes, item.scope) || typeof item.label !== 'string' || !item.label.trim() || item.label.length > 120 || /[\p{Cc}\p{Cf}]/u.test(item.label)) continue;
+      const href = ccResourceUrl(item.url);
+      if (!href) continue;
+      const link = document.createElement('a');
+      link.className = 'platform-link';
+      link.href = href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = `${kinds[item.kind]} · ${item.label}${scopes[item.scope] ? ' — ' + scopes[item.scope] : ''}`;
+      links.appendChild(link);
+      count++;
+    }
+    const status = document.createElement('span');
+    status.textContent = ready ? (count ? 'Материалы проекта' : 'Материалы пока не подключены.') : (states[payload?.state] || states.unavailable);
+    area.appendChild(status);
+    if (count) area.appendChild(links);
+    if (ready && typeof entry?.note === 'string' && entry.note.length <= 400 && !/[\p{Cc}\p{Cf}]/u.test(entry.note)) {
+      const note = document.createElement('p');
+      note.className = 'platform-resource-note';
+      note.textContent = entry.note;
+      area.appendChild(note);
+    }
+  });
+}
+async function ccLoadPlatformResources() {
+  const generation = ++ccResourceGeneration;
+  ccRenderPlatformResources({state: 'loading', platforms: {}});
+  if (IS_FILE_DASHBOARD) {
+    ccRenderPlatformResources({state: 'unavailable', platforms: {}});
+    return;
+  }
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-resources`, {headers: jarvisRunHeaders(), cache: 'no-store'});
+    const payload = response.ok ? await response.json() : {state: response.status === 401 ? 'owner_required' : 'unavailable'};
+    if (generation !== ccResourceGeneration) return;
+    ccRenderPlatformResources(payload);
+  } catch (_) {
+    if (generation === ccResourceGeneration) ccRenderPlatformResources({state: 'unavailable', platforms: {}});
+  }
+}
+window.addEventListener('focus', () => {
+  if (document.querySelector('#section-platforms.active')) ccLoadPlatformResources();
+});
+setInterval(() => {
+  if (!document.hidden && document.querySelector('#section-platforms.active')) ccLoadPlatformResources();
+}, 60000);
+// ── End Platform resources ──
 
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -8441,16 +8544,25 @@ function renderProjectChart() {
   });
 }
 
+function mmSourceDescription(source, name) {
+  const labels = {live: 'актуально', stale: 'устарело', unknown: 'актуальность неизвестна', unavailable: 'недоступно'};
+  const status = labels[source?.state] || labels.unknown;
+  const date = source?.collected_at ? new Date(source.collected_at) : null;
+  const time = date && Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat('ru-RU', {timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false}).format(date)
+    : 'нет даты сбора';
+  return `${name} — ${status}, ${time}`;
+}
+
 function mmRenderSources() {
   const parts = [];
   const machines = dailyWorkData?.sources?.machines || [];
-  // The ChatGPT export is not a machine: its time is when Mark exported it.
-  if (machines.length) parts.push(`Логи: ${machines.map(m => `${m.machine === 'chatgpt' ? 'выгрузка ChatGPT' : m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
+  machines.forEach(m => parts.push(mmSourceDescription(m, m.machine === 'chatgpt' ? 'Выгрузка ChatGPT' : m.machine)));
   const github = dailyWorkData?.sources?.github;
-  if (github) parts.push(github.ok ? `GitHub ${mmAgo(github.collected_at)}` : 'GitHub ещё не собран');
+  if (github) parts.push(mmSourceDescription(github, 'GitHub'));
   const infraMachines = infraData?.machines || [];
-  if (infraMachines.length) parts.push(`Снимки: ${infraMachines.map(m => `${m.machine} ${mmAgo(m.collected_at)}`).join(', ')}`);
-  parts.push('облачные сессии claude.ai/code не учитываются');
+  infraMachines.forEach(m => parts.push(mmSourceDescription(m, `Снимок ${m.machine}`)));
+  parts.push('время по Парижу', 'облачные сессии claude.ai/code не учитываются');
   document.getElementById('mm-sources').textContent = parts.join(' · ');
 }
 

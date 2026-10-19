@@ -760,7 +760,155 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual(payload["state"], "stale")
 
 
+class SourceFreshnessTests(unittest.TestCase):
+    """AC-5/6, EC-5: source age never comes from response generated_at."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.now = datetime(2026, 10, 19, 16, 0, tzinfo=timezone.utc)
+
+    def machine(self, name, timestamp, sources=None):
+        path = self.root / "sessions" / name / "2026-10-19.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        data = {"schema": 2, "machine": name, "date": "2026-10-19", "sessions": [],
+                "sources": sources if sources is not None else {"claude": {"ok": True}, "codex": {"ok": True}}}
+        if timestamp is not None:
+            data["collected_at"] = timestamp
+        path.write_text(json.dumps(data))
+
+    def github(self, timestamp, ok=True):
+        (self.root / "github.json").write_text(json.dumps({"ok": ok, "collected_at": timestamp,
+                                                        "prs": [], "commits": [], "open_issues": []}))
+
+    def test_ac_5_mini_pro_and_github_have_independent_freshness(self):
+        self.machine("mac-mini", _iso(self.now - timedelta(minutes=10)))
+        self.machine("macbook-pro", _iso(self.now - timedelta(hours=8)))
+        self.github(_iso(self.now - timedelta(hours=9)))
+        payload = work_projection(self.root, now=self.now, owner=True)
+        sources = payload["sources"]
+        by_name = {m["machine"]: m for m in sources["machines"]}
+        self.assertEqual((by_name["mac-mini"].get("state"), by_name["mac-mini"].get("age_seconds")), ("live", 600))
+        self.assertEqual((by_name["macbook-pro"].get("state"), by_name["macbook-pro"].get("age_seconds")), ("stale", 28800))
+        self.assertEqual((sources["github"].get("state"), sources["github"].get("age_seconds")), ("stale", 32400))
+        # Preserve existing aggregate fields without using them to recolor every source.
+        self.assertEqual(payload["generated_at"], _iso(self.now))
+        self.assertEqual(payload["collected_at"], _iso(self.now - timedelta(minutes=10)))
+        self.assertEqual(payload["state"], "live")
+        self.assertIn("Оценка по активности сессий", payload["time_estimate_note"])
+
+    def test_ec_5_exact_six_hour_boundary_is_live_then_stale(self):
+        for seconds, state in ((21600, "live"), (21601, "stale")):
+            self.machine("boundary", _iso(self.now - timedelta(seconds=seconds)))
+            self.github(_iso(self.now - timedelta(seconds=seconds)))
+            with self.subTest(seconds=seconds):
+                sources = work_projection(self.root, now=self.now, owner=True)["sources"]
+                for item in (sources["machines"][0], sources["github"]):
+                    self.assertEqual(item.get("state"), state)
+                    self.assertEqual(item.get("age_seconds"), seconds)
+
+    def test_ac_5_ec_5_missing_invalid_and_future_times_stay_unknown_not_dropped(self):
+        for name, value in (("missing", None), ("invalid", "bad-date"),
+                            ("naive", "2026-10-19T15:00:00"), ("future", _iso(self.now + timedelta(seconds=1)))):
+            self.machine(name, value)
+        self.github("bad-date")
+        sources = work_projection(self.root, now=self.now, owner=True)["sources"]
+        self.assertEqual({m["machine"] for m in sources["machines"]}, {"missing", "invalid", "naive", "future"})
+        for item in sources["machines"] + [sources["github"]]:
+            with self.subTest(source=item):
+                self.assertEqual(item.get("state"), "unknown")
+                self.assertIn("age_seconds", item)
+                self.assertIsNone(item["age_seconds"])
+        self.assertEqual(work_projection(self.root, now=self.now, owner=True)["generated_at"], _iso(self.now))
+
+    def test_ac_5_explicit_source_failure_is_unavailable_even_with_fresh_timestamp(self):
+        self.machine("mac-mini", _iso(self.now), {"claude": {"ok": False, "error": "private path"}, "codex": {"ok": True}})
+        self.github(_iso(self.now), ok=False)
+        sources = work_projection(self.root, now=self.now, owner=True)["sources"]
+        self.assertEqual(sources["machines"][0].get("state"), "unavailable")
+        self.assertEqual(sources["github"].get("state"), "unavailable")
+
+    def test_ac_5_new_github_failure_overrides_old_success(self):
+        self.github(_iso(self.now - timedelta(minutes=20)))
+        (self.root / "github-error.json").write_text(json.dumps({"collected_at": _iso(self.now), "reason": "fixture-failure"}))
+        self.assertEqual(work_projection(self.root, now=self.now, owner=True)["sources"]["github"].get("state"), "unavailable")
+
+    def test_ac_5_public_freshness_keeps_anonymized_machine_names(self):
+        self.machine("private-owner-laptop", _iso(self.now - timedelta(hours=10)))
+        self.github(_iso(self.now - timedelta(hours=1)))
+        out = work_projection(self.root, now=self.now, owner=False)
+        source = out["sources"]["machines"][0]
+        self.assertEqual(source["machine"], "machine-1")
+        self.assertEqual(source.get("state"), "stale")
+        self.assertEqual(source.get("age_seconds"), 36000)
+        self.assertEqual(out["sources"]["github"].get("state"), "live")
+        self.assertNotIn("private-owner-laptop", json.dumps(out))
+        self.assertNotIn("sources", source)
+
+    def test_ac_5_newest_declared_day_invalid_or_failure_is_not_hidden_by_history(self):
+        machine_dir = self.root / "sessions" / "macbook-pro"
+        machine_dir.mkdir(parents=True)
+        for latest in ({"collected_at": "invalid"}, {"collected_at": None},
+                       {"collected_at": _iso(self.now), "sources": {"codex": {"ok": False}}}):
+            older = {"schema": 2, "machine": "macbook-pro", "date": "2026-10-18",
+                     "collected_at": _iso(self.now), "sources": {"codex": {"ok": True}}, "sessions": []}
+            newer = {**older, "date": "2026-10-19", **latest}
+            # Filename sorting differs deliberately from the declared dates.
+            (machine_dir / "z-old.json").write_text(json.dumps(older))
+            (machine_dir / "a-new.json").write_text(json.dumps(newer))
+            with self.subTest(latest=latest):
+                source = work_projection(self.root, now=self.now, owner=True)["sources"]["machines"][0]
+                expected = "unavailable" if latest.get("sources") else "unknown"
+                self.assertEqual(source.get("state"), expected)
+
+    def test_ac_5_same_day_snapshots_use_latest_collection_time(self):
+        folder = self.root / "sessions" / "mac-mini"
+        folder.mkdir(parents=True)
+        for filename, age, ok in (("z-old.json", 28800, False), ("a-new.json", 60, True)):
+            (folder / filename).write_text(json.dumps({"schema": 2, "machine": "mac-mini", "date": "2026-10-19",
+                "collected_at": _iso(self.now - timedelta(seconds=age)), "sources": {"codex": {"ok": ok}}, "sessions": []}))
+        source = work_projection(self.root, now=self.now, owner=True)["sources"]["machines"][0]
+        self.assertEqual(source.get("state"), "live")
+        self.assertEqual(source.get("age_seconds"), 60)
+
+    def test_ac_5_missing_github_is_unknown_not_a_green_zero(self):
+        source = work_projection(self.root, now=self.now, owner=True)["sources"]["github"]
+        self.assertEqual(source.get("state"), "unknown")
+        self.assertIsNone(source.get("age_seconds"))
+        self.assertIsNone(source.get("collected_at"))
+
+
 class CommandCenterWorkSectionTest(unittest.TestCase):
+    def test_ac_6_browser_displays_independent_states_and_paris_collection_time(self):
+        import re
+        import shutil
+        import subprocess
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        functions = re.findall(r"function (?:mmRenderSources|mmSource[\w]*)\([^)]*\)\s*\{[\s\S]*?\n\}", html)
+        self.assertTrue(functions)
+        javascript = r'''
+const target = {textContent:''};
+const document={getElementById:()=>target};
+const dailyWorkData={sources:{machines:[
+{machine:'Mini fixture',state:'live',collected_at:'2026-10-19T16:00:00Z',age_seconds:600},
+{machine:'Pro fixture',state:'stale',collected_at:'2026-10-19T08:00:00Z',age_seconds:29400},
+{machine:'Unknown fixture',state:'unknown',collected_at:null,age_seconds:null}],
+github:{ok:false,state:'unavailable',collected_at:null,age_seconds:null}}};
+const infraData={machines:[]};
+function mmAgo(){return 'old relative formatter';}
+''' + "\n".join(functions) + "\nmmRenderSources();process.stdout.write(JSON.stringify(target.textContent));"
+        node = shutil.which("node") or str(Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node")
+        run = subprocess.run([node, "-e", javascript], capture_output=True, text=True, timeout=10,
+                             env={**os.environ, "TZ": "UTC"})
+        self.assertEqual(run.returncode, 0, run.stderr)
+        text = json.loads(run.stdout)
+        self.assertRegex(text, r"(?i)Mini fixture[^·]*актуал")
+        self.assertRegex(text, r"(?i)Pro fixture[^·]*устар")
+        self.assertRegex(text, r"(?i)Unknown fixture[^·]*(?:неизвест|нет дат)")
+        self.assertRegex(text, r"(?i)GitHub[^·]*(?:недоступ|ошиб)")
+        self.assertIn("18:00", text, "16:00 UTC must display as 18:00 Paris on this date")
+        self.assertNotIn("old relative formatter", text)
+
     def test_dashboard_has_work_section_and_nav(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
         self.assertIn('aria-controls="section-work"', html)

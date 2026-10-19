@@ -114,6 +114,7 @@ def load_sessions(root: Path, first_day: str, last_day: str) -> tuple[dict[str, 
     """Return sessions by day (all machines) and the latest status per machine."""
     by_day: dict[str, list[dict]] = defaultdict(list)
     machines: dict[str, dict] = {}
+    latest: dict[str, tuple] = {}
     sessions_dir = root / "sessions"
     if not sessions_dir.is_dir():
         return by_day, machines
@@ -124,8 +125,11 @@ def load_sessions(root: Path, first_day: str, last_day: str) -> tuple[dict[str, 
                 continue
             machine = str(data.get("machine") or machine_dir.name)
             collected = _ts(data.get("collected_at"))
-            known = machines.get(machine)
-            if collected and (known is None or (_ts(known["collected_at"]) or collected) <= collected):
+            # A newly declared day is authoritative even if its collector failed
+            # or supplied no timestamp. Historical success cannot mask that gap.
+            rank = (data["date"], collected or datetime.min.replace(tzinfo=timezone.utc))
+            if machine not in latest or rank >= latest[machine]:
+                latest[machine] = rank
                 machines[machine] = {"machine": machine, "collected_at": _iso(collected),
                                      "sources": data.get("sources") if isinstance(data.get("sources"), dict) else {}}
             if not first_day <= data["date"] <= last_day:
@@ -134,6 +138,15 @@ def load_sessions(root: Path, first_day: str, last_day: str) -> tuple[dict[str, 
                 if isinstance(record, dict) and record.get("tool") in TOOLS:
                     by_day[data["date"]].append({**record, "machine": machine})
     return by_day, machines
+
+
+def _source_freshness(collected_at: object, now: datetime, *, failed: bool = False) -> dict:
+    collected = _ts(collected_at)
+    age = (now - collected).total_seconds() if collected else None
+    valid_age = age is not None and age >= 0
+    state = ("unavailable" if failed else "unknown" if not valid_age
+             else "stale" if age > STALE_AFTER.total_seconds() else "live")
+    return {"state": state, "age_seconds": int(age) if valid_age else None}
 
 
 def load_summaries(root: Path, days: Iterable[str]) -> dict[str, dict[str, Any]]:
@@ -696,15 +709,20 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
             break
         streak += 1
 
-    newest = max((_ts(m["collected_at"]) for m in machines.values() if _ts(m["collected_at"])), default=None)
+    newest = max((_ts(m["collected_at"]) for m in machines.values() if _ts(m["collected_at"]) and _ts(m["collected_at"]) <= now), default=None)
     gh_collected = _ts(github.get("collected_at")) if isinstance(github, dict) else None
+    gh_error_current = (isinstance(github_error, dict)
+                        and (_ts(github_error.get("collected_at")) or now) >= (gh_collected or now - timedelta(days=999)))
     sources = {
-        "machines": sorted(machines.values(), key=lambda m: m["machine"]),
+        "machines": [{**machine, **_source_freshness(machine["collected_at"], now,
+            failed=any(isinstance(source, dict) and source.get("ok") is False for source in machine["sources"].values()))}
+            for machine in sorted(machines.values(), key=lambda m: m["machine"])],
         "github": {
             "ok": bool(isinstance(github, dict) and github.get("ok")),
             "collected_at": _iso(gh_collected),
-            "last_error": github_error.get("reason") if isinstance(github_error, dict)
-            and (_ts(github_error.get("collected_at")) or now) > (gh_collected or now - timedelta(days=999)) else None,
+            "last_error": github_error.get("reason") if gh_error_current else None,
+            **_source_freshness(_iso(gh_collected), now,
+                failed=gh_error_current or (isinstance(github, dict) and github.get("ok") is False)),
         },
     }
     state = "empty" if newest is None else ("stale" if now - newest > STALE_AFTER else "live")
@@ -745,7 +763,7 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
             payload["project"] = _project_detail(portfolio[project], series_days, day_summaries) if project in portfolio else None
     else:
         payload["sources"] = {
-            "machines": [{"machine": f"machine-{i + 1}", "collected_at": m["collected_at"]} for i, m in enumerate(sources["machines"])],
-            "github": {"ok": sources["github"]["ok"], "collected_at": sources["github"]["collected_at"]},
+            "machines": [{"machine": f"machine-{i + 1}", **{key: m[key] for key in ("collected_at", "state", "age_seconds")}} for i, m in enumerate(sources["machines"])],
+            "github": {key: sources["github"][key] for key in ("ok", "collected_at", "state", "age_seconds")},
         }
     return payload
