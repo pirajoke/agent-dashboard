@@ -39,6 +39,24 @@ def prepare_navigation_fixture():
                 {"kind": "documents", "label": "Synthetic archive", "url": "https://drive.google.com/drive/folders/fixture-archive", "scope": "archive"}],
                 "note": "Only synthetic links; no owner documents."},
             "pixel-agents": {"resources": [{"kind": "code", "label": "Synthetic upstream source", "url": "https://github.com/example/upstream-fixture", "scope": "upstream"}]}}}}}
+    # Uneven resource counts reproduce the dense private card without owner data.
+    payload["navigation"]["command_center"]["platforms"]["jarvis"] = {
+        "resources": [
+            {"kind": kind, "label": label, "url": f"https://github.com/example/fixture-{i}", "scope": scope}
+            for i, (kind, label, scope) in enumerate([
+                ("code", "Synthetic project repository", "current"),
+                ("notes", "Synthetic project notes", "current"),
+                ("tasks", "Synthetic project tasks", "current"),
+                ("documents", "Synthetic historical configuration", "archive"),
+                ("notes", "Synthetic system map and responsibilities", "current"),
+                ("documents", "Synthetic system map PDF", "reference"),
+                ("notes", "Synthetic Inbox processing verification", "current"),
+                ("documents", "Synthetic document with a deliberately long descriptive title for narrow screens", "reference"),
+            ])],
+        "note": "Synthetic status: Inbox processing runs on the always-on computer. "
+                "The laptop can be off. Keep the processor logged in and online. "
+                "This preview contains no owner documents or private project links."
+    }
     if MODE == "empty":
         payload = {"schema_version": 2}
     elif MODE == "long-label":

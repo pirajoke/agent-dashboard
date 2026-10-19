@@ -294,6 +294,13 @@ vm.createContext(context);
             self.assertIn('noopener', anchor)
             self.assertIn('noreferrer', anchor)
 
+    def test_materials_disclosure_preserves_every_link_and_starts_collapsed(self):
+        out = self.run_js("context.ccRenderPlatformResources(good);process.stdout.write(JSON.stringify(areas.map(n=>n.innerHTML)));")
+        self.assertRegex(out[0], r'<details><summary>[^<]*4</summary>')
+        self.assertNotRegex(out[0], r'<details[^>]+open')
+        self.assertEqual(len(re.findall(r'<a\b', out[0])), 4)
+        self.assertNotIn('<details', out[1], 'Empty cards must not offer an empty disclosure')
+
     def test_ec_2_label_and_note_markup_render_as_text(self):
         out = self.run_js(r'''
 good.platforms.financial.resources[0].label='<img src=x onerror=alert(1)>Label';
