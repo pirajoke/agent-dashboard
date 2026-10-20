@@ -27,7 +27,7 @@ from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
 from dashboard_builder.daily_work import work_projection
-from dashboard_builder.platform_resources import platform_resources_projection
+from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
@@ -2545,6 +2545,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'edits': {}})
                 return
             self._json_response(200, {'state': 'ready', **load_edits(PLATFORM_EDITS_FILE)})
+            return
+        if parsed.path == '/api/owner-projects':
+            # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.
+            owner = self._decision_owner_authorized()
+            registry = JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"
+            self._json_response(200, owner_projects_projection(registry, owner=owner))
             return
         if parsed.path in {'/api/manager/decisions', '/api/manager/decisions/responses'}:
             self._handle_manager_decisions(responses=parsed.path.endswith('/responses'))
