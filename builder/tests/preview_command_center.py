@@ -57,6 +57,16 @@ def prepare_navigation_fixture():
                 "The laptop can be off. Keep the processor logged in and online. "
                 "This preview contains no owner documents or private project links."
     }
+    # One synthetic owner project card for «Личное» in MAIN MANAGER.
+    payload["navigation"]["command_center"]["projects"] = [{
+        "id": "fixture-personal", "name": "SYNTHETIC PERSONAL PROJECT", "status": "Preparing documents; nothing filed.",
+        "checked": STARTED.date().isoformat(),
+        "facts": [{"label": "Route", "text": "Synthetic route with a deliberately long description so the row wraps on narrow phone screens."},
+                  {"label": "Confirmed", "text": "Synthetic confirmed facts."},
+                  {"label": "Filing date", "text": "Not set."}],
+        "tasks": ["Synthetic open task one", "Synthetic open task two"],
+        "links": [{"label": "Inventory", "url": "https://docs.google.com/document/d/fixture-doc/edit"},
+                  {"label": "Checklist", "url": "https://docs.google.com/spreadsheets/d/fixture-sheet/edit"}]}]
     if MODE == "empty":
         payload = {"schema_version": 2}
     elif MODE == "long-label":
@@ -153,6 +163,10 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path == "/api/platform-resources":
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
+            return
+        if parsed.path == "/api/owner-projects":
+            prepare_navigation_fixture()
+            super().do_GET()  # The product's strict owner check and card projection.
             return
         if parsed.path == "/api/work/daily":
             prepare_navigation_fixture()

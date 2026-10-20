@@ -3399,6 +3399,32 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .mm-map-card.is-paused .mm-map-name { font-size: 15px; }
 .mm-map-card.is-paused .mm-map-last { font-size: 13px; -webkit-line-clamp: 1; }
 .mm-chart-box { margin-bottom: 24px; }
+/* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
+.mm-owner-grid { display: grid; gap: 14px; }
+.mm-owner-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; max-width: 860px; padding: 18px; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-owner-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.mm-owner-name { font-size: 17px; font-weight: 750; letter-spacing: .01em; overflow-wrap: anywhere; }
+.mm-owner-checked { color: var(--mm-muted); font-size: 12.5px; }
+.mm-owner-checked.is-stale { color: var(--mm-warning); font-weight: 650; }
+.mm-owner-status { margin: 0; padding: 10px 12px; font-size: 14px; line-height: 1.45; background: var(--mm-selection); border-radius: 10px; overflow-wrap: anywhere; }
+.mm-owner-status b { font-weight: 700; }
+.mm-owner-facts { display: grid; gap: 8px; margin: 0; }
+.mm-owner-facts > div { display: grid; grid-template-columns: minmax(120px, 190px) 1fr; gap: 12px; padding-top: 8px; border-top: 1px solid var(--mm-line); }
+.mm-owner-facts dt { color: var(--mm-muted); font-size: 13px; font-weight: 650; }
+.mm-owner-facts dd { margin: 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.mm-owner-tasks { border-top: 1px solid var(--mm-line); }
+.mm-owner-tasks summary { min-height: 44px; padding: 12px 0 8px; font-size: 14px; font-weight: 650; cursor: pointer; }
+.mm-owner-tasks summary:hover { color: var(--mm-accent); }
+.mm-owner-tasks .mm-bullets { padding-bottom: 6px; }
+.mm-owner-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.mm-os a.mm-owner-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 120px; min-height: 44px; padding: 8px 16px; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; font-size: 14px; font-weight: 650; text-decoration: none; }
+.mm-os a.mm-owner-link:hover { background: var(--mm-surface-hover); text-decoration: none; }
+.mm-owner-link span { color: var(--mm-accent); }
+@media (max-width: 760px) {
+  .mm-owner-card { padding: 14px; }
+  .mm-owner-facts > div { grid-template-columns: 1fr; gap: 2px; }
+  .mm-os a.mm-owner-link { flex: 1 1 0; }
+}
 
 @media (max-width: 1100px) {
   .container.cc-app { --cc-side-width: 216px; }
@@ -4182,6 +4208,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
       <div class="mm-main">
         <div class="mm-view" data-mm-panel="map">
+          <div id="mm-owner-projects" hidden></div>
           <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
         </div>
 
@@ -6344,7 +6371,7 @@ function ccResourceUrl(value) {
     const url = new URL(value);
     // Check raw authority too: URL normalizes an explicit :443 port away.
     const authority = value.match(/^https:\/\/([^/]+)/i)?.[1]?.toLowerCase();
-    if (!['github.com', 'drive.google.com'].includes(authority) || url.protocol !== 'https:' || url.username || url.password || url.port) return null;
+    if (!['github.com', 'drive.google.com', 'docs.google.com'].includes(authority) || url.protocol !== 'https:' || url.username || url.password || url.port) return null;
     return value;
   } catch (_) { return null; }
 }
@@ -8106,6 +8133,7 @@ function mmInit() {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
     loadDailyWork();
     loadInfraChanges();
+    mmLoadOwnerProjects();
   }, MM_REFRESH_MS);
 }
 
@@ -8147,6 +8175,7 @@ function openMainManager() {
   mmInit();
   loadDailyWork(dailyWorkDate);
   loadInfraChanges();
+  mmLoadOwnerProjects();
   const query = new URLSearchParams(window.location.search);
   const wanted = firstOpen ? query.get('project') : null;
   if (wanted) openProject(wanted, query.get('day'));
@@ -8659,6 +8688,114 @@ function renderMap(data) {
   host.innerHTML = statsHtml
     + group('В работе', 'Была работа за последние 7 дней. Столбики — часы за две недели, точка — слитый PR.', active, 'mm-map-active')
     + group('На паузе', 'Без работы больше недели.', paused, 'mm-map-paused');
+}
+
+// «Личное» (Mark 2026-10-20): owner-only project cards from the private portfolio registry, a short
+// status and buttons to the documents that keep the real record. Built with textContent; the public
+// page and anonymous callers never receive them, and losing access clears the cards.
+const OWNER_PROJECTS_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/owner-projects`;
+let mmOwnerProjectsGeneration = 0;
+const MM_OWNER_STALE_DAYS = 30;
+
+function mmOwnerText(value, limit) {
+  return typeof value === 'string' && value.trim() && value.length <= limit && !/[\p{Cc}\p{Cf}]/u.test(value);
+}
+
+function mmEl(tag, cls, text) {
+  const el = document.createElement(tag);
+  if (cls) el.className = cls;
+  if (text != null) el.textContent = text;
+  return el;
+}
+
+function mmOwnerProjectCard(card) {
+  const box = mmEl('article', 'mm-owner-card');
+  box.dataset.ownerProject = card.id;
+  const top = mmEl('div', 'mm-owner-top');
+  top.appendChild(mmEl('h4', 'mm-owner-name', card.name));
+  // The card is a copy of the source documents: say when it was last checked, and flag an old or unknown check.
+  const checked = mmOwnerText(card.checked, 10) && /^\d{4}-\d{2}-\d{2}$/.test(card.checked) ? card.checked : null;
+  const age = checked ? Math.floor((Date.now() - Date.parse(`${checked}T00:00:00Z`)) / 86400000) : null;
+  const stale = age === null || !(age >= -1) || age > MM_OWNER_STALE_DAYS;
+  top.appendChild(mmEl('span', `mm-owner-checked${stale ? ' is-stale' : ''}`, checked
+    ? `сверено ${checked.split('-').reverse().join('.')}${stale ? ' · давно, сверьте с документами' : ''}`
+    : 'дата сверки неизвестна, сверьте с документами'));
+  box.appendChild(top);
+  const status = mmEl('p', 'mm-owner-status');
+  status.appendChild(mmEl('b', '', 'Статус: '));
+  status.appendChild(document.createTextNode(card.status));
+  box.appendChild(status);
+  const facts = (Array.isArray(card.facts) ? card.facts : [])
+    .filter(item => item && mmOwnerText(item.label, 40) && mmOwnerText(item.text, 400)).slice(0, 10);
+  if (facts.length) {
+    const list = mmEl('dl', 'mm-owner-facts');
+    facts.forEach(item => {
+      const row = mmEl('div');
+      row.appendChild(mmEl('dt', '', item.label));
+      row.appendChild(mmEl('dd', '', item.text));
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+  }
+  const tasks = (Array.isArray(card.tasks) ? card.tasks : []).filter(item => mmOwnerText(item, 200)).slice(0, 10);
+  if (tasks.length) {
+    const details = mmEl('details', 'mm-owner-tasks');
+    details.appendChild(mmEl('summary', '', `Открытые задачи · ${tasks.length}`));
+    const list = mmEl('ul', 'mm-bullets');
+    tasks.forEach(item => list.appendChild(mmEl('li', '', item)));
+    details.appendChild(list);
+    box.appendChild(details);
+  }
+  const links = mmEl('div', 'mm-owner-links');
+  (Array.isArray(card.links) ? card.links : []).slice(0, 4).forEach(item => {
+    const href = item && mmOwnerText(item.label, 40) ? ccResourceUrl(item.url) : null;
+    if (!href) return;
+    const link = mmEl('a', 'mm-owner-link', item.label);
+    link.href = href;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.appendChild(mmEl('span', '', '↗'));
+    link.lastChild.setAttribute('aria-hidden', 'true');
+    links.appendChild(link);
+  });
+  if (links.childElementCount) box.appendChild(links);
+  return box;
+}
+
+function mmRenderOwnerProjects(payload) {
+  const host = document.getElementById('mm-owner-projects');
+  if (!host) return;
+  host.replaceChildren();
+  const cards = payload?.state === 'ready' && Array.isArray(payload.projects)
+    ? payload.projects.filter(card => card && /^[a-z0-9][a-z0-9-]{0,39}$/.test(card.id || '')
+      && mmOwnerText(card.name, 80) && mmOwnerText(card.status, 200)).slice(0, 12)
+    : [];
+  host.hidden = !cards.length;
+  if (!cards.length) return;
+  const group = mmEl('section', 'mm-map-group mm-owner-group');
+  group.setAttribute('aria-label', 'Личное');
+  const head = mmEl('div', 'mm-map-group-head');
+  const title = mmEl('h3', '', 'Личное ');
+  title.appendChild(mmEl('span', '', String(cards.length)));
+  head.appendChild(title);
+  head.appendChild(mmEl('p', 'mm-section-note', 'Видно только вам. Короткая сводка; полные данные — в документах по кнопкам.'));
+  group.appendChild(head);
+  const grid = mmEl('div', 'mm-owner-grid');
+  cards.forEach(card => grid.appendChild(mmOwnerProjectCard(card)));
+  group.appendChild(grid);
+  host.appendChild(group);
+}
+
+async function mmLoadOwnerProjects() {
+  const generation = ++mmOwnerProjectsGeneration;
+  if (!OWNER_PROJECTS_API) return mmRenderOwnerProjects(null);
+  try {
+    const response = await fetch(OWNER_PROJECTS_API, { headers: mmHeaders(), cache: 'no-store' });
+    const payload = response.ok ? await response.json() : null;
+    if (generation === mmOwnerProjectsGeneration) mmRenderOwnerProjects(payload);
+  } catch (_) {
+    if (generation === mmOwnerProjectsGeneration) mmRenderOwnerProjects(null);
+  }
 }
 
 async function openProject(id, day = null) {
