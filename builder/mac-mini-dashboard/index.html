@@ -3488,6 +3488,42 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-link::after { margin-left: auto; }
 .platform-links .platform-access { min-width: 92px; }
 .platform-resources > span { display: flex; align-items: center; min-height: 44px; }
+/* Archive (Mark 2026-10-20): a small per-card button sends a card to a collapsed «Архив» under the grid. */
+.platform-entry .platform-index { right: 48px; }
+.platform-archive-toggle {
+  position: absolute; z-index: 2; top: 4px; right: 4px;
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 1px solid transparent; border-radius: 10px; background: transparent;
+  color: var(--mm-muted); cursor: pointer; opacity: .55;
+  transition: opacity .15s ease, color .15s ease, border-color .15s ease, background-color .15s ease;
+}
+.platform-archive-toggle svg { width: 18px; height: 18px; }
+.platform-entry:hover .platform-archive-toggle,
+.platform-archive-toggle:focus-visible { opacity: 1; }
+.platform-archive-toggle:hover { opacity: 1; color: var(--mm-accent); border-color: var(--mm-control-line); background: var(--mm-surface); }
+.platform-archive-toggle:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-archive { margin-top: 12px; }
+.platform-archive[hidden] { display: none; }
+.platform-archive-open {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px;
+  border: 1px solid var(--mm-line); border-radius: 999px; background: var(--mm-surface);
+  color: var(--mm-muted); font: 650 12.5px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.platform-archive-open svg { width: 16px; height: 16px; }
+.platform-archive-open:hover { color: var(--mm-accent); border-color: var(--mm-control-line); }
+.platform-archive-open:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-archive-open .platform-archive-chevron { transition: transform .15s ease; }
+.platform-archive-open[aria-expanded="true"] .platform-archive-chevron { transform: rotate(90deg); }
+.platform-archive-list { margin-top: 12px; }
+.platform-archive-list[hidden] { display: none; }
+.platform-archive-list .platform-entry { opacity: .78; }
+.platform-archive-list .platform-entry:hover { opacity: 1; }
+.platform-archive-list .platform-reorder-controls,
+.platform-archive-list .platform-index { display: none; }
+.platform-archive-list .platform-archive-toggle { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .platform-archive-toggle, .platform-archive-open .platform-archive-chevron { transition: none; }
+}
 
 </style>
 </head>
@@ -3676,6 +3712,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   <!-- Access type icons -->
   <symbol id="cc-icon-telegram" viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="#DBEAFE" stroke="#1A1A1A" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="#3B82F6" stroke-width="1.6" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-web" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#DCFCE7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="#16803A" stroke-width="1.4"/></symbol>
+  <symbol id="cc-icon-archive" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 9.5v8.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9.5M10 13.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3" fill="#FEF3C7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#1A1A1A" stroke-width="1.6"/><circle cx="12" cy="15.5" r="1.6" fill="#9A7100"/></symbol>
   <!-- Navigation icons -->
   <symbol id="cc-icon-machines" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
@@ -3803,7 +3840,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
     <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge">12</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
   <div class="cc-side-foot">
@@ -4018,6 +4055,10 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
         <div class="platform-resources" data-platform-resources="n8n" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
 
+    </div>
+    <div class="platform-archive" id="platform-archive" hidden>
+      <button class="platform-archive-open" id="platform-archive-open" type="button" aria-expanded="false" aria-controls="platform-archive-list"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · <span id="platform-archive-count">0</span></span><span class="platform-archive-chevron" aria-hidden="true">›</span></button>
+      <div class="platform-directory platform-archive-list" id="platform-archive-list" aria-label="Архив платформ" hidden></div>
     </div>
     <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Закрытые ссылки ведут на локальный адрес и открываются только через ваш SSH-туннель. Этот список не проверяет, работает ли сервис прямо сейчас.</span></p>
   </section>
@@ -5565,7 +5606,117 @@ function finishPlatformPointerCancel(event) {
   releasePlatformPointerCapture(state);
 }
 
+// Archive is per browser too. Mark 2026-10-20 archived these three; a card's own button moves it either way.
+const PLATFORM_ARCHIVE_STORAGE_KEY = 'command-center.platform-archive.v1';
+const PLATFORM_ARCHIVED_BY_DEFAULT = Object.freeze(['closeness-mirror', 'sushi-parisien', 'n8n']);
+const platformArchiveList = document.getElementById('platform-archive-list');
+const platformArchiveOpen = document.getElementById('platform-archive-open');
+
+function readPlatformArchiveChoices() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLATFORM_ARCHIVE_STORAGE_KEY) || '{}');
+    return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function isPlatformArchived(id, choices) {
+  return typeof choices[id] === 'boolean' ? choices[id] : PLATFORM_ARCHIVED_BY_DEFAULT.includes(id);
+}
+
+function setPlatformArchiveButton(card, archived) {
+  let button = card.querySelector('.platform-archive-toggle');
+  if (!button) {
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'platform-archive-toggle';
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>';
+    card.appendChild(button);
+  }
+  const name = card.dataset.platformName || card.dataset.platformId;
+  const label = archived ? `${name}: вернуть из архива` : `${name}: в архив`;
+  button.setAttribute('aria-label', label);
+  button.title = archived ? 'Вернуть' : 'В архив';
+}
+
+function refreshPlatformArchive() {
+  if (!platformArchiveList) return;
+  const archived = platformArchiveList.querySelectorAll('.platform-entry').length;
+  document.getElementById('platform-archive-count').textContent = String(archived);
+  document.getElementById('platform-archive').hidden = archived === 0;
+  if (archived === 0) setPlatformArchiveExpanded(false);
+  const badge = document.getElementById('platforms-badge');
+  if (badge) badge.textContent = String(platformCards().length);
+}
+
+function setPlatformArchiveExpanded(expanded) {
+  if (!platformArchiveList || !platformArchiveOpen) return;
+  platformArchiveList.hidden = !expanded;
+  platformArchiveOpen.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+
+function placeArchivedPlatform(card) {
+  const rank = id => PLATFORM_CANONICAL_IDS.indexOf(id);
+  const next = Array.from(platformArchiveList.querySelectorAll('.platform-entry'))
+    .find(item => rank(item.dataset.platformId) > rank(card.dataset.platformId));
+  platformArchiveList.insertBefore(card, next || null);
+}
+
+function applyPlatformArchive() {
+  if (!platformDirectory || !platformArchiveList) return;
+  const choices = readPlatformArchiveChoices();
+  [...platformCards(), ...platformArchiveList.querySelectorAll('.platform-entry')].forEach(card => {
+    const archived = isPlatformArchived(card.dataset.platformId, choices);
+    setPlatformArchiveButton(card, archived);
+    if (archived && platformDirectory.contains(card)) placeArchivedPlatform(card);
+  });
+  refreshPlatformArchive();
+}
+
+function togglePlatformArchive(event) {
+  const button = event.target.closest('.platform-archive-toggle');
+  if (!button) return;
+  const card = button.closest('.platform-entry');
+  if (!card) return;
+  if (platformPointerState) cancelPlatformLongPress();
+  const archive = platformDirectory.contains(card);
+  const choices = readPlatformArchiveChoices();
+  choices[card.dataset.platformId] = archive;
+  let persisted = true;
+  try {
+    localStorage.setItem(PLATFORM_ARCHIVE_STORAGE_KEY, JSON.stringify(choices));
+  } catch (error) {
+    persisted = false;
+  }
+  const name = card.dataset.platformName || card.dataset.platformId;
+  setPlatformArchiveButton(card, archive);
+  if (archive) {
+    placeArchivedPlatform(card);
+    renumberPlatforms();
+    savePlatformOrder();
+    refreshPlatformArchive();
+    document.getElementById('platform-order-status').textContent =
+      `${name} в архиве${persisted ? '' : ' до перезагрузки'}. Вернуть можно в «Архиве» под карточками.`;
+    platformArchiveOpen.focus();
+  } else {
+    platformDirectory.appendChild(card);
+    renumberPlatforms();
+    savePlatformOrder();
+    refreshPlatformArchive();
+    announcePlatformOrder(card, persisted ? 'Возвращено из архива:' : 'Возвращено до перезагрузки:');
+    button.focus();
+  }
+}
+
+applyPlatformArchive();
 applyPlatformOrder(readPlatformOrder());
+if (platformArchiveOpen) {
+  platformArchiveOpen.addEventListener('click', () => {
+    setPlatformArchiveExpanded(platformArchiveOpen.getAttribute('aria-expanded') !== 'true');
+  });
+}
+document.getElementById('section-platforms')?.addEventListener('click', togglePlatformArchive);
 if (platformDirectory) {
   platformDirectory.addEventListener('click', movePlatformByButton);
   // A link under the finger must not open when a long press ends a drag.
