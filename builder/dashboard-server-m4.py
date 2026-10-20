@@ -28,6 +28,7 @@ from dashboard_builder.owner_decisions import (
 )
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
+from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
@@ -48,6 +49,7 @@ LAUNCH_AGENTS_DIR = HOME / "Library" / "LaunchAgents"
 GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
 JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
+PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
@@ -1675,6 +1677,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/jarvis/tasks/draft':
             self._handle_jarvis_task_draft()
             return
+        if parsed.path == '/api/platform-edits':
+            self._handle_platform_edits_save()
+            return
         if parsed.path == '/api/jarvis/pipeline/ping':
             self._handle_jarvis_pipeline_ping()
             return
@@ -2339,6 +2344,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except (OSError, ValueError, RuntimeError):
             self._json_response(503, {'error': 'decisions_unavailable', 'state': 'unavailable', 'decisions': [], 'activity': []})
 
+    def _handle_platform_edits_save(self):
+        # Owner-only, same guard as decisions: Access sign-in (Origin-checked for writes) or the owner token.
+        if not self._decision_owner_authorized():
+            self._json_response(401, {'error': 'owner_token_required'})
+            return
+        origin, host = self.headers.get('Origin'), self.headers.get('Host', '')
+        if origin and origin not in {f'http://{host}', f'https://{host}'}:
+            self._json_response(403, {'error': 'origin_not_allowed'})
+            return
+        if 'application/json' not in self.headers.get('Content-Type', ''):
+            self._json_response(415, {'error': 'json_required'})
+            return
+        try:
+            if not 1 <= int(self.headers.get('Content-Length', 0)) <= PLATFORM_EDITS_MAX_BYTES:
+                raise ValueError('invalid_body_length')
+            record = save_card_edit(PLATFORM_EDITS_FILE, self._read_json_body(max_bytes=PLATFORM_EDITS_MAX_BYTES))
+            self._json_response(200, {'state': 'ready', **record})
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_platform_edits'})
+        except OSError:
+            self._json_response(503, {'error': 'platform_edits_unavailable'})
+
     def _handle_manager_decision_response(self):
         if not self._decision_owner_authorized():
             self._json_response(401, {'error': 'owner_token_required'})
@@ -2512,6 +2539,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             owner = self._decision_owner_authorized()
             registry = JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"
             self._json_response(200, platform_resources_projection(registry, owner=owner))
+            return
+        if parsed.path == '/api/platform-edits':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'edits': {}})
+                return
+            self._json_response(200, {'state': 'ready', **load_edits(PLATFORM_EDITS_FILE)})
             return
         if parsed.path == '/api/owner-projects':
             # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.

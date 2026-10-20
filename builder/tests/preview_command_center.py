@@ -164,6 +164,9 @@ class PreviewHandler(SERVER.Handler):
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
             return
+        if parsed.path == "/api/platform-edits":
+            super().do_GET()  # The product's owner-only read of card edits.
+            return
         if parsed.path == "/api/owner-projects":
             prepare_navigation_fixture()
             super().do_GET()  # The product's strict owner check and card projection.
@@ -207,6 +210,8 @@ class PreviewHandler(SERVER.Handler):
     def do_POST(self):
         if urlsplit(self.path).path == "/api/manager/decisions/respond":
             self._handle_manager_decision_response()
+        elif urlsplit(self.path).path == "/api/platform-edits":
+            self._handle_platform_edits_save()  # Writes only to the isolated fixture state.
         else:
             self._json_response(403, {"error": "fixture_read_only"})
 
@@ -215,6 +220,7 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="command-center-preview-") as state:
         FIXTURE_STATE = Path(state)
         SERVER.MANAGER_DECISIONS_FILE = FIXTURE_STATE / "responses.jsonl"
+        SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
         prepare_navigation_fixture()
