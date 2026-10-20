@@ -3489,7 +3489,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-links .platform-access { min-width: 92px; }
 .platform-resources > span { display: flex; align-items: center; min-height: 44px; }
 /* Archive (Mark 2026-10-20): a small per-card button sends a card to a collapsed «Архив» under the grid. */
-.platform-entry .platform-index { right: 48px; }
+.platform-entry .platform-index { right: 84px; }
 .platform-archive-toggle {
   position: absolute; z-index: 2; top: 4px; right: 4px;
   display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
@@ -3565,7 +3565,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-entry.priority .platform-art svg { width: 40px; height: 40px; }
 .platform-content,
 .platform-entry.priority .platform-content { padding: 11px 12px 8px 10px; }
-.platform-tag { margin: 0 72px 2px 0; font-size: 9.5px; }
+.platform-tag { margin: 0 108px 2px 0; font-size: 9.5px; }
 .platform-name,
 .platform-entry.priority .platform-name { font-size: 15px; line-height: 1.25; }
 .platform-description {
@@ -3597,7 +3597,55 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-resources details[open] { pointer-events: auto; }
 .platform-resources summary { display: inline-block; min-height: 0; padding: 2px 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 600; }
 .platform-reorder-controls,
-.platform-archive-toggle { z-index: 3; }
+.platform-archive-toggle,
+.platform-edit-toggle { z-index: 3; }
+/* Edit (Mark 2026-10-20): a pencil next to the archive box opens a small window for name, status and priority. */
+.platform-edit-toggle {
+  position: absolute; top: 4px; right: 40px;
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 1px solid transparent; border-radius: 10px; background: transparent;
+  color: var(--mm-muted); cursor: pointer; opacity: .55;
+  transition: opacity .15s ease, color .15s ease, border-color .15s ease, background-color .15s ease;
+}
+.platform-edit-toggle svg { width: 17px; height: 17px; }
+.platform-entry:hover .platform-edit-toggle,
+.platform-edit-toggle:focus-visible { opacity: 1; }
+.platform-edit-toggle:hover { opacity: 1; color: var(--mm-accent); border-color: var(--mm-control-line); background: var(--mm-surface); }
+.platform-edit-toggle:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-entry.priority { border-color: color-mix(in srgb, var(--mm-accent) 45%, var(--mm-line)); }
+.platform-entry.priority .platform-tag { color: var(--mm-accent); }
+.platform-edit-dialog { width: min(440px, calc(100vw - 32px)); }
+.platform-edit-form { display: grid; gap: 14px; padding: 18px 20px 20px; }
+.platform-edit-form label { display: grid; gap: 6px; color: var(--mm-ink); font-size: 13px; font-weight: 650; }
+.platform-edit-form input,
+.platform-edit-form select {
+  min-height: 42px; padding: 8px 12px; border: 1px solid var(--mm-control-line); border-radius: 10px;
+  background: var(--mm-surface); color: var(--mm-ink); font: 500 15px/1.3 'Inter', -apple-system, sans-serif;
+}
+.platform-edit-form input:focus-visible,
+.platform-edit-form select:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.platform-edit-form small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
+.platform-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.platform-edit-actions button {
+  min-height: 40px; padding: 8px 16px; border: 1px solid var(--mm-control-line); border-radius: 10px;
+  background: var(--mm-surface); color: var(--mm-ink); font: 650 13.5px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.platform-edit-actions .platform-edit-save { background: var(--mm-accent); border-color: var(--mm-accent); color: var(--mm-background); }
+.platform-edit-actions .platform-edit-reset { margin-left: auto; color: var(--mm-muted); }
+.platform-edit-actions button:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-edit-note { min-height: 16px; margin: 0; color: var(--mm-muted); font-size: 12px; }
+.platform-edit-note:empty { display: none; }
+.platform-edit-dialog .platform-archive-close { margin-left: auto; }
+.platform-edit-form { overflow: auto; overscroll-behavior: contain; }
+.platform-edit-form input,
+.platform-edit-form select { box-sizing: border-box; width: 100%; min-width: 0; }
+@media (max-width: 600px) {
+  .platform-edit-dialog { width: 100vw; }
+  .platform-edit-form { padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .platform-edit-toggle { transition: none; }
+}
 @media (max-width: 760px) {
   .platform-directory { grid-template-columns: 1fr; gap: 8px; }
   .platform-entry,
@@ -3802,6 +3850,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <!-- Access type icons -->
   <symbol id="cc-icon-telegram" viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="#DBEAFE" stroke="#1A1A1A" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="#3B82F6" stroke-width="1.6" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-web" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#DCFCE7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="#16803A" stroke-width="1.4"/></symbol>
+  <symbol id="cc-icon-edit" viewBox="0 0 24 24"><path d="M4.5 19.5l1-4.2L15.8 5a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.7 18.5l-4.2 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.8 7l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="cc-icon-archive" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 9.5v8.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9.5M10 13.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3" fill="#FEF3C7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#1A1A1A" stroke-width="1.6"/><circle cx="12" cy="15.5" r="1.6" fill="#9A7100"/></symbol>
   <!-- Navigation icons -->
@@ -4149,6 +4198,45 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="platform-archive" id="platform-archive" hidden>
       <button class="platform-archive-open" id="platform-archive-open" type="button" aria-haspopup="dialog" aria-controls="platform-archive-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · <span id="platform-archive-count">0</span></span></button>
     </div>
+    <dialog class="platform-archive-dialog platform-edit-dialog" id="platform-edit-dialog" aria-labelledby="platform-edit-title">
+      <header class="platform-archive-head">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
+        <h3 id="platform-edit-title">Изменить карточку</h3>
+        <button class="platform-archive-close" id="platform-edit-close" type="button" aria-label="Закрыть без сохранения">✕</button>
+      </header>
+      <form class="platform-edit-form" id="platform-edit-form" method="dialog" novalidate>
+        <label>Название
+          <input id="platform-edit-name" name="name" type="text" maxlength="60" autocomplete="off" required>
+        </label>
+        <label>Статус
+          <input id="platform-edit-status" name="status" type="text" maxlength="40" autocomplete="off" list="platform-edit-statuses">
+          <small>Надпись над названием, например «Работает» или «На паузе».</small>
+        </label>
+        <datalist id="platform-edit-statuses">
+          <option value="Главный продукт"></option>
+          <option value="Работает"></option>
+          <option value="В разработке"></option>
+          <option value="На паузе"></option>
+          <option value="Не работает"></option>
+        </datalist>
+        <label>Приоритет
+          <select id="platform-edit-priority" name="priority">
+            <option value="main">Главный — карточка выделена цветом</option>
+            <option value="normal">Обычный</option>
+          </select>
+        </label>
+        <label id="platform-edit-place-field">Место в списке
+          <input id="platform-edit-place" name="place" type="number" min="1" step="1" inputmode="numeric">
+          <small id="platform-edit-place-hint"></small>
+        </label>
+        <p class="platform-edit-note" id="platform-edit-note" role="status" aria-live="polite"></p>
+        <div class="platform-edit-actions">
+          <button class="platform-edit-save" type="submit">Сохранить</button>
+          <button type="button" id="platform-edit-cancel">Отмена</button>
+          <button class="platform-edit-reset" type="button" id="platform-edit-reset">Как было</button>
+        </div>
+      </form>
+    </dialog>
     <dialog class="platform-archive-dialog" id="platform-archive-dialog" aria-labelledby="platform-archive-title">
       <header class="platform-archive-head">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>
@@ -6422,6 +6510,206 @@ setInterval(() => {
   if (!document.hidden && document.querySelector('#section-platforms.active')) ccLoadPlatformResources();
 }, 60000);
 // ── End Platform resources ──
+
+// ── Platform edits ── Mark 2026-10-20: «кнопку Эдит … менять название, статус, приоритетность».
+// Name, status and priority are kept on the Mac mini (/api/platform-edits, owner only), so a change
+// shows on every device; this browser keeps a copy so the page looks right before the server answers.
+// The place in the list is the same per-browser order as long-press dragging.
+const PLATFORM_EDITS_CACHE_KEY = 'command-center.platform-edits.v1';
+const platformEditDialog = document.getElementById('platform-edit-dialog');
+const platformEditForm = document.getElementById('platform-edit-form');
+const platformEditDefaults = new Map();
+let platformEdits = {};
+let platformEditCard = null;
+
+function platformEditAllCards() {
+  return Array.from(document.querySelectorAll('#section-platforms .platform-entry'));
+}
+
+function platformEditCurrent(card) {
+  return {
+    name: card.querySelector('.platform-name')?.textContent.trim() || card.dataset.platformId,
+    status: card.querySelector('.platform-tag')?.textContent.trim() || '',
+    priority: card.classList.contains('priority') ? 'main' : 'normal',
+  };
+}
+
+function platformEditRemember(card) {
+  if (platformEditDefaults.has(card.dataset.platformId)) return;
+  const current = platformEditCurrent(card);
+  // Shipped main products carry the «Главный продукт» label; treat them as main priority.
+  if (current.status === 'Главный продукт') current.priority = 'main';
+  platformEditDefaults.set(card.dataset.platformId, current);
+}
+
+function platformEditLabels(card, name) {
+  card.dataset.platformName = name;
+  card.querySelector('.platform-reorder-controls')?.setAttribute('aria-label', `Порядок: ${name}`);
+  card.querySelectorAll('[data-platform-move]').forEach(button => {
+    button.setAttribute('aria-label', `${name}: ${button.dataset.platformMove === 'previous' ? 'выше' : 'ниже'}`);
+  });
+  const edit = card.querySelector('.platform-edit-toggle');
+  if (edit) edit.setAttribute('aria-label', `${name}: изменить`);
+  if (typeof setPlatformArchiveButton === 'function') {
+    setPlatformArchiveButton(card, Boolean(card.closest('.platform-archive-list')));
+  }
+}
+
+function applyPlatformEdits(edits) {
+  platformEdits = edits && typeof edits === 'object' && !Array.isArray(edits) ? edits : {};
+  platformEditAllCards().forEach(card => {
+    platformEditRemember(card);
+    const base = platformEditDefaults.get(card.dataset.platformId);
+    const own = platformEdits[card.dataset.platformId] || {};
+    const value = {
+      name: typeof own.name === 'string' && own.name.trim() ? own.name.trim() : base.name,
+      status: typeof own.status === 'string' && own.status.trim() ? own.status.trim() : base.status,
+      priority: own.priority === 'main' || own.priority === 'normal' ? own.priority : base.priority,
+    };
+    const nameNode = card.querySelector('.platform-name');
+    const tagNode = card.querySelector('.platform-tag');
+    if (nameNode) nameNode.textContent = value.name;
+    if (tagNode) tagNode.textContent = value.status;
+    card.classList.toggle('priority', value.priority === 'main');
+    if (!card.querySelector('.platform-edit-toggle')) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'platform-edit-toggle';
+      button.title = 'Изменить';
+      button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>';
+      card.appendChild(button);
+    }
+    platformEditLabels(card, value.name);
+  });
+}
+
+function readPlatformEditsCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLATFORM_EDITS_CACHE_KEY) || '{}');
+    return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function writePlatformEditsCache(edits) {
+  try { localStorage.setItem(PLATFORM_EDITS_CACHE_KEY, JSON.stringify(edits)); } catch (_) { /* optional */ }
+}
+
+async function loadPlatformEdits() {
+  if (IS_FILE_DASHBOARD) return;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-edits`, {headers: jarvisRunHeaders(), cache: 'no-store'});
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (payload?.state !== 'ready' || !payload.edits || typeof payload.edits !== 'object') return;
+    writePlatformEditsCache(payload.edits);
+    applyPlatformEdits(payload.edits);
+  } catch (_) { /* keep the cached copy */ }
+}
+
+function openPlatformEdit(card) {
+  if (!platformEditDialog || !card) return;
+  platformEditCard = card;
+  const value = platformEditCurrent(card);
+  const archived = Boolean(card.closest('.platform-archive-list'));
+  document.getElementById('platform-edit-name').value = value.name;
+  document.getElementById('platform-edit-status').value = value.status;
+  document.getElementById('platform-edit-priority').value = value.priority;
+  const cards = platformCards();
+  const place = document.getElementById('platform-edit-place');
+  document.getElementById('platform-edit-place-field').hidden = archived;
+  place.max = String(cards.length);
+  place.value = archived ? '' : String(cards.indexOf(card) + 1);
+  document.getElementById('platform-edit-place-hint').textContent =
+    `От 1 до ${cards.length}. Место запоминается на этом устройстве, как при перетаскивании.`;
+  document.getElementById('platform-edit-note').textContent = '';
+  if (typeof platformEditDialog.showModal === 'function') platformEditDialog.showModal();
+  else platformEditDialog.setAttribute('open', '');
+  document.getElementById('platform-edit-name').focus();
+}
+
+function closePlatformEdit() {
+  if (platformEditDialog?.open) platformEditDialog.close();
+}
+
+async function savePlatformEdit(reset = false) {
+  const card = platformEditCard;
+  if (!card) return;
+  const id = card.dataset.platformId;
+  const base = platformEditDefaults.get(id);
+  const note = document.getElementById('platform-edit-note');
+  const name = document.getElementById('platform-edit-name').value.replace(/\s+/g, ' ').trim();
+  if (!reset && !name) {
+    note.textContent = 'Название не может быть пустым.';
+    document.getElementById('platform-edit-name').focus();
+    return;
+  }
+  const next = {...platformEdits};
+  if (reset) {
+    delete next[id];
+  } else {
+    const status = document.getElementById('platform-edit-status').value.replace(/\s+/g, ' ').trim();
+    const priority = document.getElementById('platform-edit-priority').value;
+    const entry = {};
+    if (name !== base.name) entry.name = name;
+    if (status && status !== base.status) entry.status = status;
+    if (priority !== base.priority) entry.priority = priority;
+    if (Object.keys(entry).length) next[id] = entry; else delete next[id];
+  }
+  applyPlatformEdits(next);
+  writePlatformEditsCache(next);
+
+  const place = Number(document.getElementById('platform-edit-place').value);
+  const cards = platformCards();
+  const from = cards.indexOf(card);
+  if (!reset && from >= 0 && Number.isInteger(place) && place >= 1 && place <= cards.length && place !== from + 1) {
+    const target = cards[place - 1];
+    if (place - 1 < from) target.before(card); else target.after(card);
+    renumberPlatforms();
+    savePlatformOrder();
+    announcePlatformOrder(card, 'Перемещено:');
+  }
+
+  let synced = false;
+  if (!IS_FILE_DASHBOARD) {
+    try {
+      const response = await fetch(`${DASHBOARD_API}/api/platform-edits`, {
+        method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store', body: JSON.stringify({edits: next}),
+      });
+      synced = response.ok;
+    } catch (_) { synced = false; }
+  }
+  if (synced) {
+    closePlatformEdit();
+    document.getElementById('platform-order-status').textContent =
+      `${platformEditCurrent(card).name}: сохранено, видно на всех устройствах.`;
+  } else {
+    note.textContent = 'Сохранено только на этом устройстве: Mac mini сейчас не принял правку. Попробуйте ещё раз позже.';
+  }
+}
+
+applyPlatformEdits(readPlatformEditsCache());
+loadPlatformEdits();
+document.getElementById('section-platforms')?.addEventListener('click', event => {
+  const button = event.target.closest('.platform-edit-toggle');
+  if (button) openPlatformEdit(button.closest('.platform-entry'));
+});
+platformEditForm?.addEventListener('submit', event => {
+  event.preventDefault();
+  savePlatformEdit(false);
+});
+document.getElementById('platform-edit-reset')?.addEventListener('click', () => savePlatformEdit(true));
+document.getElementById('platform-edit-cancel')?.addEventListener('click', closePlatformEdit);
+document.getElementById('platform-edit-close')?.addEventListener('click', closePlatformEdit);
+platformEditDialog?.addEventListener('click', event => {
+  if (event.target === platformEditDialog) closePlatformEdit();
+});
+platformEditDialog?.addEventListener('close', () => {
+  const button = platformEditCard?.querySelector('.platform-edit-toggle');
+  if (button && !button.closest('dialog:not([open])')) button.focus();
+});
+// ── End Platform edits ──
 
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
