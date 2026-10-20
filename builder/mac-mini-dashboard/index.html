@@ -138,6 +138,8 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   color: var(--mm-ink); box-shadow: var(--mm-shadow); overflow: auto; overscroll-behavior: contain;
 }
 .tab-name-dialog::backdrop { background: rgba(20, 16, 10, .45); }
+/* Browsers without a native <dialog> still need the closed window hidden. */
+.tab-name-dialog:not([open]) { display: none; }
 html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .tab-name-editor { margin: 0; padding: 16px 20px 18px; }
 .tab-name-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
@@ -5335,8 +5337,14 @@ function openTabNameEditor() {
 }
 
 function closeTabNameEditor() {
-  if (typeof tabNameDialog.close === 'function') tabNameDialog.close();
-  else tabNameDialog.removeAttribute('open');
+  if (typeof tabNameDialog.close === 'function') {
+    tabNameDialog.close();
+    return;
+  }
+  // No native <dialog>: no 'close' event either, so finish here.
+  if (!tabNameDialog.hasAttribute('open')) return;
+  tabNameDialog.removeAttribute('open');
+  onTabNameEditorClosed();
 }
 
 function onTabNameEditorClosed() {
