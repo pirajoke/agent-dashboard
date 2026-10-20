@@ -3552,6 +3552,68 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .platform-archive-toggle { transition: none; }
 }
+/* Compact cards (Mark 2026-10-20: «используй только карточки для перехода на сервисы и сократи место»).
+   The first link stretches over the whole card, so a tap anywhere opens the service; a second way in
+   (a Telegram bot) stays as a small chip. Buttons, chips and materials sit above the stretched link. */
+.platform-directory { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 10px; }
+.platform-entry,
+.platform-entry.priority { grid-template-columns: 58px minmax(0, 1fr); grid-template-rows: auto; align-content: start; cursor: pointer; }
+.platform-entry:hover { transform: none; border-color: var(--mm-accent); }
+.platform-art,
+.platform-entry.priority .platform-art { width: 48px; height: 48px; margin: 12px 0 0 10px; border-radius: 10px; }
+.platform-art svg,
+.platform-entry.priority .platform-art svg { width: 40px; height: 40px; }
+.platform-content,
+.platform-entry.priority .platform-content { padding: 11px 12px 8px 10px; }
+.platform-tag { margin: 0 72px 2px 0; font-size: 9.5px; }
+.platform-name,
+.platform-entry.priority .platform-name { font-size: 15px; line-height: 1.25; }
+.platform-description {
+  margin-top: 2px; font-size: 12px; line-height: 1.4;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.platform-links { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; padding-top: 0; }
+.platform-links .platform-link {
+  width: auto; min-height: 0; padding: 0; gap: 4px; border: 0; background: none;
+  font-size: 0; white-space: nowrap; transform: none;
+}
+.platform-links .platform-link .platform-access { min-width: 0; padding: 3px 8px; font-size: 10.5px; }
+.platform-links .platform-link::after { margin-left: 0; font-size: 12px; }
+.platform-links .platform-link:hover { transform: none; }
+.platform-links .platform-link:first-child::before { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.platform-links .platform-link:first-child:focus-visible { outline: none; }
+.platform-links .platform-link:first-child:focus-visible::before { outline: 2px solid var(--mm-accent); outline-offset: -2px; border-radius: var(--radius); }
+.platform-links .platform-link:not(:first-child) { position: relative; z-index: 2; min-height: 28px; }
+.platform-links .platform-link:not(:first-child) .platform-access { min-height: 28px; padding: 4px 10px; }
+.platform-links .platform-link:not(:first-child)::after { content: none; }
+.platform-links .platform-link:not(:first-child) .platform-access { box-shadow: inset 0 0 0 1px var(--mm-control-line); }
+.platform-links .platform-link:not(:first-child):hover .platform-access { box-shadow: inset 0 0 0 1px var(--mm-accent); }
+.platform-resources {
+  grid-column: 2; position: relative; z-index: 2; padding: 0 12px 8px 10px; border-top: 0;
+  font-size: 12px; pointer-events: none;
+}
+.platform-resources > .platform-resources-empty { display: none; }
+.platform-resources summary,
+.platform-resources details[open] { pointer-events: auto; }
+.platform-resources summary { display: inline-block; min-height: 0; padding: 2px 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 600; }
+.platform-reorder-controls,
+.platform-archive-toggle { z-index: 3; }
+@media (max-width: 760px) {
+  .platform-directory { grid-template-columns: 1fr; gap: 8px; }
+  .platform-entry,
+  .platform-entry.priority { grid-template-columns: 58px minmax(0, 1fr); }
+  .platform-art,
+  .platform-entry.priority .platform-art { height: 48px; }
+  .platform-art svg,
+  .platform-entry.priority .platform-art svg { width: 40px; height: 40px; }
+  .platform-content,
+  .platform-entry.priority .platform-content { padding: 11px 12px 8px 10px; }
+  .platform-entry.priority .platform-name { font-size: 15px; }
+  .platform-links .platform-link { overflow-wrap: normal; white-space: nowrap; }
+  .platform-resources summary { padding: 6px 0; }
+  .platform-links .platform-link:not(:first-child),
+  .platform-links .platform-link:not(:first-child) .platform-access { min-height: 36px; }
+}
 
 </style>
 </head>
@@ -6321,6 +6383,7 @@ function ccRenderPlatformResources(payload) {
     // Replacing the area on access loss also removes any expanded private content.
     const details = count ? document.createElement('details') : null;
     const status = document.createElement(count ? 'summary' : 'span');
+    if (ready && !count) status.className = 'platform-resources-empty';
     status.textContent = ready ? (count ? `Материалы проекта · ${count}` : 'Материалы пока не подключены.') : (states[payload?.state] || states.unavailable);
     const container = details || area;
     container.appendChild(status);
