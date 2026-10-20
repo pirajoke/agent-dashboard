@@ -419,30 +419,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   font-weight: 700;
 }
 .platform-entry.priority .platform-index { color: var(--mm-accent); }
-.platform-reorder-controls {
-  position: absolute;
-  z-index: 2;
-  top: 6px;
-  left: 6px;
-  display: flex;
-  gap: 2px;
-}
-.platform-reorder-control {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  border: 1px solid var(--mm-control-line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--mm-surface) 92%, transparent);
-  color: var(--text2);
-  font: 700 17px/1 'Inter', -apple-system, sans-serif;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-}
-.platform-reorder-control:hover { color: var(--mm-accent); border-color: var(--mm-accent); background: var(--mm-surface); }
-.platform-reorder-control:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-entry:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .platform-order-status { min-height: 20px; margin: -8px 0 12px; color: var(--text2); font-size: 12px; line-height: 1.5; }
 .platform-content {
   min-width: 0;
@@ -558,8 +535,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .tab-name-actions button,
   .platform-entry,
   .platform-art svg,
-  .platform-link,
-  .platform-reorder-control { transition: none; }
+  .platform-link { transition: none; }
   .platform-entry:hover,
   .platform-link:hover { transform: none; }
   .platform-entry:hover .platform-art svg { transform: none; }
@@ -3331,15 +3307,10 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-tag { color: var(--mm-muted); letter-spacing: .05em; }
 .platform-index { color: var(--mm-muted); opacity: .8; }
 .platform-link { border-color: var(--mm-control-line); }
-/* Arrows stay for keyboard use; a phone reorders by long press, like the iPhone home screen. */
-.platform-reorder-controls { opacity: 0; transition: opacity .15s ease; }
-.platform-entry:focus-within .platform-reorder-controls { opacity: 1; }
-@media (hover: hover) {
-  .platform-entry:hover .platform-reorder-controls { opacity: 1; }
-}
+/* Mark 2026-10-20: no arrow buttons; reorder by long press and drag (iPhone style),
+   or from the keyboard with ↑/↓ on a focused card. */
 .platform-entry { -webkit-touch-callout: none; }
 .platform-directory.is-arranging { user-select: none; -webkit-user-select: none; }
-.platform-directory.is-arranging .platform-reorder-controls { opacity: 0; }
 .platform-directory.is-arranging .platform-entry:not(.is-reordering) { animation: platform-jiggle .28s ease-in-out infinite alternate; }
 .platform-directory.is-arranging .platform-entry:nth-child(2n):not(.is-reordering) { animation-delay: -.14s; }
 .platform-directory.is-arranging .platform-entry.is-reordering {
@@ -3456,7 +3427,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .cc-tabs.mm-nav button { flex: 1 1 auto; justify-content: center; gap: 6px; padding: 8px 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mm-os a.mm-map-card, .platform-reorder-controls { transition: none; }
+  .mm-os a.mm-map-card { transition: none; }
   .mm-os a.mm-map-card:hover { transform: none; }
 }
 
@@ -3572,7 +3543,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 }
 .platform-archive-list .platform-entry { opacity: .78; }
 .platform-archive-list .platform-entry:hover { opacity: 1; }
-.platform-archive-list .platform-reorder-controls,
 .platform-archive-list .platform-index { display: none; }
 .platform-archive-list .platform-archive-toggle { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
@@ -3622,7 +3592,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-resources summary,
 .platform-resources details[open] { pointer-events: auto; }
 .platform-resources summary { display: inline-block; min-height: 0; padding: 2px 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 600; }
-.platform-reorder-controls,
 .platform-archive-toggle,
 .platform-edit-toggle { z-index: 3; }
 /* Edit (Mark 2026-10-20): a pencil next to the archive box opens a small window for name, status and priority. */
@@ -3644,12 +3613,14 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-edit-form { display: grid; gap: 14px; padding: 18px 20px 20px; }
 .platform-edit-form label { display: grid; gap: 6px; color: var(--mm-ink); font-size: 13px; font-weight: 650; }
 .platform-edit-form input,
-.platform-edit-form select {
+.platform-edit-form select,
+.platform-edit-form textarea {
   min-height: 42px; padding: 8px 12px; border: 1px solid var(--mm-control-line); border-radius: 10px;
   background: var(--mm-surface); color: var(--mm-ink); font: 500 15px/1.3 'Inter', -apple-system, sans-serif;
 }
 .platform-edit-form input:focus-visible,
-.platform-edit-form select:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.platform-edit-form select:focus-visible,
+.platform-edit-form textarea:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
 .platform-edit-form small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
 .platform-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
 .platform-edit-actions button {
@@ -3663,8 +3634,10 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-edit-note:empty { display: none; }
 .platform-edit-dialog .platform-archive-close { margin-left: auto; }
 .platform-edit-form { overflow: auto; overscroll-behavior: contain; }
+.platform-edit-form textarea { resize: vertical; }
 .platform-edit-form input,
-.platform-edit-form select { box-sizing: border-box; width: 100%; min-width: 0; }
+.platform-edit-form select,
+.platform-edit-form textarea { box-sizing: border-box; width: 100%; min-width: 0; }
 @media (max-width: 600px) {
   .platform-edit-dialog { width: 100vw; }
   .platform-edit-form { padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); }
@@ -4047,10 +4020,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Закрыто · SSH</strong><small>сначала SSH-туннель</small></li>
     </ul>
 
-    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её или нажмите её стрелки.</p>
+    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её.</p>
     <div class="platform-directory">
-      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar">
-        <div class="platform-reorder-controls" aria-label="Порядок: JobRadar"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JobRadar: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JobRadar: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
         <div class="platform-content">
@@ -4064,8 +4036,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="financial" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi">
-        <div class="platform-reorder-controls" aria-label="Порядок: Lexi"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Lexi: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Lexi: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
         <span class="platform-index">02</span>
         <div class="platform-content">
@@ -4079,8 +4050,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="mydictionary" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
-        <div class="platform-reorder-controls" aria-label="Порядок: Health OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Health OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Health OS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
         <span class="platform-index">03</span>
         <div class="platform-content">
@@ -4093,8 +4063,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="health" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
-        <div class="platform-reorder-controls" aria-label="Порядок: AI Singularity"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="AI Singularity: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="AI Singularity: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
         <span class="platform-index">04</span>
         <div class="platform-content">
@@ -4107,8 +4076,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="ai-singularity" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
-        <div class="platform-reorder-controls" aria-label="Порядок: Context News France"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Context News France: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Context News France: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
         <span class="platform-index">05</span>
         <div class="platform-content">
@@ -4121,8 +4089,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="context-news" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
-        <div class="platform-reorder-controls" aria-label="Порядок: Accountable OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Accountable OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Accountable OS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
         <span class="platform-index">06</span>
         <div class="platform-content">
@@ -4135,8 +4102,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="accountable" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
-        <div class="platform-reorder-controls" aria-label="Порядок: JARVIS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JARVIS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JARVIS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
         <span class="platform-index">07</span>
         <div class="platform-content">
@@ -4149,8 +4115,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="jarvis" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS">
-        <div class="platform-reorder-controls" aria-label="Порядок: Property OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Property OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Property OS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-property"/></svg></div>
         <span class="platform-index">08</span>
         <div class="platform-content">
@@ -4163,8 +4128,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="property-os" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents">
-        <div class="platform-reorder-controls" aria-label="Порядок: Pixel Agents"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Pixel Agents: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Pixel Agents: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-pixel"/></svg></div>
         <span class="platform-index">09</span>
         <div class="platform-content">
@@ -4177,8 +4141,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="pixel-agents" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта">
-        <div class="platform-reorder-controls" aria-label="Порядок: Зеркало Контакта"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Зеркало Контакта: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Зеркало Контакта: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-mirror"/></svg></div>
         <span class="platform-index">10</span>
         <div class="platform-content">
@@ -4191,8 +4154,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="closeness-mirror" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien">
-        <div class="platform-reorder-controls" aria-label="Порядок: Sushi Parisien"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Sushi Parisien: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Sushi Parisien: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-sushi"/></svg></div>
         <span class="platform-index">11</span>
         <div class="platform-content">
@@ -4205,8 +4167,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="sushi-parisien" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n">
-        <div class="platform-reorder-controls" aria-label="Порядок: n8n"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="n8n: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="n8n: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-n8n"/></svg></div>
         <span class="platform-index">12</span>
         <div class="platform-content">
@@ -4237,6 +4198,10 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <label>Статус
           <input id="platform-edit-status" name="status" type="text" maxlength="40" autocomplete="off" list="platform-edit-statuses">
           <small>Надпись над названием, например «Работает» или «На паузе».</small>
+        </label>
+        <label>Описание
+          <textarea id="platform-edit-description" name="description" rows="3" maxlength="200"></textarea>
+          <small>Строка под названием. Пустое поле оставляет прежнее описание.</small>
         </label>
         <datalist id="platform-edit-statuses">
           <option value="Главный продукт"></option>
@@ -5531,13 +5496,15 @@ function announcePlatformOrder(card, prefix = 'Перемещено:') {
     `${prefix} ${name}, место ${position} из ${cards.length}.`;
 }
 
-function movePlatformByButton(event) {
-  const button = event.target.closest('[data-platform-move]');
-  if (!button || !platformDirectory?.contains(button)) return;
-  const card = button.closest('.platform-entry');
+// Keyboard: ↑/↓ on a focused card moves it one place, like a drag.
+function movePlatformByKey(event, directions) {
+  const card = event.target;
+  const direction = directions[event.key];
+  if (!direction || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (!card.classList?.contains('platform-entry') || !platformDirectory?.contains(card)) return;
+  event.preventDefault();
   const cards = platformCards();
   const index = cards.indexOf(card);
-  const direction = button.dataset.platformMove;
   if (direction === 'previous' && index > 0) {
     cards[index - 1].before(card);
   } else if (direction === 'next' && index >= 0 && index < cards.length - 1) {
@@ -5549,7 +5516,7 @@ function movePlatformByButton(event) {
   renumberPlatforms();
   const persisted = savePlatformOrder();
   announcePlatformOrder(card, persisted ? 'Перемещено:' : 'Перемещено до перезагрузки:');
-  button.focus();
+  card.focus();
 }
 
 function clearPlatformLongPressTimer() {
@@ -5958,7 +5925,7 @@ platformArchiveDialog?.addEventListener('click', event => {
 platformArchiveDialog?.addEventListener('close', () => platformArchiveOpen?.focus());
 document.getElementById('section-platforms')?.addEventListener('click', togglePlatformArchive);
 if (platformDirectory) {
-  platformDirectory.addEventListener('click', movePlatformByButton);
+  platformDirectory.addEventListener('keydown', event => movePlatformByKey(event, {ArrowUp: 'previous', ArrowDown: 'next'}));
   // A link under the finger must not open when a long press ends a drag.
   platformDirectory.addEventListener('click', event => {
     if (Date.now() < platformSuppressClickUntil && event.target.closest('a')) {
@@ -6538,8 +6505,8 @@ setInterval(() => {
 }, 60000);
 // ── End Platform resources ──
 
-// ── Platform edits ── Mark 2026-10-20: «кнопку Эдит … менять название, статус, приоритетность».
-// Name, status and priority are kept on the Mac mini (/api/platform-edits, owner only), so a change
+// ── Platform edits ── Mark 2026-10-20: «кнопку Эдит … менять название, статус, приоритетность», then «менять описание».
+// Name, status, description and priority are kept on the Mac mini (/api/platform-edits, owner only), so a change
 // shows on every device; this browser keeps a copy so the page looks right before the server answers.
 // The place in the list is the same per-browser order as long-press dragging.
 const PLATFORM_EDITS_CACHE_KEY = 'command-center.platform-edits.v1';
@@ -6557,6 +6524,7 @@ function platformEditCurrent(card) {
   return {
     name: card.querySelector('.platform-name')?.textContent.trim() || card.dataset.platformId,
     status: card.querySelector('.platform-tag')?.textContent.trim() || '',
+    description: card.querySelector('.platform-description')?.textContent.trim() || '',
     priority: card.classList.contains('priority') ? 'main' : 'normal',
   };
 }
@@ -6571,10 +6539,6 @@ function platformEditRemember(card) {
 
 function platformEditLabels(card, name) {
   card.dataset.platformName = name;
-  card.querySelector('.platform-reorder-controls')?.setAttribute('aria-label', `Порядок: ${name}`);
-  card.querySelectorAll('[data-platform-move]').forEach(button => {
-    button.setAttribute('aria-label', `${name}: ${button.dataset.platformMove === 'previous' ? 'выше' : 'ниже'}`);
-  });
   const edit = card.querySelector('.platform-edit-toggle');
   if (edit) edit.setAttribute('aria-label', `${name}: изменить`);
   if (typeof setPlatformArchiveButton === 'function') {
@@ -6591,12 +6555,15 @@ function applyPlatformEdits(edits) {
     const value = {
       name: typeof own.name === 'string' && own.name.trim() ? own.name.trim() : base.name,
       status: typeof own.status === 'string' && own.status.trim() ? own.status.trim() : base.status,
+      description: typeof own.description === 'string' && own.description.trim() ? own.description.trim() : base.description,
       priority: own.priority === 'main' || own.priority === 'normal' ? own.priority : base.priority,
     };
     const nameNode = card.querySelector('.platform-name');
     const tagNode = card.querySelector('.platform-tag');
     if (nameNode) nameNode.textContent = value.name;
     if (tagNode) tagNode.textContent = value.status;
+    const descriptionNode = card.querySelector('.platform-description');
+    if (descriptionNode) descriptionNode.textContent = value.description;
     card.classList.toggle('priority', value.priority === 'main');
     if (!card.querySelector('.platform-edit-toggle')) {
       const button = document.createElement('button');
@@ -6642,6 +6609,7 @@ function openPlatformEdit(card) {
   const archived = Boolean(card.closest('.platform-archive-list'));
   document.getElementById('platform-edit-name').value = value.name;
   document.getElementById('platform-edit-status').value = value.status;
+  document.getElementById('platform-edit-description').value = value.description;
   document.getElementById('platform-edit-priority').value = value.priority;
   const cards = platformCards();
   const place = document.getElementById('platform-edit-place');
@@ -6681,6 +6649,8 @@ async function savePlatformEdit(reset = false) {
     const entry = {};
     if (name !== base.name) entry.name = name;
     if (status && status !== base.status) entry.status = status;
+    const description = document.getElementById('platform-edit-description').value.replace(/\s+/g, ' ').trim();
+    if (description && description !== base.description) entry.description = description;
     if (priority !== base.priority) entry.priority = priority;
     if (Object.keys(entry).length) next[id] = entry; else delete next[id];
   }
