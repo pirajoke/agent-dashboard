@@ -100,8 +100,10 @@ try {
   --cc-tabbar: 70px; /* phone tab bar: icon plus a label of up to two lines */
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { width: 100%; overflow-x: hidden; }
-body { font-family: var(--cc-font); background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; overflow-x: hidden; }
+/* overflow-x: clip, not hidden: «hidden» turns html/body into scroll boxes, and the sticky sidebar
+   then scrolls away with the page (Mark 2026-10-20). «hidden» stays only as a fallback for old browsers. */
+html { width: 100%; overflow-x: hidden; overflow-x: clip; }
+body { font-family: var(--cc-font); background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; overflow-x: hidden; overflow-x: clip; }
 
 .container { width: 100%; max-width: 1400px; min-width: 0; margin: 0 auto; padding: 32px 40px; }
 
@@ -130,9 +132,31 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .tab-name-actions button:hover { color: var(--text); border-color: var(--accent); }
 .tab-name-customizer button:focus-visible,
 .tab-name-field input:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.tab-name-editor { max-width: 760px; margin-top: 10px; padding: 16px; border: 1px solid var(--border2); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
-.tab-name-editor[hidden] { display: none !important; }
-.tab-name-editor-title { display: block; margin-bottom: 12px; font-size: 14px; }
+.tab-name-dialog {
+  width: min(560px, calc(100vw - 32px)); max-width: none; max-height: min(86vh, 720px); margin: auto; padding: 0;
+  border: 1px solid var(--mm-line); border-radius: 16px; background: var(--mm-background);
+  color: var(--mm-ink); box-shadow: var(--mm-shadow); overflow: auto; overscroll-behavior: contain;
+}
+.tab-name-dialog::backdrop { background: rgba(20, 16, 10, .45); }
+/* Browsers without a native <dialog> still need the closed window hidden. */
+.tab-name-dialog:not([open]) { display: none; }
+html:has(.tab-name-dialog[open]) { overflow: hidden; }
+.tab-name-editor { margin: 0; padding: 16px 20px 18px; }
+.tab-name-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.tab-name-editor-title { display: block; font-size: 17px; font-weight: 750; }
+.tab-name-close {
+  display: grid; place-items: center; width: 40px; height: 40px; margin-left: auto; padding: 0;
+  border: 1px solid var(--mm-control-line); border-radius: 10px; background: transparent;
+  color: var(--mm-ink); font: 600 18px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.tab-name-close:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
+.tab-name-close:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.tab-name-status:empty { display: none; }
+@media (max-width: 600px) {
+  .tab-name-dialog { width: 100vw; max-height: 88vh; margin: auto 0 0; border-radius: 16px 16px 0 0; border-bottom: 0; }
+  .tab-name-editor { padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); }
+  .tab-name-fields { grid-template-columns: minmax(0, 1fr); }
+}
 .tab-name-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
 .tab-name-field { display: grid; gap: 5px; color: var(--text2); font-size: 12px; }
 .tab-name-field input { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px; }
@@ -1835,6 +1859,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
     padding: 10px;
     max-width: 100%;
     overflow-x: hidden;
+    overflow-x: clip;
   }
   .header {
     flex-direction: column;
@@ -3289,7 +3314,6 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .cc-side .tab-name-customizer > button:hover { color: var(--mm-ink); background: var(--mm-surface-hover); }
 .cc-side-button svg { width: 18px; height: 18px; flex: none; }
 .cc-side .tab-name-customizer { margin: 0; }
-.cc-side .tab-name-editor { position: fixed; z-index: 60; left: 264px; bottom: 16px; width: min(560px, calc(100vw - 284px)); max-width: none; margin: 0; box-shadow: var(--mm-shadow); }
 .cc-side .footer { justify-content: flex-start; gap: 8px; margin: 4px 0 0; padding: 6px 12px; color: var(--mm-muted); font-size: 12px; }
 .cc-main { min-width: 0; padding: 32px 40px 56px; }
 .cc-main > .section { max-width: 1280px; margin: 0 auto; }
@@ -3445,7 +3469,6 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .cc-main-nav .pill-badge { display: none; }
   /* Five tabs on a phone: a long label («MAIN MANAGER») wraps to two lines instead of being cut. */
   .cc-main-nav .cc-tab-label { display: -webkit-box; max-width: 100%; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.15; text-align: center; white-space: normal; overflow-wrap: anywhere; font-size: 10.5px; }
-  .cc-side .tab-name-editor { left: 12px; right: 12px; bottom: calc(var(--cc-tabbar) + 12px + env(safe-area-inset-bottom)); width: auto; max-height: 70vh; overflow-y: auto; }
   .cc-main .cc-page-title { font-size: 25px; }
   .cc-page-lede { font-size: 14px; }
   .cc-page-head { margin-bottom: 16px; }
@@ -4011,17 +4034,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <div class="cc-side-foot">
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
     <div class="tab-name-customizer">
-      <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Переименовать вкладки</span></button>
-      <form class="tab-name-editor" id="tab-name-editor" aria-labelledby="tab-name-editor-title" hidden>
-        <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
-        <div class="tab-name-fields" id="tab-name-fields"></div>
-        <div class="tab-name-actions">
-          <button type="submit">Сохранить</button>
-          <button type="button" id="cancel-tab-names">Отмена</button>
-          <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
-        </div>
-        <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
-      </form>
+      <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename aria-haspopup="dialog" aria-controls="tab-name-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Переименовать вкладки</span></button>
     </div>
     <!-- Footer -->
     <div class="footer">
@@ -4031,6 +4044,22 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </div>
   </div>
   </aside>
+  <!-- Mark 2026-10-20: tab names open as their own window and close after Сохранить / Отмена / × / Esc / a click outside. -->
+  <dialog class="tab-name-dialog" id="tab-name-dialog" aria-labelledby="tab-name-editor-title">
+    <form class="tab-name-editor" id="tab-name-editor">
+      <div class="tab-name-head">
+        <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
+        <button type="button" class="tab-name-close" id="close-tab-names" aria-label="Закрыть">×</button>
+      </div>
+      <div class="tab-name-fields" id="tab-name-fields"></div>
+      <div class="tab-name-actions">
+        <button type="submit">Сохранить</button>
+        <button type="button" id="cancel-tab-names">Отмена</button>
+        <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
+      </div>
+      <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    </form>
+  </dialog>
 
   <main class="cc-main">
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
@@ -5383,17 +5412,30 @@ function populateTabNameEditor() {
   });
 }
 
+const tabNameDialog = document.getElementById('tab-name-dialog');
+
 function openTabNameEditor() {
-  const editor = document.getElementById('tab-name-editor');
+  if (tabNameDialog.open) return;
   populateTabNameEditor();
   setTabNameStatus('До 32 символов. Пустое поле вернёт стандартное название.');
-  editor.hidden = false;
+  if (typeof tabNameDialog.showModal === 'function') tabNameDialog.showModal();
+  else tabNameDialog.setAttribute('open', '');
   document.getElementById('edit-tab-names').setAttribute('aria-expanded', 'true');
-  editor.querySelector('input')?.focus();
+  tabNameDialog.querySelector('input')?.focus();
 }
 
 function closeTabNameEditor() {
-  document.getElementById('tab-name-editor').hidden = true;
+  if (typeof tabNameDialog.close === 'function') {
+    tabNameDialog.close();
+    return;
+  }
+  // No native <dialog>: no 'close' event either, so finish here.
+  if (!tabNameDialog.hasAttribute('open')) return;
+  tabNameDialog.removeAttribute('open');
+  onTabNameEditorClosed();
+}
+
+function onTabNameEditorClosed() {
   const trigger = document.getElementById('edit-tab-names');
   trigger.setAttribute('aria-expanded', 'false');
   trigger.focus();
@@ -5432,9 +5474,12 @@ function saveTabNames(event) {
   }
   activeTabNames = names;
   renderTabNames(activeTabNames);
-  setTabNameStatus(persisted
-    ? 'Названия сохранены в этом браузере.'
-    : 'Названия применены, но браузер не разрешил сохранить их.', !persisted);
+  if (persisted) {
+    closeTabNameEditor();
+    return;
+  }
+  // Keep the window open only to say that the names will not survive a reload.
+  setTabNameStatus('Названия применены, но браузер не разрешил сохранить их.', true);
 }
 
 function resetTabNames() {
@@ -5446,10 +5491,12 @@ function resetTabNames() {
   }
   activeTabNames = { ...TAB_NAME_DEFAULTS };
   renderTabNames(activeTabNames);
+  if (cleared) {
+    closeTabNameEditor();
+    return;
+  }
   populateTabNameEditor();
-  setTabNameStatus(cleared
-    ? 'Стандартные названия восстановлены.'
-    : 'Названия сброшены сейчас, но браузер не разрешил очистить сохранённую копию.', !cleared);
+  setTabNameStatus('Названия сброшены сейчас, но браузер не разрешил очистить сохранённую копию.', true);
 }
 
 activeTabNames = readTabNames();
@@ -5458,6 +5505,18 @@ document.getElementById('edit-tab-names').setAttribute('aria-expanded', 'false')
 document.getElementById('edit-tab-names').addEventListener('click', openTabNameEditor);
 document.getElementById('tab-name-editor').addEventListener('submit', saveTabNames);
 document.getElementById('cancel-tab-names').addEventListener('click', closeTabNameEditor);
+document.getElementById('close-tab-names').addEventListener('click', closeTabNameEditor);
+tabNameDialog.addEventListener('close', onTabNameEditorClosed);
+// A click on the dimmed area around the window lands on the <dialog> itself, not on the form.
+// Both press and release must be outside, so selecting text in a field never closes it.
+let tabNamePressedOutside = false;
+tabNameDialog.addEventListener('pointerdown', event => {
+  tabNamePressedOutside = event.target === tabNameDialog;
+});
+tabNameDialog.addEventListener('click', event => {
+  if (event.target === tabNameDialog && tabNamePressedOutside) closeTabNameEditor();
+  tabNamePressedOutside = false;
+});
 document.getElementById('reset-tab-names').addEventListener('click', resetTabNames);
 
 // Platform order is local-only. Restore known IDs once and append any newly shipped cards.
