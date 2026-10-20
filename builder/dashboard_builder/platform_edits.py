@@ -1,4 +1,4 @@
-"""Owner edits to Platforms cards: a name, a status label and a priority per card.
+"""Owner edits to Platforms cards: a name, a status label, a description and a priority per card.
 
 Mark 2026-10-20: «Добавь кнопку Эдит, чтоб, если что, я мог менять название, менять статус,
 менять приоритетность». The page keeps its built-in names; this file only overrides them, so a
@@ -19,6 +19,7 @@ MAX_BODY_BYTES = 16 * 1024
 MAX_CARDS = 60
 NAME_MAX = 60
 STATUS_MAX = 40
+DESCRIPTION_MAX = 200
 PRIORITIES = ("main", "normal")
 
 _STORE_LOCK = threading.Lock()  # The server is threaded; one card change at a time.
@@ -50,16 +51,19 @@ def validate_edits(payload: object) -> dict[str, dict[str, str]]:
     for card_id, entry in edits.items():
         if not isinstance(card_id, str) or not _ID.match(card_id):
             raise ValueError("invalid_card_id")
-        if not isinstance(entry, dict) or set(entry) - {"name", "status", "priority"}:
+        if not isinstance(entry, dict) or set(entry) - {"name", "status", "description", "priority"}:
             raise ValueError("invalid_card_entry")
         result: dict[str, str] = {}
         name = _clean_text(entry.get("name"), NAME_MAX)
         status = _clean_text(entry.get("status"), STATUS_MAX)
+        description = _clean_text(entry.get("description"), DESCRIPTION_MAX)
         priority = entry.get("priority")
         if name:
             result["name"] = name
         if status:
             result["status"] = status
+        if description:
+            result["description"] = description
         if priority is not None:
             if priority not in PRIORITIES:
                 raise ValueError("invalid_priority")
@@ -104,9 +108,11 @@ def save_edits(path: Path, payload: object, *, now: datetime | None = None) -> d
 def save_card_edit(path: Path, payload: object, *, now: datetime | None = None) -> dict:
     """Change one card on top of what is stored now, so two devices never wipe each other's edits.
 
-    ``payload`` is ``{"card": id, "edit": {...}}``; an empty or null ``edit`` puts the card back.
+    ``payload`` is ``{"card": id, "edit": {...}, "v": 2}``; an empty or null ``edit`` puts the card back.
+    A page opened before descriptions existed sends no ``v`` and knows nothing about the description,
+    so its save keeps the stored one instead of silently dropping it.
     """
-    if not isinstance(payload, dict) or set(payload) - {"card", "edit"}:
+    if not isinstance(payload, dict) or set(payload) - {"card", "edit", "v"}:
         raise ValueError("card_edit_expected")
     card_id, entry = payload.get("card"), payload.get("edit") or {}
     change = validate_edits({"edits": {card_id: entry}}) if isinstance(card_id, str) else None
@@ -114,6 +120,8 @@ def save_card_edit(path: Path, payload: object, *, now: datetime | None = None) 
         raise ValueError("invalid_card_id")
     with _STORE_LOCK:
         edits = dict(load_edits(path)["edits"])
-        edits.pop(card_id, None)
+        previous = edits.pop(card_id, None) or {}
+        if payload.get("v") != 2 and "description" in previous:
+            change.setdefault(card_id, {}).setdefault("description", previous["description"])
         edits.update(change)
         return save_edits(path, {"edits": edits}, now=now)

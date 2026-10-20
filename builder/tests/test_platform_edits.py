@@ -35,11 +35,16 @@ class PlatformEditsStoreTests(unittest.TestCase):
     def test_card_edit_keeps_other_cards_and_reset_removes_only_that_card(self):
         # Two devices: the laptop renames A, then a phone with an older page changes B.
         save_card_edit(self.path, {"card": "financial", "edit": {"name": "JobRadar Pro"}})
-        save_card_edit(self.path, {"card": "health", "edit": {"status": "На паузе"}})
+        save_card_edit(self.path, {"card": "health", "edit": {"status": "На паузе", "description": "Сон  и\nшаги"}})
         self.assertEqual(load_edits(self.path)["edits"], {
-            "financial": {"name": "JobRadar Pro"}, "health": {"status": "На паузе"}})
+            "financial": {"name": "JobRadar Pro"}, "health": {"status": "На паузе", "description": "Сон и шаги"}})
+        # A tab opened before descriptions existed (no "v") renames the card: the description stays.
+        save_card_edit(self.path, {"card": "health", "edit": {"name": "Здоровье"}})
+        self.assertEqual(load_edits(self.path)["edits"]["health"],
+                         {"name": "Здоровье", "description": "Сон и шаги"})
+        save_card_edit(self.path, {"card": "health", "edit": {"status": "На паузе", "description": "Сон и шаги"}, "v": 2})
         save_card_edit(self.path, {"card": "financial", "edit": None})
-        self.assertEqual(load_edits(self.path)["edits"], {"health": {"status": "На паузе"}})
+        self.assertEqual(load_edits(self.path)["edits"], {"health": {"status": "На паузе", "description": "Сон и шаги"}})
         for bad in ({"card": "../x", "edit": {"name": "a"}}, {"card": 5}, {"edits": {}}, {"card": "a", "edit": {"url": "x"}}):
             with self.subTest(bad=str(bad)), self.assertRaises(ValueError):
                 save_card_edit(self.path, bad)
@@ -54,7 +59,7 @@ class PlatformEditsStoreTests(unittest.TestCase):
         for payload in (
             [], {"edits": []}, {"edits": {"../x": {"name": "a"}}}, {"edits": {"a": {"name": 5}}},
             {"edits": {"a": {"name": "x" * 61}}}, {"edits": {"a": {"status": "s" * 41}}},
-            {"edits": {"a": {"priority": "top"}}}, {"edits": {"a": {"name": "a‮b"}}},
+            {"edits": {"a": {"priority": "top"}}}, {"edits": {"a": {"description": "d" * 201}}}, {"edits": {"a": {"name": "a‮b"}}},
             {"edits": {"a": {"url": "https://evil.invalid"}}},
             {"edits": {f"c{i}": {"name": "x"} for i in range(61)}},
         ):
