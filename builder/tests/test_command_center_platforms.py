@@ -222,6 +222,17 @@ class CommandCenterPlatformsTests(unittest.TestCase):
         )
 
 
+    def test_archived_by_default_names_real_cards_and_archive_stays_reachable(self):
+        # Mark 2026-10-20: «эти проекты в архив» + «добавь маленькую кнопочку архива».
+        match = re.search(r"PLATFORM_ARCHIVED_BY_DEFAULT = Object\.freeze\(\[([^\]]*)\]\)", self.html)
+        self.assertIsNotNone(match)
+        archived = re.findall(r"'([^']+)'", match.group(1))
+        self.assertEqual(set(archived), {"closeness-mirror", "sushi-parisien", "n8n"})
+        self.assertTrue(set(archived) < set(EXPECTED_PLATFORMS))
+        self.assertIn('id="platform-archive-open"', self.html)
+        self.assertIn('aria-controls="platform-archive-list"', self.html)
+
+
 class OwnerResourcesBrowserTests(unittest.TestCase):
     """AC-4/6, EC-2/4: execute the installed JS with a small synthetic DOM.
 
