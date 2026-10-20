@@ -38,6 +38,11 @@ class PlatformEditsStoreTests(unittest.TestCase):
         save_card_edit(self.path, {"card": "health", "edit": {"status": "На паузе", "description": "Сон  и\nшаги"}})
         self.assertEqual(load_edits(self.path)["edits"], {
             "financial": {"name": "JobRadar Pro"}, "health": {"status": "На паузе", "description": "Сон и шаги"}})
+        # A tab opened before descriptions existed (no "v") renames the card: the description stays.
+        save_card_edit(self.path, {"card": "health", "edit": {"name": "Здоровье"}})
+        self.assertEqual(load_edits(self.path)["edits"]["health"],
+                         {"name": "Здоровье", "description": "Сон и шаги"})
+        save_card_edit(self.path, {"card": "health", "edit": {"status": "На паузе", "description": "Сон и шаги"}, "v": 2})
         save_card_edit(self.path, {"card": "financial", "edit": None})
         self.assertEqual(load_edits(self.path)["edits"], {"health": {"status": "На паузе", "description": "Сон и шаги"}})
         for bad in ({"card": "../x", "edit": {"name": "a"}}, {"card": 5}, {"edits": {}}, {"card": "a", "edit": {"url": "x"}}):

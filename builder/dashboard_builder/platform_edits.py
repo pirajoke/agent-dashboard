@@ -108,9 +108,11 @@ def save_edits(path: Path, payload: object, *, now: datetime | None = None) -> d
 def save_card_edit(path: Path, payload: object, *, now: datetime | None = None) -> dict:
     """Change one card on top of what is stored now, so two devices never wipe each other's edits.
 
-    ``payload`` is ``{"card": id, "edit": {...}}``; an empty or null ``edit`` puts the card back.
+    ``payload`` is ``{"card": id, "edit": {...}, "v": 2}``; an empty or null ``edit`` puts the card back.
+    A page opened before descriptions existed sends no ``v`` and knows nothing about the description,
+    so its save keeps the stored one instead of silently dropping it.
     """
-    if not isinstance(payload, dict) or set(payload) - {"card", "edit"}:
+    if not isinstance(payload, dict) or set(payload) - {"card", "edit", "v"}:
         raise ValueError("card_edit_expected")
     card_id, entry = payload.get("card"), payload.get("edit") or {}
     change = validate_edits({"edits": {card_id: entry}}) if isinstance(card_id, str) else None
@@ -118,6 +120,8 @@ def save_card_edit(path: Path, payload: object, *, now: datetime | None = None) 
         raise ValueError("invalid_card_id")
     with _STORE_LOCK:
         edits = dict(load_edits(path)["edits"])
-        edits.pop(card_id, None)
+        previous = edits.pop(card_id, None) or {}
+        if payload.get("v") != 2 and "description" in previous:
+            change.setdefault(card_id, {}).setdefault("description", previous["description"])
         edits.update(change)
         return save_edits(path, {"edits": edits}, now=now)

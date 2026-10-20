@@ -265,6 +265,7 @@ class El {
   contains(node) { for (let n=node; n; n=n.parent) if (n===this) return true; return false; }
   closest(sel) { for (let n=this; n; n=n.parent) if (n.matches && n.matches(sel)) return n; return null; }
   setAttribute(k, v) { this.attrs[k]=String(v); }
+  removeAttribute(k) { delete this.attrs[k]; }
   getAttribute(k) { return this.attrs[k] ?? null; }
   focus() { focused=this; }
   set innerHTML(v) { this._html=v; }
@@ -300,7 +301,7 @@ function click(api, p, id) {
   const card=[...p.directory.children, ...p.archiveList.children].find(c=>c.dataset.platformId===id);
   const button=card.querySelector('.platform-archive-toggle');
   api.togglePlatformArchive({target:button});
-  return {label:button.getAttribute('aria-label'), type:button.type, focused:focused===button ? 'button' : focused===p.byId['platform-archive-open'] ? 'archive-open' : 'other'};
+  return {label:button.getAttribute('aria-label'), type:button.type, tabindex:card.getAttribute('tabindex'), focused:focused===button ? 'button' : focused===p.byId['platform-archive-open'] ? 'archive-open' : 'other'};
 }
 let p=page(); let api=boot(p);
 const initial=snapshot(p);
@@ -325,8 +326,10 @@ process.stdout.write(JSON.stringify({initial, restored, archived, afterClicks, r
         self.assertFalse(out["initial"]["archiveHidden"])
 
         # Native <button>s, so Enter and Space work; focus follows the card or the archive button.
-        self.assertEqual(out["restored"], {"label": "n8n: в архив", "type": "button", "focused": "button"})
+        self.assertEqual(out["restored"], {"label": "n8n: в архив", "type": "button", "tabindex": "0", "focused": "button"})
         self.assertEqual(out["archived"]["label"], "pixel-agents: вернуть из архива")
+        # ↑/↓ reorder only the board, so an archived card stops being a keyboard reorder stop.
+        self.assertIsNone(out["archived"]["tabindex"])
         self.assertEqual(out["archived"]["focused"], "archive-open")
 
         self.assertEqual(out["afterClicks"]["archive"], ["pixel-agents", "closeness-mirror", "sushi-parisien"])
