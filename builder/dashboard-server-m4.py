@@ -28,7 +28,7 @@ from dashboard_builder.owner_decisions import (
 )
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import platform_resources_projection
-from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_edits
+from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
@@ -2359,7 +2359,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try:
             if not 1 <= int(self.headers.get('Content-Length', 0)) <= PLATFORM_EDITS_MAX_BYTES:
                 raise ValueError('invalid_body_length')
-            record = save_edits(PLATFORM_EDITS_FILE, self._read_json_body(max_bytes=PLATFORM_EDITS_MAX_BYTES))
+            record = save_card_edit(PLATFORM_EDITS_FILE, self._read_json_body(max_bytes=PLATFORM_EDITS_MAX_BYTES))
             self._json_response(200, {'state': 'ready', **record})
         except ValueError:
             self._json_response(400, {'error': 'invalid_platform_edits'})

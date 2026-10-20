@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import threading
 
 MAX_BODY_BYTES = 16 * 1024
 MAX_CARDS = 60
@@ -20,6 +21,7 @@ NAME_MAX = 60
 STATUS_MAX = 40
 PRIORITIES = ("main", "normal")
 
+_STORE_LOCK = threading.Lock()  # The server is threaded; one card change at a time.
 _ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f​-‏‪-‮⁦-⁩]")
 
@@ -97,3 +99,21 @@ def save_edits(path: Path, payload: object, *, now: datetime | None = None) -> d
             pass
         raise
     return record
+
+
+def save_card_edit(path: Path, payload: object, *, now: datetime | None = None) -> dict:
+    """Change one card on top of what is stored now, so two devices never wipe each other's edits.
+
+    ``payload`` is ``{"card": id, "edit": {...}}``; an empty or null ``edit`` puts the card back.
+    """
+    if not isinstance(payload, dict) or set(payload) - {"card", "edit"}:
+        raise ValueError("card_edit_expected")
+    card_id, entry = payload.get("card"), payload.get("edit") or {}
+    change = validate_edits({"edits": {card_id: entry}}) if isinstance(card_id, str) else None
+    if change is None:
+        raise ValueError("invalid_card_id")
+    with _STORE_LOCK:
+        edits = dict(load_edits(path)["edits"])
+        edits.pop(card_id, None)
+        edits.update(change)
+        return save_edits(path, {"edits": edits}, now=now)

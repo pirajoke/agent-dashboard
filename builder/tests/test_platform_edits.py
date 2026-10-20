@@ -9,7 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from dashboard_builder.platform_edits import load_edits, save_edits, validate_edits
+from dashboard_builder.platform_edits import load_edits, save_card_edit, save_edits, validate_edits
 
 BUILDER = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("dashboard_platform_edits_test", BUILDER / "dashboard-server-m4.py")
@@ -31,6 +31,18 @@ class PlatformEditsStoreTests(unittest.TestCase):
         self.assertEqual(record["edits"], {"financial": {"name": "JobRadar Pro", "status": "На паузе", "priority": "normal"}})
         self.assertEqual(load_edits(self.path)["edits"], record["edits"])
         self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
+
+    def test_card_edit_keeps_other_cards_and_reset_removes_only_that_card(self):
+        # Two devices: the laptop renames A, then a phone with an older page changes B.
+        save_card_edit(self.path, {"card": "financial", "edit": {"name": "JobRadar Pro"}})
+        save_card_edit(self.path, {"card": "health", "edit": {"status": "На паузе"}})
+        self.assertEqual(load_edits(self.path)["edits"], {
+            "financial": {"name": "JobRadar Pro"}, "health": {"status": "На паузе"}})
+        save_card_edit(self.path, {"card": "financial", "edit": None})
+        self.assertEqual(load_edits(self.path)["edits"], {"health": {"status": "На паузе"}})
+        for bad in ({"card": "../x", "edit": {"name": "a"}}, {"card": 5}, {"edits": {}}, {"card": "a", "edit": {"url": "x"}}):
+            with self.subTest(bad=str(bad)), self.assertRaises(ValueError):
+                save_card_edit(self.path, bad)
 
     def test_missing_or_broken_store_means_no_edits(self):
         self.assertEqual(load_edits(self.path)["edits"], {})
@@ -75,15 +87,17 @@ class PlatformEditsEndpointTests(unittest.TestCase):
         return output
 
     def test_owner_saves_and_reads_back_from_any_device(self):
-        body = {"edits": {"health": {"name": "Здоровье", "priority": "main"}}}
+        save_edits(self.path, {"edits": {"jarvis": {"status": "Работает"}}})
+        body = {"card": "health", "edit": {"name": "Здоровье", "priority": "main"}}
         saved = self.call("POST", body, origin="http://localhost:9999")
         self.assertEqual(saved["status"], 200)
         read = self.call("GET")
         self.assertEqual(read["status"], 200)
-        self.assertEqual(read["payload"]["edits"], body["edits"])
+        self.assertEqual(read["payload"]["edits"], {
+            "jarvis": {"status": "Работает"}, "health": {"name": "Здоровье", "priority": "main"}})
 
     def test_anonymous_wrong_token_cross_origin_or_bad_body_cannot_write(self):
-        body = {"edits": {"health": {"name": "x"}}}
+        body = {"card": "health", "edit": {"name": "x"}}
         for kwargs, status in (
             ({"token": None}, 401), ({"token": "wrong"}, 401),
             ({"origin": "https://foreign.invalid"}, 403), ({"content_type": "text/plain"}, 415),

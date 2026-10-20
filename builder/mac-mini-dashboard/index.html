@@ -6675,9 +6675,16 @@ async function savePlatformEdit(reset = false) {
   if (!IS_FILE_DASHBOARD) {
     try {
       const response = await fetch(`${DASHBOARD_API}/api/platform-edits`, {
-        method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store', body: JSON.stringify({edits: next}),
+        method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store',
+        body: JSON.stringify({card: id, edit: next[id] || null}),
       });
       synced = response.ok;
+      // The Mac mini merges one card into what it has, so take its full copy (other devices' edits too).
+      const payload = synced ? await response.json().catch(() => null) : null;
+      if (payload?.state === 'ready' && payload.edits && typeof payload.edits === 'object') {
+        writePlatformEditsCache(payload.edits);
+        applyPlatformEdits(payload.edits);
+      }
     } catch (_) { synced = false; }
   }
   if (synced) {
@@ -6690,7 +6697,11 @@ async function savePlatformEdit(reset = false) {
 }
 
 applyPlatformEdits(readPlatformEditsCache());
-loadPlatformEdits();
+// After the rest of the page script, so a token just opened from the phone QR link is already imported.
+window.setTimeout(loadPlatformEdits, 0);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !platformEditDialog?.open) loadPlatformEdits();
+});
 document.getElementById('section-platforms')?.addEventListener('click', event => {
   const button = event.target.closest('.platform-edit-toggle');
   if (button) openPlatformEdit(button.closest('.platform-entry'));
