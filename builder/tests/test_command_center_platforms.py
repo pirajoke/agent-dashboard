@@ -222,15 +222,116 @@ class CommandCenterPlatformsTests(unittest.TestCase):
         )
 
 
-    def test_archived_by_default_names_real_cards_and_archive_stays_reachable(self):
-        # Mark 2026-10-20: «эти проекты в архив» + «добавь маленькую кнопочку архива».
-        match = re.search(r"PLATFORM_ARCHIVED_BY_DEFAULT = Object\.freeze\(\[([^\]]*)\]\)", self.html)
-        self.assertIsNotNone(match)
-        archived = re.findall(r"'([^']+)'", match.group(1))
-        self.assertEqual(set(archived), {"closeness-mirror", "sushi-parisien", "n8n"})
-        self.assertTrue(set(archived) < set(EXPECTED_PLATFORMS))
-        self.assertIn('id="platform-archive-open"', self.html)
-        self.assertIn('aria-controls="platform-archive-list"', self.html)
+    def test_archive_buttons_move_cards_and_choice_survives_reload(self):
+        """Mark 2026-10-20: «эти проекты в архив» + «добавь маленькую кнопочку архива».
+
+        Runs the shipped archive and order functions against a small DOM: the
+        default archive, an archive and a restore through the cards' own
+        buttons, and the same layout rebuilt from localStorage after a reload.
+        """
+        import json
+        import shutil
+        import subprocess
+
+        node = shutil.which("node")
+        self.assertIsNotNone(node, "Node runtime required for the archive behaviour test")
+        start = self.html.index("// Platform order is local-only.")
+        end = self.html.index("applyPlatformArchive();\napplyPlatformOrder(readPlatformOrder());")
+        order_and_archive = self.html[start:end]
+        # The order block binds the live directory; the fake DOM below supplies it instead.
+        order_and_archive = re.sub(
+            r"const platformDirectory = document\.querySelector\('\.platform-directory'\);",
+            "const platformDirectory = document.platformDirectory;",
+            order_and_archive,
+        )
+        order_and_archive = re.sub(
+            r"const platformArchiveList = document\.getElementById\('platform-archive-list'\);",
+            "const platformArchiveList = document.platformArchiveList;",
+            order_and_archive,
+        )
+        ids = list(EXPECTED_PLATFORMS)
+        setup = r"""
+const IDS = __IDS__;
+class El {
+  constructor(tag, cls='') { this.tagName=tag; this.className=cls; this.children=[]; this.parent=null; this.dataset={}; this.attrs={}; this.hidden=false; this.textContent=''; }
+  get classes() { return this.className.split(/\s+/); }
+  matches(sel) { return sel.startsWith('.') && this.classes.includes(sel.slice(1)); }
+  appendChild(node) { if (node.parent) node.parent.removeChild(node); node.parent=this; this.children.push(node); return node; }
+  removeChild(node) { this.children.splice(this.children.indexOf(node), 1); node.parent=null; }
+  insertBefore(node, ref) { if (!ref) return this.appendChild(node); if (node.parent) node.parent.removeChild(node); node.parent=this; this.children.splice(this.children.indexOf(ref), 0, node); return node; }
+  all() { return this.children.flatMap(c => [c, ...c.all()]); }
+  querySelectorAll(sel) { return this.all().filter(n => n.matches(sel)); }
+  querySelector(sel) { return this.querySelectorAll(sel)[0] || null; }
+  contains(node) { for (let n=node; n; n=n.parent) if (n===this) return true; return false; }
+  closest(sel) { for (let n=this; n; n=n.parent) if (n.matches && n.matches(sel)) return n; return null; }
+  setAttribute(k, v) { this.attrs[k]=String(v); }
+  getAttribute(k) { return this.attrs[k] ?? null; }
+  focus() { focused=this; }
+  set innerHTML(v) { this._html=v; }
+}
+let focused=null;
+const stored=new Map();
+const localStorage={getItem:k=>stored.has(k)?stored.get(k):null,setItem:(k,v)=>stored.set(k,String(v))};
+function page() {
+  const directory=new El('div','platform-directory');
+  IDS.forEach(id => { const card=new El('article','platform-entry'); card.dataset.platformId=id; card.dataset.platformName=id;
+    card.appendChild(new El('span','platform-index')); directory.appendChild(card); });
+  const archiveList=new El('div','platform-directory platform-archive-list'); archiveList.hidden=true;
+  const byId={'platform-archive':new El('div'),'platform-archive-count':new El('span'),'platforms-badge':new El('span'),
+    'platform-order-status':new El('p'),'platform-archive-open':new El('button')};
+  return {directory, archiveList, byId};
+}
+function boot(p) {
+  const document={platformDirectory:p.directory, platformArchiveList:p.archiveList,
+    getElementById:id=>p.byId[id]||null, createElement:tag=>new El(tag)};
+  const window={setTimeout:()=>0};
+  const fn = new Function('document','localStorage','window','navigator', __CODE__ + `
+    applyPlatformArchive(); applyPlatformOrder(readPlatformOrder());
+    return {togglePlatformArchive, platformCards};`);
+  return fn(document, localStorage, window, {});
+}
+function snapshot(p) {
+  return {main:p.directory.children.map(c=>c.dataset.platformId+':'+c.querySelector('.platform-index').textContent),
+    archive:p.archiveList.children.map(c=>c.dataset.platformId),
+    count:p.byId['platform-archive-count'].textContent, badge:p.byId['platforms-badge'].textContent,
+    archiveHidden:p.byId['platform-archive'].hidden};
+}
+function click(api, p, id) {
+  const card=[...p.directory.children, ...p.archiveList.children].find(c=>c.dataset.platformId===id);
+  const button=card.querySelector('.platform-archive-toggle');
+  api.togglePlatformArchive({target:button});
+  return {label:button.getAttribute('aria-label'), type:button.type, focused:focused===button ? 'button' : focused===p.byId['platform-archive-open'] ? 'archive-open' : 'other'};
+}
+let p=page(); let api=boot(p);
+const initial=snapshot(p);
+const restored=click(api,p,'n8n');
+const archived=click(api,p,'pixel-agents');
+const afterClicks=snapshot(p);
+p=page(); api=boot(p);
+process.stdout.write(JSON.stringify({initial, restored, archived, afterClicks, reloaded:snapshot(p)}));
+"""
+        script = setup.replace("__IDS__", json.dumps(ids)).replace("__CODE__", json.dumps(order_and_archive))
+        run = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        out = json.loads(run.stdout)
+
+        default_archive = ["closeness-mirror", "sushi-parisien", "n8n"]
+        self.assertEqual(out["initial"]["archive"], default_archive)
+        self.assertEqual(
+            out["initial"]["main"],
+            [f"{pid}:{n:02d}" for n, pid in enumerate([i for i in ids if i not in default_archive], 1)],
+        )
+        self.assertEqual((out["initial"]["count"], out["initial"]["badge"]), ("3", "9"))
+        self.assertFalse(out["initial"]["archiveHidden"])
+
+        # Native <button>s, so Enter and Space work; focus follows the card or the archive button.
+        self.assertEqual(out["restored"], {"label": "n8n: в архив", "type": "button", "focused": "button"})
+        self.assertEqual(out["archived"]["label"], "pixel-agents: вернуть из архива")
+        self.assertEqual(out["archived"]["focused"], "archive-open")
+
+        self.assertEqual(out["afterClicks"]["archive"], ["pixel-agents", "closeness-mirror", "sushi-parisien"])
+        self.assertEqual(out["afterClicks"]["main"][-1], "n8n:09")
+        self.assertEqual(out["reloaded"], out["afterClicks"])
 
 
 class OwnerResourcesBrowserTests(unittest.TestCase):
