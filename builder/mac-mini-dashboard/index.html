@@ -3405,6 +3405,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .mm-owner-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
 .mm-owner-name { font-size: 17px; font-weight: 750; letter-spacing: .01em; overflow-wrap: anywhere; }
 .mm-owner-checked { color: var(--mm-muted); font-size: 12.5px; }
+.mm-owner-checked.is-stale { color: var(--mm-warning); font-weight: 650; }
 .mm-owner-status { margin: 0; padding: 10px 12px; font-size: 14px; line-height: 1.45; background: var(--mm-selection); border-radius: 10px; overflow-wrap: anywhere; }
 .mm-owner-status b { font-weight: 700; }
 .mm-owner-facts { display: grid; gap: 8px; margin: 0; }
@@ -8417,6 +8418,7 @@ function renderMap(data) {
 // page and anonymous callers never receive them, and losing access clears the cards.
 const OWNER_PROJECTS_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/owner-projects`;
 let mmOwnerProjectsGeneration = 0;
+const MM_OWNER_STALE_DAYS = 30;
 
 function mmOwnerText(value, limit) {
   return typeof value === 'string' && value.trim() && value.length <= limit && !/[\p{Cc}\p{Cf}]/u.test(value);
@@ -8434,9 +8436,13 @@ function mmOwnerProjectCard(card) {
   box.dataset.ownerProject = card.id;
   const top = mmEl('div', 'mm-owner-top');
   top.appendChild(mmEl('h4', 'mm-owner-name', card.name));
-  if (mmOwnerText(card.checked, 10)) {
-    top.appendChild(mmEl('span', 'mm-owner-checked', `сверено ${card.checked.split('-').reverse().join('.')}`));
-  }
+  // The card is a copy of the source documents: say when it was last checked, and flag an old or unknown check.
+  const checked = mmOwnerText(card.checked, 10) && /^\d{4}-\d{2}-\d{2}$/.test(card.checked) ? card.checked : null;
+  const age = checked ? Math.floor((Date.now() - Date.parse(`${checked}T00:00:00Z`)) / 86400000) : null;
+  const stale = age === null || !(age >= -1) || age > MM_OWNER_STALE_DAYS;
+  top.appendChild(mmEl('span', `mm-owner-checked${stale ? ' is-stale' : ''}`, checked
+    ? `сверено ${checked.split('-').reverse().join('.')}${stale ? ' · давно, сверьте с документами' : ''}`
+    : 'дата сверки неизвестна, сверьте с документами'));
   box.appendChild(top);
   const status = mmEl('p', 'mm-owner-status');
   status.appendChild(mmEl('b', '', 'Статус: '));

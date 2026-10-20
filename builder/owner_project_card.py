@@ -24,7 +24,7 @@ import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from dashboard_builder.platform_resources import MAX_BYTES, _project_card  # noqa: E402
+from dashboard_builder.platform_resources import MAX_BYTES, MAX_PROJECTS, _project_card  # noqa: E402
 
 DEFAULT_REGISTRY = Path(os.environ.get("JARVIS_VAULT_PATH", str(Path.home() / "jarvis-context-vault"))).expanduser() \
     / "35-Systems" / "PORTFOLIO-REGISTRY.json"
@@ -39,6 +39,8 @@ def upsert(registry: Path, card: dict) -> str:
     projected = _project_card(card)
     if projected is None:
         raise ValueError("card needs id (a-z, 0-9, -), name and status")
+    if "checked" not in projected:
+        raise ValueError("card needs checked (YYYY-MM-DD): the day its facts were last checked against the source")
     wanted = _shown(card)
     for key in ("facts", "tasks", "links"):
         wanted.setdefault(key, [])
@@ -66,6 +68,9 @@ def upsert(registry: Path, card: dict) -> str:
             continue
         result.append(item)
     if not replaced:
+        # MAIN MANAGER shows at most MAX_PROJECTS cards; never add one that would stay hidden.
+        if sum(_project_card(item) is not None for item in result) >= MAX_PROJECTS:
+            raise ValueError(f"already {MAX_PROJECTS} cards; update or remove one first")
         result.append(_shown(card))
     block["projects"] = result
     action = "updated" if replaced else "added"

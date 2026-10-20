@@ -174,6 +174,17 @@ class UpsertToolTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(self.path.read_text(), before)
 
+    def test_card_without_checked_date_is_refused(self):
+        payload = card()
+        del payload["checked"]
+        self.assertEqual(self.run_tool(payload).returncode, 1)
+
+    def test_no_thirteenth_card_that_would_stay_hidden(self):
+        for i in range(12):
+            self.assertEqual(self.run_tool(card(id=f"card-{i}")).returncode, 0)
+        self.assertEqual(self.run_tool(card(id="card-12")).returncode, 1)
+        self.assertEqual(self.run_tool(card(id="card-3", status="Still updatable")).returncode, 0)
+
     def test_missing_registry_is_not_created(self):
         self.path.unlink()
         self.assertEqual(self.run_tool(card()).returncode, 2)
