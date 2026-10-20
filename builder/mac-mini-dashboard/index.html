@@ -3512,17 +3512,45 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-archive-open svg { width: 16px; height: 16px; }
 .platform-archive-open:hover { color: var(--mm-accent); border-color: var(--mm-control-line); }
 .platform-archive-open:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.platform-archive-open .platform-archive-chevron { transition: transform .15s ease; }
-.platform-archive-open[aria-expanded="true"] .platform-archive-chevron { transform: rotate(90deg); }
-.platform-archive-list { margin-top: 12px; }
-.platform-archive-list[hidden] { display: none; }
+/* Mark 2026-10-20: the archive opens as its own window over the page. */
+.platform-archive-dialog {
+  width: min(1040px, calc(100vw - 32px)); max-width: none; max-height: min(86vh, 900px); margin: auto; padding: 0;
+  border: 1px solid var(--mm-line); border-radius: 16px; background: var(--mm-background);
+  color: var(--mm-ink); box-shadow: var(--mm-shadow); overflow: hidden;
+}
+.platform-archive-dialog[open] { display: flex; flex-direction: column; }
+.platform-archive-dialog::backdrop { background: rgba(20, 16, 10, .45); }
+.platform-archive-head {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px 14px 20px;
+  border-bottom: 1px solid var(--mm-line); background: var(--mm-surface);
+}
+.platform-archive-head svg { width: 20px; height: 20px; color: var(--mm-muted); }
+.platform-archive-head h3 { margin: 0; font-size: 17px; font-weight: 750; }
+.platform-archive-head p { margin: 0 0 0 auto; color: var(--mm-muted); font-size: 12.5px; }
+.platform-archive-close {
+  display: grid; place-items: center; width: 40px; height: 40px; margin-left: 8px; padding: 0;
+  border: 1px solid var(--mm-control-line); border-radius: 10px; background: transparent;
+  color: var(--mm-ink); font: 600 18px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.platform-archive-close:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
+.platform-archive-close:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-archive-body { padding: 16px; overflow: auto; overscroll-behavior: contain; }
+.platform-archive-status { margin: 0 0 10px; color: var(--mm-muted); font-size: 12px; }
+.platform-archive-status:empty { display: none; }
+html:has(.platform-archive-dialog[open]) { overflow: hidden; }
+@media (max-width: 600px) {
+  .platform-archive-dialog { width: 100vw; max-height: 88vh; margin: auto 0 0; border-radius: 16px 16px 0 0; border-bottom: 0; }
+  .platform-archive-head p { display: none; }
+  .platform-archive-close { margin-left: auto; }
+  .platform-archive-body { padding: 12px 12px calc(16px + env(safe-area-inset-bottom)); }
+}
 .platform-archive-list .platform-entry { opacity: .78; }
 .platform-archive-list .platform-entry:hover { opacity: 1; }
 .platform-archive-list .platform-reorder-controls,
 .platform-archive-list .platform-index { display: none; }
 .platform-archive-list .platform-archive-toggle { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .platform-archive-toggle, .platform-archive-open .platform-archive-chevron { transition: none; }
+  .platform-archive-toggle { transition: none; }
 }
 
 </style>
@@ -4057,9 +4085,20 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 
     </div>
     <div class="platform-archive" id="platform-archive" hidden>
-      <button class="platform-archive-open" id="platform-archive-open" type="button" aria-expanded="false" aria-controls="platform-archive-list"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · <span id="platform-archive-count">0</span></span><span class="platform-archive-chevron" aria-hidden="true">›</span></button>
-      <div class="platform-directory platform-archive-list" id="platform-archive-list" aria-label="Архив платформ" hidden></div>
+      <button class="platform-archive-open" id="platform-archive-open" type="button" aria-haspopup="dialog" aria-controls="platform-archive-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · <span id="platform-archive-count">0</span></span></button>
     </div>
+    <dialog class="platform-archive-dialog" id="platform-archive-dialog" aria-labelledby="platform-archive-title">
+      <header class="platform-archive-head">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>
+        <h3 id="platform-archive-title">Архив</h3>
+        <p>Значок коробки на карточке возвращает её обратно.</p>
+        <button class="platform-archive-close" id="platform-archive-close" type="button" aria-label="Закрыть архив">✕</button>
+      </header>
+      <div class="platform-archive-body">
+        <p class="platform-archive-status" id="platform-archive-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        <div class="platform-directory platform-archive-list" id="platform-archive-list" aria-label="Архив платформ"></div>
+      </div>
+    </dialog>
     <p class="platform-note"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><span>Закрытые ссылки ведут на локальный адрес и открываются только через ваш SSH-туннель. Этот список не проверяет, работает ли сервис прямо сейчас.</span></p>
   </section>
 
@@ -5611,6 +5650,7 @@ const PLATFORM_ARCHIVE_STORAGE_KEY = 'command-center.platform-archive.v1';
 const PLATFORM_ARCHIVED_BY_DEFAULT = Object.freeze(['closeness-mirror', 'sushi-parisien', 'n8n']);
 const platformArchiveList = document.getElementById('platform-archive-list');
 const platformArchiveOpen = document.getElementById('platform-archive-open');
+const platformArchiveDialog = document.getElementById('platform-archive-dialog');
 
 function readPlatformArchiveChoices() {
   try {
@@ -5645,15 +5685,26 @@ function refreshPlatformArchive() {
   const archived = platformArchiveList.querySelectorAll('.platform-entry').length;
   document.getElementById('platform-archive-count').textContent = String(archived);
   document.getElementById('platform-archive').hidden = archived === 0;
-  if (archived === 0) setPlatformArchiveExpanded(false);
+  if (archived === 0) setPlatformArchiveOpen(false);
   const badge = document.getElementById('platforms-badge');
   if (badge) badge.textContent = String(platformCards().length);
 }
 
-function setPlatformArchiveExpanded(expanded) {
-  if (!platformArchiveList || !platformArchiveOpen) return;
-  platformArchiveList.hidden = !expanded;
-  platformArchiveOpen.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+function isPlatformArchiveOpen() {
+  return Boolean(platformArchiveDialog?.open);
+}
+
+function setPlatformArchiveOpen(open) {
+  if (!platformArchiveDialog || open === isPlatformArchiveOpen()) return;
+  if (!open) {
+    platformArchiveDialog.close();
+    return;
+  }
+  const status = document.getElementById('platform-archive-status');
+  if (status) status.textContent = '';
+  if (typeof platformArchiveDialog.showModal === 'function') platformArchiveDialog.showModal();
+  else platformArchiveDialog.setAttribute('open', '');
+  document.getElementById('platform-archive-close')?.focus();
 }
 
 function placeArchivedPlatform(card) {
@@ -5697,7 +5748,7 @@ function togglePlatformArchive(event) {
     savePlatformOrder();
     refreshPlatformArchive();
     document.getElementById('platform-order-status').textContent =
-      `${name} в архиве${persisted ? '' : ' до перезагрузки'}. Вернуть можно в «Архиве» под карточками.`;
+      `${name} в архиве${persisted ? '' : ' до перезагрузки'}. Вернуть можно через кнопку «Архив» под карточками.`;
     platformArchiveOpen.focus();
   } else {
     platformDirectory.appendChild(card);
@@ -5705,17 +5756,29 @@ function togglePlatformArchive(event) {
     savePlatformOrder();
     refreshPlatformArchive();
     announcePlatformOrder(card, persisted ? 'Возвращено из архива:' : 'Возвращено до перезагрузки:');
-    button.focus();
+    const left = platformArchiveList.querySelector('.platform-archive-toggle');
+    if (isPlatformArchiveOpen() && left) {
+      // Stay in the archive window while it still has cards; the page behind it is inert.
+      const status = document.getElementById('platform-archive-status');
+      if (status) status.textContent = `${name} вернулась на страницу Платформ.`;
+      left.focus();
+    } else {
+      button.focus();
+    }
   }
 }
 
 applyPlatformArchive();
 applyPlatformOrder(readPlatformOrder());
 if (platformArchiveOpen) {
-  platformArchiveOpen.addEventListener('click', () => {
-    setPlatformArchiveExpanded(platformArchiveOpen.getAttribute('aria-expanded') !== 'true');
-  });
+  platformArchiveOpen.addEventListener('click', () => setPlatformArchiveOpen(true));
 }
+document.getElementById('platform-archive-close')?.addEventListener('click', () => setPlatformArchiveOpen(false));
+// A tap on the dimmed backdrop (the dialog box itself, outside its content) closes the window.
+platformArchiveDialog?.addEventListener('click', event => {
+  if (event.target === platformArchiveDialog) setPlatformArchiveOpen(false);
+});
+platformArchiveDialog?.addEventListener('close', () => platformArchiveOpen?.focus());
 document.getElementById('section-platforms')?.addEventListener('click', togglePlatformArchive);
 if (platformDirectory) {
   platformDirectory.addEventListener('click', movePlatformByButton);
