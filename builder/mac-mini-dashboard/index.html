@@ -3479,6 +3479,15 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-resources .platform-link { width: 100%; min-height: 44px; padding: 8px 10px; border-color: transparent; border-radius: 6px; background: transparent; white-space: normal; overflow-wrap: anywhere; font-weight: 550; }
 .platform-resources .platform-link:hover { background: var(--mm-surface-hover); border-color: var(--mm-control-line); }
 .platform-resource-note { margin: 0 0 12px; max-width: 65ch; color: var(--mm-muted); }
+/* Even cards: every card in a row is as tall as the tallest, link buttons share one width
+   and sit just above «Материалы проекта», so buttons and footers line up across the row. */
+.platform-directory { align-items: stretch; }
+.platform-entry { grid-template-rows: 1fr auto; }
+.platform-links { flex-direction: column; flex-wrap: nowrap; align-items: stretch; margin-top: auto; padding-top: 12px; }
+.platform-link { width: 100%; }
+.platform-link::after { margin-left: auto; }
+.platform-links .platform-access { min-width: 92px; }
+.platform-resources > span { display: flex; align-items: center; min-height: 44px; }
 
 </style>
 </head>
