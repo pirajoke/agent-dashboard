@@ -1571,6 +1571,14 @@ button {{ font: inherit; }}
 """
 
 
+def _context_catalog_path() -> Path:
+    """One private location shared by the owner API and static-serving denylist."""
+    return Path(os.environ.get(
+        'COMMAND_CENTER_CONTEXT_CATALOG',
+        str(HOME / '.agent-bridge' / 'context-library' / 'catalog.json'),
+    ))
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def _host_name(self) -> str:
         return self.headers.get("Host", "").split(":", 1)[0].lower()
@@ -1663,7 +1671,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             private_state = (HOME / '.agent-bridge').resolve()
             private_files = {MANAGER_DECISIONS_FILE.resolve(),
                              (JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json").resolve()}
-            protected = any(path.is_relative_to(private_state) or path in private_files for path in targets)
+            context_catalog = _context_catalog_path()
+            # The entire state directory includes manifests and pending intent
+            # payloads. Protect its configured and resolved locations even when
+            # an operator overrides the default or requests an implicit index.
+            context_roots = {context_catalog.parent.resolve(), context_catalog.resolve().parent}
+            protected = any(
+                path.is_relative_to(private_state) or path in private_files
+                or any(path.is_relative_to(root) for root in context_roots)
+                for path in targets
+            )
         except (OSError, ValueError, RuntimeError):
             self.send_error(403, 'Forbidden')
             return None
@@ -2569,7 +2586,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/context-library':
             owner = self._decision_owner_authorized()
             query = parse_qs(parsed.query, keep_blank_values=True)
-            catalog = Path(os.environ.get('COMMAND_CENTER_CONTEXT_CATALOG', str(HOME / 'Library/Application Support/Command Center Context/catalog.json')))
+            catalog = _context_catalog_path()
             self._json_response(200, context_library_projection(
                 catalog, owner=owner, query=query.get('q', [''])[0],
                 source=query.get('source', [''])[0], kind=query.get('kind', [''])[0],

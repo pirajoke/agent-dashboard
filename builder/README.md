@@ -179,10 +179,12 @@ python3 builder/context_library_collect.py --vault "$VAULT" --output "$EXPORT_RO
 
 The output and private state directories must already exist. State must be outside
 Drive and the web document root. Keep the output directory private. The API reads
-`~/Library/Application Support/Command Center Context/catalog.json` by default;
+`~/.agent-bridge/context-library/catalog.json` by default;
 `COMMAND_CENTER_CONTEXT_CATALOG` can point to another private catalog. It applies
 the existing strict owner check on every request, including loopback. Responses
-are no-store. Public/static HTML contains no notes, private paths or source links.
+are no-store. Static GET and HEAD requests cannot access the catalog state directory,
+including configured overrides, manifests, aliases and implicit directory indexes.
+Public/static HTML contains no notes, private paths or source links.
 
 The collector reads only Markdown from `10-Transcripts`, the three service intake
 folders under `00-Inbox`, and the newest 200 update logs. Transcripts are capped

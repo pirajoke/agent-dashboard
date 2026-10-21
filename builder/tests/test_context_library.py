@@ -482,7 +482,7 @@ class EndpointTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.home = Path(self.tmp.name)
-        self.catalog_path = self.home / 'Library/Application Support/Command Center Context/catalog.json'
+        self.catalog_path = self.home / '.agent-bridge/context-library/catalog.json'
         self.catalog_path.parent.mkdir(parents=True)
         self.catalog_path.write_text(json.dumps(catalog(record())))
 
