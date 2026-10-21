@@ -181,6 +181,9 @@ def build_catalog(vault, previous=None, now=None):
         if source not in SOURCES:
             source = next((s for s in SOURCES[:3] if s in relative.lower()), 'other')
         upstream = next((meta[k] for k in ('plaud_id', 'meeting_id', 'granola_id', 'writeback_id') if meta.get(k)), '')
+        # Fallback journals reuse this marker; it is provenance, not an event ID.
+        if source == 'project-update' and upstream == 'manual-fallback':
+            upstream = ''
         digest = _hash(raw)
         identity = source + ':' + upstream if upstream else ''
         if identity and digest in identities.get(identity, {}):

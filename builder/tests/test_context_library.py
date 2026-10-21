@@ -131,6 +131,29 @@ class CollectorTests(FixtureCase):
         self.assertEqual(after['records'][0]['id'], before['records'][0]['id'])
         self.assertIn('Edited body', after['records'][0]['body'])
 
+    def test_ac2_placeholder_writeback_id_is_not_shared_identity_and_prior_ids_survive(self):
+        first_path = '90-Operations/project-update-webhook/logs/first.md'
+        second_path = '90-Operations/project-update-webhook/logs/second.md'
+        self.note(first_path, '---\nwriteback_id: manual-fallback\n---\nFirst distinct synthetic update')
+        self.note(second_path, '---\nwriteback_id: manual-fallback\n---\nSecond distinct synthetic update')
+        # Earlier catalogs treated this importer placeholder as a genuine upstream
+        # ID. Their persisted export identities must remain stable during repair.
+        prior = catalog(record(id='c' * 32, kind='update', source='project-update',
+                               source_id='manual-fallback', relative_path=first_path),
+                        record(id='d' * 32, kind='update', source='project-update',
+                               source_id='manual-fallback', relative_path=second_path))
+        for previous in (None, prior):
+            with self.subTest(has_previous=previous is not None):
+                result = self.build(previous)
+                self.assertEqual(len(result['records']), 2)
+                self.assertEqual(len({r['id'] for r in result['records']}), 2)
+                self.assertNotIn('upstream_content_conflict', result['issues'])
+                self.assertEqual(result['state'], 'ready')
+                self.assertEqual({r['source_id'] for r in result['records']}, {''})
+                if previous is not None:
+                    self.assertEqual({r['relative_path']: r['id'] for r in result['records']},
+                                     {first_path: 'c' * 32, second_path: 'd' * 32})
+
     def test_ac2_fallback_identity_survives_edit_and_unique_body_move(self):
         path = self.note('10-Transcripts/a.md')
         first = self.build()
