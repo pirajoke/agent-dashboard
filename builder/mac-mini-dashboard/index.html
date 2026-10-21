@@ -3655,6 +3655,30 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-edit-actions button:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .platform-edit-note { min-height: 16px; margin: 0; color: var(--mm-muted); font-size: 12px; }
 .platform-edit-note:empty { display: none; }
+/* Own cards (Mark 2026-10-21): «+ Новая карточка» next to «Архив»; picture and links in the same window. */
+.platform-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.platform-toolbar .platform-archive { margin-top: 0; }
+.platform-new { color: var(--mm-accent); border-color: var(--mm-control-line); }
+.platform-art img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.platform-art.platform-art-letter { color: var(--mm-accent); font: 800 20px/1 'Inter', -apple-system, sans-serif; }
+.platform-entry[data-platform-custom] { --platform-tint: color-mix(in srgb, var(--mm-accent) 14%, var(--mm-surface)); }
+.platform-edit-custom { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.platform-edit-custom[hidden] { display: none; }
+.platform-edit-custom legend { padding: 0; color: var(--mm-ink); font-size: 13px; font-weight: 650; }
+.platform-edit-custom .platform-edit-links-title { float: none; margin-top: 6px; }
+.platform-edit-image { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.platform-edit-image-preview { width: 48px; height: 48px; margin: 0; overflow: hidden; border-radius: 10px; --platform-tint: color-mix(in srgb, var(--mm-accent) 14%, var(--mm-surface)); }
+.platform-edit-file, #platform-edit-image-remove {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border: 1px solid var(--mm-control-line);
+  border-radius: 10px; background: var(--mm-surface); color: var(--mm-ink); font: 650 13px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.platform-edit-form .platform-edit-file { display: inline-flex; gap: 0; }
+.platform-edit-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.platform-edit-file:focus-within { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-edit-links { display: grid; gap: 6px; }
+.platform-edit-link { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 6px; }
+.platform-edit-actions .platform-edit-delete { color: #B42318; }
+.platform-edit-actions [hidden] { display: none; }
 .platform-edit-dialog .platform-archive-close { margin-left: auto; }
 .platform-edit-form { overflow: auto; overscroll-behavior: contain; }
 .platform-edit-form textarea { resize: vertical; }
@@ -3873,6 +3897,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <symbol id="cc-icon-telegram" viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="#DBEAFE" stroke="#1A1A1A" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="#3B82F6" stroke-width="1.6" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-web" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#DCFCE7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="#16803A" stroke-width="1.4"/></symbol>
   <symbol id="cc-icon-edit" viewBox="0 0 24 24"><path d="M4.5 19.5l1-4.2L15.8 5a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.7 18.5l-4.2 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.8 7l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="cc-icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-archive" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 9.5v8.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9.5M10 13.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3" fill="#FEF3C7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#1A1A1A" stroke-width="1.6"/><circle cx="12" cy="15.5" r="1.6" fill="#9A7100"/></symbol>
   <!-- Navigation icons -->
@@ -4211,8 +4236,11 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </article>
 
     </div>
+    <div class="platform-toolbar">
+    <button class="platform-archive-open platform-new" id="platform-new" type="button" aria-haspopup="dialog" aria-controls="platform-edit-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg><span>Новая карточка</span></button>
     <div class="platform-archive" id="platform-archive" hidden>
       <button class="platform-archive-open" id="platform-archive-open" type="button" aria-haspopup="dialog" aria-controls="platform-archive-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · <span id="platform-archive-count">0</span></span></button>
+    </div>
     </div>
     <dialog class="platform-archive-dialog platform-edit-dialog" id="platform-edit-dialog" aria-labelledby="platform-edit-title">
       <header class="platform-archive-head">
@@ -4230,7 +4258,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </label>
         <label>Описание
           <textarea id="platform-edit-description" name="description" rows="3" maxlength="200"></textarea>
-          <small>Строка под названием. Пустое поле оставляет прежнее описание.</small>
+          <small>Строка под названием.<span id="platform-edit-description-keep"> Пустое поле оставляет прежнее описание.</span></small>
         </label>
         <datalist id="platform-edit-statuses">
           <option value="Главный продукт"></option>
@@ -4245,6 +4273,24 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <option value="normal">Обычный</option>
           </select>
         </label>
+        <fieldset class="platform-edit-custom" id="platform-edit-custom" hidden>
+          <legend>Картинка</legend>
+          <div class="platform-edit-image">
+            <span class="platform-art platform-edit-image-preview" id="platform-edit-image-preview" aria-hidden="true"></span>
+            <label class="platform-edit-file">Выбрать фото
+              <input id="platform-edit-image" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/*">
+            </label>
+            <button type="button" id="platform-edit-image-remove">Убрать</button>
+          </div>
+          <small>Фото уменьшается до маленькой иконки прямо на этом устройстве.</small>
+          <legend class="platform-edit-links-title">Ссылки</legend>
+          <div class="platform-edit-links" id="platform-edit-links">
+            <div class="platform-edit-link"><select aria-label="Ссылка 1: тип"><option value="site">Сайт</option><option value="telegram">Telegram</option><option value="other">Другая</option></select><input type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://…" aria-label="Ссылка 1: адрес"></div>
+            <div class="platform-edit-link"><select aria-label="Ссылка 2: тип"><option value="site">Сайт</option><option value="telegram" selected>Telegram</option><option value="other">Другая</option></select><input type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://t.me/…" aria-label="Ссылка 2: адрес"></div>
+            <div class="platform-edit-link"><select aria-label="Ссылка 3: тип"><option value="site">Сайт</option><option value="telegram">Telegram</option><option value="other" selected>Другая</option></select><input type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://…" aria-label="Ссылка 3: адрес"></div>
+          </div>
+          <small>Первая ссылка открывается по нажатию на карточку. Пустые строки не сохраняются.</small>
+        </fieldset>
         <label id="platform-edit-place-field">Место в списке
           <input id="platform-edit-place" name="place" type="number" min="1" step="1" inputmode="numeric">
           <small id="platform-edit-place-hint"></small>
@@ -4254,6 +4300,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           <button class="platform-edit-save" type="submit">Сохранить</button>
           <button type="button" id="platform-edit-cancel">Отмена</button>
           <button class="platform-edit-reset" type="button" id="platform-edit-reset">Как было</button>
+          <button class="platform-edit-reset platform-edit-delete" type="button" id="platform-edit-delete" hidden>Удалить карточку</button>
         </div>
       </form>
     </dialog>
@@ -5504,12 +5551,13 @@ function readPlatformOrder() {
   try {
     const saved = JSON.parse(localStorage.getItem(PLATFORM_ORDER_STORAGE_KEY) || '[]');
     if (!Array.isArray(saved)) return [...PLATFORM_CANONICAL_IDS];
-    const known = new Set(PLATFORM_CANONICAL_IDS);
+    // Owner-made cards arrive from the Mac mini after load; keep their saved places as well.
+    const known = new Set([...PLATFORM_CANONICAL_IDS, ...platformCards().map(card => card.dataset.platformId)]);
     const restored = [];
     saved.forEach(id => {
       if (typeof id === 'string' && known.has(id) && !restored.includes(id)) restored.push(id);
     });
-    PLATFORM_CANONICAL_IDS.forEach(id => {
+    known.forEach(id => {
       if (!restored.includes(id)) restored.push(id);
     });
     return restored;
@@ -6582,6 +6630,7 @@ const platformEditForm = document.getElementById('platform-edit-form');
 const platformEditDefaults = new Map();
 let platformEdits = {};
 let platformEditCard = null;
+let platformEditMode = 'shipped'; // 'shipped' card from the page, 'custom' owner-made card, or 'new'.
 
 function platformEditAllCards() {
   return Array.from(document.querySelectorAll('#section-platforms .platform-entry'));
@@ -6616,6 +6665,11 @@ function platformEditLabels(card, name) {
 function applyPlatformEdits(edits) {
   platformEdits = edits && typeof edits === 'object' && !Array.isArray(edits) ? edits : {};
   platformEditAllCards().forEach(card => {
+    if (card.dataset.platformCustom) {
+      platformEditButton(card);
+      platformEditLabels(card, platformEditCurrent(card).name);
+      return;
+    }
     platformEditRemember(card);
     const base = platformEditDefaults.get(card.dataset.platformId);
     const own = platformEdits[card.dataset.platformId] || {};
@@ -6632,16 +6686,19 @@ function applyPlatformEdits(edits) {
     const descriptionNode = card.querySelector('.platform-description');
     if (descriptionNode) descriptionNode.textContent = value.description;
     card.classList.toggle('priority', value.priority === 'main');
-    if (!card.querySelector('.platform-edit-toggle')) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'platform-edit-toggle';
-      button.title = 'Изменить';
-      button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>';
-      card.appendChild(button);
-    }
+    platformEditButton(card);
     platformEditLabels(card, value.name);
   });
+}
+
+function platformEditButton(card) {
+  if (card.querySelector('.platform-edit-toggle')) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'platform-edit-toggle';
+  button.title = 'Изменить';
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>';
+  card.appendChild(button);
 }
 
 function readPlatformEditsCache() {
@@ -6670,19 +6727,27 @@ async function loadPlatformEdits() {
 }
 
 function openPlatformEdit(card) {
-  if (!platformEditDialog || !card) return;
-  platformEditCard = card;
-  const value = platformEditCurrent(card);
-  const archived = Boolean(card.closest('.platform-archive-list'));
+  if (!platformEditDialog) return;
+  platformEditCard = card || null;
+  const own = card ? platformCustomCards.find(item => item.id === card.dataset.platformId) : null;
+  platformEditMode = !card ? 'new' : own ? 'custom' : 'shipped';
+  const value = card ? platformEditCurrent(card) : {name: '', status: 'Работает', description: '', priority: 'normal'};
+  const archived = Boolean(card?.closest('.platform-archive-list'));
+  document.getElementById('platform-edit-title').textContent = card ? 'Изменить карточку' : 'Новая карточка';
+  document.getElementById('platform-edit-custom').hidden = platformEditMode === 'shipped';
+  document.getElementById('platform-edit-description-keep').hidden = platformEditMode !== 'shipped';
+  document.getElementById('platform-edit-reset').hidden = platformEditMode !== 'shipped';
+  document.getElementById('platform-edit-delete').hidden = platformEditMode !== 'custom';
+  fillPlatformCustomFields(own);
   document.getElementById('platform-edit-name').value = value.name;
   document.getElementById('platform-edit-status').value = value.status;
   document.getElementById('platform-edit-description').value = value.description;
   document.getElementById('platform-edit-priority').value = value.priority;
   const cards = platformCards();
   const place = document.getElementById('platform-edit-place');
-  document.getElementById('platform-edit-place-field').hidden = archived;
+  document.getElementById('platform-edit-place-field').hidden = archived || !card;
   place.max = String(cards.length);
-  place.value = archived ? '' : String(cards.indexOf(card) + 1);
+  place.value = archived || !card ? '' : String(cards.indexOf(card) + 1);
   document.getElementById('platform-edit-place-hint').textContent =
     `От 1 до ${cards.length}. Место запоминается на этом устройстве, как при перетаскивании.`;
   document.getElementById('platform-edit-note').textContent = '';
@@ -6696,6 +6761,7 @@ function closePlatformEdit() {
 }
 
 async function savePlatformEdit(reset = false) {
+  if (platformEditMode !== 'shipped') return saveCustomPlatformCard();
   const card = platformEditCard;
   if (!card) return;
   const id = card.dataset.platformId;
@@ -6724,16 +6790,7 @@ async function savePlatformEdit(reset = false) {
   applyPlatformEdits(next);
   writePlatformEditsCache(next);
 
-  const place = Number(document.getElementById('platform-edit-place').value);
-  const cards = platformCards();
-  const from = cards.indexOf(card);
-  if (!reset && from >= 0 && Number.isInteger(place) && place >= 1 && place <= cards.length && place !== from + 1) {
-    const target = cards[place - 1];
-    if (place - 1 < from) target.before(card); else target.after(card);
-    renumberPlatforms();
-    savePlatformOrder();
-    announcePlatformOrder(card, 'Перемещено:');
-  }
+  if (!reset) movePlatformToPlace(card);
 
   let synced = false;
   if (!IS_FILE_DASHBOARD) {
@@ -6760,6 +6817,18 @@ async function savePlatformEdit(reset = false) {
   }
 }
 
+function movePlatformToPlace(card) {
+  const place = Number(document.getElementById('platform-edit-place').value);
+  const cards = platformCards();
+  const from = cards.indexOf(card);
+  if (from < 0 || !Number.isInteger(place) || place < 1 || place > cards.length || place === from + 1) return;
+  const target = cards[place - 1];
+  if (place - 1 < from) target.before(card); else target.after(card);
+  renumberPlatforms();
+  savePlatformOrder();
+  announcePlatformOrder(card, 'Перемещено:');
+}
+
 applyPlatformEdits(readPlatformEditsCache());
 // After the rest of the page script, so a token just opened from the phone QR link is already imported.
 window.setTimeout(loadPlatformEdits, 0);
@@ -6781,10 +6850,294 @@ platformEditDialog?.addEventListener('click', event => {
   if (event.target === platformEditDialog) closePlatformEdit();
 });
 platformEditDialog?.addEventListener('close', () => {
-  const button = platformEditCard?.querySelector('.platform-edit-toggle');
+  const button = platformEditCard?.isConnected ? platformEditCard.querySelector('.platform-edit-toggle') : null;
   if (button && !button.closest('dialog:not([open])')) button.focus();
+  else document.getElementById('platform-new')?.focus();
 });
 // ── End Platform edits ──
+
+// ── Platform own cards ── Mark 2026-10-21: «возможность создать карточку, кастомизировать её … вставлять
+// ссылки, описывать, вставлять фотки». Cards live on the Mac mini (/api/platform-cards, owner only) and are
+// built here with textContent and checked links, never from HTML. This browser keeps a copy for a fast start.
+const PLATFORM_CARDS_CACHE_KEY = 'command-center.platform-cards.v1';
+const PLATFORM_CUSTOM_ID = /^c-[a-f0-9]{8}$/;
+const PLATFORM_IMAGE_DATA = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+const PLATFORM_LINK_KINDS = {
+  site: {icon: 'cc-icon-web', label: 'Сайт'},
+  telegram: {icon: 'cc-icon-telegram', label: 'Telegram'},
+  other: {icon: 'cc-icon-web', label: 'Ссылка'},
+};
+let platformCustomCards = [];
+let platformCustomImage = null; // null keeps the saved picture, '' removes it, a data URL replaces it.
+
+function platformSafeUrl(url) {
+  return typeof url === 'string' && /^(?:https?:\/\/[^\s/?#]+\S*|tg:\/\/\S+)$/i.test(url.trim()) ? url.trim() : null;
+}
+
+function setPlatformArt(art, image, name) {
+  art.replaceChildren();
+  art.classList.toggle('platform-art-letter', !image);
+  if (image && PLATFORM_IMAGE_DATA.test(image)) {
+    const img = document.createElement('img');
+    img.src = image;
+    img.alt = '';
+    art.appendChild(img);
+  } else {
+    art.classList.add('platform-art-letter');
+    art.textContent = (Array.from((name || '').trim())[0] || '•').toUpperCase();
+  }
+}
+
+function buildCustomPlatformCard(data) {
+  const card = document.createElement('article');
+  card.className = 'platform-entry';
+  card.dataset.platformId = data.id;
+  card.dataset.platformName = data.name;
+  card.dataset.platformCustom = '1';
+  card.classList.toggle('priority', data.priority === 'main');
+  const art = document.createElement('div');
+  art.className = 'platform-art';
+  art.setAttribute('aria-hidden', 'true');
+  setPlatformArt(art, data.image, data.name);
+  const index = document.createElement('span');
+  index.className = 'platform-index';
+  const content = document.createElement('div');
+  content.className = 'platform-content';
+  const tag = document.createElement('span');
+  tag.className = 'platform-tag';
+  tag.textContent = data.status || '';
+  const title = document.createElement('h3');
+  title.className = 'platform-name';
+  title.textContent = data.name;
+  const description = document.createElement('p');
+  description.className = 'platform-description';
+  description.textContent = data.description || '';
+  const links = document.createElement('div');
+  links.className = 'platform-links';
+  (Array.isArray(data.links) ? data.links : []).forEach(link => {
+    const url = platformSafeUrl(link?.url);
+    if (!url) return;
+    const kind = PLATFORM_LINK_KINDS[link.kind] || PLATFORM_LINK_KINDS.other;
+    const anchor = document.createElement('a');
+    anchor.className = 'platform-link';
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    const chip = document.createElement('span');
+    chip.className = 'platform-access public';
+    chip.innerHTML = `<svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#${kind.icon}"/></svg>`;
+    chip.append(typeof link.label === 'string' && link.label ? link.label : kind.label);
+    anchor.append(chip, ' Открыть');
+    links.appendChild(anchor);
+  });
+  content.append(tag, title, description, links);
+  card.append(art, index, content);
+  return card;
+}
+
+function renderCustomPlatformCards(cards) {
+  if (!platformDirectory) return;
+  platformCustomCards = (Array.isArray(cards) ? cards : []).filter(card =>
+    card && PLATFORM_CUSTOM_ID.test(card.id) && typeof card.name === 'string' && card.name.trim());
+  const wanted = new Set(platformCustomCards.map(card => card.id));
+  document.querySelectorAll('#section-platforms .platform-entry[data-platform-custom]').forEach(card => {
+    if (!wanted.has(card.dataset.platformId)) card.remove();
+  });
+  platformCustomCards.forEach(data => {
+    const fresh = buildCustomPlatformCard(data);
+    const old = Array.from(document.querySelectorAll('#section-platforms .platform-entry[data-platform-custom]'))
+      .find(card => card.dataset.platformId === data.id);
+    if (old) old.replaceWith(fresh); else platformDirectory.appendChild(fresh);
+  });
+  applyPlatformEdits(platformEdits);
+  applyPlatformArchive();
+  applyPlatformOrder(readPlatformOrder());
+}
+
+function readPlatformCardsCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLATFORM_CARDS_CACHE_KEY) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writePlatformCardsCache(cards) {
+  try { localStorage.setItem(PLATFORM_CARDS_CACHE_KEY, JSON.stringify(cards)); } catch (_) { /* optional */ }
+}
+
+async function loadPlatformCards() {
+  if (IS_FILE_DASHBOARD) return;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-cards`, {headers: jarvisRunHeaders(), cache: 'no-store'});
+    if (response.status === 401 || response.status === 403) {
+      // No owner access any more: drop the private copy so this browser stops showing it.
+      writePlatformCardsCache([]);
+      renderCustomPlatformCards([]);
+      return;
+    }
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (payload?.state !== 'ready' || !Array.isArray(payload.cards)) return;
+    writePlatformCardsCache(payload.cards);
+    renderCustomPlatformCards(payload.cards);
+  } catch (_) { /* keep the cached copy */ }
+}
+
+async function postPlatformCards(body) {
+  if (IS_FILE_DASHBOARD) return null;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-cards`, {
+      method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store', body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => null);
+    if (response.ok && payload?.state === 'ready' && Array.isArray(payload.cards)) return payload;
+    return {error: payload?.reason || payload?.error || `http_${response.status}`};
+  } catch (_) {
+    return {error: 'network'};
+  }
+}
+
+function fillPlatformCustomFields(own) {
+  platformCustomImage = null;
+  const preview = document.getElementById('platform-edit-image-preview');
+  if (preview) setPlatformArt(preview, own?.image, own?.name || '+');
+  const file = document.getElementById('platform-edit-image');
+  if (file) file.value = '';
+  const rows = document.querySelectorAll('#platform-edit-links .platform-edit-link');
+  const defaults = ['site', 'telegram', 'other'];
+  rows.forEach((row, index) => {
+    const link = own?.links?.[index];
+    row.querySelector('select').value = link?.kind || defaults[index];
+    row.querySelector('input').value = link?.url || '';
+  });
+}
+
+function shrinkPlatformImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\//.test(file.type || 'image/')) { reject(new Error('type')); return; }
+    // The page's CSP allows data: images but not blob:, so read the file as a data URL.
+    const reader = new FileReader();
+    const img = new Image();
+    img.onload = () => {
+      const size = 192;
+      const scale = Math.min(1, size / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+      canvas.height = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      let data = canvas.toDataURL('image/webp', 0.86);
+      if (!data.startsWith('data:image/webp')) data = canvas.toDataURL('image/png');
+      if (data.length > 300000) data = canvas.toDataURL('image/jpeg', 0.82);
+      resolve(data);
+    };
+    img.onerror = () => reject(new Error('decode'));
+    reader.onerror = () => reject(new Error('read'));
+    reader.onload = () => { img.src = String(reader.result || ''); };
+    reader.readAsDataURL(file);
+  });
+}
+
+const PLATFORM_CARD_ERRORS = {
+  invalid_url: 'Ссылка должна начинаться с https://, http:// или tg://.',
+  image_too_large: 'Фото слишком большое даже после уменьшения. Попробуйте другое.',
+  invalid_image: 'Это фото не получилось прочитать. Попробуйте PNG или JPG.',
+  too_many_cards: 'Карточек уже 40, больше сохранить нельзя.',
+  name_required: 'Название не может быть пустым.',
+};
+
+async function saveCustomPlatformCard() {
+  const note = document.getElementById('platform-edit-note');
+  const clean = id => document.getElementById(id).value.replace(/\s+/g, ' ').trim();
+  const name = clean('platform-edit-name');
+  if (!name) {
+    note.textContent = PLATFORM_CARD_ERRORS.name_required;
+    document.getElementById('platform-edit-name').focus();
+    return;
+  }
+  const links = [];
+  for (const row of document.querySelectorAll('#platform-edit-links .platform-edit-link')) {
+    const input = row.querySelector('input');
+    const url = input.value.trim();
+    if (!url) continue;
+    if (!platformSafeUrl(url)) {
+      note.textContent = PLATFORM_CARD_ERRORS.invalid_url;
+      input.focus();
+      return;
+    }
+    links.push({kind: row.querySelector('select').value, url});
+  }
+  const existing = platformEditMode === 'custom'
+    ? platformCustomCards.find(item => item.id === platformEditCard?.dataset.platformId) : null;
+  const card = {
+    name, status: clean('platform-edit-status'), description: clean('platform-edit-description'),
+    priority: document.getElementById('platform-edit-priority').value, links,
+  };
+  if (existing) card.id = existing.id;
+  const image = platformCustomImage === null ? existing?.image : platformCustomImage;
+  if (image) card.image = image;
+  note.textContent = 'Сохраняю…';
+  const result = await postPlatformCards({action: 'save', card});
+  if (!result || result.error) {
+    note.textContent = PLATFORM_CARD_ERRORS[result?.error] || 'Mac mini сейчас не принял карточку. Попробуйте ещё раз позже.';
+    return;
+  }
+  writePlatformCardsCache(result.cards);
+  renderCustomPlatformCards(result.cards);
+  const fresh = platformCards().find(item => item.dataset.platformId === result.id)
+    || document.querySelector(`#section-platforms .platform-entry[data-platform-custom][data-platform-id="${result.id}"]`);
+  if (fresh && existing) movePlatformToPlace(fresh);
+  platformEditCard = fresh || null;
+  note.textContent = '';
+  closePlatformEdit();
+  document.getElementById('platform-order-status').textContent =
+    `${name}: ${existing ? 'сохранено' : 'карточка создана'}, видно на всех устройствах.`;
+}
+
+async function deleteCustomPlatformCard() {
+  const existing = platformCustomCards.find(item => item.id === platformEditCard?.dataset.platformId);
+  if (!existing) return;
+  if (!window.confirm(`Удалить карточку «${existing.name}»? Вернуть её будет нельзя.`)) return;
+  const note = document.getElementById('platform-edit-note');
+  const result = await postPlatformCards({action: 'delete', id: existing.id});
+  if (!result || result.error) {
+    note.textContent = 'Mac mini сейчас не удалил карточку. Попробуйте ещё раз позже.';
+    return;
+  }
+  writePlatformCardsCache(result.cards);
+  platformEditCard = null;
+  renderCustomPlatformCards(result.cards);
+  renumberPlatforms();
+  refreshPlatformArchive();
+  closePlatformEdit();
+  document.getElementById('platform-order-status').textContent = `${existing.name}: карточка удалена.`;
+}
+
+renderCustomPlatformCards(readPlatformCardsCache());
+window.setTimeout(loadPlatformCards, 0);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !platformEditDialog?.open) loadPlatformCards();
+});
+document.getElementById('platform-new')?.addEventListener('click', () => openPlatformEdit(null));
+document.getElementById('platform-edit-delete')?.addEventListener('click', deleteCustomPlatformCard);
+document.getElementById('platform-edit-image')?.addEventListener('change', async event => {
+  const note = document.getElementById('platform-edit-note');
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    platformCustomImage = await shrinkPlatformImage(file);
+    setPlatformArt(document.getElementById('platform-edit-image-preview'), platformCustomImage, '');
+    note.textContent = '';
+  } catch (_) {
+    note.textContent = PLATFORM_CARD_ERRORS.invalid_image;
+  }
+});
+document.getElementById('platform-edit-image-remove')?.addEventListener('click', () => {
+  platformCustomImage = '';
+  setPlatformArt(document.getElementById('platform-edit-image-preview'), '', document.getElementById('platform-edit-name').value || '+');
+});
+// ── End Platform own cards ──
 
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
