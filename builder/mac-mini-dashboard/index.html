@@ -6971,6 +6971,12 @@ async function loadPlatformCards() {
   if (IS_FILE_DASHBOARD) return;
   try {
     const response = await fetch(`${DASHBOARD_API}/api/platform-cards`, {headers: jarvisRunHeaders(), cache: 'no-store'});
+    if (response.status === 401 || response.status === 403) {
+      // No owner access any more: drop the private copy so this browser stops showing it.
+      writePlatformCardsCache([]);
+      renderCustomPlatformCards([]);
+      return;
+    }
     if (!response.ok) return;
     const payload = await response.json();
     if (payload?.state !== 'ready' || !Array.isArray(payload.cards)) return;

@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from dashboard_builder.platform_cards import IMAGE_MAX_BYTES, MAX_CARDS, change_cards, load_cards, validate_card
+from dashboard_builder.platform_cards import IMAGE_MAX_BYTES, MAX_CARDS, StoreUnavailable, change_cards, load_cards, validate_card
 
 BUILDER = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("dashboard_platform_cards_test", BUILDER / "dashboard-server-m4.py")
@@ -89,8 +89,13 @@ class PlatformCardsStoreTests(unittest.TestCase):
     def test_limit_and_broken_store(self):
         self.assertEqual(load_cards(self.path)["cards"], [])
         self.path.parent.mkdir(parents=True)
+        # A damaged store is not "no cards": saving on top of it would wipe them all.
         self.path.write_text("{not json")
-        self.assertEqual(load_cards(self.path)["cards"], [])
+        with self.assertRaises(StoreUnavailable):
+            load_cards(self.path)
+        with self.assertRaises(StoreUnavailable):
+            change_cards(self.path, {"action": "save", "card": {"name": "new"}})
+        self.assertEqual(self.path.read_text(), "{not json")
         good = [{"id": f"c-{i:08x}", "name": f"P{i}", "priority": "normal", "links": []} for i in range(MAX_CARDS)]
         self.path.write_text(json.dumps({"cards": [{"id": "x", "name": "bad"}, {"id": "c-ffffffff"}] + good}))
         self.assertEqual(len(load_cards(self.path)["cards"]), MAX_CARDS - 2)
@@ -149,6 +154,12 @@ class PlatformCardsEndpointTests(unittest.TestCase):
             with self.subTest(kwargs=str(kwargs)):
                 self.assertEqual(self.call("POST", body, **kwargs)["status"], status)
                 self.assertFalse(self.path.exists())
+
+    def test_damaged_store_answers_unavailable_and_is_not_overwritten(self):
+        self.path.write_text("{not json")
+        self.assertEqual(self.call("GET")["status"], 503)
+        self.assertEqual(self.call("POST", {"action": "save", "card": {"name": "x"}})["status"], 503)
+        self.assertEqual(self.path.read_text(), "{not json")
 
     def test_anonymous_read_reveals_nothing(self):
         change_cards(self.path, {"action": "save", "card": {"name": "Секретный проект"}})

@@ -2580,7 +2580,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not self._decision_owner_authorized():
                 self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'cards': []})
                 return
-            self._json_response(200, {'state': 'ready', **load_cards(PLATFORM_CARDS_FILE)})
+            try:
+                record = load_cards(PLATFORM_CARDS_FILE)
+            except OSError:
+                self._json_response(503, {'error': 'platform_cards_unavailable', 'state': 'unavailable', 'cards': []})
+                return
+            self._json_response(200, {'state': 'ready', **record})
             return
         if parsed.path == '/api/owner-projects':
             # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.

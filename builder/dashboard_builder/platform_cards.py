@@ -106,10 +106,20 @@ def validate_card(entry: object, card_id: str) -> dict:
     return card
 
 
+class StoreUnavailable(OSError):
+    """The store exists but can't be read; saving on top of it would wipe the cards."""
+
+
 def load_cards(path: Path) -> dict:
-    """Read the store; anything unreadable counts as no cards rather than an error page."""
+    """Read the store. No file means no cards; a damaged or unreadable file raises StoreUnavailable."""
     try:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        text = Path(path).read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return {"cards": [], "updated_at": None}
+    except OSError as error:
+        raise StoreUnavailable("store_unreadable") from error
+    try:
+        data = json.loads(text)
         cards = data.get("cards")
         if not isinstance(cards, list):
             raise ValueError("cards_list_expected")
@@ -121,8 +131,8 @@ def load_cards(path: Path) -> dict:
             except ValueError:
                 continue  # One damaged card must not hide the others.
         return {"cards": clean, "updated_at": data.get("updated_at")}
-    except (OSError, ValueError, TypeError, AttributeError):
-        return {"cards": [], "updated_at": None}
+    except (ValueError, TypeError, AttributeError) as error:
+        raise StoreUnavailable("store_unreadable") from error
 
 
 def change_cards(path: Path, payload: object, *, now: datetime | None = None, new_id=None) -> dict:
