@@ -199,6 +199,8 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual((record["outcome"], record["active_minutes"]), ("Бюджет добавлен: 300 евро", 20))
         self.assertEqual(data["machine"], "chatgpt")
         self.assertTrue({"ChatGPT · проект def456", "ChatGPT · без проекта"} <= {item["name"] for item in projection["projects"]})
+        # A folder that is not a Platforms product is secondary on the board.
+        self.assertFalse(any(item["main"] for item in projection["projects"] if item["name"].startswith("ChatGPT")))
         self.assertEqual((renamed["fresh"], named["sessions"][0]["project"]), (True, "ChatGPT · SHOPIFY"))
         self.assertEqual((newer["days"], emptied["sessions"]), (sorted([day, post_day]), []))
 
@@ -466,6 +468,11 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual(projects["mydictionary"]["name"], "Lexi")
         self.assertEqual(projects["mydictionary"]["prs_open"], 1)
         self.assertEqual(len(projects["jarvis"]["daily_minutes"]), 30)
+        # The board splits each week by agent and puts Platforms products first (2026-10-21).
+        self.assertEqual(len(projects["command-center"]["daily_claude_minutes"]), 30)
+        self.assertEqual(sum(projects["command-center"]["daily_claude_minutes"]), projects["command-center"]["claude_minutes"])
+        self.assertEqual(sum(projects["command-center"]["daily_codex_minutes"]), projects["command-center"]["codex_minutes"])
+        self.assertTrue(all(item["main"] for item in projects.values()))
         self.assertEqual(payload["project_total"], 3)
         detail = payload["project"]
         timeline = {day["date"]: day for day in detail["timeline"]}
@@ -972,10 +979,17 @@ function mmAgo(){return 'old relative formatter';}
             self.assertRegex(html, rf'<h2 class="cc-page-title[^"]*" id="{title_id}">')
         self.assertIn('id="cc-theme-toggle"', html)
         self.assertNotIn('id="mm-theme-toggle"', html)
-        # The board: a card per project with two weeks of work and what waits on Mark.
+        # The board (Mark 2026-10-21: «нужны основные и дополнительные, с разделением на Claude Code и Codex»):
+        # main projects as compact cards with the agents' split, other folders folded, an agent filter on top.
         self.assertIn("function renderMap(data)", html)
-        self.assertIn("const MM_MAP_DAYS = 14;", html)
-        self.assertIn("${active ? mmSpark(p, dates, scale) : ''}", html)
+        self.assertIn("const main = projects.filter(p => p.main);", html)
+        self.assertIn('<details class="mm-map-others">', html)
+        self.assertIn("const MM_MAP_AGENT_KEY = 'command-center.board-agent';", html)
+        self.assertIn("['all', 'Все агенты'], ['claude', 'Claude Code'], ['codex', 'Codex']", html)
+        self.assertIn("${mmMapAgent === 'all' ? mmAgentBar(split) : ''}", html)
+        # Less on a card: no two-week bars and no day summary there, the project page keeps them.
+        self.assertNotIn("mmSpark", html)
+        self.assertNotIn("mm-map-last", html)
         self.assertIn("Карточки проектов видны только владельцу.", html)
         # A link with ?day= opens that day in the project's history, details unfolded.
         self.assertIn("if (day) mmOpenHistoryDay(day);", html)
