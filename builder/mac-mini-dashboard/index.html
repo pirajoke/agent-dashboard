@@ -3740,8 +3740,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:9px; padding:10px 12px; min-height:44px; }
 .context-controls :focus-visible,.context-row:focus-visible,.context-reader a:focus-visible,.context-reader button:focus-visible { outline:3px solid var(--mm-info); outline-offset:3px; }
 .context-status,.context-sources { color:var(--mm-muted); font-size:14px; margin:10px 0; overflow-wrap:anywhere; }
-.context-layout { display:grid; grid-template-columns:minmax(260px,1fr) minmax(280px,1.2fr); gap:24px; align-items:start; }
+.context-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; }
 .context-list { list-style:none; margin:0; padding:0; }
+.context-list:empty { display:none; }
 .context-row { display:flex; flex-direction:column; width:100%; gap:6px; text-align:left; background:transparent; color:var(--mm-ink); border:0; border-bottom:1px solid var(--mm-line); padding:15px 4px; cursor:pointer; font:inherit; }
 .context-row:hover,.context-row[aria-pressed="true"] { background:var(--mm-info-soft); }
 .context-row small { color:var(--mm-muted); font-size:12px; line-height:1.5; }
