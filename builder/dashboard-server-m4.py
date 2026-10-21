@@ -26,6 +26,7 @@ from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
+from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
@@ -2565,6 +2566,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/context-library':
+            owner = self._decision_owner_authorized()
+            query = parse_qs(parsed.query, keep_blank_values=True)
+            catalog = Path(os.environ.get('COMMAND_CENTER_CONTEXT_CATALOG', str(HOME / 'Library/Application Support/Command Center Context/catalog.json')))
+            self._json_response(200, context_library_projection(
+                catalog, owner=owner, query=query.get('q', [''])[0],
+                source=query.get('source', [''])[0], kind=query.get('kind', [''])[0],
+                record_id=query.get('id', [None])[0]))
+            return
         if parsed.path == '/api/platform-resources':
             owner = self._decision_owner_authorized()
             registry = JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"

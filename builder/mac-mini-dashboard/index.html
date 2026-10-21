@@ -3732,6 +3732,25 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   .platform-links .platform-link:not(:first-child) .platform-access { min-height: 36px; }
 }
 
+
+/* Private context library: compact list, same typography and theme as the workspace. */
+.context-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:20px 0; }
+.context-controls label { display:flex; flex-direction:column; gap:6px; color:var(--mm-muted); font-size:13px; }
+.context-controls label:first-child { flex:1 1 220px; }
+.context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:9px; padding:10px 12px; min-height:44px; }
+.context-controls :focus-visible,.context-row:focus-visible,.context-reader a:focus-visible,.context-reader button:focus-visible { outline:3px solid var(--mm-info); outline-offset:3px; }
+.context-status,.context-sources { color:var(--mm-muted); font-size:14px; margin:10px 0; overflow-wrap:anywhere; }
+.context-layout { display:grid; grid-template-columns:minmax(260px,1fr) minmax(280px,1.2fr); gap:24px; align-items:start; }
+.context-list { list-style:none; margin:0; padding:0; }
+.context-row { display:flex; flex-direction:column; width:100%; gap:6px; text-align:left; background:transparent; color:var(--mm-ink); border:0; border-bottom:1px solid var(--mm-line); padding:15px 4px; cursor:pointer; font:inherit; }
+.context-row:hover,.context-row[aria-pressed="true"] { background:var(--mm-info-soft); }
+.context-row small { color:var(--mm-muted); font-size:12px; line-height:1.5; }
+.context-reader { border:1px solid var(--mm-line); border-radius:12px; padding:20px; min-width:0; background:var(--mm-surface); }
+.context-reader[hidden] { display:none; }
+.context-reader h3 { margin:12px 0; overflow-wrap:anywhere; }
+.context-reader pre { white-space:pre-wrap; overflow-wrap:anywhere; font:14px/1.7 system-ui,sans-serif; color:var(--mm-ink); max-height:70vh; overflow:auto; }
+.context-reader a { display:inline-block; margin:12px 0; color:var(--mm-info); }
+@media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
 </style>
 </head>
 <body>
@@ -4050,6 +4069,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true">🎙️</span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
   <div class="cc-side-foot">
@@ -4083,6 +4103,24 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   </dialog>
 
   <main class="cc-main">
+  <section id="section-context" class="section" aria-labelledby="context-title">
+    <header class="cc-page-head"><div><h2 class="cc-page-title" id="context-title">Встречи и контекст</h2>
+    <p class="cc-page-lede">Транскрипты и последние обновления проектов. Основная версия хранится в Obsidian.</p></div></header>
+    <form class="context-controls" id="context-filters" role="search">
+      <label>Найти в записях<input id="context-search" type="search" maxlength="1000" placeholder="Тема, решение или проект" autocomplete="off"></label>
+      <label>Источник<select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
+      <label>Тип<select id="context-kind"><option value="">Все записи</option><option value="transcript">Транскрипты</option><option value="update">Обновления</option></select></label>
+      <button type="submit">Обновить</button>
+    </form>
+    <p id="context-status" class="context-status" role="status" aria-live="polite">Записи доступны после проверки доступа владельца.</p>
+    <p id="context-sources" class="context-sources"></p>
+    <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
+      <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Полный текст записи">
+        <button type="button" id="context-close">Закрыть запись</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p><a id="context-obsidian">Открыть в Obsidian</a><pre id="context-body"></pre>
+      </article>
+    </div>
+  </section>
+
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
   <section id="section-platforms" class="section" aria-labelledby="platforms-title">
     <header class="cc-page-head platforms-header">
@@ -5055,6 +5093,7 @@ function safeStorageSet(key, value) {
 function safeStorageRemove(key) {
   try {
     window.localStorage.removeItem(key);
+    if (key === JARVIS_RUN_TOKEN_KEY) window.dispatchEvent(new Event('context-lock'));
     return true;
   } catch (error) {
     return false;
@@ -5368,7 +5407,7 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'machines']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'context', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -6153,13 +6192,15 @@ function showSection(name) {
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
   if (name === 'platforms') setTimeout(ccLoadPlatformResources, 0);
+  if (name === 'context') setTimeout(ccLoadContext, 0);
+  else window.dispatchEvent(new Event('context-lock'));
 }
 
 // MAIN MANAGER is the first screen. «По дням» was removed on 2026-10-14 (Mark: MAIN MANAGER already says
 // what it said), so its old links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work', 'growth'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 } else {
   showSection('work');
@@ -6642,6 +6683,98 @@ setInterval(() => {
   if (!document.hidden && document.querySelector('#section-platforms.active')) ccLoadPlatformResources();
 }, 60000);
 // ── End Platform resources ──
+
+// Private context is kept only in the active DOM, never in browser storage.
+let ccContextGeneration = 0;
+let ccContextController = null;
+let ccContextTimer = null;
+let ccContextRecordId = null;
+const ccContextNames = {plaud:'PLAUD',krisp:'Krisp',granola:'Granola',other:'Другие записи','project-update':'Обновления проектов'};
+function ccContextVisible() { return !document.hidden && !!document.querySelector('#section-context.active'); }
+function ccContextClear(message = 'Записи доступны после проверки доступа владельца.') {
+  ccContextGeneration++;
+  ccContextRecordId = null;
+  ccContextController?.abort(); ccContextController = null;
+  document.getElementById('context-list').replaceChildren();
+  document.getElementById('context-sources').textContent = '';
+  document.getElementById('context-status').textContent = message;
+  ccContextClose();
+}
+function ccContextClose() {
+  document.getElementById('context-reader').hidden = true;
+  for (const id of ['context-reader-title','context-reader-meta','context-body']) document.getElementById(id).textContent = '';
+  document.getElementById('context-obsidian').removeAttribute('href');
+}
+function ccContextTime(value) {
+  if (!value) return 'не указана';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.valueOf()) ? 'не указана' : parsed.toLocaleString('ru-RU');
+}
+function ccContextURI(value) {
+  try {
+    const u = new URL(value); const keys = [...u.searchParams.keys()];
+    if (u.protocol !== 'obsidian:' || u.host !== 'open' || (u.pathname && u.pathname !== '/') || u.hash || keys.length !== 2 || !keys.includes('vault') || !keys.includes('file')) return '';
+    for (const key of keys) { const v=u.searchParams.get(key); if (!v || v.startsWith('/') || v.includes('\\') || v.split('/').includes('..') || /[\u0000-\u001f]/.test(v)) return ''; }
+    return u.href;
+  } catch (_) { return ''; }
+}
+async function ccLoadContext(recordId = null) {
+  if (!ccContextVisible()) return;
+  ccContextClear('Проверяем доступ и загружаем записи…');
+  const generation = ccContextGeneration;
+  ccContextRecordId = recordId;
+  if (!DASHBOARD_API) { ccContextClear('Откройте защищённый Command Center: статическая страница не содержит записей.'); return; }
+  const controller = new AbortController(); ccContextController = controller;
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  const params = new URLSearchParams();
+  if (recordId) params.set('id', recordId);
+  else { params.set('q',document.getElementById('context-search').value); params.set('source',document.getElementById('context-source').value); params.set('kind',document.getElementById('context-kind').value); }
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/context-library?${params}`, {headers:jarvisRunHeaders(), cache:'no-store', signal:controller.signal});
+    if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'owner_required' : 'unavailable');
+    const data = await response.json();
+    if (generation !== ccContextGeneration || !ccContextVisible()) return;
+    if (!['ready','partial','stale'].includes(data.state)) throw new Error(data.state === 'owner_required' ? 'owner_required' : data.state === 'not_found' ? 'not_found' : 'unavailable');
+    const warning = data.state === 'stale' ? 'Данные устарели. ' : data.state === 'partial' ? 'Часть источников не прочитана. ' : '';
+    document.getElementById('context-status').textContent = warning + 'Каталог проверен: ' + ccContextTime(data.generated_at) + '. Последние 200 обновлений проектов.';
+    if (recordId) {
+      const r = data.record;
+      if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
+      document.getElementById('context-reader-title').textContent = r.title;
+      document.getElementById('context-reader-meta').textContent = `${ccContextNames[r.source] || 'Запись'} · Дата записи: ${r.date || 'не указана'} · Изменено: ${ccContextTime(r.modified_at)}`;
+      document.getElementById('context-body').textContent = r.body;
+      const uri = ccContextURI(r.obsidian_url); const link = document.getElementById('context-obsidian');
+      if (uri) link.href = uri; link.hidden = !uri;
+      const reader = document.getElementById('context-reader'); reader.hidden = false; reader.focus();
+      return;
+    }
+    if (!Array.isArray(data.records)) throw new Error('unavailable');
+    document.getElementById('context-sources').textContent = (data.sources || []).map(s => `${ccContextNames[s.source] || 'Источник'}: ${s.state === 'observed' ? 'записи найдены' : 'записи не найдены'}`).join(' · ') + ' Наличие записей не подтверждает активное подключение сервиса.';
+    const list=document.getElementById('context-list');
+    for (const r of data.records) {
+      if (!/^[a-f0-9]{32}$/.test(r.id)) continue;
+      const li=document.createElement('li'); const button=document.createElement('button'); button.type='button';button.className='context-row';
+      const title=document.createElement('strong');title.textContent=r.title;
+      const meta=document.createElement('small'); meta.textContent=`${ccContextNames[r.source] || 'Запись'} · ${r.date || 'Дата не указана'}${r.project ? ' · '+r.project : ''} · Изменено: ${ccContextTime(r.modified_at)}`;
+      button.append(title,meta);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
+    }
+    document.getElementById('context-status').textContent += data.records.length ? ` Показано ${data.records.length} из ${data.total}.` : ' По выбранным условиям записей нет.';
+  } catch (error) {
+    if (generation !== ccContextGeneration) return;
+    ccContextClear(error.message === 'owner_required' ? 'Войдите как владелец, чтобы открыть записи.' : error.message === 'not_found' ? 'Запись не найдена. Обновите каталог.' : 'Источник временно недоступен. Попробуйте обновить каталог.');
+  } finally { clearTimeout(timeout); if (generation === ccContextGeneration) ccContextController=null; }
+}
+document.getElementById('context-filters').addEventListener('submit', event => {event.preventDefault();ccLoadContext();});
+for (const id of ['context-source','context-kind']) document.getElementById(id).addEventListener('change',()=>ccLoadContext());
+document.getElementById('context-search').addEventListener('input',()=>{clearTimeout(ccContextTimer);ccContextTimer=setTimeout(()=>ccLoadContext(),300);});
+document.getElementById('context-close').addEventListener('click',()=>ccLoadContext());
+window.addEventListener('context-lock',()=>ccContextClear());
+window.addEventListener('pagehide',()=>ccContextClear());
+window.addEventListener('storage',event=>{if (!event.key || event.key===JARVIS_RUN_TOKEN_KEY) {ccContextClear();if(ccContextVisible())ccLoadContext();}});
+document.addEventListener('visibilitychange',()=>{ccContextClear();if(ccContextVisible())ccLoadContext();});
+window.addEventListener('focus',()=>{if(ccContextVisible())ccLoadContext();});
+setInterval(()=>{if(ccContextVisible())ccLoadContext(ccContextRecordId);},60000);
+
 
 // ── Platform edits ── Mark 2026-10-20: «кнопку Эдит … менять название, статус, приоритетность», then «менять описание».
 // Name, status, description and priority are kept on the Mac mini (/api/platform-edits, owner only), so a change
