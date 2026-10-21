@@ -87,21 +87,7 @@ def save_edits(path: Path, payload: object, *, now: datetime | None = None) -> d
     edits = validate_edits(payload)
     stamp = (now or datetime.now(timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ")
     record = {"edits": edits, "updated_at": stamp}
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp = tempfile.mkstemp(prefix=".platform-edits.", dir=path.parent)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            json.dump(record, handle, ensure_ascii=False, indent=2)
-            handle.write("\n")
-        os.chmod(temp, 0o600)
-        os.replace(temp, path)
-    except BaseException:
-        try:
-            os.unlink(temp)
-        except OSError:
-            pass
-        raise
+    _write_json(Path(path), record, prefix=".platform-edits.")
     return record
 
 
@@ -125,3 +111,21 @@ def save_card_edit(path: Path, payload: object, *, now: datetime | None = None) 
             change.setdefault(card_id, {}).setdefault("description", previous["description"])
         edits.update(change)
         return save_edits(path, {"edits": edits}, now=now)
+
+
+def _write_json(path: Path, record: dict, *, prefix: str) -> None:
+    """Atomically replace ``path`` with ``record``, readable only by the owner."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temp = tempfile.mkstemp(prefix=prefix, dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(record, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+        os.chmod(temp, 0o600)
+        os.replace(temp, path)
+    except BaseException:
+        try:
+            os.unlink(temp)
+        except OSError:
+            pass
+        raise
