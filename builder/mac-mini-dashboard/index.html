@@ -3374,25 +3374,48 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-map-when i.is-today { background: var(--mm-success); box-shadow: 0 0 0 3px var(--mm-success-soft); }
 .mm-map-when i.is-week { background: var(--mm-accent); }
 .mm-map-go { flex: none; color: var(--mm-muted); font-size: 22px; line-height: 1; }
-.mm-map-last { display: -webkit-box; overflow: hidden; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.mm-map-last b { font-weight: 650; }
-.mm-map-last.is-desc { color: var(--mm-muted); }
-.mm-spark { display: block; padding-top: 2px; }
-.mm-spark-bars { display: flex; align-items: flex-end; gap: 3px; height: 52px; }
-.mm-spark-bars i { position: relative; flex: 1 1 0; min-width: 0; background: color-mix(in srgb, var(--mm-accent) 62%, var(--mm-surface)); border-radius: 4px 4px 1px 1px; }
-.mm-spark-bars i.is-empty { background: var(--mm-line); }
-.mm-spark-bars i.is-today:not(.is-empty) { background: var(--mm-accent); }
-.mm-spark-bars i.has-pr::after { content: ""; position: absolute; bottom: -8px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; background: var(--mm-success); border-radius: 50%; }
-.mm-spark-axis { display: flex; justify-content: space-between; margin-top: 11px; color: var(--mm-muted); font-size: 11.5px; }
 .mm-map-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
 .mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
 .mm-chip.is-accent { color: var(--mm-accent); background: var(--mm-selection); border-color: transparent; }
-.mm-map-paused .mm-map-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-.mm-os a.mm-map-card.is-paused { gap: 8px; padding: 12px 14px; background: color-mix(in srgb, var(--mm-surface) 55%, transparent); }
-.mm-map-card.is-paused .mm-project-art { width: 40px; height: 40px; border-radius: 11px; }
-.mm-map-card.is-paused .mm-project-art svg { width: 34px; height: 34px; }
-.mm-map-card.is-paused .mm-map-name { font-size: 15px; }
-.mm-map-card.is-paused .mm-map-last { font-size: 13px; -webkit-line-clamp: 1; }
+/* Board 2026-10-21: main projects as compact cards, the Claude Code / Codex split, other folders folded. */
+.mm-map-agents { margin-bottom: 18px; }
+.mm-map-agents .mm-dot { display: inline-block; margin-right: 6px; }
+.mm-agent-bar { display: flex; gap: 2px; height: 6px; overflow: hidden; border-radius: 999px; }
+.mm-agent-bar i { display: block; min-width: 0; height: 100%; }
+.mm-agent-bar i[style="width:0%"] { display: none; }
+.mm-agent-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-agent-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.mm-map-card .mm-map-foot { flex-direction: column; align-items: flex-start; gap: 8px; }
+.mm-map-paused-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 16px 0 26px; color: var(--mm-muted); font-size: 13.5px; }
+.mm-os .mm-map-paused-line a { display: inline-flex; align-items: center; gap: 7px; color: var(--mm-muted); text-decoration: none; }
+.mm-os .mm-map-paused-line a:hover { color: var(--mm-ink); }
+.mm-map-paused-line .mm-project-art { width: 26px; height: 26px; border-radius: 8px; opacity: .8; }
+.mm-map-paused-line .mm-project-art svg { width: 22px; height: 22px; }
+.mm-map-paused-line .mm-art-initials { width: 20px; height: 20px; font-size: 9px; }
+.mm-map-others { margin-bottom: 30px; border-top: 1px solid var(--mm-line); }
+.mm-map-others summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-height: 44px; padding: 14px 0 10px; cursor: pointer; }
+.mm-map-others summary b { font-size: 16px; font-weight: 700; }
+.mm-map-others summary span { color: var(--mm-muted); font-size: 14px; }
+.mm-map-others summary small { flex-basis: 100%; color: var(--mm-muted); font-size: 12.5px; }
+.mm-map-rows { display: flex; flex-direction: column; }
+.mm-os a.mm-map-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(60px, 140px) 84px 150px; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; color: var(--mm-ink); text-decoration: none; border-top: 1px solid var(--mm-line); }
+.mm-map-rows a.mm-map-row:first-child { border-top: 0; }
+.mm-os a.mm-map-row:hover { background: var(--mm-surface-hover); text-decoration: none; }
+.mm-map-row .mm-project-art { width: 36px; height: 36px; border-radius: 10px; }
+.mm-map-row .mm-project-art svg { width: 30px; height: 30px; }
+.mm-map-row .mm-art-initials { width: 26px; height: 26px; border-radius: 8px; font-size: 10px; }
+.mm-map-row-name { display: flex; flex-direction: column; min-width: 0; overflow: hidden; font-size: 14.5px; font-weight: 650; white-space: nowrap; text-overflow: ellipsis; }
+.mm-map-row-name small { display: flex; align-items: center; gap: 6px; color: var(--mm-muted); font-size: 12px; font-weight: 500; }
+.mm-map-row-name small i { flex: none; width: 7px; height: 7px; background: var(--mm-control-line); border-radius: 50%; }
+.mm-map-row-name small i.is-today { background: var(--mm-success); }
+.mm-map-row-name small i.is-week { background: var(--mm-accent); }
+.mm-map-row-time { color: var(--mm-muted); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+.mm-map-row > .mm-chip { justify-self: end; }
+@media (max-width: 760px) {
+  .mm-os a.mm-map-row { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
+  .mm-map-row-bar { display: none; }
+  .mm-map-row > .mm-chip, .mm-map-row > span:last-child:empty { grid-column: 2 / -1; justify-self: start; }
+}
 .mm-chart-box { margin-bottom: 24px; }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
 .mm-owner-grid { display: grid; gap: 14px; }
@@ -3445,7 +3468,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
   .cc-page-head { margin-bottom: 16px; }
   .cc-main .cc-subnav, .cc-main .nav-pills.cc-machine-nav { display: flex; width: 100%; }
   .cc-main .cc-subnav button, .cc-main .cc-machine-nav .nav-pill { flex: 1 1 auto; justify-content: center; padding: 8px 10px; }
-  .mm-map-grid, .mm-map-paused .mm-map-grid { grid-template-columns: 1fr; }
+  .mm-map-grid { grid-template-columns: 1fr; }
   .cc-tabs.mm-nav { display: flex; width: 100%; }
   .cc-tabs.mm-nav button { flex: 1 1 auto; justify-content: center; gap: 6px; padding: 8px 8px; }
 }
@@ -8458,6 +8481,13 @@ function mmInit() {
     renderInfra(infraData);
   });
   // A project name in «Дела» or a card on the board opens its page; a modified click opens a new tab.
+  document.getElementById('mm-map').addEventListener('click', event => {
+    const button = event.target.closest('[data-map-agent]');
+    if (!button) return;
+    mmMapAgent = button.dataset.mapAgent;
+    safeStorageSet(MM_MAP_AGENT_KEY, mmMapAgent);
+    if (dailyWorkData) renderMap(dailyWorkData);
+  });
   ['mm-todo-list', 'mm-map'].forEach(id => document.getElementById(id).addEventListener('click', event => {
     const link = event.target.closest('[data-project]');
     if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
@@ -8925,53 +8955,73 @@ function renderTodo(data) {
 
 // «Проекты» (Mark 2026-10-14: «чтобы была визуализация проекта, который я делаю»): every project as a
 // card with its last two weeks of work and what waits on Mark, newest work first; a card opens its page.
-const MM_MAP_DAYS = 14;
-
 function mmSum(values) {
   return values.reduce((sum, value) => sum + (Number(value) || 0), 0);
 }
 
-// Two weeks of work as small bars on one scale for all cards, so a busy project looks busier; a dot
-// under a bar marks a day with a merged PR. The hover title gives the day's numbers.
-function mmSpark(p, dates, scale) {
-  const days = dates.slice(-MM_MAP_DAYS);
-  const minutes = p.daily_minutes.slice(-MM_MAP_DAYS);
-  const prs = p.daily_prs_merged.slice(-MM_MAP_DAYS);
-  const bars = days.map((date, i) => {
-    const value = minutes[i] || 0;
-    const height = value ? Math.max(10, Math.round((value / scale) * 100)) : 6;
-    const cls = [value ? '' : 'is-empty', i === days.length - 1 ? 'is-today' : '', prs[i] ? 'has-pr' : ''].filter(Boolean).join(' ');
-    const label = `${mmDayShort(date)}: ${value ? workMinutes(value) : 'без работы'}${prs[i] ? `, слито PR: ${prs[i]}` : ''}`;
-    return `<i class="${cls}" style="height:${height}%" title="${mmEsc(label)}"></i>`;
-  }).join('');
-  return `<span class="mm-spark"><span class="mm-spark-bars">${bars}</span>
-    <span class="mm-spark-axis" aria-hidden="true"><span>${mmEsc(mmDayShort(days[0]))}</span><span>сегодня</span></span></span>`;
+// The agent filter above the board (Mark 2026-10-21: «разделять на Codex, Claude Code»): all work,
+// or only one agent's. Remembered per browser.
+const MM_MAP_AGENT_KEY = 'command-center.board-agent';
+const MM_MAP_AGENTS = [['all', 'Все агенты'], ['claude', 'Claude Code'], ['codex', 'Codex']];
+let mmMapAgent = MM_MAP_AGENTS.some(([key]) => key === safeStorageGet(MM_MAP_AGENT_KEY)) ? safeStorageGet(MM_MAP_AGENT_KEY) : 'all';
+
+function mmWeekSplit(p) {
+  const claude = mmSum((p.daily_claude_minutes || []).slice(-7));
+  const codex = mmSum((p.daily_codex_minutes || []).slice(-7));
+  const all = mmSum((p.daily_minutes || []).slice(-7));
+  return { claude, codex, all, shown: mmMapAgent === 'all' ? all : (mmMapAgent === 'claude' ? claude : codex) };
 }
 
-function mmMapCard(p, todo, dates, scale, today) {
+// One thin bar: the Claude Code part and the Codex part of the week's work.
+function mmAgentBar(split) {
+  const total = split.claude + split.codex;
+  if (!total) return '';
+  const claude = Math.round((split.claude / total) * 100);
+  return `<span class="mm-agent-bar" aria-hidden="true"><i class="claude" style="width:${claude}%"></i><i class="codex" style="width:${100 - claude}%"></i></span>`;
+}
+
+function mmAgentLegend(split) {
+  const parts = [];
+  if (split.claude && mmMapAgent !== 'codex') parts.push(`<span><i class="mm-dot claude"></i>Claude Code ${mmEsc(workMinutes(split.claude))}</span>`);
+  if (split.codex && mmMapAgent !== 'claude') parts.push(`<span><i class="mm-dot codex"></i>Codex ${mmEsc(workMinutes(split.codex))}</span>`);
+  return parts.length ? `<span class="mm-agent-legend">${parts.join('')}</span>` : '';
+}
+
+// At most one thing that waits on Mark: the nearest deadline, else PRs ready to merge.
+function mmAttention(todo, today) {
+  if (!todo) return '';
+  if (todo.deadlines.length) return `<span class="mm-chip is-warn">срок ${mmEsc(npDue(todo.deadlines[0].date, today))}</span>`;
+  if (todo.open_prs_count) return `<span class="mm-chip is-accent">PR к слиянию: ${todo.open_prs_count}</span>`;
+  return '';
+}
+
+function mmPulse(p) {
   const offset = mmDayOffset(p.last_activity);
-  const active = offset !== null && offset < 7;
-  const pulse = offset === null ? '' : (offset <= 0 ? 'is-today' : (active ? 'is-week' : ''));
-  const week = mmSum(p.daily_minutes.slice(-7));
-  const when = [p.last_activity ? mmRelDay(p.last_activity) : 'без активности', week ? `${workMinutes(week)} за 7 дней` : '']
+  return offset === null ? '' : (offset <= 0 ? 'is-today' : (offset < 7 ? 'is-week' : ''));
+}
+
+function mmMapCard(p, todo, today) {
+  const split = mmWeekSplit(p);
+  const when = [p.last_activity ? mmRelDay(p.last_activity) : 'без активности', split.shown ? `${workMinutes(split.shown)} за неделю` : '']
     .filter(Boolean).join(' · ');
-  const last = active ? p.last_summary : null;
-  const text = last
-    ? `<span class="mm-map-last"><b>${mmEsc(mmDayHeading(last.date))}:</b> ${mmEsc(last.bullets[0])}</span>`
-    : (p.description ? `<span class="mm-map-last is-desc">${mmEsc(p.description)}</span>` : '');
-  const chips = [];
-  if (todo) {
-    if (todo.deadlines.length) chips.push(`<span class="mm-chip is-warn">срок ${mmEsc(npDue(todo.deadlines[0].date, today))}</span>`);
-    if (todo.open_prs_count) chips.push(`<span class="mm-chip is-accent">PR к слиянию: ${todo.open_prs_count}</span>`);
-    if (todo.next.length) chips.push(`<span class="mm-chip">шагов: ${todo.next.length}</span>`);
-  }
-  if (p.loose) chips.push(`<span class="mm-chip">хвостов: ${p.loose}</span>`);
-  return `<a class="mm-map-card${active ? '' : ' is-paused'}" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${when}`)}">
+  const attention = mmAttention(todo, today);
+  return `<a class="mm-map-card" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${when}`)}">
     <span class="mm-map-top">${mmArt(p)}<span class="mm-map-head"><span class="mm-map-name">${mmEsc(p.name)}</span>
-      <span class="mm-map-when"><i class="${pulse}" aria-hidden="true"></i>${mmEsc(when)}</span></span><span class="mm-map-go" aria-hidden="true">›</span></span>
-    ${text}
-    ${active ? mmSpark(p, dates, scale) : ''}
-    ${chips.length ? `<span class="mm-map-foot">${chips.join('')}</span>` : ''}
+      <span class="mm-map-when"><i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}</span></span><span class="mm-map-go" aria-hidden="true">›</span></span>
+    ${mmMapAgent === 'all' ? mmAgentBar(split) : ''}
+    <span class="mm-map-foot">${mmAgentLegend(split)}${attention}</span>
+  </a>`;
+}
+
+// A one-line row for a secondary folder.
+function mmMapRow(p, todo, today) {
+  const split = mmWeekSplit(p);
+  const when = p.last_activity ? mmRelDay(p.last_activity) : 'без активности';
+  return `<a class="mm-map-row" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}">
+    ${mmArt(p)}<span class="mm-map-row-name">${mmEsc(p.name)}<small><i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}</small></span>
+    <span class="mm-map-row-bar">${mmAgentBar(split)}</span>
+    <span class="mm-map-row-time">${split.shown ? mmEsc(workMinutes(split.shown)) : '—'}</span>
+    ${mmAttention(todo, today) || '<span></span>'}
   </a>`;
 }
 
@@ -8985,22 +9035,28 @@ function renderMap(data) {
   const delta = week - prevWeek;
   const projects = data.owner_view ? (data.projects || []) : [];
   const todo = data.owner_view ? (data.todo || []) : [];
-  const isActive = p => {
+  const recent = p => {
     const offset = mmDayOffset(p.last_activity);
     return offset !== null && offset < 7;
   };
-  const active = projects.filter(isActive);
-  const paused = projects.filter(p => !isActive(p));
-  document.getElementById('mm-map-count').textContent = data.owner_view ? projects.length : (data.project_total || 0);
+  // With one agent chosen, a project is in work only when that agent worked on it this week.
+  const isActive = p => recent(p) && (mmMapAgent === 'all' || mmWeekSplit(p).shown > 0);
+  const main = projects.filter(p => p.main);
+  const others = projects.filter(p => !p.main && isActive(p));
+  const active = main.filter(isActive).sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown);
+  const paused = main.filter(p => !isActive(p));
+  document.getElementById('mm-map-count').textContent = data.owner_view ? active.length + others.length : (data.project_total || 0);
+  const weekClaude = mmSum(last7.map(day => day.claude_minutes));
+  const weekCodex = mmSum(last7.map(day => day.codex_minutes));
   const stats = [
     data.owner_view
-      ? { label: 'В работе', value: String(active.length), note: `проектов за 7 дней · всего ${projects.length}` }
+      ? { label: 'Основные в работе', value: String(main.filter(recent).length), note: `других папок: ${projects.filter(p => !p.main && recent(p)).length}` }
       : { label: 'Проектов', value: String(data.project_total || 0), note: 'с работой за 30 дней' },
     { label: 'Работа за 7 дней', value: workMinutes(week), note: prevWeek ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе` : 'прошлой недели в данных нет', cls: prevWeek ? (delta >= 0 ? 'is-up' : 'is-down') : '' },
+    { label: 'Claude Code / Codex', value: `${workHours(weekClaude)} / ${workHours(weekCodex)} ч`, note: 'часов за 7 дней' },
     data.owner_view
       ? { label: 'Ждёт вас', value: String(todo.length), note: `сроков: ${mmSum(todo.map(item => item.deadlines.length))} · PR к слиянию: ${mmSum(todo.map(item => item.open_prs_count))}` }
-      : { label: 'Хвосты', value: String(data.dropped_count + data.forgot_count), note: `сбросил ${data.dropped_count} · забыл ${data.forgot_count}` },
-    { label: 'Слито PR за 7 дней', value: String(mmSum(last7.map(day => day.prs_merged))), note: `за 30 дней: ${mmSum(series.map(day => day.prs_merged))}` },
+      : { label: 'Слито PR за 7 дней', value: String(mmSum(last7.map(day => day.prs_merged))), note: `за 30 дней: ${mmSum(series.map(day => day.prs_merged))}` },
   ];
   const statsHtml = `<div class="mm-stats mm-map-stats">${stats.map(stat => `
     <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
@@ -9013,17 +9069,19 @@ function renderMap(data) {
     host.innerHTML = `${statsHtml}<p class="mm-empty">${data.state === 'empty' ? 'Сборщик работы ещё не присылал данные с компьютеров.' : 'За 30 дней работы по проектам не было.'}</p>`;
     return;
   }
-  const dates = series.map(day => day.date);
-  const today = dates[dates.length - 1];
+  const today = series[series.length - 1]?.date;
   const todoById = Object.fromEntries(todo.map(item => [item.id, item]));
-  const scale = Math.max(60, ...active.map(p => Math.max(0, ...p.daily_minutes.slice(-MM_MAP_DAYS))));
-  const group = (title, note, items, cls) => (items.length ? `<section class="mm-map-group ${cls}" aria-label="${mmEsc(title)}">
-      <div class="mm-map-group-head"><h3>${mmEsc(title)} <span>${items.length}</span></h3><p class="mm-section-note">${mmEsc(note)}</p></div>
-      <div class="mm-map-grid">${items.map(p => mmMapCard(p, todoById[p.id], dates, scale, today)).join('')}</div>
-    </section>` : '');
-  host.innerHTML = statsHtml
-    + group('В работе', 'Была работа за последние 7 дней. Столбики — часы за две недели, точка — слитый PR.', active, 'mm-map-active')
-    + group('На паузе', 'Без работы больше недели.', paused, 'mm-map-paused');
+  const filter = `<div class="mm-filter-tabs mm-map-agents" role="group" aria-label="Чья работа">${MM_MAP_AGENTS.map(([key, label]) =>
+    `<button type="button" data-map-agent="${key}" aria-pressed="${mmMapAgent === key}">${key === 'all' ? '' : `<i class="mm-dot ${key}"></i>`}${mmEsc(label)}</button>`).join('')}</div>`;
+  const head = (title, count, note) => `<div class="mm-map-group-head"><h3>${mmEsc(title)} <span>${count}</span></h3>${note ? `<p class="mm-section-note">${mmEsc(note)}</p>` : ''}</div>`;
+  const pausedHtml = paused.length ? `<div class="mm-map-paused-line"><span>На паузе:</span>${paused.map(p =>
+    `<a href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}">${mmArt(p)}${mmEsc(p.name)}</a>`).join('')}</div>` : '';
+  const othersHtml = others.length ? `<details class="mm-map-others">
+      <summary><b>Другие папки</b> <span>${others.length}</span><small>мелкие папки и заметки, не основные проекты · ${mmEsc(workMinutes(mmSum(others.map(p => mmWeekSplit(p).shown))))} за неделю</small></summary>
+      <div class="mm-map-rows">${others.sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown).map(p => mmMapRow(p, todoById[p.id], today)).join('')}</div>
+    </details>` : '';
+  const body = `${filter}${head('Основные проекты', active.length, '')}<div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
+  host.innerHTML = statsHtml + body;
 }
 
 // «Личное» (Mark 2026-10-20): owner-only project cards from the private portfolio registry, a short
