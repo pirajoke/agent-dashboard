@@ -8860,16 +8860,21 @@ function initGrowthEditing() {
     }
   });
   document.getElementById('growth-new-area').addEventListener('click', () => openGrowthEdit({kind: 'area'}));
+  let saving = false;
   document.getElementById('growth-edit-form').addEventListener('submit', async event => {
     event.preventDefault();
+    if (saving) return;  // A double tap must not add the same step twice.
     const note = document.getElementById('growth-edit-note');
     const main = document.getElementById('growth-edit-main').value.replace(/\s+/g, ' ').trim();
     const why = document.getElementById('growth-edit-why').value.replace(/\s+/g, ' ').trim();
     if (!main) { note.textContent = growthErrorText('text_required'); return; }
     note.textContent = 'Сохраняю…';
+    const save = event.currentTarget.querySelector('.platform-edit-save');
+    saving = true;
+    save.disabled = true;
     const error = await postGrowthEdit(growthEditTarget?.kind === 'area'
       ? {action: 'add_area', title: main, why}
-      : {action: 'add_step', area: growthEditTarget?.area, text: main});
+      : {action: 'add_step', area: growthEditTarget?.area, text: main}).finally(() => { saving = false; save.disabled = false; });
     if (error) note.textContent = growthErrorText(error);
     else closeGrowthEdit();
   });
