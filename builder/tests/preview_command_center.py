@@ -164,7 +164,7 @@ class PreviewHandler(SERVER.Handler):
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
             return
-        if parsed.path in {"/api/platform-edits", "/api/platform-cards"}:
+        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/growth"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
         if parsed.path == "/api/owner-projects":
@@ -214,6 +214,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_edits_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/platform-cards":
             self._handle_platform_cards_save()
+        elif urlsplit(self.path).path == "/api/growth":
+            self._handle_growth_edit()  # Writes only the synthetic note in the fixture state.
         else:
             self._json_response(403, {"error": "fixture_read_only"})
 
@@ -226,6 +228,8 @@ if __name__ == "__main__":
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
+        SERVER.GROWTH_NOTE_FILE = FIXTURE_STATE / "growth-note.md"
+        SERVER.GROWTH_NOTE_FILE.write_text("# Точки роста\n\n## Synthetic research area\n- Зачем: Synthetic reason.\n- [x] Synthetic first step\n- [ ] Synthetic second step\n\n## Synthetic design area\n", encoding="utf-8")
         prepare_navigation_fixture()
         with http.server.ThreadingHTTPServer(("127.0.0.1", 0), PreviewHandler) as server:
             print(f"http://127.0.0.1:{server.server_port}/", flush=True)

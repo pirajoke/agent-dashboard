@@ -32,7 +32,7 @@ from dashboard_builder.platform_resources import owner_projects_projection, plat
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.infra_changes import infra_projection
-from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
+from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
@@ -1703,6 +1703,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/platform-cards':
             self._handle_platform_cards_save()
             return
+        if parsed.path == '/api/growth':
+            self._handle_growth_edit()
+            return
         if parsed.path == '/api/jarvis/pipeline/ping':
             self._handle_jarvis_pipeline_ping()
             return
@@ -2554,6 +2557,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(200, {"ok": False, "state": "unavailable", "reason": "growth_unreadable"})
             return
         self._json_response(200, payload)
+
+    def _handle_growth_edit(self):
+        # Mark 2026-10-22: tick, add and remove steps and add areas on the site; the note stays the source.
+        body = self._platform_owner_body(GROWTH_EDIT_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            change_note(GROWTH_NOTE_FILE, body)
+        except NoteConflict as error:
+            self._json_response(409, {'ok': False, 'error': 'note_changed', 'reason': str(error)})
+            return
+        except ValueError as error:
+            self._json_response(400, {'ok': False, 'error': 'invalid_growth_edit', 'reason': str(error)})
+            return
+        except OSError:
+            self._json_response(503, {'ok': False, 'error': 'growth_unavailable'})
+            return
+        self._json_response(200, growth_projection(GROWTH_NOTE_FILE, DAILY_WORK_DIR, owner=True))
 
     def _handle_infra_changes(self, parsed):
         # Owner view adds the timeline itself; the public view is counts only.

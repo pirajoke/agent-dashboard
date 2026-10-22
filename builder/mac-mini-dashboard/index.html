@@ -3510,6 +3510,19 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .growth-steps li::before { content: ""; width: 14px; height: 14px; margin-top: 2px; border: 1.6px solid var(--mm-control-line); border-radius: 4px; }
 .growth-steps li.is-done { color: var(--mm-muted); text-decoration: line-through; }
 .growth-steps li.is-done::before { background: var(--mm-success); border-color: var(--mm-success); }
+/* Editable steps for the owner (Mark 2026-10-22): the whole row ticks, × removes. */
+.growth-steps li.is-editable { display: flex; align-items: flex-start; gap: 4px; }
+.growth-steps li.is-editable::before { content: none; }
+.growth-step-toggle { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; flex: 1; min-width: 0; padding: 2px 0; color: inherit; font: inherit; text-align: left; text-decoration: inherit; background: none; border: 0; cursor: pointer; }
+.growth-step-toggle::before { content: ""; width: 14px; height: 14px; margin-top: 2px; border: 1.6px solid var(--mm-control-line); border-radius: 4px; }
+.growth-steps li.is-done .growth-step-toggle::before { background: var(--mm-success); border-color: var(--mm-success); }
+.growth-step-toggle:hover::before { border-color: var(--mm-success); }
+.growth-step-delete { flex: none; width: 26px; height: 26px; padding: 0; color: var(--mm-muted); font-size: 14px; background: none; border: 0; border-radius: 8px; cursor: pointer; opacity: .35; }
+.growth-steps li:hover .growth-step-delete, .growth-step-delete:focus-visible { opacity: 1; }
+.growth-step-delete:hover { color: var(--mm-danger); background: var(--mm-danger-soft); }
+.growth-step-toggle:focus-visible, .growth-step-delete:focus-visible, .growth-add-step:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.growth-add-step { align-self: flex-start; margin-top: 8px; padding: 4px 0; color: var(--mm-accent); font: inherit; font-size: 13px; font-weight: 650; background: none; border: 0; cursor: pointer; }
+.growth-steps li.is-busy { opacity: .5; pointer-events: none; }
 .growth-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-line); border-radius: 14px; }
 @media (max-width: 760px) { .growth-grid { grid-template-columns: 1fr; } .growth-art { height: 120px; } .growth-art svg { width: 92px; height: 92px; } }
 
@@ -4452,9 +4465,32 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="growth-title">Мои точки роста</h2>
-        <p class="cc-page-lede">Что хочу изучить и развить, но не успеваю. Список живёт в Obsidian, в заметке «ТОЧКИ-РОСТА»: отмечайте там шаги, и прогресс здесь посчитается сам.</p>
+        <p class="cc-page-lede">Что хочу изучить и развить, но не успеваю. Отмечайте шаги прямо здесь или в Obsidian, в заметке «ТОЧКИ-РОСТА»: это один и тот же список.</p>
       </div>
+      <button class="platform-archive-open" id="growth-new-area" type="button" aria-haspopup="dialog" aria-controls="growth-edit-dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg><span>Новая точка роста</span></button>
     </header>
+    <!-- Mark 2026-10-22: add a step or an area on the site; the window writes into the same Obsidian note. -->
+    <dialog class="platform-archive-dialog platform-edit-dialog" id="growth-edit-dialog" aria-labelledby="growth-edit-title">
+      <header class="platform-archive-head">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg>
+        <h3 id="growth-edit-title">Новый шаг</h3>
+        <button class="platform-archive-close" id="growth-edit-close" type="button" aria-label="Закрыть без сохранения">✕</button>
+      </header>
+      <form class="platform-edit-form" id="growth-edit-form" method="dialog" novalidate>
+        <label id="growth-edit-main-label"><span id="growth-edit-main-name">Шаг</span>
+          <input id="growth-edit-main" name="main" type="text" maxlength="200" autocomplete="off" required>
+        </label>
+        <label id="growth-edit-why-field">Зачем
+          <input id="growth-edit-why" name="why" type="text" maxlength="200" autocomplete="off">
+          <small>Необязательно. Строка под названием.</small>
+        </label>
+        <p class="platform-edit-note" id="growth-edit-note" role="status" aria-live="polite"></p>
+        <div class="platform-edit-actions">
+          <button type="submit" class="platform-edit-save">Добавить</button>
+          <button type="button" id="growth-edit-cancel">Отмена</button>
+        </div>
+      </form>
+    </dialog>
     <p class="mm-notice" id="growth-state" role="status" aria-live="polite">Загружаю точки роста…</p>
     <div class="growth-summary" id="growth-summary"></div>
     <div class="growth-grid" id="growth-grid"></div>
@@ -8752,6 +8788,97 @@ const GROWTH_API = (!IS_FILE_DASHBOARD)
   : 'https://command.meshly.fr/api/growth';
 const GROWTH_PICTURES = ['pe', 'digital', 'research', 'podcast', 'design', 'coworking', 'trading', 'pmp', 'robots', 'agents', 'growth'];
 let growthLoading = false;
+let growthData = null;
+let growthCanEdit = false;
+let growthEditTarget = null;  // {kind: 'step', area} or {kind: 'area'}
+
+function growthErrorText(error) {
+  if (error === 'note_changed') return 'Заметку только что поменяли в Obsidian. Обновил список, попробуйте ещё раз.';
+  if (error === 'owner_token_required') return 'Менять может только владелец.';
+  if (error === 'text_required') return 'Напишите текст.';
+  if (error === 'network') return 'Нет связи с Mac mini. Попробуйте ещё раз.';
+  return 'Не получилось сохранить. Попробуйте ещё раз.';
+}
+
+async function postGrowthEdit(body) {
+  try {
+    const response = await fetch(GROWTH_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', body: JSON.stringify(body) });
+    const payload = await response.json().catch(() => null);
+    if (response.ok && payload?.ok) { renderGrowth(payload); return null; }
+    if (response.status === 409) await loadGrowth();
+    return payload?.reason === 'text_required' ? 'text_required' : (payload?.error || `http_${response.status}`);
+  } catch (_) {
+    return 'network';
+  }
+}
+
+function openGrowthEdit(target) {
+  const dialog = document.getElementById('growth-edit-dialog');
+  growthEditTarget = target;
+  const area = target.kind === 'area';
+  document.getElementById('growth-edit-title').textContent = area ? 'Новая точка роста' : 'Новый шаг';
+  document.getElementById('growth-edit-main-name').textContent = area ? 'Название' : 'Шаг';
+  document.getElementById('growth-edit-main').maxLength = area ? 80 : 200;
+  document.getElementById('growth-edit-why-field').hidden = !area;
+  document.getElementById('growth-edit-main').value = '';
+  document.getElementById('growth-edit-why').value = '';
+  document.getElementById('growth-edit-note').textContent = '';
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+  document.getElementById('growth-edit-main').focus();
+}
+
+function closeGrowthEdit() {
+  const dialog = document.getElementById('growth-edit-dialog');
+  if (dialog.open) dialog.close();
+  else dialog.removeAttribute('open');
+}
+
+function initGrowthEditing() {
+  const grid = document.getElementById('growth-grid');
+  const state = document.getElementById('growth-state');
+  grid.addEventListener('click', async event => {
+    if (!growthCanEdit) return;
+    const card = event.target.closest('[data-growth-area]');
+    const area = card && growthData?.areas?.find(item => item.id === card.dataset.growthArea);
+    if (!area) return;
+    if (event.target.closest('[data-growth-add-step]')) return openGrowthEdit({kind: 'step', area: area.id});
+    const toggle = event.target.closest('[data-growth-toggle]');
+    const remove = event.target.closest('[data-growth-delete]');
+    const index = Number((toggle || remove)?.dataset.growthToggle ?? (toggle || remove)?.dataset.growthDelete);
+    const step = area.steps[index];
+    if (!step) return;
+    if (remove && !window.confirm(`Удалить шаг «${step.text}»?`)) return;
+    (toggle || remove).closest('li').classList.add('is-busy');
+    const error = await postGrowthEdit(remove
+      ? {action: 'delete_step', area: area.id, step: index, text: step.text}
+      : {action: 'toggle', area: area.id, step: index, text: step.text, done: !step.done});
+    if (error) {
+      state.className = 'mm-notice error';
+      state.textContent = growthErrorText(error);
+      (toggle || remove).closest('li')?.classList.remove('is-busy');
+    }
+  });
+  document.getElementById('growth-new-area').addEventListener('click', () => openGrowthEdit({kind: 'area'}));
+  document.getElementById('growth-edit-form').addEventListener('submit', async event => {
+    event.preventDefault();
+    const note = document.getElementById('growth-edit-note');
+    const main = document.getElementById('growth-edit-main').value.replace(/\s+/g, ' ').trim();
+    const why = document.getElementById('growth-edit-why').value.replace(/\s+/g, ' ').trim();
+    if (!main) { note.textContent = growthErrorText('text_required'); return; }
+    note.textContent = 'Сохраняю…';
+    const error = await postGrowthEdit(growthEditTarget?.kind === 'area'
+      ? {action: 'add_area', title: main, why}
+      : {action: 'add_step', area: growthEditTarget?.area, text: main});
+    if (error) note.textContent = growthErrorText(error);
+    else closeGrowthEdit();
+  });
+  document.getElementById('growth-edit-cancel').addEventListener('click', closeGrowthEdit);
+  document.getElementById('growth-edit-close').addEventListener('click', closeGrowthEdit);
+  const dialog = document.getElementById('growth-edit-dialog');
+  dialog.addEventListener('click', event => { if (event.target === dialog) closeGrowthEdit(); });
+}
+initGrowthEditing();
 
 async function loadGrowth() {
   if (growthLoading) return;
@@ -8773,6 +8900,10 @@ async function loadGrowth() {
 }
 
 function renderGrowth(data) {
+  growthData = data;
+  // Editing only for the owner view of a real note; the page still works read-only without it.
+  growthCanEdit = Boolean(data.owner_view) && !IS_FILE_DASHBOARD;
+  document.getElementById('growth-new-area').hidden = !growthCanEdit;
   const state = document.getElementById('growth-state');
   const summary = document.getElementById('growth-summary');
   const grid = document.getElementById('growth-grid');
@@ -8833,9 +8964,11 @@ function renderGrowth(data) {
         ? '<span class="growth-chip is-muted">Время неизвестно</span>'
         : `<span class="growth-chip">${mmEsc(workMinutes(area.minutes_30d))} за 30 дней</span>`;
     const steps = area.steps.length
-      ? `<ul class="growth-steps">${area.steps.map(step => `<li class="${step.done ? 'is-done' : ''}">${mmEsc(step.text)}</li>`).join('')}</ul>`
-      : '<p class="growth-why">Добавьте шаги в заметку, чтобы видеть прогресс.</p>';
-    return `<article class="growth-card" data-picture="${picture}">
+      ? `<ul class="growth-steps">${area.steps.map((step, index) => growthCanEdit
+        ? `<li class="is-editable${step.done ? ' is-done' : ''}"><button type="button" class="growth-step-toggle" data-growth-toggle="${index}" aria-pressed="${step.done}">${mmEsc(step.text)}</button><button type="button" class="growth-step-delete" data-growth-delete="${index}" aria-label="Удалить шаг: ${mmEsc(step.text)}">✕</button></li>`
+        : `<li class="${step.done ? 'is-done' : ''}">${mmEsc(step.text)}</li>`).join('')}</ul>`
+      : `<p class="growth-why">${growthCanEdit ? 'Шагов пока нет. Добавьте первый, чтобы видеть прогресс.' : 'Добавьте шаги в заметку, чтобы видеть прогресс.'}</p>`;
+    return `<article class="growth-card" data-picture="${picture}" data-growth-area="${mmEsc(area.id)}">
       <div class="growth-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-growth-${picture}"/></svg>
         ${ring}</div>
       <div class="growth-body">
@@ -8843,6 +8976,7 @@ function renderGrowth(data) {
         ${area.why ? `<p class="growth-why">${mmEsc(area.why)}</p>` : ''}
         <div class="growth-meta">${progress}${time}</div>
         ${steps}
+        ${growthCanEdit ? '<button type="button" class="growth-add-step" data-growth-add-step>+ Шаг</button>' : ''}
       </div>
     </article>`;
   }).join('');
