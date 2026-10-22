@@ -228,6 +228,68 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .svc-env-table td:last-child { color: var(--text2); }
 .svc-cat-header { padding: 16px 12px 8px; font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .svc-cat-header .svc-cat-count { font-size: 11px; font-weight: 500; background: var(--bg2); padding: 2px 8px; border-radius: 4px; }
+/* Mark 2026-10-20: services as a short grouped list; red only for real problems. */
+.svc-list { display: flex; flex-direction: column; gap: 4px; padding: 4px 4px 12px; }
+.svc-summary { display: flex; align-items: center; gap: 10px; margin: 4px 4px 8px; padding: 12px 14px; border-radius: 12px; font-size: 14px; line-height: 1.35; }
+.svc-summary.ok { background: var(--mm-success-soft); color: var(--mm-ink); }
+.svc-summary.bad { background: var(--mm-danger-soft); color: var(--mm-ink); }
+.svc-summary-icon { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; color: #fff; font-weight: 800; font-size: 13px; }
+.svc-summary.ok .svc-summary-icon { background: var(--mm-success); }
+.svc-summary.bad .svc-summary-icon { background: var(--mm-danger); }
+.svc-group { margin-top: 8px; }
+.svc-group-title { margin: 0; padding: 8px 10px 4px; font-size: 12px; font-weight: 700; color: var(--mm-muted); letter-spacing: .02em; }
+.svc-group-title span { font-weight: 500; margin-left: 4px; }
+.svc-group-problem .svc-group-title { color: var(--mm-danger); }
+.svc-item { border-radius: 10px; }
+.svc-item:hover { background: var(--mm-surface-hover); }
+.svc-line { display: flex; align-items: center; gap: 4px; }
+.svc-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: 0; border-radius: 10px; background: transparent; color: var(--mm-ink); font: inherit; text-align: left; cursor: pointer; }
+.svc-open:focus-visible, .svc-archive-toggle:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.svc-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
+.svc-dot.ok { background: var(--mm-success); }
+.svc-dot.bad { background: var(--mm-danger); }
+.svc-text { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; }
+.svc-text .svc-name { font-weight: 600; font-size: 14px; white-space: nowrap; }
+.svc-text .svc-desc { font-size: 12.5px; color: var(--mm-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.svc-state { flex: none; font-size: 12px; font-weight: 600; }
+.svc-state.ok { color: var(--mm-muted); font-weight: 500; }
+.svc-state.bad { color: var(--mm-danger); padding: 2px 8px; border-radius: 999px; background: var(--mm-danger-soft); }
+.svc-archive-toggle { flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--mm-muted); cursor: pointer; opacity: .35; }
+.svc-archive-toggle svg { width: 16px; height: 16px; }
+.svc-item:hover .svc-archive-toggle, .svc-archive-toggle:focus-visible, .svc-item.archived .svc-archive-toggle { opacity: 1; }
+.svc-archive-toggle:hover { color: var(--mm-accent); border-color: var(--mm-control-line); }
+.svc-detail { margin: 0 8px 8px 30px; padding: 12px 14px; border-radius: 10px; background: var(--mm-surface); border: 1px solid var(--mm-line); }
+.svc-detail[hidden] { display: none; }
+.svc-detail-actions { margin-top: 12px; }
+.svc-archive-bar { padding: 10px 6px 0; }
+.svc-empty { margin: 8px 10px; color: var(--mm-muted); font-size: 13px; }
+.svc-archive-dialog { width: min(720px, calc(100vw - 32px)); }
+.svc-item.archived { opacity: .8; }
+@media (max-width: 600px) {
+  .svc-text { flex-direction: column; gap: 1px; }
+  .svc-text .svc-desc { white-space: normal; }
+  .svc-detail { margin-left: 8px; }
+  .svc-detail-grid { grid-template-columns: 1fr; }
+}
+.svc-summary .svc-style-switch { margin-left: auto; display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--mm-surface); border: 1px solid var(--mm-line); }
+.svc-style-switch button { border: 0; border-radius: 6px; padding: 4px 10px; background: transparent; color: var(--mm-muted); font: 600 12px/1.2 'Inter', -apple-system, sans-serif; cursor: pointer; }
+.svc-style-switch button[aria-pressed="true"] { background: var(--mm-background); color: var(--mm-ink); box-shadow: var(--mm-shadow-soft); }
+.svc-style-switch button:focus-visible, .svc-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -2px; }
+.svc-list .svc-table { margin-top: 4px; }
+.svc-group-row td { padding: 0 !important; background: transparent !important; cursor: default; }
+.svc-group-problem .svc-cat-header { color: var(--mm-danger); }
+.svc-why { font-size: 11px; color: var(--mm-danger); margin-top: 2px; }
+.svc-port.bad { background: var(--mm-danger-soft); color: var(--mm-danger); }
+.svc-table .svc-archive-toggle { opacity: .35; }
+.svc-table tr:hover .svc-archive-toggle, .svc-row.archived .svc-archive-toggle { opacity: 1; }
+@media (max-width: 600px) {
+  .svc-list .svc-table th:nth-child(4), .svc-list .svc-table td:nth-child(4),
+  .svc-list .svc-table th:nth-child(5), .svc-list .svc-table td:nth-child(5),
+  .svc-list .svc-table th:nth-child(6), .svc-list .svc-table td:nth-child(6) { display: none; }
+  .svc-list .svc-table td { padding: 10px 6px; }
+  .svc-list .svc-table { min-width: 0; }
+  .svc-summary { flex-wrap: wrap; }
+}
 /* Legacy grid for Air tab */
 .services-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 .service-card { background: var(--bg); border-radius: var(--radius-sm); padding: 16px; border: 1px solid var(--border); transition: all 0.2s; }
@@ -4536,8 +4598,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <!-- Services table -->
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
-        <div style="font-size:16px; font-weight:600;">Services <span style="font-size:12px; color:var(--muted); font-weight:400;" id="mini-svc-count"></span></div>
-        <button class="svc-btn" onclick="refreshMini()" style="border:none;">↻ Refresh</button>
+        <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="mini-svc-count"></span></div>
+        <button class="svc-btn" onclick="refreshMini()" style="border:none;">↻ Обновить</button>
       </div>
       <div id="mini-services-table" style="padding:8px 8px 0;">
         <table class="svc-table">
@@ -8200,97 +8262,348 @@ function initJarvisRunPanel() {
 }
 
 // ─── Shared: render service table (used by both Mac Mini and Air) ───
+// Mark 2026-10-20: «очень непонятно и много». The list shows one line on top (all fine or what needs
+// attention), problems first, then services grouped by what they are for. Ports, runtime and launchd
+// details open on click. Anything can go to a per-browser «Архив · N» window, like Platforms.
 function formatInterval(sec) {
   if (!sec) return '';
-  if (sec >= 3600) return `every ${sec/3600}h`;
-  if (sec >= 60) return `every ${sec/60}m`;
-  return `every ${sec}s`;
+  if (sec >= 3600) return `раз в ${sec/3600} ч`;
+  if (sec >= 60) return `раз в ${sec/60} мин`;
+  return `раз в ${sec} с`;
 }
 
 function visibleRuntimeServices(services) {
   return (services || []).filter(s => s.cat !== 'scheduled');
 }
 
-function renderSvcTable(tbodyId, services, actionFn) {
-  services = visibleRuntimeServices(services);
-  const cats = {core: 'Core Services', scheduled: 'Scheduled Tasks', ondemand: 'On-demand'};
-  const hasCats = services.some(s => s.cat);
+const SVC_ARCHIVE_STORAGE_KEY = 'command-center.service-archive.v1';
+// Old jobs replaced by the 03:30 backups, JARVIS-bot alerts and the health API (checked 2026-10-20).
+const SVC_ARCHIVED_BY_DEFAULT = Object.freeze(['krisp-import', 'database-backup', 'alert-monitor', 'm4-healthcheck']);
+const SVC_GROUPS = [
+  ['problem', 'Нужно внимание'],
+  ['web', 'Сайты и приложения'],
+  ['bot', 'Боты'],
+  ['db', 'Базы данных'],
+  ['job', 'Фоновые задачи'],
+  ['other', 'Остальное'],
+];
+const SVC_PLAIN_DESC = {
+  'Lexi Admin': 'Админка словаря Lexi',
+  'Lexi PostgreSQL': 'База словаря Lexi',
+  'Context News Web': 'Сайт и админка Context News',
+  'Context News Worker': 'Рассылка дайджестов в Telegram',
+  'Context News PostgreSQL': 'База Context News',
+  'Accountable OS': 'Система личной ответственности',
+  'Pixel Agents': 'Пиксельный офис агентов',
+  'Closeness Mirror': 'Приложение Closeness Mirror',
+  'Krisp Import': 'Старый импорт записей Krisp',
+  'TGBot Watchdog': 'Перезапускает Telegram-бота, если он завис',
+  'Database Backup': 'Старый ночной бэкап баз',
+  'Alert Monitor': 'Старые оповещения',
+  'M4 Healthcheck': 'Старая проверка здоровья Mac mini',
+};
+const SVC_ARCHIVE_MEMORY = {};
+const SVC_NOTES = [/\s*·\s*не загружена в launchd\s*$/, /\s*·\s*последний запуск с ошибкой \(код -?\d+\)\s*$/];
+const svcRendered = {};
 
-  let html = '';
-  if (hasCats) {
-    const grouped = {};
-    for (const cat of Object.keys(cats)) grouped[cat] = [];
-    services.forEach(s => {
-      const c = s.cat || 'core';
-      if (!grouped[c]) grouped[c] = [];
-      grouped[c].push(s);
-    });
-    for (const [cat, label] of Object.entries(cats)) {
-      const list = grouped[cat] || [];
-      if (!list.length) continue;
-      const runCount = list.filter(s => s.status === 'running').length;
-      html += `<tr><td colspan="6"><div class="svc-cat-header" onclick="toggleCat('${tbodyId}-${cat}')">${label} <span class="svc-cat-count">${runCount}/${list.length}</span></div></td></tr>`;
-      list.forEach(s => { html += renderSvcRow(s, `${tbodyId}-${cat}`, actionFn); });
-    }
-  } else {
-    services.forEach(s => { html += renderSvcRow(s, 'all', actionFn); });
-  }
-  document.getElementById(tbodyId).innerHTML = html;
+function svcId(s) {
+  return String(s.name || s.label || '').toLowerCase().replace(/[^a-z0-9а-яё]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function renderSvcRow(s, catClass, actionFn) {
-  const statusClass = s.status === 'running' ? 'deployed' : 'stopped';
-  const statusLabel = s.status === 'running' ? 'Deployed' : 'Stopped';
-  const badgeClass = s.cat === 'scheduled' && s.status !== 'running' ? 'scheduled' : statusClass;
-  const badgeLabel = s.cat === 'scheduled' && s.status !== 'running' ? 'Scheduled' : statusLabel;
-  const uid = (s.label || s.name).replace(/[\.\s]/g, '-');
-  const actionCell = IS_PUBLIC_DASHBOARD
+function svcUid(tbodyId, s) {
+  return `${tbodyId}-${String(s.label || s.name).replace(/[^A-Za-z0-9_-]/g, '-')}`;
+}
+
+function svcProblem(s) {
+  const desc = String(s.desc || '');
+  if (s.status !== 'running') {
+    if (/не загружена в launchd/.test(desc)) return {label: 'Не запущена', why: 'macOS не загрузила задачу, она не выполняется'};
+    if (/последний запуск с ошибкой/.test(desc) || (s.exit_code !== null && s.exit_code !== undefined && s.exit_code !== 0)) {
+      return {label: 'Ошибка', why: `последний запуск закончился ошибкой${s.exit_code ? ` (код ${s.exit_code})` : ''}`};
+    }
+    return {label: 'Остановлен', why: 'сервис не работает'};
+  }
+  if (s.port && s.port_ok === false) return {label: 'Не отвечает', why: `работает, но не отвечает на порту ${s.port}`};
+  return null;
+}
+
+function svcGroup(s) {
+  const text = `${s.name || ''} ${s.desc || ''} ${s.runtime || ''}`;
+  if (s.interval || s.cat === 'scheduled') return 'job';
+  if (/postgres|mysql|redis|sqlite|database|\bdb\b/i.test(text)) return 'db';
+  if (/\bbot\b|telegram|@\w+_bot|worker/i.test(text)) return 'bot';
+  if (s.port) return 'web';
+  return 'other';
+}
+
+function svcPlainDesc(s) {
+  let desc = String(s.desc || '');
+  SVC_NOTES.forEach(note => { desc = desc.replace(note, ''); });
+  return SVC_PLAIN_DESC[s.name] || desc;
+}
+
+function readSvcArchiveChoices() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SVC_ARCHIVE_STORAGE_KEY) || '{}');
+    return {...(saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {}), ...SVC_ARCHIVE_MEMORY};
+  } catch (error) {
+    return {...SVC_ARCHIVE_MEMORY};
+  }
+}
+
+function isSvcArchived(s, choices) {
+  const id = svcId(s);
+  return typeof choices[id] === 'boolean' ? choices[id] : SVC_ARCHIVED_BY_DEFAULT.includes(id);
+}
+
+function svcHost(tbodyId) {
+  let host = document.getElementById(tbodyId);
+  if (host && host.tagName === 'TBODY') {
+    // The machine panels still carry the old table; the list replaces it on first render.
+    const list = document.createElement('div');
+    list.id = tbodyId;
+    list.className = 'svc-list';
+    (host.closest('table') || host).replaceWith(list);
+    host = list;
+  }
+  return host;
+}
+
+function renderSvcTable(tbodyId, services, actionFn) {
+  services = visibleRuntimeServices(services);
+  svcRendered[tbodyId] = {services, actionFn};
+  const host = svcHost(tbodyId);
+  if (!host) return;
+  const choices = readSvcArchiveChoices();
+  const active = services.filter(s => !isSvcArchived(s, choices));
+  const archived = services.filter(s => isSvcArchived(s, choices));
+  const grouped = {};
+  active.forEach(s => {
+    const key = svcProblem(s) ? 'problem' : svcGroup(s);
+    (grouped[key] = grouped[key] || []).push(s);
+  });
+  const problems = (grouped.problem || []).length;
+  const summary = problems
+    ? `<div class="svc-summary bad"><span class="svc-summary-icon" aria-hidden="true">!</span><span><strong>Нужно внимание: ${problems}</strong> · остальные ${active.length - problems} работают</span></div>`
+    : `<div class="svc-summary ok"><span class="svc-summary-icon" aria-hidden="true">✓</span><span><strong>Всё работает</strong> · ${active.length} ${svcWord(active.length)}</span></div>`;
+  const style = readSvcStyle();
+  const toggle = `<span class="svc-style-switch" role="group" aria-label="Вид списка">${[['table', 'Таблица'], ['list', 'Список']].map(([key, label]) =>
+    `<button type="button" aria-pressed="${style === key}" onclick="setSvcStyle('${key}')">${label}</button>`).join('')}</span>`;
+  let html = summary.replace(/<\/div>$/, `${toggle}</div>`);
+  if (style === 'table') {
+    html += '<table class="svc-table"><thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th><th></th></tr></thead><tbody>';
+    for (const [key, label] of SVC_GROUPS) {
+      const list = grouped[key] || [];
+      if (!list.length) continue;
+      const runCount = list.filter(s => s.status === 'running').length;
+      html += `<tr class="svc-group-row svc-group-${key}"><td colspan="7"><div class="svc-cat-header">${label} <span class="svc-cat-count">${key === 'problem' ? list.length : `${runCount}/${list.length}`}</span></div></td></tr>`;
+      list.forEach(s => { html += renderSvcTableRow(s, tbodyId, actionFn, false); });
+    }
+    html += '</tbody></table>';
+  } else {
+    for (const [key, label] of SVC_GROUPS) {
+      const list = grouped[key] || [];
+      if (!list.length) continue;
+      html += `<section class="svc-group svc-group-${key}"><h4 class="svc-group-title">${label} <span>${list.length}</span></h4>`;
+      list.forEach(s => { html += renderSvcRow(s, tbodyId, actionFn, false); });
+      html += '</section>';
+    }
+  }
+  if (!active.length) html += '<p class="svc-empty">Здесь пусто: все сервисы в архиве.</p>';
+  if (archived.length) {
+    html += `<div class="svc-archive-bar"><button class="platform-archive-open" type="button" aria-haspopup="dialog" onclick="openSvcArchive('${tbodyId}')"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · ${archived.length}</span></button></div>`;
+  }
+  host.innerHTML = html;
+  const count = document.getElementById(tbodyId.replace('-svc-tbody', '-svc-count'));
+  if (count) count.textContent = `· ${active.filter(s => !svcProblem(s)).length} из ${active.length} работают`;
+  const dialog = document.getElementById('svc-archive-dialog');
+  if (dialog && dialog.open && dialog.dataset.host === tbodyId) fillSvcArchive(tbodyId);
+}
+
+const SVC_STYLE_STORAGE_KEY = 'command-center.service-style.v1';
+let svcStyleMemory = null;
+
+function readSvcStyle() {
+  if (svcStyleMemory) return svcStyleMemory;
+  try {
+    return localStorage.getItem(SVC_STYLE_STORAGE_KEY) === 'list' ? 'list' : 'table';
+  } catch (error) {
+    return 'table';
+  }
+}
+
+function setSvcStyle(style) {
+  svcStyleMemory = style;
+  try { localStorage.setItem(SVC_STYLE_STORAGE_KEY, style); } catch (error) {}
+  Object.entries(svcRendered).forEach(([id, state]) => renderSvcTable(id, state.services, state.actionFn));
+}
+
+// The table keeps the look of the original service table (Mark 2026-10-20: «стиль оставь предыдущий»).
+function renderSvcTableRow(s, tbodyId, actionFn, archived) {
+  const problem = svcProblem(s);
+  const running = s.status === 'running';
+  const badgeClass = problem ? 'stopped' : (running ? 'deployed' : 'scheduled');
+  const badgeLabel = problem ? (running ? 'No answer' : 'Stopped') : (running ? 'Deployed' : 'Scheduled');
+  const uid = svcUid(tbodyId, s);
+  const name = escapeHtml(s.name || s.label || '—');
+  const actionCell = IS_PUBLIC_DASHBOARD || !s.label
     ? '<span class="svc-readonly">Live</span>'
-    : (s.status === 'running'
+    : (running
         ? `<button class="svc-btn stop" onclick="event.stopPropagation(); ${actionFn}('${s.label}','stop')">Stop</button>`
         : `<button class="svc-btn start" onclick="event.stopPropagation(); ${actionFn}('${s.label}','start')">Start</button>`);
-  let html = `<tr class="svc-row cat-${catClass}" onclick="toggleSvcDetail('${uid}')">
-    <td><span class="status-dot ${s.status}"></span></td>
-    <td><div class="svc-name-cell"><div><div class="svc-name">${s.name}</div><div class="svc-desc">${s.desc || ''}</div></div></div></td>
+  const port = s.port
+    ? `<span class="svc-port${s.port_ok === false ? ' bad' : ''}">:${s.port} ${s.port_ok ? '✓' : '✗'}</span>`
+    : (s.interval ? `<span style="font-size:11px;color:var(--muted)">${formatInterval(s.interval)}</span>` : '—');
+  const why = problem ? `<div class="svc-why">${escapeHtml(problem.why)}</div>` : '';
+  let html = `<tr class="svc-row${problem ? ' problem' : ''}${archived ? ' archived' : ''}" tabindex="0" aria-expanded="false" onclick="toggleSvcDetail('${uid}', this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSvcDetail('${uid}', this)}">
+    <td><span class="status-dot ${problem ? 'stopped' : 'running'}"></span></td>
+    <td><div class="svc-name-cell"><div><div class="svc-name">${name}</div><div class="svc-desc">${escapeHtml(svcPlainDesc(s))}</div>${why}</div></div></td>
     <td><span class="svc-badge ${badgeClass}">${badgeLabel}</span></td>
-    <td><span class="svc-runtime">${s.runtime || 'Python'}</span></td>
-    <td>${s.port ? `<span class="svc-port">:${s.port} ${s.port_ok ? '✓' : '✗'}</span>` : (s.interval ? `<span style="font-size:11px;color:var(--muted)">${formatInterval(s.interval)}</span>` : '—')}</td>
+    <td><span class="svc-runtime">${escapeHtml(s.runtime || 'Python')}</span></td>
+    <td>${port}</td>
     <td>${actionCell}</td>
+    <td><button class="svc-archive-toggle" type="button" title="${archived ? 'Вернуть' : 'В архив'}" aria-label="${name}: ${archived ? 'вернуть из архива' : 'в архив'}" onclick="event.stopPropagation(); toggleSvcArchive('${tbodyId}', '${svcId(s)}', ${archived ? 'false' : 'true'})"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg></button></td>
   </tr>`;
-  html += `<tr class="svc-expand" id="svc-detail-${uid}"><td colspan="6">
-    <div class="svc-detail-grid">
-      <div class="svc-detail-item"><div class="svc-detail-label">Label</div><div class="svc-detail-value">${s.label || '—'}</div></div>
-      <div class="svc-detail-item"><div class="svc-detail-label">PID</div><div class="svc-detail-value">${s.pid || '—'}</div></div>
-      <div class="svc-detail-item"><div class="svc-detail-label">Project</div><div class="svc-detail-value">${s.project || '—'}</div></div>
-      <div class="svc-detail-item"><div class="svc-detail-label">Exit Code</div><div class="svc-detail-value">${s.exit_code !== null && s.exit_code !== undefined ? s.exit_code : '—'}</div></div>
-      <div class="svc-detail-item"><div class="svc-detail-label">Plist</div><div class="svc-detail-value">${s.plist || '—'}</div></div>
-      <div class="svc-detail-item"><div class="svc-detail-label">Log</div><div class="svc-detail-value">${s.log || '—'}</div></div>
-      ${s.config ? `<div class="svc-detail-item"><div class="svc-detail-label">Config</div><div class="svc-detail-value">${s.config}</div></div>` : ''}
-      ${s.env_file ? `<div class="svc-detail-item"><div class="svc-detail-label">Env File</div><div class="svc-detail-value">${s.env_file}</div></div>` : ''}
-    </div>
-    ${s.env_vars ? renderEnvVars(s.env_vars) : ''}
-  </td></tr>`;
+  const detail = [
+    ['Label', s.label], ['PID', s.pid], ['Project', s.project],
+    ['Exit Code', s.exit_code !== null && s.exit_code !== undefined ? s.exit_code : null],
+    ['Plist', s.plist], ['Log', s.log], ['Config', s.config], ['Env File', s.env_file],
+  ].filter(([, v]) => v !== null && v !== undefined && v !== '')
+    .map(([k, v]) => `<div class="svc-detail-item"><div class="svc-detail-label">${k}</div><div class="svc-detail-value">${escapeHtml(String(v))}</div></div>`).join('');
+  html += `<tr class="svc-expand"><td colspan="7"><div class="svc-detail-grid" id="svc-detail-${uid}" hidden>${detail || '<div class="svc-detail-value">—</div>'}</div>${s.env_vars ? renderEnvVars(s.env_vars) : ''}</td></tr>`;
   return html;
+}
+
+function svcWord(n) {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return 'сервис';
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'сервиса';
+  return 'сервисов';
+}
+
+function renderSvcRow(s, tbodyId, actionFn, archived) {
+  const problem = svcProblem(s);
+  const uid = svcUid(tbodyId, s);
+  const name = escapeHtml(s.name || s.label || '—');
+  const state = problem ? 'bad' : 'ok';
+  const stateLabel = problem ? problem.label : 'Работает';
+  const desc = escapeHtml(svcPlainDesc(s));
+  const control = IS_PUBLIC_DASHBOARD || !s.label ? '' : (s.status === 'running'
+    ? `<button class="svc-btn stop" type="button" onclick="${actionFn}('${s.label}','stop')">Остановить</button>`
+    : `<button class="svc-btn start" type="button" onclick="${actionFn}('${s.label}','start')">Запустить</button>`);
+  const detail = [
+    problem ? ['Что не так', problem.why] : null,
+    s.port ? ['Порт', `:${s.port}${s.port_ok === false ? ' — не отвечает' : (s.port_ok ? ' — отвечает' : '')}`] : null,
+    s.interval ? ['Расписание', formatInterval(s.interval)] : null,
+    ['Как запущен', s.runtime || '—'],
+    s.desc && s.desc !== svcPlainDesc(s) ? ['Описание', s.desc] : null,
+    ['launchd', s.label || '—'],
+    s.pid ? ['PID', s.pid] : null,
+    s.exit_code !== null && s.exit_code !== undefined ? ['Код выхода', s.exit_code] : null,
+    s.project ? ['Проект', s.project] : null,
+    s.plist ? ['Plist', s.plist] : null,
+    s.log ? ['Лог', s.log] : null,
+    s.config ? ['Config', s.config] : null,
+    s.env_file ? ['Env File', s.env_file] : null,
+  ].filter(Boolean).map(([k, v]) => `<div class="svc-detail-item"><div class="svc-detail-label">${k}</div><div class="svc-detail-value">${escapeHtml(String(v))}</div></div>`).join('');
+  const archiveLabel = archived ? `${name}: вернуть из архива` : `${name}: в архив`;
+  return `<div class="svc-item ${state}${archived ? ' archived' : ''}">
+    <div class="svc-line">
+      <button class="svc-open" type="button" aria-expanded="false" aria-controls="svc-detail-${uid}" onclick="toggleSvcDetail('${uid}', this)">
+        <span class="svc-dot ${state}" aria-hidden="true"></span>
+        <span class="svc-text"><span class="svc-name">${name}</span>${desc ? `<span class="svc-desc">${desc}</span>` : ''}</span>
+        <span class="svc-state ${state}">${stateLabel}</span>
+      </button>
+      <button class="svc-archive-toggle" type="button" title="${archived ? 'Вернуть' : 'В архив'}" aria-label="${archiveLabel}" onclick="toggleSvcArchive('${tbodyId}', '${svcId(s)}', ${archived ? 'false' : 'true'})"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg></button>
+    </div>
+    <div class="svc-detail" id="svc-detail-${uid}" hidden>
+      <div class="svc-detail-grid">${detail}</div>
+      ${s.env_vars ? renderEnvVars(s.env_vars) : ''}
+      ${control ? `<div class="svc-detail-actions">${control}</div>` : ''}
+    </div>
+  </div>`;
 }
 
 function renderEnvVars(vars) {
   if (!vars || !Object.keys(vars).length) return '';
   let html = '<div style="margin-top:12px;"><div class="svc-detail-label" style="margin-bottom:6px;">Environment Variables</div><table class="svc-env-table">';
   for (const [k, v] of Object.entries(vars)) {
-    html += `<tr><td>${k}</td><td>${v}</td></tr>`;
+    html += `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(String(v))}</td></tr>`;
   }
   return html + '</table></div>';
 }
 
-function toggleSvcDetail(uid) {
+function toggleSvcDetail(uid, button) {
   const el = document.getElementById('svc-detail-' + uid);
-  if (el) el.classList.toggle('open');
+  if (!el) return;
+  el.hidden = !el.hidden;
+  el.closest('.svc-expand')?.classList.toggle('open', !el.hidden);
+  if (button) button.setAttribute('aria-expanded', String(!el.hidden));
 }
 
 function toggleCat(catId) {
   document.querySelectorAll(`.cat-${catId}`).forEach(r => {
     r.style.display = r.style.display === 'none' ? '' : 'none';
   });
+}
+
+function toggleSvcArchive(tbodyId, id, archive) {
+  const choices = readSvcArchiveChoices();
+  choices[id] = archive;
+  try {
+    localStorage.setItem(SVC_ARCHIVE_STORAGE_KEY, JSON.stringify(choices));
+  } catch (error) {
+    // Private mode: the choice below lasts until the page reloads.
+  }
+  SVC_ARCHIVE_MEMORY[id] = archive;
+  const state = svcRendered[tbodyId];
+  if (state) renderSvcTable(tbodyId, state.services, state.actionFn);
+  const host = document.getElementById(tbodyId);
+  if (!archive && host) host.querySelector('.svc-open')?.focus();
+}
+
+function svcArchiveDialog() {
+  let dialog = document.getElementById('svc-archive-dialog');
+  if (dialog) return dialog;
+  dialog = document.createElement('dialog');
+  dialog.id = 'svc-archive-dialog';
+  dialog.className = 'platform-archive-dialog svc-archive-dialog';
+  dialog.setAttribute('aria-labelledby', 'svc-archive-title');
+  dialog.innerHTML = `<header class="platform-archive-head">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>
+      <h3 id="svc-archive-title">Архив сервисов</h3>
+      <p>Значок коробки возвращает сервис в список. Сам сервис архив не трогает.</p>
+      <button class="platform-archive-close" type="button" aria-label="Закрыть архив">✕</button>
+    </header>
+    <div class="platform-archive-body"><div class="svc-list" id="svc-archive-list"></div></div>`;
+  dialog.querySelector('.platform-archive-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+  document.body.appendChild(dialog);
+  return dialog;
+}
+
+function fillSvcArchive(tbodyId) {
+  const state = svcRendered[tbodyId];
+  const list = document.getElementById('svc-archive-list');
+  if (!state || !list) return;
+  const choices = readSvcArchiveChoices();
+  const archived = state.services.filter(s => isSvcArchived(s, choices));
+  const table = readSvcStyle() === 'table';
+  list.innerHTML = archived.length
+    ? (table
+        ? `<table class="svc-table"><tbody>${archived.map(s => renderSvcTableRow(s, tbodyId, state.actionFn, true)).join('')}</tbody></table>`
+        : archived.map(s => renderSvcRow(s, tbodyId, state.actionFn, true)).join(''))
+    : '<p class="svc-empty">Архив пуст.</p>';
+  if (!archived.length) document.getElementById('svc-archive-dialog')?.close();
+}
+
+function openSvcArchive(tbodyId) {
+  const dialog = svcArchiveDialog();
+  dialog.dataset.host = tbodyId;
+  fillSvcArchive(tbodyId);
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+  dialog.querySelector('.platform-archive-close')?.focus();
 }
 
 function renderHeaderDate() {
@@ -8332,7 +8645,7 @@ async function refreshMini() {
     const data = await fetchJSON(LOCAL_API, '/api/services/detailed');
     if (data && data.services) {
       const svcs = visibleRuntimeServices(data.services);
-      document.getElementById('mini-svc-count').textContent = `${svcs.length} registered`;
+      document.getElementById('mini-svc-count').textContent = `· ${svcs.length} в списке`;
       renderSvcTable('mini-svc-tbody', svcs, 'miniAction');
     }
     return;
@@ -8351,7 +8664,7 @@ async function refreshMini() {
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('mini-badge').textContent = `${running}/${svcs.length}`;
-  document.getElementById('mini-svc-count').textContent = `${running} running / ${svcs.length} total`;
+  document.getElementById('mini-svc-count').textContent = `· ${running} из ${svcs.length} работают`;
   renderSvcTable('mini-svc-tbody', svcs, 'miniAction');
   renderGauges('mini', sys);
 }
@@ -8380,7 +8693,7 @@ async function refreshAir() {
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('air-badge').textContent = `${running}/${svcs.length}`;
-  document.getElementById('air-svc-count').textContent = `${running} running / ${svcs.length} total`;
+  document.getElementById('air-svc-count').textContent = `· ${running} из ${svcs.length} работают`;
   document.getElementById('stat-services').textContent = `${running}/${svcs.length}`;
   renderSvcTable('air-svc-tbody', svcs, 'airAction');
   renderGauges('air', sys);
@@ -8414,7 +8727,7 @@ async function refreshPro() {
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('pro-badge').textContent = `${running}/${svcs.length}`;
-  document.getElementById('pro-svc-count').textContent = `${running} running / ${svcs.length} total`;
+  document.getElementById('pro-svc-count').textContent = `· ${running} из ${svcs.length} работают`;
   renderSvcTable('pro-svc-tbody', svcs, 'proAction');
   renderGauges('pro', sys);
 }
