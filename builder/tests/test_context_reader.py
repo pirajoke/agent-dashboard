@@ -236,6 +236,61 @@ process.stdout.write(JSON.stringify(snapshot()));
         self.assertNotIn("Согласовали пилот", out["html"])
         self.assertIsNone(out["href"])
 
+    def test_quotes_emphasis_and_checklists_remain_read_only_source_text(self):
+        out = self.load(BODY.replace("Обсудить результат завтра.", "> **Рекомендация**\n> Обсудить с *Максом*.\n\n- [x] Отметка из исходной заметки.\n- [ ] План из исходной заметки."))
+        self.assertIn("<blockquote>", out["html"])
+        self.assertIn("<em>Максом</em>", out["html"])
+        self.assertNotIn("*Максом*", out["visible"])
+        self.assertNotIn("&gt;", out["html"])
+        self.assertNotIn('type="checkbox"', out["html"], "A note checklist is not a task-status control")
+        self.assertEqual(len(out["calls"]), 1)
+
+    def test_source_work_links_are_clickable_deduplicated_and_not_fabricated(self):
+        text = """[Проверить задачу](https://github.com/example/context-fixture/issues/23)
+https://github.com/example/context-fixture/issues/23.
+[Правка](https://github.com/example/context-fixture/pull/24)
+[Доска](https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?v=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb)
+[Карточка](https://linear.app/fixture/issue/CTX-12/summary)
+"""
+        out = self.run_js("await context.ccLoadContext(good.record.id);const area=document.getElementById('context-links');process.stdout.write(JSON.stringify({...snapshot(),links:area.querySelectorAll('a').map(a=>a.attrs),relatedHidden:area.hidden}));", BODY.replace("Обсудить результат завтра.", text))
+        self.assertFalse(out["relatedHidden"])
+        self.assertEqual(len(out["links"]), 4)
+        self.assertEqual(out["links"][0]["href"], "https://github.com/example/context-fixture/issues/23")
+        for link in out["links"]:
+            self.assertEqual(link["target"], "_blank")
+            self.assertEqual(link["rel"], "noopener noreferrer")
+        self.assertEqual(len(out["calls"]), 1, "Viewing source links must not fetch other services or create tasks")
+        self.assertTrue(out["payloadUnchanged"])
+        self.assertEqual(out["storageWrites"], 0)
+        self.assertIn('id="context-work" href="?tab=work&amp;view=todo"', out["html"])
+        self.assertIn('id="context-agents" href="?tab=agents"', out["html"])
+
+    def test_no_task_links_are_inferred_and_examples_are_not_task_relationships(self):
+        text = """Нужно создать задачу #123 и поручить агенту.
+`https://github.com/example/context-fixture/issues/25`
+```markdown
+https://github.com/example/context-fixture/issues/26
+```
+[Небезопасно](javascript:alert(1))
+[Поддельный домен](https://github.com.evil.invalid/a/b/issues/1)
+[Доступ](https://owner:secret@github.com/a/b/issues/1)
+[Команда](https://github.com/a/b/issues/1?run=true)
+[Смена маршрута](https://github.com/a/b/../issues/1)
+"""
+        out = self.run_js("await context.ccLoadContext(good.record.id);process.stdout.write(JSON.stringify({...snapshot(),relatedHidden:document.getElementById('context-links').hidden,links:document.getElementById('context-body').querySelectorAll('a').map(a=>a.attrs)}));", BODY.replace("Обсудить результат завтра.", text))
+        self.assertTrue(out["relatedHidden"])
+        self.assertEqual(out["links"], [])
+        self.assertIn("Нужно создать задачу #123", out["visible"])
+        self.assertEqual(len(out["calls"]), 1)
+
+    def test_private_work_links_disappear_after_close_and_access_loss(self):
+        body = BODY.replace("Обсудить результат завтра.", "[Задача](https://github.com/example/private-context/issues/7)")
+        for clear in ("context.ccContextClose();", "responseMode='denied';await context.ccLoadContext(good.record.id);", "window.dispatchEvent({type:'context-lock'});"):
+            with self.subTest(clear=clear):
+                out = self.run_js("await context.ccLoadContext(good.record.id);" + clear + "process.stdout.write(JSON.stringify({...snapshot(),relatedHidden:document.getElementById('context-links').hidden}));", body)
+                self.assertNotIn("private-context", out["html"])
+                self.assertTrue(out["relatedHidden"])
+
 
 if __name__ == "__main__":
     unittest.main()

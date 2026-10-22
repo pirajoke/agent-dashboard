@@ -3831,15 +3831,31 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-reader { border:1px solid var(--mm-line); border-radius:12px; padding:20px; min-width:0; background:var(--mm-surface); }
 .context-reader[hidden] { display:none; }
 .context-reader h3 { margin:12px 0; overflow-wrap:anywhere; }
-.context-body { max-width:80ch; font:15px/1.7 system-ui,sans-serif; color:var(--mm-ink); overflow-wrap:anywhere; }
+.context-body { max-width:72ch; font:15px/1.7 system-ui,sans-serif; color:var(--mm-ink); overflow-wrap:anywhere; }
 .context-body h4,.context-body h5,.context-body h6 { margin:22px 0 8px; font-size:1em; line-height:1.4; }
 .context-body p { margin:10px 0; white-space:pre-line; }
 .context-body ul,.context-body ol { margin:10px 0; padding-left:24px; }
 .context-body li { margin:6px 0; }
+.context-body li::marker { color:var(--mm-info); }
+.context-body .context-checklist { list-style:none; padding-left:0; }
+.context-checkmark { display:inline-block; min-width:1.6em; color:var(--mm-muted); }
+.context-body blockquote { margin:16px 0; padding:4px 16px; border-radius:8px; background:var(--mm-info-soft); }
+.context-body pre { white-space:pre-wrap; overflow-wrap:anywhere; }
 .context-body details { margin-top:24px; border-top:1px solid var(--mm-line); padding-top:8px; }
 .context-body summary { cursor:pointer; min-height:44px; padding:10px 0; font-weight:600; }
 .context-body code { font-size:.9em; white-space:pre-wrap; }
 .context-reader a { display:inline-block; margin:12px 0; color:var(--mm-info); }
+.context-body a { display:inline; margin:0; text-decoration:underline; text-underline-offset:3px; }
+.context-actions { display:flex; flex-wrap:wrap; gap:8px 16px; margin:12px 0 20px; padding-bottom:14px; border-bottom:1px solid var(--mm-line); }
+.context-actions a { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin:0; text-decoration:none; font-size:14px; font-weight:600; }
+.context-actions a:hover { text-decoration:underline; }
+.context-actions a[hidden] { display:none; }
+.context-links { margin-top:24px; padding-top:16px; border-top:1px solid var(--mm-line); }
+.context-links h4 { margin:0; font-size:15px; }
+.context-links p { color:var(--mm-muted); font-size:13px; margin:8px 0; }
+.context-links ul { padding:0; margin:0; list-style:none; }
+.context-links a { min-height:44px; margin:0; padding:10px 0; overflow-wrap:anywhere; }
+.context-links[hidden] { display:none; }
 @media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
 </style>
 </head>
@@ -4213,7 +4229,14 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <p id="context-sources" class="context-sources"></p>
     <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
       <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Просмотр записи">
-        <button type="button" id="context-close">Закрыть запись</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p><div id="context-body" class="context-body"></div><a id="context-obsidian">Открыть в Obsidian</a>
+        <button type="button" id="context-close">← Все записи</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p>
+        <nav class="context-actions" aria-label="Перейти из записи">
+          <a id="context-obsidian"><span aria-hidden="true">📝</span> Оригинал в Obsidian</a>
+          <a id="context-work" href="?tab=work&amp;view=todo"><span aria-hidden="true">📋</span> Дела и результаты</a>
+          <a id="context-agents" href="?tab=agents"><span aria-hidden="true">🤖</span> Агенты</a>
+        </nav>
+        <div id="context-body" class="context-body"></div>
+        <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
       </article>
     </div>
   </section>
@@ -6799,7 +6822,8 @@ function ccContextClear(message = 'Записи доступны после пр
 }
 function ccContextClose() {
   document.getElementById('context-reader').hidden = true;
-  for (const id of ['context-reader-title','context-reader-meta','context-body']) document.getElementById(id).textContent = '';
+  for (const id of ['context-reader-title','context-reader-meta','context-body','context-links']) document.getElementById(id).textContent = '';
+  document.getElementById('context-links').hidden = true;
   document.getElementById('context-obsidian').removeAttribute('href');
 }
 function ccContextTime(value) {
@@ -6815,40 +6839,92 @@ function ccContextURI(value) {
     return u.href;
   } catch (_) { return ''; }
 }
-// A deliberately small display-only Markdown subset. Source text never becomes HTML,
-// a link, a task action or a second stored copy of the note.
-function ccContextInline(element, text) {
-  for (const part of text.split(/(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`)/g)) {
-    const bold = /^(?:\*\*[^*]+\*\*|__[^_]+__)$/.test(part);
-    if (bold || /^`[^`]+`$/.test(part)) {
-      const span = document.createElement(bold ? 'strong' : 'code');
-      span.textContent = part.slice(bold ? 2 : 1, bold ? -2 : -1); element.append(span);
-    } else element.append(document.createTextNode(part));
+// Display-only Markdown. Work links are explicit, allowlisted navigation from the
+// source, not evidence of a created task, its status, or permission to execute it.
+function ccContextWorkLink(value) {
+  if (typeof value !== 'string' || value.length > 2048 || /[\s\\\u0000-\u001f\u007f]/.test(value)) return null;
+  try {
+    const u = new URL(value);
+    if (u.protocol !== 'https:' || u.username || u.password || u.port || u.hash) return null;
+    const match = u.pathname.match(/^\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_.-]+)\/(issues|pull)\/([1-9][0-9]*)\/?$/);
+    if (u.hostname === 'github.com' && !u.search && match && !['.', '..'].includes(match[2])) {
+      return {url:`https://github.com/${match[1]}/${match[2]}/${match[3]}/${match[4]}`, label:`GitHub · ${match[1]}/${match[2]} · ${match[3] === 'pull' ? 'PR' : 'Issue'} #${match[4]}`};
+    }
+    if (['notion.so', 'www.notion.so'].includes(u.hostname) && /^\/(?:[A-Za-z0-9_-]+\/)?[A-Za-z0-9_-]*[a-f0-9]{32}\/?$/i.test(u.pathname) && (!u.search || /^\?v=[a-f0-9]{32}$/i.test(u.search))) return {url:u.href, label:'Notion · Открыть страницу'};
+    if (u.hostname === 'linear.app' && !u.search && /^\/[A-Za-z0-9_-]+\/issue\/[A-Z][A-Z0-9]*-[1-9][0-9]*(?:\/[A-Za-z0-9_-]+)?\/?$/.test(u.pathname)) return {url:u.href, label:`Linear · ${u.pathname.split('/')[3]}`};
+  } catch (_) {}
+  return null;
+}
+function ccContextInline(element, text, links) {
+  const tokens = /(`[^`]+`|\[[^\]\n]+\]\([^\s)]+\)|https:\/\/[^\s<>\])]+|\*\*[^*]+\*\*|__[^_]+__|\*[^*\n]+\*)/g;
+  for (const part of text.split(tokens)) {
+    const markdown = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    const target = markdown ? markdown[2] : part.replace(/[.,;:!?]+$/, '');
+    const link = (markdown || part.startsWith('https://')) ? ccContextWorkLink(target) : null;
+    if (link) {
+      const a = document.createElement('a'); a.href = link.url; a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer'); a.setAttribute('title', link.label);
+      a.textContent = markdown ? markdown[1] : link.label; element.append(a);
+      if (!markdown) element.append(document.createTextNode(part.slice(target.length)));
+      if (links) links.set(link.url, link);
+    } else {
+      const bold = /^(?:\*\*[^*]+\*\*|__[^_]+__)$/.test(part);
+      const code = /^`[^`]+`$/.test(part), emphasis = /^\*[^*]+\*$/.test(part);
+      if (bold || code || emphasis) {
+        const span = document.createElement(bold ? 'strong' : code ? 'code' : 'em');
+        span.textContent = part.slice(bold ? 2 : 1, bold ? -2 : -1); element.append(span);
+      } else element.append(document.createTextNode(part));
+    }
   }
 }
-function ccContextParagraphs(container, text) {
-  let paragraph = [], list = null;
+function ccContextParagraphs(container, text, links, depth = 0) {
+  let paragraph = [], list = null, quoted = [], code = null;
   const flush = () => {
-    if (paragraph.length) { const p = document.createElement('p'); ccContextInline(p, paragraph.join('\n')); container.append(p); paragraph = []; }
+    if (paragraph.length) { const p = document.createElement('p'); ccContextInline(p, paragraph.join('\n'), links); container.append(p); paragraph = []; }
+    if (quoted.length) { const q = document.createElement('blockquote'); if (depth < 4) ccContextParagraphs(q, quoted.join('\n'), links, depth + 1); else q.textContent = quoted.join('\n'); container.append(q); quoted = []; }
   };
   for (const line of text.split('\n')) {
+    if (/^\s*```/.test(line)) {
+      flush(); list = null;
+      if (code) { const pre = document.createElement('pre'); pre.textContent = code.join('\n'); container.append(pre); code = null; }
+      else code = [];
+      continue;
+    }
+    if (code) { code.push(line); continue; }
+    if (/^\s{0,3}>/.test(line)) { if (paragraph.length) flush(); list = null; quoted.push(line.replace(/^\s{0,3}>\s?/, '')); continue; }
+    if (quoted.length) flush();
     const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
     const bullet = line.match(/^\s*(?:[-*+] |\d+[.)] )(.+)$/);
     if (!line.trim()) { flush(); list = null; }
-    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, heading[2]); container.append(h); }
+    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, heading[2], links); container.append(h); }
     else if (bullet) {
       flush(); const tag = /^\s*\d/.test(line) ? 'ol' : 'ul';
-      if (!list || list.tagName.toLowerCase() !== tag) { list = document.createElement(tag); container.append(list); }
-      const item = document.createElement('li'); ccContextInline(item, bullet[1].replace(/^\[ \]\s*/, '☐ ').replace(/^\[x\]\s*/i, '☑ ')); list.append(item);
+      const check = bullet[1].match(/^\[([ x])\]\s*/i), checklist = !!check && tag === 'ul';
+      if (!list || list.tagName.toLowerCase() !== tag || list.classList.contains('context-checklist') !== checklist) { list = document.createElement(tag); if (checklist) list.className = 'context-checklist'; if (tag === 'ol') list.setAttribute('start', line.trim().match(/^\d+/)[0]); container.append(list); }
+      const item = document.createElement('li');
+      if (check) { const mark = document.createElement('span'); mark.className = 'context-checkmark'; mark.textContent = check[1].toLowerCase() === 'x' ? '☑' : '☐'; mark.setAttribute('aria-label', check[1].toLowerCase() === 'x' ? 'Отмечено в заметке' : 'Пункт из заметки'); item.append(mark); }
+      ccContextInline(item, bullet[1].slice(check ? check[0].length : 0), links); list.append(item);
     } else { list = null; paragraph.push(line); }
   }
   flush();
+  if (code) { const pre = document.createElement('pre'); pre.textContent = code.join('\n'); container.append(pre); }
+}
+function ccContextRenderLinks(links) {
+  const area = document.getElementById('context-links'); area.replaceChildren(); area.hidden = !links.size;
+  if (!links.size) return;
+  const title = document.createElement('h4'); title.textContent = '🔗 Ссылки из записи';
+  const hint = document.createElement('p'); hint.textContent = 'Статусы задач и исполнители — по ссылке в исходном сервисе.';
+  const list = document.createElement('ul');
+  for (const link of [...links.values()].slice(0, 20)) {
+    const item = document.createElement('li'), a = document.createElement('a'); a.href = link.url; a.textContent = link.label; a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer'); item.append(a); list.append(item);
+  }
+  area.append(title, hint, list);
 }
 function ccContextRenderBody(record) {
   const container = document.getElementById('context-body'); container.replaceChildren();
+  const links = new Map();
   const text = record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
     .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, '');
-  if (record.kind !== 'transcript') { ccContextParagraphs(container, text); return; }
+  if (record.kind !== 'transcript') { ccContextParagraphs(container, text, links); ccContextRenderLinks(links); return; }
   const parts = {summary: [], transcript: []}; let section = 'transcript', firstContent = true;
   for (const line of text.split('\n')) {
     // The importer banner is operational guidance, not part of the conversation.
@@ -6863,13 +6939,14 @@ function ccContextRenderBody(record) {
     parts[section].push(line);
   }
   const summary = parts.summary.join('\n').trim(), transcript = parts.transcript.join('\n').trim();
-  const title = document.createElement('h4'); title.textContent = 'Краткое резюме'; container.append(title);
-  if (summary) ccContextParagraphs(container, summary);
+  const title = document.createElement('h4'); title.textContent = '📝 Краткое резюме'; container.append(title);
+  if (summary) ccContextParagraphs(container, summary, links);
   else { const p = document.createElement('p'); p.textContent = transcript ? 'Резюме пока нет. Можно раскрыть полный транскрипт ниже или открыть оригинал в Obsidian.' : 'Резюме и транскрипт пока недоступны. Оригинал можно открыть в Obsidian.'; container.append(p); }
   if (transcript) {
-    const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = 'Полный транскрипт'; details.append(toggle);
-    ccContextParagraphs(details, transcript); container.append(details);
+    const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = '🎙️ Полный транскрипт'; details.append(toggle);
+    ccContextParagraphs(details, transcript, links); container.append(details);
   }
+  ccContextRenderLinks(links);
 }
 async function ccLoadContext(recordId = null) {
   if (!ccContextVisible()) return;
@@ -9482,6 +9559,7 @@ function openMainManager() {
   const query = new URLSearchParams(window.location.search);
   const wanted = firstOpen ? query.get('project') : null;
   if (wanted) openProject(wanted, query.get('day'));
+  else if (firstOpen && query.get('view') === 'todo') mmShowView('todo');
 }
 
 async function loadDailyWork(date) {
