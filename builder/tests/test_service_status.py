@@ -191,3 +191,34 @@ class LaunchdStateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UnlistedRunningServicesTests(unittest.TestCase):
+    """Mark 2026-10-20: running services such as MAIN MANAGER and n8n were missing from Техника."""
+
+    def test_running_jobs_missing_from_the_registry_are_added(self):
+        from dashboard_builder.service_status import parse_launchctl_running, unlisted_running_services
+        raw = ("PID\tStatus\tLabel\n774\t0\tcom.pirajoke.jarvis-bot\n812\t0\tcom.pirajoke.health-lab\n"
+               "901\t0\thomebrew.mxcl.n8n\n-\t0\tcom.pirajoke.live-feed\n455\t0\tcom.google.keystone.agent\n"
+               "300\t0\tcom.pirajoke.obsidian-tg-bot\n320\t0\tapplication.com.example.123\n333\t0\tcom.pirajoke.no-plist\n")
+        running = parse_launchctl_running(raw)
+        self.assertEqual(running, {"com.pirajoke.jarvis-bot", "com.pirajoke.health-lab", "homebrew.mxcl.n8n",
+                                   "com.google.keystone.agent", "com.pirajoke.obsidian-tg-bot",
+                                   "application.com.example.123", "com.pirajoke.no-plist"})
+        extra = unlisted_running_services(
+            [svc("com.pirajoke.jarvis-bot", "running")], running=running, disabled={"com.pirajoke.obsidian-tg-bot"},
+            agents_dir=Path("/LA"), plist_exists=lambda path: "no-plist" not in str(path))
+        self.assertEqual([(item["name"], item["label"]) for item in extra],
+                         [("Health Lab", "com.pirajoke.health-lab"), ("N8n", "homebrew.mxcl.n8n")])
+        self.assertTrue(all(item["status"] == "running" and item["cat"] == "core" for item in extra))
+
+    def test_payload_adds_them_once_to_each_list(self):
+        original = svc("com.pirajoke.jarvis-bot", "running")
+        data = {"services_detailed": [original], "services": [original]}
+        result = normalize_payload(data, loaded={"com.pirajoke.jarvis-bot": 0, "com.pirajoke.health-lab": 0},
+                                   disabled=set(), running={"com.pirajoke.jarvis-bot", "com.pirajoke.health-lab"},
+                                   plist_exists=lambda path: True)
+        for key in ("services", "services_detailed"):
+            self.assertEqual([item["label"] for item in result[key]], ["com.pirajoke.jarvis-bot", "com.pirajoke.health-lab"])
+        without = normalize_payload(data, loaded={"com.pirajoke.jarvis-bot": 0}, disabled=set(), plist_exists=lambda path: True)
+        self.assertEqual(len(without["services"]), 1)
