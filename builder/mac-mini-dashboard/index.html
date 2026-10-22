@@ -9764,7 +9764,11 @@ function mmRenderHealth(data) {
   } else {
     const services = visibleRuntimeServices(data.services_detailed || data.services || []).filter(service => !mmHealthArchived(service));
     const down = services.filter(service => service.status !== 'running');
-    if (!down.length) {
+    if (!services.length) {
+      // No services seen is not proof that they run.
+      line.classList.add('is-unknown');
+      line.appendChild(mmEl('span', '', 'Mac mini не прислал список сервисов: не знаю, всё ли работает'));
+    } else if (!down.length) {
       line.appendChild(mmEl('span', '', `Всё работает · ${services.length} ${services.length % 10 === 1 && services.length % 100 !== 11 ? 'сервис' : [2, 3, 4].includes(services.length % 10) && ![12, 13, 14].includes(services.length % 100) ? 'сервиса' : 'сервисов'}`));
     } else {
       line.classList.add('is-problem');
@@ -9918,8 +9922,10 @@ function mmInitOwnerTodo() {
       if (result?.error) { toggle.disabled = false; toggle.title = mmTodoErrorText(result.error); }
     }
   });
+  let saving = false;
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    if (saving) return;  // A double tap must not add the same item twice.
     const text = document.getElementById('todo-edit-text').value.replace(/\s+/g, ' ').trim();
     const note = document.getElementById('todo-edit-note').value.replace(/\s+/g, ' ').trim();
     const message = document.getElementById('todo-edit-note-msg');
@@ -9929,7 +9935,12 @@ function mmInitOwnerTodo() {
     }
     message.textContent = 'Сохраняю…';
     const body = mmOwnerTodoEditing ? {action: 'edit', id: mmOwnerTodoEditing.id, text, note} : {action: 'add', text, note};
-    const result = await mmPostOwnerTodo(body);
+    saving = true;
+    form.querySelector('.platform-edit-save').disabled = true;
+    const result = await mmPostOwnerTodo(body).finally(() => {
+      saving = false;
+      form.querySelector('.platform-edit-save').disabled = false;
+    });
     if (result?.error) message.textContent = mmTodoErrorText(result.error);
     else mmCloseTodoEdit();
   });
