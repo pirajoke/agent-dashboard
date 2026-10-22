@@ -8800,7 +8800,13 @@ function growthErrorText(error) {
   return 'Не получилось сохранить. Попробуйте ещё раз.';
 }
 
+function growthRequestId() {
+  try { return crypto.randomUUID(); } catch (_) { return `g-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`; }
+}
+
 async function postGrowthEdit(body) {
+  // One id per edit: a retried or double-sent request changes the note once.
+  body = {...body, request_id: growthRequestId()};
   try {
     const response = await fetch(GROWTH_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', body: JSON.stringify(body) });
     const payload = await response.json().catch(() => null);

@@ -229,6 +229,7 @@ if __name__ == "__main__":
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
         SERVER.GROWTH_NOTE_FILE = FIXTURE_STATE / "growth-note.md"
+        SERVER.GROWTH_EDITS_JOURNAL = FIXTURE_STATE / "growth-edits.jsonl"
         SERVER.GROWTH_NOTE_FILE.write_text("# Точки роста\n\n## Synthetic research area\n- Зачем: Synthetic reason.\n- [x] Synthetic first step\n- [ ] Synthetic second step\n\n## Synthetic design area\n", encoding="utf-8")
         prepare_navigation_fixture()
         with http.server.ThreadingHTTPServer(("127.0.0.1", 0), PreviewHandler) as server:

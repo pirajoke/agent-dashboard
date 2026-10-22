@@ -53,6 +53,7 @@ JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
 PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
+GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
@@ -2564,7 +2565,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if body is None:
             return
         try:
-            change_note(GROWTH_NOTE_FILE, body)
+            change_note(GROWTH_NOTE_FILE, body, journal=GROWTH_EDITS_JOURNAL)
         except NoteConflict as error:
             self._json_response(409, {'ok': False, 'error': 'note_changed', 'reason': str(error)})
             return

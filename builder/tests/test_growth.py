@@ -156,8 +156,10 @@ class GrowthEditTests(unittest.TestCase):
             "Заметка между разделами.\n\n## Дизайн\n- [ ] Курс\n")
 
     def setUp(self):
+        import uuid
         from dashboard_builder.growth import change_note
-        self.change = change_note
+        self.change = lambda path, payload: change_note(
+            path, {**payload, "request_id": str(uuid.uuid4())} if isinstance(payload, dict) else payload)
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         self.path = Path(temp.name) / "ТОЧКИ-РОСТА.md"
@@ -207,6 +209,28 @@ class GrowthEditTests(unittest.TestCase):
                 self.change(self.path, payload)
         self.assertEqual(self.path.read_text(), self.NOTE)
 
+    def test_a_repeated_request_applies_once_and_is_journaled(self):
+        from dashboard_builder.growth import change_note
+        journal = self.path.parent / "journal.jsonl"
+        payload = {"action": "add_step", "area": "дизайн", "text": "Один раз", "request_id": "req-00000001"}
+        self.assertTrue(change_note(self.path, payload, journal=journal))
+        self.assertFalse(change_note(self.path, payload, journal=journal))
+        self.assertEqual(self.path.read_text().count("Один раз"), 1)
+        self.assertEqual(json.loads(journal.read_text())["request_id"], "req-00000001")
+        with self.assertRaises(ValueError):
+            change_note(self.path, {"action": "add_step", "area": "дизайн", "text": "x"})
+
+    def test_a_save_in_obsidian_during_the_edit_is_never_overwritten(self):
+        from unittest.mock import patch
+        from dashboard_builder import growth
+        # Obsidian saves the note right after the edit wrote its temporary file.
+        with patch.object(growth.Path, "write_bytes", autospec=True, side_effect=lambda path, data: (
+                Path.write_text(path, data.decode()), self.path.write_text(self.NOTE + "- [ ] Шаг из Obsidian\n", encoding="utf-8"))[0]):
+            with self.assertRaises(growth.NoteConflict):
+                self.change(self.path, {"action": "add_step", "area": "дизайн", "text": "С сайта"})
+        self.assertIn("Шаг из Obsidian", self.path.read_text())
+        self.assertNotIn("С сайта", self.path.read_text())
+
     def test_crlf_notes_keep_crlf(self):
         self.path.write_bytes(self.NOTE.replace("\n", "\r\n").encode())
         self.change(self.path, {"action": "add_step", "area": "дизайн", "text": "Шаг"})
@@ -229,7 +253,8 @@ class GrowthEditEndpointTests(unittest.TestCase):
         from unittest.mock import patch
         handler = self.server.Handler.__new__(self.server.Handler)
         handler.path, handler.command = "/api/growth", "POST"
-        data = json.dumps(body).encode()
+        import uuid
+        data = json.dumps({**body, "request_id": str(uuid.uuid4())}).encode()
         handler.headers = {"Host": host, "Content-Length": str(len(data)), "Content-Type": "application/json"}
         if token:
             handler.headers["X-Dashboard-Run-Token"] = token
@@ -239,6 +264,7 @@ class GrowthEditEndpointTests(unittest.TestCase):
         output = {}
         handler._json_response = lambda status, payload: output.update(status=status, payload=payload)
         with (patch.object(self.server, "GROWTH_NOTE_FILE", self.path),
+              patch.object(self.server, "GROWTH_EDITS_JOURNAL", self.path.parent / "growth-edits.jsonl"),
               patch.object(self.server, "DAILY_WORK_DIR", self.path.parent / "none"),
               patch.object(self.server, "_dashboard_run_token", return_value="fixture-owner"),
               patch.object(self.server.Handler, "_cloudflare_access_owner", return_value=False)):
