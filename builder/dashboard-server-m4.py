@@ -31,6 +31,7 @@ from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
+from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list, parse_launchctl_running
@@ -53,6 +54,7 @@ JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
 PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
+OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
@@ -1720,6 +1722,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/platform-cards':
             self._handle_platform_cards_save()
             return
+        if parsed.path == '/api/owner-todo':
+            self._handle_owner_todo_save()
+            return
         if parsed.path == '/api/jarvis/pipeline/ping':
             self._handle_jarvis_pipeline_ping()
             return
@@ -2431,6 +2436,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except OSError:
             self._json_response(503, {'error': 'platform_cards_unavailable'})
 
+    def _handle_owner_todo_save(self):
+        body = self._platform_owner_body(OWNER_TODO_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            record = change_owner_todo(OWNER_TODO_FILE, body)
+            self._json_response(200, {'state': 'ready', **record})
+        except LookupError:
+            self._json_response(404, {'error': 'item_not_found'})
+        except ValueError as error:
+            self._json_response(400, {'error': 'invalid_owner_todo', 'reason': str(error)})
+        except OSError:
+            self._json_response(503, {'error': 'owner_todo_unavailable'})
+
     def _handle_manager_decision_response(self):
         if not self._decision_owner_authorized():
             self._json_response(401, {'error': 'owner_token_required'})
@@ -2631,6 +2650,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 record = load_cards(PLATFORM_CARDS_FILE)
             except OSError:
                 self._json_response(503, {'error': 'platform_cards_unavailable', 'state': 'unavailable', 'cards': []})
+                return
+            self._json_response(200, {'state': 'ready', **record})
+            return
+        if parsed.path == '/api/owner-todo':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'items': []})
+                return
+            try:
+                record = load_owner_todo(OWNER_TODO_FILE)
+            except OSError:
+                self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record})
             return

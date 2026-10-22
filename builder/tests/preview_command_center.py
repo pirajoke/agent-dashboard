@@ -226,7 +226,7 @@ class PreviewHandler(SERVER.Handler):
                 payload["records"] = [record]
             self._json_response(200, payload)
             return
-        if parsed.path in {"/api/platform-edits", "/api/platform-cards"}:
+        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
         if parsed.path == "/api/owner-projects":
@@ -261,7 +261,7 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
             payload = {
                 "system": {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
-                "services": [dict(service) for service in FIXTURE_SERVICES],
+                "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
             }
             if parsed.path == "/api/all" and self._decision_owner_authorized():
                 # A running job the health registry does not list is added by the product rule.
@@ -281,6 +281,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_edits_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/platform-cards":
             self._handle_platform_cards_save()
+        elif urlsplit(self.path).path == "/api/owner-todo":
+            self._handle_owner_todo_save()  # Writes only to the isolated fixture state.
         else:
             self._json_response(403, {"error": "fixture_read_only"})
 
@@ -291,6 +293,7 @@ if __name__ == "__main__":
         SERVER.MANAGER_DECISIONS_FILE = FIXTURE_STATE / "responses.jsonl"
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
+        SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
         SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
