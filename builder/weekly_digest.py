@@ -88,7 +88,8 @@ def compose(projection: dict[str, Any], todo: list[dict[str, Any]], today: date)
                          + (f" ({split})" if split else "") + extra)
             summary = project.get("last_summary") or {}
             bullet = (summary.get("bullets") or [None])[0]
-            if bullet and summary.get("date", "") >= first.isoformat():
+            # Only a line written about the reported week, not today's summary.
+            if bullet and first.isoformat() <= str(summary.get("date") or "") <= last.isoformat():
                 lines.append(f"  {bullet}")
         if len(moved) > MAX_PROJECTS:
             lines.append(f"• и ещё {len(moved) - MAX_PROJECTS}")
@@ -154,7 +155,8 @@ def run(*, now: datetime | None = None, root: Path = DAILY_WORK_DIR, todo_file: 
         status = json.loads(status_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         status = {}
-    projection = work_projection(root, now=now, days=14, owner=True)
+    # Today is in the window but not in the totals: 15 days give two complete weeks.
+    projection = work_projection(root, now=now, days=15, owner=True)
     todo = load_todo(todo_file)
     text = compose(projection, todo, today)
     write(out / f"{week}.md", text + "\n")

@@ -44,6 +44,9 @@ class ComposeTests(unittest.TestCase):
         self.assertEqual(moved[2], "• Lexi — 1 ч (Codex 1 ч)")
         self.assertEqual(moved[3], "• tmp-folder — 30 мин (Claude Code 30 мин)")
         self.assertNotIn("Idle", text)
+        today_summary = DIGEST.compose({"traction": {}, "projects": [project("Lexi", 60, 0, bullet="Сегодняшняя строка", day="2026-10-26")]},
+                                       [], date(2026, 10, 26))
+        self.assertNotIn("Сегодняшняя строка", today_summary)
         self.assertIn("Ждёт тебя (1):\n• Поставить ИБП", text)
         self.assertNotIn("999", text)  # today's unfinished day is not counted
 
@@ -68,6 +71,12 @@ class RunTests(unittest.TestCase):
         return DIGEST.run(now=datetime(2026, 10, 26, 7, tzinfo=timezone.utc), root=self.root / "daily-work",
                           todo_file=self.root / "owner-todo.json", out=self.root / "out",
                           config_file=self.root / "telegram_digest.json", opener=self.opener, **kwargs)
+
+    def test_two_complete_weeks_are_compared(self):
+        from unittest.mock import patch
+        with patch.object(DIGEST, "work_projection", return_value={"traction": {}, "projects": []}) as projection:
+            self.run_digest(dry_run=True)
+        self.assertEqual(projection.call_args.kwargs["days"], 15)
 
     def test_without_config_it_saves_the_text_and_sends_nothing(self):
         result = self.run_digest()
