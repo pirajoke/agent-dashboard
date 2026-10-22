@@ -194,9 +194,10 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
     def _assert_platform_reorder_persistence_is_local(self):
         """Execute keyboard and drag commits, proving writes stay in localStorage."""
         names = ("platformCards", "readPlatformOrder", "renumberPlatforms", "savePlatformOrder",
-                 "announcePlatformOrder", "movePlatformByButton", "commitPlatformLongPress")
+                 "announcePlatformOrder", "movePlatformByKey", "commitPlatformLongPress")
         functions = "\n".join("function " + name + "(" + (
-            "event" if name in ("movePlatformByButton", "commitPlatformLongPress") else
+            "event, directions" if name == "movePlatformByKey" else
+            "event" if name == "commitPlatformLongPress" else
             "card, prefix = 'Перемещено:'" if name == "announcePlatformOrder" else ""
         ) + ") {" + self._js_function(name) + "\n}" for name in names)
         javascript = r'''
@@ -216,8 +217,9 @@ const status={textContent:''};const document={getElementById:()=>status};
 let platformPointerState=null, platformSuppressClickUntil=0;
 function clearPlatformLongPressTimer(){}function settlePlatformCard(){}function releasePlatformPointerCapture(){}
 ''' + functions + r'''
-const keyboardCard=cards[1];const button={dataset:{platformMove:'previous'},closest:()=>keyboardCard,focus(){}};
-movePlatformByButton({target:{closest:()=>button}});
+// Mark 2026-10-20 removed the arrow buttons: ↑ on a focused card moves it, like a drag.
+const keyboardCard=cards[1];keyboardCard.classList.contains=()=>true;keyboardCard.focus=()=>{};
+movePlatformByKey({key:'ArrowUp',target:keyboardCard,preventDefault(){}},{ArrowUp:'previous',ArrowDown:'next'});
 const keyboard=JSON.parse(stored.get(PLATFORM_ORDER_STORAGE_KEY));
 const initialOrder=cards.map(c=>c.dataset.platformId);cards=[cards[2],cards[0],cards[1]];
 platformPointerState={pointerId:9,active:true,changed:true,card:cards[0],initialOrder};
@@ -649,7 +651,7 @@ process.stdout.write(JSON.stringify({keyboard,dragged,restored:readPlatformOrder
         self.assertIsNotNone(nav_match)
         nav = nav_match.group(1)
         # Mark 2026-10-14: «По дням» (today) is gone, MAIN MANAGER is the first tab.
-        routes = ("work", "growth", "agents", "platforms", "machines")
+        routes = ("work", "growth", "agents", "platforms", "context", "machines")
 
         for route in routes:
             with self.subTest(route=route):

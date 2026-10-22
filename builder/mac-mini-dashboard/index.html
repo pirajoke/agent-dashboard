@@ -100,8 +100,10 @@ try {
   --cc-tabbar: 70px; /* phone tab bar: icon plus a label of up to two lines */
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { width: 100%; overflow-x: hidden; }
-body { font-family: var(--cc-font); background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; overflow-x: hidden; }
+/* overflow-x: clip, not hidden: «hidden» turns html/body into scroll boxes, and the sticky sidebar
+   then scrolls away with the page (Mark 2026-10-20). «hidden» stays only as a fallback for old browsers. */
+html { width: 100%; overflow-x: hidden; overflow-x: clip; }
+body { font-family: var(--cc-font); background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; overflow-x: hidden; overflow-x: clip; }
 
 .container { width: 100%; max-width: 1400px; min-width: 0; margin: 0 auto; padding: 32px 40px; }
 
@@ -130,9 +132,31 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .tab-name-actions button:hover { color: var(--text); border-color: var(--accent); }
 .tab-name-customizer button:focus-visible,
 .tab-name-field input:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.tab-name-editor { max-width: 760px; margin-top: 10px; padding: 16px; border: 1px solid var(--border2); border-radius: 12px; background: var(--card); box-shadow: var(--shadow); }
-.tab-name-editor[hidden] { display: none !important; }
-.tab-name-editor-title { display: block; margin-bottom: 12px; font-size: 14px; }
+.tab-name-dialog {
+  width: min(560px, calc(100vw - 32px)); max-width: none; max-height: min(86vh, 720px); margin: auto; padding: 0;
+  border: 1px solid var(--mm-line); border-radius: 16px; background: var(--mm-background);
+  color: var(--mm-ink); box-shadow: var(--mm-shadow); overflow: auto; overscroll-behavior: contain;
+}
+.tab-name-dialog::backdrop { background: rgba(20, 16, 10, .45); }
+/* Browsers without a native <dialog> still need the closed window hidden. */
+.tab-name-dialog:not([open]) { display: none; }
+html:has(.tab-name-dialog[open]) { overflow: hidden; }
+.tab-name-editor { margin: 0; padding: 16px 20px 18px; }
+.tab-name-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.tab-name-editor-title { display: block; font-size: 17px; font-weight: 750; }
+.tab-name-close {
+  display: grid; place-items: center; width: 40px; height: 40px; margin-left: auto; padding: 0;
+  border: 1px solid var(--mm-control-line); border-radius: 10px; background: transparent;
+  color: var(--mm-ink); font: 600 18px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.tab-name-close:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
+.tab-name-close:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.tab-name-status:empty { display: none; }
+@media (max-width: 600px) {
+  .tab-name-dialog { width: 100vw; max-height: 88vh; margin: auto 0 0; border-radius: 16px 16px 0 0; border-bottom: 0; }
+  .tab-name-editor { padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); }
+  .tab-name-fields { grid-template-columns: minmax(0, 1fr); }
+}
 .tab-name-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
 .tab-name-field { display: grid; gap: 5px; color: var(--text2); font-size: 12px; }
 .tab-name-field input { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid var(--border2); border-radius: 9px; background: var(--bg); color: var(--text); font: inherit; font-size: 14px; }
@@ -481,30 +505,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   font-weight: 700;
 }
 .platform-entry.priority .platform-index { color: var(--mm-accent); }
-.platform-reorder-controls {
-  position: absolute;
-  z-index: 2;
-  top: 6px;
-  left: 6px;
-  display: flex;
-  gap: 2px;
-}
-.platform-reorder-control {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  border: 1px solid var(--mm-control-line);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--mm-surface) 92%, transparent);
-  color: var(--text2);
-  font: 700 17px/1 'Inter', -apple-system, sans-serif;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-}
-.platform-reorder-control:hover { color: var(--mm-accent); border-color: var(--mm-accent); background: var(--mm-surface); }
-.platform-reorder-control:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-entry:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .platform-order-status { min-height: 20px; margin: -8px 0 12px; color: var(--text2); font-size: 12px; line-height: 1.5; }
 .platform-content {
   min-width: 0;
@@ -620,8 +621,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .tab-name-actions button,
   .platform-entry,
   .platform-art svg,
-  .platform-link,
-  .platform-reorder-control { transition: none; }
+  .platform-link { transition: none; }
   .platform-entry:hover,
   .platform-link:hover { transform: none; }
   .platform-entry:hover .platform-art svg { transform: none; }
@@ -1897,6 +1897,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
     padding: 10px;
     max-width: 100%;
     overflow-x: hidden;
+    overflow-x: clip;
   }
   .header {
     flex-direction: column;
@@ -3351,7 +3352,6 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .cc-side .tab-name-customizer > button:hover { color: var(--mm-ink); background: var(--mm-surface-hover); }
 .cc-side-button svg { width: 18px; height: 18px; flex: none; }
 .cc-side .tab-name-customizer { margin: 0; }
-.cc-side .tab-name-editor { position: fixed; z-index: 60; left: 264px; bottom: 16px; width: min(560px, calc(100vw - 284px)); max-width: none; margin: 0; box-shadow: var(--mm-shadow); }
 .cc-side .footer { justify-content: flex-start; gap: 8px; margin: 4px 0 0; padding: 6px 12px; color: var(--mm-muted); font-size: 12px; }
 .cc-main { min-width: 0; padding: 32px 40px 56px; }
 .cc-main > .section { max-width: 1280px; margin: 0 auto; }
@@ -3393,15 +3393,10 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-tag { color: var(--mm-muted); letter-spacing: .05em; }
 .platform-index { color: var(--mm-muted); opacity: .8; }
 .platform-link { border-color: var(--mm-control-line); }
-/* Arrows stay for keyboard use; a phone reorders by long press, like the iPhone home screen. */
-.platform-reorder-controls { opacity: 0; transition: opacity .15s ease; }
-.platform-entry:focus-within .platform-reorder-controls { opacity: 1; }
-@media (hover: hover) {
-  .platform-entry:hover .platform-reorder-controls { opacity: 1; }
-}
+/* Mark 2026-10-20: no arrow buttons; reorder by long press and drag (iPhone style),
+   or from the keyboard with ↑/↓ on a focused card. */
 .platform-entry { -webkit-touch-callout: none; }
 .platform-directory.is-arranging { user-select: none; -webkit-user-select: none; }
-.platform-directory.is-arranging .platform-reorder-controls { opacity: 0; }
 .platform-directory.is-arranging .platform-entry:not(.is-reordering) { animation: platform-jiggle .28s ease-in-out infinite alternate; }
 .platform-directory.is-arranging .platform-entry:nth-child(2n):not(.is-reordering) { animation-delay: -.14s; }
 .platform-directory.is-arranging .platform-entry.is-reordering {
@@ -3441,25 +3436,48 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .mm-map-when i.is-today { background: var(--mm-success); box-shadow: 0 0 0 3px var(--mm-success-soft); }
 .mm-map-when i.is-week { background: var(--mm-accent); }
 .mm-map-go { flex: none; color: var(--mm-muted); font-size: 22px; line-height: 1; }
-.mm-map-last { display: -webkit-box; overflow: hidden; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.mm-map-last b { font-weight: 650; }
-.mm-map-last.is-desc { color: var(--mm-muted); }
-.mm-spark { display: block; padding-top: 2px; }
-.mm-spark-bars { display: flex; align-items: flex-end; gap: 3px; height: 52px; }
-.mm-spark-bars i { position: relative; flex: 1 1 0; min-width: 0; background: color-mix(in srgb, var(--mm-accent) 62%, var(--mm-surface)); border-radius: 4px 4px 1px 1px; }
-.mm-spark-bars i.is-empty { background: var(--mm-line); }
-.mm-spark-bars i.is-today:not(.is-empty) { background: var(--mm-accent); }
-.mm-spark-bars i.has-pr::after { content: ""; position: absolute; bottom: -8px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; background: var(--mm-success); border-radius: 50%; }
-.mm-spark-axis { display: flex; justify-content: space-between; margin-top: 11px; color: var(--mm-muted); font-size: 11.5px; }
 .mm-map-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
 .mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
 .mm-chip.is-accent { color: var(--mm-accent); background: var(--mm-selection); border-color: transparent; }
-.mm-map-paused .mm-map-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-.mm-os a.mm-map-card.is-paused { gap: 8px; padding: 12px 14px; background: color-mix(in srgb, var(--mm-surface) 55%, transparent); }
-.mm-map-card.is-paused .mm-project-art { width: 40px; height: 40px; border-radius: 11px; }
-.mm-map-card.is-paused .mm-project-art svg { width: 34px; height: 34px; }
-.mm-map-card.is-paused .mm-map-name { font-size: 15px; }
-.mm-map-card.is-paused .mm-map-last { font-size: 13px; -webkit-line-clamp: 1; }
+/* Board 2026-10-21: main projects as compact cards, the Claude Code / Codex split, other folders folded. */
+.mm-map-agents { margin-bottom: 18px; }
+.mm-map-agents .mm-dot { display: inline-block; margin-right: 6px; }
+.mm-agent-bar { display: flex; gap: 2px; height: 6px; overflow: hidden; border-radius: 999px; }
+.mm-agent-bar i { display: block; min-width: 0; height: 100%; }
+.mm-agent-bar i[style="width:0%"] { display: none; }
+.mm-agent-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-agent-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.mm-map-card .mm-map-foot { flex-direction: column; align-items: flex-start; gap: 8px; }
+.mm-map-paused-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 16px 0 26px; color: var(--mm-muted); font-size: 13.5px; }
+.mm-os .mm-map-paused-line a { display: inline-flex; align-items: center; gap: 7px; color: var(--mm-muted); text-decoration: none; }
+.mm-os .mm-map-paused-line a:hover { color: var(--mm-ink); }
+.mm-map-paused-line .mm-project-art { width: 26px; height: 26px; border-radius: 8px; opacity: .8; }
+.mm-map-paused-line .mm-project-art svg { width: 22px; height: 22px; }
+.mm-map-paused-line .mm-art-initials { width: 20px; height: 20px; font-size: 9px; }
+.mm-map-others { margin-bottom: 30px; border-top: 1px solid var(--mm-line); }
+.mm-map-others summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-height: 44px; padding: 14px 0 10px; cursor: pointer; }
+.mm-map-others summary b { font-size: 16px; font-weight: 700; }
+.mm-map-others summary span { color: var(--mm-muted); font-size: 14px; }
+.mm-map-others summary small { flex-basis: 100%; color: var(--mm-muted); font-size: 12.5px; }
+.mm-map-rows { display: flex; flex-direction: column; }
+.mm-os a.mm-map-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(60px, 140px) 84px 150px; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; color: var(--mm-ink); text-decoration: none; border-top: 1px solid var(--mm-line); }
+.mm-map-rows a.mm-map-row:first-child { border-top: 0; }
+.mm-os a.mm-map-row:hover { background: var(--mm-surface-hover); text-decoration: none; }
+.mm-map-row .mm-project-art { width: 36px; height: 36px; border-radius: 10px; }
+.mm-map-row .mm-project-art svg { width: 30px; height: 30px; }
+.mm-map-row .mm-art-initials { width: 26px; height: 26px; border-radius: 8px; font-size: 10px; }
+.mm-map-row-name { display: flex; flex-direction: column; min-width: 0; overflow: hidden; font-size: 14.5px; font-weight: 650; white-space: nowrap; text-overflow: ellipsis; }
+.mm-map-row-name small { display: flex; align-items: center; gap: 6px; color: var(--mm-muted); font-size: 12px; font-weight: 500; }
+.mm-map-row-name small i { flex: none; width: 7px; height: 7px; background: var(--mm-control-line); border-radius: 50%; }
+.mm-map-row-name small i.is-today { background: var(--mm-success); }
+.mm-map-row-name small i.is-week { background: var(--mm-accent); }
+.mm-map-row-time { color: var(--mm-muted); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
+.mm-map-row > .mm-chip { justify-self: end; }
+@media (max-width: 760px) {
+  .mm-os a.mm-map-row { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
+  .mm-map-row-bar { display: none; }
+  .mm-map-row > .mm-chip, .mm-map-row > span:last-child:empty { grid-column: 2 / -1; justify-self: start; }
+}
 .mm-chart-box { margin-bottom: 24px; }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
 .mm-owner-grid { display: grid; gap: 14px; }
@@ -3507,18 +3525,17 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
   .cc-main-nav .pill-badge { display: none; }
   /* Five tabs on a phone: a long label («MAIN MANAGER») wraps to two lines instead of being cut. */
   .cc-main-nav .cc-tab-label { display: -webkit-box; max-width: 100%; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.15; text-align: center; white-space: normal; overflow-wrap: anywhere; font-size: 10.5px; }
-  .cc-side .tab-name-editor { left: 12px; right: 12px; bottom: calc(var(--cc-tabbar) + 12px + env(safe-area-inset-bottom)); width: auto; max-height: 70vh; overflow-y: auto; }
   .cc-main .cc-page-title { font-size: 25px; }
   .cc-page-lede { font-size: 14px; }
   .cc-page-head { margin-bottom: 16px; }
   .cc-main .cc-subnav, .cc-main .nav-pills.cc-machine-nav { display: flex; width: 100%; }
   .cc-main .cc-subnav button, .cc-main .cc-machine-nav .nav-pill { flex: 1 1 auto; justify-content: center; padding: 8px 10px; }
-  .mm-map-grid, .mm-map-paused .mm-map-grid { grid-template-columns: 1fr; }
+  .mm-map-grid { grid-template-columns: 1fr; }
   .cc-tabs.mm-nav { display: flex; width: 100%; }
   .cc-tabs.mm-nav button { flex: 1 1 auto; justify-content: center; gap: 6px; padding: 8px 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .mm-os a.mm-map-card, .platform-reorder-controls { transition: none; }
+  .mm-os a.mm-map-card { transition: none; }
   .mm-os a.mm-map-card:hover { transform: none; }
 }
 
@@ -3577,7 +3594,7 @@ body { font-family: var(--cc-font); background: var(--bg); color: var(--text); m
 .platform-links .platform-access { min-width: 92px; }
 .platform-resources > span { display: flex; align-items: center; min-height: 44px; }
 /* Archive (Mark 2026-10-20): a small per-card button sends a card to a collapsed «Архив» under the grid. */
-.platform-entry .platform-index { right: 48px; }
+.platform-entry .platform-index { right: 84px; }
 .platform-archive-toggle {
   position: absolute; z-index: 2; top: 4px; right: 4px;
   display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
@@ -3634,7 +3651,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 }
 .platform-archive-list .platform-entry { opacity: .78; }
 .platform-archive-list .platform-entry:hover { opacity: 1; }
-.platform-archive-list .platform-reorder-controls,
 .platform-archive-list .platform-index { display: none; }
 .platform-archive-list .platform-archive-toggle { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
@@ -3653,7 +3669,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-entry.priority .platform-art svg { width: 40px; height: 40px; }
 .platform-content,
 .platform-entry.priority .platform-content { padding: 11px 12px 8px 10px; }
-.platform-tag { margin: 0 72px 2px 0; font-size: 9.5px; }
+.platform-tag { margin: 0 108px 2px 0; font-size: 9.5px; }
 .platform-name,
 .platform-entry.priority .platform-name { font-size: 15px; line-height: 1.25; }
 .platform-description {
@@ -3684,8 +3700,83 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-resources summary,
 .platform-resources details[open] { pointer-events: auto; }
 .platform-resources summary { display: inline-block; min-height: 0; padding: 2px 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 600; }
-.platform-reorder-controls,
-.platform-archive-toggle { z-index: 3; }
+.platform-archive-toggle,
+.platform-edit-toggle { z-index: 3; }
+/* Edit (Mark 2026-10-20): a pencil next to the archive box opens a small window for name, status and priority. */
+.platform-edit-toggle {
+  position: absolute; top: 4px; right: 40px;
+  display: grid; place-items: center; width: 36px; height: 36px; padding: 0;
+  border: 1px solid transparent; border-radius: 10px; background: transparent;
+  color: var(--mm-muted); cursor: pointer; opacity: .55;
+  transition: opacity .15s ease, color .15s ease, border-color .15s ease, background-color .15s ease;
+}
+.platform-edit-toggle svg { width: 17px; height: 17px; }
+.platform-entry:hover .platform-edit-toggle,
+.platform-edit-toggle:focus-visible { opacity: 1; }
+.platform-edit-toggle:hover { opacity: 1; color: var(--mm-accent); border-color: var(--mm-control-line); background: var(--mm-surface); }
+.platform-edit-toggle:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-entry.priority { border-color: color-mix(in srgb, var(--mm-accent) 45%, var(--mm-line)); }
+.platform-entry.priority .platform-tag { color: var(--mm-accent); }
+.platform-edit-dialog { width: min(440px, calc(100vw - 32px)); }
+.platform-edit-form { display: grid; gap: 14px; padding: 18px 20px 20px; }
+.platform-edit-form label { display: grid; gap: 6px; color: var(--mm-ink); font-size: 13px; font-weight: 650; }
+.platform-edit-form input,
+.platform-edit-form select,
+.platform-edit-form textarea {
+  min-height: 42px; padding: 8px 12px; border: 1px solid var(--mm-control-line); border-radius: 10px;
+  background: var(--mm-surface); color: var(--mm-ink); font: 500 15px/1.3 'Inter', -apple-system, sans-serif;
+}
+.platform-edit-form input:focus-visible,
+.platform-edit-form select:focus-visible,
+.platform-edit-form textarea:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.platform-edit-form small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
+.platform-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.platform-edit-actions button {
+  min-height: 40px; padding: 8px 16px; border: 1px solid var(--mm-control-line); border-radius: 10px;
+  background: var(--mm-surface); color: var(--mm-ink); font: 650 13.5px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.platform-edit-actions .platform-edit-save { background: var(--mm-accent); border-color: var(--mm-accent); color: var(--mm-background); }
+.platform-edit-actions .platform-edit-reset { margin-left: auto; color: var(--mm-muted); }
+.platform-edit-actions button:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-edit-note { min-height: 16px; margin: 0; color: var(--mm-muted); font-size: 12px; }
+.platform-edit-note:empty { display: none; }
+/* Own cards (Mark 2026-10-21): «+ Новая карточка» next to «Архив»; picture and links in the same window. */
+.platform-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.platform-toolbar .platform-archive { margin-top: 0; }
+.platform-new { color: var(--mm-accent); border-color: var(--mm-control-line); }
+.platform-art img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.platform-art.platform-art-letter { color: var(--mm-accent); font: 800 20px/1 'Inter', -apple-system, sans-serif; }
+.platform-entry[data-platform-custom] { --platform-tint: color-mix(in srgb, var(--mm-accent) 14%, var(--mm-surface)); }
+.platform-edit-custom { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.platform-edit-custom[hidden] { display: none; }
+.platform-edit-custom legend { padding: 0; color: var(--mm-ink); font-size: 13px; font-weight: 650; }
+.platform-edit-custom .platform-edit-links-title { float: none; margin-top: 6px; }
+.platform-edit-image { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.platform-edit-image-preview { width: 48px; height: 48px; margin: 0; overflow: hidden; border-radius: 10px; --platform-tint: color-mix(in srgb, var(--mm-accent) 14%, var(--mm-surface)); }
+.platform-edit-file, #platform-edit-image-remove {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border: 1px solid var(--mm-control-line);
+  border-radius: 10px; background: var(--mm-surface); color: var(--mm-ink); font: 650 13px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.platform-edit-form .platform-edit-file { display: inline-flex; gap: 0; }
+.platform-edit-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.platform-edit-file:focus-within { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.platform-edit-links { display: grid; gap: 6px; }
+.platform-edit-link { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 6px; }
+.platform-edit-actions .platform-edit-delete { color: #B42318; }
+.platform-edit-actions [hidden] { display: none; }
+.platform-edit-dialog .platform-archive-close { margin-left: auto; }
+.platform-edit-form { overflow: auto; overscroll-behavior: contain; }
+.platform-edit-form textarea { resize: vertical; }
+.platform-edit-form input,
+.platform-edit-form select,
+.platform-edit-form textarea { box-sizing: border-box; width: 100%; min-width: 0; }
+@media (max-width: 600px) {
+  .platform-edit-dialog { width: 100vw; }
+  .platform-edit-form { padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .platform-edit-toggle { transition: none; }
+}
 @media (max-width: 760px) {
   .platform-directory { grid-template-columns: 1fr; gap: 8px; }
   .platform-entry,
@@ -3703,6 +3794,33 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   .platform-links .platform-link:not(:first-child) .platform-access { min-height: 36px; }
 }
 
+
+/* Private context library: compact list, same typography and theme as the workspace. */
+.context-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:20px 0; }
+.context-controls label { display:flex; flex-direction:column; gap:6px; color:var(--mm-muted); font-size:13px; }
+.context-controls label:first-child { flex:1 1 220px; }
+.context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:9px; padding:10px 12px; min-height:44px; }
+.context-controls :focus-visible,.context-row:focus-visible,.context-reader a:focus-visible,.context-reader button:focus-visible,.context-reader summary:focus-visible { outline:3px solid var(--mm-info); outline-offset:3px; }
+.context-status,.context-sources { color:var(--mm-muted); font-size:14px; margin:10px 0; overflow-wrap:anywhere; }
+.context-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; }
+.context-list { list-style:none; margin:0; padding:0; }
+.context-list:empty { display:none; }
+.context-row { display:flex; flex-direction:column; width:100%; gap:6px; text-align:left; background:transparent; color:var(--mm-ink); border:0; border-bottom:1px solid var(--mm-line); padding:15px 4px; cursor:pointer; font:inherit; }
+.context-row:hover,.context-row[aria-pressed="true"] { background:var(--mm-info-soft); }
+.context-row small { color:var(--mm-muted); font-size:12px; line-height:1.5; }
+.context-reader { border:1px solid var(--mm-line); border-radius:12px; padding:20px; min-width:0; background:var(--mm-surface); }
+.context-reader[hidden] { display:none; }
+.context-reader h3 { margin:12px 0; overflow-wrap:anywhere; }
+.context-body { max-width:80ch; font:15px/1.7 system-ui,sans-serif; color:var(--mm-ink); overflow-wrap:anywhere; }
+.context-body h4,.context-body h5,.context-body h6 { margin:22px 0 8px; font-size:1em; line-height:1.4; }
+.context-body p { margin:10px 0; white-space:pre-line; }
+.context-body ul,.context-body ol { margin:10px 0; padding-left:24px; }
+.context-body li { margin:6px 0; }
+.context-body details { margin-top:24px; border-top:1px solid var(--mm-line); padding-top:8px; }
+.context-body summary { cursor:pointer; min-height:44px; padding:10px 0; font-weight:600; }
+.context-body code { font-size:.9em; white-space:pre-wrap; }
+.context-reader a { display:inline-block; margin:12px 0; color:var(--mm-info); }
+@media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
 </style>
 </head>
 <body>
@@ -3890,6 +4008,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <!-- Access type icons -->
   <symbol id="cc-icon-telegram" viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="#DBEAFE" stroke="#1A1A1A" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="#3B82F6" stroke-width="1.6" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-web" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#DCFCE7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="#16803A" stroke-width="1.4"/></symbol>
+  <symbol id="cc-icon-edit" viewBox="0 0 24 24"><path d="M4.5 19.5l1-4.2L15.8 5a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.7 18.5l-4.2 1z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.8 7l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="cc-icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-archive" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 9.5v8.5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9.5M10 13.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3" fill="#FEF3C7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#1A1A1A" stroke-width="1.6"/><circle cx="12" cy="15.5" r="1.6" fill="#9A7100"/></symbol>
   <!-- Navigation icons -->
@@ -4019,22 +4139,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true">🎙️</span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
   <div class="cc-side-foot">
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
     <div class="tab-name-customizer">
-      <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Переименовать вкладки</span></button>
-      <form class="tab-name-editor" id="tab-name-editor" aria-labelledby="tab-name-editor-title" hidden>
-        <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
-        <div class="tab-name-fields" id="tab-name-fields"></div>
-        <div class="tab-name-actions">
-          <button type="submit">Сохранить</button>
-          <button type="button" id="cancel-tab-names">Отмена</button>
-          <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
-        </div>
-        <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
-      </form>
+      <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename aria-haspopup="dialog" aria-controls="tab-name-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Переименовать вкладки</span></button>
     </div>
     <!-- Footer -->
     <div class="footer">
@@ -4044,8 +4155,42 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </div>
   </div>
   </aside>
+  <!-- Mark 2026-10-20: tab names open as their own window and close after Сохранить / Отмена / × / Esc / a click outside. -->
+  <dialog class="tab-name-dialog" id="tab-name-dialog" aria-labelledby="tab-name-editor-title">
+    <form class="tab-name-editor" id="tab-name-editor">
+      <div class="tab-name-head">
+        <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
+        <button type="button" class="tab-name-close" id="close-tab-names" aria-label="Закрыть">×</button>
+      </div>
+      <div class="tab-name-fields" id="tab-name-fields"></div>
+      <div class="tab-name-actions">
+        <button type="submit">Сохранить</button>
+        <button type="button" id="cancel-tab-names">Отмена</button>
+        <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
+      </div>
+      <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    </form>
+  </dialog>
 
   <main class="cc-main">
+  <section id="section-context" class="section" aria-labelledby="context-title">
+    <header class="cc-page-head"><div><h2 class="cc-page-title" id="context-title">Встречи и контекст</h2>
+    <p class="cc-page-lede">Транскрипты и последние обновления проектов. Основная версия хранится в Obsidian.</p></div></header>
+    <form class="context-controls" id="context-filters" role="search">
+      <label>Найти в записях<input id="context-search" type="search" maxlength="1000" placeholder="Тема, решение или проект" autocomplete="off"></label>
+      <label>Источник<select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
+      <label>Тип<select id="context-kind"><option value="">Все записи</option><option value="transcript">Транскрипты</option><option value="update">Обновления</option></select></label>
+      <button type="submit">Обновить</button>
+    </form>
+    <p id="context-status" class="context-status" role="status" aria-live="polite">Записи доступны после проверки доступа владельца.</p>
+    <p id="context-sources" class="context-sources"></p>
+    <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
+      <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Просмотр записи">
+        <button type="button" id="context-close">Закрыть запись</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p><div id="context-body" class="context-body"></div><a id="context-obsidian">Открыть в Obsidian</a>
+      </article>
+    </div>
+  </section>
+
   <!-- ═══════════════ PLATFORMS ═══════════════ -->
   <section id="section-platforms" class="section" aria-labelledby="platforms-title">
     <header class="cc-page-head platforms-header">
@@ -4060,10 +4205,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Закрыто · SSH</strong><small>сначала SSH-туннель</small></li>
     </ul>
 
-    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её или нажмите её стрелки.</p>
+    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её.</p>
     <div class="platform-directory">
-      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar">
-        <div class="platform-reorder-controls" aria-label="Порядок: JobRadar"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JobRadar: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JobRadar: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
         <div class="platform-content">
@@ -4077,8 +4221,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="financial" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi">
-        <div class="platform-reorder-controls" aria-label="Порядок: Lexi"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Lexi: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Lexi: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
         <span class="platform-index">02</span>
         <div class="platform-content">
@@ -4092,8 +4235,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="mydictionary" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS">
-        <div class="platform-reorder-controls" aria-label="Порядок: Health OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Health OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Health OS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
         <span class="platform-index">03</span>
         <div class="platform-content">
@@ -4106,8 +4248,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="health" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity">
-        <div class="platform-reorder-controls" aria-label="Порядок: AI Singularity"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="AI Singularity: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="AI Singularity: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
         <span class="platform-index">04</span>
         <div class="platform-content">
@@ -4120,8 +4261,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="ai-singularity" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France">
-        <div class="platform-reorder-controls" aria-label="Порядок: Context News France"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Context News France: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Context News France: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
         <span class="platform-index">05</span>
         <div class="platform-content">
@@ -4134,8 +4274,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="context-news" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS">
-        <div class="platform-reorder-controls" aria-label="Порядок: Accountable OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Accountable OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Accountable OS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
         <span class="platform-index">06</span>
         <div class="platform-content">
@@ -4148,8 +4287,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="accountable" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS">
-        <div class="platform-reorder-controls" aria-label="Порядок: JARVIS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="JARVIS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="JARVIS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
         <span class="platform-index">07</span>
         <div class="platform-content">
@@ -4162,8 +4300,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="jarvis" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS">
-        <div class="platform-reorder-controls" aria-label="Порядок: Property OS"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Property OS: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Property OS: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-property"/></svg></div>
         <span class="platform-index">08</span>
         <div class="platform-content">
@@ -4176,8 +4313,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="property-os" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents">
-        <div class="platform-reorder-controls" aria-label="Порядок: Pixel Agents"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Pixel Agents: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Pixel Agents: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-pixel"/></svg></div>
         <span class="platform-index">09</span>
         <div class="platform-content">
@@ -4190,8 +4326,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="pixel-agents" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта">
-        <div class="platform-reorder-controls" aria-label="Порядок: Зеркало Контакта"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Зеркало Контакта: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Зеркало Контакта: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-mirror"/></svg></div>
         <span class="platform-index">10</span>
         <div class="platform-content">
@@ -4204,8 +4339,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="closeness-mirror" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien">
-        <div class="platform-reorder-controls" aria-label="Порядок: Sushi Parisien"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="Sushi Parisien: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="Sushi Parisien: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-sushi"/></svg></div>
         <span class="platform-index">11</span>
         <div class="platform-content">
@@ -4218,8 +4352,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="platform-resources" data-platform-resources="sushi-parisien" aria-live="polite">Материалы — после проверки доступа.</div>
       </article>
-      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n">
-        <div class="platform-reorder-controls" aria-label="Порядок: n8n"><button class="platform-reorder-control" type="button" data-platform-move="previous" aria-label="n8n: выше">↑</button><button class="platform-reorder-control" type="button" data-platform-move="next" aria-label="n8n: ниже">↓</button></div>
+      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-n8n"/></svg></div>
         <span class="platform-index">12</span>
         <div class="platform-content">
@@ -4234,9 +4367,74 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </article>
 
     </div>
+    <div class="platform-toolbar">
+    <button class="platform-archive-open platform-new" id="platform-new" type="button" aria-haspopup="dialog" aria-controls="platform-edit-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg><span>Новая карточка</span></button>
     <div class="platform-archive" id="platform-archive" hidden>
       <button class="platform-archive-open" id="platform-archive-open" type="button" aria-haspopup="dialog" aria-controls="platform-archive-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · <span id="platform-archive-count">0</span></span></button>
     </div>
+    </div>
+    <dialog class="platform-archive-dialog platform-edit-dialog" id="platform-edit-dialog" aria-labelledby="platform-edit-title">
+      <header class="platform-archive-head">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
+        <h3 id="platform-edit-title">Изменить карточку</h3>
+        <button class="platform-archive-close" id="platform-edit-close" type="button" aria-label="Закрыть без сохранения">✕</button>
+      </header>
+      <form class="platform-edit-form" id="platform-edit-form" method="dialog" novalidate>
+        <label>Название
+          <input id="platform-edit-name" name="name" type="text" maxlength="60" autocomplete="off" required>
+        </label>
+        <label>Статус
+          <input id="platform-edit-status" name="status" type="text" maxlength="40" autocomplete="off" list="platform-edit-statuses">
+          <small>Надпись над названием, например «Работает» или «На паузе».</small>
+        </label>
+        <label>Описание
+          <textarea id="platform-edit-description" name="description" rows="3" maxlength="200"></textarea>
+          <small>Строка под названием.<span id="platform-edit-description-keep"> Пустое поле оставляет прежнее описание.</span></small>
+        </label>
+        <datalist id="platform-edit-statuses">
+          <option value="Главный продукт"></option>
+          <option value="Работает"></option>
+          <option value="В разработке"></option>
+          <option value="На паузе"></option>
+          <option value="Не работает"></option>
+        </datalist>
+        <label>Приоритет
+          <select id="platform-edit-priority" name="priority">
+            <option value="main">Главный — карточка выделена цветом</option>
+            <option value="normal">Обычный</option>
+          </select>
+        </label>
+        <fieldset class="platform-edit-custom" id="platform-edit-custom" hidden>
+          <legend>Картинка</legend>
+          <div class="platform-edit-image">
+            <span class="platform-art platform-edit-image-preview" id="platform-edit-image-preview" aria-hidden="true"></span>
+            <label class="platform-edit-file">Выбрать фото
+              <input id="platform-edit-image" type="file" accept="image/png,image/jpeg,image/webp,image/heic,image/*">
+            </label>
+            <button type="button" id="platform-edit-image-remove">Убрать</button>
+          </div>
+          <small>Фото уменьшается до маленькой иконки прямо на этом устройстве.</small>
+          <legend class="platform-edit-links-title">Ссылки</legend>
+          <div class="platform-edit-links" id="platform-edit-links">
+            <div class="platform-edit-link"><select aria-label="Ссылка 1: тип"><option value="site">Сайт</option><option value="telegram">Telegram</option><option value="other">Другая</option></select><input type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://…" aria-label="Ссылка 1: адрес"></div>
+            <div class="platform-edit-link"><select aria-label="Ссылка 2: тип"><option value="site">Сайт</option><option value="telegram" selected>Telegram</option><option value="other">Другая</option></select><input type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://t.me/…" aria-label="Ссылка 2: адрес"></div>
+            <div class="platform-edit-link"><select aria-label="Ссылка 3: тип"><option value="site">Сайт</option><option value="telegram">Telegram</option><option value="other" selected>Другая</option></select><input type="url" inputmode="url" maxlength="500" autocomplete="off" placeholder="https://…" aria-label="Ссылка 3: адрес"></div>
+          </div>
+          <small>Первая ссылка открывается по нажатию на карточку. Пустые строки не сохраняются.</small>
+        </fieldset>
+        <label id="platform-edit-place-field">Место в списке
+          <input id="platform-edit-place" name="place" type="number" min="1" step="1" inputmode="numeric">
+          <small id="platform-edit-place-hint"></small>
+        </label>
+        <p class="platform-edit-note" id="platform-edit-note" role="status" aria-live="polite"></p>
+        <div class="platform-edit-actions">
+          <button class="platform-edit-save" type="submit">Сохранить</button>
+          <button type="button" id="platform-edit-cancel">Отмена</button>
+          <button class="platform-edit-reset" type="button" id="platform-edit-reset">Как было</button>
+          <button class="platform-edit-reset platform-edit-delete" type="button" id="platform-edit-delete" hidden>Удалить карточку</button>
+        </div>
+      </form>
+    </dialog>
     <dialog class="platform-archive-dialog" id="platform-archive-dialog" aria-labelledby="platform-archive-title">
       <header class="platform-archive-head">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>
@@ -4965,6 +5163,7 @@ function safeStorageSet(key, value) {
 function safeStorageRemove(key) {
   try {
     window.localStorage.removeItem(key);
+    if (key === JARVIS_RUN_TOKEN_KEY) window.dispatchEvent(new Event('context-lock'));
     return true;
   } catch (error) {
     return false;
@@ -5278,7 +5477,7 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'machines']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'context', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -5357,17 +5556,30 @@ function populateTabNameEditor() {
   });
 }
 
+const tabNameDialog = document.getElementById('tab-name-dialog');
+
 function openTabNameEditor() {
-  const editor = document.getElementById('tab-name-editor');
+  if (tabNameDialog.open) return;
   populateTabNameEditor();
   setTabNameStatus('До 32 символов. Пустое поле вернёт стандартное название.');
-  editor.hidden = false;
+  if (typeof tabNameDialog.showModal === 'function') tabNameDialog.showModal();
+  else tabNameDialog.setAttribute('open', '');
   document.getElementById('edit-tab-names').setAttribute('aria-expanded', 'true');
-  editor.querySelector('input')?.focus();
+  tabNameDialog.querySelector('input')?.focus();
 }
 
 function closeTabNameEditor() {
-  document.getElementById('tab-name-editor').hidden = true;
+  if (typeof tabNameDialog.close === 'function') {
+    tabNameDialog.close();
+    return;
+  }
+  // No native <dialog>: no 'close' event either, so finish here.
+  if (!tabNameDialog.hasAttribute('open')) return;
+  tabNameDialog.removeAttribute('open');
+  onTabNameEditorClosed();
+}
+
+function onTabNameEditorClosed() {
   const trigger = document.getElementById('edit-tab-names');
   trigger.setAttribute('aria-expanded', 'false');
   trigger.focus();
@@ -5406,9 +5618,12 @@ function saveTabNames(event) {
   }
   activeTabNames = names;
   renderTabNames(activeTabNames);
-  setTabNameStatus(persisted
-    ? 'Названия сохранены в этом браузере.'
-    : 'Названия применены, но браузер не разрешил сохранить их.', !persisted);
+  if (persisted) {
+    closeTabNameEditor();
+    return;
+  }
+  // Keep the window open only to say that the names will not survive a reload.
+  setTabNameStatus('Названия применены, но браузер не разрешил сохранить их.', true);
 }
 
 function resetTabNames() {
@@ -5420,10 +5635,12 @@ function resetTabNames() {
   }
   activeTabNames = { ...TAB_NAME_DEFAULTS };
   renderTabNames(activeTabNames);
+  if (cleared) {
+    closeTabNameEditor();
+    return;
+  }
   populateTabNameEditor();
-  setTabNameStatus(cleared
-    ? 'Стандартные названия восстановлены.'
-    : 'Названия сброшены сейчас, но браузер не разрешил очистить сохранённую копию.', !cleared);
+  setTabNameStatus('Названия сброшены сейчас, но браузер не разрешил очистить сохранённую копию.', true);
 }
 
 activeTabNames = readTabNames();
@@ -5432,6 +5649,18 @@ document.getElementById('edit-tab-names').setAttribute('aria-expanded', 'false')
 document.getElementById('edit-tab-names').addEventListener('click', openTabNameEditor);
 document.getElementById('tab-name-editor').addEventListener('submit', saveTabNames);
 document.getElementById('cancel-tab-names').addEventListener('click', closeTabNameEditor);
+document.getElementById('close-tab-names').addEventListener('click', closeTabNameEditor);
+tabNameDialog.addEventListener('close', onTabNameEditorClosed);
+// A click on the dimmed area around the window lands on the <dialog> itself, not on the form.
+// Both press and release must be outside, so selecting text in a field never closes it.
+let tabNamePressedOutside = false;
+tabNameDialog.addEventListener('pointerdown', event => {
+  tabNamePressedOutside = event.target === tabNameDialog;
+});
+tabNameDialog.addEventListener('click', event => {
+  if (event.target === tabNameDialog && tabNamePressedOutside) closeTabNameEditor();
+  tabNamePressedOutside = false;
+});
 document.getElementById('reset-tab-names').addEventListener('click', resetTabNames);
 
 // Platform order is local-only. Restore known IDs once and append any newly shipped cards.
@@ -5454,12 +5683,13 @@ function readPlatformOrder() {
   try {
     const saved = JSON.parse(localStorage.getItem(PLATFORM_ORDER_STORAGE_KEY) || '[]');
     if (!Array.isArray(saved)) return [...PLATFORM_CANONICAL_IDS];
-    const known = new Set(PLATFORM_CANONICAL_IDS);
+    // Owner-made cards arrive from the Mac mini after load; keep their saved places as well.
+    const known = new Set([...PLATFORM_CANONICAL_IDS, ...platformCards().map(card => card.dataset.platformId)]);
     const restored = [];
     saved.forEach(id => {
       if (typeof id === 'string' && known.has(id) && !restored.includes(id)) restored.push(id);
     });
-    PLATFORM_CANONICAL_IDS.forEach(id => {
+    known.forEach(id => {
       if (!restored.includes(id)) restored.push(id);
     });
     return restored;
@@ -5505,13 +5735,15 @@ function announcePlatformOrder(card, prefix = 'Перемещено:') {
     `${prefix} ${name}, место ${position} из ${cards.length}.`;
 }
 
-function movePlatformByButton(event) {
-  const button = event.target.closest('[data-platform-move]');
-  if (!button || !platformDirectory?.contains(button)) return;
-  const card = button.closest('.platform-entry');
+// Keyboard: ↑/↓ on a focused card moves it one place, like a drag.
+function movePlatformByKey(event, directions) {
+  const card = event.target;
+  const direction = directions[event.key];
+  if (!direction || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (!card.classList?.contains('platform-entry') || !platformDirectory?.contains(card)) return;
+  event.preventDefault();
   const cards = platformCards();
   const index = cards.indexOf(card);
-  const direction = button.dataset.platformMove;
   if (direction === 'previous' && index > 0) {
     cards[index - 1].before(card);
   } else if (direction === 'next' && index >= 0 && index < cards.length - 1) {
@@ -5523,7 +5755,7 @@ function movePlatformByButton(event) {
   renumberPlatforms();
   const persisted = savePlatformOrder();
   announcePlatformOrder(card, persisted ? 'Перемещено:' : 'Перемещено до перезагрузки:');
-  button.focus();
+  card.focus();
 }
 
 function clearPlatformLongPressTimer() {
@@ -5829,6 +6061,14 @@ function setPlatformArchiveButton(card, archived) {
   const label = archived ? `${name}: вернуть из архива` : `${name}: в архив`;
   button.setAttribute('aria-label', label);
   button.title = archived ? 'Вернуть' : 'В архив';
+  // ↑/↓ only reorder cards on the board, so an archived card is not a reorder stop.
+  if (archived) {
+    card.removeAttribute('tabindex');
+    card.removeAttribute('aria-keyshortcuts');
+  } else {
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown');
+  }
 }
 
 function refreshPlatformArchive() {
@@ -5932,7 +6172,7 @@ platformArchiveDialog?.addEventListener('click', event => {
 platformArchiveDialog?.addEventListener('close', () => platformArchiveOpen?.focus());
 document.getElementById('section-platforms')?.addEventListener('click', togglePlatformArchive);
 if (platformDirectory) {
-  platformDirectory.addEventListener('click', movePlatformByButton);
+  platformDirectory.addEventListener('keydown', event => movePlatformByKey(event, {ArrowUp: 'previous', ArrowDown: 'next'}));
   // A link under the finger must not open when a long press ends a drag.
   platformDirectory.addEventListener('click', event => {
     if (Date.now() < platformSuppressClickUntil && event.target.closest('a')) {
@@ -6022,13 +6262,15 @@ function showSection(name) {
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
   if (name === 'platforms') setTimeout(ccLoadPlatformResources, 0);
+  if (name === 'context') setTimeout(ccLoadContext, 0);
+  else window.dispatchEvent(new Event('context-lock'));
 }
 
 // MAIN MANAGER is the first screen. «По дням» was removed on 2026-10-14 (Mark: MAIN MANAGER already says
 // what it said), so its old links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'work', 'growth'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 } else {
   showSection('work');
@@ -6511,6 +6753,673 @@ setInterval(() => {
   if (!document.hidden && document.querySelector('#section-platforms.active')) ccLoadPlatformResources();
 }, 60000);
 // ── End Platform resources ──
+
+// Private context is kept only in the active DOM, never in browser storage.
+let ccContextGeneration = 0;
+let ccContextController = null;
+let ccContextTimer = null;
+let ccContextRecordId = null;
+const ccContextNames = {plaud:'PLAUD',krisp:'Krisp',granola:'Granola',other:'Другие записи','project-update':'Обновления проектов'};
+function ccContextVisible() { return !document.hidden && !!document.querySelector('#section-context.active'); }
+function ccContextClear(message = 'Записи доступны после проверки доступа владельца.') {
+  ccContextGeneration++;
+  ccContextRecordId = null;
+  ccContextController?.abort(); ccContextController = null;
+  document.getElementById('context-list').replaceChildren();
+  document.getElementById('context-sources').textContent = '';
+  document.getElementById('context-status').textContent = message;
+  ccContextClose();
+}
+function ccContextClose() {
+  document.getElementById('context-reader').hidden = true;
+  for (const id of ['context-reader-title','context-reader-meta','context-body']) document.getElementById(id).textContent = '';
+  document.getElementById('context-obsidian').removeAttribute('href');
+}
+function ccContextTime(value) {
+  if (!value) return 'не указана';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.valueOf()) ? 'не указана' : parsed.toLocaleString('ru-RU');
+}
+function ccContextURI(value) {
+  try {
+    const u = new URL(value); const keys = [...u.searchParams.keys()];
+    if (u.protocol !== 'obsidian:' || u.host !== 'open' || (u.pathname && u.pathname !== '/') || u.hash || keys.length !== 2 || !keys.includes('vault') || !keys.includes('file')) return '';
+    for (const key of keys) { const v=u.searchParams.get(key); if (!v || v.startsWith('/') || v.includes('\\') || v.split('/').includes('..') || /[\u0000-\u001f]/.test(v)) return ''; }
+    return u.href;
+  } catch (_) { return ''; }
+}
+// A deliberately small display-only Markdown subset. Source text never becomes HTML,
+// a link, a task action or a second stored copy of the note.
+function ccContextInline(element, text) {
+  for (const part of text.split(/(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`)/g)) {
+    const bold = /^(?:\*\*[^*]+\*\*|__[^_]+__)$/.test(part);
+    if (bold || /^`[^`]+`$/.test(part)) {
+      const span = document.createElement(bold ? 'strong' : 'code');
+      span.textContent = part.slice(bold ? 2 : 1, bold ? -2 : -1); element.append(span);
+    } else element.append(document.createTextNode(part));
+  }
+}
+function ccContextParagraphs(container, text) {
+  let paragraph = [], list = null;
+  const flush = () => {
+    if (paragraph.length) { const p = document.createElement('p'); ccContextInline(p, paragraph.join('\n')); container.append(p); paragraph = []; }
+  };
+  for (const line of text.split('\n')) {
+    const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
+    const bullet = line.match(/^\s*(?:[-*+] |\d+[.)] )(.+)$/);
+    if (!line.trim()) { flush(); list = null; }
+    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, heading[2]); container.append(h); }
+    else if (bullet) {
+      flush(); const tag = /^\s*\d/.test(line) ? 'ol' : 'ul';
+      if (!list || list.tagName.toLowerCase() !== tag) { list = document.createElement(tag); container.append(list); }
+      const item = document.createElement('li'); ccContextInline(item, bullet[1].replace(/^\[ \]\s*/, '☐ ').replace(/^\[x\]\s*/i, '☑ ')); list.append(item);
+    } else { list = null; paragraph.push(line); }
+  }
+  flush();
+}
+function ccContextRenderBody(record) {
+  const container = document.getElementById('context-body'); container.replaceChildren();
+  const text = record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
+    .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, '');
+  if (record.kind !== 'transcript') { ccContextParagraphs(container, text); return; }
+  const parts = {summary: [], transcript: []}; let section = 'transcript', firstContent = true;
+  for (const line of text.split('\n')) {
+    // The importer banner is operational guidance, not part of the conversation.
+    if (/^>\s*Сырой импорт PLAUD\..*IMPORT LOGIC/.test(line)) continue;
+    if (firstContent && !line.trim()) continue;
+    const heading = line.match(/^#{1,6}\s+(.+?)\s*#*$/);
+    const label = heading ? heading[1].trim().toLowerCase() : '';
+    if (/^(?:plaud\s+)?summary$|^(?:резюме|краткое содержание|краткое резюме|саммари)$/.test(label)) { section = 'summary'; firstContent = false; continue; }
+    if (/^(?:full\s+)?transcript$|^(?:транскрипт|транскрипция|расшифровка|полная расшифровка)$/.test(label)) { section = 'transcript'; firstContent = false; continue; }
+    if (firstContent && heading && /^#\s+/.test(line) && heading[1].trim() === record.title) { firstContent = false; continue; }
+    firstContent = false;
+    parts[section].push(line);
+  }
+  const summary = parts.summary.join('\n').trim(), transcript = parts.transcript.join('\n').trim();
+  const title = document.createElement('h4'); title.textContent = 'Краткое резюме'; container.append(title);
+  if (summary) ccContextParagraphs(container, summary);
+  else { const p = document.createElement('p'); p.textContent = transcript ? 'Резюме пока нет. Можно раскрыть полный транскрипт ниже или открыть оригинал в Obsidian.' : 'Резюме и транскрипт пока недоступны. Оригинал можно открыть в Obsidian.'; container.append(p); }
+  if (transcript) {
+    const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = 'Полный транскрипт'; details.append(toggle);
+    ccContextParagraphs(details, transcript); container.append(details);
+  }
+}
+async function ccLoadContext(recordId = null) {
+  if (!ccContextVisible()) return;
+  ccContextClear('Проверяем доступ и загружаем записи…');
+  const generation = ccContextGeneration;
+  ccContextRecordId = recordId;
+  if (!DASHBOARD_API) { ccContextClear('Откройте защищённый Command Center: статическая страница не содержит записей.'); return; }
+  const controller = new AbortController(); ccContextController = controller;
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  const params = new URLSearchParams();
+  if (recordId) params.set('id', recordId);
+  else { params.set('q',document.getElementById('context-search').value); params.set('source',document.getElementById('context-source').value); params.set('kind',document.getElementById('context-kind').value); }
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/context-library?${params}`, {headers:jarvisRunHeaders(), cache:'no-store', signal:controller.signal});
+    if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'owner_required' : 'unavailable');
+    const data = await response.json();
+    if (generation !== ccContextGeneration || !ccContextVisible()) return;
+    if (!['ready','partial','stale'].includes(data.state)) throw new Error(data.state === 'owner_required' ? 'owner_required' : data.state === 'not_found' ? 'not_found' : 'unavailable');
+    const warning = data.state === 'stale' ? 'Данные устарели. ' : data.state === 'partial' ? 'Часть источников не прочитана. ' : '';
+    document.getElementById('context-status').textContent = warning + 'Каталог проверен: ' + ccContextTime(data.generated_at) + '. Последние 200 обновлений проектов.';
+    if (recordId) {
+      const r = data.record;
+      if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
+      document.getElementById('context-reader-title').textContent = r.title;
+      document.getElementById('context-reader-meta').textContent = `${ccContextNames[r.source] || 'Запись'} · Дата записи: ${r.date || 'не указана'} · Изменено: ${ccContextTime(r.modified_at)}`;
+      ccContextRenderBody(r);
+      const uri = ccContextURI(r.obsidian_url); const link = document.getElementById('context-obsidian');
+      if (uri) link.href = uri; link.hidden = !uri;
+      const reader = document.getElementById('context-reader'); reader.hidden = false; reader.focus();
+      return;
+    }
+    if (!Array.isArray(data.records)) throw new Error('unavailable');
+    document.getElementById('context-sources').textContent = (data.sources || []).map(s => `${ccContextNames[s.source] || 'Источник'}: ${s.state === 'observed' ? 'записи найдены' : 'записи не найдены'}`).join(' · ') + ' Наличие записей не подтверждает активное подключение сервиса.';
+    const list=document.getElementById('context-list');
+    for (const r of data.records) {
+      if (!/^[a-f0-9]{32}$/.test(r.id)) continue;
+      const li=document.createElement('li'); const button=document.createElement('button'); button.type='button';button.className='context-row';
+      const title=document.createElement('strong');title.textContent=r.title;
+      const meta=document.createElement('small'); meta.textContent=`${ccContextNames[r.source] || 'Запись'} · ${r.date || 'Дата не указана'}${r.project ? ' · '+r.project : ''} · Изменено: ${ccContextTime(r.modified_at)}`;
+      button.append(title,meta);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
+    }
+    document.getElementById('context-status').textContent += data.records.length ? ` Показано ${data.records.length} из ${data.total}.` : ' По выбранным условиям записей нет.';
+  } catch (error) {
+    if (generation !== ccContextGeneration) return;
+    ccContextClear(error.message === 'owner_required' ? 'Войдите как владелец, чтобы открыть записи.' : error.message === 'not_found' ? 'Запись не найдена. Обновите каталог.' : 'Источник временно недоступен. Попробуйте обновить каталог.');
+  } finally { clearTimeout(timeout); if (generation === ccContextGeneration) ccContextController=null; }
+}
+document.getElementById('context-filters').addEventListener('submit', event => {event.preventDefault();ccLoadContext();});
+for (const id of ['context-source','context-kind']) document.getElementById(id).addEventListener('change',()=>ccLoadContext());
+document.getElementById('context-search').addEventListener('input',()=>{clearTimeout(ccContextTimer);ccContextTimer=setTimeout(()=>ccLoadContext(),300);});
+document.getElementById('context-close').addEventListener('click',()=>ccLoadContext());
+window.addEventListener('context-lock',()=>ccContextClear());
+window.addEventListener('pagehide',()=>ccContextClear());
+window.addEventListener('storage',event=>{if (!event.key || event.key===JARVIS_RUN_TOKEN_KEY) {ccContextClear();if(ccContextVisible())ccLoadContext();}});
+document.addEventListener('visibilitychange',()=>{ccContextClear();if(ccContextVisible())ccLoadContext();});
+window.addEventListener('focus',()=>{if(ccContextVisible())ccLoadContext();});
+setInterval(()=>{if(ccContextVisible())ccLoadContext(ccContextRecordId);},60000);
+
+
+// ── Platform edits ── Mark 2026-10-20: «кнопку Эдит … менять название, статус, приоритетность», then «менять описание».
+// Name, status, description and priority are kept on the Mac mini (/api/platform-edits, owner only), so a change
+// shows on every device; this browser keeps a copy so the page looks right before the server answers.
+// The place in the list is the same per-browser order as long-press dragging.
+const PLATFORM_EDITS_CACHE_KEY = 'command-center.platform-edits.v1';
+const platformEditDialog = document.getElementById('platform-edit-dialog');
+const platformEditForm = document.getElementById('platform-edit-form');
+const platformEditDefaults = new Map();
+let platformEdits = {};
+let platformEditCard = null;
+let platformEditMode = 'shipped'; // 'shipped' card from the page, 'custom' owner-made card, or 'new'.
+
+function platformEditAllCards() {
+  return Array.from(document.querySelectorAll('#section-platforms .platform-entry'));
+}
+
+function platformEditCurrent(card) {
+  return {
+    name: card.querySelector('.platform-name')?.textContent.trim() || card.dataset.platformId,
+    status: card.querySelector('.platform-tag')?.textContent.trim() || '',
+    description: card.querySelector('.platform-description')?.textContent.trim() || '',
+    priority: card.classList.contains('priority') ? 'main' : 'normal',
+  };
+}
+
+function platformEditRemember(card) {
+  if (platformEditDefaults.has(card.dataset.platformId)) return;
+  const current = platformEditCurrent(card);
+  // Shipped main products carry the «Главный продукт» label; treat them as main priority.
+  if (current.status === 'Главный продукт') current.priority = 'main';
+  platformEditDefaults.set(card.dataset.platformId, current);
+}
+
+function platformEditLabels(card, name) {
+  card.dataset.platformName = name;
+  const edit = card.querySelector('.platform-edit-toggle');
+  if (edit) edit.setAttribute('aria-label', `${name}: изменить`);
+  if (typeof setPlatformArchiveButton === 'function') {
+    setPlatformArchiveButton(card, Boolean(card.closest('.platform-archive-list')));
+  }
+}
+
+function applyPlatformEdits(edits) {
+  platformEdits = edits && typeof edits === 'object' && !Array.isArray(edits) ? edits : {};
+  platformEditAllCards().forEach(card => {
+    if (card.dataset.platformCustom) {
+      platformEditButton(card);
+      platformEditLabels(card, platformEditCurrent(card).name);
+      return;
+    }
+    platformEditRemember(card);
+    const base = platformEditDefaults.get(card.dataset.platformId);
+    const own = platformEdits[card.dataset.platformId] || {};
+    const value = {
+      name: typeof own.name === 'string' && own.name.trim() ? own.name.trim() : base.name,
+      status: typeof own.status === 'string' && own.status.trim() ? own.status.trim() : base.status,
+      description: typeof own.description === 'string' && own.description.trim() ? own.description.trim() : base.description,
+      priority: own.priority === 'main' || own.priority === 'normal' ? own.priority : base.priority,
+    };
+    const nameNode = card.querySelector('.platform-name');
+    const tagNode = card.querySelector('.platform-tag');
+    if (nameNode) nameNode.textContent = value.name;
+    if (tagNode) tagNode.textContent = value.status;
+    const descriptionNode = card.querySelector('.platform-description');
+    if (descriptionNode) descriptionNode.textContent = value.description;
+    card.classList.toggle('priority', value.priority === 'main');
+    platformEditButton(card);
+    platformEditLabels(card, value.name);
+  });
+}
+
+function platformEditButton(card) {
+  if (card.querySelector('.platform-edit-toggle')) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'platform-edit-toggle';
+  button.title = 'Изменить';
+  button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>';
+  card.appendChild(button);
+}
+
+function readPlatformEditsCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLATFORM_EDITS_CACHE_KEY) || '{}');
+    return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function writePlatformEditsCache(edits) {
+  try { localStorage.setItem(PLATFORM_EDITS_CACHE_KEY, JSON.stringify(edits)); } catch (_) { /* optional */ }
+}
+
+async function loadPlatformEdits() {
+  if (IS_FILE_DASHBOARD) return;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-edits`, {headers: jarvisRunHeaders(), cache: 'no-store'});
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (payload?.state !== 'ready' || !payload.edits || typeof payload.edits !== 'object') return;
+    writePlatformEditsCache(payload.edits);
+    applyPlatformEdits(payload.edits);
+  } catch (_) { /* keep the cached copy */ }
+}
+
+function openPlatformEdit(card) {
+  if (!platformEditDialog) return;
+  platformEditCard = card || null;
+  const own = card ? platformCustomCards.find(item => item.id === card.dataset.platformId) : null;
+  platformEditMode = !card ? 'new' : own ? 'custom' : 'shipped';
+  const value = card ? platformEditCurrent(card) : {name: '', status: 'Работает', description: '', priority: 'normal'};
+  const archived = Boolean(card?.closest('.platform-archive-list'));
+  document.getElementById('platform-edit-title').textContent = card ? 'Изменить карточку' : 'Новая карточка';
+  document.getElementById('platform-edit-custom').hidden = platformEditMode === 'shipped';
+  document.getElementById('platform-edit-description-keep').hidden = platformEditMode !== 'shipped';
+  document.getElementById('platform-edit-reset').hidden = platformEditMode !== 'shipped';
+  document.getElementById('platform-edit-delete').hidden = platformEditMode !== 'custom';
+  fillPlatformCustomFields(own);
+  document.getElementById('platform-edit-name').value = value.name;
+  document.getElementById('platform-edit-status').value = value.status;
+  document.getElementById('platform-edit-description').value = value.description;
+  document.getElementById('platform-edit-priority').value = value.priority;
+  const cards = platformCards();
+  const place = document.getElementById('platform-edit-place');
+  document.getElementById('platform-edit-place-field').hidden = archived || !card;
+  place.max = String(cards.length);
+  place.value = archived || !card ? '' : String(cards.indexOf(card) + 1);
+  document.getElementById('platform-edit-place-hint').textContent =
+    `От 1 до ${cards.length}. Место запоминается на этом устройстве, как при перетаскивании.`;
+  document.getElementById('platform-edit-note').textContent = '';
+  if (typeof platformEditDialog.showModal === 'function') platformEditDialog.showModal();
+  else platformEditDialog.setAttribute('open', '');
+  document.getElementById('platform-edit-name').focus();
+}
+
+function closePlatformEdit() {
+  if (platformEditDialog?.open) platformEditDialog.close();
+}
+
+async function savePlatformEdit(reset = false) {
+  if (platformEditMode !== 'shipped') return saveCustomPlatformCard();
+  const card = platformEditCard;
+  if (!card) return;
+  const id = card.dataset.platformId;
+  const base = platformEditDefaults.get(id);
+  const note = document.getElementById('platform-edit-note');
+  const name = document.getElementById('platform-edit-name').value.replace(/\s+/g, ' ').trim();
+  if (!reset && !name) {
+    note.textContent = 'Название не может быть пустым.';
+    document.getElementById('platform-edit-name').focus();
+    return;
+  }
+  const next = {...platformEdits};
+  if (reset) {
+    delete next[id];
+  } else {
+    const status = document.getElementById('platform-edit-status').value.replace(/\s+/g, ' ').trim();
+    const priority = document.getElementById('platform-edit-priority').value;
+    const entry = {};
+    if (name !== base.name) entry.name = name;
+    if (status && status !== base.status) entry.status = status;
+    const description = document.getElementById('platform-edit-description').value.replace(/\s+/g, ' ').trim();
+    if (description && description !== base.description) entry.description = description;
+    if (priority !== base.priority) entry.priority = priority;
+    if (Object.keys(entry).length) next[id] = entry; else delete next[id];
+  }
+  applyPlatformEdits(next);
+  writePlatformEditsCache(next);
+
+  if (!reset) movePlatformToPlace(card);
+
+  let synced = false;
+  if (!IS_FILE_DASHBOARD) {
+    try {
+      const response = await fetch(`${DASHBOARD_API}/api/platform-edits`, {
+        method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store',
+        body: JSON.stringify({card: id, edit: next[id] || null, v: 2}),
+      });
+      synced = response.ok;
+      // The Mac mini merges one card into what it has, so take its full copy (other devices' edits too).
+      const payload = synced ? await response.json().catch(() => null) : null;
+      if (payload?.state === 'ready' && payload.edits && typeof payload.edits === 'object') {
+        writePlatformEditsCache(payload.edits);
+        applyPlatformEdits(payload.edits);
+      }
+    } catch (_) { synced = false; }
+  }
+  if (synced) {
+    closePlatformEdit();
+    document.getElementById('platform-order-status').textContent =
+      `${platformEditCurrent(card).name}: сохранено, видно на всех устройствах.`;
+  } else {
+    note.textContent = 'Сохранено только на этом устройстве: Mac mini сейчас не принял правку. Попробуйте ещё раз позже.';
+  }
+}
+
+function movePlatformToPlace(card) {
+  const place = Number(document.getElementById('platform-edit-place').value);
+  const cards = platformCards();
+  const from = cards.indexOf(card);
+  if (from < 0 || !Number.isInteger(place) || place < 1 || place > cards.length || place === from + 1) return;
+  const target = cards[place - 1];
+  if (place - 1 < from) target.before(card); else target.after(card);
+  renumberPlatforms();
+  savePlatformOrder();
+  announcePlatformOrder(card, 'Перемещено:');
+}
+
+applyPlatformEdits(readPlatformEditsCache());
+// After the rest of the page script, so a token just opened from the phone QR link is already imported.
+window.setTimeout(loadPlatformEdits, 0);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !platformEditDialog?.open) loadPlatformEdits();
+});
+document.getElementById('section-platforms')?.addEventListener('click', event => {
+  const button = event.target.closest('.platform-edit-toggle');
+  if (button) openPlatformEdit(button.closest('.platform-entry'));
+});
+platformEditForm?.addEventListener('submit', event => {
+  event.preventDefault();
+  savePlatformEdit(false);
+});
+document.getElementById('platform-edit-reset')?.addEventListener('click', () => savePlatformEdit(true));
+document.getElementById('platform-edit-cancel')?.addEventListener('click', closePlatformEdit);
+document.getElementById('platform-edit-close')?.addEventListener('click', closePlatformEdit);
+platformEditDialog?.addEventListener('click', event => {
+  if (event.target === platformEditDialog) closePlatformEdit();
+});
+platformEditDialog?.addEventListener('close', () => {
+  const button = platformEditCard?.isConnected ? platformEditCard.querySelector('.platform-edit-toggle') : null;
+  if (button && !button.closest('dialog:not([open])')) button.focus();
+  else document.getElementById('platform-new')?.focus();
+});
+// ── End Platform edits ──
+
+// ── Platform own cards ── Mark 2026-10-21: «возможность создать карточку, кастомизировать её … вставлять
+// ссылки, описывать, вставлять фотки». Cards live on the Mac mini (/api/platform-cards, owner only) and are
+// built here with textContent and checked links, never from HTML. This browser keeps a copy for a fast start.
+const PLATFORM_CARDS_CACHE_KEY = 'command-center.platform-cards.v1';
+const PLATFORM_CUSTOM_ID = /^c-[a-f0-9]{8}$/;
+const PLATFORM_IMAGE_DATA = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+const PLATFORM_LINK_KINDS = {
+  site: {icon: 'cc-icon-web', label: 'Сайт'},
+  telegram: {icon: 'cc-icon-telegram', label: 'Telegram'},
+  other: {icon: 'cc-icon-web', label: 'Ссылка'},
+};
+let platformCustomCards = [];
+let platformCustomImage = null; // null keeps the saved picture, '' removes it, a data URL replaces it.
+
+function platformSafeUrl(url) {
+  return typeof url === 'string' && /^(?:https?:\/\/[^\s/?#]+\S*|tg:\/\/\S+)$/i.test(url.trim()) ? url.trim() : null;
+}
+
+function setPlatformArt(art, image, name) {
+  art.replaceChildren();
+  art.classList.toggle('platform-art-letter', !image);
+  if (image && PLATFORM_IMAGE_DATA.test(image)) {
+    const img = document.createElement('img');
+    img.src = image;
+    img.alt = '';
+    art.appendChild(img);
+  } else {
+    art.classList.add('platform-art-letter');
+    art.textContent = (Array.from((name || '').trim())[0] || '•').toUpperCase();
+  }
+}
+
+function buildCustomPlatformCard(data) {
+  const card = document.createElement('article');
+  card.className = 'platform-entry';
+  card.dataset.platformId = data.id;
+  card.dataset.platformName = data.name;
+  card.dataset.platformCustom = '1';
+  card.classList.toggle('priority', data.priority === 'main');
+  const art = document.createElement('div');
+  art.className = 'platform-art';
+  art.setAttribute('aria-hidden', 'true');
+  setPlatformArt(art, data.image, data.name);
+  const index = document.createElement('span');
+  index.className = 'platform-index';
+  const content = document.createElement('div');
+  content.className = 'platform-content';
+  const tag = document.createElement('span');
+  tag.className = 'platform-tag';
+  tag.textContent = data.status || '';
+  const title = document.createElement('h3');
+  title.className = 'platform-name';
+  title.textContent = data.name;
+  const description = document.createElement('p');
+  description.className = 'platform-description';
+  description.textContent = data.description || '';
+  const links = document.createElement('div');
+  links.className = 'platform-links';
+  (Array.isArray(data.links) ? data.links : []).forEach(link => {
+    const url = platformSafeUrl(link?.url);
+    if (!url) return;
+    const kind = PLATFORM_LINK_KINDS[link.kind] || PLATFORM_LINK_KINDS.other;
+    const anchor = document.createElement('a');
+    anchor.className = 'platform-link';
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    const chip = document.createElement('span');
+    chip.className = 'platform-access public';
+    chip.innerHTML = `<svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#${kind.icon}"/></svg>`;
+    chip.append(typeof link.label === 'string' && link.label ? link.label : kind.label);
+    anchor.append(chip, ' Открыть');
+    links.appendChild(anchor);
+  });
+  content.append(tag, title, description, links);
+  card.append(art, index, content);
+  return card;
+}
+
+function renderCustomPlatformCards(cards) {
+  if (!platformDirectory) return;
+  platformCustomCards = (Array.isArray(cards) ? cards : []).filter(card =>
+    card && PLATFORM_CUSTOM_ID.test(card.id) && typeof card.name === 'string' && card.name.trim());
+  const wanted = new Set(platformCustomCards.map(card => card.id));
+  document.querySelectorAll('#section-platforms .platform-entry[data-platform-custom]').forEach(card => {
+    if (!wanted.has(card.dataset.platformId)) card.remove();
+  });
+  platformCustomCards.forEach(data => {
+    const fresh = buildCustomPlatformCard(data);
+    const old = Array.from(document.querySelectorAll('#section-platforms .platform-entry[data-platform-custom]'))
+      .find(card => card.dataset.platformId === data.id);
+    if (old) old.replaceWith(fresh); else platformDirectory.appendChild(fresh);
+  });
+  applyPlatformEdits(platformEdits);
+  applyPlatformArchive();
+  applyPlatformOrder(readPlatformOrder());
+}
+
+function readPlatformCardsCache() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PLATFORM_CARDS_CACHE_KEY) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function writePlatformCardsCache(cards) {
+  try { localStorage.setItem(PLATFORM_CARDS_CACHE_KEY, JSON.stringify(cards)); } catch (_) { /* optional */ }
+}
+
+async function loadPlatformCards() {
+  if (IS_FILE_DASHBOARD) return;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-cards`, {headers: jarvisRunHeaders(), cache: 'no-store'});
+    if (response.status === 401 || response.status === 403) {
+      // No owner access any more: drop the private copy so this browser stops showing it.
+      writePlatformCardsCache([]);
+      renderCustomPlatformCards([]);
+      return;
+    }
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (payload?.state !== 'ready' || !Array.isArray(payload.cards)) return;
+    writePlatformCardsCache(payload.cards);
+    renderCustomPlatformCards(payload.cards);
+  } catch (_) { /* keep the cached copy */ }
+}
+
+async function postPlatformCards(body) {
+  if (IS_FILE_DASHBOARD) return null;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-cards`, {
+      method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store', body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => null);
+    if (response.ok && payload?.state === 'ready' && Array.isArray(payload.cards)) return payload;
+    return {error: payload?.reason || payload?.error || `http_${response.status}`};
+  } catch (_) {
+    return {error: 'network'};
+  }
+}
+
+function fillPlatformCustomFields(own) {
+  platformCustomImage = null;
+  const preview = document.getElementById('platform-edit-image-preview');
+  if (preview) setPlatformArt(preview, own?.image, own?.name || '+');
+  const file = document.getElementById('platform-edit-image');
+  if (file) file.value = '';
+  const rows = document.querySelectorAll('#platform-edit-links .platform-edit-link');
+  const defaults = ['site', 'telegram', 'other'];
+  rows.forEach((row, index) => {
+    const link = own?.links?.[index];
+    row.querySelector('select').value = link?.kind || defaults[index];
+    row.querySelector('input').value = link?.url || '';
+  });
+}
+
+function shrinkPlatformImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\//.test(file.type || 'image/')) { reject(new Error('type')); return; }
+    // The page's CSP allows data: images but not blob:, so read the file as a data URL.
+    const reader = new FileReader();
+    const img = new Image();
+    img.onload = () => {
+      const size = 192;
+      const scale = Math.min(1, size / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+      canvas.height = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      let data = canvas.toDataURL('image/webp', 0.86);
+      if (!data.startsWith('data:image/webp')) data = canvas.toDataURL('image/png');
+      if (data.length > 300000) data = canvas.toDataURL('image/jpeg', 0.82);
+      resolve(data);
+    };
+    img.onerror = () => reject(new Error('decode'));
+    reader.onerror = () => reject(new Error('read'));
+    reader.onload = () => { img.src = String(reader.result || ''); };
+    reader.readAsDataURL(file);
+  });
+}
+
+const PLATFORM_CARD_ERRORS = {
+  invalid_url: 'Ссылка должна начинаться с https://, http:// или tg://.',
+  image_too_large: 'Фото слишком большое даже после уменьшения. Попробуйте другое.',
+  invalid_image: 'Это фото не получилось прочитать. Попробуйте PNG или JPG.',
+  too_many_cards: 'Карточек уже 40, больше сохранить нельзя.',
+  name_required: 'Название не может быть пустым.',
+};
+
+async function saveCustomPlatformCard() {
+  const note = document.getElementById('platform-edit-note');
+  const clean = id => document.getElementById(id).value.replace(/\s+/g, ' ').trim();
+  const name = clean('platform-edit-name');
+  if (!name) {
+    note.textContent = PLATFORM_CARD_ERRORS.name_required;
+    document.getElementById('platform-edit-name').focus();
+    return;
+  }
+  const links = [];
+  for (const row of document.querySelectorAll('#platform-edit-links .platform-edit-link')) {
+    const input = row.querySelector('input');
+    const url = input.value.trim();
+    if (!url) continue;
+    if (!platformSafeUrl(url)) {
+      note.textContent = PLATFORM_CARD_ERRORS.invalid_url;
+      input.focus();
+      return;
+    }
+    links.push({kind: row.querySelector('select').value, url});
+  }
+  const existing = platformEditMode === 'custom'
+    ? platformCustomCards.find(item => item.id === platformEditCard?.dataset.platformId) : null;
+  const card = {
+    name, status: clean('platform-edit-status'), description: clean('platform-edit-description'),
+    priority: document.getElementById('platform-edit-priority').value, links,
+  };
+  if (existing) card.id = existing.id;
+  const image = platformCustomImage === null ? existing?.image : platformCustomImage;
+  if (image) card.image = image;
+  note.textContent = 'Сохраняю…';
+  const result = await postPlatformCards({action: 'save', card});
+  if (!result || result.error) {
+    note.textContent = PLATFORM_CARD_ERRORS[result?.error] || 'Mac mini сейчас не принял карточку. Попробуйте ещё раз позже.';
+    return;
+  }
+  writePlatformCardsCache(result.cards);
+  renderCustomPlatformCards(result.cards);
+  const fresh = platformCards().find(item => item.dataset.platformId === result.id)
+    || document.querySelector(`#section-platforms .platform-entry[data-platform-custom][data-platform-id="${result.id}"]`);
+  if (fresh && existing) movePlatformToPlace(fresh);
+  platformEditCard = fresh || null;
+  note.textContent = '';
+  closePlatformEdit();
+  document.getElementById('platform-order-status').textContent =
+    `${name}: ${existing ? 'сохранено' : 'карточка создана'}, видно на всех устройствах.`;
+}
+
+async function deleteCustomPlatformCard() {
+  const existing = platformCustomCards.find(item => item.id === platformEditCard?.dataset.platformId);
+  if (!existing) return;
+  if (!window.confirm(`Удалить карточку «${existing.name}»? Вернуть её будет нельзя.`)) return;
+  const note = document.getElementById('platform-edit-note');
+  const result = await postPlatformCards({action: 'delete', id: existing.id});
+  if (!result || result.error) {
+    note.textContent = 'Mac mini сейчас не удалил карточку. Попробуйте ещё раз позже.';
+    return;
+  }
+  writePlatformCardsCache(result.cards);
+  platformEditCard = null;
+  renderCustomPlatformCards(result.cards);
+  renumberPlatforms();
+  refreshPlatformArchive();
+  closePlatformEdit();
+  document.getElementById('platform-order-status').textContent = `${existing.name}: карточка удалена.`;
+}
+
+renderCustomPlatformCards(readPlatformCardsCache());
+window.setTimeout(loadPlatformCards, 0);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && !platformEditDialog?.open) loadPlatformCards();
+});
+document.getElementById('platform-new')?.addEventListener('click', () => openPlatformEdit(null));
+document.getElementById('platform-edit-delete')?.addEventListener('click', deleteCustomPlatformCard);
+document.getElementById('platform-edit-image')?.addEventListener('change', async event => {
+  const note = document.getElementById('platform-edit-note');
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    platformCustomImage = await shrinkPlatformImage(file);
+    setPlatformArt(document.getElementById('platform-edit-image-preview'), platformCustomImage, '');
+    note.textContent = '';
+  } catch (_) {
+    note.textContent = PLATFORM_CARD_ERRORS.invalid_image;
+  }
+});
+document.getElementById('platform-edit-image-remove')?.addEventListener('click', () => {
+  platformCustomImage = '';
+  setPlatformArt(document.getElementById('platform-edit-image-preview'), '', document.getElementById('platform-edit-name').value || '+');
+});
+// ── End Platform own cards ──
 
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -8435,6 +9344,13 @@ function mmInit() {
     renderInfra(infraData);
   });
   // A project name in «Дела» or a card on the board opens its page; a modified click opens a new tab.
+  document.getElementById('mm-map').addEventListener('click', event => {
+    const button = event.target.closest('[data-map-agent]');
+    if (!button) return;
+    mmMapAgent = button.dataset.mapAgent;
+    safeStorageSet(MM_MAP_AGENT_KEY, mmMapAgent);
+    if (dailyWorkData) renderMap(dailyWorkData);
+  });
   ['mm-todo-list', 'mm-map'].forEach(id => document.getElementById(id).addEventListener('click', event => {
     const link = event.target.closest('[data-project]');
     if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
@@ -8902,53 +9818,73 @@ function renderTodo(data) {
 
 // «Проекты» (Mark 2026-10-14: «чтобы была визуализация проекта, который я делаю»): every project as a
 // card with its last two weeks of work and what waits on Mark, newest work first; a card opens its page.
-const MM_MAP_DAYS = 14;
-
 function mmSum(values) {
   return values.reduce((sum, value) => sum + (Number(value) || 0), 0);
 }
 
-// Two weeks of work as small bars on one scale for all cards, so a busy project looks busier; a dot
-// under a bar marks a day with a merged PR. The hover title gives the day's numbers.
-function mmSpark(p, dates, scale) {
-  const days = dates.slice(-MM_MAP_DAYS);
-  const minutes = p.daily_minutes.slice(-MM_MAP_DAYS);
-  const prs = p.daily_prs_merged.slice(-MM_MAP_DAYS);
-  const bars = days.map((date, i) => {
-    const value = minutes[i] || 0;
-    const height = value ? Math.max(10, Math.round((value / scale) * 100)) : 6;
-    const cls = [value ? '' : 'is-empty', i === days.length - 1 ? 'is-today' : '', prs[i] ? 'has-pr' : ''].filter(Boolean).join(' ');
-    const label = `${mmDayShort(date)}: ${value ? workMinutes(value) : 'без работы'}${prs[i] ? `, слито PR: ${prs[i]}` : ''}`;
-    return `<i class="${cls}" style="height:${height}%" title="${mmEsc(label)}"></i>`;
-  }).join('');
-  return `<span class="mm-spark"><span class="mm-spark-bars">${bars}</span>
-    <span class="mm-spark-axis" aria-hidden="true"><span>${mmEsc(mmDayShort(days[0]))}</span><span>сегодня</span></span></span>`;
+// The agent filter above the board (Mark 2026-10-21: «разделять на Codex, Claude Code»): all work,
+// or only one agent's. Remembered per browser.
+const MM_MAP_AGENT_KEY = 'command-center.board-agent';
+const MM_MAP_AGENTS = [['all', 'Все агенты'], ['claude', 'Claude Code'], ['codex', 'Codex']];
+let mmMapAgent = MM_MAP_AGENTS.some(([key]) => key === safeStorageGet(MM_MAP_AGENT_KEY)) ? safeStorageGet(MM_MAP_AGENT_KEY) : 'all';
+
+function mmWeekSplit(p) {
+  const claude = mmSum((p.daily_claude_minutes || []).slice(-7));
+  const codex = mmSum((p.daily_codex_minutes || []).slice(-7));
+  const all = mmSum((p.daily_minutes || []).slice(-7));
+  return { claude, codex, all, shown: mmMapAgent === 'all' ? all : (mmMapAgent === 'claude' ? claude : codex) };
 }
 
-function mmMapCard(p, todo, dates, scale, today) {
+// One thin bar: the Claude Code part and the Codex part of the week's work.
+function mmAgentBar(split) {
+  const total = split.claude + split.codex;
+  if (!total) return '';
+  const claude = Math.round((split.claude / total) * 100);
+  return `<span class="mm-agent-bar" aria-hidden="true"><i class="claude" style="width:${claude}%"></i><i class="codex" style="width:${100 - claude}%"></i></span>`;
+}
+
+function mmAgentLegend(split) {
+  const parts = [];
+  if (split.claude && mmMapAgent !== 'codex') parts.push(`<span><i class="mm-dot claude"></i>Claude Code ${mmEsc(workMinutes(split.claude))}</span>`);
+  if (split.codex && mmMapAgent !== 'claude') parts.push(`<span><i class="mm-dot codex"></i>Codex ${mmEsc(workMinutes(split.codex))}</span>`);
+  return parts.length ? `<span class="mm-agent-legend">${parts.join('')}</span>` : '';
+}
+
+// At most one thing that waits on Mark: the nearest deadline, else PRs ready to merge.
+function mmAttention(todo, today) {
+  if (!todo) return '';
+  if (todo.deadlines.length) return `<span class="mm-chip is-warn">срок ${mmEsc(npDue(todo.deadlines[0].date, today))}</span>`;
+  if (todo.open_prs_count) return `<span class="mm-chip is-accent">PR к слиянию: ${todo.open_prs_count}</span>`;
+  return '';
+}
+
+function mmPulse(p) {
   const offset = mmDayOffset(p.last_activity);
-  const active = offset !== null && offset < 7;
-  const pulse = offset === null ? '' : (offset <= 0 ? 'is-today' : (active ? 'is-week' : ''));
-  const week = mmSum(p.daily_minutes.slice(-7));
-  const when = [p.last_activity ? mmRelDay(p.last_activity) : 'без активности', week ? `${workMinutes(week)} за 7 дней` : '']
+  return offset === null ? '' : (offset <= 0 ? 'is-today' : (offset < 7 ? 'is-week' : ''));
+}
+
+function mmMapCard(p, todo, today) {
+  const split = mmWeekSplit(p);
+  const when = [p.last_activity ? mmRelDay(p.last_activity) : 'без активности', split.shown ? `${workMinutes(split.shown)} за неделю` : '']
     .filter(Boolean).join(' · ');
-  const last = active ? p.last_summary : null;
-  const text = last
-    ? `<span class="mm-map-last"><b>${mmEsc(mmDayHeading(last.date))}:</b> ${mmEsc(last.bullets[0])}</span>`
-    : (p.description ? `<span class="mm-map-last is-desc">${mmEsc(p.description)}</span>` : '');
-  const chips = [];
-  if (todo) {
-    if (todo.deadlines.length) chips.push(`<span class="mm-chip is-warn">срок ${mmEsc(npDue(todo.deadlines[0].date, today))}</span>`);
-    if (todo.open_prs_count) chips.push(`<span class="mm-chip is-accent">PR к слиянию: ${todo.open_prs_count}</span>`);
-    if (todo.next.length) chips.push(`<span class="mm-chip">шагов: ${todo.next.length}</span>`);
-  }
-  if (p.loose) chips.push(`<span class="mm-chip">хвостов: ${p.loose}</span>`);
-  return `<a class="mm-map-card${active ? '' : ' is-paused'}" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${when}`)}">
+  const attention = mmAttention(todo, today);
+  return `<a class="mm-map-card" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${when}`)}">
     <span class="mm-map-top">${mmArt(p)}<span class="mm-map-head"><span class="mm-map-name">${mmEsc(p.name)}</span>
-      <span class="mm-map-when"><i class="${pulse}" aria-hidden="true"></i>${mmEsc(when)}</span></span><span class="mm-map-go" aria-hidden="true">›</span></span>
-    ${text}
-    ${active ? mmSpark(p, dates, scale) : ''}
-    ${chips.length ? `<span class="mm-map-foot">${chips.join('')}</span>` : ''}
+      <span class="mm-map-when"><i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}</span></span><span class="mm-map-go" aria-hidden="true">›</span></span>
+    ${mmMapAgent === 'all' ? mmAgentBar(split) : ''}
+    <span class="mm-map-foot">${mmAgentLegend(split)}${attention}</span>
+  </a>`;
+}
+
+// A one-line row for a secondary folder.
+function mmMapRow(p, todo, today) {
+  const split = mmWeekSplit(p);
+  const when = p.last_activity ? mmRelDay(p.last_activity) : 'без активности';
+  return `<a class="mm-map-row" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}">
+    ${mmArt(p)}<span class="mm-map-row-name">${mmEsc(p.name)}<small><i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}</small></span>
+    <span class="mm-map-row-bar">${mmAgentBar(split)}</span>
+    <span class="mm-map-row-time">${split.shown ? mmEsc(workMinutes(split.shown)) : '—'}</span>
+    ${mmAttention(todo, today) || '<span></span>'}
   </a>`;
 }
 
@@ -8962,22 +9898,28 @@ function renderMap(data) {
   const delta = week - prevWeek;
   const projects = data.owner_view ? (data.projects || []) : [];
   const todo = data.owner_view ? (data.todo || []) : [];
-  const isActive = p => {
+  const recent = p => {
     const offset = mmDayOffset(p.last_activity);
     return offset !== null && offset < 7;
   };
-  const active = projects.filter(isActive);
-  const paused = projects.filter(p => !isActive(p));
-  document.getElementById('mm-map-count').textContent = data.owner_view ? projects.length : (data.project_total || 0);
+  // With one agent chosen, a project is in work only when that agent worked on it this week.
+  const isActive = p => recent(p) && (mmMapAgent === 'all' || mmWeekSplit(p).shown > 0);
+  const main = projects.filter(p => p.main);
+  const others = projects.filter(p => !p.main && isActive(p));
+  const active = main.filter(isActive).sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown);
+  const paused = main.filter(p => !isActive(p));
+  document.getElementById('mm-map-count').textContent = data.owner_view ? active.length + others.length : (data.project_total || 0);
+  const weekClaude = mmSum(last7.map(day => day.claude_minutes));
+  const weekCodex = mmSum(last7.map(day => day.codex_minutes));
   const stats = [
     data.owner_view
-      ? { label: 'В работе', value: String(active.length), note: `проектов за 7 дней · всего ${projects.length}` }
+      ? { label: 'Основные в работе', value: String(main.filter(recent).length), note: `других папок: ${projects.filter(p => !p.main && recent(p)).length}` }
       : { label: 'Проектов', value: String(data.project_total || 0), note: 'с работой за 30 дней' },
     { label: 'Работа за 7 дней', value: workMinutes(week), note: prevWeek ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе` : 'прошлой недели в данных нет', cls: prevWeek ? (delta >= 0 ? 'is-up' : 'is-down') : '' },
+    { label: 'Claude Code / Codex', value: `${workHours(weekClaude)} / ${workHours(weekCodex)} ч`, note: 'часов за 7 дней' },
     data.owner_view
       ? { label: 'Ждёт вас', value: String(todo.length), note: `сроков: ${mmSum(todo.map(item => item.deadlines.length))} · PR к слиянию: ${mmSum(todo.map(item => item.open_prs_count))}` }
-      : { label: 'Хвосты', value: String(data.dropped_count + data.forgot_count), note: `сбросил ${data.dropped_count} · забыл ${data.forgot_count}` },
-    { label: 'Слито PR за 7 дней', value: String(mmSum(last7.map(day => day.prs_merged))), note: `за 30 дней: ${mmSum(series.map(day => day.prs_merged))}` },
+      : { label: 'Слито PR за 7 дней', value: String(mmSum(last7.map(day => day.prs_merged))), note: `за 30 дней: ${mmSum(series.map(day => day.prs_merged))}` },
   ];
   const statsHtml = `<div class="mm-stats mm-map-stats">${stats.map(stat => `
     <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
@@ -8990,17 +9932,19 @@ function renderMap(data) {
     host.innerHTML = `${statsHtml}<p class="mm-empty">${data.state === 'empty' ? 'Сборщик работы ещё не присылал данные с компьютеров.' : 'За 30 дней работы по проектам не было.'}</p>`;
     return;
   }
-  const dates = series.map(day => day.date);
-  const today = dates[dates.length - 1];
+  const today = series[series.length - 1]?.date;
   const todoById = Object.fromEntries(todo.map(item => [item.id, item]));
-  const scale = Math.max(60, ...active.map(p => Math.max(0, ...p.daily_minutes.slice(-MM_MAP_DAYS))));
-  const group = (title, note, items, cls) => (items.length ? `<section class="mm-map-group ${cls}" aria-label="${mmEsc(title)}">
-      <div class="mm-map-group-head"><h3>${mmEsc(title)} <span>${items.length}</span></h3><p class="mm-section-note">${mmEsc(note)}</p></div>
-      <div class="mm-map-grid">${items.map(p => mmMapCard(p, todoById[p.id], dates, scale, today)).join('')}</div>
-    </section>` : '');
-  host.innerHTML = statsHtml
-    + group('В работе', 'Была работа за последние 7 дней. Столбики — часы за две недели, точка — слитый PR.', active, 'mm-map-active')
-    + group('На паузе', 'Без работы больше недели.', paused, 'mm-map-paused');
+  const filter = `<div class="mm-filter-tabs mm-map-agents" role="group" aria-label="Чья работа">${MM_MAP_AGENTS.map(([key, label]) =>
+    `<button type="button" data-map-agent="${key}" aria-pressed="${mmMapAgent === key}">${key === 'all' ? '' : `<i class="mm-dot ${key}"></i>`}${mmEsc(label)}</button>`).join('')}</div>`;
+  const head = (title, count, note) => `<div class="mm-map-group-head"><h3>${mmEsc(title)} <span>${count}</span></h3>${note ? `<p class="mm-section-note">${mmEsc(note)}</p>` : ''}</div>`;
+  const pausedHtml = paused.length ? `<div class="mm-map-paused-line"><span>На паузе:</span>${paused.map(p =>
+    `<a href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}">${mmArt(p)}${mmEsc(p.name)}</a>`).join('')}</div>` : '';
+  const othersHtml = others.length ? `<details class="mm-map-others">
+      <summary><b>Другие папки</b> <span>${others.length}</span><small>мелкие папки и заметки, не основные проекты · ${mmEsc(workMinutes(mmSum(others.map(p => mmWeekSplit(p).shown))))} за неделю</small></summary>
+      <div class="mm-map-rows">${others.sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown).map(p => mmMapRow(p, todoById[p.id], today)).join('')}</div>
+    </details>` : '';
+  const body = `${filter}${head('Основные проекты', active.length, '')}<div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
+  host.innerHTML = statsHtml + body;
 }
 
 // «Личное» (Mark 2026-10-20): owner-only project cards from the private portfolio registry, a short

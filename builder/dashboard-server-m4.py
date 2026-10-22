@@ -26,8 +26,11 @@ from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
+from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
+from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
+from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
@@ -48,6 +51,8 @@ LAUNCH_AGENTS_DIR = HOME / "Library" / "LaunchAgents"
 GITHUB_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_github_token"
 JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
+PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
+PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
@@ -1566,6 +1571,14 @@ button {{ font: inherit; }}
 """
 
 
+def _context_catalog_path() -> Path:
+    """One private location shared by the owner API and static-serving denylist."""
+    return Path(os.environ.get(
+        'COMMAND_CENTER_CONTEXT_CATALOG',
+        str(HOME / '.agent-bridge' / 'context-library' / 'catalog.json'),
+    ))
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def _host_name(self) -> str:
         return self.headers.get("Host", "").split(":", 1)[0].lower()
@@ -1658,7 +1671,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             private_state = (HOME / '.agent-bridge').resolve()
             private_files = {MANAGER_DECISIONS_FILE.resolve(),
                              (JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json").resolve()}
-            protected = any(path.is_relative_to(private_state) or path in private_files for path in targets)
+            context_catalog = _context_catalog_path()
+            # The entire state directory includes manifests and pending intent
+            # payloads. Protect its configured and resolved locations even when
+            # an operator overrides the default or requests an implicit index.
+            context_roots = {context_catalog.parent.resolve(), context_catalog.resolve().parent}
+            protected = any(
+                path.is_relative_to(private_state) or path in private_files
+                or any(path.is_relative_to(root) for root in context_roots)
+                for path in targets
+            )
         except (OSError, ValueError, RuntimeError):
             self.send_error(403, 'Forbidden')
             return None
@@ -1674,6 +1696,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/jarvis/tasks/draft':
             self._handle_jarvis_task_draft()
+            return
+        if parsed.path == '/api/platform-edits':
+            self._handle_platform_edits_save()
+            return
+        if parsed.path == '/api/platform-cards':
+            self._handle_platform_cards_save()
             return
         if parsed.path == '/api/jarvis/pipeline/ping':
             self._handle_jarvis_pipeline_ping()
@@ -2339,6 +2367,53 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except (OSError, ValueError, RuntimeError):
             self._json_response(503, {'error': 'decisions_unavailable', 'state': 'unavailable', 'decisions': [], 'activity': []})
 
+    def _platform_owner_body(self, max_bytes: int):
+        """Read an owner write for the Platforms tab, or answer the refusal and return None."""
+        # Owner-only, same guard as decisions: Access sign-in (Origin-checked for writes) or the owner token.
+        if not self._decision_owner_authorized():
+            self._json_response(401, {'error': 'owner_token_required'})
+            return None
+        origin, host = self.headers.get('Origin'), self.headers.get('Host', '')
+        if origin and origin not in {f'http://{host}', f'https://{host}'}:
+            self._json_response(403, {'error': 'origin_not_allowed'})
+            return None
+        if 'application/json' not in self.headers.get('Content-Type', ''):
+            self._json_response(415, {'error': 'json_required'})
+            return None
+        try:
+            if not 1 <= int(self.headers.get('Content-Length', 0)) <= max_bytes:
+                raise ValueError('invalid_body_length')
+            return self._read_json_body(max_bytes=max_bytes)
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_request'})
+            return None
+
+    def _handle_platform_edits_save(self):
+        body = self._platform_owner_body(PLATFORM_EDITS_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            record = save_card_edit(PLATFORM_EDITS_FILE, body)
+            self._json_response(200, {'state': 'ready', **record})
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_platform_edits'})
+        except OSError:
+            self._json_response(503, {'error': 'platform_edits_unavailable'})
+
+    def _handle_platform_cards_save(self):
+        body = self._platform_owner_body(PLATFORM_CARDS_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            record = change_cards(PLATFORM_CARDS_FILE, body)
+            self._json_response(200, {'state': 'ready', **record})
+        except LookupError:
+            self._json_response(404, {'error': 'card_not_found'})
+        except ValueError as error:
+            self._json_response(400, {'error': 'invalid_platform_card', 'reason': str(error)})
+        except OSError:
+            self._json_response(503, {'error': 'platform_cards_unavailable'})
+
     def _handle_manager_decision_response(self):
         if not self._decision_owner_authorized():
             self._json_response(401, {'error': 'owner_token_required'})
@@ -2508,10 +2583,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/context-library':
+            owner = self._decision_owner_authorized()
+            query = parse_qs(parsed.query, keep_blank_values=True)
+            catalog = _context_catalog_path()
+            self._json_response(200, context_library_projection(
+                catalog, owner=owner, query=query.get('q', [''])[0],
+                source=query.get('source', [''])[0], kind=query.get('kind', [''])[0],
+                record_id=query.get('id', [None])[0]))
+            return
         if parsed.path == '/api/platform-resources':
             owner = self._decision_owner_authorized()
             registry = JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"
             self._json_response(200, platform_resources_projection(registry, owner=owner))
+            return
+        if parsed.path == '/api/platform-edits':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'edits': {}})
+                return
+            self._json_response(200, {'state': 'ready', **load_edits(PLATFORM_EDITS_FILE)})
+            return
+        if parsed.path == '/api/platform-cards':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'cards': []})
+                return
+            try:
+                record = load_cards(PLATFORM_CARDS_FILE)
+            except OSError:
+                self._json_response(503, {'error': 'platform_cards_unavailable', 'state': 'unavailable', 'cards': []})
+                return
+            self._json_response(200, {'state': 'ready', **record})
             return
         if parsed.path == '/api/owner-projects':
             # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.

@@ -57,6 +57,8 @@ PRODUCTS = (
      "description": "Личный ассистент в Telegram, который управляет остальными системами."},
 )
 
+MAIN_IDS = frozenset(product["id"] for product in PRODUCTS)
+
 
 def _ts(value: object) -> datetime | None:
     if not isinstance(value, str) or not value:
@@ -450,6 +452,8 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str],
             break
     return {
         "id": item["id"], "name": item["name"], "mascot": item["mascot"],
+        # A product from PRODUCTS is a main project; any other folder or repo is secondary on the board.
+        "main": item["id"] in MAIN_IDS,
         "description": item.get("description"), "last_summary": last_summary,
         "repos": sorted(item["repos"]), "projects": sorted(p for p in item["projects"] if p),
         "total_minutes": sum(daily), "claude_minutes": sum(claude), "codex_minutes": sum(codex),
@@ -457,6 +461,7 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str],
         "active_days": sum(1 for minutes in daily if minutes > 0),
         "sessions": sessions, "prompts": prompts,
         "daily_minutes": daily, "daily_prs_merged": daily_prs,
+        "daily_claude_minutes": claude, "daily_codex_minutes": codex,
         "prs_merged": sum(daily_prs),
         "prs_opened": sum(len(prs["opened"]) for prs in item["prs_by_day"].values()),
         "prs_open": len(item["open_prs"]), "loose": len(item["loose"]),
@@ -467,12 +472,6 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str],
 def _project_detail(item: dict[str, Any], series_days: list[str],
                     summaries: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     detail = _portfolio_summary(item, series_days, summaries)
-    detail["daily_claude_minutes"] = [
-        _union_minutes(p for r in item["sessions_by_day"].get(day, []) if r["tool"] == "claude" for p in _session_intervals(r))
-        for day in series_days]
-    detail["daily_codex_minutes"] = [
-        _union_minutes(p for r in item["sessions_by_day"].get(day, []) if r["tool"] == "codex" for p in _session_intervals(r))
-        for day in series_days]
     timeline = []
     for index, day in reversed(list(enumerate(series_days))):
         records = item["sessions_by_day"].get(day, [])
