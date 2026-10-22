@@ -33,7 +33,7 @@ from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MA
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
-from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list
+from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list, parse_launchctl_running
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
     DEPARTMENT_ZONES,
@@ -449,10 +449,12 @@ def _launchd_state() -> tuple[dict, set | None]:
     with _LAUNCHD_STATE_LOCK:
         if time.monotonic() - float(_LAUNCHD_STATE["read_at"]) > LAUNCHD_STATE_TTL_SECONDS:
             uid = os.getuid()
-            loaded = parse_launchctl_list(_run_text(["launchctl", "list"], timeout=10))
+            listing = _run_text(["launchctl", "list"], timeout=10)
+            loaded = parse_launchctl_list(listing)
             disabled = parse_launchctl_disabled(_run_text(["launchctl", "print-disabled", f"gui/{uid}"]))
             if loaded:
                 _LAUNCHD_STATE["loaded"] = loaded
+                _LAUNCHD_STATE["running"] = parse_launchctl_running(listing)
             if disabled is not None:
                 _LAUNCHD_STATE["disabled"] = disabled
             _LAUNCHD_STATE["read_at"] = time.monotonic()
@@ -460,12 +462,20 @@ def _launchd_state() -> tuple[dict, set | None]:
         return dict(_LAUNCHD_STATE["loaded"]), (set(disabled) if disabled is not None else None)
 
 
-def _mini_services_payload(data):
-    """Keep only real problems in the Mac mini service list (see dashboard_builder.service_status)."""
+def _mini_services_payload(data, *, include_unlisted: bool = False):
+    """Keep only real problems in the Mac mini service list (see dashboard_builder.service_status).
+
+    Running jobs missing from the registry are added for the owner only: their names come straight
+    from launchd labels, which may name a private project or client.
+    """
     loaded, disabled = _launchd_state()
     if not loaded or disabled is None:
         return data  # launchctl has not answered yet: show the health API as it is
-    return normalize_payload(data, loaded=loaded, disabled=disabled)
+    running = set()
+    if include_unlisted:
+        with _LAUNCHD_STATE_LOCK:
+            running = set(_LAUNCHD_STATE.get("running") or ())
+    return normalize_payload(data, loaded=loaded, disabled=disabled, running=running)
 
 
 def _local_service_snapshot() -> dict:
@@ -2713,7 +2723,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 suffix = f"?{parsed.query}" if parsed.query else ""
                 data = _health_request("GET", f"{parsed.path}{suffix}")
                 if parsed.path in {"/api/all", "/api/services/detailed"}:
-                    data = _mini_services_payload(data)
+                    data = _mini_services_payload(data, include_unlisted=self._decision_owner_authorized())
                 if self._is_public_request():
                     data = _public_dashboard_payload(data)
                 self._json_response(200, data)
