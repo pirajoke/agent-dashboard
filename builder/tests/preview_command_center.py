@@ -189,6 +189,43 @@ class PreviewHandler(SERVER.Handler):
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
             return
+        if parsed.path == "/api/context-library":
+            # Synthetic content only. Never read the operator's vault for previews.
+            if not self._decision_owner_authorized():
+                self._json_response(200, {"state": "owner_required", "records": []})
+                return
+            record = {
+                "id": "a" * 32, "source": "plaud", "kind": "transcript",
+                "title": "Пример: план запуска проекта", "date": STARTED.date().isoformat(),
+                "modified_at": STARTED.isoformat(), "project": "Демонстрация интерфейса",
+                "obsidian_url": "obsidian://open?vault=Synthetic&file=preview",
+            }
+            payload = {"state": "ready", "generated_at": STARTED.isoformat(),
+                       "sources": [{"source": "plaud", "state": "observed"}], "total": 1}
+            if query.get("id"):
+                record["body"] = """# Пример: план запуска проекта
+## Резюме
+### Что решили
+- **Начать с пилота:** проверить один сценарий перед большим запуском.
+- Оставить оригинальную запись в Obsidian.
+
+### Следующие шаги
+- [ ] Подготовить план и обсудить результат.
+- [ ] Открыть [задачу-пример](https://github.com/example/context-fixture/issues/23).
+
+> **Рекомендация:** сначала проверить результат с *участниками пилота*.
+
+Это демонстрационные данные; ссылки показывают формат, а не реальную работу.
+
+## Транскрипт
+**[00:03] Участник:** Давайте начнём с одного сценария.
+**[00:41] Участник:** Затем обсудим результат и выберем следующий шаг.
+"""
+                payload["record"] = record
+            else:
+                payload["records"] = [record]
+            self._json_response(200, payload)
+            return
         if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
