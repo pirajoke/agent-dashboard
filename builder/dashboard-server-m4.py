@@ -118,6 +118,12 @@ PUBLIC_FILE_PATHS = {
     "/dashboard-assets/ai-town-32x32folk.png",
     "/dashboard-assets/pixel-verse-campus-bg.webp",
     "/dashboard-assets/three.module.min.js",
+    # Phone home-screen app (Mark 2026-10-22): manifest and icons.
+    "/dashboard-assets/manifest.json",
+    "/dashboard-assets/icon-192.png",
+    "/dashboard-assets/icon-512.png",
+    "/dashboard-assets/apple-touch-icon.png",
+    "/dashboard-assets/favicon-32.png",
     "/favicon.ico",
     "/live-feed.json",
     "/scripts/live-feed.json",

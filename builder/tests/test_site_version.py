@@ -58,8 +58,13 @@ class SiteVersionTests(unittest.TestCase):
             self.assertIn(needle, PAGE)
         manifest = json.loads((BUILDER / "dashboard-assets" / "manifest.json").read_text())
         self.assertEqual(manifest["display"], "standalone")
-        for icon in manifest["icons"]:
-            self.assertTrue((BUILDER / "dashboard-assets" / Path(icon["src"]).name).is_file())
+        linked = {icon["src"] for icon in manifest["icons"]} | {
+            "/dashboard-assets/manifest.json", "/dashboard-assets/apple-touch-icon.png", "/dashboard-assets/favicon-32.png"}
+        for path in linked:
+            self.assertTrue((BUILDER / "dashboard-assets" / Path(path).name).is_file(), path)
+            # command.meshly.fr serves only listed static paths; anything else is a 404 even after login.
+            self.assertIn(path, SERVER.PUBLIC_FILE_PATHS)
+            self.assertIn(Path(path).name, (BUILDER / "deploy_to_scripts.sh").read_text())
 
 
 if __name__ == "__main__":
