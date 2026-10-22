@@ -164,7 +164,7 @@ class PreviewHandler(SERVER.Handler):
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
             return
-        if parsed.path in {"/api/platform-edits", "/api/platform-cards"}:
+        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
         if parsed.path == "/api/owner-projects":
@@ -199,7 +199,7 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
             self._json_response(200, {
                 "system": {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
-                "services": [{"id": "fixture-service", "name": "Fixture Service", "description": "Isolated preview", "status": "running", "runtime": "Python", "port": 8080, "cat": "core"}],
+                "services": [{"id": "fixture-service", "name": "Fixture Service", "description": "Isolated preview", "status": "stopped" if MODE == "failure" else "running", "runtime": "Python", "port": 8080, "cat": "core"}],
             })
             return
         if parsed.path.startswith("/api/"):
@@ -214,6 +214,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_edits_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/platform-cards":
             self._handle_platform_cards_save()
+        elif urlsplit(self.path).path == "/api/owner-todo":
+            self._handle_owner_todo_save()  # Writes only to the isolated fixture state.
         else:
             self._json_response(403, {"error": "fixture_read_only"})
 
@@ -224,6 +226,7 @@ if __name__ == "__main__":
         SERVER.MANAGER_DECISIONS_FILE = FIXTURE_STATE / "responses.jsonl"
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
+        SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
         prepare_navigation_fixture()
