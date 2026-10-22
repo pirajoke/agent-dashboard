@@ -3738,7 +3738,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-controls label { display:flex; flex-direction:column; gap:6px; color:var(--mm-muted); font-size:13px; }
 .context-controls label:first-child { flex:1 1 220px; }
 .context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:9px; padding:10px 12px; min-height:44px; }
-.context-controls :focus-visible,.context-row:focus-visible,.context-reader a:focus-visible,.context-reader button:focus-visible { outline:3px solid var(--mm-info); outline-offset:3px; }
+.context-controls :focus-visible,.context-row:focus-visible,.context-reader a:focus-visible,.context-reader button:focus-visible,.context-reader summary:focus-visible { outline:3px solid var(--mm-info); outline-offset:3px; }
 .context-status,.context-sources { color:var(--mm-muted); font-size:14px; margin:10px 0; overflow-wrap:anywhere; }
 .context-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; }
 .context-list { list-style:none; margin:0; padding:0; }
@@ -3749,7 +3749,14 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-reader { border:1px solid var(--mm-line); border-radius:12px; padding:20px; min-width:0; background:var(--mm-surface); }
 .context-reader[hidden] { display:none; }
 .context-reader h3 { margin:12px 0; overflow-wrap:anywhere; }
-.context-reader pre { white-space:pre-wrap; overflow-wrap:anywhere; font:14px/1.7 system-ui,sans-serif; color:var(--mm-ink); max-height:70vh; overflow:auto; }
+.context-body { max-width:80ch; font:15px/1.7 system-ui,sans-serif; color:var(--mm-ink); overflow-wrap:anywhere; }
+.context-body h4,.context-body h5,.context-body h6 { margin:22px 0 8px; font-size:1em; line-height:1.4; }
+.context-body p { margin:10px 0; white-space:pre-line; }
+.context-body ul,.context-body ol { margin:10px 0; padding-left:24px; }
+.context-body li { margin:6px 0; }
+.context-body details { margin-top:24px; border-top:1px solid var(--mm-line); padding-top:8px; }
+.context-body summary { cursor:pointer; min-height:44px; padding:10px 0; font-weight:600; }
+.context-body code { font-size:.9em; white-space:pre-wrap; }
 .context-reader a { display:inline-block; margin:12px 0; color:var(--mm-info); }
 @media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
 </style>
@@ -4116,8 +4123,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <p id="context-status" class="context-status" role="status" aria-live="polite">Записи доступны после проверки доступа владельца.</p>
     <p id="context-sources" class="context-sources"></p>
     <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
-      <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Полный текст записи">
-        <button type="button" id="context-close">Закрыть запись</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p><a id="context-obsidian">Открыть в Obsidian</a><pre id="context-body"></pre>
+      <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Просмотр записи">
+        <button type="button" id="context-close">Закрыть запись</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p><div id="context-body" class="context-body"></div><a id="context-obsidian">Открыть в Obsidian</a>
       </article>
     </div>
   </section>
@@ -6719,6 +6726,62 @@ function ccContextURI(value) {
     return u.href;
   } catch (_) { return ''; }
 }
+// A deliberately small display-only Markdown subset. Source text never becomes HTML,
+// a link, a task action or a second stored copy of the note.
+function ccContextInline(element, text) {
+  for (const part of text.split(/(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`)/g)) {
+    const bold = /^(?:\*\*[^*]+\*\*|__[^_]+__)$/.test(part);
+    if (bold || /^`[^`]+`$/.test(part)) {
+      const span = document.createElement(bold ? 'strong' : 'code');
+      span.textContent = part.slice(bold ? 2 : 1, bold ? -2 : -1); element.append(span);
+    } else element.append(document.createTextNode(part));
+  }
+}
+function ccContextParagraphs(container, text) {
+  let paragraph = [], list = null;
+  const flush = () => {
+    if (paragraph.length) { const p = document.createElement('p'); ccContextInline(p, paragraph.join('\n')); container.append(p); paragraph = []; }
+  };
+  for (const line of text.split('\n')) {
+    const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
+    const bullet = line.match(/^\s*(?:[-*+] |\d+[.)] )(.+)$/);
+    if (!line.trim()) { flush(); list = null; }
+    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, heading[2]); container.append(h); }
+    else if (bullet) {
+      flush(); const tag = /^\s*\d/.test(line) ? 'ol' : 'ul';
+      if (!list || list.tagName.toLowerCase() !== tag) { list = document.createElement(tag); container.append(list); }
+      const item = document.createElement('li'); ccContextInline(item, bullet[1].replace(/^\[ \]\s*/, '☐ ').replace(/^\[x\]\s*/i, '☑ ')); list.append(item);
+    } else { list = null; paragraph.push(line); }
+  }
+  flush();
+}
+function ccContextRenderBody(record) {
+  const container = document.getElementById('context-body'); container.replaceChildren();
+  const text = record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
+    .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, '');
+  if (record.kind !== 'transcript') { ccContextParagraphs(container, text); return; }
+  const parts = {summary: [], transcript: []}; let section = 'transcript', firstContent = true;
+  for (const line of text.split('\n')) {
+    // The importer banner is operational guidance, not part of the conversation.
+    if (/^>\s*Сырой импорт PLAUD\..*IMPORT LOGIC/.test(line)) continue;
+    if (firstContent && !line.trim()) continue;
+    const heading = line.match(/^#{1,6}\s+(.+?)\s*#*$/);
+    const label = heading ? heading[1].trim().toLowerCase() : '';
+    if (/^(?:plaud\s+)?summary$|^(?:резюме|краткое содержание|краткое резюме|саммари)$/.test(label)) { section = 'summary'; firstContent = false; continue; }
+    if (/^(?:full\s+)?transcript$|^(?:транскрипт|транскрипция|расшифровка|полная расшифровка)$/.test(label)) { section = 'transcript'; firstContent = false; continue; }
+    if (firstContent && heading && /^#\s+/.test(line) && heading[1].trim() === record.title) { firstContent = false; continue; }
+    firstContent = false;
+    parts[section].push(line);
+  }
+  const summary = parts.summary.join('\n').trim(), transcript = parts.transcript.join('\n').trim();
+  const title = document.createElement('h4'); title.textContent = 'Краткое резюме'; container.append(title);
+  if (summary) ccContextParagraphs(container, summary);
+  else { const p = document.createElement('p'); p.textContent = transcript ? 'Резюме пока нет. Можно раскрыть полный транскрипт ниже или открыть оригинал в Obsidian.' : 'Резюме и транскрипт пока недоступны. Оригинал можно открыть в Obsidian.'; container.append(p); }
+  if (transcript) {
+    const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = 'Полный транскрипт'; details.append(toggle);
+    ccContextParagraphs(details, transcript); container.append(details);
+  }
+}
 async function ccLoadContext(recordId = null) {
   if (!ccContextVisible()) return;
   ccContextClear('Проверяем доступ и загружаем записи…');
@@ -6743,7 +6806,7 @@ async function ccLoadContext(recordId = null) {
       if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
       document.getElementById('context-reader-title').textContent = r.title;
       document.getElementById('context-reader-meta').textContent = `${ccContextNames[r.source] || 'Запись'} · Дата записи: ${r.date || 'не указана'} · Изменено: ${ccContextTime(r.modified_at)}`;
-      document.getElementById('context-body').textContent = r.body;
+      ccContextRenderBody(r);
       const uri = ccContextURI(r.obsidian_url); const link = document.getElementById('context-obsidian');
       if (uri) link.href = uri; link.hidden = !uri;
       const reader = document.getElementById('context-reader'); reader.hidden = false; reader.focus();
