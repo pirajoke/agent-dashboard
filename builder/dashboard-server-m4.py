@@ -33,7 +33,7 @@ from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MA
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.infra_changes import infra_projection
-from dashboard_builder.growth import NOTE_FILE as GROWTH_NOTE_FILE, growth_projection
+from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list, parse_launchctl_running
 from dashboard_builder.department_campus import (
     CAMPUS_PROJECTS,
@@ -54,6 +54,7 @@ JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
 PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
+GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
@@ -1722,6 +1723,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/platform-cards':
             self._handle_platform_cards_save()
             return
+        if parsed.path == '/api/growth':
+            self._handle_growth_edit()
+            return
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
             return
@@ -2590,6 +2594,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(200, {"ok": False, "state": "unavailable", "reason": "growth_unreadable"})
             return
         self._json_response(200, payload)
+
+    def _handle_growth_edit(self):
+        # Mark 2026-10-22: tick, add and remove steps and add areas on the site; the note stays the source.
+        body = self._platform_owner_body(GROWTH_EDIT_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            change_note(GROWTH_NOTE_FILE, body, journal=GROWTH_EDITS_JOURNAL)
+        except NoteConflict as error:
+            self._json_response(409, {'ok': False, 'error': 'note_changed', 'reason': str(error)})
+            return
+        except ValueError as error:
+            self._json_response(400, {'ok': False, 'error': 'invalid_growth_edit', 'reason': str(error)})
+            return
+        except OSError:
+            self._json_response(503, {'ok': False, 'error': 'growth_unavailable'})
+            return
+        self._json_response(200, growth_projection(GROWTH_NOTE_FILE, DAILY_WORK_DIR, owner=True))
 
     def _handle_infra_changes(self, parsed):
         # Owner view adds the timeline itself; the public view is counts only.

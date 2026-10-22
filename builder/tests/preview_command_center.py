@@ -226,7 +226,7 @@ class PreviewHandler(SERVER.Handler):
                 payload["records"] = [record]
             self._json_response(200, payload)
             return
-        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo"}:
+        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
         if parsed.path == "/api/owner-projects":
@@ -281,6 +281,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_edits_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/platform-cards":
             self._handle_platform_cards_save()
+        elif urlsplit(self.path).path == "/api/growth":
+            self._handle_growth_edit()  # Writes only the synthetic note in the fixture state.
         elif urlsplit(self.path).path == "/api/owner-todo":
             self._handle_owner_todo_save()  # Writes only to the isolated fixture state.
         else:
@@ -296,6 +298,9 @@ if __name__ == "__main__":
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
+        SERVER.GROWTH_NOTE_FILE = FIXTURE_STATE / "growth-note.md"
+        SERVER.GROWTH_EDITS_JOURNAL = FIXTURE_STATE / "growth-edits.jsonl"
+        SERVER.GROWTH_NOTE_FILE.write_text("# Точки роста\n\n## Synthetic research area\n- Зачем: Synthetic reason.\n- [x] Synthetic first step\n- [ ] Synthetic second step\n\n## Synthetic design area\n", encoding="utf-8")
         SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
         SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": (STARTED - timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}))
         prepare_navigation_fixture()

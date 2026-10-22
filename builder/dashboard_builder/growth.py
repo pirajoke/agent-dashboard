@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import re
+import threading
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -178,3 +179,144 @@ def growth_projection(note_file: Path, daily_work_dir: Path, *, owner: bool, tod
             "source": "Obsidian · AMBITIONS-DREAMS/ТОЧКИ-РОСТА.md", "window_days": TIME_WINDOW_DAYS,
             "time_available": minutes is not None, "note_updated_at": changed.isoformat(timespec="seconds"),
             "note_age_days": note_age_days, "stale_after_days": NOTE_STALE_DAYS, "observed_at": observed_at}
+
+
+# ── Edits from the site (Mark 2026-10-22: «Точки роста правятся прямо на сайте») ──
+# The note stays the source of truth and stays a normal Obsidian note: an edit changes only the lines
+# it is about and keeps the rest of the file byte for byte. Each change names the step by its text as
+# the page saw it, so a note edited in Obsidian meanwhile gives a conflict instead of a wrong tick.
+EDIT_MAX_BODY_BYTES = 4 * 1024
+_EDIT_LOCK = threading.Lock()
+
+
+_REQUEST_ID = re.compile(r"^[A-Za-z0-9-]{8,64}$")
+_RECENT_REQUESTS: dict[str, None] = {}  # request ids already applied, oldest first
+_RECENT_LIMIT = 200
+
+
+class NoteConflict(Exception):
+    """The note changed since the page read it."""
+
+
+def _remember(request_id: str, journal: Path | None, action: str) -> None:
+    _RECENT_REQUESTS[request_id] = None
+    while len(_RECENT_REQUESTS) > _RECENT_LIMIT:
+        _RECENT_REQUESTS.pop(next(iter(_RECENT_REQUESTS)))
+    if journal is None:
+        return
+    try:
+        journal.parent.mkdir(parents=True, exist_ok=True)
+        with journal.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps({"at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                     "request_id": request_id, "action": action}) + "\n")
+    except OSError:
+        pass  # the edit itself is saved; the audit line is best effort
+
+
+def _sections(lines: list[str]) -> list[dict[str, Any]]:
+    """Areas with the line numbers of their heading, meta lines and steps, in parse_note order."""
+    used: set[str] = set()
+    sections: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    for index, line in enumerate(lines):
+        if line.startswith("## "):
+            current = {"id": _slug(_clean(line[3:], 80), used), "heading": index, "last": index, "steps": []}
+            sections.append(current)
+            continue
+        if current is None:
+            continue
+        step = _STEP_RE.match(line)
+        if step:
+            current["steps"].append({"line": index, "text": _clean(step.group(2)), "done": step.group(1).lower() == "x"})
+            current["last"] = index
+        elif _META_RE.match(line):
+            current["last"] = index
+    return sections
+
+
+def _one_line(value: object, limit: int) -> str:
+    if not isinstance(value, str):
+        raise ValueError("text_expected")
+    text = " ".join(value.split())
+    if not text:
+        raise ValueError("text_required")
+    if len(text) > limit or re.search(r"[\x00-\x1f\x7f]", text):
+        raise ValueError("text_too_long" if len(text) > limit else "control_characters")
+    return text
+
+
+def change_note(note_file: Path, payload: object, *, journal: Path | None = None) -> bool:
+    """Apply one owner edit to the note: toggle, add_step, delete_step or add_area.
+
+    ``request_id`` makes a retried or double-sent request apply once; returns False for a repeat.
+    """
+    if not isinstance(payload, dict):
+        raise ValueError("invalid_request")
+    action = payload.get("action")
+    if action not in {"toggle", "add_step", "delete_step", "add_area"}:
+        raise ValueError("invalid_action")
+    request_id = payload.get("request_id")
+    if not isinstance(request_id, str) or not _REQUEST_ID.match(request_id):
+        raise ValueError("request_id_required")
+    with _EDIT_LOCK:
+        if request_id in _RECENT_REQUESTS:
+            return False
+        missing = False
+        try:
+            raw = note_file.read_bytes().decode("utf-8")  # bytes: keep CRLF as it is
+        except FileNotFoundError:
+            if action != "add_area":
+                raise NoteConflict("note_missing") from None
+            missing, raw = True, "# Точки роста\n"
+        newline = "\r\n" if "\r\n" in raw else "\n"
+        lines = raw.split(newline)
+        if action == "add_area":
+            title = _one_line(payload.get("title"), 80)
+            why = payload.get("why")
+            block = [f"## {title}"]
+            if why not in (None, ""):
+                block.append(f"- Зачем: {_one_line(why, _TEXT_LIMIT)}")
+            lines = (raw.rstrip("\r\n") + newline * 2 + newline.join(block) + newline).split(newline)
+        else:
+            area_id = payload.get("area")
+            section = next((item for item in _sections(lines) if item["id"] == area_id), None)
+            if section is None:
+                raise NoteConflict("area_not_found")
+            if action == "add_step":
+                text = _one_line(payload.get("text"), _TEXT_LIMIT)
+                lines.insert(section["last"] + 1, f"- [ ] {text}")
+            elif action in {"toggle", "delete_step"}:
+                index = payload.get("step")
+                if not isinstance(index, int) or isinstance(index, bool) or not 0 <= index < len(section["steps"]):
+                    raise NoteConflict("step_not_found")
+                step = section["steps"][index]
+                if step["text"] != payload.get("text"):
+                    raise NoteConflict("step_changed")
+                if action == "delete_step":
+                    del lines[step["line"]]
+                else:
+                    done = payload.get("done")
+                    if not isinstance(done, bool):
+                        raise ValueError("done_expected")
+                    lines[step["line"]] = re.sub(r"\[( |x|X)\]", "[x]" if done else "[ ]", lines[step["line"]], count=1)
+            else:
+                raise ValueError("invalid_action")
+        text = newline.join(lines)
+        note_file.parent.mkdir(parents=True, exist_ok=True)
+        temp = note_file.with_name(f".{note_file.name}.site-edit")
+        temp.write_bytes(text.encode("utf-8"))
+        try:
+            temp.chmod(note_file.stat().st_mode & 0o777)
+        except FileNotFoundError:
+            pass
+        # Obsidian may have saved the note while this edit was prepared: never write over that.
+        try:
+            current = note_file.read_bytes().decode("utf-8")
+        except FileNotFoundError:
+            current = None
+        if current != (None if missing else raw):
+            temp.unlink(missing_ok=True)
+            raise NoteConflict("note_changed_meanwhile")
+        temp.replace(note_file)
+        _remember(request_id, journal, action)
+        return True
