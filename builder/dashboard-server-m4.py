@@ -55,6 +55,7 @@ PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
+AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
@@ -118,6 +119,12 @@ PUBLIC_FILE_PATHS = {
     "/dashboard-assets/ai-town-32x32folk.png",
     "/dashboard-assets/pixel-verse-campus-bg.webp",
     "/dashboard-assets/three.module.min.js",
+    # Phone home-screen app (Mark 2026-10-22): manifest and icons.
+    "/dashboard-assets/manifest.json",
+    "/dashboard-assets/icon-192.png",
+    "/dashboard-assets/icon-512.png",
+    "/dashboard-assets/apple-touch-icon.png",
+    "/dashboard-assets/favicon-32.png",
     "/favicon.ico",
     "/live-feed.json",
     "/scripts/live-feed.json",
@@ -2619,6 +2626,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             registry = JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"
             self._json_response(200, platform_resources_projection(registry, owner=owner))
             return
+        if parsed.path == '/api/site-version':
+            self._json_response(200, _site_version())
+            return
         if parsed.path == '/api/platform-edits':
             if not self._decision_owner_authorized():
                 self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'edits': {}})
@@ -2897,6 +2907,25 @@ python3 ~/scripts/orchestrator_tokens.py update codex 23 '$46' '200' 'Apr 15'
 
     def log_message(self, format, *args):
         pass
+
+def _site_version(state_file: Path | None = None) -> dict:
+    """When the site code last went live, for «Сайт обновлён …» and the refresh prompt.
+
+    auto_deploy.py sets deployed_at only on a real deploy (or deploy_to_scripts.sh);
+    commits that touch only generated files move deployed_sha but not this time,
+    so an open tab is not asked to refresh after every data rebuild.
+    """
+    unknown = {"state": "unknown", "version": None, "deployed_at": None}
+    try:
+        state = json.loads((state_file or AUTO_DEPLOY_STATE_FILE).read_text())
+        deployed_at = datetime.fromisoformat(str(state["deployed_at"]).replace("Z", "+00:00"))
+    except (OSError, ValueError, TypeError, KeyError):
+        return unknown
+    if deployed_at.tzinfo is None:
+        return unknown
+    stamp = deployed_at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return {"state": "ready", "version": stamp, "deployed_at": stamp}
+
 
 def _github_api_request(token, method, url, payload=None):
     data = None
