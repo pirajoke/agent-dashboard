@@ -272,6 +272,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .svc-detail[hidden] { display: none; }
 .svc-detail-actions { margin-top: 12px; }
 .svc-archive-bar { padding: 10px 6px 0; }
+.svc-archive-problem { color: var(--red); font-weight: 600; margin-left: 4px; }
 .svc-empty { margin: 8px 10px; color: var(--mm-muted); font-size: 13px; }
 .svc-archive-dialog { width: min(720px, calc(100vw - 32px)); }
 .svc-item.archived { opacity: .8; }
@@ -8410,8 +8411,17 @@ const SVC_ARCHIVE_MEMORY = {};
 const SVC_NOTES = [/\s*·\s*не загружена в launchd\s*$/, /\s*·\s*последний запуск с ошибкой \(код -?\d+\)\s*$/];
 const svcRendered = {};
 
+function svcSlug(text) {
+  return String(text || '').toLowerCase().replace(/[^a-z0-9а-яё.]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// One archive per machine panel, keyed by the launchd label so equal names on Air and Mac mini stay apart.
 function svcId(s) {
-  return String(s.name || s.label || '').toLowerCase().replace(/[^a-z0-9а-яё]+/g, '-').replace(/^-|-$/g, '');
+  return svcSlug(s.label || s.name);
+}
+
+function svcArchiveKey(tbodyId, id) {
+  return `${String(tbodyId).split('-')[0]}:${id}`;
 }
 
 function svcUid(tbodyId, s) {
@@ -8455,9 +8465,9 @@ function readSvcArchiveChoices() {
   }
 }
 
-function isSvcArchived(s, choices) {
-  const id = svcId(s);
-  return typeof choices[id] === 'boolean' ? choices[id] : SVC_ARCHIVED_BY_DEFAULT.includes(id);
+function isSvcArchived(s, choices, tbodyId) {
+  const key = svcArchiveKey(tbodyId, svcId(s));
+  return typeof choices[key] === 'boolean' ? choices[key] : SVC_ARCHIVED_BY_DEFAULT.includes(svcSlug(s.name).replace(/\./g, '-'));
 }
 
 function svcHost(tbodyId) {
@@ -8479,8 +8489,11 @@ function renderSvcTable(tbodyId, services, actionFn) {
   const host = svcHost(tbodyId);
   if (!host) return;
   const choices = readSvcArchiveChoices();
-  const active = services.filter(s => !isSvcArchived(s, choices));
-  const archived = services.filter(s => isSvcArchived(s, choices));
+  const active = services.filter(s => !isSvcArchived(s, choices, tbodyId));
+  const archived = services.filter(s => isSvcArchived(s, choices, tbodyId));
+  // An archived service that breaks still shows on the archive button, so a problem is never hidden silently.
+  // «Не запущена» is the expected state of an archived old job and stays quiet.
+  const archivedProblems = archived.filter(s => { const p = svcProblem(s); return p && p.label !== 'Не запущена'; }).length;
   const grouped = {};
   active.forEach(s => {
     const key = svcProblem(s) ? 'problem' : svcGroup(s);
@@ -8515,13 +8528,17 @@ function renderSvcTable(tbodyId, services, actionFn) {
   }
   if (!active.length) html += '<p class="svc-empty">Здесь пусто: все сервисы в архиве.</p>';
   if (archived.length) {
-    html += `<div class="svc-archive-bar"><button class="platform-archive-open" type="button" aria-haspopup="dialog" onclick="openSvcArchive('${tbodyId}')"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · ${archived.length}</span></button></div>`;
+    html += `<div class="svc-archive-bar"><button class="platform-archive-open" type="button" aria-haspopup="dialog" onclick="openSvcArchive('${tbodyId}')"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · ${archived.length}</span>${archivedProblems ? `<span class="svc-archive-problem">· с проблемой: ${archivedProblems}</span>` : ''}</button></div>`;
   }
   host.innerHTML = html;
+  const working = active.filter(s => !svcProblem(s)).length;
   const count = document.getElementById(tbodyId.replace('-svc-tbody', '-svc-count'));
-  if (count) count.textContent = `· ${active.filter(s => !svcProblem(s)).length} из ${active.length} работают`;
+  if (count) count.textContent = `· ${working} из ${active.length} работают`;
+  const badge = document.getElementById(tbodyId.replace('-svc-tbody', '-badge'));
+  if (badge) badge.textContent = `${working}/${active.length}`;
   const dialog = document.getElementById('svc-archive-dialog');
   if (dialog && dialog.open && dialog.dataset.host === tbodyId) fillSvcArchive(tbodyId);
+  return {working, total: active.length};
 }
 
 const SVC_STYLE_STORAGE_KEY = 'command-center.service-style.v1';
@@ -8559,7 +8576,7 @@ function renderSvcTableRow(s, tbodyId, actionFn, archived) {
     ? `<span class="svc-port${s.port_ok === false ? ' bad' : ''}">:${s.port} ${s.port_ok ? '✓' : '✗'}</span>`
     : (s.interval ? `<span style="font-size:11px;color:var(--muted)">${formatInterval(s.interval)}</span>` : '—');
   const why = problem ? `<div class="svc-why">${escapeHtml(problem.why)}</div>` : '';
-  let html = `<tr class="svc-row${problem ? ' problem' : ''}${archived ? ' archived' : ''}" tabindex="0" aria-expanded="false" onclick="toggleSvcDetail('${uid}', this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleSvcDetail('${uid}', this)}">
+  let html = `<tr class="svc-row${problem ? ' problem' : ''}${archived ? ' archived' : ''}" tabindex="0" aria-expanded="false" onclick="toggleSvcDetail('${uid}', this)" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggleSvcDetail('${uid}', this)}">
     <td><span class="status-dot ${problem ? 'stopped' : 'running'}"></span></td>
     <td><div class="svc-name-cell"><div><div class="svc-name">${name}</div><div class="svc-desc">${escapeHtml(svcPlainDesc(s))}</div>${why}</div></div></td>
     <td><span class="svc-badge ${badgeClass}">${badgeLabel}</span></td>
@@ -8645,25 +8662,21 @@ function toggleSvcDetail(uid, button) {
   if (button) button.setAttribute('aria-expanded', String(!el.hidden));
 }
 
-function toggleCat(catId) {
-  document.querySelectorAll(`.cat-${catId}`).forEach(r => {
-    r.style.display = r.style.display === 'none' ? '' : 'none';
-  });
-}
-
 function toggleSvcArchive(tbodyId, id, archive) {
+  const key = svcArchiveKey(tbodyId, id);
   const choices = readSvcArchiveChoices();
-  choices[id] = archive;
+  choices[key] = archive;
   try {
     localStorage.setItem(SVC_ARCHIVE_STORAGE_KEY, JSON.stringify(choices));
   } catch (error) {
     // Private mode: the choice below lasts until the page reloads.
   }
-  SVC_ARCHIVE_MEMORY[id] = archive;
+  SVC_ARCHIVE_MEMORY[key] = archive;
   const state = svcRendered[tbodyId];
   if (state) renderSvcTable(tbodyId, state.services, state.actionFn);
-  const host = document.getElementById(tbodyId);
-  if (!archive && host) host.querySelector('.svc-open')?.focus();
+  const dialog = document.getElementById('svc-archive-dialog');
+  if (dialog && dialog.open) dialog.querySelector('.platform-archive-close')?.focus();
+  else document.getElementById(tbodyId)?.querySelector('.platform-archive-open, .svc-open, .svc-row')?.focus();
 }
 
 function svcArchiveDialog() {
@@ -8691,7 +8704,7 @@ function fillSvcArchive(tbodyId) {
   const list = document.getElementById('svc-archive-list');
   if (!state || !list) return;
   const choices = readSvcArchiveChoices();
-  const archived = state.services.filter(s => isSvcArchived(s, choices));
+  const archived = state.services.filter(s => isSvcArchived(s, choices, tbodyId));
   const table = readSvcStyle() === 'table';
   list.innerHTML = archived.length
     ? (table
@@ -8798,8 +8811,8 @@ async function refreshAir() {
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('air-badge').textContent = `${running}/${svcs.length}`;
   document.getElementById('air-svc-count').textContent = `· ${running} из ${svcs.length} работают`;
-  document.getElementById('stat-services').textContent = `${running}/${svcs.length}`;
-  renderSvcTable('air-svc-tbody', svcs, 'airAction');
+  const shown = renderSvcTable('air-svc-tbody', svcs, 'airAction');
+  if (shown) document.getElementById('stat-services').textContent = `${shown.working}/${shown.total}`;
   renderGauges('air', sys);
 }
 
