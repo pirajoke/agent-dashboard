@@ -189,7 +189,44 @@ class PreviewHandler(SERVER.Handler):
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
             return
-        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/growth"}:
+        if parsed.path == "/api/context-library":
+            # Synthetic content only. Never read the operator's vault for previews.
+            if not self._decision_owner_authorized():
+                self._json_response(200, {"state": "owner_required", "records": []})
+                return
+            record = {
+                "id": "a" * 32, "source": "plaud", "kind": "transcript",
+                "title": "Пример: план запуска проекта", "date": STARTED.date().isoformat(),
+                "modified_at": STARTED.isoformat(), "project": "Демонстрация интерфейса",
+                "obsidian_url": "obsidian://open?vault=Synthetic&file=preview",
+            }
+            payload = {"state": "ready", "generated_at": STARTED.isoformat(),
+                       "sources": [{"source": "plaud", "state": "observed"}], "total": 1}
+            if query.get("id"):
+                record["body"] = """# Пример: план запуска проекта
+## Резюме
+### Что решили
+- **Начать с пилота:** проверить один сценарий перед большим запуском.
+- Оставить оригинальную запись в Obsidian.
+
+### Следующие шаги
+- [ ] Подготовить план и обсудить результат.
+- [ ] Открыть [задачу-пример](https://github.com/example/context-fixture/issues/23).
+
+> **Рекомендация:** сначала проверить результат с *участниками пилота*.
+
+Это демонстрационные данные; ссылки показывают формат, а не реальную работу.
+
+## Транскрипт
+**[00:03] Участник:** Давайте начнём с одного сценария.
+**[00:41] Участник:** Затем обсудим результат и выберем следующий шаг.
+"""
+                payload["record"] = record
+            else:
+                payload["records"] = [record]
+            self._json_response(200, payload)
+            return
+        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
         if parsed.path == "/api/owner-projects":
@@ -222,10 +259,15 @@ class PreviewHandler(SERVER.Handler):
                 self.send_error(404)
             return
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
-            self._json_response(200, {
+            payload = {
                 "system": {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
-                "services": FIXTURE_SERVICES,
-            })
+                "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
+            }
+            if parsed.path == "/api/all" and self._decision_owner_authorized():
+                # A running job the health registry does not list is added by the product rule.
+                payload = SERVER.normalize_payload(payload, loaded={"com.example.fixture-extra": 0}, disabled=set(),
+                                                   running={"com.example.fixture-extra"}, plist_exists=lambda path: True)
+            self._json_response(200, payload)
             return
         if parsed.path.startswith("/api/"):
             self._json_response(200, {"status": "ok", "tasks": [], "services": [], "history": [], "counts": {}})
@@ -241,6 +283,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_cards_save()
         elif urlsplit(self.path).path == "/api/growth":
             self._handle_growth_edit()  # Writes only the synthetic note in the fixture state.
+        elif urlsplit(self.path).path == "/api/owner-todo":
+            self._handle_owner_todo_save()  # Writes only to the isolated fixture state.
         else:
             self._json_response(403, {"error": "fixture_read_only"})
 
@@ -251,6 +295,7 @@ if __name__ == "__main__":
         SERVER.MANAGER_DECISIONS_FILE = FIXTURE_STATE / "responses.jsonl"
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
+        SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
         SERVER.GROWTH_NOTE_FILE = FIXTURE_STATE / "growth-note.md"
