@@ -222,10 +222,15 @@ class PreviewHandler(SERVER.Handler):
                 self.send_error(404)
             return
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
-            self._json_response(200, {
+            payload = {
                 "system": {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
-                "services": [dict(service, status="stopped") for service in FIXTURE_SERVICES] if MODE == "failure" else FIXTURE_SERVICES,
-            })
+                "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
+            }
+            if parsed.path == "/api/all" and self._decision_owner_authorized():
+                # A running job the health registry does not list is added by the product rule.
+                payload = SERVER.normalize_payload(payload, loaded={"com.example.fixture-extra": 0}, disabled=set(),
+                                                   running={"com.example.fixture-extra"}, plist_exists=lambda path: True)
+            self._json_response(200, payload)
             return
         if parsed.path.startswith("/api/"):
             self._json_response(200, {"status": "ok", "tasks": [], "services": [], "history": [], "counts": {}})

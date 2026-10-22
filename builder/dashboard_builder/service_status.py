@@ -40,6 +40,16 @@ def parse_launchctl_list(raw: str) -> dict[str, int | None]:
     return loaded
 
 
+def parse_launchctl_running(raw: str) -> set[str]:
+    """``launchctl list`` → labels that have a live process (a PID in the first column)."""
+    running = set()
+    for line in raw.splitlines():
+        parts = line.split("\t") if "\t" in line else line.split()
+        if len(parts) >= 3 and parts[0].strip().isdigit():
+            running.add(parts[2].strip())
+    return running
+
+
 def parse_launchctl_disabled(raw: str) -> set[str] | None:
     """``launchctl print-disabled gui/<uid>`` → labels switched off, None if launchctl did not answer."""
     if "disabled services" not in raw:
@@ -132,12 +142,64 @@ def normalize_services(
     return result
 
 
-def normalize_payload(data, *, loaded: dict[str, int | None], disabled: set[str], **kwargs):
-    """Apply :func:`normalize_services` to the service lists of a health API answer."""
+# Agents that apps put in ~/Library/LaunchAgents for their own updates; not Mark's services.
+VENDOR_PREFIXES = ("com.apple.", "com.google.", "com.microsoft.", "com.adobe.", "com.dropbox.", "com.docker.",
+                   "com.openai.", "com.anthropic.", "us.zoom.", "com.spotify.", "com.tailscale.", "org.mozilla.",
+                   "com.brave.", "com.getdropbox.", "com.valvesoftware.", "com.logi.", "com.logitech.")
+UNLISTED_NOTE = "работает; добавлено само, раньше не было в списке"
+
+
+def _readable_name(label: str) -> str:
+    """com.pirajoke.health-lab → Health Lab; homebrew.mxcl.n8n → N8n."""
+    for prefix in ("com.pirajoke.", "homebrew.mxcl.", "com.", "org.", "io."):
+        if label.startswith(prefix):
+            label = label[len(prefix):]
+            break
+    words = re.split(r"[-_.]+", label)
+    return " ".join(word[:1].upper() + word[1:] for word in words if word) or label
+
+
+def unlisted_running_services(
+    services: list,
+    *,
+    running: set[str],
+    disabled: set[str],
+    agents_dir: Path | None = None,
+    plist_exists: Callable[[Path], bool] = Path.exists,
+) -> list:
+    """Mark 2026-10-20: about 13 services run on the Mac mini but the page never showed them.
+
+    Any job that runs now from a plist in ~/Library/LaunchAgents, is not in the health API
+    registry, is not switched off and is not an app's own updater is added as running.
+    """
+    agents_dir = agents_dir or LAUNCH_AGENTS_DIR
+    known = {str(item.get("label")).strip() for item in services if isinstance(item, dict) and item.get("label")}
+    extra = []
+    for label in sorted(running):
+        if label in known or label in disabled or label.startswith(VENDOR_PREFIXES) or label.startswith("application."):
+            continue
+        plist = agents_dir / f"{label}.plist"
+        if not plist_exists(plist):
+            continue
+        extra.append({"name": _readable_name(label), "label": label, "status": "running", "cat": "core",
+                      "desc": UNLISTED_NOTE, "plist": str(plist), "unlisted": True})
+    return extra
+
+
+def normalize_payload(data, *, loaded: dict[str, int | None], disabled: set[str], running: set[str] | None = None, **kwargs):
+    """Apply :func:`normalize_services` to the service lists of a health API answer.
+
+    With ``running`` (labels with a live process), running jobs missing from the registry are added.
+    """
     if not isinstance(data, dict):
         return data
     cleaned = dict(data)
     for key in ("services", "services_detailed"):
         if isinstance(cleaned.get(key), list):
-            cleaned[key] = normalize_services(cleaned[key], loaded=loaded, disabled=disabled, **kwargs)
+            original = cleaned[key]
+            cleaned[key] = normalize_services(original, loaded=loaded, disabled=disabled, **kwargs)
+            if running:
+                cleaned[key] = cleaned[key] + unlisted_running_services(
+                    original, running=running, disabled=disabled,
+                    plist_exists=kwargs.get("plist_exists", Path.exists))
     return cleaned
