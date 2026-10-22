@@ -26,6 +26,23 @@ MODE = "waiting"
 
 FIXTURE_STATE = None
 
+# Synthetic service list shaped like the Mac mini health API (names only, no owner data).
+FIXTURE_SERVICES = [
+    {"name": "Lexi Admin", "label": "fixture.lexi-admin", "desc": "Lexi / MyDictionary admin", "status": "running", "runtime": "Docker", "port": 8791, "port_ok": True, "cat": "core"},
+    {"name": "Lexi PostgreSQL", "label": "fixture.lexi-db", "desc": "Lexi / MyDictionary database", "status": "running", "runtime": "Docker", "port": 55434, "port_ok": True, "cat": "core"},
+    {"name": "Context News Web", "label": "fixture.cn-web", "desc": "Context News web app + admin", "status": "running", "runtime": "Python", "port": 8790, "port_ok": True, "cat": "core"},
+    {"name": "Context News Worker", "label": "fixture.cn-worker", "desc": "@contextnews_bot digest delivery", "status": "running", "runtime": "Python", "cat": "core"},
+    {"name": "Context News PostgreSQL", "label": "fixture.cn-db", "desc": "Context News database", "status": "running", "runtime": "Postgres", "port": 55432, "port_ok": True, "cat": "core"},
+    {"name": "Accountable OS", "label": "fixture.accountable", "desc": "Accountability workspace", "status": "running", "runtime": "Python", "port": 4174, "port_ok": True, "cat": "core"},
+    {"name": "Pixel Agents", "label": "fixture.pixel", "desc": "Pixel agents runtime", "status": "running", "runtime": "Node", "port": 3100, "port_ok": True, "cat": "core"},
+    {"name": "Closeness Mirror", "label": "fixture.closeness", "desc": "Closeness Mirror app", "status": "running", "runtime": "Node", "cat": "core"},
+    {"name": "Krisp Import", "label": "fixture.krisp", "desc": "Legacy Krisp import job · не загружена в launchd", "status": "stopped", "runtime": "Node", "interval": 3600, "cat": "core"},
+    {"name": "TGBot Watchdog", "label": "fixture.tgbot-watchdog", "desc": "Restarts Telegram bot if unhealthy · последний запуск с ошибкой (код 1)", "status": "stopped", "runtime": "Python", "interval": 300, "exit_code": 1, "cat": "core"},
+    {"name": "Database Backup", "label": "fixture.db-backup", "desc": "Nightly PostgreSQL backup · не загружена в launchd", "status": "stopped", "runtime": "Bash", "interval": 86400, "cat": "core"},
+    {"name": "Alert Monitor", "label": "fixture.alert-monitor", "desc": "Periodic alert monitor · не загружена в launchd", "status": "stopped", "runtime": "Python", "interval": 300, "cat": "core"},
+    {"name": "M4 Healthcheck", "label": "fixture.m4-health", "desc": "Mac Mini health alert checks · не загружена в launchd", "status": "stopped", "runtime": "Python", "interval": 300, "cat": "core"},
+]
+
 
 def prepare_navigation_fixture():
     if FIXTURE_STATE is None:
@@ -140,6 +157,14 @@ class PreviewHandler(SERVER.Handler):
         global MODE
         parsed = urlsplit(self.path)
         query = parse_qs(parsed.query)
+        if parsed.path == "/fixture-deploy":
+            # Simulates the Mac mini deploying a newer version while a tab stays open.
+            SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}))
+            self._json_response(200, {"deployed": True})
+            return
+        if parsed.path == "/api/site-version":
+            super().do_GET()
+            return
         if parsed.path.startswith('/fixture/'):
             mode = parsed.path.removeprefix('/fixture/')
             if mode in {'waiting', 'ready', 'google-owner', 'changed', 'empty', 'stale', 'unavailable', 'anonymous', 'long-label', 'unknown', 'failure'}:
@@ -199,7 +224,7 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
             self._json_response(200, {
                 "system": {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
-                "services": [{"id": "fixture-service", "name": "Fixture Service", "description": "Isolated preview", "status": "stopped" if MODE == "failure" else "running", "runtime": "Python", "port": 8080, "cat": "core"}],
+                "services": [dict(service, status="stopped") for service in FIXTURE_SERVICES] if MODE == "failure" else FIXTURE_SERVICES,
             })
             return
         if parsed.path.startswith("/api/"):
@@ -229,6 +254,8 @@ if __name__ == "__main__":
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
+        SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
+        SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": (STARTED - timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}))
         prepare_navigation_fixture()
         with http.server.ThreadingHTTPServer(("127.0.0.1", 0), PreviewHandler) as server:
             print(f"http://127.0.0.1:{server.server_port}/", flush=True)
