@@ -1,0 +1,14 @@
+{
+  "name": "Command Center",
+  "short_name": "Command",
+  "lang": "ru",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f3ea",
+  "theme_color": "#f8f3ea",
+  "icons": [
+    { "src": "/dashboard-assets/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/dashboard-assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
