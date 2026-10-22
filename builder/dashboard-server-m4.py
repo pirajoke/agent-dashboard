@@ -455,13 +455,19 @@ def _launchd_state() -> tuple[dict, set | None]:
         return dict(_LAUNCHD_STATE["loaded"]), (set(disabled) if disabled is not None else None)
 
 
-def _mini_services_payload(data):
-    """Keep only real problems in the Mac mini service list (see dashboard_builder.service_status)."""
+def _mini_services_payload(data, *, include_unlisted: bool = False):
+    """Keep only real problems in the Mac mini service list (see dashboard_builder.service_status).
+
+    Running jobs missing from the registry are added for the owner only: their names come straight
+    from launchd labels, which may name a private project or client.
+    """
     loaded, disabled = _launchd_state()
     if not loaded or disabled is None:
         return data  # launchctl has not answered yet: show the health API as it is
-    with _LAUNCHD_STATE_LOCK:
-        running = set(_LAUNCHD_STATE.get("running") or ())
+    running = set()
+    if include_unlisted:
+        with _LAUNCHD_STATE_LOCK:
+            running = set(_LAUNCHD_STATE.get("running") or ())
     return normalize_payload(data, loaded=loaded, disabled=disabled, running=running)
 
 
@@ -2707,7 +2713,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 suffix = f"?{parsed.query}" if parsed.query else ""
                 data = _health_request("GET", f"{parsed.path}{suffix}")
                 if parsed.path in {"/api/all", "/api/services/detailed"}:
-                    data = _mini_services_payload(data)
+                    data = _mini_services_payload(data, include_unlisted=self._decision_owner_authorized())
                 if self._is_public_request():
                     data = _public_dashboard_payload(data)
                 self._json_response(200, data)

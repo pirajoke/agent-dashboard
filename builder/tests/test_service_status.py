@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import plistlib
 import tempfile
 import unittest
@@ -143,6 +144,7 @@ class ServerServiceListTests(unittest.TestCase):
         response = {}
         handler = SERVER.Handler.__new__(SERVER.Handler)
         handler.path = path
+        handler.headers = {}
         handler._is_public_request = lambda: public
         handler._json_response = lambda status, payload: response.update(status=status, payload=payload)
         with patch.object(SERVER, "_health_request", return_value=health), patch.object(
@@ -222,3 +224,33 @@ class UnlistedRunningServicesTests(unittest.TestCase):
             self.assertEqual([item["label"] for item in result[key]], ["com.pirajoke.jarvis-bot", "com.pirajoke.health-lab"])
         without = normalize_payload(data, loaded={"com.pirajoke.jarvis-bot": 0}, disabled=set(), plist_exists=lambda path: True)
         self.assertEqual(len(without["services"]), 1)
+
+
+class UnlistedServicesAreOwnerOnlyTests(unittest.TestCase):
+    """Review 2026-10-22: a launchd label can name a private project, so only the owner gets the added rows."""
+
+    def call(self, *, owner: bool, public: bool) -> list:
+        handler = SERVER.Handler.__new__(SERVER.Handler)
+        handler.path, handler.headers = "/api/all", {}
+        handler._is_public_request = lambda: public
+        handler._decision_owner_authorized = lambda: owner
+        output = {}
+        handler._json_response = lambda status, payload: output.update(status=status, payload=payload)
+        registry = {"services": [svc("com.pirajoke.jarvis-bot", "running")]}
+        launchd = ({"com.pirajoke.jarvis-bot": 0, "com.pirajoke.private-client-worker": 0}, set())
+        with (patch.object(SERVER, "_health_request", return_value=registry),
+              patch.object(SERVER, "_launchd_state", return_value=launchd),
+              patch.dict(SERVER._LAUNCHD_STATE, {"running": {"com.pirajoke.jarvis-bot", "com.pirajoke.private-client-worker"}}),
+              patch.object(Path, "exists", return_value=True)):
+            handler.do_GET()
+        return output["payload"]["services"]
+
+    def test_anonymous_never_sees_added_rows(self):
+        for public in (True, False):
+            text = json.dumps(self.call(owner=False, public=public))
+            self.assertNotIn("private-client-worker", text)
+            self.assertNotIn("Private Client Worker", text)
+
+    def test_owner_sees_them(self):
+        names = [item.get("name") for item in self.call(owner=True, public=True)]
+        self.assertIn("Private Client Worker", names)
