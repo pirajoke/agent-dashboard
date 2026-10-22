@@ -140,6 +140,14 @@ class PreviewHandler(SERVER.Handler):
         global MODE
         parsed = urlsplit(self.path)
         query = parse_qs(parsed.query)
+        if parsed.path == "/fixture-deploy":
+            # Simulates the Mac mini deploying a newer version while a tab stays open.
+            SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}))
+            self._json_response(200, {"deployed": True})
+            return
+        if parsed.path == "/api/site-version":
+            super().do_GET()
+            return
         if parsed.path.startswith('/fixture/'):
             mode = parsed.path.removeprefix('/fixture/')
             if mode in {'waiting', 'ready', 'google-owner', 'changed', 'empty', 'stale', 'unavailable', 'anonymous', 'long-label', 'unknown', 'failure'}:
@@ -226,6 +234,8 @@ if __name__ == "__main__":
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
+        SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
+        SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": (STARTED - timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}))
         prepare_navigation_fixture()
         with http.server.ThreadingHTTPServer(("127.0.0.1", 0), PreviewHandler) as server:
             print(f"http://127.0.0.1:{server.server_port}/", flush=True)
