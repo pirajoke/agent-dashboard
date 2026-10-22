@@ -24,6 +24,7 @@ cp "$SRC_DIR/daily_work_summarizer.py" "$SCRIPTS_DIR/daily_work_summarizer.py"
 cp "$SRC_DIR/auto_deploy.py" "$SCRIPTS_DIR/auto_deploy.py"
 cp "$SRC_DIR/launchd_watchdog.py" "$SCRIPTS_DIR/launchd_watchdog.py"
 cp "$SRC_DIR/owner_project_card.py" "$SCRIPTS_DIR/owner_project_card.py"
+cp "$SRC_DIR/weekly_digest.py" "$SCRIPTS_DIR/weekly_digest.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
 cp "$SRC_DIR/dashboard-assets/style.css" "$SCRIPTS_DIR/dashboard-assets/style.css"
@@ -47,6 +48,7 @@ chmod +x "$LOCAL_BIN_DIR/mm-command-center-auth"
 
 cd "$SCRIPTS_DIR"
 python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manager_status_publisher.py daily_work_collector.py infra_change_collector.py daily_work_summarizer.py auto_deploy.py launchd_watchdog.py dashboard_builder/*.py
+python3 -m py_compile weekly_digest.py
 python3 build-agent-dashboard.py
 
 if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]] && launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then
@@ -65,6 +67,18 @@ fi
 
 if [[ "${DASHBOARD_INSTALL_DAILY_WORK:-1}" == "1" ]]; then
   DAILY_WORK_INSTALL_DIR="$SCRIPTS_DIR" "$SRC_DIR/install_daily_work_collector.sh" --machine mac-mini --github --summaries
+fi
+
+# Monday digest of last week's work in Telegram (Mark 2026-10-22). Sends only once Mark has saved
+# ~/.agent-bridge/telegram_digest.json; until then it writes the text to ~/.agent-bridge/weekly-digest/.
+DIGEST_LABEL="com.pirajoke.weekly-digest"
+DIGEST_PLIST="$HOME/Library/LaunchAgents/$DIGEST_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_WEEKLY_DIGEST:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$DIGEST_LABEL"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$DIGEST_LABEL.plist.template" > "$DIGEST_PLIST.tmp"
+  plutil -lint "$DIGEST_PLIST.tmp" >/dev/null
+  install_launchd_agent "$DIGEST_PLIST.tmp" "$DIGEST_PLIST" "$DIGEST_LABEL"
 fi
 
 # Record what is deployed now, before the agent starts (RunAtLoad), so the auto-deploy agent compares main against it.
