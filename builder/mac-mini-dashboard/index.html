@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Command Center</title>
+<!-- Mark 2026-10-22: an icon on the phone home screen that opens the site full screen, like an app.
+     use-credentials: the site sits behind Cloudflare Access, so the manifest needs the login cookie. -->
+<link rel="manifest" href="/dashboard-assets/manifest.json" crossorigin="use-credentials">
+<link rel="icon" type="image/png" sizes="32x32" href="/dashboard-assets/favicon-32.png">
+<link rel="apple-touch-icon" href="/dashboard-assets/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Command">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f8f3ea">
 <script>
 // One light or dark choice for the whole Command Center, per browser, set before the first paint.
 // Light unless this browser picked dark (Mark 2026-10-14: light by default, whatever the system says).
@@ -3353,6 +3363,16 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .cc-side-button svg { width: 18px; height: 18px; flex: none; }
 .cc-side .tab-name-customizer { margin: 0; }
 .cc-side .footer { justify-content: flex-start; gap: 8px; margin: 4px 0 0; padding: 6px 12px; color: var(--mm-muted); font-size: 12px; }
+/* Mark 2026-10-22: show when the site last changed, and offer a refresh when a newer version is live,
+   so an old open tab is not mistaken for a change that "did not work". */
+.site-version { margin: 0; padding: 0 12px 4px; color: var(--mm-muted); font-size: 12px; }
+.site-version:empty { display: none; }
+.site-update { position: fixed; left: 50%; bottom: 20px; z-index: 1000; display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 32px); padding: 10px 10px 10px 16px; color: var(--mm-ink); font-size: 14px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow); transform: translateX(-50%); }
+.site-update[hidden] { display: none; }
+.site-update button { min-height: 36px; padding: 6px 14px; font: inherit; font-weight: 650; border-radius: 10px; cursor: pointer; }
+.site-update .site-update-go { color: #fff; background: var(--mm-accent); border: 0; }
+.site-update .site-update-later { color: var(--mm-muted); background: none; border: 0; }
+@media (max-width: 760px) { .site-update { bottom: calc(var(--cc-tabbar) + env(safe-area-inset-bottom) + 10px); width: calc(100vw - 32px); } .site-update span { flex: 1; } }
 .cc-main { min-width: 0; padding: 32px 40px 56px; }
 .cc-main > .section { max-width: 1280px; margin: 0 auto; }
 .cc-main > #section-agents { max-width: 1440px; }
@@ -4153,6 +4173,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <span>На связи</span>
       <span id="last-update">—</span>
     </div>
+    <p class="site-version" id="site-version"></p>
   </div>
   </aside>
   <!-- Mark 2026-10-20: tab names open as their own window and close after Сохранить / Отмена / × / Esc / a click outside. -->
@@ -4171,6 +4192,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </form>
   </dialog>
+
+  <div class="site-update" id="site-update" role="status" aria-live="polite" hidden>
+    <span>Вышла новая версия сайта</span>
+    <button type="button" class="site-update-go" id="site-update-go">Обновить</button>
+    <button type="button" class="site-update-later" id="site-update-later" aria-label="Позже">Позже</button>
+  </div>
 
   <main class="cc-main">
   <section id="section-context" class="section" aria-labelledby="context-title">
@@ -9097,6 +9124,53 @@ function restoreLayout(grid) {
     if (widgets[name]) grid.appendChild(widgets[name]);
   });
 }
+
+// ─── Site version: «Сайт обновлён …» and «Вышла новая версия» (Mark 2026-10-22) ───
+// The tab remembers the version it opened with. When the Mac mini deploys a newer one, it offers a refresh
+// instead of silently showing old code. Checked every few minutes and whenever the tab comes back into view.
+const SITE_VERSION_API = DASHBOARD_API ? `${DASHBOARD_API}/api/site-version` : null;
+let siteVersionLoaded = null;
+let siteVersionLatest = null;
+let siteVersionDismissed = null;
+function formatSiteVersionTime(stamp) {
+  const date = new Date(stamp);
+  if (Number.isNaN(date.getTime())) return '';
+  const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) return `сегодня в ${time}`;
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return `вчера в ${time}`;
+  return `${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} в ${time}`;
+}
+async function checkSiteVersion() {
+  if (!SITE_VERSION_API) return;
+  let data;
+  try {
+    const response = await fetch(SITE_VERSION_API, { cache: 'no-store' });
+    if (!response.ok) return;
+    data = await response.json();
+  } catch (error) { return; }
+  if (!data || data.state !== 'ready' || typeof data.version !== 'string') return;
+  siteVersionLatest = data.version;
+  if (siteVersionLoaded === null) {
+    siteVersionLoaded = data.version;
+    const when = formatSiteVersionTime(data.deployed_at);
+    document.getElementById('site-version').textContent = when ? `Сайт обновлён ${when}` : '';
+    return;
+  }
+  if (data.version !== siteVersionLoaded && data.version !== siteVersionDismissed) {
+    document.getElementById('site-update').hidden = false;
+  }
+}
+document.getElementById('site-update-go').addEventListener('click', () => window.location.reload());
+document.getElementById('site-update-later').addEventListener('click', () => {
+  document.getElementById('site-update').hidden = true;
+  siteVersionDismissed = siteVersionLatest;
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkSiteVersion(); });
+window.addEventListener('focus', checkSiteVersion);
+setInterval(checkSiteVersion, 3 * 60 * 1000);
+checkSiteVersion();
 
 // ─── Init ───
 function refreshAll() {
