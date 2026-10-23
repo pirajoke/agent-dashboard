@@ -17,10 +17,10 @@
 <script>
 // One light or dark choice for the whole Command Center, per browser, set before the first paint.
 // Light unless this browser picked dark (Mark 2026-10-14: light by default, whatever the system says).
-// A new key, so an older dark pick from before that decision does not stick.
+// A new key, so an older dark pick does not stick (v3: Mark 2026-10-23 asked again for light by default).
 document.documentElement.dataset.theme = 'light';
 try {
-  if (localStorage.getItem('command-center.theme.v2') === 'dark') document.documentElement.dataset.theme = 'dark';
+  if (localStorage.getItem('command-center.theme.v3') === 'dark') document.documentElement.dataset.theme = 'dark';
 } catch (error) { /* stays light */ }
 </script>
 <style>
@@ -3104,7 +3104,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 
 .mm-nav { margin: 0 0 18px; }
 .mm-notice { margin: 0 0 20px; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
-.mm-notice.live { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
+/* Mark 2026-10-23: one style on every tab. Fresh data is a quiet grey line, not a coloured banner. */
+.mm-notice.live { padding: 0; color: var(--mm-muted); background: none; border-color: transparent; font-size: 12.5px; }
 .mm-notice.stale, .mm-notice.empty, .mm-notice.error { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
 .mm-main { padding: 0; }
 .mm-sources { margin-top: 28px; color: var(--mm-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
@@ -3199,10 +3200,11 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-row-action.is-closed > span { color: var(--mm-danger); }
 .mm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: var(--mm-muted); border: 1px solid var(--mm-line); border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 
-.mm-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-.mm-filter-tabs button { min-height: 44px; padding: 8px 14px; color: var(--mm-muted); border: 1px solid var(--mm-control-line) !important; border-radius: 999px; font-size: 14px; }
-.mm-filter-tabs button:hover { color: var(--mm-accent); background: var(--mm-selection); }
-.mm-filter-tabs button[aria-pressed="true"] { color: var(--mm-background); background: var(--mm-ink); border-color: var(--mm-ink) !important; }
+/* Filters look like every other switch on the site: one light segmented control. */
+.mm-filter-tabs { display: inline-flex; flex-wrap: wrap; gap: 2px; margin-bottom: 20px; padding: 3px; background: var(--mm-surface-hover); border-radius: 10px; }
+.mm-filter-tabs button { min-height: 34px; padding: 4px 12px; color: var(--mm-muted); border: 0 !important; border-radius: 8px; font-size: 13.5px; font-weight: 600; }
+.mm-filter-tabs button:hover { color: var(--mm-ink); }
+.mm-filter-tabs button[aria-pressed="true"] { color: var(--mm-ink); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
 .mm-filter-tabs button span { margin-left: 6px; font-variant-numeric: tabular-nums; }
 
 
@@ -3461,7 +3463,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
 .mm-chip.is-accent { color: var(--mm-accent); background: var(--mm-selection); border-color: transparent; }
 /* Board 2026-10-21: main projects as compact cards, the Claude Code / Codex split, other folders folded. */
-.mm-map-agents { margin-bottom: 18px; }
+.mm-map-agents { margin-bottom: 14px; }
 .mm-map-agents .mm-dot { display: inline-block; margin-right: 6px; }
 .mm-agent-bar { display: flex; gap: 2px; height: 6px; overflow: hidden; border-radius: 999px; }
 .mm-agent-bar i { display: block; min-width: 0; height: 100%; }
@@ -3680,8 +3682,9 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 }
 
 /* «Точки роста»: what Mark wants to learn, read from his Obsidian note. */
-.growth-summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.growth-summary .mm-stat { flex: 1 1 160px; }
+.growth-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.growth-summary .mm-stat { flex: 1 1 160px; padding: 10px 12px; background: var(--mm-background); border: 0; border-radius: 10px; }
+.growth-summary .mm-stat strong { font-size: 22px; }
 .growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .growth-card { --growth-tint: var(--mm-selection); display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .growth-card[data-picture="pe"] { --growth-tint: #FEF3C7; }
@@ -3952,7 +3955,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:20px 0; }
 .context-controls label { display:flex; flex-direction:column; gap:6px; color:var(--mm-muted); font-size:13px; }
 .context-controls label:first-child { flex:1 1 220px; }
-.context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:9px; padding:10px 12px; min-height:44px; }
+.context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; font-size:14px; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:10px; padding:8px 12px; min-height:40px; }
+.context-controls button { color:var(--mm-accent); font-weight:650; cursor:pointer; }
 .context-controls :focus-visible,.context-row:focus-visible,.context-reader a:focus-visible,.context-reader button:focus-visible,.context-reader summary:focus-visible { outline:3px solid var(--mm-info); outline-offset:3px; }
 .context-status,.context-sources { color:var(--mm-muted); font-size:14px; margin:10px 0; overflow-wrap:anywhere; }
 .context-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; }
@@ -3993,7 +3997,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 /* DOCXX: a readable route, with motion tied only to the processor lock. */
 #section-documents { max-width:1480px; }
 .docxx-head { align-items:center; gap:20px; }
-.docxx-button { font:inherit; font-size:13px; padding:10px 14px; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:8px; cursor:pointer; }
+.docxx-button { font:inherit; font-size:13px; font-weight:650; min-height:36px; padding:6px 14px; color:var(--mm-accent); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:10px; cursor:pointer; }
 .docxx-button:hover { background:var(--mm-selection); }
 .docxx-button:disabled { opacity:.6; cursor:wait; }
 #section-documents :is(button,a,input):focus-visible { outline:3px solid var(--mm-accent); outline-offset:4px; }
@@ -4364,6 +4368,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <path d="M60 86V46" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
     <path d="M60 58c0-16 12-26 30-26 0 16-12 26-30 26zM60 70c0-12-9-20-24-20 0 12 9 20 24 20z" fill="#86EFAC" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
   </symbol>
+  <symbol id="cc-icon-docs" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="cc-icon-context" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
@@ -4387,8 +4393,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true">▤</span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true">🎙️</span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
   <div class="cc-side-foot">
@@ -4431,7 +4437,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <main class="cc-main">
   <section id="section-documents" class="section" aria-labelledby="docxx-title">
     <header class="cc-page-head docxx-head">
-      <div><h2 class="cc-page-title" id="docxx-title">Документы без суеты</h2><p class="cc-page-lede">Разные источники. Одна понятная библиотека.</p></div>
+      <div><h2 class="cc-page-title" id="docxx-title">Документы</h2><p class="cc-page-lede">Что Mac mini разобрал и куда положил.</p></div>
       <button type="button" class="docxx-button" id="docxx-help-toggle" aria-expanded="false" aria-controls="docxx-help">Как добавить документ ↗</button>
     </header>
     <div class="docxx-statusbar" role="status" aria-live="polite">
@@ -4446,8 +4452,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <button type="button" class="docxx-node" data-docxx-step="icloud" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">☁</span><span><strong>С iPhone</strong><small>iCloud Drive → DOCXX Inbox</small></span><span aria-hidden="true">↗</span></button>
         <button type="button" class="docxx-node" data-docxx-step="drive" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">▱</span><span><strong>С компьютера</strong><small>Файл или папка → DOCXXx</small></span><span aria-hidden="true">↗</span></button>
         <button type="button" class="docxx-node" data-docxx-step="gmail" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✉</span><span><strong>Из Gmail</strong><small id="docxx-gmail-state">Импорт через чат · фоновая проверка не подтверждена</small></span><span aria-hidden="true">↗</span></button>
-        <p class="docxx-caption" id="docxx-gmail-freshness">Для импорта укажи письмо или отправителя в чате.</p>
-        <p class="docxx-caption">ChatGPT и «Мой диск» тоже поддерживаются как дополнительные входы.</p>
+        <p class="docxx-caption" id="docxx-gmail-freshness" hidden></p>
       </div>
       <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
       <div class="docxx-column docxx-processor">
@@ -4456,15 +4461,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           <svg viewBox="0 0 160 100" aria-hidden="true"><path d="M25 65L62 43L137 60L100 84Z" fill="var(--mm-selection)" stroke="currentColor" stroke-width="2"/><path d="M25 65V78L100 95L137 72V60M100 84V95" fill="none" stroke="currentColor" stroke-width="2"/><path d="M64 28V5H96L111 20V45H64V28Z" fill="var(--mm-surface)" stroke="currentColor" stroke-width="2"/><path d="M96 5V20H111M75 27H99M75 35H91" fill="none" stroke="currentColor" stroke-width="2"/><circle class="docxx-machine-led" cx="113" cy="79" r="2" fill="currentColor"/></svg>
           <strong>Mac mini</strong><span id="docxx-machine-label">Статус ещё не получен</span>
         </button>
-        <ol class="docxx-steps"><li>Читает содержимое</li><li>Сверяет с каталогом</li><li>Уточняет имя и папку</li><li>Проверяет результат в облаке</li></ol>
-        <p class="docxx-caption">Проверка каждые 5 минут.<br>Синхронизация может занять дольше.</p>
+
       </div>
       <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
       <div class="docxx-column">
         <h3>Ты находишь</h3>
         <button type="button" class="docxx-node" data-docxx-step="library" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✓</span><span><strong>На своём месте</strong><small>Название по содержимому</small></span><span aria-hidden="true">↗</span></button>
         <button type="button" class="docxx-node" data-docxx-step="review" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">?</span><span><strong>На разборе</strong><small>Если назначение неясно</small></span><span aria-hidden="true">↗</span></button>
-        <p class="docxx-caption">Точное совпадение сверяется с оригиналом. Неясный файл остаётся доступным.</p>
       </div>
     </div>
     <div class="docxx-explainer" id="docxx-explainer"><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
@@ -4478,12 +4481,11 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="docxx-results-head"><div><h3>Что произошло с документами</h3><p id="docxx-results-note">Последний проход и ограниченная история обработчика.</p></div><label class="docxx-search">Поиск по показанным операциям<input id="docxx-search" type="search" placeholder="Название или папка" autocomplete="off" maxlength="200"></label></div>
     <div class="docxx-filters" role="group" aria-label="Показать операции"><button type="button" data-docxx-filter="all" aria-pressed="true">Все</button><button type="button" data-docxx-filter="attention" aria-pressed="false">Нужно внимание</button><button type="button" data-docxx-filter="complete" aria-pressed="false">Обработанные</button></div>
     <div id="docxx-records" class="docxx-records"><p class="docxx-empty">Проверяем доступ к журналу обработки…</p></div>
-    <p class="docxx-footnote">Журнал обработки — не список всех файлов на Диске. Содержимое документов здесь не публикуется. Анимация включается только при занятом обработчике; подробные шаги показаны как инструкция.</p>
   </section>
 
   <section id="section-context" class="section" aria-labelledby="context-title">
     <header class="cc-page-head"><div><h2 class="cc-page-title" id="context-title">Встречи и контекст</h2>
-    <p class="cc-page-lede">Транскрипты и последние обновления проектов. Основная версия хранится в Obsidian.</p></div></header>
+    <p class="cc-page-lede">Транскрипты встреч и обновления проектов.</p></div></header>
     <form class="context-controls" id="context-filters" role="search">
       <label>Найти в записях<input id="context-search" type="search" maxlength="1000" placeholder="Тема, решение или проект" autocomplete="off"></label>
       <label>Источник<select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
@@ -4511,7 +4513,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head platforms-header">
       <div>
         <h2 class="cc-page-title platforms-title" id="platforms-title">Платформы</h2>
-        <p class="cc-page-lede">Все продукты, админки и Telegram-боты в одном месте. Всё работает на Mac mini, закрытые ссылки открываются через SSH-туннель по Tailscale.</p>
+        <p class="cc-page-lede">Все продукты, админки и боты в одном месте.</p>
       </div>
     </header>
     <ul class="platforms-legend" aria-label="Как открывается каждая ссылка">
@@ -4520,8 +4522,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Закрыто · SSH</strong><small>сначала SSH-туннель</small></li>
     </ul>
 
-    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её.</p>
-    <div class="platform-directory">
+    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div class="platform-directory" title="Удерживайте карточку и перетащите, чтобы поменять порядок">
       <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
@@ -4883,7 +4885,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="growth-title">Мои точки роста</h2>
-        <p class="cc-page-lede">Что хочу изучить и развить, но не успеваю. Отмечайте шаги прямо здесь или в Obsidian, в заметке «ТОЧКИ-РОСТА»: это один и тот же список.</p>
+        <p class="cc-page-lede">Что хочу изучить и развить. Тот же список, что в Obsidian.</p>
       </div>
       <button class="platform-archive-open" id="growth-new-area" type="button" aria-haspopup="dialog" aria-controls="growth-edit-dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg><span>Новая точка роста</span></button>
     </header>
@@ -6594,7 +6596,7 @@ document.addEventListener('visibilitychange', () => {
 
 // Light or dark for the whole Command Center (Mark 2026-10-14: one design everywhere). The choice is per
 // browser and set before the first paint in <head>; without one the page is light (Mark 2026-10-14).
-const CC_THEME_KEY = 'command-center.theme.v2';
+const CC_THEME_KEY = 'command-center.theme.v3';
 
 function ccIsDark() {
   const theme = document.documentElement.dataset.theme;
@@ -10699,12 +10701,13 @@ function mmRenderToday(day, prsToMerge) {
   const line = document.getElementById('mm-today');
   if (!line) return;
   if (!day) {
+    line.hidden = false;
     line.textContent = 'Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.';
     return;
   }
-  const parts = [day.total_minutes ? `Сегодня ${workMinutes(day.total_minutes)} работы` : 'Сегодня работы ещё не было'];
-  if (prsToMerge) parts.push(`PR ждут слияния: ${prsToMerge}`);
-  line.textContent = parts.join(' · ');
+  // Today's hours are in «Сводка» right below; the title line keeps only what waits for a merge.
+  line.hidden = !prsToMerge;
+  line.textContent = prsToMerge ? `Ждут слияния: ${prsToMerge} PR` : '';
 }
 
 // «Личное» (Mark 2026-10-20): owner-only project cards from the private portfolio registry, a short
