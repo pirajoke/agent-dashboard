@@ -1285,6 +1285,7 @@
             const room = ROOMS[zone.dataset.departmentId];
             if (!room) return;
             const label = addLabel('department', new THREE.Vector3(room.x - room.w / 2 + 0.9, room.top ? 3.8 : 3.6, room.farZ));
+            label.roomId = room.id;
             const boundary = zone.querySelector('.campus-owner-boundary');
             setLabelText(label, zone.querySelector('h3')?.textContent || room.id, boundary ? boundary.textContent.trim() : '');
             if (boundary) label.el.classList.add('has-boundary');
@@ -1295,6 +1296,79 @@
         });
         folderViews.forEach((view) => {
             view.label = addLabel('project', view.labelAnchor, view.el);
+            // Mark 2026-10-23: «не хочу все эти папки видеть» — project signs stay off the scene;
+            // a department name opens who is there and what each project is doing.
+            view.label.visible = false;
+        });
+
+        // ── Department card: opened from a department name ──
+        const deptCard = document.createElement('section');
+        deptCard.className = 'campus-3d-dept';
+        deptCard.hidden = true;
+        deptCard.setAttribute('aria-live', 'polite');
+        stage.append(deptCard);
+        let deptOpen = null;
+        function renderDeptCard() {
+            if (!deptOpen) { deptCard.hidden = true; return; }
+            const room = ROOMS[deptOpen.id];
+            const head = document.createElement('header');
+            const title = document.createElement('h3');
+            title.textContent = deptOpen.title;
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.textContent = '×';
+            close.setAttribute('aria-label', 'Закрыть');
+            close.addEventListener('click', () => { deptOpen = null; renderDeptCard(); });
+            head.append(title, close);
+            const people = document.createElement('ul');
+            actors.filter((actor) => actor.homeRoom === room.id || actor.room === room.id).forEach((actor) => {
+                const li = document.createElement('li');
+                const name = document.createElement('strong');
+                name.textContent = actor.name;
+                const state = document.createElement('small');
+                state.textContent = actor.label?.el.querySelector('small')?.textContent?.replace(/^·\s*/, '') || 'ожидает задач';
+                li.append(name, state);
+                people.append(li);
+            });
+            const projects = document.createElement('ul');
+            folderViews.filter((view) => view.room.id === room.id && view.el).forEach((view) => {
+                const li = document.createElement('li');
+                const status = view.el.dataset.campusProjectStatus || 'idle';
+                li.className = status === 'idle' ? '' : 'is-live';
+                const name = document.createElement('button');
+                name.type = 'button';
+                name.textContent = view.el.dataset.campusProjectLabel || '';
+                name.addEventListener('click', () => view.el.click());
+                const state = document.createElement('small');
+                state.textContent = view.el.querySelector('[data-campus-project-folder-status]')?.textContent || '';
+                li.append(name, state);
+                projects.append(li);
+            });
+            const parts = [head];
+            if (people.childElementCount) {
+                const h = document.createElement('h4'); h.textContent = 'Кто здесь';
+                parts.push(h, people);
+            }
+            if (projects.childElementCount) {
+                const h = document.createElement('h4'); h.textContent = 'Проекты';
+                parts.push(h, projects);
+            }
+            deptCard.replaceChildren(...parts);
+            deptCard.hidden = false;
+        }
+        labels.filter((label) => label.el.classList.contains('is-department')).forEach((label) => {
+            label.el.dataset.clickable = 'true';
+            label.el.setAttribute('role', 'button');
+            label.el.tabIndex = 0;
+            const open = () => {
+                const id = label.roomId;
+                deptOpen = deptOpen?.id === id ? null : {id, title: label.el.querySelector('strong')?.textContent || id};
+                renderDeptCard();
+            };
+            label.el.addEventListener('click', open);
+            label.el.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); }
+            });
         });
 
         // ── Characters ──
@@ -1571,6 +1645,7 @@
         function sync() {
             const state = campus.dataset.campusState || 'loading';
             if (state === 'loading') return;
+            if (typeof renderDeptCard === 'function' && deptOpen) setTimeout(renderDeptCard, 0);
             stage.setAttribute('data-campus-3d-live', state);
 
             folderViews.forEach((view) => {

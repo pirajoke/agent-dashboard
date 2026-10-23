@@ -5660,6 +5660,20 @@ html, body { background: #fffcf6; color: #24292b; }
 .campus-agent { background: #fffcf6; color: #24292b; }
 .campus-task-lane, .campus-details, .campus-3d-label { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 
+.campus-3d-label.is-department { cursor: pointer; pointer-events: auto; }
+.campus-3d-label.is-department:hover, .campus-3d-label.is-department:focus-visible { border-color: #0a7f93; outline: none; }
+.campus-3d-dept { position: absolute; z-index: 200000; top: 14px; right: 14px; width: min(320px, calc(100% - 28px)); max-height: calc(100% - 28px); overflow: auto; padding: 14px 16px 16px; color: #24292b; background: rgba(255, 252, 246, 0.97); border: 1px solid #e6dccc; border-radius: 16px; box-shadow: 0 10px 30px rgba(60, 45, 20, 0.16); font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.campus-3d-dept[hidden] { display: none; }
+.campus-3d-dept header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.campus-3d-dept h3 { margin: 0; font-size: 16px; }
+.campus-3d-dept header button { width: 32px; height: 32px; color: #6c6a63; font-size: 20px; background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.campus-3d-dept h4 { margin: 14px 0 6px; color: #6c6a63; font-size: 12px; font-weight: 650; }
+.campus-3d-dept ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.campus-3d-dept li { display: grid; gap: 1px; padding: 8px 10px; background: #f8f3ea; border-radius: 10px; }
+.campus-3d-dept li.is-live { background: #fff4df; }
+.campus-3d-dept strong, .campus-3d-dept li button { padding: 0; color: #24292b; font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: none; border: 0; cursor: pointer; }
+.campus-3d-dept small { color: #6c6a63; font-size: 12px; }
+
 /* ── Agent Theater v2: AI Town-inspired town map ── */
 .theater-layout {
     grid-template-columns: minmax(0, 1.7fr) minmax(330px, 0.58fr);

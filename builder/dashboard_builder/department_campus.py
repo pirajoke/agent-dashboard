@@ -783,7 +783,7 @@ def build_department_campus_html() -> str:
     <div class="campus-stage-3d" data-campus-3d data-campus-3d-state="off" hidden aria-hidden="true">
         <div class="campus-3d-labels" data-campus-3d-labels></div>
         <div class="campus-3d-focus" data-campus-3d-focus hidden></div>
-        <p class="campus-3d-hint">Перетащите, чтобы повернуть · папка или сотрудник открывают сведения</p>
+        <p class="campus-3d-hint">Потяни, чтобы повернуть · нажми на отдел — кто чем занят</p>
     </div>
     <div class="campus-map" aria-label="Семь отделов Pixel Verse">
         <div class="campus-boulevard" aria-hidden="true"></div>

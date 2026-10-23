@@ -11933,8 +11933,8 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
     const HOME = { azimuth: -0.3, elevation: 0.6, distance: 17.5 };
     const view = { ...HOME };
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xd9ccb6, 1.6));
-    const sun = new THREE.DirectionalLight(0xfff1dc, 2.2);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xd9ccb6, 0.9));
+    const sun = new THREE.DirectionalLight(0xfff1dc, 1.9);
     sun.position.set(-6, 12, 8);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -11942,7 +11942,7 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
     sun.shadow.radius = 4;
     scene.add(sun);
 
-    const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, ...extra });
+    const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, envMapIntensity: 0.25, ...extra });
     function slab(w, d, h, r, material) {
       const shape = new THREE.Shape();
       const x = -w / 2, y = -d / 2;
@@ -11969,51 +11969,137 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
 
     const anchors = {};
     const bobbers = [];
-    // iPhone
+    // A soft studio environment so metal and glass have something to reflect.
+    const envScene = new THREE.Scene();
+    const envSky = new THREE.Mesh(new THREE.SphereGeometry(20, 32, 16), new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      vertexShader: 'varying vec3 vPos; void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: 'varying vec3 vPos; void main() { float h = normalize(vPos).y; vec3 top = vec3(1.0, 0.99, 0.97); vec3 bottom = vec3(0.78, 0.72, 0.64); gl_FragColor = vec4(mix(bottom, top, smoothstep(-0.4, 0.7, h)), 1.0); }',
+    }));
+    envScene.add(envSky);
+    [[0, 12, 0, 14], [10, 5, 6, 6], [-10, 4, -4, 5]].forEach(([x, y, z, size]) => {
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+      panel.position.set(x, y, z); panel.lookAt(0, 0, 0); envScene.add(panel);
+    });
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+    const aluminium = mat(0xcfd4da, { metalness: 0.85, roughness: 0.32, envMapIntensity: 0.9 });
+    const darkGlass = mat(0x0d0f12, { metalness: 0.2, roughness: 0.08, envMapIntensity: 1.4 });
+    const canvasTexture = (width, height, draw) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      draw(canvas.getContext('2d'), width, height);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = 4;
+      return texture;
+    };
+    const roundRect = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); };
+    const screenMaterial = texture => new THREE.MeshStandardMaterial({ map: texture, emissiveMap: texture, emissive: 0xffffff, emissiveIntensity: 0.55, roughness: 0.25, metalness: 0 });
+
+    // iPhone: titanium frame, black glass, the island, and a Files screen with a document on its way.
     const phone = new THREE.Group();
-    const phoneBody = slab(0.78, 1.56, 0.1, 0.16, mat(0x3a4552, { metalness: 0.1, roughness: 0.4 }));
-    phoneBody.rotation.x = Math.PI / 2; phoneBody.position.set(0, 0.78, -0.05); phone.add(phoneBody);
-    const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 1.4), mat(0x8fd3df, { emissive: 0x3a9fb0, emissiveIntensity: 0.55, roughness: 0.2 }));
-    phoneScreen.position.set(0, 0.78, 0.051); phone.add(phoneScreen);
-    const phoneCard = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.5), mat(0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.25 }));
-    phoneCard.position.set(0, 0.86, 0.053); phone.add(phoneCard);
-    phone.position.set(-5.6, 0.35, -2.4); phone.rotation.y = 0.5; scene.add(phone);
-    pad(-5.6, -2.4, 0.9, 0xe6f0fb);
-    bobbers.push([phone, 0.35, 0]);
-    anchors.icloud = new THREE.Vector3(-5.6, 2.7, -2.4);
-    // Laptop
+    const phoneBody = slab(0.8, 1.64, 0.09, 0.15, mat(0x8a8f96, { metalness: 0.85, roughness: 0.35, envMapIntensity: 0.9 }));
+    phoneBody.rotation.x = Math.PI / 2; phoneBody.position.set(0, 0.82, -0.045); phone.add(phoneBody);
+    const phoneGlass = slab(0.76, 1.6, 0.012, 0.13, darkGlass);
+    phoneGlass.rotation.x = Math.PI / 2; phoneGlass.position.set(0, 0.82, 0.047); phone.add(phoneGlass);
+    const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.52), screenMaterial(canvasTexture(256, 556, (ctx, w, h) => {
+      ctx.fillStyle = '#f5f7fa'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#111'; roundRect(ctx, w / 2 - 38, 12, 76, 22, 11);
+      ctx.fillStyle = '#1d1d1f'; ctx.font = '600 22px -apple-system, Inter, sans-serif'; ctx.fillText('Файлы', 18, 72);
+      ctx.fillStyle = '#8a8f96'; ctx.font = '13px -apple-system, Inter, sans-serif'; ctx.fillText('iCloud Drive › DOCXX Inbox', 18, 96);
+      [0, 1, 2].forEach(index => {
+        const y = 118 + index * 92;
+        ctx.fillStyle = '#ffffff'; roundRect(ctx, 14, y, w - 28, 80, 14);
+        ctx.fillStyle = index === 0 ? '#2f7fd1' : '#c9d6e4'; roundRect(ctx, 26, y + 14, 40, 52, 6);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(33, y + 26, 26, 3); ctx.fillRect(33, y + 34, 26, 3); ctx.fillRect(33, y + 42, 18, 3);
+        ctx.fillStyle = '#1d1d1f'; ctx.font = '600 14px -apple-system, Inter, sans-serif'; ctx.fillText(['Счёт.pdf', 'Договор.pdf', 'Паспорт.jpg'][index], 78, y + 36);
+        ctx.fillStyle = '#8a8f96'; ctx.font = '12px -apple-system, Inter, sans-serif'; ctx.fillText(index === 0 ? 'загружается…' : 'вчера', 78, y + 56);
+      });
+      ctx.fillStyle = '#2f7fd1'; roundRect(ctx, 26, 404, w - 52, 6, 3);
+      ctx.fillStyle = '#d6dde6'; roundRect(ctx, 26, 404, (w - 52) * 0.4, 6, 3);
+      ctx.fillStyle = '#1d1d1f'; roundRect(ctx, w / 2 - 50, h - 18, 100, 5, 3);
+    })));
+    phoneScreen.position.set(0, 0.82, 0.064); phone.add(phoneScreen);
+    [[0.405, 1.12, 0.22], [-0.405, 1.2, 0.12], [-0.405, 1.02, 0.16]].forEach(([x, y, length]) => {
+      const button = new THREE.Mesh(new THREE.CapsuleGeometry(0.012, length, 4, 8), mat(0x8a8f96, { metalness: 0.85, roughness: 0.35, envMapIntensity: 0.9 }));
+      button.position.set(x, y, 0); phone.add(button);
+    });
+    phone.position.set(-5.8, 0.32, -3.1); phone.rotation.y = 0.5; scene.add(phone);
+    pad(-5.8, -3.1, 0.85, 0xc9dcf2);
+    bobbers.push([phone, 0.32, 0]);
+    anchors.icloud = new THREE.Vector3(-5.8, 2.75, -3.1);
+
+    // Laptop: aluminium body, keyboard, trackpad, black bezel with a Drive window on screen.
     const laptop = new THREE.Group();
-    laptop.add(slab(1.9, 1.3, 0.08, 0.1, mat(0xe3e7ec, { metalness: 0.1, roughness: 0.4 })));
-    const lid = new THREE.Group(); lid.position.set(0, 0.08, -0.62); lid.rotation.x = -0.28; laptop.add(lid);
-    const lidBody = slab(1.9, 1.2, 0.05, 0.1, mat(0xe3e7ec, { metalness: 0.1, roughness: 0.4 }));
-    lidBody.rotation.x = Math.PI / 2; lidBody.position.set(0, 0.6, 0); lid.add(lidBody);
-    const lidScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.02), mat(0xb8a6ef, { emissive: 0x7a5bc7, emissiveIntensity: 0.45, roughness: 0.2 }));
-    lidScreen.position.set(0, 0.6, 0.058); lid.add(lidScreen);
-    laptop.position.set(-6.2, 0.08, 0.6); laptop.rotation.y = 0.45; scene.add(laptop);
-    pad(-6.2, 0.6, 1.25, 0xefeafb);
-    anchors.drive = new THREE.Vector3(-6.2, 2.2, 0.6);
-    // Gmail envelope
+    laptop.add(slab(2.2, 1.5, 0.07, 0.1, aluminium));
+    const keyboard = new THREE.Mesh(new THREE.PlaneGeometry(1.86, 0.62), new THREE.MeshStandardMaterial({ map: canvasTexture(512, 172, (ctx, w, h) => {
+      ctx.fillStyle = '#2a2c30'; ctx.fillRect(0, 0, w, h);
+      for (let row = 0; row < 5; row += 1) for (let col = 0; col < 14; col += 1) {
+        ctx.fillStyle = '#121316'; roundRect(ctx, 6 + col * 36, 6 + row * 33, 31, 27, 4);
+      }
+    }), roughness: 0.6 }));
+    keyboard.rotation.x = -Math.PI / 2; keyboard.position.set(0, 0.072, -0.3); laptop.add(keyboard);
+    const trackpad = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.42), mat(0xc7ccd2, { metalness: 0.6, roughness: 0.25 }));
+    trackpad.rotation.x = -Math.PI / 2; trackpad.position.set(0, 0.073, 0.38); laptop.add(trackpad);
+    const lid = new THREE.Group(); lid.position.set(0, 0.07, -0.73); lid.rotation.x = -0.22; laptop.add(lid);
+    const lidBody = slab(2.2, 1.42, 0.05, 0.1, aluminium);
+    lidBody.rotation.x = Math.PI / 2; lidBody.position.set(0, 0.71, -0.03); lid.add(lidBody);
+    const bezel = new THREE.Mesh(new THREE.PlaneGeometry(2.14, 1.36), darkGlass);
+    bezel.position.set(0, 0.71, 0.022); lid.add(bezel);
+    const lidScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.02, 1.24), screenMaterial(canvasTexture(512, 314, (ctx, w, h) => {
+      ctx.fillStyle = '#f7f8fa'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#eceef2'; ctx.fillRect(0, 0, w, 26);
+      ['#ff5f57', '#febc2e', '#28c840'].forEach((color, index) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(14 + index * 16, 13, 5, 0, Math.PI * 2); ctx.fill(); });
+      ctx.fillStyle = '#111'; roundRect(ctx, w / 2 - 30, 0, 60, 12, 5);
+      ctx.fillStyle = '#eef2f7'; ctx.fillRect(0, 26, 110, h - 26);
+      ctx.fillStyle = '#1d1d1f'; ctx.font = '600 15px -apple-system, Inter, sans-serif'; ctx.fillText('DOCXXx', 128, 54);
+      ['Работа', 'Дом', 'Документы', 'Учёба', 'Банк', 'Здоровье'].forEach((name, index) => {
+        const x = 128 + (index % 3) * 124, y = 72 + Math.floor(index / 3) * 98;
+        ctx.fillStyle = '#ffffff'; roundRect(ctx, x, y, 112, 84, 10);
+        ctx.fillStyle = '#7a5bc7'; roundRect(ctx, x + 12, y + 14, 34, 26, 5);
+        ctx.fillStyle = '#1d1d1f'; ctx.font = '13px -apple-system, Inter, sans-serif'; ctx.fillText(name, x + 12, y + 64);
+      });
+      ['Входящие', 'Недавние', 'Общие'].forEach((name, index) => { ctx.fillStyle = index === 0 ? '#7a5bc7' : '#6c6a63'; ctx.font = '12px -apple-system, Inter, sans-serif'; ctx.fillText(name, 14, 54 + index * 24); });
+    })));
+    lidScreen.position.set(0, 0.72, 0.024); lid.add(lidScreen);
+    laptop.position.set(-6.2, 0.08, 0.7); laptop.rotation.y = 0.45; scene.add(laptop);
+    pad(-6.2, 0.7, 1.4, 0xdcd3f2);
+    anchors.drive = new THREE.Vector3(-6.9, 2.1, 0.5);
+
+    // Gmail: a white envelope with a red flap and a letter peeking out.
     const mail = new THREE.Group();
-    const envelope = slab(1.4, 0.95, 0.08, 0.06, mat(0xffffff, { roughness: 0.7 }));
+    const envelope = slab(1.4, 0.95, 0.06, 0.06, mat(0xffffff, { roughness: 0.65 }));
     envelope.rotation.x = Math.PI / 2; envelope.position.set(0, 0.6, 0); mail.add(envelope);
-    const flapShape = new THREE.Shape(); flapShape.moveTo(-0.68, 0.46); flapShape.lineTo(0.68, 0.46); flapShape.lineTo(0, -0.05); flapShape.closePath();
-    const flap = new THREE.Mesh(new THREE.ShapeGeometry(flapShape), mat(0xd9574a, { roughness: 0.6, side: THREE.DoubleSide }));
-    flap.position.set(0, 0.6, 0.085); mail.add(flap);
-    mail.position.set(-5.2, 0.35, 3.3); mail.rotation.y = 0.35; scene.add(mail);
-    pad(-5.2, 3.3, 0.9, 0xfbebe7);
-    bobbers.push([mail, 0.35, 1.7]);
-    anchors.gmail = new THREE.Vector3(-5.2, 2.2, 3.3);
-    // Mac mini in the middle
+    const letter = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.01), mat(0xfdfbf6, { roughness: 0.8 }));
+    letter.position.set(0, 0.86, -0.01); mail.add(letter);
+    const flapShape = new THREE.Shape(); flapShape.moveTo(-0.7, 0.475); flapShape.lineTo(0.7, 0.475); flapShape.lineTo(0, -0.04); flapShape.closePath();
+    const flap = new THREE.Mesh(new THREE.ShapeGeometry(flapShape), mat(0xd9574a, { roughness: 0.5, side: THREE.DoubleSide }));
+    flap.position.set(0, 0.6, 0.065); mail.add(flap);
+    mail.position.set(-5.0, 0.32, 3.9); mail.rotation.y = 0.35; scene.add(mail);
+    pad(-5.0, 3.9, 0.85, 0xf3d2cb);
+    bobbers.push([mail, 0.32, 1.7]);
+    anchors.gmail = new THREE.Vector3(-5.0, 2.25, 3.9);
+
+    // Mac mini: brushed aluminium, rounded square, ports and a status light on the front, a dark foot.
     const mini = new THREE.Group();
-    mini.add(slab(2.6, 2.6, 0.62, 0.42, mat(0xeef1f4, { metalness: 0.12, roughness: 0.32 })));
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.025, 8, 48), mat(0xd3d9df, { metalness: 0.1, roughness: 0.35 }));
-    ring.rotation.x = Math.PI / 2; ring.position.y = 0.625; mini.add(ring);
-    const led = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 12), new THREE.MeshBasicMaterial({ color: 0x34c27a }));
-    led.position.set(0.95, 0.2, 1.31); mini.add(led);
-    const glow = new THREE.Mesh(new THREE.CircleGeometry(2.4, 48), new THREE.MeshBasicMaterial({ color: 0x0a7f93, transparent: true, opacity: 0.1 }));
+    const foot = slab(2.3, 2.3, 0.08, 0.5, mat(0x2a2c30, { roughness: 0.8 }));
+    mini.add(foot);
+    const shell = slab(2.7, 2.7, 0.66, 0.5, aluminium);
+    shell.position.y = 0.06; mini.add(shell);
+    const front = 1.352;
+    [[-0.62, 0.34], [-0.42, 0.34]].forEach(([x, y]) => {
+      const port = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.1, 4, 8), mat(0x1a1b1e, { roughness: 0.6 }));
+      port.rotation.z = Math.PI / 2; port.position.set(x, y, front); mini.add(port);
+    });
+    const jack = new THREE.Mesh(new THREE.CircleGeometry(0.03, 16), mat(0x1a1b1e)); jack.position.set(-0.22, 0.34, front + 0.001); mini.add(jack);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), new THREE.MeshBasicMaterial({ color: 0x34c27a }));
+    led.position.set(1.0, 0.34, front - 0.01); mini.add(led);
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(2.6, 64), new THREE.MeshBasicMaterial({ color: 0x0a7f93, transparent: true, opacity: 0.1 }));
     glow.rotation.x = -Math.PI / 2; glow.position.y = 0.012; mini.add(glow);
+    mini.rotation.y = -0.35;
     scene.add(mini);
-    anchors.processor = new THREE.Vector3(0, 2.1, 0);
+    anchors.processor = new THREE.Vector3(0, 2.15, 0);
     // Library: a folder with papers
     const library = new THREE.Group();
     const folderBack = slab(1.8, 1.25, 0.08, 0.08, mat(0xe8b45a, { roughness: 0.6 }));
@@ -12027,7 +12113,7 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
     const folderFront = slab(1.8, 0.95, 0.08, 0.08, mat(0xf2c46c, { roughness: 0.6 }));
     folderFront.rotation.x = Math.PI / 2 - 0.32; folderFront.position.set(0, 0.5, 0.12); library.add(folderFront);
     library.position.set(5.6, 0.05, -1.6); library.rotation.y = -0.45; scene.add(library);
-    pad(5.6, -1.6, 1.3, 0xe5f5ec);
+    pad(5.6, -1.6, 1.3, 0xc9e8d6);
     anchors.library = new THREE.Vector3(5.6, 2.2, -1.6);
     // Review tray
     const tray = new THREE.Group();
@@ -12037,7 +12123,7 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
     });
     const waiting = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.012, 0.75), mat(0xffffff)); waiting.position.set(0.05, 0.1, 0.02); waiting.rotation.y = 0.2; tray.add(waiting);
     tray.position.set(5.0, 0.06, 2.6); tray.rotation.y = -0.3; scene.add(tray);
-    pad(5.0, 2.6, 1.15, 0xfbf1df);
+    pad(5.0, 2.6, 1.15, 0xf2e0bd);
     anchors.review = new THREE.Vector3(5.0, 1.15, 2.6);
 
     // Routes: soft arcs, and papers that travel along them.
@@ -12048,9 +12134,9 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
       return new THREE.CatmullRomCurve3([from, mid, to]);
     };
     const routes = [
-      { curve: curve(new THREE.Vector3(-5.4, 1.2, -2.2), new THREE.Vector3(-1.2, 0.75, -0.4), 1.2), papers: 2, speed: 0.16, tone: 0x2f7fd1 },
+      { curve: curve(new THREE.Vector3(-5.6, 1.2, -2.9), new THREE.Vector3(-1.2, 0.75, -0.4), 1.2), papers: 2, speed: 0.16, tone: 0x2f7fd1 },
       { curve: curve(new THREE.Vector3(-5.8, 0.9, 0.6), new THREE.Vector3(-1.35, 0.75, 0.05), 1.0), papers: 2, speed: 0.14, tone: 0x7a5bc7 },
-      { curve: curve(new THREE.Vector3(-5.0, 1.2, 3.1), new THREE.Vector3(-1.1, 0.75, 0.6), 1.2), papers: 1, speed: 0.12, tone: 0xd9574a },
+      { curve: curve(new THREE.Vector3(-4.8, 1.2, 3.6), new THREE.Vector3(-1.1, 0.75, 0.6), 1.2), papers: 1, speed: 0.12, tone: 0xd9574a },
       { curve: curve(new THREE.Vector3(1.3, 0.75, -0.3), new THREE.Vector3(5.3, 1.0, -1.5), 1.4), papers: 3, speed: 0.15, tone: 0x2f9361 },
       { curve: curve(new THREE.Vector3(1.2, 0.75, 0.5), new THREE.Vector3(4.8, 0.5, 2.4), 1.0), papers: 1, speed: 0.08, tone: 0xe6a23c, review: true },
     ];
