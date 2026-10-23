@@ -28,6 +28,7 @@ from dashboard_builder.owner_decisions import (
 )
 from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
+from dashboard_builder.docxx_public_pages import PAGES as DOCXX_INFO_PAGES, CONTENT_SECURITY_POLICY as DOCXX_INFO_CSP
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
@@ -1666,6 +1667,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Location", "/?tab=agents&v=pixel-agents")
         self.end_headers()
 
+    def _serve_docxx_info_page(self, path: str, *, head: bool = False) -> bool:
+        """Serve fixed information only; never map this namespace to a filesystem."""
+        body = DOCXX_INFO_PAGES.get(path)
+        if body is None:
+            if path == '/jarvis-docxx' or path.startswith('/jarvis-docxx/'):
+                self.send_error(404)
+                return True
+            return False
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/html; charset=utf-8')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Cache-Control', 'public, max-age=300')
+        self.send_header('Content-Security-Policy', DOCXX_INFO_CSP)
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('Referrer-Policy', 'no-referrer')
+        self.end_headers()
+        if not head:
+            self.wfile.write(body)
+        return True
+
     def translate_path(self, path):
         clean_path = urlsplit(path).path
         if clean_path == '/agent-dashboard.html' or clean_path == '/legacy-dashboard.html':
@@ -2644,6 +2665,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if self._serve_docxx_info_page(parsed.path):
+            return
         if parsed.path == '/api/docxx':
             owner = self._decision_owner_authorized()
             self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner))
@@ -2867,6 +2890,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_HEAD(self):
         parsed = urlsplit(self.path)
+        if self._serve_docxx_info_page(parsed.path, head=True):
+            return
         if parsed.path in {"/agent-dashboard.html", "/legacy-dashboard.html"}:
             self._redirect_legacy_dashboard()
             return
