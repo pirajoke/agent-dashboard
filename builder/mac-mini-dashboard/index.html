@@ -10637,7 +10637,13 @@ function mmRenderOwnerProjects(payload) {
     : [];
   mmOwnerProjectCards = cards;
   host.hidden = !cards.length;
-  if (!cards.length) return;
+  if (!cards.length) {
+    // Losing access must also clear a card already open in its window.
+    const dialog = document.getElementById('owner-project-dialog');
+    document.getElementById('owner-project-body')?.replaceChildren();
+    if (dialog?.open) dialog.close();
+    return;
+  }
   // Mark 2026-10-23: one compact line per card on the page; the whole card opens in a window.
   const group = mmEl('section', 'mm-owner-group');
   group.setAttribute('aria-label', 'Личное');
@@ -10760,6 +10766,9 @@ function mmRenderOwnerTodo(payload) {
   host.replaceChildren();
   if (payload?.state !== 'ready' || !Array.isArray(payload.items)) {
     host.hidden = true;  // Not the owner, or the Mac mini cannot answer: nothing to show.
+    mmOwnerTodoItems = [];
+    document.getElementById('todo-done-list')?.replaceChildren();
+    mmCloseTodoDone();
     return;
   }
   if (payload.runner) mmOwnerTodoRunner = payload.runner;

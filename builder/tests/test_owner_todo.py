@@ -123,6 +123,12 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         self.assertIn("'↩ Вернуть'", PAGE)
         # The window lives outside the views, so it opens on every MAIN MANAGER tab.
         self.assertLess(PAGE.index('id="todo-done-dialog"'), PAGE.index('data-mm-panel="map"'))
+        # Losing owner access empties and closes the windows, not only the lists on the page.
+        render = PAGE[PAGE.index("function mmRenderOwnerTodo("):PAGE.index("function mmRenderTodoDone(")]
+        self.assertIn("mmCloseTodoDone();", render)
+        self.assertIn("getElementById('todo-done-list')?.replaceChildren()", render)
+        projects = PAGE[PAGE.index("function mmRenderOwnerProjects("):PAGE.index("let mmOwnerProjectCards")]
+        self.assertIn("getElementById('owner-project-body')?.replaceChildren()", projects)
 
     def test_services_turned_off_on_purpose_never_show_red(self):
         start = PAGE.index("const MM_HEALTH_TURNED_OFF")
