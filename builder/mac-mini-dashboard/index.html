@@ -4161,6 +4161,28 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-facts > span { padding: 6px 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; font-size: 12.5px; }
 @media (prefers-reduced-motion: reduce) { .docxx-flow[data-active="true"] .docxx-mini-docs { animation: none; } .docxx-node { transition: none; } }
 @media (max-width: 700px) { .docxx-connector { margin: 0; } .docxx-machine svg.docxx-mini { width: 170px; height: 144px; } }
+/* 3D route (Mark 2026-10-23). */
+.docxx-stage { position: relative; height: 460px; margin: 22px 0 6px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, #fffdf8 0%, #f3ece0 70%, #ece3d4 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
+.docxx-stage.is-dragging { cursor: grabbing; }
+.docxx-stage[hidden] { display: none; }
+.docxx-stage canvas { display: block; width: 100%; height: 100%; }
+.docxx-stage-labels { position: absolute; inset: 0; pointer-events: none; }
+.docxx-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: rgba(255, 252, 246, .94); border: 1px solid var(--mm-line); border-radius: 12px; box-shadow: 0 2px 8px rgba(60, 45, 20, .1); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
+.docxx-stage-label small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
+.docxx-stage-label:hover, .docxx-stage-label[aria-pressed="true"] { border-color: var(--mm-accent); }
+.docxx-stage-label:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.docxx-stage-label.is-hub { padding: 8px 14px; font-size: 14.5px; border-color: var(--mm-accent); }
+.docxx-stage-hint { position: absolute; left: 14px; bottom: 12px; margin: 0; padding: 5px 10px; color: var(--mm-muted); font-size: 12px; background: rgba(255, 252, 246, .85); border-radius: 999px; pointer-events: none; }
+.docxx-stage-reset { position: absolute; right: 12px; bottom: 10px; min-height: 32px; padding: 4px 12px; color: var(--mm-accent); font: inherit; font-size: 12.5px; font-weight: 650; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+#section-documents.has-3d .docxx-flow { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 14px; }
+#section-documents.has-3d .docxx-flow > .docxx-connector, #section-documents.has-3d .docxx-column h3, #section-documents.has-3d .docxx-machine { display: none; }
+#section-documents.has-3d .docxx-column { display: contents; }
+#section-documents.has-3d .docxx-node { width: auto; min-height: 0; margin: 0; padding: 6px 12px 6px 6px; gap: 8px; border-radius: 999px; box-shadow: none; }
+#section-documents.has-3d .docxx-node small, #section-documents.has-3d .docxx-node .docxx-go { display: none; }
+#section-documents.has-3d .docxx-node strong { margin: 0; font-size: 13px; }
+#section-documents.has-3d .docxx-symbol { width: 30px; height: 30px; border-radius: 50%; }
+#section-documents.has-3d .docxx-symbol svg { width: 17px; height: 17px; }
+@media (max-width: 700px) { .docxx-stage { height: 360px; border-radius: 16px; } .docxx-stage-hint { display: none; } .docxx-stage-label { font-size: 12px; padding: 5px 9px; } }
 @keyframes docxx-travel { from { transform:translateX(-16px); } to { transform:translateX(48px); } }
 @keyframes docxx-pulse { 50% { opacity:.25; } }
 @media(max-width:1000px) { .docxx-flow { gap:8px; grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); } .docxx-node { padding:12px 10px; gap:8px; } .docxx-symbol { min-width:18px; font-size:20px; } }
@@ -4540,6 +4562,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" id="docxx-refresh" class="docxx-button">Обновить</button>
     </div>
     <div id="docxx-warnings" class="docxx-warnings" hidden></div>
+    <!-- Mark 2026-10-23: the document route as a 3D scene to turn around; the buttons below stay as its list form. -->
+    <div class="docxx-stage" id="docxx-stage" hidden>
+      <div class="docxx-stage-labels" id="docxx-stage-labels"></div>
+      <p class="docxx-stage-hint" id="docxx-stage-hint">Потяни, чтобы повернуть · колёсико или два пальца — приблизить</p>
+      <button type="button" class="docxx-stage-reset" id="docxx-stage-reset">Вернуть вид</button>
+    </div>
     <div class="docxx-flow" id="docxx-flow" data-active="false" aria-label="Путь документа: поступление, обработка на Mac mini, результат">
       <div class="docxx-column">
         <h3>Ты добавляешь</h3>
@@ -11877,6 +11905,283 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
   ccDocxxExplain(button.dataset.docxxStep);
   box.hidden=same;
 });
+
+// ── Documents 3D route ── Mark 2026-10-23: «нарисуй в 3D, чтобы можно было вертеть и смотреть, как процессы двигаются».
+// iPhone, computer and Gmail on the left, the Mac mini in the middle, the library and the review tray on the right.
+// Papers travel only while the Mac mini reports a busy pass; with reduced motion they stay put. Rendering pauses
+// whenever the Documents tab is not on screen, so the scene costs nothing in the background.
+(function ccDocxx3d() {
+  const stage = document.getElementById('docxx-stage');
+  const section = document.getElementById('section-documents');
+  if (!stage || !section || !/^https?:$/.test(window.location.protocol) || typeof window.WebGLRenderingContext === 'undefined') return;
+  try {
+    const probe = document.createElement('canvas');
+    if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return;
+  } catch (error) { return; }
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  import(new URL('/dashboard-assets/three.module.min.js', window.location.href).href).then(THREE => {
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 0);
+    stage.prepend(renderer.domElement);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(32, 2, 0.1, 100);
+    const target = new THREE.Vector3(-0.7, 0.5, 0.2);
+    const HOME = { azimuth: -0.3, elevation: 0.6, distance: 17.5 };
+    const view = { ...HOME };
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xd9ccb6, 1.6));
+    const sun = new THREE.DirectionalLight(0xfff1dc, 2.2);
+    sun.position.set(-6, 12, 8);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 8, bottom: -8, near: 1, far: 40 });
+    sun.shadow.radius = 4;
+    scene.add(sun);
+
+    const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, ...extra });
+    function slab(w, d, h, r, material) {
+      const shape = new THREE.Shape();
+      const x = -w / 2, y = -d / 2;
+      shape.moveTo(x + r, y); shape.lineTo(x + w - r, y); shape.quadraticCurveTo(x + w, y, x + w, y + r);
+      shape.lineTo(x + w, y + d - r); shape.quadraticCurveTo(x + w, y + d, x + w - r, y + d);
+      shape.lineTo(x + r, y + d); shape.quadraticCurveTo(x, y + d, x, y + d - r);
+      shape.lineTo(x, y + r); shape.quadraticCurveTo(x, y, x + r, y);
+      const bevel = Math.min(h * 0.35, r * 0.5, 0.06);
+      const geometry = new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.001, h - bevel * 2), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 10 });
+      geometry.rotateX(-Math.PI / 2);
+      geometry.translate(0, bevel, 0);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // Ground: a soft disc that catches the shadows.
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(11, 64), new THREE.ShadowMaterial({ opacity: 0.13 }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    const pad = (x, z, radius, color) => {
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.06, 48), mat(color, { roughness: 0.9 }));
+      disc.position.set(x, 0.03, z); disc.receiveShadow = true; scene.add(disc); return disc;
+    };
+
+    const anchors = {};
+    const bobbers = [];
+    // iPhone
+    const phone = new THREE.Group();
+    const phoneBody = slab(0.78, 1.56, 0.1, 0.16, mat(0x3a4552, { metalness: 0.1, roughness: 0.4 }));
+    phoneBody.rotation.x = Math.PI / 2; phoneBody.position.set(0, 0.78, -0.05); phone.add(phoneBody);
+    const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 1.4), mat(0x8fd3df, { emissive: 0x3a9fb0, emissiveIntensity: 0.55, roughness: 0.2 }));
+    phoneScreen.position.set(0, 0.78, 0.051); phone.add(phoneScreen);
+    const phoneCard = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.5), mat(0xffffff, { emissive: 0xffffff, emissiveIntensity: 0.25 }));
+    phoneCard.position.set(0, 0.86, 0.053); phone.add(phoneCard);
+    phone.position.set(-5.6, 0.35, -2.4); phone.rotation.y = 0.5; scene.add(phone);
+    pad(-5.6, -2.4, 0.9, 0xe6f0fb);
+    bobbers.push([phone, 0.35, 0]);
+    anchors.icloud = new THREE.Vector3(-5.6, 2.7, -2.4);
+    // Laptop
+    const laptop = new THREE.Group();
+    laptop.add(slab(1.9, 1.3, 0.08, 0.1, mat(0xe3e7ec, { metalness: 0.1, roughness: 0.4 })));
+    const lid = new THREE.Group(); lid.position.set(0, 0.08, -0.62); lid.rotation.x = -0.28; laptop.add(lid);
+    const lidBody = slab(1.9, 1.2, 0.05, 0.1, mat(0xe3e7ec, { metalness: 0.1, roughness: 0.4 }));
+    lidBody.rotation.x = Math.PI / 2; lidBody.position.set(0, 0.6, 0); lid.add(lidBody);
+    const lidScreen = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.02), mat(0xb8a6ef, { emissive: 0x7a5bc7, emissiveIntensity: 0.45, roughness: 0.2 }));
+    lidScreen.position.set(0, 0.6, 0.058); lid.add(lidScreen);
+    laptop.position.set(-6.2, 0.08, 0.6); laptop.rotation.y = 0.45; scene.add(laptop);
+    pad(-6.2, 0.6, 1.25, 0xefeafb);
+    anchors.drive = new THREE.Vector3(-6.2, 2.2, 0.6);
+    // Gmail envelope
+    const mail = new THREE.Group();
+    const envelope = slab(1.4, 0.95, 0.08, 0.06, mat(0xffffff, { roughness: 0.7 }));
+    envelope.rotation.x = Math.PI / 2; envelope.position.set(0, 0.6, 0); mail.add(envelope);
+    const flapShape = new THREE.Shape(); flapShape.moveTo(-0.68, 0.46); flapShape.lineTo(0.68, 0.46); flapShape.lineTo(0, -0.05); flapShape.closePath();
+    const flap = new THREE.Mesh(new THREE.ShapeGeometry(flapShape), mat(0xd9574a, { roughness: 0.6, side: THREE.DoubleSide }));
+    flap.position.set(0, 0.6, 0.085); mail.add(flap);
+    mail.position.set(-5.2, 0.35, 3.3); mail.rotation.y = 0.35; scene.add(mail);
+    pad(-5.2, 3.3, 0.9, 0xfbebe7);
+    bobbers.push([mail, 0.35, 1.7]);
+    anchors.gmail = new THREE.Vector3(-5.2, 2.2, 3.3);
+    // Mac mini in the middle
+    const mini = new THREE.Group();
+    mini.add(slab(2.6, 2.6, 0.62, 0.42, mat(0xeef1f4, { metalness: 0.12, roughness: 0.32 })));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.025, 8, 48), mat(0xd3d9df, { metalness: 0.1, roughness: 0.35 }));
+    ring.rotation.x = Math.PI / 2; ring.position.y = 0.625; mini.add(ring);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 12), new THREE.MeshBasicMaterial({ color: 0x34c27a }));
+    led.position.set(0.95, 0.2, 1.31); mini.add(led);
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(2.4, 48), new THREE.MeshBasicMaterial({ color: 0x0a7f93, transparent: true, opacity: 0.1 }));
+    glow.rotation.x = -Math.PI / 2; glow.position.y = 0.012; mini.add(glow);
+    scene.add(mini);
+    anchors.processor = new THREE.Vector3(0, 2.1, 0);
+    // Library: a folder with papers
+    const library = new THREE.Group();
+    const folderBack = slab(1.8, 1.25, 0.08, 0.08, mat(0xe8b45a, { roughness: 0.6 }));
+    folderBack.rotation.x = Math.PI / 2 - 0.12; folderBack.position.set(0, 0.68, -0.2); library.add(folderBack);
+    const tab = slab(0.6, 0.22, 0.08, 0.05, mat(0xe8b45a, { roughness: 0.6 }));
+    tab.rotation.x = Math.PI / 2 - 0.12; tab.position.set(-0.5, 1.36, -0.28); library.add(tab);
+    [0.12, 0.0, -0.1].forEach((offset, index) => {
+      const sheet = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 0.015), mat(0xffffff, { roughness: 0.8 }));
+      sheet.position.set(0.05 * index - 0.05, 0.72 + 0.04 * index, -0.12 + offset * 0.4); sheet.rotation.x = -0.12; sheet.castShadow = true; library.add(sheet);
+    });
+    const folderFront = slab(1.8, 0.95, 0.08, 0.08, mat(0xf2c46c, { roughness: 0.6 }));
+    folderFront.rotation.x = Math.PI / 2 - 0.32; folderFront.position.set(0, 0.5, 0.12); library.add(folderFront);
+    library.position.set(5.6, 0.05, -1.6); library.rotation.y = -0.45; scene.add(library);
+    pad(5.6, -1.6, 1.3, 0xe5f5ec);
+    anchors.library = new THREE.Vector3(5.6, 2.2, -1.6);
+    // Review tray
+    const tray = new THREE.Group();
+    tray.add(slab(1.7, 1.2, 0.07, 0.1, mat(0xf4dfb2)));
+    [[0, 0.6, 1.7, 0.06], [0, -0.6, 1.7, 0.06], [0.85, 0, 0.06, 1.2], [-0.85, 0, 0.06, 1.2]].forEach(([x, z, w, d]) => {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 0.28, d), mat(0xe6b45f)); wall.position.set(x, 0.18, z); wall.castShadow = true; tray.add(wall);
+    });
+    const waiting = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.012, 0.75), mat(0xffffff)); waiting.position.set(0.05, 0.1, 0.02); waiting.rotation.y = 0.2; tray.add(waiting);
+    tray.position.set(5.0, 0.06, 2.6); tray.rotation.y = -0.3; scene.add(tray);
+    pad(5.0, 2.6, 1.15, 0xfbf1df);
+    anchors.review = new THREE.Vector3(5.0, 1.15, 2.6);
+
+    // Routes: soft arcs, and papers that travel along them.
+    const routeMaterial = new THREE.MeshBasicMaterial({ color: 0x0a7f93, transparent: true, opacity: 0.35 });
+    const reviewMaterial = new THREE.MeshBasicMaterial({ color: 0xe6a23c, transparent: true, opacity: 0.4 });
+    const curve = (from, to, lift) => {
+      const mid = from.clone().lerp(to, 0.5); mid.y += lift;
+      return new THREE.CatmullRomCurve3([from, mid, to]);
+    };
+    const routes = [
+      { curve: curve(new THREE.Vector3(-5.4, 1.2, -2.2), new THREE.Vector3(-1.2, 0.75, -0.4), 1.2), papers: 2, speed: 0.16, tone: 0x2f7fd1 },
+      { curve: curve(new THREE.Vector3(-5.8, 0.9, 0.6), new THREE.Vector3(-1.35, 0.75, 0.05), 1.0), papers: 2, speed: 0.14, tone: 0x7a5bc7 },
+      { curve: curve(new THREE.Vector3(-5.0, 1.2, 3.1), new THREE.Vector3(-1.1, 0.75, 0.6), 1.2), papers: 1, speed: 0.12, tone: 0xd9574a },
+      { curve: curve(new THREE.Vector3(1.3, 0.75, -0.3), new THREE.Vector3(5.3, 1.0, -1.5), 1.4), papers: 3, speed: 0.15, tone: 0x2f9361 },
+      { curve: curve(new THREE.Vector3(1.2, 0.75, 0.5), new THREE.Vector3(4.8, 0.5, 2.4), 1.0), papers: 1, speed: 0.08, tone: 0xe6a23c, review: true },
+    ];
+    const paperGeometry = new THREE.BoxGeometry(0.5, 0.014, 0.66);
+    const stripeGeometry = new THREE.BoxGeometry(0.32, 0.016, 0.07);
+    routes.forEach(route => {
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(route.curve, 48, 0.022, 8, false), route.review ? reviewMaterial : routeMaterial);
+      scene.add(tube);
+      route.items = Array.from({ length: route.papers }, (_, index) => {
+        const paper = new THREE.Group();
+        const sheet = new THREE.Mesh(paperGeometry, mat(0xffffff, { roughness: 0.75 })); sheet.castShadow = true; paper.add(sheet);
+        const stripe = new THREE.Mesh(stripeGeometry, mat(route.tone, { roughness: 0.6 })); stripe.position.set(0, 0.009, -0.18); paper.add(stripe);
+        scene.add(paper);
+        return { paper, offset: index / route.papers };
+      });
+    });
+
+    // Labels: real buttons over the scene; they open the same explanation as the list below.
+    const labelsHost = document.getElementById('docxx-stage-labels');
+    const LABELS = [
+      ['icloud', 'С iPhone', 'iCloud → DOCXX Inbox'], ['drive', 'С компьютера', 'Google Drive → DOCXXx'], ['gmail', 'Из Gmail', 'через чат'],
+      ['processor', 'Mac mini', ''], ['library', 'На своём месте', ''], ['review', 'На разбор', ''],
+    ];
+    const labels = LABELS.map(([step, title, note]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `docxx-stage-label${step === 'processor' ? ' is-hub' : ''}`;
+      button.dataset.stageStep = step;
+      const strong = document.createElement('strong'); strong.textContent = title;
+      const small = document.createElement('small'); small.textContent = note;
+      button.append(strong, small);
+      button.addEventListener('click', () => {
+        const box = document.getElementById('docxx-explainer');
+        const same = ccDocxxStep === step && !box.hidden;
+        ccDocxxExplain(step);
+        box.hidden = same;
+      });
+      labelsHost.appendChild(button);
+      return { step, button, small };
+    });
+    const refreshLabels = () => {
+      const text = id => (document.getElementById(id)?.textContent || '').trim();
+      labels.forEach(label => {
+        label.button.setAttribute('aria-pressed', String(ccDocxxStep === label.step && !document.getElementById('docxx-explainer').hidden));
+        if (label.step === 'processor') label.small.textContent = text('docxx-machine-label');
+        if (label.step === 'library') label.small.textContent = /^\d+$/.test(text('docxx-catalog-count')) ? `в каталоге ${text('docxx-catalog-count')}` : 'название по содержимому';
+        if (label.step === 'review') label.small.textContent = /^\d+$/.test(text('docxx-review')) ? `ждут: ${text('docxx-review')}` : 'если неясно';
+      });
+    };
+
+    // Turning and zooming by hand.
+    let drag = null;
+    const pointers = new Map();
+    stage.addEventListener('pointerdown', event => {
+      if (event.target.closest('button')) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      stage.setPointerCapture(event.pointerId);
+      drag = { x: event.clientX, y: event.clientY, azimuth: view.azimuth, elevation: view.elevation };
+      stage.classList.add('is-dragging');
+    });
+    stage.addEventListener('pointermove', event => {
+      if (!pointers.has(event.pointerId)) return;
+      const before = [...pointers.values()];
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size === 2) {
+        const after = [...pointers.values()];
+        const gap = list => Math.hypot(list[0].x - list[1].x, list[0].y - list[1].y);
+        view.distance = Math.min(26, Math.max(10, view.distance * gap(before) / Math.max(1, gap(after))));
+        return;
+      }
+      if (!drag) return;
+      view.azimuth = drag.azimuth - (event.clientX - drag.x) * 0.008;
+      view.elevation = Math.min(1.35, Math.max(0.22, drag.elevation + (event.clientY - drag.y) * 0.006));
+    });
+    const release = event => { pointers.delete(event.pointerId); if (!pointers.size) { drag = null; stage.classList.remove('is-dragging'); } };
+    stage.addEventListener('pointerup', release);
+    stage.addEventListener('pointercancel', release);
+    stage.addEventListener('wheel', event => {
+      event.preventDefault();
+      view.distance = Math.min(26, Math.max(10, view.distance * (1 + Math.sign(event.deltaY) * 0.08)));
+    }, { passive: false });
+    document.getElementById('docxx-stage-reset').addEventListener('click', () => Object.assign(view, HOME));
+
+    const projected = new THREE.Vector3();
+    let last = performance.now();
+    let clock = 0;
+    function frame(now) {
+      const visible = !document.hidden && section.classList.contains('active');
+      if (!visible) { setTimeout(() => requestAnimationFrame(frame), 800); return; }
+      const width = stage.clientWidth, height = stage.clientHeight;
+      if (renderer.domElement.width !== Math.round(width * renderer.getPixelRatio()) || renderer.domElement.height !== Math.round(height * renderer.getPixelRatio())) {
+        renderer.setSize(width, height, false);
+        camera.aspect = width / Math.max(1, height);
+        camera.updateProjectionMatrix();
+      }
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      const busy = document.getElementById('docxx-flow')?.dataset.active === 'true';
+      const moving = busy && !reduced.matches;
+      if (moving) clock += dt;
+      camera.position.set(
+        target.x + view.distance * Math.cos(view.elevation) * Math.sin(view.azimuth),
+        target.y + view.distance * Math.sin(view.elevation),
+        target.z + view.distance * Math.cos(view.elevation) * Math.cos(view.azimuth));
+      camera.lookAt(target);
+      if (!reduced.matches) bobbers.forEach(([object, base, phase]) => { object.position.y = base + Math.sin(now / 900 + phase) * 0.06; });
+      led.material.color.setHex(busy && Math.sin(now / 180) > 0 ? 0x7cf0b0 : 0x34c27a);
+      routes.forEach(route => route.items.forEach(item => {
+        item.paper.visible = busy;
+        if (!busy) return;
+        const t = moving ? (item.offset + clock * route.speed) % 1 : (item.offset + 0.5) % 1;
+        const point = route.curve.getPointAt(t);
+        const ahead = route.curve.getPointAt(Math.min(1, t + 0.01));
+        item.paper.position.copy(point);
+        item.paper.lookAt(ahead);
+        const fade = Math.min(1, t * 8, (1 - t) * 8);
+        item.paper.scale.setScalar(0.4 + 0.6 * fade);
+      }));
+      renderer.render(scene, camera);
+      labels.forEach(label => {
+        projected.copy(anchors[label.step]).project(camera);
+        label.button.style.transform = `translate(${(projected.x * 0.5 + 0.5) * width}px, ${(-projected.y * 0.5 + 0.5) * height}px) translate(-50%, -100%)`;
+      });
+      requestAnimationFrame(frame);
+    }
+    refreshLabels();
+    setInterval(refreshLabels, 1000);
+    stage.hidden = false;
+    section.classList.add('has-3d');
+    requestAnimationFrame(frame);
+  }).catch(() => { /* The flat route below stays as it is. */ });
+})();
 for(const button of document.querySelectorAll('[data-docxx-filter]')) button.addEventListener('click',()=>{
   ccDocxxFilter=button.dataset.docxxFilter;
   document.querySelectorAll('[data-docxx-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
