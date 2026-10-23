@@ -3527,6 +3527,42 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-todo-done-toggle { min-height: 34px; padding: 4px 12px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 600; background: none; border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
 .mm-todo-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--mm-line); }
 .mm-todo-foot .mm-todo-add { margin-left: 0; }
+.mm-todo-foot .mm-todo-all { margin-right: auto; color: var(--mm-muted); border-color: transparent; }
+.mm-summary { margin: 0 0 18px; padding: 16px 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.mm-summary-head h3 { font-size: 16px; font-weight: 750; }
+.mm-seg { display: inline-flex; padding: 3px; background: var(--mm-surface-hover); border-radius: 10px; }
+.mm-seg button { min-height: 30px; padding: 3px 12px; color: var(--mm-muted); font-size: 13px; font-weight: 600; border-radius: 8px; }
+.mm-seg button[aria-pressed="true"] { color: var(--mm-ink); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
+.mm-summary-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.mm-summary-tiles > div { min-width: 0; padding: 10px 12px; background: var(--mm-background); border-radius: 10px; }
+.mm-summary-tiles span { color: var(--mm-muted); font-size: 12.5px; }
+.mm-summary-tiles strong { display: block; font-size: 22px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.mm-summary-tiles strong.is-up { color: var(--mm-success); }
+.mm-summary-tiles strong.is-down { color: var(--mm-warning); }
+.mm-summary-tiles small { display: block; color: var(--mm-muted); font-size: 12px; line-height: 1.35; }
+.mm-summary-split h4 { margin: 14px 0 6px; color: var(--mm-muted); font-size: 12.5px; font-weight: 600; }
+.mm-summary-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.mm-summary-list li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto; align-items: center; gap: 12px; padding: 5px 0; }
+.mm-summary-list li[data-project] { cursor: pointer; }
+.mm-summary-list li[data-project]:hover .mm-summary-name { color: var(--mm-accent); }
+.mm-summary-name { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.mm-summary-name .mm-project-art { flex: none; width: 26px; height: 26px; overflow: hidden; border-radius: 7px; }
+.mm-summary-name .mm-project-art svg { width: 22px; height: 22px; }
+.mm-summary-name .mm-art-initials { font-size: 10px; }
+.mm-summary-bar { height: 8px; background: var(--mm-surface-hover); border-radius: 4px; overflow: hidden; }
+.mm-summary-bar i { display: block; height: 100%; background: var(--mm-accent); border-radius: 4px; }
+.mm-summary-time { min-width: 92px; font-size: 13.5px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
+.mm-summary-time small { display: block; color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
+.mm-summary-agents { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 10px 0 0; color: var(--mm-muted); font-size: 13px; }
+.mm-summary-agents i { display: inline-block; width: 9px; height: 9px; margin-left: 6px; border-radius: 3px; }
+.mm-summary-chart { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 10px; }
+.mm-summary-chart i { flex: 1; min-width: 2px; background: var(--mm-codex); border-radius: 3px 3px 0 0; opacity: .75; }
+.mm-summary-more { margin-top: 8px; padding: 4px 0; color: var(--mm-accent); font-size: 13px; font-weight: 650; }
+.mm-more { margin-top: 28px; }
+.mm-more > summary { color: var(--mm-muted); font-size: 12.5px; cursor: pointer; }
+.mm-more .mm-sources { margin-top: 8px; }
+@media (max-width: 600px) { .mm-summary-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mm-summary-list li { grid-template-columns: minmax(0, 1fr) auto; } .mm-summary-bar { grid-column: 1 / -1; grid-row: 2; } }
 .mm-todo-done-list { margin: 0; }
 .mm-todo-done-list .mm-todo-body { color: var(--mm-muted); cursor: default; }
 .mm-todo-back { flex: none; min-height: 34px; padding: 4px 14px; color: var(--mm-accent); font: inherit; font-size: 13px; font-weight: 650; background: none; border: 1px solid var(--mm-accent); border-radius: 999px; cursor: pointer; }
@@ -4740,7 +4776,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <!-- Mark 2026-10-22: whether everything on the Mac mini is alive; since 2026-10-23 a small badge, not a banner. -->
         <button type="button" class="mm-health" id="mm-health" hidden></button>
       </header>
-      <!-- Mark 2026-10-23: what is on him comes first, on every MAIN MANAGER view. -->
+      <!-- Mark 2026-10-23: a short summary of day / week / month first, then what is on him. -->
+      <section class="mm-summary" id="mm-summary" aria-labelledby="mm-summary-title" hidden></section>
       <div id="mm-owner-todo" hidden></div>
       <div id="mm-owner-projects" hidden></div>
       <dialog class="platform-archive-dialog platform-edit-dialog" id="todo-edit-dialog" aria-labelledby="todo-edit-title">
@@ -4819,6 +4856,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           <div class="mm-group-rows" id="mm-infra"></div>
         </div>
       </div>
+      <details class="mm-more">
+        <summary>Откуда данные · открыть на телефоне</summary>
       <p class="mm-sources" id="mm-sources">Источники загружаются…</p>
       <section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>
         <div class="np-device-row">
@@ -4836,6 +4875,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           </div>
         </div>
       </section>
+      </details>
     </div>
   </section>
 
@@ -9937,6 +9977,7 @@ function mmInit() {
   }));
   mmInitOwnerTodo();
   mmInitOwnerProjects();
+  mmInitSummary();
   // The board, «Дела» and «Изменения» refresh while MAIN MANAGER is on screen.
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
@@ -10513,9 +10554,9 @@ function renderMap(data) {
   ];
   const prsToMerge = mmSum(todo.map(item => item.open_prs_count));
   mmRenderToday(data.owner_view ? series[series.length - 1] : null, prsToMerge);
-  // Mark 2026-10-23: four tiles of numbers were noise; the owner gets the week in one line.
-  const statsHtml = data.owner_view ? `<p class="mm-week"><span>За 7 дней <b>${mmEsc(workMinutes(week))}</b> работы</span>
-    <span><i class="claude"></i>Claude Code ${mmEsc(workHours(weekClaude))} ч</span><span><i class="codex"></i>Codex ${mmEsc(workHours(weekCodex))} ч</span></p>`
+  // Mark 2026-10-23: four tiles of numbers were noise; the owner gets «Сводка» on top instead.
+  mmRenderSummary(data);
+  const statsHtml = data.owner_view ? ''
     : `<div class="mm-stats mm-map-stats">${stats.map(stat => `
     <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
   </div>`;
@@ -10540,6 +10581,117 @@ function renderMap(data) {
     </details>` : '';
   const body = `${filter}${head('Основные проекты', active.length, '')}<div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
   host.innerHTML = statsHtml + body;
+}
+
+// ─── «Сводка» (Mark 2026-10-23) ───
+// Day, week or month at a glance: how long he worked, what got merged, what one result cost in
+// time, and where the time went by project. Only from the owner payload; the public page never
+// gets project names. Details fold away behind buttons.
+const MM_SUMMARY_KEY = 'command-center.mm-summary-period';
+const MM_SUMMARY_PERIODS = [['day', 'День', 1], ['week', 'Неделя', 7], ['month', 'Месяц', 30]];
+let mmSummaryPeriod = MM_SUMMARY_PERIODS.some(([key]) => key === safeStorageGet(MM_SUMMARY_KEY)) ? safeStorageGet(MM_SUMMARY_KEY) : 'week';
+let mmSummaryOpen = false;
+let mmSummaryData = null;
+
+function mmSummaryNumbers(data, days, offset = 0) {
+  const series = data.series || [];
+  const end = series.length - offset;
+  const slice = list => (list || []).slice(Math.max(0, end - days), end);
+  const part = slice(series);
+  if (part.length < days) return null;  // Not enough history for a fair comparison.
+  const projects = (data.projects || []).map(p => ({
+    id: p.id, name: p.name, main: !!p.main, art: p,
+    minutes: mmSum(slice(p.daily_minutes)), prs: mmSum(slice(p.daily_prs_merged)),
+  })).filter(p => p.minutes || p.prs);
+  return {
+    minutes: mmSum(part.map(day => day.total_minutes)),
+    claude: mmSum(part.map(day => day.claude_minutes)),
+    codex: mmSum(part.map(day => day.codex_minutes)),
+    prs: mmSum(part.map(day => day.prs_merged)),
+    activeDays: part.filter(day => day.total_minutes > 0).length,
+    bars: part.map(day => ({ date: day.date, minutes: day.total_minutes })),
+    projects,
+  };
+}
+
+function mmRenderSummary(data) {
+  const host = document.getElementById('mm-summary');
+  if (!host) return;
+  mmSummaryData = data;
+  if (!data?.owner_view || !Array.isArray(data.series)) {
+    host.hidden = true;
+    host.replaceChildren();
+    return;
+  }
+  const [key, , days] = MM_SUMMARY_PERIODS.find(([name]) => name === mmSummaryPeriod);
+  const now = mmSummaryNumbers(data, days);
+  const before = mmSummaryNumbers(data, days, days);
+  const head = `<div class="mm-summary-head"><h3 id="mm-summary-title">Сводка</h3>
+    <div class="mm-seg" role="group" aria-label="Период">${MM_SUMMARY_PERIODS.map(([name, label]) =>
+      `<button type="button" data-summary-period="${name}" aria-pressed="${name === key}">${label}</button>`).join('')}</div></div>`;
+  if (!now) {
+    host.innerHTML = `${head}<p class="mm-empty">Данных за этот период пока нет.</p>`;
+    host.hidden = false;
+    return;
+  }
+  const compare = before ? now.minutes - before.minutes : null;
+  const versus = key === 'day' ? 'вчера' : 'прошлой неделе';
+  const workNote = compare === null ? `дней с работой: ${now.activeDays} из ${days}`
+    : `${compare >= 0 ? '+' : '−'}${workMinutes(Math.abs(compare))} к ${versus}`;
+  const perResult = now.prs ? Math.round(now.minutes / now.prs) : null;
+  const beforePer = before?.prs ? Math.round(before.minutes / before.prs) : null;
+  const returnNote = perResult === null ? 'нет слитых PR за период'
+    : beforePer ? `на один PR · ${key === 'day' ? 'вчера' : 'неделей раньше'} ${workMinutes(beforePer)}`
+    : 'на один слитый PR';
+  const projectMinutes = mmSum(now.projects.map(p => p.minutes));
+  const mainShare = projectMinutes ? Math.round(mmSum(now.projects.filter(p => p.main).map(p => p.minutes)) / projectMinutes * 100) : 0;
+  const tiles = [
+    ['Работа', workMinutes(now.minutes), workNote, compare === null ? '' : (compare >= 0 ? 'is-up' : 'is-down')],
+    ['Результат', `${now.prs} PR`, now.prs ? 'слито в main' : 'слитых PR нет', ''],
+    ['Отдача', perResult === null ? '—' : workMinutes(perResult), returnNote, ''],
+    ['На основные проекты', projectMinutes ? `${mainShare}%` : '—', 'остальное — мелкие папки', ''],
+  ];
+  const tilesHtml = `<div class="mm-summary-tiles">${tiles.map(([label, value, note, cls]) =>
+    `<div><span>${mmEsc(label)}</span><strong class="${cls}">${mmEsc(value)}</strong><small>${mmEsc(note)}</small></div>`).join('')}</div>`;
+  // Where the time went: main projects one by one, the small folders as one line.
+  const main = now.projects.filter(p => p.main).sort((a, b) => b.minutes - a.minutes);
+  const others = now.projects.filter(p => !p.main);
+  const rows = [...main];
+  if (others.length) rows.push({ id: '', name: `Другие папки · ${others.length}`, minutes: mmSum(others.map(p => p.minutes)), prs: mmSum(others.map(p => p.prs)) });
+  const top = Math.max(1, ...rows.map(p => p.minutes));
+  const shown = mmSummaryOpen ? rows : rows.slice(0, 4);
+  const rowHtml = p => `<li${p.id ? ` data-project="${mmEsc(p.id)}"` : ''}><span class="mm-summary-name">${p.art ? mmArt(p.art) : ''}${mmEsc(p.name)}</span>
+    <span class="mm-summary-bar"><i style="width:${Math.max(2, Math.round(p.minutes / top * 100))}%"></i></span>
+    <span class="mm-summary-time">${mmEsc(workMinutes(p.minutes))}<small>${projectMinutes ? Math.round(p.minutes / projectMinutes * 100) : 0}%${p.prs ? ` · ${p.prs} PR` : ''}</small></span></li>`;
+  const listHtml = rows.length ? `<ul class="mm-summary-list">${shown.map(rowHtml).join('')}</ul>` : '<p class="mm-empty">За этот период работы по проектам не было.</p>';
+  const agentsLine = now.claude + now.codex ? `<p class="mm-summary-agents"><i class="claude"></i>Claude Code ${mmEsc(workMinutes(now.claude))}<i class="codex"></i>Codex ${mmEsc(workMinutes(now.codex))}</p>` : '';
+  const chart = days > 1 ? `<div class="mm-summary-chart" role="img" aria-label="Работа по дням">${now.bars.map(day => {
+    const peak = Math.max(1, ...now.bars.map(bar => bar.minutes));
+    return `<i style="height:${Math.max(day.minutes ? 8 : 2, Math.round(day.minutes / peak * 100))}%" title="${mmEsc(`${day.date.split('-').reverse().slice(0, 2).join('.')}: ${workMinutes(day.minutes)}`)}"></i>`;
+  }).join('')}</div>` : '';
+  const more = rows.length > 4 || chart || agentsLine
+    ? `<button type="button" class="mm-summary-more" data-summary-more aria-expanded="${mmSummaryOpen}">${mmSummaryOpen ? 'Свернуть' : 'Подробнее'}</button>` : '';
+  host.innerHTML = `${head}${tilesHtml}<div class="mm-summary-split"><h4>Куда ушло время</h4>${listHtml}</div>${mmSummaryOpen ? agentsLine + chart : ''}${more}`;
+  host.hidden = false;
+}
+
+function mmInitSummary() {
+  const host = document.getElementById('mm-summary');
+  if (!host) return;
+  host.addEventListener('click', event => {
+    const period = event.target.closest('[data-summary-period]');
+    if (period) {
+      mmSummaryPeriod = period.dataset.summaryPeriod;
+      safeStorageSet(MM_SUMMARY_KEY, mmSummaryPeriod);
+      return mmRenderSummary(mmSummaryData);
+    }
+    if (event.target.closest('[data-summary-more]')) {
+      mmSummaryOpen = !mmSummaryOpen;
+      return mmRenderSummary(mmSummaryData);
+    }
+    const row = event.target.closest('[data-project]');
+    if (row) openProject(row.dataset.project);
+  });
 }
 
 // The line under the title: today's work and what waits for a merge, in plain words.
@@ -10758,6 +10910,7 @@ async function mmLoadHealth() {
 const OWNER_TODO_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/owner-todo`;
 let mmOwnerTodoItems = [];
 let mmOwnerTodoEditing = null;
+let mmOwnerTodoAll = false;
 let mmOwnerTodoGeneration = 0;
 
 function mmRenderOwnerTodo(payload) {
@@ -10784,7 +10937,8 @@ function mmRenderOwnerTodo(payload) {
   head.appendChild(title);
   card.appendChild(head);
   const list = mmEl('ul', 'mm-todo-items');
-  open.forEach(item => list.appendChild(mmOwnerTodoRow(item)));
+  // Three at a time; the rest behind «Ещё N».
+  (mmOwnerTodoAll ? open : open.slice(0, 3)).forEach(item => list.appendChild(mmOwnerTodoRow(item)));
   const lane = mmAgentLane(open);
   if (lane) card.appendChild(lane);
   if (open.length) card.appendChild(list);
@@ -10796,6 +10950,12 @@ function mmRenderOwnerTodo(payload) {
   add.type = 'button';
   add.dataset.todoAdd = '';
   foot.appendChild(add);
+  if (open.length > 3) {
+    const all = mmEl('button', 'mm-todo-done-toggle mm-todo-all', mmOwnerTodoAll ? 'Свернуть' : `Ещё ${open.length - 3}`);
+    all.type = 'button';
+    all.dataset.todoAll = '';
+    foot.appendChild(all);
+  }
   if (done.length) {
     const toggle = mmEl('button', 'mm-todo-done-toggle', `Сделано · ${done.length} ›`);
     toggle.type = 'button';
@@ -11045,6 +11205,10 @@ function mmInitOwnerTodo() {
   host.addEventListener('click', async event => {
     if (event.target.closest('[data-todo-add]')) return mmOpenTodoEdit(null);
     if (event.target.closest('[data-todo-show-done]')) return mmOpenTodoDone();
+    if (event.target.closest('[data-todo-all]')) {
+      mmOwnerTodoAll = !mmOwnerTodoAll;
+      return mmRenderOwnerTodo({state: 'ready', items: mmOwnerTodoItems});
+    }
     const edit = event.target.closest('[data-todo-edit]');
     if (edit) return mmOpenTodoEdit(mmOwnerTodoItems.find(item => item.id === edit.dataset.todoEdit));
     const handOff = event.target.closest('[data-todo-give], [data-todo-take]');

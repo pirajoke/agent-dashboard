@@ -130,6 +130,13 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         projects = PAGE[PAGE.index("function mmRenderOwnerProjects("):PAGE.index("let mmOwnerProjectCards")]
         self.assertIn("getElementById('owner-project-body')?.replaceChildren()", projects)
 
+    def test_summary_is_owner_only_and_has_three_periods(self):
+        render = PAGE[PAGE.index("function mmRenderSummary("):PAGE.index("function mmInitSummary(")]
+        self.assertIn("if (!data?.owner_view", render)
+        self.assertIn("host.replaceChildren()", render)
+        for label in ("'День', 1", "'Неделя', 7", "'Месяц', 30"):
+            self.assertIn(label, PAGE)
+
     def test_services_turned_off_on_purpose_never_show_red(self):
         start = PAGE.index("const MM_HEALTH_TURNED_OFF")
         block = PAGE[start:PAGE.index("]);", start)]
