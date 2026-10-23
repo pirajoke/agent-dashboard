@@ -888,13 +888,13 @@
             ANALYST: {shirt: '#3f9a8f', pants: '#24282a', skin: '#6f4630', hair: '#151515'},
         };
         const ROOMS = {
-            sales: {x: -8.25, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
-            development: {x: -0.5, z: -6, w: 8, d: 6.5, tint: '#80553a'},
-            design: {x: 7.75, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
-            hq: {x: -11, z: 6, w: 6, d: 6.5, tint: '#845a3b'},
-            infrastructure: {x: -4.25, z: 6, w: 6.5, d: 6.5, tint: '#6f4a33'},
-            internal: {x: 2.75, z: 6, w: 6.5, d: 6.5, tint: '#7b4f32'},
-            finance: {x: 9.5, z: 6, w: 6, d: 6.5, tint: '#7a5236'},
+            sales: {x: -8.25, z: -6, w: 6.5, d: 6.5, tint: '#f3dcc0'},
+            development: {x: -0.5, z: -6, w: 8, d: 6.5, tint: '#f5dec2'},
+            design: {x: 7.75, z: -6, w: 6.5, d: 6.5, tint: '#f3dcc0'},
+            hq: {x: -11, z: 6, w: 6, d: 6.5, tint: '#f6e0c4'},
+            infrastructure: {x: -4.25, z: 6, w: 6.5, d: 6.5, tint: '#efd7ba'},
+            internal: {x: 2.75, z: 6, w: 6.5, d: 6.5, tint: '#f3dcc0'},
+            finance: {x: 9.5, z: 6, w: 6, d: 6.5, tint: '#f2dbbf'},
         };
         Object.entries(ROOMS).forEach(([id, room]) => {
             room.id = id;
@@ -913,7 +913,7 @@
 
         const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'low-power'});
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setClearColor(0x09090b, 1);
+        renderer.setClearColor(0xf3ede2, 1);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -921,12 +921,12 @@
         stage.prepend(renderer.domElement);
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x09090b, 46, 90);
+        scene.fog = new THREE.Fog(0xf3ede2, 46, 90);
         const camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.5, 200);
         const lookTarget = new THREE.Vector3(-0.8, 0, 0);
         const view = {azimuth: 0, elevation: 0.9};
 
-        scene.add(new THREE.HemisphereLight(0xfff0db, 0x1b1511, 1.25));
+        scene.add(new THREE.HemisphereLight(0xfff6e8, 0xb9a88f, 1.35));
         const sun = new THREE.DirectionalLight(0xffe0b5, 2.1);
         sun.position.set(-9, 26, 15);
         sun.castShadow = true;
@@ -973,20 +973,20 @@
         const plankTexture = canvasTexture(128, (ctx, size) => {
             const rows = 4;
             for (let row = 0; row < rows; row += 1) {
-                ctx.fillStyle = row % 2 ? '#b98a64' : '#c79a72';
+                ctx.fillStyle = row % 2 ? '#dcbb94' : '#e6c8a3';
                 ctx.fillRect(0, row * size / rows, size, size / rows);
-                ctx.fillStyle = '#8a6142';
+                ctx.fillStyle = '#c29d74';
                 ctx.fillRect(0, (row + 1) * size / rows - 2, size, 2);
                 ctx.fillRect((row * 53) % size, row * size / rows, 2, size / rows);
             }
         }, 3, 3);
         const tileTexture = canvasTexture(128, (ctx, size) => {
-            ctx.fillStyle = '#3b352d';
+            ctx.fillStyle = '#d6ccbb';
             ctx.fillRect(0, 0, size, size);
-            ctx.fillStyle = '#463f35';
+            ctx.fillStyle = '#e4dbcc';
             ctx.fillRect(3, 3, size / 2 - 6, size / 2 - 6);
             ctx.fillRect(size / 2 + 3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
-            ctx.fillStyle = '#413a31';
+            ctx.fillStyle = '#ddd3c3';
             ctx.fillRect(size / 2 + 3, 3, size / 2 - 6, size / 2 - 6);
             ctx.fillRect(3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
         }, 14, 3);
@@ -994,7 +994,7 @@
         // ── Ground and boulevard ──
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(80, 60),
-            material('#121115', {flatShading: false}),
+            material('#ebe3d5', {flatShading: false}),
         );
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
@@ -1006,11 +1006,11 @@
         boulevard.position.set(-0.75, 0.03, 0);
         boulevard.receiveShadow = true;
         scene.add(boulevard);
-        [-2.82, 2.82].forEach((z) => box(scene, 29.5, 0.1, 0.12, '#5c4a3a', -0.75, 0, z));
+        [-2.82, 2.82].forEach((z) => box(scene, 29.5, 0.1, 0.12, '#c8b79e', -0.75, 0, z));
 
         // ── Rooms ──
-        const WALL = '#2a272c';
-        const TRIM = '#5a3b27';
+        const WALL = '#f6f1e8';
+        const TRIM = '#cdb592';
         const pickRoots = [];
         const lampLights = [];
 
@@ -1161,7 +1161,7 @@
 
         // ── Shared waypoints ──
         Object.entries(WAYPOINTS).forEach(([id, waypoint]) => {
-            const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.1, 24), material('#1f1e24'));
+            const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.1, 24), material('#e2d8c8'));
             pad.position.set(waypoint.x, 0.11, waypoint.z);
             pad.receiveShadow = true;
             scene.add(pad);
@@ -1172,7 +1172,7 @@
             ring.rotation.x = Math.PI / 2;
             ring.position.set(waypoint.x, 0.18, waypoint.z);
             scene.add(ring);
-            box(scene, 0.5, 0.75, 0.35, '#2a272c', waypoint.x, 0.16, waypoint.z - 0.85);
+            box(scene, 0.5, 0.75, 0.35, '#d8cdbb', waypoint.x, 0.16, waypoint.z - 0.85);
             box(scene, 0.42, 0.26, 0.04, '#111', waypoint.x, 0.62, waypoint.z - 0.66, {
                 emissive: waypoint.color, emissiveIntensity: 0.5,
             });
@@ -1285,6 +1285,7 @@
             const room = ROOMS[zone.dataset.departmentId];
             if (!room) return;
             const label = addLabel('department', new THREE.Vector3(room.x - room.w / 2 + 0.9, room.top ? 3.8 : 3.6, room.farZ));
+            label.roomId = room.id;
             const boundary = zone.querySelector('.campus-owner-boundary');
             setLabelText(label, zone.querySelector('h3')?.textContent || room.id, boundary ? boundary.textContent.trim() : '');
             if (boundary) label.el.classList.add('has-boundary');
@@ -1295,52 +1296,160 @@
         });
         folderViews.forEach((view) => {
             view.label = addLabel('project', view.labelAnchor, view.el);
+            // Mark 2026-10-23: «не хочу все эти папки видеть» — project signs stay off the scene;
+            // a department name opens who is there and what each project is doing.
+            view.label.visible = false;
+        });
+
+        // ── Department card: opened from a department name ──
+        const deptCard = document.createElement('section');
+        deptCard.className = 'campus-3d-dept';
+        deptCard.hidden = true;
+        deptCard.setAttribute('aria-live', 'polite');
+        stage.append(deptCard);
+        let deptOpen = null;
+        function renderDeptCard() {
+            if (!deptOpen) { deptCard.hidden = true; return; }
+            const room = ROOMS[deptOpen.id];
+            const head = document.createElement('header');
+            const title = document.createElement('h3');
+            title.textContent = deptOpen.title;
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.textContent = '×';
+            close.setAttribute('aria-label', 'Закрыть');
+            close.addEventListener('click', () => { deptOpen = null; renderDeptCard(); });
+            head.append(title, close);
+            const people = document.createElement('ul');
+            actors.filter((actor) => actor.homeRoom === room.id || actor.room === room.id).forEach((actor) => {
+                const li = document.createElement('li');
+                const name = document.createElement('strong');
+                name.textContent = actor.name;
+                const state = document.createElement('small');
+                state.textContent = actor.label?.el.querySelector('small')?.textContent?.replace(/^·\s*/, '') || 'ожидает задач';
+                li.append(name, state);
+                people.append(li);
+            });
+            const projects = document.createElement('ul');
+            folderViews.filter((view) => view.room.id === room.id && view.el).forEach((view) => {
+                const li = document.createElement('li');
+                const status = view.el.dataset.campusProjectStatus || 'idle';
+                li.className = status === 'idle' ? '' : 'is-live';
+                const name = document.createElement('button');
+                name.type = 'button';
+                name.textContent = view.el.dataset.campusProjectLabel || '';
+                name.addEventListener('click', () => view.el.click());
+                const state = document.createElement('small');
+                state.textContent = view.el.querySelector('[data-campus-project-folder-status]')?.textContent || '';
+                li.append(name, state);
+                projects.append(li);
+            });
+            const parts = [head];
+            if (people.childElementCount) {
+                const h = document.createElement('h4'); h.textContent = 'Кто здесь';
+                parts.push(h, people);
+            }
+            if (projects.childElementCount) {
+                const h = document.createElement('h4'); h.textContent = 'Проекты';
+                parts.push(h, projects);
+            }
+            deptCard.replaceChildren(...parts);
+            deptCard.hidden = false;
+        }
+        labels.filter((label) => label.el.classList.contains('is-department')).forEach((label) => {
+            label.el.dataset.clickable = 'true';
+            label.el.setAttribute('role', 'button');
+            label.el.tabIndex = 0;
+            const open = () => {
+                const id = label.roomId;
+                deptOpen = deptOpen?.id === id ? null : {id, title: label.el.querySelector('strong')?.textContent || id};
+                renderDeptCard();
+            };
+            label.el.addEventListener('click', open);
+            label.el.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); }
+            });
         });
 
         // ── Characters ──
+        // Mark 2026-10-23: rounder, friendlier people (big head, eyes that blink, rounded limbs, shoes).
         function makePerson(look) {
             const group = new THREE.Group();
             const body = new THREE.Group();
             group.add(body);
-            const limb = (color, w, h, d, x, y) => {
+            const soft = (color) => material(color, {flatShading: false, roughness: 0.62});
+            const capsule = (radius, length, color) => {
+                const mesh = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 4, 12), soft(color));
+                mesh.castShadow = true;
+                return mesh;
+            };
+            const limb = (color, radius, length, x, y, end) => {
                 const pivot = new THREE.Group();
                 pivot.position.set(x, y, 0);
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material(color));
-                mesh.position.y = -h / 2;
-                mesh.castShadow = true;
+                const mesh = capsule(radius, length, color);
+                mesh.position.y = -length / 2 - radius * 0.4;
                 pivot.add(mesh);
+                if (end) {
+                    end.position.y = -length - radius * 0.9;
+                    pivot.add(end);
+                }
                 body.add(pivot);
                 return pivot;
             };
-            const legs = [limb(look.pants, 0.15, 0.5, 0.17, -0.1, 0.62), limb(look.pants, 0.15, 0.5, 0.17, 0.1, 0.62)];
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.52, 0.27), material(look.shirt));
-            torso.position.y = 0.88;
-            torso.castShadow = true;
+            const shoe = () => {
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 8), soft('#3a3330'));
+                mesh.scale.set(1, 0.6, 1.45);
+                mesh.position.z = 0.04;
+                mesh.castShadow = true;
+                return mesh;
+            };
+            const legs = [limb(look.pants, 0.075, 0.3, -0.1, 0.56, shoe()), limb(look.pants, 0.075, 0.3, 0.1, 0.56, shoe())];
+            const torso = capsule(0.22, 0.2, look.shirt);
+            torso.scale.set(1, 1, 0.78);
+            torso.position.y = 0.84;
             body.add(torso);
-            const arms = [limb(look.shirt, 0.12, 0.46, 0.14, -0.29, 1.1), limb(look.shirt, 0.12, 0.46, 0.14, 0.29, 1.1)];
-            arms.forEach((arm) => {
-                const hand = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.1, 0.12), material(look.skin));
-                hand.position.y = -0.5;
-                arm.add(hand);
-            });
+            const hand = () => {
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.065, 10, 8), soft(look.skin));
+                mesh.castShadow = true;
+                return mesh;
+            };
+            const arms = [limb(look.shirt, 0.06, 0.3, -0.29, 1.03, hand()), limb(look.shirt, 0.06, 0.3, 0.29, 1.03, hand())];
+            arms[0].rotation.z = -0.12;
+            arms[1].rotation.z = 0.12;
             const head = new THREE.Group();
             head.position.y = 1.36;
             body.add(head);
-            const face = new THREE.Mesh(new THREE.IcosahedronGeometry(0.22, 1), material(look.skin));
+            const face = new THREE.Mesh(new THREE.SphereGeometry(0.27, 20, 16), soft(look.skin));
             face.castShadow = true;
             head.add(face);
             const hair = new THREE.Mesh(
-                new THREE.SphereGeometry(0.235, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.52),
-                material(look.hair),
+                new THREE.SphereGeometry(0.285, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.5),
+                soft(look.hair),
             );
-            hair.position.set(0, 0.03, -0.02);
-            hair.rotation.x = -0.25;
+            hair.position.set(0, 0.02, -0.03);
+            hair.rotation.x = -0.32;
             head.add(hair);
-            [-0.08, 0.08].forEach((x) => {
-                const eye = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.05, 0.02), material('#1b1b1f'));
-                eye.position.set(x, 0.0, 0.205);
+            const eyes = [-0.095, 0.095].map((x) => {
+                const eye = new THREE.Group();
+                eye.position.set(x, 0.02, 0.245);
+                const white = new THREE.Mesh(new THREE.SphereGeometry(0.052, 12, 10), soft('#ffffff'));
+                white.scale.z = 0.5;
+                const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), soft('#1f1b1a'));
+                pupil.position.z = 0.02;
+                eye.add(white, pupil);
                 head.add(eye);
+                return eye;
             });
+            [-0.16, 0.16].forEach((x) => {
+                const cheek = new THREE.Mesh(new THREE.CircleGeometry(0.035, 12), new THREE.MeshBasicMaterial({color: 0xf2a2a0, transparent: true, opacity: 0.7}));
+                cheek.position.set(x, -0.07, 0.247);
+                cheek.rotation.y = x * 2.2;
+                head.add(cheek);
+            });
+            const mouth = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.011, 6, 12, Math.PI), soft('#7a3b2e'));
+            mouth.position.set(0, -0.09, 0.255);
+            mouth.rotation.z = Math.PI;
+            head.add(mouth);
             const ring = new THREE.Mesh(
                 new THREE.RingGeometry(0.36, 0.46, 28),
                 new THREE.MeshBasicMaterial({color: 0xe6a23c, side: THREE.DoubleSide}),
@@ -1349,8 +1458,9 @@
             ring.position.y = 0.15;
             ring.visible = false;
             group.add(ring);
+            group.scale.setScalar(1.35);
             scene.add(group);
-            return {group, body, legs, arms, head, ring};
+            return {group, body, legs, arms, head, ring, eyes, mouth};
         }
 
         function residentInfo(agentId) {
@@ -1389,10 +1499,10 @@
                 bubble: null,
             };
             actor.label = addLabel('agent', {
-                copy: (out) => out.copy(actor.position).setY(1.95),
+                copy: (out) => out.copy(actor.position).setY(2.45),
             }, null);
             actor.bubble = addLabel('bubble', {
-                copy: (out) => out.copy(actor.position).setY(2.6),
+                copy: (out) => out.copy(actor.position).setY(3.1),
             }, null);
             actor.bubble.visible = false;
             actor.label.el.addEventListener('click', () => {
@@ -1535,6 +1645,7 @@
         function sync() {
             const state = campus.dataset.campusState || 'loading';
             if (state === 'loading') return;
+            if (typeof renderDeptCard === 'function' && deptOpen) setTimeout(renderDeptCard, 0);
             stage.setAttribute('data-campus-3d-live', state);
 
             folderViews.forEach((view) => {
@@ -1652,6 +1763,21 @@
                 actor.bubble.visible = false;
             });
             actors.forEach((actor) => {
+                // Mark 2026-10-23: people at rest stroll a little inside their own room now and then.
+                // Their label still says they wait for tasks; only verified events send them elsewhere.
+                if (actor.mode === 'idle' && !actor.meeting && actor !== coordinator && !actor.steps.length && actor.room === actor.homeRoom && actor.home && ROOMS[actor.homeRoom]) {
+                    actor.strollAt = actor.strollAt || time + 4 + Math.random() * 10;
+                    if (time >= actor.strollAt) {
+                        const room = ROOMS[actor.homeRoom];
+                        const away = actor.position.distanceTo(actor.home) > 0.2;
+                        const point = away ? actor.home.clone() : new THREE.Vector3(
+                            THREE.MathUtils.clamp(actor.home.x + (Math.random() - 0.5) * room.w * 0.45, room.x - room.w * 0.36, room.x + room.w * 0.36),
+                            0,
+                            THREE.MathUtils.clamp(actor.home.z + (Math.random() - 0.5) * room.d * 0.3, room.z - room.d * 0.3, room.z + room.d * 0.3));
+                        actor.steps = [{to: point, stroll: true, facing: away ? actor.homeFacing : undefined}];
+                        actor.strollAt = time + 7 + Math.random() * 12;
+                    }
+                }
                 const step = actor.steps[0];
                 if (step && step.pause !== undefined) {
                     animating = true;
@@ -1675,10 +1801,10 @@
                     }
                 } else if (step) {
                     animating = true;
-                    actor.mode = 'walk';
+                    actor.mode = step.stroll ? 'stroll' : 'walk';
                     scratch.copy(step.to).sub(actor.position).setY(0);
                     const distance = scratch.length();
-                    const travel = WALK_SPEED * dt;
+                    const travel = WALK_SPEED * (step.stroll ? 0.28 : 1) * dt;
                     if (distance > 0.001) {
                         actor.facing = Math.atan2(scratch.x, scratch.z);
                     }
@@ -1690,11 +1816,14 @@
                     } else {
                         actor.position.addScaledVector(scratch.normalize(), travel);
                     }
-                    actor.phase += dt * 11;
+                    actor.phase += dt * (step.stroll ? 6 : 11);
                 }
+                if (!actor.steps.length && actor.mode === 'stroll') actor.mode = 'idle';
                 if (!actor.steps.length && actor.mode !== 'idle') {
                     actor.mode = 'arrived';
                 }
+                // Breathing, blinking and looking around keep the room alive.
+                if (actor.mode === 'idle' || actor.mode === 'arrived' || actor.mode === 'meet') animating = true;
                 const working = actor.mode === 'arrived' && (actor.status === 'active' || actor.status === 'testing');
                 if (working) {
                     animating = true;
@@ -1709,14 +1838,32 @@
             const {group, body, legs, arms, head} = actor.person;
             group.position.copy(actor.position);
             group.rotation.y = actor.facing;
-            const walking = actor.mode === 'walk' && !reducedMotion.matches;
-            const swing = walking ? Math.sin(actor.phase) * 0.65 : 0;
+            const walking = (actor.mode === 'walk' || actor.mode === 'stroll') && !reducedMotion.matches;
+            const swing = walking ? Math.sin(actor.phase) * (actor.mode === 'stroll' ? 0.45 : 0.65) : 0;
             legs[0].rotation.x = swing;
             legs[1].rotation.x = -swing;
             arms[0].rotation.x = -swing * 0.8;
             arms[1].rotation.x = swing * 0.8;
             body.position.y = walking ? Math.abs(Math.sin(actor.phase)) * 0.06 : 0;
             head.rotation.y = 0;
+            head.rotation.x = 0;
+            const calm = !reducedMotion.matches;
+            const seed = actor.agentId.length * 1.7;
+            body.scale.y = calm && !walking ? 1 + Math.sin(time * 2.1 + seed) * 0.012 : 1;
+            const blink = calm && ((time + seed) % 3.6) < 0.12;
+            (actor.person.eyes || []).forEach((eye) => { eye.scale.y = blink ? 0.12 : 1; });
+            const talking = actor.mode === 'meet' || actor.meeting;
+            if (calm && !walking && !talking) head.rotation.y = Math.sin(time * 0.45 + seed) * 0.4;
+            if (calm && talking) {
+                // Talking: a nod and a hand that explains.
+                head.rotation.x = Math.sin(time * 5 + seed) * 0.08;
+                arms[1].rotation.x = -0.9 + Math.sin(time * 6 + seed) * 0.35;
+                arms[1].rotation.z = 0.35;
+                if (actor.person.mouth) actor.person.mouth.scale.y = 1 + Math.abs(Math.sin(time * 12)) * 0.8;
+            } else {
+                arms[1].rotation.z = 0.12;
+                if (actor.person.mouth) actor.person.mouth.scale.y = 1;
+            }
             if (working && !reducedMotion.matches) {
                 arms[0].rotation.x = -1.05 + Math.sin(actor.phase * 1.3) * 0.14;
                 arms[1].rotation.x = -1.05 + Math.sin(actor.phase * 1.3 + 1.8) * 0.14;

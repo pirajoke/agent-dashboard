@@ -769,8 +769,8 @@ def build_department_campus_html() -> str:
 <section class="section department-campus" id="department-campus" aria-labelledby="department-campus-title">
     <div class="section-head campus-head">
         <div class="section-dot" style="background:#e6a23c"></div>
-        <div><div class="section-title" id="department-campus-title">Pixel Verse · Кампус отделов</div>
-        <div class="campus-subtitle">Проверенные события Главного координатора · только просмотр</div></div>
+        <div><div class="section-title" id="department-campus-title">Кампус отделов</div>
+        <div class="campus-subtitle">Только просмотр</div></div>
         <div class="section-count" data-campus-count>{len(CAMPUS_RESIDENTS)} в команде · все ожидают задач</div>
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
         <button class="campus-view-toggle" type="button" data-campus-view-toggle
@@ -783,7 +783,7 @@ def build_department_campus_html() -> str:
     <div class="campus-stage-3d" data-campus-3d data-campus-3d-state="off" hidden aria-hidden="true">
         <div class="campus-3d-labels" data-campus-3d-labels></div>
         <div class="campus-3d-focus" data-campus-3d-focus hidden></div>
-        <p class="campus-3d-hint">Перетащите, чтобы повернуть · папка или сотрудник открывают сведения</p>
+        <p class="campus-3d-hint">Потяни, чтобы повернуть · нажми на отдел — кто чем занят</p>
     </div>
     <div class="campus-map" aria-label="Семь отделов Pixel Verse">
         <div class="campus-boulevard" aria-hidden="true"></div>
@@ -801,8 +801,8 @@ def build_department_campus_html() -> str:
     <div class="campus-bottom-grid">
         <section class="campus-task-panel" data-campus-task-panel hidden aria-labelledby="campus-task-title">
             <header class="campus-task-head">
-                <strong id="campus-task-title">Task lanes</strong>
-                <span>up to 3 verified live routes</span>
+                <strong id="campus-task-title">Задачи в пути</strong>
+                <span>до трёх сразу</span>
             </header>
             <div class="campus-task-lanes" data-campus-task-lanes aria-label="До трёх активных маршрутов задач"></div>
         </section>

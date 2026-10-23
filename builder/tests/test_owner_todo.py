@@ -116,6 +116,47 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         self.assertIn('id="mm-owner-todo"', PAGE)
         self.assertIn('id="mm-health"', PAGE)
 
+    def test_closed_items_open_in_a_window_with_undo(self):
+        # Mark 2026-10-23 ticked two items by mistake and could not find them again.
+        self.assertIn('id="todo-done-dialog"', PAGE)
+        self.assertIn("action: 'undo'", PAGE)
+        self.assertIn("'↩ Вернуть'", PAGE)
+        # The window lives outside the views, so it opens on every MAIN MANAGER tab.
+        self.assertLess(PAGE.index('id="todo-done-dialog"'), PAGE.index('data-mm-panel="map"'))
+        # Losing owner access empties and closes the windows, not only the lists on the page.
+        render = PAGE[PAGE.index("function mmRenderOwnerTodo("):PAGE.index("function mmRenderTodoDone(")]
+        self.assertIn("mmCloseTodoDone();", render)
+        self.assertIn("getElementById('todo-done-list')?.replaceChildren()", render)
+        projects = PAGE[PAGE.index("function mmRenderOwnerProjects("):PAGE.index("let mmOwnerProjectCards")]
+        self.assertIn("getElementById('owner-project-body')?.replaceChildren()", projects)
+
+    def test_projects_first_then_folded_blocks_then_history(self):
+        # Mark 2026-10-23: main projects on top; the summary, his tasks and «Личное» are one line each
+        # until opened (remembered per browser); «Дела» and «Изменения» come last as the history.
+        self.assertLess(PAGE.index('data-mm-panel="map"'), PAGE.index('id="mm-folds"'))
+        self.assertLess(PAGE.index('id="mm-folds"'), PAGE.index('id="mm-history"'))
+        folds = PAGE[PAGE.index('id="mm-folds"'):PAGE.index('id="mm-history"')]
+        for host in ('id="mm-summary"', 'id="mm-owner-todo"', 'id="mm-owner-projects"'):
+            self.assertIn(host, folds)
+        for key in ("'summary'", "'todo'", "'personal'"):
+            self.assertIn(f"mmFoldHead({key}", PAGE)
+        self.assertIn("safeStorageSet(`${MM_FOLD_KEY}.${head.dataset.fold}`", PAGE)
+        self.assertIn('.mm-fold:not(.is-open) > .mm-fold-body { display: none; }', PAGE)
+
+    def test_summary_is_owner_only_and_has_three_periods(self):
+        render = PAGE[PAGE.index("function mmRenderSummary("):PAGE.index("function mmInitSummary(")]
+        self.assertIn("if (!data?.owner_view", render)
+        self.assertIn("host.replaceChildren()", render)
+        for label in ("'День', 1", "'Неделя', 7", "'Месяц', 30"):
+            self.assertIn(label, PAGE)
+
+    def test_services_turned_off_on_purpose_never_show_red(self):
+        start = PAGE.index("const MM_HEALTH_TURNED_OFF")
+        block = PAGE[start:PAGE.index("]);", start)]
+        for label in ("homebrew.mxcl.ollama", "com.pirajoke.tag-website", "com.pirajoke.obsidian-tg-bot"):
+            self.assertIn(label, block)
+        self.assertIn("MM_HEALTH_TURNED_OFF.has(service.label)", PAGE)
+
 
 if __name__ == "__main__":
     unittest.main()

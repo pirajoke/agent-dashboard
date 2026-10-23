@@ -17,10 +17,10 @@
 <script>
 // One light or dark choice for the whole Command Center, per browser, set before the first paint.
 // Light unless this browser picked dark (Mark 2026-10-14: light by default, whatever the system says).
-// A new key, so an older dark pick from before that decision does not stick.
+// A new key, so an older dark pick does not stick (v3: Mark 2026-10-23 asked again for light by default).
 document.documentElement.dataset.theme = 'light';
 try {
-  if (localStorage.getItem('command-center.theme.v2') === 'dark') document.documentElement.dataset.theme = 'dark';
+  if (localStorage.getItem('command-center.theme.v3') === 'dark') document.documentElement.dataset.theme = 'dark';
 } catch (error) { /* stays light */ }
 </script>
 <style>
@@ -3104,7 +3104,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 
 .mm-nav { margin: 0 0 18px; }
 .mm-notice { margin: 0 0 20px; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
-.mm-notice.live { color: var(--mm-success); background: var(--mm-success-soft); border-color: transparent; }
+/* Mark 2026-10-23: one style on every tab. Fresh data is a quiet grey line, not a coloured banner. */
+.mm-notice.live { padding: 0; color: var(--mm-muted); background: none; border-color: transparent; font-size: 12.5px; }
 .mm-notice.stale, .mm-notice.empty, .mm-notice.error { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
 .mm-main { padding: 0; }
 .mm-sources { margin-top: 28px; color: var(--mm-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
@@ -3199,10 +3200,11 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-row-action.is-closed > span { color: var(--mm-danger); }
 .mm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: var(--mm-muted); border: 1px solid var(--mm-line); border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 
-.mm-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-.mm-filter-tabs button { min-height: 44px; padding: 8px 14px; color: var(--mm-muted); border: 1px solid var(--mm-control-line) !important; border-radius: 999px; font-size: 14px; }
-.mm-filter-tabs button:hover { color: var(--mm-accent); background: var(--mm-selection); }
-.mm-filter-tabs button[aria-pressed="true"] { color: var(--mm-background); background: var(--mm-ink); border-color: var(--mm-ink) !important; }
+/* Filters look like every other switch on the site: one light segmented control. */
+.mm-filter-tabs { display: inline-flex; flex-wrap: wrap; gap: 2px; margin-bottom: 20px; padding: 3px; background: var(--mm-surface-hover); border-radius: 10px; }
+.mm-filter-tabs button { min-height: 34px; padding: 4px 12px; color: var(--mm-muted); border: 0 !important; border-radius: 8px; font-size: 13.5px; font-weight: 600; }
+.mm-filter-tabs button:hover { color: var(--mm-ink); }
+.mm-filter-tabs button[aria-pressed="true"] { color: var(--mm-ink); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
 .mm-filter-tabs button span { margin-left: 6px; font-variant-numeric: tabular-nums; }
 
 
@@ -3461,7 +3463,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
 .mm-chip.is-accent { color: var(--mm-accent); background: var(--mm-selection); border-color: transparent; }
 /* Board 2026-10-21: main projects as compact cards, the Claude Code / Codex split, other folders folded. */
-.mm-map-agents { margin-bottom: 18px; }
+.mm-map-agents { margin-bottom: 14px; }
 .mm-map-agents .mm-dot { display: inline-block; margin-right: 6px; }
 .mm-agent-bar { display: flex; gap: 2px; height: 6px; overflow: hidden; border-radius: 999px; }
 .mm-agent-bar i { display: block; min-width: 0; height: 100%; }
@@ -3502,14 +3504,14 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-chart-box { margin-bottom: 24px; }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
 /* «Всё ли живо» and «Ждёт тебя» (Mark 2026-10-22). */
-.mm-health { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 16px; padding: 10px 14px; color: var(--mm-success); font: inherit; font-size: 14px; font-weight: 650; text-align: left; background: var(--mm-success-soft); border: 0; border-radius: 10px; cursor: pointer; }
+.mm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.mm-health { display: inline-flex; flex: none; align-items: center; gap: 8px; max-width: 46%; margin-top: 4px; padding: 6px 12px; color: var(--mm-success); font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: var(--mm-success-soft); border: 0; border-radius: 999px; cursor: pointer; }
 .mm-health[hidden] { display: none; }
 .mm-health::before { content: ""; flex: none; width: 9px; height: 9px; background: currentColor; border-radius: 50%; }
 .mm-health.is-problem { color: var(--mm-danger); background: var(--mm-danger-soft); }
 .mm-health.is-unknown { color: var(--mm-warning); background: var(--mm-warning-soft); }
-.mm-health .mm-health-more { margin-left: auto; font-weight: 500; white-space: nowrap; }
 .mm-health:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.mm-todo-card { max-width: 860px; margin: 0 0 22px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-todo-card { max-width: none; margin: 0 0 22px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .mm-todo-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .mm-todo-card-head h3 { margin: 0; font-size: 16px; font-weight: 750; }
 .mm-todo-card-head h3 span { color: var(--mm-muted); font-weight: 600; }
@@ -3524,7 +3526,104 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-todo-body small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
 .mm-todo-item.is-done .mm-todo-body { color: var(--mm-muted); text-decoration: line-through; }
 .mm-todo-check:focus-visible, .mm-todo-body:focus-visible, .mm-todo-add:focus-visible, .mm-todo-done-toggle:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.mm-todo-done-toggle { margin-top: 4px; padding: 4px 0; color: var(--mm-muted); font: inherit; font-size: 12.5px; background: none; border: 0; cursor: pointer; }
+.mm-todo-done-toggle { min-height: 34px; padding: 4px 12px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 600; background: none; border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+.mm-todo-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--mm-line); }
+.mm-todo-foot .mm-todo-add { margin-left: 0; }
+.mm-todo-foot .mm-todo-all { margin-right: auto; color: var(--mm-muted); border-color: transparent; }
+.mm-summary { margin: 0 0 18px; padding: 16px 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-summary-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.mm-summary-head h3 { font-size: 16px; font-weight: 750; }
+.mm-seg { display: inline-flex; padding: 3px; background: var(--mm-surface-hover); border-radius: 10px; }
+.mm-seg button { min-height: 30px; padding: 3px 12px; color: var(--mm-muted); font-size: 13px; font-weight: 600; border-radius: 8px; }
+.mm-seg button[aria-pressed="true"] { color: var(--mm-ink); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
+.mm-summary-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.mm-summary-tiles > div { min-width: 0; padding: 10px 12px; background: var(--mm-background); border-radius: 10px; }
+.mm-summary-tiles span { color: var(--mm-muted); font-size: 12.5px; }
+.mm-summary-tiles strong { display: block; font-size: 22px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.mm-summary-tiles strong.is-up { color: var(--mm-success); }
+.mm-summary-tiles strong.is-down { color: var(--mm-warning); }
+.mm-summary-tiles small { display: block; color: var(--mm-muted); font-size: 12px; line-height: 1.35; }
+.mm-summary-split h4 { margin: 14px 0 6px; color: var(--mm-muted); font-size: 12.5px; font-weight: 600; }
+.mm-summary-list { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.mm-summary-list li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) auto; align-items: center; gap: 12px; padding: 5px 0; }
+.mm-summary-list li[data-project] { cursor: pointer; }
+.mm-summary-list li[data-project]:hover .mm-summary-name { color: var(--mm-accent); }
+.mm-summary-name { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.mm-summary-name .mm-project-art { flex: none; width: 26px; height: 26px; overflow: hidden; border-radius: 7px; }
+.mm-summary-name .mm-project-art svg { width: 22px; height: 22px; }
+.mm-summary-name .mm-art-initials { font-size: 10px; }
+.mm-summary-bar { height: 8px; background: var(--mm-surface-hover); border-radius: 4px; overflow: hidden; }
+.mm-summary-bar i { display: block; height: 100%; background: var(--mm-accent); border-radius: 4px; }
+.mm-summary-time { min-width: 92px; font-size: 13.5px; font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
+.mm-summary-time small { display: block; color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
+.mm-summary-agents { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 10px 0 0; color: var(--mm-muted); font-size: 13px; }
+.mm-summary-agents i { display: inline-block; width: 9px; height: 9px; margin-left: 6px; border-radius: 3px; }
+.mm-summary-chart { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 10px; }
+.mm-summary-chart i { flex: 1; min-width: 2px; background: var(--mm-codex); border-radius: 3px 3px 0 0; opacity: .75; }
+.mm-summary-more { margin-top: 8px; padding: 4px 0; color: var(--mm-accent); font-size: 13px; font-weight: 650; }
+/* Mark 2026-10-23: one line per block until it is opened; projects on top, history below. */
+.mm-folds { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 26px 0 0; }
+.mm-folds > * { min-width: 0; }
+.mm-folds > [hidden] { display: none; }
+.mm-folds .mm-fold, .mm-folds .mm-summary, .mm-folds .mm-todo-card, .mm-folds .mm-owner-group { margin: 0; padding: 0; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; box-shadow: var(--mm-shadow-soft); overflow: hidden; }
+.mm-fold-head { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 60px; padding: 12px 18px; color: var(--mm-ink); font: inherit; text-align: left; background: none !important; border: 0 !important; border-radius: 0; cursor: pointer; }
+.mm-fold-head:hover { background: var(--mm-surface-hover) !important; }
+.mm-fold-head:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -2px; }
+.mm-fold-head h3 { flex: none; display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 750; }
+.mm-fold-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; color: #fff; font-size: 12.5px; font-weight: 700; background: var(--mm-accent); border-radius: 999px; }
+.mm-fold-meta { flex: 1; min-width: 0; overflow: hidden; color: var(--mm-muted); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.mm-fold-chev { flex: none; width: 10px; height: 10px; margin: -4px 4px 0 auto; border-right: 2px solid var(--mm-muted); border-bottom: 2px solid var(--mm-muted); transform: rotate(45deg); transition: transform .15s ease; }
+.mm-fold.is-open > .mm-fold-head .mm-fold-chev { margin-top: 4px; transform: rotate(-135deg); }
+.mm-fold-body { padding: 4px 18px 18px; border-top: 1px solid var(--mm-line); }
+.mm-fold:not(.is-open) > .mm-fold-body { display: none; }
+.mm-fold-body > .mm-summary-head { justify-content: flex-start; margin: 12px 0; }
+.mm-fold-body > .mm-owner-row { margin-top: 12px; }
+.mm-fold-note { margin: 10px 0 0; color: var(--mm-muted); font-size: 12.5px; }
+.mm-map-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 14px; }
+.mm-map-top .mm-map-group-head, .mm-map-top .mm-map-group-head h3, .mm-map-top .mm-filter-tabs { margin: 0; }
+.mm-history { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--mm-line); }
+.mm-history-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.mm-history-head h3 { margin: 0; font-size: 20px; font-weight: 750; letter-spacing: -.01em; }
+.mm-history-head .mm-nav { margin: 0; }
+.mm-os[data-mm-view="project"] .mm-folds, .mm-os[data-mm-view="project"] .mm-history { display: none; }
+@media (prefers-reduced-motion: reduce) { .mm-fold-chev { transition: none; } }
+@media (max-width: 600px) { .mm-fold-head { padding: 12px 14px; gap: 10px; } .mm-fold-body { padding: 4px 14px 16px; } }
+/* Mark 2026-10-23: the Agents screen in the same light style as the rest of the site. */
+#section-agents .pixel-agents-shell { min-height: 0; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; box-shadow: var(--mm-shadow-soft); }
+#section-agents .pixel-agents-shell.is-pinned { border-color: var(--mm-accent); }
+#section-agents .pixel-agents-gamebar { position: static; flex-direction: row; align-items: center; padding: 10px 14px; color: var(--mm-ink); background: var(--mm-surface); border: 0; border-bottom: 1px solid var(--mm-line); border-radius: 0; box-shadow: none; }
+#section-agents .pixel-agents-gamebar-title { font-size: 15px; font-weight: 750; }
+#section-agents .pixel-agents-gamebar-title span { color: var(--mm-muted); font-size: 13px; font-weight: 500; }
+#section-agents .pixel-control-btn, #section-agents .pixel-pin-btn { min-height: 34px; padding: 5px 12px; color: var(--mm-ink); font-size: 13px; font-weight: 600; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; transform: none; }
+#section-agents .pixel-control-btn:hover, #section-agents .pixel-pin-btn:hover { background: var(--mm-surface-hover); border-color: var(--mm-control-line); color: var(--mm-ink); }
+#section-agents .pixel-control-btn.active, #section-agents .pixel-pin-btn.active { color: var(--mm-accent); background: var(--mm-surface); border-color: var(--mm-accent); }
+#section-agents .pixel-agents-actions a { padding: 0 6px; color: var(--mm-accent); font-size: 13px; font-weight: 650; }
+#section-agents .pixel-agents-viewport, #section-agents .pixel-agents-frame { background: var(--mm-surface); }
+#section-agents .pixel-agents-viewport { height: min(76vh, 860px); min-height: 560px; }
+@media (max-width: 760px) { #section-agents .pixel-agents-gamebar { flex-direction: column; align-items: stretch; } #section-agents .pixel-agents-viewport { min-height: 480px; } }
+.mm-more { margin-top: 28px; }
+.mm-more > summary { color: var(--mm-muted); font-size: 12.5px; cursor: pointer; }
+.mm-more .mm-sources { margin-top: 8px; }
+@media (max-width: 600px) { .mm-summary-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mm-summary-list li { grid-template-columns: minmax(0, 1fr) auto; } .mm-summary-bar { grid-column: 1 / -1; grid-row: 2; } }
+.mm-todo-done-list { margin: 0; }
+.mm-todo-done-list .mm-todo-body { color: var(--mm-muted); cursor: default; }
+.mm-todo-back { flex: none; min-height: 34px; padding: 4px 14px; color: var(--mm-accent); font: inherit; font-size: 13px; font-weight: 650; background: none; border: 1px solid var(--mm-accent); border-radius: 999px; cursor: pointer; }
+.mm-todo-back:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.mm-os[data-mm-view="project"] #mm-owner-todo, .mm-os[data-mm-view="project"] #mm-owner-projects { display: none; }
+.mm-nav b { display: none; }
+@media (max-width: 600px) { .mm-head { flex-wrap: wrap; } .mm-health { max-width: 100%; } }
+.mm-week { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0 0 16px; color: var(--mm-muted); font-size: 14px; }
+.mm-week b { color: var(--mm-ink); font-weight: 650; }
+.mm-week i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; }
+.mm-owner-group { display: grid; gap: 10px; margin: 0 0 22px; }
+.mm-owner-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; text-align: left; background: var(--mm-surface) !important; border: 1px solid var(--mm-line) !important; border-radius: 14px; }
+.mm-owner-row:hover { background: var(--mm-surface-hover) !important; }
+.mm-owner-row-tag { flex: none; padding: 3px 8px; color: var(--mm-violet); font-size: 12px; font-weight: 650; background: var(--mm-info-soft); border-radius: 999px; }
+.mm-owner-row-text { display: grid; min-width: 0; }
+.mm-owner-row-text strong { font-size: 15px; }
+.mm-owner-row-text small { overflow: hidden; color: var(--mm-muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.mm-owner-row-go { margin-left: auto; color: var(--mm-muted); font-size: 20px; }
+#owner-project-body .mm-owner-card { max-width: none; border: 0; padding: 0; }
 .mm-todo-empty { margin: 4px 0 0; color: var(--mm-muted); font-size: 13px; }
 /* Agents take items off the list (Mark 2026-10-23): a chip on the item and a lane where they walk. */
 .mm-todo-main { flex: 1; min-width: 0; }
@@ -3623,8 +3722,9 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 }
 
 /* «Точки роста»: what Mark wants to learn, read from his Obsidian note. */
-.growth-summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.growth-summary .mm-stat { flex: 1 1 160px; }
+.growth-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.growth-summary .mm-stat { flex: 1 1 160px; padding: 10px 12px; background: var(--mm-background); border: 0; border-radius: 10px; }
+.growth-summary .mm-stat strong { font-size: 22px; }
 .growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .growth-card { --growth-tint: var(--mm-selection); display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .growth-card[data-picture="pe"] { --growth-tint: #FEF3C7; }
@@ -3895,7 +3995,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:20px 0; }
 .context-controls label { display:flex; flex-direction:column; gap:6px; color:var(--mm-muted); font-size:13px; }
 .context-controls label:first-child { flex:1 1 220px; }
-.context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:9px; padding:10px 12px; min-height:44px; }
+.context-controls input,.context-controls select,.context-controls button,.context-reader button { font:inherit; font-size:14px; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:10px; padding:8px 12px; min-height:40px; }
+.context-controls button { color:var(--mm-accent); font-weight:650; cursor:pointer; }
 .context-controls :focus-visible,.context-row:focus-visible,.context-reader a:focus-visible,.context-reader button:focus-visible,.context-reader summary:focus-visible { outline:3px solid var(--mm-info); outline-offset:3px; }
 .context-status,.context-sources { color:var(--mm-muted); font-size:14px; margin:10px 0; overflow-wrap:anywhere; }
 .context-layout { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; align-items:start; }
@@ -3928,6 +4029,28 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-actions a[hidden] { display:none; }
 .context-links { margin-top:24px; padding-top:16px; border-top:1px solid var(--mm-line); }
 .context-links h4 { margin:0; font-size:15px; }
+/* Mark 2026-10-23: records as clear cards, one search field, no walls of text. */
+.context-controls { flex-wrap: nowrap; align-items: center; gap: 8px; margin: 18px 0 8px; }
+.context-controls label { flex: none; }
+.context-controls label.context-search-field { position: relative; flex: 1 1 auto; min-width: 0; }
+.context-search-field svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; color: var(--mm-muted); transform: translateY(-50%); pointer-events: none; }
+.context-controls .context-search-field input { width: 100%; min-height: 46px; padding-left: 42px; border-radius: 12px; font-size: 15px; }
+.context-controls select { min-height: 46px; border-radius: 12px; }
+.context-controls button { min-width: 46px; min-height: 46px; padding: 0; font-size: 18px; border-radius: 12px; }
+.context-status { margin: 4px 0 16px; font-size: 12.5px; }
+.context-list { display: grid; gap: 10px; }
+.context-row { flex-direction: row; align-items: center; gap: 14px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); }
+.context-row:hover, .context-row[aria-pressed="true"] { background: var(--mm-surface); border-color: var(--mm-accent); }
+.context-row-icon { display: grid; place-items: center; flex: none; width: 42px; height: 42px; color: #7a5bc7; background: #efeafb; border-radius: 12px; }
+.context-row-icon.is-update { color: var(--mm-accent); background: var(--mm-selection); }
+.context-row-icon svg { width: 22px; height: 22px; }
+.context-row-text { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.context-row-text strong { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
+.context-row-text small { font-size: 13px; }
+.context-row-go { flex: none; color: var(--mm-muted); font-size: 22px; }
+.context-reader { padding: 22px 24px; border-radius: 16px; box-shadow: var(--mm-shadow-soft); }
+.context-reader #context-close { border-radius: 10px; }
+@media (max-width: 600px) { .context-controls { flex-wrap: wrap; } .context-controls label.context-search-field { flex-basis: 100%; } .context-controls label:not(.context-search-field) { flex: 1 1 0; } .context-controls select { width: 100%; } }
 .context-links p { color:var(--mm-muted); font-size:13px; margin:8px 0; }
 .context-links ul { padding:0; margin:0; list-style:none; }
 .context-links a { min-height:44px; margin:0; padding:10px 0; overflow-wrap:anywhere; }
@@ -3936,7 +4059,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 /* DOCXX: a readable route, with motion tied only to the processor lock. */
 #section-documents { max-width:1480px; }
 .docxx-head { align-items:center; gap:20px; }
-.docxx-button { font:inherit; font-size:13px; padding:10px 14px; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:8px; cursor:pointer; }
+.docxx-button { font:inherit; font-size:13px; font-weight:650; min-height:36px; padding:6px 14px; color:var(--mm-accent); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:10px; cursor:pointer; }
 .docxx-button:hover { background:var(--mm-selection); }
 .docxx-button:disabled { opacity:.6; cursor:wait; }
 .docxx-unified { border-block:1px solid var(--mm-line); padding:20px 0; margin:16px 0; }
@@ -4018,6 +4141,60 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-help p { max-width:78ch; }
 .docxx-warnings { padding:14px 18px; margin-top:16px; border-radius:8px; color:var(--mm-warning); background:var(--mm-warning-soft); font-size:13px; line-height:1.6; }
 .docxx-footnote { margin-top:25px; max-width:90ch; }
+/* Mark 2026-10-23: a clear, calm flow with a 3D Mac mini in the middle. */
+.docxx-flow { padding: 26px 0 18px; }
+.docxx-column h3 { margin: 0 0 14px; color: var(--mm-muted); font-size: 13px; font-weight: 650; text-transform: none; }
+.docxx-node { min-height: 72px; padding: 14px; gap: 14px; border-radius: 14px; box-shadow: var(--mm-shadow-soft); transition: border-color .15s, transform .15s; }
+.docxx-node:hover { transform: translateY(-1px); }
+.docxx-node[aria-pressed="true"] { background: var(--mm-surface); }
+.docxx-symbol { display: grid; place-items: center; flex: none; width: 42px; height: 42px; min-width: 0; border-radius: 12px; font-size: 0; }
+.docxx-symbol svg { width: 22px; height: 22px; }
+.docxx-tone-blue { color: #2f7fd1; background: #e6f0fb; }
+.docxx-tone-violet { color: #7a5bc7; background: #efeafb; }
+.docxx-tone-red { color: #c4513f; background: #fbebe7; }
+.docxx-tone-green { color: #2f9361; background: #e5f5ec; }
+.docxx-tone-amber { color: #b97813; background: #fbf1df; }
+.docxx-go { color: var(--mm-muted); font-size: 20px; }
+.docxx-machine { min-height: 0; padding: 6px 12px 16px; background: linear-gradient(180deg, var(--mm-surface), var(--mm-background)); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
+.docxx-machine[aria-pressed="true"] { border-color: var(--mm-line); }
+.docxx-machine:hover { border-color: var(--mm-accent); }
+.docxx-machine svg.docxx-mini { width: 210px; height: 178px; margin: 0; color: inherit; }
+.docxx-machine strong { font-size: 16px; }
+.docxx-machine span { color: var(--mm-muted); }
+.docxx-connector { margin-top: 120px; }
+.docxx-mini-docs, .docxx-mini-arrow { transform-box: view-box; }
+.docxx-flow[data-active="true"] .docxx-mini-docs { animation: docxx-drop 2.4s ease-in-out infinite; }
+@keyframes docxx-drop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+.docxx-explainer[hidden] { display: none; }
+.docxx-record-icon { display: grid; place-items: center; flex: none; width: 34px; height: 34px; color: var(--mm-accent); background: var(--mm-selection); border-radius: 10px; }
+.docxx-record-icon svg { width: 18px; height: 18px; }
+.docxx-explainer { margin-bottom: 8px; padding: 14px 18px; border-radius: 14px; }
+.docxx-facts { gap: 8px; padding: 14px 0 18px; }
+.docxx-facts > span { padding: 6px 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; font-size: 12.5px; }
+@media (prefers-reduced-motion: reduce) { .docxx-flow[data-active="true"] .docxx-mini-docs { animation: none; } .docxx-node { transition: none; } }
+@media (max-width: 700px) { .docxx-connector { margin: 0; } .docxx-machine svg.docxx-mini { width: 170px; height: 144px; } }
+/* 3D route (Mark 2026-10-23). */
+.docxx-stage { position: relative; height: 460px; margin: 22px 0 6px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, #fffdf8 0%, #f3ece0 70%, #ece3d4 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
+.docxx-stage.is-dragging { cursor: grabbing; }
+.docxx-stage[hidden] { display: none; }
+.docxx-stage canvas { display: block; width: 100%; height: 100%; }
+.docxx-stage-labels { position: absolute; inset: 0; pointer-events: none; }
+.docxx-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: rgba(255, 252, 246, .94); border: 1px solid var(--mm-line); border-radius: 12px; box-shadow: 0 2px 8px rgba(60, 45, 20, .1); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
+.docxx-stage-label small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
+.docxx-stage-label:hover, .docxx-stage-label[aria-pressed="true"] { border-color: var(--mm-accent); }
+.docxx-stage-label:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.docxx-stage-label.is-hub { padding: 8px 14px; font-size: 14.5px; border-color: var(--mm-accent); }
+.docxx-stage-hint { position: absolute; left: 14px; bottom: 12px; margin: 0; padding: 5px 10px; color: var(--mm-muted); font-size: 12px; background: rgba(255, 252, 246, .85); border-radius: 999px; pointer-events: none; }
+.docxx-stage-reset { position: absolute; right: 12px; bottom: 10px; min-height: 32px; padding: 4px 12px; color: var(--mm-accent); font: inherit; font-size: 12.5px; font-weight: 650; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+#section-documents.has-3d .docxx-flow { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 14px; }
+#section-documents.has-3d .docxx-flow > .docxx-connector, #section-documents.has-3d .docxx-column h3, #section-documents.has-3d .docxx-machine { display: none; }
+#section-documents.has-3d .docxx-column { display: contents; }
+#section-documents.has-3d .docxx-node { width: auto; min-height: 0; margin: 0; padding: 6px 12px 6px 6px; gap: 8px; border-radius: 999px; box-shadow: none; }
+#section-documents.has-3d .docxx-node small, #section-documents.has-3d .docxx-node .docxx-go { display: none; }
+#section-documents.has-3d .docxx-node strong { margin: 0; font-size: 13px; }
+#section-documents.has-3d .docxx-symbol { width: 30px; height: 30px; border-radius: 50%; }
+#section-documents.has-3d .docxx-symbol svg { width: 17px; height: 17px; }
+@media (max-width: 700px) { .docxx-stage { height: 360px; border-radius: 16px; } .docxx-stage-hint { display: none; } .docxx-stage-label { font-size: 12px; padding: 5px 9px; } }
 @keyframes docxx-travel { from { transform:translateX(-16px); } to { transform:translateX(48px); } }
 @keyframes docxx-pulse { 50% { opacity:.25; } }
 @media(max-width:1000px) { .docxx-flow { gap:8px; grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); } .docxx-node { padding:12px 10px; gap:8px; } .docxx-symbol { min-width:18px; font-size:20px; } }
@@ -4319,6 +4496,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <path d="M60 86V46" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
     <path d="M60 58c0-16 12-26 30-26 0 16-12 26-30 26zM60 70c0-12-9-20-24-20 0 12 9 20 24 20z" fill="#86EFAC" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
   </symbol>
+  <symbol id="cc-icon-docs" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="cc-icon-context" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-work" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
@@ -4342,8 +4521,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true">▤</span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true">🎙️</span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
   <div class="cc-side-foot">
@@ -4386,8 +4565,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <main class="cc-main">
   <section id="section-documents" class="section" aria-labelledby="docxx-title">
     <header class="cc-page-head docxx-head">
-      <div><h2 class="cc-page-title" id="docxx-title">Документы без суеты</h2><p class="cc-page-lede">Разные источники. Одна понятная библиотека.</p></div>
-      <button type="button" class="docxx-button" id="docxx-help-toggle" aria-expanded="false" aria-controls="docxx-help">Как добавить документ ↗</button>
+      <div><h2 class="cc-page-title" id="docxx-title">Документы</h2><p class="cc-page-lede">Что Mac mini разобрал и куда положил.</p></div>
+      <button type="button" class="docxx-button" id="docxx-help-toggle" aria-expanded="false" aria-controls="docxx-help">Как добавить документ</button>
     </header>
     <div class="docxx-statusbar" role="status" aria-live="polite">
       <span class="docxx-indicator" id="docxx-indicator" data-state="unavailable"></span>
@@ -4395,34 +4574,57 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" id="docxx-refresh" class="docxx-button">Обновить</button>
     </div>
     <div id="docxx-warnings" class="docxx-warnings" hidden></div>
+    <!-- Mark 2026-10-23: the document route as a 3D scene to turn around; the buttons below stay as its list form. -->
+    <div class="docxx-stage" id="docxx-stage" hidden>
+      <div class="docxx-stage-labels" id="docxx-stage-labels"></div>
+      <p class="docxx-stage-hint" id="docxx-stage-hint">Потяни, чтобы повернуть · колёсико или два пальца — приблизить</p>
+      <button type="button" class="docxx-stage-reset" id="docxx-stage-reset">Вернуть вид</button>
+    </div>
     <div class="docxx-flow" id="docxx-flow" data-active="false" aria-label="Путь документа: поступление, обработка на Mac mini, результат">
       <div class="docxx-column">
         <h3>Ты добавляешь</h3>
-        <button type="button" class="docxx-node" data-docxx-step="icloud" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">☁</span><span><strong>С iPhone</strong><small>iCloud Drive → DOCXX Inbox</small></span><span aria-hidden="true">↗</span></button>
-        <button type="button" class="docxx-node" data-docxx-step="drive" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">▱</span><span><strong>С компьютера</strong><small>Файл или папка → DOCXXx</small></span><span aria-hidden="true">↗</span></button>
-        <button type="button" class="docxx-node" data-docxx-step="gmail" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✉</span><span><strong>Из Gmail</strong><small id="docxx-gmail-state">Импорт через чат · фоновая проверка не подтверждена</small></span><span aria-hidden="true">↗</span></button>
-        <p class="docxx-caption" id="docxx-gmail-freshness">Для импорта укажи письмо или отправителя в чате.</p>
-        <p class="docxx-caption">ChatGPT и «Мой диск» тоже поддерживаются как дополнительные входы.</p>
+        <button type="button" class="docxx-node" data-docxx-step="icloud" aria-pressed="false"><span class="docxx-symbol docxx-tone-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.4 9.2 4.5 4.5 0 0 0 7 18Z"/></svg></span><span><strong>С iPhone</strong><small>iCloud Drive → DOCXX Inbox</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="drive" aria-pressed="false"><span class="docxx-symbol docxx-tone-violet" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.6"/><path d="M2.5 19h19"/></svg></span><span><strong>С компьютера</strong><small>Файл или папка → DOCXXx</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="gmail" aria-pressed="false"><span class="docxx-symbol docxx-tone-red" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span><span><strong>Из Gmail</strong><small id="docxx-gmail-state">Импорт через чат · фоновая проверка не подтверждена</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
+        <p class="docxx-caption" id="docxx-gmail-freshness" hidden></p>
       </div>
       <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
       <div class="docxx-column docxx-processor">
         <h3>Mini разбирает</h3>
         <button type="button" class="docxx-machine" data-docxx-step="processor" aria-pressed="true">
-          <svg viewBox="0 0 160 100" aria-hidden="true"><path d="M25 65L62 43L137 60L100 84Z" fill="var(--mm-selection)" stroke="currentColor" stroke-width="2"/><path d="M25 65V78L100 95L137 72V60M100 84V95" fill="none" stroke="currentColor" stroke-width="2"/><path d="M64 28V5H96L111 20V45H64V28Z" fill="var(--mm-surface)" stroke="currentColor" stroke-width="2"/><path d="M96 5V20H111M75 27H99M75 35H91" fill="none" stroke="currentColor" stroke-width="2"/><circle class="docxx-machine-led" cx="113" cy="79" r="2" fill="currentColor"/></svg>
+          <svg class="docxx-mini" viewBox="0 0 200 170" aria-hidden="true">
+            <defs>
+              <linearGradient id="docxx-mini-top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfcfd"/><stop offset="1" stop-color="#d9dee4"/></linearGradient>
+              <linearGradient id="docxx-mini-left" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9cfd6"/><stop offset="1" stop-color="#aeb6bf"/></linearGradient>
+              <linearGradient id="docxx-mini-right" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8c0c9"/><stop offset="1" stop-color="#97a1ac"/></linearGradient>
+              <radialGradient id="docxx-mini-glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="var(--mm-accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--mm-accent)" stop-opacity="0"/></radialGradient>
+              <filter id="docxx-mini-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+            </defs>
+            <ellipse cx="100" cy="132" rx="86" ry="30" fill="url(#docxx-mini-glow)"/>
+            <ellipse cx="100" cy="140" rx="62" ry="12" fill="#3c2d14" opacity=".16" filter="url(#docxx-mini-soft)"/>
+            <path d="M34 106 L100 139 L100 152 Q100 155 97 153.6 L36.5 123.4 Q34 122 34 119 Z" fill="url(#docxx-mini-left)"/>
+            <path d="M100 139 L166 106 L166 119 Q166 122 163.5 123.4 L103 153.6 Q100 155 100 152 Z" fill="url(#docxx-mini-right)"/>
+            <path d="M100 73 Q103 71.5 106 73 L163 101.5 Q169 104.5 163 107.5 L106 136 Q100 139 94 136 L37 107.5 Q31 104.5 37 101.5 L94 73 Q97 71.5 100 73 Z" fill="url(#docxx-mini-top)" stroke="#ffffff" stroke-width="1"/>
+            <ellipse cx="100" cy="104.5" rx="15" ry="7.5" fill="none" stroke="#c3cad2" stroke-width="1.2"/>
+            <circle class="docxx-machine-led" cx="152" cy="118" r="2.4" fill="#34c27a"/>
+            <g class="docxx-mini-docs">
+              <g transform="matrix(.894 .447 0 1 66 10)"><rect width="34" height="44" rx="3" fill="#ffffff" stroke="#cfd6de"/><path d="M7 11h20M7 18h20M7 25h13" stroke="var(--mm-accent)" stroke-width="2" stroke-linecap="round" opacity=".7"/></g>
+              <g transform="matrix(.894 .447 0 1 88 4)"><rect width="34" height="44" rx="3" fill="#ffffff" stroke="#cfd6de"/><path d="M7 11h20M7 18h20M7 25h13" stroke="#e6a23c" stroke-width="2" stroke-linecap="round" opacity=".8"/></g>
+            </g>
+            <path class="docxx-mini-arrow" d="M100 62 v8 m-4 -4 l4 4 l4 -4" stroke="var(--mm-accent)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           <strong>Mac mini</strong><span id="docxx-machine-label">Статус ещё не получен</span>
         </button>
-        <ol class="docxx-steps"><li>Читает содержимое</li><li>Сверяет с каталогом</li><li>Уточняет имя и папку</li><li>Проверяет результат в облаке</li></ol>
-        <p class="docxx-caption">Проверка каждые 5 минут.<br>Синхронизация может занять дольше.</p>
+
       </div>
       <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
       <div class="docxx-column">
         <h3>Ты находишь</h3>
-        <button type="button" class="docxx-node" data-docxx-step="library" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✓</span><span><strong>На своём месте</strong><small>Название по содержимому</small></span><span aria-hidden="true">↗</span></button>
-        <button type="button" class="docxx-node" data-docxx-step="review" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">?</span><span><strong>На разборе</strong><small>Если назначение неясно</small></span><span aria-hidden="true">↗</span></button>
-        <p class="docxx-caption">Точное совпадение сверяется с оригиналом. Неясный файл остаётся доступным.</p>
+        <button type="button" class="docxx-node" data-docxx-step="library" aria-pressed="false"><span class="docxx-symbol docxx-tone-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span><span><strong>На своём месте</strong><small>Название по содержимому</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="review" aria-pressed="false"><span class="docxx-symbol docxx-tone-amber" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 9a3 3 0 1 1 4.1 2.8c-.8.3-1.3 1-1.3 1.9v.3"/><path d="M12 17.5h.01"/></svg></span><span><strong>На разборе</strong><small>Если назначение неясно</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
       </div>
     </div>
-    <div class="docxx-explainer" id="docxx-explainer"><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
+    <div class="docxx-explainer" id="docxx-explainer" hidden><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
     <div class="docxx-facts" aria-label="Последний снимок обработки файлов из iCloud и Google Drive"><span>Очередь файлов <b id="docxx-pending">—</b></span><span>Нужен разбор <b id="docxx-review">—</b></span><span>В каталоге <b id="docxx-catalog-count">—</b></span><span>Вызовы модели за проход <b id="docxx-model">—</b></span></div>
     <details class="docxx-unified" id="docxx-operations">
       <summary>Общая история обработки</summary>
@@ -4446,27 +4648,26 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="docxx-results-head"><div><h3>Что произошло с документами</h3><p id="docxx-results-note">Последний проход и ограниченная история обработчика.</p></div><label class="docxx-search">Поиск по показанным операциям<input id="docxx-search" type="search" placeholder="Название или папка" autocomplete="off" maxlength="200"></label></div>
     <div class="docxx-filters" role="group" aria-label="Показать операции"><button type="button" data-docxx-filter="all" aria-pressed="true">Все</button><button type="button" data-docxx-filter="attention" aria-pressed="false">Нужно внимание</button><button type="button" data-docxx-filter="complete" aria-pressed="false">Обработанные</button></div>
     <div id="docxx-records" class="docxx-records"><p class="docxx-empty">Проверяем доступ к журналу обработки…</p></div>
-    <p class="docxx-footnote">Журнал обработки — не список всех файлов на Диске. Содержимое документов здесь не публикуется. Анимация включается только при занятом обработчике; подробные шаги показаны как инструкция.</p>
   </section>
 
   <section id="section-context" class="section" aria-labelledby="context-title">
     <header class="cc-page-head"><div><h2 class="cc-page-title" id="context-title">Встречи и контекст</h2>
-    <p class="cc-page-lede">Транскрипты и последние обновления проектов. Основная версия хранится в Obsidian.</p></div></header>
+    <p class="cc-page-lede">Записи встреч и обновления проектов. Нажми на запись, чтобы прочитать.</p></div></header>
     <form class="context-controls" id="context-filters" role="search">
-      <label>Найти в записях<input id="context-search" type="search" maxlength="1000" placeholder="Тема, решение или проект" autocomplete="off"></label>
-      <label>Источник<select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
-      <label>Тип<select id="context-kind"><option value="">Все записи</option><option value="transcript">Транскрипты</option><option value="update">Обновления</option></select></label>
-      <button type="submit">Обновить</button>
+      <label class="context-search-field"><span class="cc-visually-hidden">Найти в записях</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="context-search" type="search" maxlength="1000" placeholder="Найти: тема, решение или проект" autocomplete="off"></label>
+      <label><span class="cc-visually-hidden">Источник</span><select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
+      <label><span class="cc-visually-hidden">Тип</span><select id="context-kind"><option value="">Все записи</option><option value="transcript">Встречи</option><option value="update">Обновления</option></select></label>
+      <button type="submit" aria-label="Обновить записи" title="Обновить">↻</button>
     </form>
     <p id="context-status" class="context-status" role="status" aria-live="polite">Записи доступны после проверки доступа владельца.</p>
-    <p id="context-sources" class="context-sources"></p>
+    <p id="context-sources" class="context-sources" hidden></p>
     <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
       <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Просмотр записи">
         <button type="button" id="context-close">← Все записи</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p>
         <nav class="context-actions" aria-label="Перейти из записи">
-          <a id="context-obsidian"><span aria-hidden="true">📝</span> Оригинал в Obsidian</a>
-          <a id="context-work" href="?tab=work&amp;view=todo"><span aria-hidden="true">📋</span> Дела и результаты</a>
-          <a id="context-agents" href="?tab=agents"><span aria-hidden="true">🤖</span> Агенты</a>
+          <a id="context-obsidian">Оригинал в Obsidian</a>
+          <a id="context-work" href="?tab=work&amp;view=todo">Дела и результаты</a>
+          <a id="context-agents" href="?tab=agents">Агенты</a>
         </nav>
         <div id="context-body" class="context-body"></div>
         <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
@@ -4479,7 +4680,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head platforms-header">
       <div>
         <h2 class="cc-page-title platforms-title" id="platforms-title">Платформы</h2>
-        <p class="cc-page-lede">Все продукты, админки и Telegram-боты в одном месте. Всё работает на Mac mini, закрытые ссылки открываются через SSH-туннель по Tailscale.</p>
+        <p class="cc-page-lede">Все продукты, админки и боты в одном месте.</p>
       </div>
     </header>
     <ul class="platforms-legend" aria-label="Как открывается каждая ссылка">
@@ -4488,8 +4689,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Закрыто · SSH</strong><small>сначала SSH-туннель</small></li>
     </ul>
 
-    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true">Чтобы поменять порядок, удерживайте карточку и перетащите её.</p>
-    <div class="platform-directory">
+    <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div class="platform-directory" title="Удерживайте карточку и перетащите, чтобы поменять порядок">
       <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
@@ -4736,57 +4937,87 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
   <section id="section-work" class="section active" aria-labelledby="mm-title">
     <div class="mm-os" id="mm-os">
-      <header class="cc-page-head">
+      <header class="cc-page-head mm-head">
         <div>
           <h2 class="cc-page-title" id="mm-title">MAIN MANAGER</h2>
-          <p class="cc-page-lede">Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.</p>
+          <p class="cc-page-lede" id="mm-today">Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.</p>
         </div>
+        <!-- Mark 2026-10-22: whether everything on the Mac mini is alive; since 2026-10-23 a small badge, not a banner. -->
+        <button type="button" class="mm-health" id="mm-health" hidden></button>
       </header>
-      <!-- Mark 2026-10-22: one line that says whether everything on the Mac mini is alive. -->
-      <button type="button" class="mm-health" id="mm-health" hidden></button>
-      <nav class="cc-tabs mm-nav" aria-label="Разделы MAIN MANAGER">
-        <button type="button" data-mm-view="map" aria-pressed="true">Проекты <b id="mm-map-count">0</b></button>
-        <button type="button" data-mm-view="todo" aria-pressed="false">Дела <b id="mm-todo-count">0</b></button>
-        <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
-      </nav>
+      <dialog class="platform-archive-dialog platform-edit-dialog" id="todo-edit-dialog" aria-labelledby="todo-edit-title">
+        <header class="platform-archive-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
+          <h3 id="todo-edit-title">Новое дело</h3>
+          <button class="platform-archive-close" id="todo-edit-close" type="button" aria-label="Закрыть без сохранения">✕</button>
+        </header>
+        <form class="platform-edit-form" id="todo-edit-form" method="dialog" novalidate>
+          <label>Что сделать
+            <textarea id="todo-edit-text" name="text" rows="2" maxlength="200" required></textarea>
+          </label>
+          <label>Подробности
+            <input id="todo-edit-note" name="note" type="text" maxlength="300" autocomplete="off">
+            <small>Необязательно: где это, кому написать, ссылка.</small>
+          </label>
+          <p class="platform-edit-note" id="todo-edit-note-msg" role="status" aria-live="polite"></p>
+          <div class="platform-edit-actions">
+            <button type="submit" class="platform-edit-save">Сохранить</button>
+            <button type="button" id="todo-edit-cancel">Отмена</button>
+            <button type="button" class="platform-edit-reset" id="todo-edit-delete" hidden>Удалить</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog class="platform-archive-dialog" id="todo-done-dialog" aria-labelledby="todo-done-title">
+        <header class="platform-archive-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>
+          <h3 id="todo-done-title">Сделано</h3>
+          <p>Отметил случайно? «Вернуть» кладёт дело обратно в список.</p>
+          <button class="platform-archive-close" id="todo-done-close" type="button" aria-label="Закрыть">✕</button>
+        </header>
+        <div class="platform-archive-body"><ul class="mm-todo-items mm-todo-done-list" id="todo-done-list"></ul></div>
+      </dialog>
+      <dialog class="platform-archive-dialog" id="owner-project-dialog" aria-label="Личное">
+        <header class="platform-archive-head">
+          <h3>Личное</h3>
+          <p>Видно только тебе. Полные данные — в документах по кнопкам.</p>
+          <button class="platform-archive-close" id="owner-project-close" type="button" aria-label="Закрыть">✕</button>
+        </header>
+        <div class="platform-archive-body" id="owner-project-body"></div>
+      </dialog>
       <h3 class="cc-visually-hidden" id="mm-view-title">Проекты</h3>
       <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
+      <!-- Mark 2026-10-23: main projects first; the summary, his tasks and the personal block fold
+           under them; the history («Дела», «Изменения») comes last. -->
       <div class="mm-main">
         <div class="mm-view" data-mm-panel="map">
-          <div id="mm-owner-todo" hidden></div>
-          <dialog class="platform-archive-dialog platform-edit-dialog" id="todo-edit-dialog" aria-labelledby="todo-edit-title">
-            <header class="platform-archive-head">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
-              <h3 id="todo-edit-title">Новое дело</h3>
-              <button class="platform-archive-close" id="todo-edit-close" type="button" aria-label="Закрыть без сохранения">✕</button>
-            </header>
-            <form class="platform-edit-form" id="todo-edit-form" method="dialog" novalidate>
-              <label>Что сделать
-                <textarea id="todo-edit-text" name="text" rows="2" maxlength="200" required></textarea>
-              </label>
-              <label>Подробности
-                <input id="todo-edit-note" name="note" type="text" maxlength="300" autocomplete="off">
-                <small>Необязательно: где это, кому написать, ссылка.</small>
-              </label>
-              <p class="platform-edit-note" id="todo-edit-note-msg" role="status" aria-live="polite"></p>
-              <div class="platform-edit-actions">
-                <button type="submit" class="platform-edit-save">Сохранить</button>
-                <button type="button" id="todo-edit-cancel">Отмена</button>
-                <button type="button" class="platform-edit-reset" id="todo-edit-delete" hidden>Удалить</button>
-              </div>
-            </form>
-          </dialog>
-          <div id="mm-owner-projects" hidden></div>
           <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
         </div>
 
-        <div class="mm-view" data-mm-panel="todo" hidden>
+        <div class="mm-view" data-mm-panel="project" hidden>
+          <div id="mm-project-page"></div>
+        </div>
+
+      </div>
+      <div class="mm-folds" id="mm-folds">
+        <section class="mm-summary mm-fold" id="mm-summary" aria-labelledby="mm-summary-title" hidden></section>
+        <div id="mm-owner-todo" hidden></div>
+        <div id="mm-owner-projects" hidden></div>
+      </div>
+      <section class="mm-history" id="mm-history" aria-labelledby="mm-history-title">
+        <div class="mm-history-head">
+          <h3 id="mm-history-title">История</h3>
+          <nav class="cc-tabs mm-nav" aria-label="История">
+            <button type="button" data-mm-view="todo" aria-pressed="true">Дела <b id="mm-todo-count">0</b></button>
+            <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
+          </nav>
+        </div>
+        <div class="mm-view" data-mm-panel="todo">
           <div class="mm-section-heading">
-            <div><h3>Ждёт вас <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги из итогов дня и PR, готовые к слиянию.</p></div>
+            <div><h3>Из проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги и PR к слиянию.</p></div>
           </div>
           <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
           <div class="mm-section-heading mm-loose-heading">
-            <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p></div>
+            <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — закрыто без слияния. «Забыл» — без движения больше недели.</p></div>
           </div>
           <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр хвостов">
             <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
@@ -4796,15 +5027,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           <div class="mm-group-rows" id="mm-loose"></div>
         </div>
 
-        <div class="mm-view" data-mm-panel="project" hidden>
-          <div id="mm-project-page"></div>
-        </div>
-
         <div class="mm-view" data-mm-panel="infra" hidden>
           <div class="mm-filter-tabs" id="mm-infra-filter" role="group" aria-label="Тип изменения"></div>
           <div class="mm-group-rows" id="mm-infra"></div>
         </div>
-      </div>
+      </section>
+      <details class="mm-more">
+        <summary>Откуда данные · открыть на телефоне</summary>
       <p class="mm-sources" id="mm-sources">Источники загружаются…</p>
       <section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>
         <div class="np-device-row">
@@ -4822,6 +5051,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           </div>
         </div>
       </section>
+      </details>
     </div>
   </section>
 
@@ -4829,7 +5059,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="growth-title">Мои точки роста</h2>
-        <p class="cc-page-lede">Что хочу изучить и развить, но не успеваю. Отмечайте шаги прямо здесь или в Obsidian, в заметке «ТОЧКИ-РОСТА»: это один и тот же список.</p>
+        <p class="cc-page-lede">Что хочу изучить и развить. Тот же список, что в Obsidian.</p>
       </div>
       <button class="platform-archive-open" id="growth-new-area" type="button" aria-haspopup="dialog" aria-controls="growth-edit-dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg><span>Новая точка роста</span></button>
     </header>
@@ -5095,7 +5325,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="agents-title">Агенты</h2>
-        <p class="cc-page-lede">Кампус отделов: кто над чем работает сейчас. Решения, которые ждут вас, на второй вкладке.</p>
+        <p class="cc-page-lede">Кто из агентов над чем работает сейчас.</p>
       </div>
     </header>
     <div class="cc-subnav cc-tabs" aria-label="Виды агентов">
@@ -5126,8 +5356,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="pixel-agents-shell">
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
-          <strong>Pixel Verse</strong>
-          <span>живые передачи задач между отделами</span>
+          <strong>Кампус</strong>
+          <span>агенты двигаются только по настоящим задачам</span>
         </div>
         <div class="pixel-agents-actions">
           <button
@@ -5148,7 +5378,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             onclick="togglePixelAgentsPin()"
             aria-pressed="false"
             title="Закрепить размер, не меняя вид"
-          >📌 Закрепить</button>
+          >Закрепить</button>
           <a id="pixel-agents-fullscreen" target="_blank" rel="noreferrer">На весь экран</a>
         </div>
       </div>
@@ -6540,7 +6770,7 @@ document.addEventListener('visibilitychange', () => {
 
 // Light or dark for the whole Command Center (Mark 2026-10-14: one design everywhere). The choice is per
 // browser and set before the first paint in <head>; without one the page is light (Mark 2026-10-14).
-const CC_THEME_KEY = 'command-center.theme.v2';
+const CC_THEME_KEY = 'command-center.theme.v3';
 
 function ccIsDark() {
   const theme = document.documentElement.dataset.theme;
@@ -6822,7 +7052,7 @@ function applyPixelAgentsPin(isPinned) {
   shell.classList.toggle('is-pinned', isPinned);
   button.classList.toggle('active', isPinned);
   button.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
-  button.textContent = isPinned ? '📌 Закреплено' : '📌 Закрепить';
+  button.textContent = isPinned ? 'Закреплено' : 'Закрепить';
   button.title = isPinned
     ? 'Размер закреплён. Нажмите, чтобы открепить.'
     : 'Закрепить размер, не меняя вид';
@@ -7118,6 +7348,14 @@ function ccContextClose() {
   document.getElementById('context-links').hidden = true;
   document.getElementById('context-obsidian').removeAttribute('href');
 }
+function ccContextShort(value) {
+  const parsed = new Date(value || '');
+  return Number.isNaN(parsed.valueOf()) ? 'время не указано' : parsed.toLocaleString('ru-RU', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'});
+}
+function ccContextDay(value) {
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? new Date(`${value}T12:00:00`) : null;
+  return parsed && !Number.isNaN(parsed.valueOf()) ? parsed.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'}) : 'дата не указана';
+}
 function ccContextTime(value) {
   if (!value) return 'не указана';
   const parsed = new Date(value);
@@ -7258,7 +7496,7 @@ async function ccLoadContext(recordId = null) {
     if (generation !== ccContextGeneration || !ccContextVisible()) return;
     if (!['ready','partial','stale'].includes(data.state)) throw new Error(data.state === 'owner_required' ? 'owner_required' : data.state === 'not_found' ? 'not_found' : 'unavailable');
     const warning = data.state === 'stale' ? 'Данные устарели. ' : data.state === 'partial' ? 'Часть источников не прочитана. ' : '';
-    document.getElementById('context-status').textContent = warning + 'Каталог проверен: ' + ccContextTime(data.generated_at) + '. Последние 200 обновлений проектов.';
+    document.getElementById('context-status').textContent = warning + 'Обновлено ' + ccContextShort(data.generated_at) + '.';
     if (recordId) {
       const r = data.record;
       if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
@@ -7271,16 +7509,25 @@ async function ccLoadContext(recordId = null) {
       return;
     }
     if (!Array.isArray(data.records)) throw new Error('unavailable');
+    // Mark 2026-10-23: one card per record — what it is, when, which project; the source note stays as a tooltip.
     document.getElementById('context-sources').textContent = (data.sources || []).map(s => `${ccContextNames[s.source] || 'Источник'}: ${s.state === 'observed' ? 'записи найдены' : 'записи не найдены'}`).join(' · ') + ' Наличие записей не подтверждает активное подключение сервиса.';
+    document.getElementById('context-status').title = document.getElementById('context-sources').textContent;
     const list=document.getElementById('context-list');
     for (const r of data.records) {
       if (!/^[a-f0-9]{32}$/.test(r.id)) continue;
       const li=document.createElement('li'); const button=document.createElement('button'); button.type='button';button.className='context-row';
+      const isUpdate = r.source === 'project-update';
+      const icon=document.createElement('span'); icon.className=`context-row-icon${isUpdate ? ' is-update' : ''}`; icon.setAttribute('aria-hidden','true');
+      icon.innerHTML = isUpdate
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
+      const text=document.createElement('span'); text.className='context-row-text';
       const title=document.createElement('strong');title.textContent=r.title;
-      const meta=document.createElement('small'); meta.textContent=`${ccContextNames[r.source] || 'Запись'} · ${r.date || 'Дата не указана'}${r.project ? ' · '+r.project : ''} · Изменено: ${ccContextTime(r.modified_at)}`;
-      button.append(title,meta);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
+      const meta=document.createElement('small'); meta.textContent=[ccContextNames[r.source] || 'Запись', ccContextDay(r.date), r.project].filter(Boolean).join(' · ');
+      const go=document.createElement('span'); go.className='context-row-go'; go.setAttribute('aria-hidden','true'); go.textContent='›';
+      text.append(title,meta); button.append(icon,text,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
     }
-    document.getElementById('context-status').textContent += data.records.length ? ` Показано ${data.records.length} из ${data.total}.` : ' По выбранным условиям записей нет.';
+    document.getElementById('context-status').textContent += data.records.length ? ` Записей: ${data.total}.` : ' По выбранным условиям записей нет.';
   } catch (error) {
     if (generation !== ccContextGeneration) return;
     ccContextClear(error.message === 'owner_required' ? 'Войдите как владелец, чтобы открыть записи.' : error.message === 'not_found' ? 'Запись не найдена. Обновите каталог.' : 'Источник временно недоступен. Попробуйте обновить каталог.');
@@ -9806,7 +10053,8 @@ let dailyWorkDate = null;
 let dailyWorkLoading = false;
 let infraData = null;
 let mmView = 'map';
-let mmReturnView = 'map'; // the view a project page was opened from; its back button returns there
+let mmReturnView = 'map';
+let mmHistoryView = 'todo'; // which history tab is open under the board // the view a project page was opened from; its back button returns there
 let mmProjectId = null;
 let mmProjectData = null;
 let mmLooseFilter = 'all';
@@ -9922,6 +10170,9 @@ function mmInit() {
     openProject(link.dataset.project);
   }));
   mmInitOwnerTodo();
+  mmInitOwnerProjects();
+  mmInitSummary();
+  mmInitFolds();
   // The board, «Дела» and «Изменения» refresh while MAIN MANAGER is on screen.
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
@@ -9941,18 +10192,22 @@ function mmShowView(view) {
   if (!MM_VIEW_TITLES[view]) return;
   mmView = view;
   if (view === 'map' || view === 'todo') mmReturnView = view;
-  // A project page stays under the view it was opened from.
-  const navView = view === 'project' ? mmReturnView : view;
+  // Mark 2026-10-23: the board stays on top; «Дела» and «Изменения» are tabs of the history below it.
+  if (view === 'todo' || view === 'infra') mmHistoryView = view;
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
-    button.setAttribute('aria-pressed', button.dataset.mmView === navView ? 'true' : 'false');
+    button.setAttribute('aria-pressed', button.dataset.mmView === mmHistoryView ? 'true' : 'false');
   });
   document.querySelectorAll('[data-mm-panel]').forEach(panel => {
-    panel.hidden = panel.dataset.mmPanel !== view;
+    const name = panel.dataset.mmPanel;
+    panel.hidden = view === 'project' ? name !== 'project'
+      : name === 'project' || (name !== 'map' && name !== mmHistoryView);
   });
+  document.getElementById('mm-os')?.setAttribute('data-mm-view', view === 'project' ? 'project' : 'map');
   document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
   if (view !== 'project') mmSetProjectUrl(null);
   mmRenderNotice();
   mmRedrawCharts();
+  if (view === 'map' || (view === 'project')) window.scrollTo({ top: 0 });
 }
 
 function mmSetProjectUrl(id) {
@@ -10019,28 +10274,29 @@ function mmRenderNotice(errorText) {
   const notice = document.getElementById('mm-state');
   if (errorText) {
     notice.className = 'mm-notice error';
+    notice.hidden = false;
     notice.textContent = errorText;
     return;
   }
-  const source = mmView === 'infra' ? infraData : dailyWorkData;
+  // The line sits above the board, so it speaks about the board's data.
+  const source = dailyWorkData;
   if (!source) return;
   if (!source.ok) {
     notice.className = 'mm-notice error';
-    notice.textContent = 'Журнал изменений с сервера не получен. Ничего не показываю, чтобы не гадать.';
+    notice.hidden = false;
+    notice.textContent = 'Данные с сервера не получены. Ничего не показываю, чтобы не гадать.';
     return;
   }
   notice.className = `mm-notice ${source.state}`;
+  // Mark 2026-10-23: fresh data needs no banner; the line shows up only when something is off.
+  notice.hidden = source.state === 'live' && source.owner_view;
   let text;
   if (source.state === 'empty') {
-    text = mmView === 'infra'
-      ? 'Сборщик изменений ещё не запускался. Журнал начнёт заполняться после деплоя на Mac mini.'
-      : 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
+    text = 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
   } else if (source.state === 'stale') {
     text = `Данные устарели: последний сбор ${mmAgo(source.collected_at)}. Проверь сборщик на Mac mini.`;
   } else {
-    text = mmView === 'infra'
-      ? `Обновлено: ${mmAgo(source.collected_at)}. Снимок машины каждые 10 минут плюс команды Claude и Codex и merge PR.`
-      : `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
+    text = `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
   }
   if (!source.owner_view) {
     text += ' Подробности видны только на устройстве владельца. Телефон подключается с Mac, где проекты уже видны: «Открыть на телефоне» внизу MAIN MANAGER.';
@@ -10478,7 +10734,7 @@ function renderMap(data) {
   const others = projects.filter(p => !p.main && isActive(p));
   const active = main.filter(isActive).sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown);
   const paused = main.filter(p => !isActive(p));
-  document.getElementById('mm-map-count').textContent = data.owner_view ? active.length + others.length : (data.project_total || 0);
+  const mapCount = document.getElementById('mm-map-count'); if (mapCount) mapCount.textContent = data.owner_view ? active.length + others.length : (data.project_total || 0);
   const weekClaude = mmSum(last7.map(day => day.claude_minutes));
   const weekCodex = mmSum(last7.map(day => day.codex_minutes));
   const stats = [
@@ -10491,7 +10747,12 @@ function renderMap(data) {
       ? { label: 'Ждёт вас', value: String(todo.length), note: `сроков: ${mmSum(todo.map(item => item.deadlines.length))} · PR к слиянию: ${mmSum(todo.map(item => item.open_prs_count))}` }
       : { label: 'Слито PR за 7 дней', value: String(mmSum(last7.map(day => day.prs_merged))), note: `за 30 дней: ${mmSum(series.map(day => day.prs_merged))}` },
   ];
-  const statsHtml = `<div class="mm-stats mm-map-stats">${stats.map(stat => `
+  const prsToMerge = mmSum(todo.map(item => item.open_prs_count));
+  mmRenderToday(data.owner_view ? series[series.length - 1] : null, prsToMerge);
+  // Mark 2026-10-23: four tiles of numbers were noise; the owner gets «Сводка» on top instead.
+  mmRenderSummary(data);
+  const statsHtml = data.owner_view ? ''
+    : `<div class="mm-stats mm-map-stats">${stats.map(stat => `
     <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
   </div>`;
   if (!data.owner_view) {
@@ -10513,8 +10774,168 @@ function renderMap(data) {
       <summary><b>Другие папки</b> <span>${others.length}</span><small>мелкие папки и заметки, не основные проекты · ${mmEsc(workMinutes(mmSum(others.map(p => mmWeekSplit(p).shown))))} за неделю</small></summary>
       <div class="mm-map-rows">${others.sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown).map(p => mmMapRow(p, todoById[p.id], today)).join('')}</div>
     </details>` : '';
-  const body = `${filter}${head('Основные проекты', active.length, '')}<div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
+  const body = `<div class="mm-map-top">${head('Основные проекты', active.length, '')}${filter}</div><div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
   host.innerHTML = statsHtml + body;
+}
+
+// ─── «Сводка» (Mark 2026-10-23) ───
+// Day, week or month at a glance: how long he worked, what got merged, what one result cost in
+// time, and where the time went by project. Only from the owner payload; the public page never
+// gets project names. Details fold away behind buttons.
+// Mark 2026-10-23: the summary, his tasks and the personal block are one line each until he opens
+// them. The choice is remembered per browser.
+const MM_FOLD_KEY = 'command-center.mm-fold';
+function mmFoldIsOpen(key) { return safeStorageGet(`${MM_FOLD_KEY}.${key}`) === 'open'; }
+function mmFoldHead(key, title, count, meta, titleId) {
+  const button = mmEl('button', 'mm-fold-head');
+  button.type = 'button';
+  button.dataset.fold = key;
+  button.setAttribute('aria-expanded', String(mmFoldIsOpen(key)));
+  const heading = mmEl('h3', '', title);
+  if (titleId) heading.id = titleId;
+  if (count !== null && count !== undefined) heading.appendChild(mmEl('span', 'mm-fold-count', String(count)));
+  button.appendChild(heading);
+  if (meta) button.appendChild(mmEl('span', 'mm-fold-meta', meta));
+  button.appendChild(mmEl('span', 'mm-fold-chev'));
+  return button;
+}
+function mmInitFolds() {
+  document.getElementById('mm-folds')?.addEventListener('click', event => {
+    const head = event.target.closest('[data-fold]');
+    if (!head) return;
+    const open = head.getAttribute('aria-expanded') !== 'true';
+    head.setAttribute('aria-expanded', String(open));
+    head.closest('.mm-fold')?.classList.toggle('is-open', open);
+    safeStorageSet(`${MM_FOLD_KEY}.${head.dataset.fold}`, open ? 'open' : 'closed');
+  });
+}
+
+const MM_SUMMARY_KEY = 'command-center.mm-summary-period';
+const MM_SUMMARY_PERIODS = [['day', 'День', 1], ['week', 'Неделя', 7], ['month', 'Месяц', 30]];
+let mmSummaryPeriod = MM_SUMMARY_PERIODS.some(([key]) => key === safeStorageGet(MM_SUMMARY_KEY)) ? safeStorageGet(MM_SUMMARY_KEY) : 'week';
+let mmSummaryOpen = false;
+let mmSummaryData = null;
+
+function mmSummaryNumbers(data, days, offset = 0) {
+  const series = data.series || [];
+  const end = series.length - offset;
+  const slice = list => (list || []).slice(Math.max(0, end - days), end);
+  const part = slice(series);
+  if (part.length < days) return null;  // Not enough history for a fair comparison.
+  const projects = (data.projects || []).map(p => ({
+    id: p.id, name: p.name, main: !!p.main, art: p,
+    minutes: mmSum(slice(p.daily_minutes)), prs: mmSum(slice(p.daily_prs_merged)),
+  })).filter(p => p.minutes || p.prs);
+  return {
+    minutes: mmSum(part.map(day => day.total_minutes)),
+    claude: mmSum(part.map(day => day.claude_minutes)),
+    codex: mmSum(part.map(day => day.codex_minutes)),
+    prs: mmSum(part.map(day => day.prs_merged)),
+    activeDays: part.filter(day => day.total_minutes > 0).length,
+    bars: part.map(day => ({ date: day.date, minutes: day.total_minutes })),
+    projects,
+  };
+}
+
+function mmRenderSummary(data) {
+  const host = document.getElementById('mm-summary');
+  if (!host) return;
+  mmSummaryData = data;
+  if (!data?.owner_view || !Array.isArray(data.series)) {
+    host.hidden = true;
+    host.replaceChildren();
+    return;
+  }
+  const [key, , days] = MM_SUMMARY_PERIODS.find(([name]) => name === mmSummaryPeriod);
+  const now = mmSummaryNumbers(data, days);
+  const before = mmSummaryNumbers(data, days, days);
+  const periodLabel = MM_SUMMARY_PERIODS.find(([name]) => name === key)[1];
+  const fold = (meta, body) => {
+    host.classList.toggle('is-open', mmFoldIsOpen('summary'));
+    host.replaceChildren(mmFoldHead('summary', 'Сводка', null, meta, 'mm-summary-title'));
+    const box = mmEl('div', 'mm-fold-body');
+    box.innerHTML = body;
+    host.appendChild(box);
+    host.hidden = false;
+  };
+  const head = `<div class="mm-summary-head"><div class="mm-seg" role="group" aria-label="Период">${MM_SUMMARY_PERIODS.map(([name, label]) =>
+      `<button type="button" data-summary-period="${name}" aria-pressed="${name === key}">${label}</button>`).join('')}</div></div>`;
+  if (!now) {
+    fold(`${periodLabel}: данных пока нет`, `${head}<p class="mm-empty">Данных за этот период пока нет.</p>`);
+    return;
+  }
+  const compare = before ? now.minutes - before.minutes : null;
+  const versus = key === 'day' ? 'вчера' : 'прошлой неделе';
+  const workNote = compare === null ? `дней с работой: ${now.activeDays} из ${days}`
+    : `${compare >= 0 ? '+' : '−'}${workMinutes(Math.abs(compare))} к ${versus}`;
+  const perResult = now.prs ? Math.round(now.minutes / now.prs) : null;
+  const beforePer = before?.prs ? Math.round(before.minutes / before.prs) : null;
+  const returnNote = perResult === null ? 'нет слитых PR за период'
+    : beforePer ? `на PR · было ${workMinutes(beforePer)}`
+    : 'на один слитый PR';
+  const projectMinutes = mmSum(now.projects.map(p => p.minutes));
+  const mainShare = projectMinutes ? Math.round(mmSum(now.projects.filter(p => p.main).map(p => p.minutes)) / projectMinutes * 100) : 0;
+  const tiles = [
+    ['Работа', workMinutes(now.minutes), workNote, compare === null ? '' : (compare >= 0 ? 'is-up' : 'is-down')],
+    ['Результат', `${now.prs} PR`, now.prs ? 'слито в main' : 'слитых PR нет', ''],
+    ['Отдача', perResult === null ? '—' : workMinutes(perResult), returnNote, ''],
+    ['На основные проекты', projectMinutes ? `${mainShare}%` : '—', 'остальное — мелкие папки', ''],
+  ];
+  const tilesHtml = `<div class="mm-summary-tiles">${tiles.map(([label, value, note, cls]) =>
+    `<div><span>${mmEsc(label)}</span><strong class="${cls}">${mmEsc(value)}</strong><small>${mmEsc(note)}</small></div>`).join('')}</div>`;
+  // Where the time went: main projects one by one, the small folders as one line.
+  const main = now.projects.filter(p => p.main).sort((a, b) => b.minutes - a.minutes);
+  const others = now.projects.filter(p => !p.main);
+  const rows = [...main];
+  if (others.length) rows.push({ id: '', name: `Другие папки · ${others.length}`, minutes: mmSum(others.map(p => p.minutes)), prs: mmSum(others.map(p => p.prs)) });
+  const top = Math.max(1, ...rows.map(p => p.minutes));
+  const shown = mmSummaryOpen ? rows : rows.slice(0, 4);
+  const rowHtml = p => `<li${p.id ? ` data-project="${mmEsc(p.id)}"` : ''}><span class="mm-summary-name">${p.art ? mmArt(p.art) : ''}${mmEsc(p.name)}</span>
+    <span class="mm-summary-bar"><i style="width:${Math.max(2, Math.round(p.minutes / top * 100))}%"></i></span>
+    <span class="mm-summary-time">${mmEsc(workMinutes(p.minutes))}<small>${projectMinutes ? Math.round(p.minutes / projectMinutes * 100) : 0}%${p.prs ? ` · ${p.prs} PR` : ''}</small></span></li>`;
+  const listHtml = rows.length ? `<ul class="mm-summary-list">${shown.map(rowHtml).join('')}</ul>` : '<p class="mm-empty">За этот период работы по проектам не было.</p>';
+  const agentsLine = now.claude + now.codex ? `<p class="mm-summary-agents"><i class="claude"></i>Claude Code ${mmEsc(workMinutes(now.claude))}<i class="codex"></i>Codex ${mmEsc(workMinutes(now.codex))}</p>` : '';
+  const chart = days > 1 ? `<div class="mm-summary-chart" role="img" aria-label="Работа по дням">${now.bars.map(day => {
+    const peak = Math.max(1, ...now.bars.map(bar => bar.minutes));
+    return `<i style="height:${Math.max(day.minutes ? 8 : 2, Math.round(day.minutes / peak * 100))}%" title="${mmEsc(`${day.date.split('-').reverse().slice(0, 2).join('.')}: ${workMinutes(day.minutes)}`)}"></i>`;
+  }).join('')}</div>` : '';
+  const more = rows.length > 4 || chart || agentsLine
+    ? `<button type="button" class="mm-summary-more" data-summary-more aria-expanded="${mmSummaryOpen}">${mmSummaryOpen ? 'Свернуть' : 'Подробнее'}</button>` : '';
+  fold(`${periodLabel}: ${workMinutes(now.minutes)} · ${now.prs} PR`,
+    `${head}${tilesHtml}<div class="mm-summary-split"><h4>Куда ушло время</h4>${listHtml}</div>${mmSummaryOpen ? agentsLine + chart : ''}${more}`);
+}
+
+function mmInitSummary() {
+  const host = document.getElementById('mm-summary');
+  if (!host) return;
+  host.addEventListener('click', event => {
+    const period = event.target.closest('[data-summary-period]');
+    if (period) {
+      mmSummaryPeriod = period.dataset.summaryPeriod;
+      safeStorageSet(MM_SUMMARY_KEY, mmSummaryPeriod);
+      return mmRenderSummary(mmSummaryData);
+    }
+    if (event.target.closest('[data-summary-more]')) {
+      mmSummaryOpen = !mmSummaryOpen;
+      return mmRenderSummary(mmSummaryData);
+    }
+    const row = event.target.closest('[data-project]');
+    if (row) openProject(row.dataset.project);
+  });
+}
+
+// The line under the title: today's work and what waits for a merge, in plain words.
+function mmRenderToday(day, prsToMerge) {
+  const line = document.getElementById('mm-today');
+  if (!line) return;
+  if (!day) {
+    line.hidden = false;
+    line.textContent = 'Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.';
+    return;
+  }
+  // Today's hours are in «Сводка» right below; the title line keeps only what waits for a merge.
+  line.hidden = !prsToMerge;
+  line.textContent = prsToMerge ? `Ждут слияния: ${prsToMerge} PR` : '';
 }
 
 // «Личное» (Mark 2026-10-20): owner-only project cards from the private portfolio registry, a short
@@ -10597,20 +11018,61 @@ function mmRenderOwnerProjects(payload) {
     ? payload.projects.filter(card => card && /^[a-z0-9][a-z0-9-]{0,39}$/.test(card.id || '')
       && mmOwnerText(card.name, 80) && mmOwnerText(card.status, 200)).slice(0, 12)
     : [];
+  mmOwnerProjectCards = cards;
   host.hidden = !cards.length;
-  if (!cards.length) return;
-  const group = mmEl('section', 'mm-map-group mm-owner-group');
-  group.setAttribute('aria-label', 'Личное');
-  const head = mmEl('div', 'mm-map-group-head');
-  const title = mmEl('h3', '', 'Личное ');
-  title.appendChild(mmEl('span', '', String(cards.length)));
-  head.appendChild(title);
-  head.appendChild(mmEl('p', 'mm-section-note', 'Видно только вам. Короткая сводка; полные данные — в документах по кнопкам.'));
-  group.appendChild(head);
-  const grid = mmEl('div', 'mm-owner-grid');
-  cards.forEach(card => grid.appendChild(mmOwnerProjectCard(card)));
-  group.appendChild(grid);
+  if (!cards.length) {
+    // Losing access must also clear a card already open in its window.
+    const dialog = document.getElementById('owner-project-dialog');
+    document.getElementById('owner-project-body')?.replaceChildren();
+    if (dialog?.open) dialog.close();
+    return;
+  }
+  // Mark 2026-10-23: one compact line per card on the page; the whole card opens in a window.
+  const group = mmEl('section', 'mm-owner-group mm-fold');
+  group.setAttribute('aria-labelledby', 'mm-owner-title');
+  group.classList.toggle('is-open', mmFoldIsOpen('personal'));
+  group.appendChild(mmFoldHead('personal', 'Личное', null, cards.map(card => card.name).join(' · '), 'mm-owner-title'));
+  const rows = mmEl('div', 'mm-fold-body');
+  cards.forEach(card => {
+    const row = mmEl('button', 'mm-owner-row');
+    row.type = 'button';
+    row.dataset.ownerOpen = card.id;
+    const text = mmEl('span', 'mm-owner-row-text');
+    text.appendChild(mmEl('strong', '', card.name));
+    const tasks = Array.isArray(card.tasks) ? card.tasks.length : 0;
+    text.appendChild(mmEl('small', '', tasks ? `${card.status} · открытых задач: ${tasks}` : card.status));
+    row.appendChild(text);
+    row.appendChild(mmEl('span', 'mm-owner-row-go', '›'));
+    row.setAttribute('aria-label', `Открыть: ${card.name}`);
+    rows.appendChild(row);
+  });
+  rows.appendChild(mmEl('p', 'mm-fold-note', 'Видно только тебе.'));
+  group.appendChild(rows);
   host.appendChild(group);
+}
+
+let mmOwnerProjectCards = [];
+
+function mmOpenOwnerProject(id) {
+  const card = mmOwnerProjectCards.find(entry => entry.id === id);
+  const dialog = document.getElementById('owner-project-dialog');
+  if (!card || !dialog) return;
+  document.getElementById('owner-project-body').replaceChildren(mmOwnerProjectCard(card));
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+}
+
+function mmInitOwnerProjects() {
+  const host = document.getElementById('mm-owner-projects');
+  const dialog = document.getElementById('owner-project-dialog');
+  if (!host || !dialog) return;
+  const close = () => (dialog.open ? dialog.close() : dialog.removeAttribute('open'));
+  host.addEventListener('click', event => {
+    const open = event.target.closest('[data-owner-open]');
+    if (open) mmOpenOwnerProject(open.dataset.ownerOpen);
+  });
+  document.getElementById('owner-project-close').addEventListener('click', close);
+  dialog.addEventListener('click', event => { if (event.target === dialog) close(); });
 }
 
 async function mmLoadOwnerProjects() {
@@ -10631,8 +11093,16 @@ async function mmLoadOwnerProjects() {
 // (or archived by default as replaced on 2026-10-20) do not count. A click opens Техника.
 let mmHealthGeneration = 0;
 
+// Services Mark switched off on purpose (2026-10-20…22). They are not broken, so the badge never
+// turns red for them, whatever a browser's own Техника archive says.
+const MM_HEALTH_TURNED_OFF = new Set([
+  'homebrew.mxcl.ollama', 'com.pirajoke.tag-website', 'com.pirajoke.obsidian-tg-bot', 'com.pirajoke.obsidian-linear-sync',
+  'com.pirajoke.tgbot-watchdog', 'com.pirajoke.m4-pg-backup', 'com.pirajoke.alert-monitor', 'com.pirajoke.m4-healthcheck',
+]);
+
 // Exactly the Техника rule: the same saved choices, keys and default list as the Mac mini panel there.
 function mmHealthArchived(service) {
+  if (MM_HEALTH_TURNED_OFF.has(service.label)) return true;
   return isSvcArchived(service, readSvcArchiveChoices(), 'mini-svc-tbody');
 }
 
@@ -10643,16 +11113,17 @@ function mmRenderHealth(data) {
   line.classList.remove('is-problem', 'is-unknown');
   if (!data || !Array.isArray(data.services_detailed || data.services)) {
     line.classList.add('is-unknown');
-    line.appendChild(mmEl('span', '', 'Mac mini не отвечает: не знаю, всё ли работает'));
+    line.appendChild(mmEl('span', '', 'Mac mini не отвечает'));
   } else {
     const services = visibleRuntimeServices(data.services_detailed || data.services || []).filter(service => !mmHealthArchived(service));
     const down = services.filter(service => service.status !== 'running');
     if (!services.length) {
       // No services seen is not proof that they run.
       line.classList.add('is-unknown');
-      line.appendChild(mmEl('span', '', 'Mac mini не прислал список сервисов: не знаю, всё ли работает'));
+      line.appendChild(mmEl('span', '', 'Нет списка сервисов'));
     } else if (!down.length) {
-      line.appendChild(mmEl('span', '', `Всё работает · ${services.length} ${services.length % 10 === 1 && services.length % 100 !== 11 ? 'сервис' : [2, 3, 4].includes(services.length % 10) && ![12, 13, 14].includes(services.length % 100) ? 'сервиса' : 'сервисов'}`));
+      line.appendChild(mmEl('span', '', 'Всё работает'));
+      line.title = `${services.length} ${services.length % 10 === 1 && services.length % 100 !== 11 ? 'сервис' : [2, 3, 4].includes(services.length % 10) && ![12, 13, 14].includes(services.length % 100) ? 'сервиса' : 'сервисов'} на Mac mini · открыть Технику`;
     } else {
       line.classList.add('is-problem');
       const names = down.slice(0, 3).map(service => service.name || service.label).join(', ');
@@ -10660,7 +11131,6 @@ function mmRenderHealth(data) {
       line.appendChild(mmEl('span', '', `Не работает: ${names}${more}`));
     }
   }
-  line.appendChild(mmEl('span', 'mm-health-more', 'Техника →'));
   line.hidden = false;
 }
 
@@ -10674,8 +11144,8 @@ async function mmLoadHealth() {
 // Things only Mark can do, added and closed by him on the site. Owner-only, stored on the Mac mini.
 const OWNER_TODO_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/owner-todo`;
 let mmOwnerTodoItems = [];
-let mmOwnerTodoShowDone = false;
 let mmOwnerTodoEditing = null;
+let mmOwnerTodoAll = false;
 let mmOwnerTodoGeneration = 0;
 
 function mmRenderOwnerTodo(payload) {
@@ -10684,57 +11154,99 @@ function mmRenderOwnerTodo(payload) {
   host.replaceChildren();
   if (payload?.state !== 'ready' || !Array.isArray(payload.items)) {
     host.hidden = true;  // Not the owner, or the Mac mini cannot answer: nothing to show.
+    mmOwnerTodoItems = [];
+    document.getElementById('todo-done-list')?.replaceChildren();
+    mmCloseTodoDone();
     return;
   }
   if (payload.runner) mmOwnerTodoRunner = payload.runner;
   mmOwnerTodoItems = payload.items.filter(item => item && /^t-[a-f0-9]{8}$/.test(item.id || '') && typeof item.text === 'string');
   const open = mmOwnerTodoItems.filter(item => !item.done);
   const done = mmOwnerTodoItems.filter(item => item.done);
-  const card = mmEl('section', 'mm-todo-card');
+  const card = mmEl('section', 'mm-todo-card mm-fold');
   card.setAttribute('aria-labelledby', 'mm-todo-card-title');
-  const head = mmEl('div', 'mm-todo-card-head');
-  const title = mmEl('h3', '', 'Ждёт тебя ');
-  title.id = 'mm-todo-card-title';
-  title.appendChild(mmEl('span', '', String(open.length)));
-  head.appendChild(title);
+  card.classList.toggle('is-open', mmFoldIsOpen('todo'));
+  card.appendChild(mmFoldHead('todo', 'Ждёт тебя', open.length, open.length ? open[0].text : 'ничего не ждёт', 'mm-todo-card-title'));
+  const foldBody = mmEl('div', 'mm-fold-body');
+  const list = mmEl('ul', 'mm-todo-items');
+  // Three at a time; the rest behind «Ещё N».
+  (mmOwnerTodoAll ? open : open.slice(0, 3)).forEach(item => list.appendChild(mmOwnerTodoRow(item)));
+  const lane = mmAgentLane(open);
+  if (lane) foldBody.appendChild(lane);
+  if (open.length) foldBody.appendChild(list);
+  else foldBody.appendChild(mmEl('p', 'mm-todo-empty', 'Пока ничего не ждёт. Добавь дело, если что-то на тебе.'));
+  // Mark 2026-10-23: two items ticked by mistake were hard to find; «Сделано» is a real button that
+  // opens a window where each closed item can be put back.
+  const foot = mmEl('div', 'mm-todo-foot');
   const add = mmEl('button', 'mm-todo-add', '+ Добавить');
   add.type = 'button';
   add.dataset.todoAdd = '';
-  head.appendChild(add);
-  card.appendChild(head);
-  const list = mmEl('ul', 'mm-todo-items');
-  const shown = mmOwnerTodoShowDone ? [...open, ...done] : open;
-  shown.forEach(item => {
-    const row = mmEl('li', `mm-todo-item${item.done ? ' is-done' : ''}`);
-    const check = mmEl('button', 'mm-todo-check', '✓');
-    check.type = 'button';
-    check.dataset.todoToggle = item.id;
-    check.setAttribute('aria-label', item.done ? `Вернуть: ${item.text}` : `Готово: ${item.text}`);
-    row.appendChild(check);
-    const body = mmEl('button', 'mm-todo-body', item.text);
-    body.type = 'button';
-    body.dataset.todoEdit = item.id;
-    if (item.note) body.appendChild(mmEl('small', '', item.note));
-    const main = mmEl('div', 'mm-todo-main');
-    main.appendChild(body);
-    const agentNote = mmAgentNote(item);
-    if (agentNote) main.appendChild(agentNote);
-    row.appendChild(main);
-    if (!item.done) row.appendChild(mmAgentSide(item));
-    list.appendChild(row);
-  });
-  const lane = mmAgentLane(open);
-  if (lane) card.appendChild(lane);
-  if (shown.length) card.appendChild(list);
-  else card.appendChild(mmEl('p', 'mm-todo-empty', 'Пока ничего не ждёт. Добавь дело, если что-то на тебе.'));
+  foot.appendChild(add);
+  if (open.length > 3) {
+    const all = mmEl('button', 'mm-todo-done-toggle mm-todo-all', mmOwnerTodoAll ? 'Свернуть' : `Ещё ${open.length - 3}`);
+    all.type = 'button';
+    all.dataset.todoAll = '';
+    foot.appendChild(all);
+  }
   if (done.length) {
-    const toggle = mmEl('button', 'mm-todo-done-toggle', mmOwnerTodoShowDone ? 'Скрыть сделанное' : `Сделано · ${done.length}`);
+    const toggle = mmEl('button', 'mm-todo-done-toggle', `Сделано · ${done.length} ›`);
     toggle.type = 'button';
     toggle.dataset.todoShowDone = '';
-    card.appendChild(toggle);
+    foot.appendChild(toggle);
   }
+  foldBody.appendChild(foot);
+  card.appendChild(foldBody);
   host.appendChild(card);
   host.hidden = false;
+  mmRenderTodoDone(done);
+}
+
+// The «Сделано» window: newest first, each with «Вернуть».
+function mmRenderTodoDone(done) {
+  const list = document.getElementById('todo-done-list');
+  const dialog = document.getElementById('todo-done-dialog');
+  if (!list || !dialog) return;
+  document.getElementById('todo-done-title').textContent = `Сделано · ${done.length}`;
+  list.replaceChildren();
+  if (!done.length) list.appendChild(mmEl('li', 'mm-todo-empty', 'Сделанных дел нет.'));
+  [...done].sort((a, b) => String(b.done_at || '').localeCompare(String(a.done_at || ''))).forEach(item => {
+    const row = mmEl('li', 'mm-todo-item is-done');
+    const main = mmEl('div', 'mm-todo-main');
+    const body = mmEl('span', 'mm-todo-body');
+    body.appendChild(mmEl('s', '', item.text));
+    const when = item.done_at ? new Date(item.done_at) : null;
+    if (when && !Number.isNaN(when.getTime())) {
+      body.appendChild(mmEl('small', '', `отмечено ${when.toLocaleString('ru-RU', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'})}`));
+    }
+    main.appendChild(body);
+    row.appendChild(main);
+    const back = mmEl('button', 'mm-todo-back', '↩ Вернуть');
+    back.type = 'button';
+    back.dataset.todoToggle = item.id;
+    back.setAttribute('aria-label', `Вернуть: ${item.text}`);
+    row.appendChild(back);
+    list.appendChild(row);
+  });
+}
+
+function mmOwnerTodoRow(item) {
+  const row = mmEl('li', `mm-todo-item${item.done ? ' is-done' : ''}`);
+  const check = mmEl('button', 'mm-todo-check', '✓');
+  check.type = 'button';
+  check.dataset.todoToggle = item.id;
+  check.setAttribute('aria-label', item.done ? `Вернуть: ${item.text}` : `Готово: ${item.text}`);
+  row.appendChild(check);
+  const body = mmEl('button', 'mm-todo-body', item.text);
+  body.type = 'button';
+  body.dataset.todoEdit = item.id;
+  if (item.note) body.appendChild(mmEl('small', '', item.note));
+  const main = mmEl('div', 'mm-todo-main');
+  main.appendChild(body);
+  const agentNote = mmAgentNote(item);
+  if (agentNote) main.appendChild(agentNote);
+  row.appendChild(main);
+  if (!item.done) row.appendChild(mmAgentSide(item));
+  return row;
 }
 
 const MM_AGENT_NAMES = { claude: 'Claude', codex: 'Codex' };
@@ -10893,6 +11405,19 @@ function mmOpenTodoEdit(item) {
   document.getElementById('todo-edit-text').focus();
 }
 
+function mmOpenTodoDone() {
+  const dialog = document.getElementById('todo-done-dialog');
+  if (!dialog) return;
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+}
+
+function mmCloseTodoDone() {
+  const dialog = document.getElementById('todo-done-dialog');
+  if (dialog?.open) dialog.close();
+  else dialog?.removeAttribute('open');
+}
+
 function mmCloseTodoEdit() {
   const dialog = document.getElementById('todo-edit-dialog');
   if (dialog?.open) dialog.close();
@@ -10912,8 +11437,9 @@ function mmInitOwnerTodo() {
   if (!host || !form) return;
   host.addEventListener('click', async event => {
     if (event.target.closest('[data-todo-add]')) return mmOpenTodoEdit(null);
-    if (event.target.closest('[data-todo-show-done]')) {
-      mmOwnerTodoShowDone = !mmOwnerTodoShowDone;
+    if (event.target.closest('[data-todo-show-done]')) return mmOpenTodoDone();
+    if (event.target.closest('[data-todo-all]')) {
+      mmOwnerTodoAll = !mmOwnerTodoAll;
       return mmRenderOwnerTodo({state: 'ready', items: mmOwnerTodoItems});
     }
     const edit = event.target.closest('[data-todo-edit]');
@@ -10963,6 +11489,17 @@ function mmInitOwnerTodo() {
     const result = await mmPostOwnerTodo({action: 'delete', id: mmOwnerTodoEditing.id});
     if (result?.error) document.getElementById('todo-edit-note-msg').textContent = mmTodoErrorText(result.error);
     else mmCloseTodoEdit();
+  });
+  const doneDialog = document.getElementById('todo-done-dialog');
+  document.getElementById('todo-done-close').addEventListener('click', mmCloseTodoDone);
+  doneDialog.addEventListener('click', async event => {
+    if (event.target === doneDialog) return mmCloseTodoDone();
+    const back = event.target.closest('[data-todo-toggle]');
+    if (!back) return;
+    back.disabled = true;
+    const result = await mmPostOwnerTodo({action: 'undo', id: back.dataset.todoToggle});
+    if (result?.error) { back.disabled = false; back.textContent = mmTodoErrorText(result.error); }
+    else if (!mmOwnerTodoItems.some(item => item.done)) mmCloseTodoDone();
   });
   document.getElementById('todo-edit-cancel').addEventListener('click', mmCloseTodoEdit);
   document.getElementById('todo-edit-close').addEventListener('click', mmCloseTodoEdit);
@@ -11410,7 +11947,7 @@ function ccDocxxRenderRecords() {
   if(!rows.length) { list.append(ccDocxxEl('p',q||ccDocxxFilter!=='all'?'По выбранному фильтру операций нет.':'В журнале пока нет операций. Добавь документ через один из входов выше.','docxx-empty')); return; }
   for(const row of rows) {
     const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
-    const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',row.kind==='folder'?'▱':'▤'); icon.setAttribute('aria-hidden','true');
+    const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
     const name=ccDocxxEl('span',undefined,'docxx-record-name'); name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',`${row.source==='gmail'?'Gmail':row.source==='icloud'?'iCloud':row.source==='review'?'На разборе':'Google Drive'} · ${row.historical?'История · ':''}${ccDocxxDate(row.at)}`));
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(icon,name,badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
@@ -11462,7 +11999,376 @@ async function ccLoadDocxx() {
     if(generation===ccDocxxGeneration) { button.disabled=false; ccDocxxController=null; if(ccDocxxVisible()) ccDocxxTimer=setTimeout(ccLoadDocxx,5000); }
   }
 }
-for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEventListener('click',()=>ccDocxxExplain(button.dataset.docxxStep));
+// Mark 2026-10-23: the explanation stays folded until a step is clicked; a second click folds it again.
+for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEventListener('click',()=>{
+  const box=document.getElementById('docxx-explainer');
+  const same=ccDocxxStep===button.dataset.docxxStep && !box.hidden;
+  ccDocxxExplain(button.dataset.docxxStep);
+  box.hidden=same;
+});
+
+// ── Documents 3D route ── Mark 2026-10-23: «нарисуй в 3D, чтобы можно было вертеть и смотреть, как процессы двигаются».
+// iPhone, computer and Gmail on the left, the Mac mini in the middle, the library and the review tray on the right.
+// Papers travel only while the Mac mini reports a busy pass; with reduced motion they stay put. Rendering pauses
+// whenever the Documents tab is not on screen, so the scene costs nothing in the background.
+(function ccDocxx3d() {
+  const stage = document.getElementById('docxx-stage');
+  const section = document.getElementById('section-documents');
+  if (!stage || !section || !/^https?:$/.test(window.location.protocol) || typeof window.WebGLRenderingContext === 'undefined') return;
+  try {
+    const probe = document.createElement('canvas');
+    if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return;
+  } catch (error) { return; }
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  import(new URL('/dashboard-assets/three.module.min.js', window.location.href).href).then(THREE => {
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 0);
+    stage.prepend(renderer.domElement);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(32, 2, 0.1, 100);
+    const target = new THREE.Vector3(-0.7, 0.5, 0.2);
+    const HOME = { azimuth: -0.3, elevation: 0.6, distance: 17.5 };
+    const view = { ...HOME };
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xd9ccb6, 0.9));
+    const sun = new THREE.DirectionalLight(0xfff1dc, 1.9);
+    sun.position.set(-6, 12, 8);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    Object.assign(sun.shadow.camera, { left: -10, right: 10, top: 8, bottom: -8, near: 1, far: 40 });
+    sun.shadow.radius = 4;
+    scene.add(sun);
+
+    const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, envMapIntensity: 0.25, ...extra });
+    function slab(w, d, h, r, material) {
+      const shape = new THREE.Shape();
+      const x = -w / 2, y = -d / 2;
+      shape.moveTo(x + r, y); shape.lineTo(x + w - r, y); shape.quadraticCurveTo(x + w, y, x + w, y + r);
+      shape.lineTo(x + w, y + d - r); shape.quadraticCurveTo(x + w, y + d, x + w - r, y + d);
+      shape.lineTo(x + r, y + d); shape.quadraticCurveTo(x, y + d, x, y + d - r);
+      shape.lineTo(x, y + r); shape.quadraticCurveTo(x, y, x + r, y);
+      const bevel = Math.min(h * 0.35, r * 0.5, 0.06);
+      const geometry = new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.001, h - bevel * 2), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 10 });
+      geometry.rotateX(-Math.PI / 2);
+      geometry.translate(0, bevel, 0);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    // Ground: a soft disc that catches the shadows.
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(11, 64), new THREE.ShadowMaterial({ opacity: 0.13 }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    const pad = (x, z, radius, color) => {
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.06, 48), mat(color, { roughness: 0.9 }));
+      disc.position.set(x, 0.03, z); disc.receiveShadow = true; scene.add(disc); return disc;
+    };
+
+    const anchors = {};
+    const bobbers = [];
+    // A soft studio environment so metal and glass have something to reflect.
+    const envScene = new THREE.Scene();
+    const envSky = new THREE.Mesh(new THREE.SphereGeometry(20, 32, 16), new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      vertexShader: 'varying vec3 vPos; void main() { vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: 'varying vec3 vPos; void main() { float h = normalize(vPos).y; vec3 top = vec3(1.0, 0.99, 0.97); vec3 bottom = vec3(0.78, 0.72, 0.64); gl_FragColor = vec4(mix(bottom, top, smoothstep(-0.4, 0.7, h)), 1.0); }',
+    }));
+    envScene.add(envSky);
+    [[0, 12, 0, 14], [10, 5, 6, 6], [-10, 4, -4, 5]].forEach(([x, y, z, size]) => {
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+      panel.position.set(x, y, z); panel.lookAt(0, 0, 0); envScene.add(panel);
+    });
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+    const aluminium = mat(0xcfd4da, { metalness: 0.85, roughness: 0.32, envMapIntensity: 0.9 });
+    const darkGlass = mat(0x0d0f12, { metalness: 0.2, roughness: 0.08, envMapIntensity: 1.4 });
+    const canvasTexture = (width, height, draw) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      draw(canvas.getContext('2d'), width, height);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = 4;
+      return texture;
+    };
+    const roundRect = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); };
+    const screenMaterial = texture => new THREE.MeshStandardMaterial({ map: texture, emissiveMap: texture, emissive: 0xffffff, emissiveIntensity: 0.55, roughness: 0.25, metalness: 0 });
+
+    // iPhone: titanium frame, black glass, the island, and a Files screen with a document on its way.
+    const phone = new THREE.Group();
+    const phoneBody = slab(0.8, 1.64, 0.09, 0.15, mat(0x8a8f96, { metalness: 0.85, roughness: 0.35, envMapIntensity: 0.9 }));
+    phoneBody.rotation.x = Math.PI / 2; phoneBody.position.set(0, 0.82, -0.045); phone.add(phoneBody);
+    const phoneGlass = slab(0.76, 1.6, 0.012, 0.13, darkGlass);
+    phoneGlass.rotation.x = Math.PI / 2; phoneGlass.position.set(0, 0.82, 0.047); phone.add(phoneGlass);
+    const phoneScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.52), screenMaterial(canvasTexture(256, 556, (ctx, w, h) => {
+      ctx.fillStyle = '#f5f7fa'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#111'; roundRect(ctx, w / 2 - 38, 12, 76, 22, 11);
+      ctx.fillStyle = '#1d1d1f'; ctx.font = '600 22px -apple-system, Inter, sans-serif'; ctx.fillText('Файлы', 18, 72);
+      ctx.fillStyle = '#8a8f96'; ctx.font = '13px -apple-system, Inter, sans-serif'; ctx.fillText('iCloud Drive › DOCXX Inbox', 18, 96);
+      [0, 1, 2].forEach(index => {
+        const y = 118 + index * 92;
+        ctx.fillStyle = '#ffffff'; roundRect(ctx, 14, y, w - 28, 80, 14);
+        ctx.fillStyle = index === 0 ? '#2f7fd1' : '#c9d6e4'; roundRect(ctx, 26, y + 14, 40, 52, 6);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(33, y + 26, 26, 3); ctx.fillRect(33, y + 34, 26, 3); ctx.fillRect(33, y + 42, 18, 3);
+        ctx.fillStyle = '#1d1d1f'; ctx.font = '600 14px -apple-system, Inter, sans-serif'; ctx.fillText(['Счёт.pdf', 'Договор.pdf', 'Паспорт.jpg'][index], 78, y + 36);
+        ctx.fillStyle = '#8a8f96'; ctx.font = '12px -apple-system, Inter, sans-serif'; ctx.fillText(index === 0 ? 'загружается…' : 'вчера', 78, y + 56);
+      });
+      ctx.fillStyle = '#2f7fd1'; roundRect(ctx, 26, 404, w - 52, 6, 3);
+      ctx.fillStyle = '#d6dde6'; roundRect(ctx, 26, 404, (w - 52) * 0.4, 6, 3);
+      ctx.fillStyle = '#1d1d1f'; roundRect(ctx, w / 2 - 50, h - 18, 100, 5, 3);
+    })));
+    phoneScreen.position.set(0, 0.82, 0.064); phone.add(phoneScreen);
+    [[0.405, 1.12, 0.22], [-0.405, 1.2, 0.12], [-0.405, 1.02, 0.16]].forEach(([x, y, length]) => {
+      const button = new THREE.Mesh(new THREE.CapsuleGeometry(0.012, length, 4, 8), mat(0x8a8f96, { metalness: 0.85, roughness: 0.35, envMapIntensity: 0.9 }));
+      button.position.set(x, y, 0); phone.add(button);
+    });
+    phone.position.set(-5.8, 0.32, -3.1); phone.rotation.y = 0.5; scene.add(phone);
+    pad(-5.8, -3.1, 0.85, 0xc9dcf2);
+    bobbers.push([phone, 0.32, 0]);
+    anchors.icloud = new THREE.Vector3(-5.8, 2.75, -3.1);
+
+    // Laptop: aluminium body, keyboard, trackpad, black bezel with a Drive window on screen.
+    const laptop = new THREE.Group();
+    laptop.add(slab(2.2, 1.5, 0.07, 0.1, aluminium));
+    const keyboard = new THREE.Mesh(new THREE.PlaneGeometry(1.86, 0.62), new THREE.MeshStandardMaterial({ map: canvasTexture(512, 172, (ctx, w, h) => {
+      ctx.fillStyle = '#2a2c30'; ctx.fillRect(0, 0, w, h);
+      for (let row = 0; row < 5; row += 1) for (let col = 0; col < 14; col += 1) {
+        ctx.fillStyle = '#121316'; roundRect(ctx, 6 + col * 36, 6 + row * 33, 31, 27, 4);
+      }
+    }), roughness: 0.6 }));
+    keyboard.rotation.x = -Math.PI / 2; keyboard.position.set(0, 0.072, -0.3); laptop.add(keyboard);
+    const trackpad = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.42), mat(0xc7ccd2, { metalness: 0.6, roughness: 0.25 }));
+    trackpad.rotation.x = -Math.PI / 2; trackpad.position.set(0, 0.073, 0.38); laptop.add(trackpad);
+    const lid = new THREE.Group(); lid.position.set(0, 0.07, -0.73); lid.rotation.x = -0.22; laptop.add(lid);
+    const lidBody = slab(2.2, 1.42, 0.05, 0.1, aluminium);
+    lidBody.rotation.x = Math.PI / 2; lidBody.position.set(0, 0.71, -0.03); lid.add(lidBody);
+    const bezel = new THREE.Mesh(new THREE.PlaneGeometry(2.14, 1.36), darkGlass);
+    bezel.position.set(0, 0.71, 0.022); lid.add(bezel);
+    const lidScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.02, 1.24), screenMaterial(canvasTexture(512, 314, (ctx, w, h) => {
+      ctx.fillStyle = '#f7f8fa'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#eceef2'; ctx.fillRect(0, 0, w, 26);
+      ['#ff5f57', '#febc2e', '#28c840'].forEach((color, index) => { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(14 + index * 16, 13, 5, 0, Math.PI * 2); ctx.fill(); });
+      ctx.fillStyle = '#111'; roundRect(ctx, w / 2 - 30, 0, 60, 12, 5);
+      ctx.fillStyle = '#eef2f7'; ctx.fillRect(0, 26, 110, h - 26);
+      ctx.fillStyle = '#1d1d1f'; ctx.font = '600 15px -apple-system, Inter, sans-serif'; ctx.fillText('DOCXXx', 128, 54);
+      ['Работа', 'Дом', 'Документы', 'Учёба', 'Банк', 'Здоровье'].forEach((name, index) => {
+        const x = 128 + (index % 3) * 124, y = 72 + Math.floor(index / 3) * 98;
+        ctx.fillStyle = '#ffffff'; roundRect(ctx, x, y, 112, 84, 10);
+        ctx.fillStyle = '#7a5bc7'; roundRect(ctx, x + 12, y + 14, 34, 26, 5);
+        ctx.fillStyle = '#1d1d1f'; ctx.font = '13px -apple-system, Inter, sans-serif'; ctx.fillText(name, x + 12, y + 64);
+      });
+      ['Входящие', 'Недавние', 'Общие'].forEach((name, index) => { ctx.fillStyle = index === 0 ? '#7a5bc7' : '#6c6a63'; ctx.font = '12px -apple-system, Inter, sans-serif'; ctx.fillText(name, 14, 54 + index * 24); });
+    })));
+    lidScreen.position.set(0, 0.72, 0.024); lid.add(lidScreen);
+    laptop.position.set(-6.2, 0.08, 0.7); laptop.rotation.y = 0.45; scene.add(laptop);
+    pad(-6.2, 0.7, 1.4, 0xdcd3f2);
+    anchors.drive = new THREE.Vector3(-6.9, 2.1, 0.5);
+
+    // Gmail: a white envelope with a red flap and a letter peeking out.
+    const mail = new THREE.Group();
+    const envelope = slab(1.4, 0.95, 0.06, 0.06, mat(0xffffff, { roughness: 0.65 }));
+    envelope.rotation.x = Math.PI / 2; envelope.position.set(0, 0.6, 0); mail.add(envelope);
+    const letter = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.01), mat(0xfdfbf6, { roughness: 0.8 }));
+    letter.position.set(0, 0.86, -0.01); mail.add(letter);
+    const flapShape = new THREE.Shape(); flapShape.moveTo(-0.7, 0.475); flapShape.lineTo(0.7, 0.475); flapShape.lineTo(0, -0.04); flapShape.closePath();
+    const flap = new THREE.Mesh(new THREE.ShapeGeometry(flapShape), mat(0xd9574a, { roughness: 0.5, side: THREE.DoubleSide }));
+    flap.position.set(0, 0.6, 0.065); mail.add(flap);
+    mail.position.set(-5.0, 0.32, 3.9); mail.rotation.y = 0.35; scene.add(mail);
+    pad(-5.0, 3.9, 0.85, 0xf3d2cb);
+    bobbers.push([mail, 0.32, 1.7]);
+    anchors.gmail = new THREE.Vector3(-5.0, 2.25, 3.9);
+
+    // Mac mini: brushed aluminium, rounded square, ports and a status light on the front, a dark foot.
+    const mini = new THREE.Group();
+    const foot = slab(2.3, 2.3, 0.08, 0.5, mat(0x2a2c30, { roughness: 0.8 }));
+    mini.add(foot);
+    const shell = slab(2.7, 2.7, 0.66, 0.5, aluminium);
+    shell.position.y = 0.06; mini.add(shell);
+    const front = 1.352;
+    [[-0.62, 0.34], [-0.42, 0.34]].forEach(([x, y]) => {
+      const port = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.1, 4, 8), mat(0x1a1b1e, { roughness: 0.6 }));
+      port.rotation.z = Math.PI / 2; port.position.set(x, y, front); mini.add(port);
+    });
+    const jack = new THREE.Mesh(new THREE.CircleGeometry(0.03, 16), mat(0x1a1b1e)); jack.position.set(-0.22, 0.34, front + 0.001); mini.add(jack);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), new THREE.MeshBasicMaterial({ color: 0x34c27a }));
+    led.position.set(1.0, 0.34, front - 0.01); mini.add(led);
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(2.6, 64), new THREE.MeshBasicMaterial({ color: 0x0a7f93, transparent: true, opacity: 0.1 }));
+    glow.rotation.x = -Math.PI / 2; glow.position.y = 0.012; mini.add(glow);
+    mini.rotation.y = -0.35;
+    scene.add(mini);
+    anchors.processor = new THREE.Vector3(0, 2.15, 0);
+    // Library: a folder with papers
+    const library = new THREE.Group();
+    const folderBack = slab(1.8, 1.25, 0.08, 0.08, mat(0xe8b45a, { roughness: 0.6 }));
+    folderBack.rotation.x = Math.PI / 2 - 0.12; folderBack.position.set(0, 0.68, -0.2); library.add(folderBack);
+    const tab = slab(0.6, 0.22, 0.08, 0.05, mat(0xe8b45a, { roughness: 0.6 }));
+    tab.rotation.x = Math.PI / 2 - 0.12; tab.position.set(-0.5, 1.36, -0.28); library.add(tab);
+    [0.12, 0.0, -0.1].forEach((offset, index) => {
+      const sheet = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.0, 0.015), mat(0xffffff, { roughness: 0.8 }));
+      sheet.position.set(0.05 * index - 0.05, 0.72 + 0.04 * index, -0.12 + offset * 0.4); sheet.rotation.x = -0.12; sheet.castShadow = true; library.add(sheet);
+    });
+    const folderFront = slab(1.8, 0.95, 0.08, 0.08, mat(0xf2c46c, { roughness: 0.6 }));
+    folderFront.rotation.x = Math.PI / 2 - 0.32; folderFront.position.set(0, 0.5, 0.12); library.add(folderFront);
+    library.position.set(5.6, 0.05, -1.6); library.rotation.y = -0.45; scene.add(library);
+    pad(5.6, -1.6, 1.3, 0xc9e8d6);
+    anchors.library = new THREE.Vector3(5.6, 2.2, -1.6);
+    // Review tray
+    const tray = new THREE.Group();
+    tray.add(slab(1.7, 1.2, 0.07, 0.1, mat(0xf4dfb2)));
+    [[0, 0.6, 1.7, 0.06], [0, -0.6, 1.7, 0.06], [0.85, 0, 0.06, 1.2], [-0.85, 0, 0.06, 1.2]].forEach(([x, z, w, d]) => {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 0.28, d), mat(0xe6b45f)); wall.position.set(x, 0.18, z); wall.castShadow = true; tray.add(wall);
+    });
+    const waiting = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.012, 0.75), mat(0xffffff)); waiting.position.set(0.05, 0.1, 0.02); waiting.rotation.y = 0.2; tray.add(waiting);
+    tray.position.set(5.0, 0.06, 2.6); tray.rotation.y = -0.3; scene.add(tray);
+    pad(5.0, 2.6, 1.15, 0xf2e0bd);
+    anchors.review = new THREE.Vector3(5.0, 1.15, 2.6);
+
+    // Routes: soft arcs, and papers that travel along them.
+    const routeMaterial = new THREE.MeshBasicMaterial({ color: 0x0a7f93, transparent: true, opacity: 0.35 });
+    const reviewMaterial = new THREE.MeshBasicMaterial({ color: 0xe6a23c, transparent: true, opacity: 0.4 });
+    const curve = (from, to, lift) => {
+      const mid = from.clone().lerp(to, 0.5); mid.y += lift;
+      return new THREE.CatmullRomCurve3([from, mid, to]);
+    };
+    const routes = [
+      { curve: curve(new THREE.Vector3(-5.6, 1.2, -2.9), new THREE.Vector3(-1.2, 0.75, -0.4), 1.2), papers: 2, speed: 0.16, tone: 0x2f7fd1 },
+      { curve: curve(new THREE.Vector3(-5.8, 0.9, 0.6), new THREE.Vector3(-1.35, 0.75, 0.05), 1.0), papers: 2, speed: 0.14, tone: 0x7a5bc7 },
+      { curve: curve(new THREE.Vector3(-4.8, 1.2, 3.6), new THREE.Vector3(-1.1, 0.75, 0.6), 1.2), papers: 1, speed: 0.12, tone: 0xd9574a },
+      { curve: curve(new THREE.Vector3(1.3, 0.75, -0.3), new THREE.Vector3(5.3, 1.0, -1.5), 1.4), papers: 3, speed: 0.15, tone: 0x2f9361 },
+      { curve: curve(new THREE.Vector3(1.2, 0.75, 0.5), new THREE.Vector3(4.8, 0.5, 2.4), 1.0), papers: 1, speed: 0.08, tone: 0xe6a23c, review: true },
+    ];
+    const paperGeometry = new THREE.BoxGeometry(0.5, 0.014, 0.66);
+    const stripeGeometry = new THREE.BoxGeometry(0.32, 0.016, 0.07);
+    routes.forEach(route => {
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(route.curve, 48, 0.022, 8, false), route.review ? reviewMaterial : routeMaterial);
+      scene.add(tube);
+      route.items = Array.from({ length: route.papers }, (_, index) => {
+        const paper = new THREE.Group();
+        const sheet = new THREE.Mesh(paperGeometry, mat(0xffffff, { roughness: 0.75 })); sheet.castShadow = true; paper.add(sheet);
+        const stripe = new THREE.Mesh(stripeGeometry, mat(route.tone, { roughness: 0.6 })); stripe.position.set(0, 0.009, -0.18); paper.add(stripe);
+        scene.add(paper);
+        return { paper, offset: index / route.papers };
+      });
+    });
+
+    // Labels: real buttons over the scene; they open the same explanation as the list below.
+    const labelsHost = document.getElementById('docxx-stage-labels');
+    const LABELS = [
+      ['icloud', 'С iPhone', 'iCloud → DOCXX Inbox'], ['drive', 'С компьютера', 'Google Drive → DOCXXx'], ['gmail', 'Из Gmail', 'через чат'],
+      ['processor', 'Mac mini', ''], ['library', 'На своём месте', ''], ['review', 'На разбор', ''],
+    ];
+    const labels = LABELS.map(([step, title, note]) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `docxx-stage-label${step === 'processor' ? ' is-hub' : ''}`;
+      button.dataset.stageStep = step;
+      const strong = document.createElement('strong'); strong.textContent = title;
+      const small = document.createElement('small'); small.textContent = note;
+      button.append(strong, small);
+      button.addEventListener('click', () => {
+        const box = document.getElementById('docxx-explainer');
+        const same = ccDocxxStep === step && !box.hidden;
+        ccDocxxExplain(step);
+        box.hidden = same;
+      });
+      labelsHost.appendChild(button);
+      return { step, button, small };
+    });
+    const refreshLabels = () => {
+      const text = id => (document.getElementById(id)?.textContent || '').trim();
+      labels.forEach(label => {
+        label.button.setAttribute('aria-pressed', String(ccDocxxStep === label.step && !document.getElementById('docxx-explainer').hidden));
+        if (label.step === 'processor') label.small.textContent = text('docxx-machine-label');
+        if (label.step === 'library') label.small.textContent = /^\d+$/.test(text('docxx-catalog-count')) ? `в каталоге ${text('docxx-catalog-count')}` : 'название по содержимому';
+        if (label.step === 'review') label.small.textContent = /^\d+$/.test(text('docxx-review')) ? `ждут: ${text('docxx-review')}` : 'если неясно';
+      });
+    };
+
+    // Turning and zooming by hand.
+    let drag = null;
+    const pointers = new Map();
+    stage.addEventListener('pointerdown', event => {
+      if (event.target.closest('button')) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      stage.setPointerCapture(event.pointerId);
+      drag = { x: event.clientX, y: event.clientY, azimuth: view.azimuth, elevation: view.elevation };
+      stage.classList.add('is-dragging');
+    });
+    stage.addEventListener('pointermove', event => {
+      if (!pointers.has(event.pointerId)) return;
+      const before = [...pointers.values()];
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size === 2) {
+        const after = [...pointers.values()];
+        const gap = list => Math.hypot(list[0].x - list[1].x, list[0].y - list[1].y);
+        view.distance = Math.min(26, Math.max(10, view.distance * gap(before) / Math.max(1, gap(after))));
+        return;
+      }
+      if (!drag) return;
+      view.azimuth = drag.azimuth - (event.clientX - drag.x) * 0.008;
+      view.elevation = Math.min(1.35, Math.max(0.22, drag.elevation + (event.clientY - drag.y) * 0.006));
+    });
+    const release = event => { pointers.delete(event.pointerId); if (!pointers.size) { drag = null; stage.classList.remove('is-dragging'); } };
+    stage.addEventListener('pointerup', release);
+    stage.addEventListener('pointercancel', release);
+    stage.addEventListener('wheel', event => {
+      event.preventDefault();
+      view.distance = Math.min(26, Math.max(10, view.distance * (1 + Math.sign(event.deltaY) * 0.08)));
+    }, { passive: false });
+    document.getElementById('docxx-stage-reset').addEventListener('click', () => Object.assign(view, HOME));
+
+    const projected = new THREE.Vector3();
+    let last = performance.now();
+    let clock = 0;
+    function frame(now) {
+      const visible = !document.hidden && section.classList.contains('active');
+      if (!visible) { setTimeout(() => requestAnimationFrame(frame), 800); return; }
+      const width = stage.clientWidth, height = stage.clientHeight;
+      if (renderer.domElement.width !== Math.round(width * renderer.getPixelRatio()) || renderer.domElement.height !== Math.round(height * renderer.getPixelRatio())) {
+        renderer.setSize(width, height, false);
+        camera.aspect = width / Math.max(1, height);
+        camera.updateProjectionMatrix();
+      }
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      const busy = document.getElementById('docxx-flow')?.dataset.active === 'true';
+      const moving = busy && !reduced.matches;
+      if (moving) clock += dt;
+      camera.position.set(
+        target.x + view.distance * Math.cos(view.elevation) * Math.sin(view.azimuth),
+        target.y + view.distance * Math.sin(view.elevation),
+        target.z + view.distance * Math.cos(view.elevation) * Math.cos(view.azimuth));
+      camera.lookAt(target);
+      if (!reduced.matches) bobbers.forEach(([object, base, phase]) => { object.position.y = base + Math.sin(now / 900 + phase) * 0.06; });
+      led.material.color.setHex(busy && Math.sin(now / 180) > 0 ? 0x7cf0b0 : 0x34c27a);
+      routes.forEach(route => route.items.forEach(item => {
+        item.paper.visible = busy;
+        if (!busy) return;
+        const t = moving ? (item.offset + clock * route.speed) % 1 : (item.offset + 0.5) % 1;
+        const point = route.curve.getPointAt(t);
+        const ahead = route.curve.getPointAt(Math.min(1, t + 0.01));
+        item.paper.position.copy(point);
+        item.paper.lookAt(ahead);
+        const fade = Math.min(1, t * 8, (1 - t) * 8);
+        item.paper.scale.setScalar(0.4 + 0.6 * fade);
+      }));
+      renderer.render(scene, camera);
+      labels.forEach(label => {
+        projected.copy(anchors[label.step]).project(camera);
+        label.button.style.transform = `translate(${(projected.x * 0.5 + 0.5) * width}px, ${(-projected.y * 0.5 + 0.5) * height}px) translate(-50%, -100%)`;
+      });
+      requestAnimationFrame(frame);
+    }
+    refreshLabels();
+    setInterval(refreshLabels, 1000);
+    stage.hidden = false;
+    section.classList.add('has-3d');
+    requestAnimationFrame(frame);
+  }).catch(() => { /* The flat route below stays as it is. */ });
+})();
 for(const button of document.querySelectorAll('[data-docxx-filter]')) button.addEventListener('click',()=>{
   ccDocxxFilter=button.dataset.docxxFilter;
   document.querySelectorAll('[data-docxx-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));

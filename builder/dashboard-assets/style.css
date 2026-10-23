@@ -5617,6 +5617,63 @@ tr:last-child td { border-bottom: none; }
     }
 }
 
+/* Mark 2026-10-23: the campus follows the site's light theme («этот экран тоже тёмный»). */
+html, body { background: #fffcf6; color: #24292b; }
+:root { color-scheme: light; }
+.department-campus { background: #fffcf6; border-color: #e6dccc; color: #24292b; }
+.department-campus .section-title { color: #24292b; font-size: 0.95rem; letter-spacing: 0; text-transform: none; }
+.department-campus .section-count, .campus-subtitle { font-family: inherit; font-size: 0.75rem; }
+.department-campus .section-dot { display: none; }
+.department-campus .section-count, .campus-subtitle { color: #6c6a63; }
+.campus-state { color: #6c6a63; border-bottom-color: #e6dccc; font-family: inherit; font-size: 0.78rem; }
+.campus-refresh, .campus-view-toggle,
+.campus-details [data-campus-detail-close], .campus-details [data-campus-project-detail-close] {
+    border: 1px solid #d4c6b1; border-radius: 10px; background: #fffcf6; color: #0a7f93;
+}
+.campus-refresh:hover, .campus-view-toggle:hover { background: #f1eadf; }
+.campus-view-toggle[aria-pressed="true"] { border-color: #0a7f93; }
+.campus-stage-3d { background: #f3ede2; border-bottom-color: #e6dccc; }
+.campus-3d-label { border: 1px solid #e6dccc; border-radius: 6px; background: rgba(255, 252, 246, 0.94); color: #24292b; box-shadow: 0 1px 3px rgba(60, 45, 20, 0.12); font-family: inherit; }
+.campus-3d-label.is-department { border: 1px solid #e6a23c; background: #fff7e8; color: #7a4b12; }
+.campus-3d-label.is-department.has-boundary small, .campus-3d-label.is-live small { color: #a8650f; }
+.campus-3d-label.is-waypoint { border-color: #b9c6d6; background: #f3f7fb; }
+.campus-3d-label.is-project { border-color: #e2cdb3; background: #fffaf2; }
+.campus-3d-label.is-project small, .campus-3d-label small { color: #6c6a63; }
+.campus-3d-label.is-live { border-color: #e6a23c; }
+.campus-3d-label.is-agent { border-color: #9cc3a6; }
+.campus-3d-label.is-bubble { border-color: #0a7f93; background: #0a7f93; color: #fff; }
+.campus-3d-hint { border: 1px solid #e6dccc; border-radius: 8px; background: rgba(255, 252, 246, 0.94); color: #6c6a63; font-family: inherit; }
+.campus-bottom-grid { background: #fffcf6; border-top-color: #e6dccc; }
+.campus-task-panel { border: 1px solid #e6dccc; border-radius: 12px; background: #f8f3ea; overflow: hidden; }
+.campus-task-head { border-bottom-color: #e6dccc; font-family: inherit; }
+.campus-task-head strong { color: #24292b; }
+.campus-task-head span { color: #6c6a63; font-size: 0.68rem; }
+.campus-task-lanes { background: transparent; }
+.campus-task-lane { border: 1px solid #e6dccc; border-radius: 10px; background: #fffcf6; color: #24292b; font-family: inherit; font-size: 0.72rem; }
+.campus-details { border: 1px solid #e6dccc; border-radius: 12px; background: #fffcf6; color: #24292b; }
+.campus-details dl > div { border-bottom-color: #efe7da; }
+.campus-details dd { color: #24292b; }
+.campus-department-picker { background: #f8f3ea; color: #24292b; font-family: inherit; }
+.campus-department-picker select { border: 1px solid #d4c6b1; border-radius: 10px; background: #fffcf6; color: #24292b; }
+.campus-waypoint { border-color: #d4c6b1; background: #fffcf6; color: #24292b; }
+.campus-waypoint > span { color: #6c6a63; }
+.campus-agent { background: #fffcf6; color: #24292b; }
+.campus-task-lane, .campus-details, .campus-3d-label { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+.campus-3d-label.is-department { cursor: pointer; pointer-events: auto; }
+.campus-3d-label.is-department:hover, .campus-3d-label.is-department:focus-visible { border-color: #0a7f93; outline: none; }
+.campus-3d-dept { position: absolute; z-index: 200000; top: 14px; right: 14px; width: min(320px, calc(100% - 28px)); max-height: calc(100% - 28px); overflow: auto; padding: 14px 16px 16px; color: #24292b; background: rgba(255, 252, 246, 0.97); border: 1px solid #e6dccc; border-radius: 16px; box-shadow: 0 10px 30px rgba(60, 45, 20, 0.16); font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.campus-3d-dept[hidden] { display: none; }
+.campus-3d-dept header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.campus-3d-dept h3 { margin: 0; font-size: 16px; }
+.campus-3d-dept header button { width: 32px; height: 32px; color: #6c6a63; font-size: 20px; background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.campus-3d-dept h4 { margin: 14px 0 6px; color: #6c6a63; font-size: 12px; font-weight: 650; }
+.campus-3d-dept ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.campus-3d-dept li { display: grid; gap: 1px; padding: 8px 10px; background: #f8f3ea; border-radius: 10px; }
+.campus-3d-dept li.is-live { background: #fff4df; }
+.campus-3d-dept strong, .campus-3d-dept li button { padding: 0; color: #24292b; font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: none; border: 0; cursor: pointer; }
+.campus-3d-dept small { color: #6c6a63; font-size: 12px; }
+
 /* ── Agent Theater v2: AI Town-inspired town map ── */
 .theater-layout {
     grid-template-columns: minmax(0, 1.7fr) minmax(330px, 0.58fr);
