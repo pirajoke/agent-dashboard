@@ -170,5 +170,12 @@ class AgentPageAndApiTests(unittest.TestCase):
             self.assertIn(needle, PAGE)
 
 
+    def test_deploy_ships_and_installs_the_runner(self):
+        deploy = (BUILDER / "deploy_to_scripts.sh").read_text()
+        self.assertIn('cp "$SRC_DIR/agent_task_runner.py"', deploy)
+        self.assertIn("com.pirajoke.agent-task-runner", deploy)
+        plist = (BUILDER / "launchd" / "com.pirajoke.agent-task-runner.plist.template").read_text()
+        self.assertIn("<integer>300</integer>", plist)
+
 if __name__ == "__main__":
     unittest.main()
