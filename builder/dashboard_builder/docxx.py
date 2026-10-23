@@ -166,10 +166,72 @@ def _gmail_status(directory, now):
         code = saved.get('error_code')
         error = GMAIL_ERRORS.get(code) if isinstance(code, str) else None
         error = error or 'Проверка почты завершилась ошибкой. Нужна проверка подключения.'
-    return {'state': state, 'automatic': enabled and fresh and state in ('ready', 'processing'),
+    if (state == 'error' and saved.get('error_code') == 'message_not_found'
+            and _count(saved.get('pending')) == 0 and _count(saved.get('known_pending')) == 0
+            and saved.get('discovery_pending') is False):
+        state = 'warning'
+    return {'state': state, 'automatic': enabled and fresh and state in ('ready', 'processing', 'warning'),
             'checked_at': _stamp(checked),
-            'pending': _count(saved.get('pending')) if fresh and enabled and state in ('ready', 'processing', 'error') else None,
+            'pending': _count(saved.get('pending')) if fresh and enabled and state in ('ready', 'processing', 'error', 'warning') else None,
             'error': error}
+
+
+OPERATION_LABELS = {
+    'queued': 'В очереди', 'processing': 'Чтение и проверка', 'applying': 'Изменение документа',
+    'awaiting_cloud': 'Ожидает проверки облака', 'verified': 'Результат проверен в облаке',
+    'needs_review': 'Нужен разбор', 'failed': 'Ошибка обработки', 'uncertain': 'Результат требует проверки',
+    'metadata_verified': 'Перемещение проверено',
+}
+
+
+def _operations(directory, now):
+    empty = {'state': 'unavailable', 'counts': {}, 'records': [], 'checked_at': None}
+    try:
+        saved = _read(directory / 'operations-status.json')
+        counts, records = saved.get('counts'), saved.get('records')
+        if (type(saved.get('schema_version')) is not int or saved['schema_version'] != 1
+                or saved.get('producer') != 'docxx-operations'
+                or not isinstance(counts, dict) or not isinstance(records, list)
+                or any(key not in OPERATION_LABELS or _count(value) is None for key, value in counts.items())):
+            return empty
+        checked = _date(saved.get('checked_at'))
+        fresh = checked is not None and 0 <= now - checked <= STALE_AFTER
+        projected = []
+        for row in records[:100]:
+            if not isinstance(row, dict):
+                continue
+            ident, state = row.get('id'), row.get('state')
+            if (not isinstance(ident, str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}', ident)
+                    or not isinstance(state, str) or state not in OPERATION_LABELS):
+                continue
+            item = {'id': ident, 'state': state, 'label': OPERATION_LABELS[state]}
+            sha, size = row.get('sha256'), row.get('size')
+            if isinstance(sha, str) and re.fullmatch(r'[0-9a-f]{64}', sha): item['sha256'] = sha
+            if type(size) is int and 0 < size <= 100 * 1024 * 1024: item['size'] = size
+            names, kinds = row.get('source_names'), row.get('source_kinds')
+            item['source_names'] = [_basename(name) for name in names[:8] if isinstance(name, str)] if isinstance(names, list) else []
+            item['source_kinds'] = list(dict.fromkeys(k for k in kinds[:20] if isinstance(k, str) and k in ('icloud', 'drive', 'gmail', 'manual'))) if isinstance(kinds, list) else []
+            destination = row.get('destination')
+            if (isinstance(destination, str) and 0 < len(destination) <= 600
+                    and not destination.startswith(('/', '\\')) and '\\' not in destination
+                    and ':' not in destination and all(p not in ('', '.', '..') for p in destination.split('/'))
+                    and all(c.isprintable() for c in destination)):
+                item['destination'] = destination
+            if state == 'metadata_verified':
+                if row.get('verification') != 'metadata':
+                    continue
+                item['verification'] = 'metadata'
+            if state in ('verified', 'metadata_verified'):
+                url = _drive_link(row.get('cloud_file_id'))
+                if url: item.update(cloud_file_id=row['cloud_file_id'], url=url)
+            for key in ('checked_at', 'at'):
+                stamp = _stamp(row.get(key))
+                if stamp: item[key] = stamp
+            projected.append(item)
+        return {'state': 'ready' if fresh else 'stale', 'counts': counts,
+                'records': projected, 'checked_at': _stamp(checked)}
+    except (OSError, ValueError, TypeError):
+        return empty
 
 
 def _record(row, source, key, historical=False):
@@ -265,11 +327,18 @@ def docxx_projection(directory, *, owner=False, now=None):
     except FileNotFoundError: pass  # Optional until Gmail is connected.
     except (OSError, ValueError, TypeError): warnings.append('История вложений Gmail недоступна.')
     current = []
-    for values, source in ((status.get('results', []), 'icloud'), (ingress.get('results', []),'drive'), (status.get('review_pending', []),'review')):
+    queue_known = True
+    for values, source in ((status.get('results'), 'icloud'), (ingress.get('results'),'drive'), (status.get('review_pending'),'review')):
         if not isinstance(values, list):
-            warnings.append('Неполные данные очереди.'); continue
+            queue_known = False
+            continue
+        if len(values) > 1000: queue_known = False
         for index, value in enumerate(values[:1000]):
-            if not isinstance(value, dict): continue
+            if not isinstance(value, dict):
+                queue_known = False
+                continue
+            if not isinstance(value.get('status'), str) or value['status'] not in {*LABELS, 'moving', 'pending_cloud', 'planned'}:
+                queue_known = False
             row = _record(value, source, value.get('id') or value.get('source') or index)
             if row:
                 if ('/gmail-staging/' in str(value.get('source', '')).replace('\\', '/') and
@@ -290,13 +359,37 @@ def docxx_projection(directory, *, owner=False, now=None):
     review = sum(row['status'] in issues for row in current)
     pending_icloud = sum(row['source'] == 'icloud' and row['status'] in ('settling','pending','awaiting_verification') for row in current)
     drive_pending = _count(ingress.get('pending'))
-    pending = pending_icloud + drive_pending if drive_pending is not None else None
-    error = status.get('error') or status.get('phase') == 'needs_review' or catalog.get('status') == 'error' or ingress.get('status') in ('error','awaiting_verification')
+    pending = pending_icloud + drive_pending if queue_known and drive_pending is not None else None
+    if not queue_known: warnings.append('Неполные данные очереди.')
+    gmail = _gmail_status(directory, now)
+    operations = _operations(directory, now)
+    unified_attention, unified_pending = False, False
+    health = None
+    if 'health' in status:
+        saved_health = status['health']
+        health_state = saved_health.get('state') if isinstance(saved_health, dict) else None
+        if health_state not in ('ready', 'processing', 'degraded', 'blocked', 'stale'):
+            health_state = 'unavailable'
+        health = {'state': health_state}
+        unified_attention = health_state in ('degraded', 'blocked', 'stale', 'unavailable')
+        unified_pending = health_state == 'processing'
+    if operations['state'] == 'ready':
+        counts = operations['counts']
+        unified_attention = unified_attention or any(counts.get(key, 0) > 0 for key in ('needs_review', 'failed', 'uncertain'))
+        unified_pending = unified_pending or any(counts.get(key, 0) > 0 for key in ('queued', 'processing', 'applying', 'awaiting_cloud'))
+    if unified_attention: warnings.append('В общей обработке есть вопросы для проверки. Откройте общую историю.')
+    elif unified_pending: warnings.append('В общей очереди остаются незавершённые операции.')
+    isolated_gmail = gmail['state'] == 'warning'
+    if gmail.get('error'): warnings.append(gmail['error'])
+    if gmail['state'] == 'stale': warnings.append('Статус почтового входа устарел.')
+    error = (status.get('error') or not queue_known or unified_attention or (status.get('phase') == 'needs_review' and not isolated_gmail)
+             or catalog.get('status') != 'ready' or ingress.get('status') in ('error','awaiting_verification')
+             or gmail['state'] in ('error', 'stale', 'unavailable'))
     if catalog.get('status') == 'error': warnings.append('Облачный каталог временно недоступен. Входящие файлы сохранены.')
     if ingress.get('status') == 'error': warnings.append('Последняя проверка Google Drive завершилась ошибкой.')
     if isinstance(status.get('status_view'), dict) and status['status_view'].get('status') == 'error': warnings.append('Обновление текстового статуса в Google Drive задерживается.')
     if status.get('error'): warnings.append('Последний проход завершился ошибкой. Смотрите журнал обработки.')
-    state = 'stale' if stale else 'processing' if busy else 'attention' if error or review else 'waiting' if pending or pending is None else 'ready'
+    state = 'stale' if stale else 'processing' if busy else 'attention' if error or review else 'waiting' if unified_pending or pending or pending is None else 'ready'
     if status.get('phase') not in ('ready','needs_review') and not stale and not busy: state = 'unavailable'
     if busy is None: warnings.append('Не удалось проверить, выполняется ли проход прямо сейчас.')
     links = {}
@@ -320,4 +413,4 @@ def docxx_projection(directory, *, owner=False, now=None):
             'catalog_state': catalog.get('status') if catalog.get('status') in ('ready','error','refreshing') else 'unknown',
             'pending': pending, 'review_count': review, 'records': records[:100],
             'records_total': len(records), 'warnings': warnings, 'links': links,
-            'gmail': _gmail_status(directory, now)}
+            'gmail': gmail, 'operations': operations, 'health': health}
