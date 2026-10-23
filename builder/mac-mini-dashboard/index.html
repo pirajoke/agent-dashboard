@@ -3939,6 +3939,18 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-button { font:inherit; font-size:13px; padding:10px 14px; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:8px; cursor:pointer; }
 .docxx-button:hover { background:var(--mm-selection); }
 .docxx-button:disabled { opacity:.6; cursor:wait; }
+.docxx-unified { border-block:1px solid var(--mm-line); padding:20px 0; margin:16px 0; }
+.docxx-unified>summary { cursor:pointer; font-weight:650; padding:8px 0; }
+.docxx-timeline { padding-left:24px; max-height:400px; overflow:auto; }
+.docxx-timeline li { padding:10px 0; border-bottom:1px solid var(--mm-line); overflow-wrap:anywhere; }
+.docxx-timeline small { display:block; color:var(--mm-muted); margin-top:5px; }
+.docxx-content-search { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin:20px 0 10px; }
+.docxx-content-search label { flex:1 1 240px; min-width:0; }
+.docxx-content-search input { box-sizing:border-box; width:100%; }
+.docxx-search-results { padding-left:24px; overflow-wrap:anywhere; }
+.docxx-search-results li { margin:18px 0; }
+.docxx-search-results p { white-space:pre-wrap; line-height:1.6; }
+#section-documents :focus-visible { outline:2px solid var(--mm-accent); outline-offset:4px; }
 #section-documents :is(button,a,input):focus-visible { outline:3px solid var(--mm-accent); outline-offset:4px; }
 .docxx-statusbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px 12px; padding:18px 0; border-block:1px solid var(--mm-line); font-size:14px; }
 .docxx-statusbar #docxx-freshness { color:var(--mm-muted); font-size:13px; }
@@ -4412,6 +4424,19 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </div>
     <div class="docxx-explainer" id="docxx-explainer"><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
     <div class="docxx-facts" aria-label="Последний снимок обработки файлов из iCloud и Google Drive"><span>Очередь файлов <b id="docxx-pending">—</b></span><span>Нужен разбор <b id="docxx-review">—</b></span><span>В каталоге <b id="docxx-catalog-count">—</b></span><span>Вызовы модели за проход <b id="docxx-model">—</b></span></div>
+    <details class="docxx-unified" id="docxx-operations">
+      <summary>Общая история обработки</summary>
+      <p id="docxx-operations-state" class="docxx-footnote">Общая история ещё не подтверждена.</p>
+      <div id="docxx-operation-counts" class="docxx-facts" aria-label="Все операции по состояниям"></div>
+      <ol id="docxx-operation-timeline" class="docxx-timeline" aria-label="Последние операции"></ol>
+    </details>
+    <form id="docxx-content-search-form" class="docxx-content-search" role="search" aria-label="Поиск в документах">
+      <label class="docxx-search" for="docxx-content-query">Поиск по содержимому документов<input id="docxx-content-query" type="search" maxlength="500" autocomplete="off" placeholder="Слово или фраза" aria-describedby="docxx-content-help"></label>
+      <button id="docxx-content-submit" class="docxx-button" type="submit">Найти</button>
+    </form>
+    <p id="docxx-content-help" class="docxx-footnote">Приватный поиск по зарегистрированным версиям. Результат поиска не подтверждает текущее состояние файла в облаке.</p>
+    <p id="docxx-content-state" class="docxx-footnote" role="status" aria-live="polite">Введите слово или точную фразу.</p>
+    <ol id="docxx-content-results" class="docxx-search-results" aria-label="Результаты поиска документов"></ol>
     <div id="docxx-help" class="docxx-help" hidden>
       <h3>Сохрани документ. Остальное начнёт Mini.</h3>
       <ol><li><strong>На iPhone:</strong> «Поделиться» → «Сохранить в Файлы» → iCloud Drive → DOCXX Inbox. Подходит для отдельных файлов.</li><li><strong>На компьютере:</strong> добавь новый файл или комплект прямо в корень DOCXXx в Google Drive. Постоянные разделы остаются на месте.</li><li><strong>Из Gmail:</strong> попроси в чате разобрать письмо или вложения. Содержимое проверяется перед выбором имени и папки. Фоновая проверка почты показана отдельно в узле Gmail; подключение чата само по себе её не включает.</li><li><strong>Дождись синхронизации.</strong> Новый файл должен полностью загрузиться и перестать меняться. Папки проверяются как единый комплект.</li><li><strong>Проверь результат ниже.</strong> Если нет уверенного назначения, открой «Разобрать позже».</li></ol>
@@ -11226,7 +11251,7 @@ document.getElementById('np-device-show').addEventListener('click', npShowQr);
 document.getElementById('np-device-hide').addEventListener('click', npHideQr);
 document.addEventListener('visibilitychange', () => { if (document.hidden) npHideQr(); });
 // ── End «Открыть на телефоне» ──
-// DOCXX live view: no document text, no browser persistence, no actions on files.
+// DOCXX owner view: bounded private snippets, no browser persistence or file actions.
 let ccDocxxData = null;
 let ccDocxxController = null;
 let ccDocxxTimer = null;
@@ -11234,6 +11259,9 @@ let ccDocxxGeneration = 0;
 let ccDocxxFilter = 'all';
 let ccDocxxStep = 'processor';
 let ccDocxxRecordsSignature = null;
+let ccDocxxSearchController = null;
+let ccDocxxSearchGeneration = 0;
+let ccDocxxOperationsSignature = null;
 const ccDocxxAttention = new Set(['needs_review','error','duplicate_found','retained','awaiting_verification']);
 const ccDocxxSteps = {
   icloud:['С iPhone — в одну папку','В «Файлах» выбери iCloud Drive → DOCXX Inbox. Отдельный файл поступит на Mini после синхронизации. «На моём iPhone» и другие папки iCloud не входят в этот маршрут.',null],
@@ -11263,6 +11291,7 @@ function ccDocxxExplain(step=ccDocxxStep) {
 }
 function ccDocxxGmailDescription() {
   const gmail=ccDocxxData?.gmail;
+  if(gmail?.state==='warning') return 'Одно письмо недоступно. Остальная почтовая очередь проверена; другие источники продолжают работать.';
   if(gmail?.automatic===true && ['ready','processing'].includes(gmail.state)) return 'Фоновый почтовый вход подтверждён свежим статусом Mini. Результат импорта проверяется отдельно от обнаружения вложения.';
   if(gmail?.state==='error') return 'Последняя фоновая проверка почты завершилась ошибкой. Импорт новых вложений пока не подтверждён.';
   if(gmail?.state==='stale') return 'Статус почтового входа устарел. Текущая фоновая работа не подтверждена.';
@@ -11271,7 +11300,7 @@ function ccDocxxGmailDescription() {
 }
 function ccDocxxRenderGmail() {
   const gmail=ccDocxxData?.gmail;
-  const labels={manual:'Импорт через чат · фон не подтверждён',paused:'Фоновая проверка приостановлена',error:'Ошибка фоновой проверки',stale:'Статус почтового входа устарел',unavailable:'Статус почтового входа недоступен'};
+  const labels={manual:'Импорт через чат · фон не подтверждён',paused:'Фоновая проверка приостановлена',warning:'Почта проверена · одно письмо недоступно',error:'Ошибка фоновой проверки',stale:'Статус почтового входа устарел',unavailable:'Статус почтового входа недоступен'};
   const automatic=gmail?.automatic===true && ['ready','processing'].includes(gmail.state);
   ccDocxxText('docxx-gmail-state',automatic?(gmail.state==='processing'?'Mini проверяет почтовый вход':'Фоновый почтовый вход работает'):(labels[gmail?.state]||'Импорт через чат · фон не подтверждён'));
   const details=[];
@@ -11282,6 +11311,7 @@ function ccDocxxRenderGmail() {
 }
 function ccDocxxReset(message, state='unavailable') {
   ccDocxxData=null; ccDocxxRecordsSignature=null;
+  ccDocxxResetSearch(); ccDocxxRenderOperations();
   ccDocxxText('docxx-state',message); ccDocxxText('docxx-freshness','Нет подтверждённого текущего снимка');
   ccDocxxText('docxx-machine-label','Состояние неизвестно');
   document.getElementById('docxx-indicator').dataset.state=state;
@@ -11296,6 +11326,77 @@ function ccDocxxClear() {
   ccDocxxGeneration++; ccDocxxController?.abort(); ccDocxxController=null;
   clearTimeout(ccDocxxTimer); ccDocxxTimer=null;
   ccDocxxReset('Статус доступен после проверки доступа владельца.','owner_required');
+}
+const ccDocxxOperationLabels = {queued:'В очереди',processing:'Чтение и проверка',applying:'Изменение документа',awaiting_cloud:'Ожидает облачной проверки',verified:'Проверено в облаке',metadata_verified:'Перемещение проверено',needs_review:'Нужен разбор',failed:'Ошибка',uncertain:'Результат требует проверки'};
+function ccDocxxRenderOperations() {
+  const operations=ccDocxxData?.operations;
+  const signature=JSON.stringify(operations || null);
+  if(signature===ccDocxxOperationsSignature) return;
+  ccDocxxOperationsSignature=signature;
+  const counts=document.getElementById('docxx-operation-counts'); counts.replaceChildren();
+  const timeline=document.getElementById('docxx-operation-timeline'); timeline.replaceChildren();
+  if(!operations || !['ready','stale'].includes(operations.state)) {
+    ccDocxxText('docxx-operations-state','Общая история недоступна. Это не означает остановку существующей обработки.'); return;
+  }
+  ccDocxxText('docxx-operations-state',(operations.state==='stale'?'Снимок устарел; текущая работа не подтверждена. ':'Состояние общей очереди. ')+'Снимок: '+ccDocxxDate(operations.checked_at)+'. Показано до 100 последних операций; счётчики охватывают всю историю.');
+  for(const [state,label] of Object.entries(ccDocxxOperationLabels)) {
+    const value=operations.counts?.[state]; if(!Number.isInteger(value)) continue;
+    const entry=ccDocxxEl('span',label+' '); entry.append(ccDocxxEl('b',value.toLocaleString('ru-RU'))); counts.append(entry);
+  }
+  for(const row of (Array.isArray(operations.records)?operations.records:[]).slice(0,100)) {
+    const item=ccDocxxEl('li'); item.append(ccDocxxEl('strong',(row.source_names || []).join(', ') || 'Документ'));
+    const sources=(row.source_kinds || []).map(k=>({icloud:'iCloud',gmail:'Gmail',drive:'Google Drive',manual:'Ручной импорт'}[k] || '')).filter(Boolean).join(' · ');
+    item.append(ccDocxxEl('small',(ccDocxxOperationLabels[row.state] || 'Состояние неизвестно')+' · '+sources+(row.at?' · '+ccDocxxDate(row.at):'')));
+    if(row.destination) item.append(ccDocxxEl('small',row.destination));
+    if(row.verification==='metadata') item.append(ccDocxxEl('small','Имя и папка сверены с Drive; содержимое файла не сверялось.'));
+    const link=ccDocxxLink('Открыть зарегистрированный файл ↗',row.url); if(link) item.append(link);
+    timeline.append(item);
+  }
+  if(!timeline.children.length) timeline.append(ccDocxxEl('li','В общей истории пока нет операций.'));
+}
+function ccDocxxResetSearch() {
+  ccDocxxSearchGeneration++; ccDocxxSearchController?.abort(); ccDocxxSearchController=null;
+  document.getElementById('docxx-content-results').replaceChildren();
+  document.getElementById('docxx-content-query').value='';
+  document.getElementById('docxx-content-submit').disabled=false;
+  ccDocxxText('docxx-content-state','Введите слово или точную фразу.');
+}
+async function ccDocxxSearchContent(event) {
+  event.preventDefault();
+  const query=document.getElementById('docxx-content-query').value.trim();
+  const generation=++ccDocxxSearchGeneration;
+  ccDocxxSearchController?.abort();
+  const list=document.getElementById('docxx-content-results'); list.replaceChildren();
+  if(!ccDocxxData) { ccDocxxText('docxx-content-state','Сначала подтвердите доступ владельца.'); return; }
+  if(!query) { ccDocxxText('docxx-content-state','Введите слово или точную фразу.'); return; }
+  const controller=new AbortController(); ccDocxxSearchController=controller;
+  const timeout=setTimeout(()=>controller.abort(),8000);
+  const button=document.getElementById('docxx-content-submit'); button.disabled=true;
+  ccDocxxText('docxx-content-state','Ищем в зарегистрированных версиях…');
+  try {
+    const response=await fetch(`${DASHBOARD_API}/api/docxx/search?q=${encodeURIComponent(query)}`,{headers:jarvisRunHeaders(),cache:'no-store',signal:controller.signal});
+    if(generation!==ccDocxxSearchGeneration || !ccDocxxVisible()) return;
+    if(response.status===401 || response.status===403) { ccDocxxClear(); return; }
+    if(!response.ok) throw new Error('unavailable');
+    const data=await response.json();
+    if(generation!==ccDocxxSearchGeneration || !ccDocxxVisible()) return;
+    if(data.state==='owner_required') { ccDocxxClear(); return; }
+    if(data.state!=='ready' || !Array.isArray(data.results)) {
+      ccDocxxText('docxx-content-state',data.state==='invalid_query'?'Введите текст не длиннее 500 символов.':'Индекс поиска недоступен. Повторите позже.'); return;
+    }
+    const rows=data.results.slice(0,100);
+    ccDocxxText('docxx-content-state',rows.length?'Найдено версий: '+rows.length+'. Показаны фрагменты сохранённого текста.':'Совпадений в доступном индексе нет.');
+    for(const row of rows) {
+      const item=ccDocxxEl('li');
+      item.append(ccDocxxLink('Открыть зарегистрированную версию ↗',row.url) || ccDocxxEl('strong','Зарегистрированная версия'));
+      item.append(ccDocxxEl('p',String(row.snippet || '').slice(0,300))); list.append(item);
+    }
+  } catch(error) {
+    if(generation===ccDocxxSearchGeneration && ccDocxxVisible()) ccDocxxText('docxx-content-state','Не удалось выполнить поиск. Повторите позже.');
+  } finally {
+    clearTimeout(timeout);
+    if(generation===ccDocxxSearchGeneration) { button.disabled=false; ccDocxxSearchController=null; }
+  }
 }
 function ccDocxxRenderRecords() {
   const list=document.getElementById('docxx-records');
@@ -11337,7 +11438,7 @@ function ccDocxxRender(data) {
   const links=document.getElementById('docxx-guide-links'); links.replaceChildren();
   for(const [label,key] of [['Инструкция в Google Drive ↗','guide'],['Библиотека DOCXXx ↗','library'],['Разобрать позже ↗','review'],['Полный каталог ↗','catalog'],['Текстовый статус ↗','status']]) { const a=ccDocxxLink(label,data.links?.[key]); if(a) links.append(a); }
   ccDocxxText('docxx-results-note',`Показано до 100 операций. В доступном журнале: ${Number.isInteger(data.records_total)?data.records_total:'—'}. Обновление панели каждые 5 секунд, пока она открыта.`);
-  ccDocxxRenderGmail(); ccDocxxExplain(); ccDocxxRenderRecords();
+  ccDocxxRenderGmail(); ccDocxxExplain(); ccDocxxRenderRecords(); ccDocxxRenderOperations();
 }
 async function ccLoadDocxx() {
   if(!ccDocxxVisible()) return;
@@ -11369,6 +11470,7 @@ for(const button of document.querySelectorAll('[data-docxx-filter]')) button.add
 });
 document.getElementById('docxx-refresh').addEventListener('click',ccLoadDocxx);
 document.getElementById('docxx-search').addEventListener('input',ccDocxxRenderRecords);
+document.getElementById('docxx-content-search-form').addEventListener('submit',ccDocxxSearchContent);
 document.getElementById('docxx-help-toggle').addEventListener('click',()=>{
   const help=document.getElementById('docxx-help'); help.hidden=!help.hidden;
   document.getElementById('docxx-help-toggle').setAttribute('aria-expanded',String(!help.hidden));
