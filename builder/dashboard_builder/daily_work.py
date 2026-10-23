@@ -469,8 +469,17 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str],
     }
 
 
+def _latest_lead(summaries: dict[str, dict[str, Any]] | None, product_id: str, days: list[str]) -> dict[str, Any] | None:
+    """The newest summary's one-line «what is going on» for the project, with its day."""
+    for day in reversed(days):
+        details = _details((summaries or {}).get(day), product_id)
+        if details and details["lead"]:
+            return {"date": day, "text": details["lead"]}
+    return None
+
+
 def _project_detail(item: dict[str, Any], series_days: list[str],
-                    summaries: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
+                    summaries: dict[str, dict[str, Any]] | None = None, today: str | None = None) -> dict[str, Any]:
     detail = _portfolio_summary(item, series_days, summaries)
     timeline = []
     for index, day in reversed(list(enumerate(series_days))):
@@ -501,6 +510,12 @@ def _project_detail(item: dict[str, Any], series_days: list[str],
     detail["open_issues_list"] = [_issue_view(issue) for issue in item["open_issues"][:TODO_LIMIT]]
     detail["open_issues_count"] = len(item["open_issues"])
     detail["next_steps"] = _latest_next(summaries, item["id"], series_days)
+    # Mark 2026-10-23: the project page tells results, what is going on and what is next in plain words.
+    detail["now"] = _latest_lead(summaries, item["id"], series_days)
+    upcoming = {(d["date"], d["what"]) for day in series_days
+                for d in (_details((summaries or {}).get(day), item["id"]) or {}).get("deadlines", [])
+                if d["date"] >= (today or series_days[-1])}
+    detail["deadlines"] = [{"date": date, "what": what} for date, what in sorted(upcoming)]
     detail["loose_list"] = item["loose"][:LIST_LIMIT]
     return detail
 
@@ -759,7 +774,7 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
             payload["feed"] = _feed(series, portfolio, day_summaries, today.isoformat())
             payload["deadlines"] = _upcoming_deadlines(day_summaries, portfolio, series_days, today.isoformat())
         if project:
-            payload["project"] = _project_detail(portfolio[project], series_days, day_summaries) if project in portfolio else None
+            payload["project"] = _project_detail(portfolio[project], series_days, day_summaries, today.isoformat()) if project in portfolio else None
     else:
         payload["sources"] = {
             "machines": [{"machine": f"machine-{i + 1}", **{key: m[key] for key in ("collected_at", "state", "age_seconds")}} for i, m in enumerate(sources["machines"])],

@@ -666,6 +666,8 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual([pr["number"] for pr in todo["p-quietrepo"]["open_prs"]], [3])  # no activity in the window
         self.assertEqual(len(todo["jarvis"]["deadlines"]), 10)
         self.assertEqual(len(payload["deadlines"]), 8)  # the banner in «По дням» stays short
+        project = work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]
+        self.assertEqual([d["date"] for d in project["deadlines"]], [f"2026-10-{day}" for day in range(10, 20)])
 
     def test_a_quick_look_with_an_old_summary_is_still_quiet(self):
         self._write_day("mac-mini", "2026-10-06", [{
@@ -694,6 +696,8 @@ class ProjectionTest(unittest.TestCase):
         project = work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]
         self.assertEqual(([i["number"] for i in project["open_issues_list"]], project["open_issues_count"], project["next_steps"]),
                          ([7], 1, ["Проверить голос"]))
+        self.assertEqual(project["now"], {"date": "2026-10-08", "text": "Голос"})
+        self.assertEqual(project["deadlines"], [])
         lexi = work_projection(self.root, now=self.now, owner=True, edition=True, project="mydictionary")
         self.assertEqual([i["title"] for i in lexi["project"]["open_issues_list"]], ["Продлить цены"])
         self.assertNotIn("Чужое", json.dumps(lexi, ensure_ascii=False))  # a repo with no product stays out
@@ -947,7 +951,6 @@ function mmAgo(){return 'old relative formatter';}
         self.assertNotIn('data-mm-view="overview"', html)
         self.assertNotIn('id="mm-day-summary"', html)
         self.assertIn("mm-project-desc", html)
-        self.assertIn("Технические детали", html)
 
     def test_summarizer_is_deployed_on_the_mac_mini_only(self):
         deploy = (BUILDER_DIR / "deploy_to_scripts.sh").read_text(encoding="utf-8")
@@ -988,18 +991,24 @@ function mmAgo(){return 'old relative formatter';}
         self.assertIn('<details class="mm-map-others">', html)
         self.assertIn("const MM_MAP_AGENT_KEY = 'command-center.board-agent';", html)
         self.assertIn("['all', 'Все агенты'], ['claude', 'Claude Code'], ['codex', 'Codex']", html)
-        self.assertIn("${mmMapAgent === 'all' ? mmAgentBar(split) : ''}", html)
-        # Less on a card: no two-week bars and no day summary there, the project page keeps them.
+        # Mark 2026-10-23: «убери всю техническую дату … только результаты»: a card shows its last result
+        # in plain words and when, no hours and no agent split.
+        card = html[html.index("function mmMapCard("):html.index("function renderMap(data)")]
+        self.assertIn("${mmMapResult(p)}", card)
+        for gone in ("workMinutes", "mmAgentBar", "mmWeekSplit", "PR к слиянию"):
+            self.assertNotIn(gone, card)
         self.assertNotIn("mmSpark", html)
-        self.assertNotIn("mm-map-last", html)
         self.assertIn("Карточки проектов видны только владельцу.", html)
         # A link with ?day= opens that day in the project's history, details unfolded.
         self.assertIn("if (day) mmOpenHistoryDay(day);", html)
-        # The project page shows its numbers, tasks and chart first; the day history is folded below.
-        page = html[html.index("function renderProjectPage()"):html.index("function mmOpenHistoryDay(")]
-        self.assertLess(page.index("${mmTodo(p)}"), page.index('id="mm-project-chart"'))
-        self.assertLess(page.index('id="mm-project-chart"'), page.index('<details class="mm-panel mm-project-more" id="mm-project-history">'))
-        self.assertIn("<summary>Технические детали", html)
+        # The project page: what is going on and what is next, then the results day by day. No numbers,
+        # charts, PRs, GitHub issues or repo names.
+        page = html[html.index("const MM_RESULT_DAYS_SHOWN"):html.index("function mmOpenHistoryDay(")]
+        self.assertLess(page.index("Что сейчас"), page.index("Что дальше"))
+        self.assertLess(page.index("${mmProjectBrief(p, today)}"), page.index("Что получилось"))
+        for gone in ("workMinutes", "mmPrAction", "open_issues_list", "p.repos", "sessions", "prompts", "mm-project-chart",
+                     "Технические детали", "loose_list"):
+            self.assertNotIn(gone, page)
         self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
         for gone in ("renderPaper", "np-articles", "Остальные проекты", "function renderDays()", "dpDay(", "loadDays"):
             self.assertNotIn(gone, html)
