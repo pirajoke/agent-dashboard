@@ -14,5 +14,5 @@ def fixture(mode):
             'records_total':0 if mode=='empty' else 3,
             'records':[] if mode=='empty' else [
              {'key':'1','name':'Пример: Bulletin de paie - 2026-09.pdf','original_name':'Scan001.pdf','destination':'France / Emploi / Bulletins de paie','source':'drive','status':'verified','label':'Проверено в Google Drive','at':now.isoformat(),'historical':True,'kind':'file'},
-             {'key':'2','name':'Пример: документы для проверки.pdf','original_name':'DOC002.pdf','destination':'Разобрать позже / Проверить документы','source':'review','status':'needs_review','label':'Нужен разбор','reason':'Назначение документа не определено однозначно.','at':now.isoformat(),'historical':False,'kind':'file'},
+             {'key':'2','name':'Пример: документы для проверки.pdf','original_name':'DOC002.pdf','destination':'Разобрать позже / Проверить документы','source':'review','status':'needs_review','label':'Нужен разбор','reason':'Назначение документа не определено однозначно.','at':now.isoformat(),'historical':state!='attention','kind':'file'},
              {'key':'3','name':'Пример: комплект для учёбы','original_name':'New folder','destination':'Образование / Комплекты документов','source':'drive','status':'verified','label':'Проверено в Google Drive','at':now.isoformat(),'historical':True,'kind':'folder'}]}

@@ -63,6 +63,14 @@ class ProjectionTests(unittest.TestCase):
  def test_current_supersedes_history(self):
   r={'id':'synthetic_document_1234','source':'/old/scan.pdf','status':'verified'};self.write('drive-ingress-journal.json',{'key':r});self.status['drive_ingress']['results']=[{**r,'status':'awaiting_verification'}]
   d=self.read();self.assertEqual(len(d['records']),1);self.assertFalse(d['records'][0]['historical'])
+ def test_current_review_identity_counts_once(self):
+  row={'id':'synthetic_document_1234','source':'scan.pdf','status':'needs_review'}
+  self.status['drive_ingress']['results']=[row];self.status['review_pending']=[row]
+  d=self.read();self.assertEqual(d['records_total'],1);self.assertEqual(d['review_count'],1)
+ def test_cloud_transitions_do_not_claim_manual_review(self):
+  for source,target in (('planned','pending'),('moving','awaiting_verification'),('pending_cloud','awaiting_verification')):
+   self.status['drive_ingress']['results']=[{'id':'synthetic_document_1234','source':'scan.pdf','status':source}]
+   d=self.read();self.assertEqual(d['records'][0]['status'],target)
  def gmail(self,**values):
   self.write('gmail-status.json',{'schema_version':1,'producer':'docxx-gmail-intake','state':'ready','checked_at':NOW-5,'monitoring_enabled':True,'pending':0,**values})
   return self.read()['gmail']

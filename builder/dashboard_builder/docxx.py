@@ -166,6 +166,10 @@ def _gmail_status(directory, now):
 def _record(row, source, key, historical=False):
     if not isinstance(row, dict): return None
     status = row.get('status')
+    if status in ('moving', 'pending_cloud'):
+        status = 'awaiting_verification'
+    elif status == 'planned':
+        status = 'pending'
     if not isinstance(status, str) or status not in LABELS: status = 'needs_review'
     dest = row.get('destination')
     title = _basename(row.get('target_name') or dest or row.get('source')) or 'Документ без названия'
@@ -229,6 +233,9 @@ def docxx_projection(directory, *, owner=False, now=None):
                     if (row['url'] and old['url'] == row['url']) or (row['destination'] and old['destination'] == row['destination']) or (row['original_name'] and old['original_name'] == row['original_name'] and source == old['source']):
                         del rows[old_key]
                 rows[row['key']] = row
+    # Runner may include the same document in results and review_pending.
+    # Count the latest visible identity once, just as the operation list does.
+    current = [row for row in rows.values() if not row['historical']]
     issues = {'needs_review','error','duplicate_found','retained','awaiting_verification'}
     review = sum(row['status'] in issues for row in current)
     pending_icloud = sum(row['source'] == 'icloud' and row['status'] in ('settling','pending','awaiting_verification') for row in current)
