@@ -3502,14 +3502,14 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-chart-box { margin-bottom: 24px; }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
 /* «Всё ли живо» and «Ждёт тебя» (Mark 2026-10-22). */
-.mm-health { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 16px; padding: 10px 14px; color: var(--mm-success); font: inherit; font-size: 14px; font-weight: 650; text-align: left; background: var(--mm-success-soft); border: 0; border-radius: 10px; cursor: pointer; }
+.mm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.mm-health { display: inline-flex; flex: none; align-items: center; gap: 8px; max-width: 46%; margin-top: 4px; padding: 6px 12px; color: var(--mm-success); font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: var(--mm-success-soft); border: 0; border-radius: 999px; cursor: pointer; }
 .mm-health[hidden] { display: none; }
 .mm-health::before { content: ""; flex: none; width: 9px; height: 9px; background: currentColor; border-radius: 50%; }
 .mm-health.is-problem { color: var(--mm-danger); background: var(--mm-danger-soft); }
 .mm-health.is-unknown { color: var(--mm-warning); background: var(--mm-warning-soft); }
-.mm-health .mm-health-more { margin-left: auto; font-weight: 500; white-space: nowrap; }
 .mm-health:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.mm-todo-card { max-width: 860px; margin: 0 0 22px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-todo-card { max-width: none; margin: 0 0 22px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .mm-todo-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .mm-todo-card-head h3 { margin: 0; font-size: 16px; font-weight: 750; }
 .mm-todo-card-head h3 span { color: var(--mm-muted); font-weight: 600; }
@@ -3524,7 +3524,28 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-todo-body small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
 .mm-todo-item.is-done .mm-todo-body { color: var(--mm-muted); text-decoration: line-through; }
 .mm-todo-check:focus-visible, .mm-todo-body:focus-visible, .mm-todo-add:focus-visible, .mm-todo-done-toggle:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.mm-todo-done-toggle { margin-top: 4px; padding: 4px 0; color: var(--mm-muted); font: inherit; font-size: 12.5px; background: none; border: 0; cursor: pointer; }
+.mm-todo-done-toggle { min-height: 34px; padding: 4px 12px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 600; background: none; border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+.mm-todo-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--mm-line); }
+.mm-todo-foot .mm-todo-add { margin-left: 0; }
+.mm-todo-done-list { margin: 0; }
+.mm-todo-done-list .mm-todo-body { color: var(--mm-muted); cursor: default; }
+.mm-todo-back { flex: none; min-height: 34px; padding: 4px 14px; color: var(--mm-accent); font: inherit; font-size: 13px; font-weight: 650; background: none; border: 1px solid var(--mm-accent); border-radius: 999px; cursor: pointer; }
+.mm-todo-back:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.mm-os[data-mm-view="project"] #mm-owner-todo, .mm-os[data-mm-view="project"] #mm-owner-projects { display: none; }
+.mm-nav b { display: none; }
+@media (max-width: 600px) { .mm-head { flex-wrap: wrap; } .mm-health { max-width: 100%; } }
+.mm-week { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0 0 16px; color: var(--mm-muted); font-size: 14px; }
+.mm-week b { color: var(--mm-ink); font-weight: 650; }
+.mm-week i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; }
+.mm-owner-group { display: grid; gap: 10px; margin: 0 0 22px; }
+.mm-owner-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; text-align: left; background: var(--mm-surface) !important; border: 1px solid var(--mm-line) !important; border-radius: 14px; }
+.mm-owner-row:hover { background: var(--mm-surface-hover) !important; }
+.mm-owner-row-tag { flex: none; padding: 3px 8px; color: var(--mm-violet); font-size: 12px; font-weight: 650; background: var(--mm-info-soft); border-radius: 999px; }
+.mm-owner-row-text { display: grid; min-width: 0; }
+.mm-owner-row-text strong { font-size: 15px; }
+.mm-owner-row-text small { overflow: hidden; color: var(--mm-muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.mm-owner-row-go { margin-left: auto; color: var(--mm-muted); font-size: 20px; }
+#owner-project-body .mm-owner-card { max-width: none; border: 0; padding: 0; }
 .mm-todo-empty { margin: 4px 0 0; color: var(--mm-muted); font-size: 13px; }
 /* Agents take items off the list (Mark 2026-10-23): a chip on the item and a lane where they walk. */
 .mm-todo-main { flex: 1; min-width: 0; }
@@ -4711,14 +4732,56 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <!-- ═══════════════ MAIN MANAGER ═══════════════ -->
   <section id="section-work" class="section active" aria-labelledby="mm-title">
     <div class="mm-os" id="mm-os">
-      <header class="cc-page-head">
+      <header class="cc-page-head mm-head">
         <div>
           <h2 class="cc-page-title" id="mm-title">MAIN MANAGER</h2>
-          <p class="cc-page-lede">Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.</p>
+          <p class="cc-page-lede" id="mm-today">Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.</p>
         </div>
+        <!-- Mark 2026-10-22: whether everything on the Mac mini is alive; since 2026-10-23 a small badge, not a banner. -->
+        <button type="button" class="mm-health" id="mm-health" hidden></button>
       </header>
-      <!-- Mark 2026-10-22: one line that says whether everything on the Mac mini is alive. -->
-      <button type="button" class="mm-health" id="mm-health" hidden></button>
+      <!-- Mark 2026-10-23: what is on him comes first, on every MAIN MANAGER view. -->
+      <div id="mm-owner-todo" hidden></div>
+      <div id="mm-owner-projects" hidden></div>
+      <dialog class="platform-archive-dialog platform-edit-dialog" id="todo-edit-dialog" aria-labelledby="todo-edit-title">
+        <header class="platform-archive-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
+          <h3 id="todo-edit-title">Новое дело</h3>
+          <button class="platform-archive-close" id="todo-edit-close" type="button" aria-label="Закрыть без сохранения">✕</button>
+        </header>
+        <form class="platform-edit-form" id="todo-edit-form" method="dialog" novalidate>
+          <label>Что сделать
+            <textarea id="todo-edit-text" name="text" rows="2" maxlength="200" required></textarea>
+          </label>
+          <label>Подробности
+            <input id="todo-edit-note" name="note" type="text" maxlength="300" autocomplete="off">
+            <small>Необязательно: где это, кому написать, ссылка.</small>
+          </label>
+          <p class="platform-edit-note" id="todo-edit-note-msg" role="status" aria-live="polite"></p>
+          <div class="platform-edit-actions">
+            <button type="submit" class="platform-edit-save">Сохранить</button>
+            <button type="button" id="todo-edit-cancel">Отмена</button>
+            <button type="button" class="platform-edit-reset" id="todo-edit-delete" hidden>Удалить</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog class="platform-archive-dialog" id="todo-done-dialog" aria-labelledby="todo-done-title">
+        <header class="platform-archive-head">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>
+          <h3 id="todo-done-title">Сделано</h3>
+          <p>Отметил случайно? «Вернуть» кладёт дело обратно в список.</p>
+          <button class="platform-archive-close" id="todo-done-close" type="button" aria-label="Закрыть">✕</button>
+        </header>
+        <div class="platform-archive-body"><ul class="mm-todo-items mm-todo-done-list" id="todo-done-list"></ul></div>
+      </dialog>
+      <dialog class="platform-archive-dialog" id="owner-project-dialog" aria-label="Личное">
+        <header class="platform-archive-head">
+          <h3>Личное</h3>
+          <p>Видно только тебе. Полные данные — в документах по кнопкам.</p>
+          <button class="platform-archive-close" id="owner-project-close" type="button" aria-label="Закрыть">✕</button>
+        </header>
+        <div class="platform-archive-body" id="owner-project-body"></div>
+      </dialog>
       <nav class="cc-tabs mm-nav" aria-label="Разделы MAIN MANAGER">
         <button type="button" data-mm-view="map" aria-pressed="true">Проекты <b id="mm-map-count">0</b></button>
         <button type="button" data-mm-view="todo" aria-pressed="false">Дела <b id="mm-todo-count">0</b></button>
@@ -4728,36 +4791,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
       <div class="mm-main">
         <div class="mm-view" data-mm-panel="map">
-          <div id="mm-owner-todo" hidden></div>
-          <dialog class="platform-archive-dialog platform-edit-dialog" id="todo-edit-dialog" aria-labelledby="todo-edit-title">
-            <header class="platform-archive-head">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
-              <h3 id="todo-edit-title">Новое дело</h3>
-              <button class="platform-archive-close" id="todo-edit-close" type="button" aria-label="Закрыть без сохранения">✕</button>
-            </header>
-            <form class="platform-edit-form" id="todo-edit-form" method="dialog" novalidate>
-              <label>Что сделать
-                <textarea id="todo-edit-text" name="text" rows="2" maxlength="200" required></textarea>
-              </label>
-              <label>Подробности
-                <input id="todo-edit-note" name="note" type="text" maxlength="300" autocomplete="off">
-                <small>Необязательно: где это, кому написать, ссылка.</small>
-              </label>
-              <p class="platform-edit-note" id="todo-edit-note-msg" role="status" aria-live="polite"></p>
-              <div class="platform-edit-actions">
-                <button type="submit" class="platform-edit-save">Сохранить</button>
-                <button type="button" id="todo-edit-cancel">Отмена</button>
-                <button type="button" class="platform-edit-reset" id="todo-edit-delete" hidden>Удалить</button>
-              </div>
-            </form>
-          </dialog>
-          <div id="mm-owner-projects" hidden></div>
           <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
         </div>
 
         <div class="mm-view" data-mm-panel="todo" hidden>
           <div class="mm-section-heading">
-            <div><h3>Ждёт вас <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги из итогов дня и PR, готовые к слиянию.</p></div>
+            <div><h3>Из проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги из итогов дня и PR, готовые к слиянию.</p></div>
           </div>
           <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
           <div class="mm-section-heading mm-loose-heading">
@@ -9897,6 +9936,7 @@ function mmInit() {
     openProject(link.dataset.project);
   }));
   mmInitOwnerTodo();
+  mmInitOwnerProjects();
   // The board, «Дела» and «Изменения» refresh while MAIN MANAGER is on screen.
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
@@ -9924,6 +9964,7 @@ function mmShowView(view) {
   document.querySelectorAll('[data-mm-panel]').forEach(panel => {
     panel.hidden = panel.dataset.mmPanel !== view;
   });
+  document.getElementById('mm-os')?.setAttribute('data-mm-view', view);
   document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
   if (view !== 'project') mmSetProjectUrl(null);
   mmRenderNotice();
@@ -9994,6 +10035,7 @@ function mmRenderNotice(errorText) {
   const notice = document.getElementById('mm-state');
   if (errorText) {
     notice.className = 'mm-notice error';
+    notice.hidden = false;
     notice.textContent = errorText;
     return;
   }
@@ -10001,10 +10043,13 @@ function mmRenderNotice(errorText) {
   if (!source) return;
   if (!source.ok) {
     notice.className = 'mm-notice error';
+    notice.hidden = false;
     notice.textContent = 'Журнал изменений с сервера не получен. Ничего не показываю, чтобы не гадать.';
     return;
   }
   notice.className = `mm-notice ${source.state}`;
+  // Mark 2026-10-23: fresh data needs no banner; the line shows up only when something is off.
+  notice.hidden = source.state === 'live' && source.owner_view;
   let text;
   if (source.state === 'empty') {
     text = mmView === 'infra'
@@ -10466,7 +10511,12 @@ function renderMap(data) {
       ? { label: 'Ждёт вас', value: String(todo.length), note: `сроков: ${mmSum(todo.map(item => item.deadlines.length))} · PR к слиянию: ${mmSum(todo.map(item => item.open_prs_count))}` }
       : { label: 'Слито PR за 7 дней', value: String(mmSum(last7.map(day => day.prs_merged))), note: `за 30 дней: ${mmSum(series.map(day => day.prs_merged))}` },
   ];
-  const statsHtml = `<div class="mm-stats mm-map-stats">${stats.map(stat => `
+  const prsToMerge = mmSum(todo.map(item => item.open_prs_count));
+  mmRenderToday(data.owner_view ? series[series.length - 1] : null, prsToMerge);
+  // Mark 2026-10-23: four tiles of numbers were noise; the owner gets the week in one line.
+  const statsHtml = data.owner_view ? `<p class="mm-week"><span>За 7 дней <b>${mmEsc(workMinutes(week))}</b> работы</span>
+    <span><i class="claude"></i>Claude Code ${mmEsc(workHours(weekClaude))} ч</span><span><i class="codex"></i>Codex ${mmEsc(workHours(weekCodex))} ч</span></p>`
+    : `<div class="mm-stats mm-map-stats">${stats.map(stat => `
     <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
   </div>`;
   if (!data.owner_view) {
@@ -10490,6 +10540,19 @@ function renderMap(data) {
     </details>` : '';
   const body = `${filter}${head('Основные проекты', active.length, '')}<div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
   host.innerHTML = statsHtml + body;
+}
+
+// The line under the title: today's work and what waits for a merge, in plain words.
+function mmRenderToday(day, prsToMerge) {
+  const line = document.getElementById('mm-today');
+  if (!line) return;
+  if (!day) {
+    line.textContent = 'Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.';
+    return;
+  }
+  const parts = [day.total_minutes ? `Сегодня ${workMinutes(day.total_minutes)} работы` : 'Сегодня работы ещё не было'];
+  if (prsToMerge) parts.push(`PR ждут слияния: ${prsToMerge}`);
+  line.textContent = parts.join(' · ');
 }
 
 // «Личное» (Mark 2026-10-20): owner-only project cards from the private portfolio registry, a short
@@ -10572,20 +10635,51 @@ function mmRenderOwnerProjects(payload) {
     ? payload.projects.filter(card => card && /^[a-z0-9][a-z0-9-]{0,39}$/.test(card.id || '')
       && mmOwnerText(card.name, 80) && mmOwnerText(card.status, 200)).slice(0, 12)
     : [];
+  mmOwnerProjectCards = cards;
   host.hidden = !cards.length;
   if (!cards.length) return;
-  const group = mmEl('section', 'mm-map-group mm-owner-group');
+  // Mark 2026-10-23: one compact line per card on the page; the whole card opens in a window.
+  const group = mmEl('section', 'mm-owner-group');
   group.setAttribute('aria-label', 'Личное');
-  const head = mmEl('div', 'mm-map-group-head');
-  const title = mmEl('h3', '', 'Личное ');
-  title.appendChild(mmEl('span', '', String(cards.length)));
-  head.appendChild(title);
-  head.appendChild(mmEl('p', 'mm-section-note', 'Видно только вам. Короткая сводка; полные данные — в документах по кнопкам.'));
-  group.appendChild(head);
-  const grid = mmEl('div', 'mm-owner-grid');
-  cards.forEach(card => grid.appendChild(mmOwnerProjectCard(card)));
-  group.appendChild(grid);
+  cards.forEach(card => {
+    const row = mmEl('button', 'mm-owner-row');
+    row.type = 'button';
+    row.dataset.ownerOpen = card.id;
+    row.appendChild(mmEl('span', 'mm-owner-row-tag', 'Личное'));
+    const text = mmEl('span', 'mm-owner-row-text');
+    text.appendChild(mmEl('strong', '', card.name));
+    const tasks = Array.isArray(card.tasks) ? card.tasks.length : 0;
+    text.appendChild(mmEl('small', '', tasks ? `${card.status} · открытых задач: ${tasks}` : card.status));
+    row.appendChild(text);
+    row.appendChild(mmEl('span', 'mm-owner-row-go', '›'));
+    row.setAttribute('aria-label', `Открыть: ${card.name}`);
+    group.appendChild(row);
+  });
   host.appendChild(group);
+}
+
+let mmOwnerProjectCards = [];
+
+function mmOpenOwnerProject(id) {
+  const card = mmOwnerProjectCards.find(entry => entry.id === id);
+  const dialog = document.getElementById('owner-project-dialog');
+  if (!card || !dialog) return;
+  document.getElementById('owner-project-body').replaceChildren(mmOwnerProjectCard(card));
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+}
+
+function mmInitOwnerProjects() {
+  const host = document.getElementById('mm-owner-projects');
+  const dialog = document.getElementById('owner-project-dialog');
+  if (!host || !dialog) return;
+  const close = () => (dialog.open ? dialog.close() : dialog.removeAttribute('open'));
+  host.addEventListener('click', event => {
+    const open = event.target.closest('[data-owner-open]');
+    if (open) mmOpenOwnerProject(open.dataset.ownerOpen);
+  });
+  document.getElementById('owner-project-close').addEventListener('click', close);
+  dialog.addEventListener('click', event => { if (event.target === dialog) close(); });
 }
 
 async function mmLoadOwnerProjects() {
@@ -10606,8 +10700,16 @@ async function mmLoadOwnerProjects() {
 // (or archived by default as replaced on 2026-10-20) do not count. A click opens Техника.
 let mmHealthGeneration = 0;
 
+// Services Mark switched off on purpose (2026-10-20…22). They are not broken, so the badge never
+// turns red for them, whatever a browser's own Техника archive says.
+const MM_HEALTH_TURNED_OFF = new Set([
+  'homebrew.mxcl.ollama', 'com.pirajoke.tag-website', 'com.pirajoke.obsidian-tg-bot', 'com.pirajoke.obsidian-linear-sync',
+  'com.pirajoke.tgbot-watchdog', 'com.pirajoke.m4-pg-backup', 'com.pirajoke.alert-monitor', 'com.pirajoke.m4-healthcheck',
+]);
+
 // Exactly the Техника rule: the same saved choices, keys and default list as the Mac mini panel there.
 function mmHealthArchived(service) {
+  if (MM_HEALTH_TURNED_OFF.has(service.label)) return true;
   return isSvcArchived(service, readSvcArchiveChoices(), 'mini-svc-tbody');
 }
 
@@ -10618,16 +10720,17 @@ function mmRenderHealth(data) {
   line.classList.remove('is-problem', 'is-unknown');
   if (!data || !Array.isArray(data.services_detailed || data.services)) {
     line.classList.add('is-unknown');
-    line.appendChild(mmEl('span', '', 'Mac mini не отвечает: не знаю, всё ли работает'));
+    line.appendChild(mmEl('span', '', 'Mac mini не отвечает'));
   } else {
     const services = visibleRuntimeServices(data.services_detailed || data.services || []).filter(service => !mmHealthArchived(service));
     const down = services.filter(service => service.status !== 'running');
     if (!services.length) {
       // No services seen is not proof that they run.
       line.classList.add('is-unknown');
-      line.appendChild(mmEl('span', '', 'Mac mini не прислал список сервисов: не знаю, всё ли работает'));
+      line.appendChild(mmEl('span', '', 'Нет списка сервисов'));
     } else if (!down.length) {
-      line.appendChild(mmEl('span', '', `Всё работает · ${services.length} ${services.length % 10 === 1 && services.length % 100 !== 11 ? 'сервис' : [2, 3, 4].includes(services.length % 10) && ![12, 13, 14].includes(services.length % 100) ? 'сервиса' : 'сервисов'}`));
+      line.appendChild(mmEl('span', '', 'Всё работает'));
+      line.title = `${services.length} ${services.length % 10 === 1 && services.length % 100 !== 11 ? 'сервис' : [2, 3, 4].includes(services.length % 10) && ![12, 13, 14].includes(services.length % 100) ? 'сервиса' : 'сервисов'} на Mac mini · открыть Технику`;
     } else {
       line.classList.add('is-problem');
       const names = down.slice(0, 3).map(service => service.name || service.label).join(', ');
@@ -10635,7 +10738,6 @@ function mmRenderHealth(data) {
       line.appendChild(mmEl('span', '', `Не работает: ${names}${more}`));
     }
   }
-  line.appendChild(mmEl('span', 'mm-health-more', 'Техника →'));
   line.hidden = false;
 }
 
@@ -10649,7 +10751,6 @@ async function mmLoadHealth() {
 // Things only Mark can do, added and closed by him on the site. Owner-only, stored on the Mac mini.
 const OWNER_TODO_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/owner-todo`;
 let mmOwnerTodoItems = [];
-let mmOwnerTodoShowDone = false;
 let mmOwnerTodoEditing = null;
 let mmOwnerTodoGeneration = 0;
 
@@ -10672,44 +10773,78 @@ function mmRenderOwnerTodo(payload) {
   title.id = 'mm-todo-card-title';
   title.appendChild(mmEl('span', '', String(open.length)));
   head.appendChild(title);
+  card.appendChild(head);
+  const list = mmEl('ul', 'mm-todo-items');
+  open.forEach(item => list.appendChild(mmOwnerTodoRow(item)));
+  const lane = mmAgentLane(open);
+  if (lane) card.appendChild(lane);
+  if (open.length) card.appendChild(list);
+  else card.appendChild(mmEl('p', 'mm-todo-empty', 'Пока ничего не ждёт. Добавь дело, если что-то на тебе.'));
+  // Mark 2026-10-23: two items ticked by mistake were hard to find; «Сделано» is a real button that
+  // opens a window where each closed item can be put back.
+  const foot = mmEl('div', 'mm-todo-foot');
   const add = mmEl('button', 'mm-todo-add', '+ Добавить');
   add.type = 'button';
   add.dataset.todoAdd = '';
-  head.appendChild(add);
-  card.appendChild(head);
-  const list = mmEl('ul', 'mm-todo-items');
-  const shown = mmOwnerTodoShowDone ? [...open, ...done] : open;
-  shown.forEach(item => {
-    const row = mmEl('li', `mm-todo-item${item.done ? ' is-done' : ''}`);
-    const check = mmEl('button', 'mm-todo-check', '✓');
-    check.type = 'button';
-    check.dataset.todoToggle = item.id;
-    check.setAttribute('aria-label', item.done ? `Вернуть: ${item.text}` : `Готово: ${item.text}`);
-    row.appendChild(check);
-    const body = mmEl('button', 'mm-todo-body', item.text);
-    body.type = 'button';
-    body.dataset.todoEdit = item.id;
-    if (item.note) body.appendChild(mmEl('small', '', item.note));
-    const main = mmEl('div', 'mm-todo-main');
-    main.appendChild(body);
-    const agentNote = mmAgentNote(item);
-    if (agentNote) main.appendChild(agentNote);
-    row.appendChild(main);
-    if (!item.done) row.appendChild(mmAgentSide(item));
-    list.appendChild(row);
-  });
-  const lane = mmAgentLane(open);
-  if (lane) card.appendChild(lane);
-  if (shown.length) card.appendChild(list);
-  else card.appendChild(mmEl('p', 'mm-todo-empty', 'Пока ничего не ждёт. Добавь дело, если что-то на тебе.'));
+  foot.appendChild(add);
   if (done.length) {
-    const toggle = mmEl('button', 'mm-todo-done-toggle', mmOwnerTodoShowDone ? 'Скрыть сделанное' : `Сделано · ${done.length}`);
+    const toggle = mmEl('button', 'mm-todo-done-toggle', `Сделано · ${done.length} ›`);
     toggle.type = 'button';
     toggle.dataset.todoShowDone = '';
-    card.appendChild(toggle);
+    foot.appendChild(toggle);
   }
+  card.appendChild(foot);
   host.appendChild(card);
   host.hidden = false;
+  mmRenderTodoDone(done);
+}
+
+// The «Сделано» window: newest first, each with «Вернуть».
+function mmRenderTodoDone(done) {
+  const list = document.getElementById('todo-done-list');
+  const dialog = document.getElementById('todo-done-dialog');
+  if (!list || !dialog) return;
+  document.getElementById('todo-done-title').textContent = `Сделано · ${done.length}`;
+  list.replaceChildren();
+  if (!done.length) list.appendChild(mmEl('li', 'mm-todo-empty', 'Сделанных дел нет.'));
+  [...done].sort((a, b) => String(b.done_at || '').localeCompare(String(a.done_at || ''))).forEach(item => {
+    const row = mmEl('li', 'mm-todo-item is-done');
+    const main = mmEl('div', 'mm-todo-main');
+    const body = mmEl('span', 'mm-todo-body');
+    body.appendChild(mmEl('s', '', item.text));
+    const when = item.done_at ? new Date(item.done_at) : null;
+    if (when && !Number.isNaN(when.getTime())) {
+      body.appendChild(mmEl('small', '', `отмечено ${when.toLocaleString('ru-RU', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'})}`));
+    }
+    main.appendChild(body);
+    row.appendChild(main);
+    const back = mmEl('button', 'mm-todo-back', '↩ Вернуть');
+    back.type = 'button';
+    back.dataset.todoToggle = item.id;
+    back.setAttribute('aria-label', `Вернуть: ${item.text}`);
+    row.appendChild(back);
+    list.appendChild(row);
+  });
+}
+
+function mmOwnerTodoRow(item) {
+  const row = mmEl('li', `mm-todo-item${item.done ? ' is-done' : ''}`);
+  const check = mmEl('button', 'mm-todo-check', '✓');
+  check.type = 'button';
+  check.dataset.todoToggle = item.id;
+  check.setAttribute('aria-label', item.done ? `Вернуть: ${item.text}` : `Готово: ${item.text}`);
+  row.appendChild(check);
+  const body = mmEl('button', 'mm-todo-body', item.text);
+  body.type = 'button';
+  body.dataset.todoEdit = item.id;
+  if (item.note) body.appendChild(mmEl('small', '', item.note));
+  const main = mmEl('div', 'mm-todo-main');
+  main.appendChild(body);
+  const agentNote = mmAgentNote(item);
+  if (agentNote) main.appendChild(agentNote);
+  row.appendChild(main);
+  if (!item.done) row.appendChild(mmAgentSide(item));
+  return row;
 }
 
 const MM_AGENT_NAMES = { claude: 'Claude', codex: 'Codex' };
@@ -10868,6 +11003,19 @@ function mmOpenTodoEdit(item) {
   document.getElementById('todo-edit-text').focus();
 }
 
+function mmOpenTodoDone() {
+  const dialog = document.getElementById('todo-done-dialog');
+  if (!dialog) return;
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+}
+
+function mmCloseTodoDone() {
+  const dialog = document.getElementById('todo-done-dialog');
+  if (dialog?.open) dialog.close();
+  else dialog?.removeAttribute('open');
+}
+
 function mmCloseTodoEdit() {
   const dialog = document.getElementById('todo-edit-dialog');
   if (dialog?.open) dialog.close();
@@ -10887,10 +11035,7 @@ function mmInitOwnerTodo() {
   if (!host || !form) return;
   host.addEventListener('click', async event => {
     if (event.target.closest('[data-todo-add]')) return mmOpenTodoEdit(null);
-    if (event.target.closest('[data-todo-show-done]')) {
-      mmOwnerTodoShowDone = !mmOwnerTodoShowDone;
-      return mmRenderOwnerTodo({state: 'ready', items: mmOwnerTodoItems});
-    }
+    if (event.target.closest('[data-todo-show-done]')) return mmOpenTodoDone();
     const edit = event.target.closest('[data-todo-edit]');
     if (edit) return mmOpenTodoEdit(mmOwnerTodoItems.find(item => item.id === edit.dataset.todoEdit));
     const handOff = event.target.closest('[data-todo-give], [data-todo-take]');
@@ -10938,6 +11083,17 @@ function mmInitOwnerTodo() {
     const result = await mmPostOwnerTodo({action: 'delete', id: mmOwnerTodoEditing.id});
     if (result?.error) document.getElementById('todo-edit-note-msg').textContent = mmTodoErrorText(result.error);
     else mmCloseTodoEdit();
+  });
+  const doneDialog = document.getElementById('todo-done-dialog');
+  document.getElementById('todo-done-close').addEventListener('click', mmCloseTodoDone);
+  doneDialog.addEventListener('click', async event => {
+    if (event.target === doneDialog) return mmCloseTodoDone();
+    const back = event.target.closest('[data-todo-toggle]');
+    if (!back) return;
+    back.disabled = true;
+    const result = await mmPostOwnerTodo({action: 'undo', id: back.dataset.todoToggle});
+    if (result?.error) { back.disabled = false; back.textContent = mmTodoErrorText(result.error); }
+    else if (!mmOwnerTodoItems.some(item => item.done)) mmCloseTodoDone();
   });
   document.getElementById('todo-edit-cancel').addEventListener('click', mmCloseTodoEdit);
   document.getElementById('todo-edit-close').addEventListener('click', mmCloseTodoEdit);

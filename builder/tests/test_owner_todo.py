@@ -116,6 +116,21 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         self.assertIn('id="mm-owner-todo"', PAGE)
         self.assertIn('id="mm-health"', PAGE)
 
+    def test_closed_items_open_in_a_window_with_undo(self):
+        # Mark 2026-10-23 ticked two items by mistake and could not find them again.
+        self.assertIn('id="todo-done-dialog"', PAGE)
+        self.assertIn("action: 'undo'", PAGE)
+        self.assertIn("'↩ Вернуть'", PAGE)
+        # The window lives outside the views, so it opens on every MAIN MANAGER tab.
+        self.assertLess(PAGE.index('id="todo-done-dialog"'), PAGE.index('data-mm-panel="map"'))
+
+    def test_services_turned_off_on_purpose_never_show_red(self):
+        start = PAGE.index("const MM_HEALTH_TURNED_OFF")
+        block = PAGE[start:PAGE.index("]);", start)]
+        for label in ("homebrew.mxcl.ollama", "com.pirajoke.tag-website", "com.pirajoke.obsidian-tg-bot"):
+            self.assertIn(label, block)
+        self.assertIn("MM_HEALTH_TURNED_OFF.has(service.label)", PAGE)
+
 
 if __name__ == "__main__":
     unittest.main()
