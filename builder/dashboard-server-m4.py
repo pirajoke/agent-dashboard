@@ -27,6 +27,7 @@ from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
 from dashboard_builder.context_library import context_library_projection
+from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
@@ -1696,7 +1697,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             # The entire state directory includes manifests and pending intent
             # payloads. Protect its configured and resolved locations even when
             # an operator overrides the default or requests an implicit index.
-            context_roots = {context_catalog.parent.resolve(), context_catalog.resolve().parent}
+            context_roots = {context_catalog.parent.resolve(), context_catalog.resolve().parent,
+                             docxx_state_path(HOME).resolve()}
             protected = any(
                 path.is_relative_to(private_state) or path in private_files
                 or any(path.is_relative_to(root) for root in context_roots)
@@ -2642,6 +2644,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/docxx':
+            owner = self._decision_owner_authorized()
+            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner))
+            return
         if parsed.path == '/api/context-library':
             owner = self._decision_owner_authorized()
             query = parse_qs(parsed.query, keep_blank_values=True)
