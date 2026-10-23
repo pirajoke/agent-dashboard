@@ -5620,6 +5620,7 @@ const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(r
   return [route, label ? label.textContent.trim() : route];
 })));
 let activeTabNames = { ...TAB_NAME_DEFAULTS };
+const TAB_PAGE_TITLE_IDS = Object.freeze({ work: 'mm-title', growth: 'growth-title', agents: 'agents-title', platforms: 'platforms-title', context: 'context-title', machines: 'machines-title' });
 
 function sanitizeTabName(value) {
   const normalized = String(value ?? '').normalize('NFC')
@@ -5663,6 +5664,14 @@ function renderTabNames(names) {
   document.querySelectorAll('[data-tab-label]').forEach(label => {
     const route = label.dataset.tabLabel;
     label.textContent = names[route] || TAB_NAME_DEFAULTS[route] || route;
+  });
+  // A renamed tab renames its page heading too (Mark 2026-10-23); untouched tabs keep their own heading.
+  Object.entries(TAB_PAGE_TITLE_IDS).forEach(([route, titleId]) => {
+    const title = document.getElementById(titleId);
+    if (!title) return;
+    if (!title.dataset.defaultTitle) title.dataset.defaultTitle = title.textContent.trim();
+    const custom = names[route] && names[route] !== TAB_NAME_DEFAULTS[route];
+    title.textContent = custom ? names[route] : title.dataset.defaultTitle;
   });
 }
 
@@ -10424,19 +10433,11 @@ async function mmLoadOwnerProjects() {
 // One line on top of MAIN MANAGER: everything on the Mac mini runs, or which services are down.
 // Same rule as Техника: scheduled jobs between runs are fine, and services moved to «Архив» there
 // (or archived by default as replaced on 2026-10-20) do not count. A click opens Техника.
-const MM_HEALTH_ARCHIVE_KEY = 'command-center.service-archive.v1';
-const MM_HEALTH_ARCHIVED_BY_DEFAULT = ['krisp-import', 'database-backup', 'alert-monitor', 'm4-healthcheck'];
 let mmHealthGeneration = 0;
 
-function mmHealthServiceId(service) {
-  return String(service.name || service.label || '').toLowerCase().replace(/[^a-z0-9а-яё]+/g, '-').replace(/^-|-$/g, '');
-}
-
+// Exactly the Техника rule: the same saved choices, keys and default list as the Mac mini panel there.
 function mmHealthArchived(service) {
-  let choices = {};
-  try { choices = JSON.parse(localStorage.getItem(MM_HEALTH_ARCHIVE_KEY) || '{}') || {}; } catch (error) { choices = {}; }
-  const id = mmHealthServiceId(service);
-  return typeof choices[id] === 'boolean' ? choices[id] : MM_HEALTH_ARCHIVED_BY_DEFAULT.includes(id);
+  return isSvcArchived(service, readSvcArchiveChoices(), 'mini-svc-tbody');
 }
 
 function mmRenderHealth(data) {
