@@ -470,11 +470,16 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str],
 
 
 def _latest_lead(summaries: dict[str, dict[str, Any]] | None, product_id: str, days: list[str]) -> dict[str, Any] | None:
-    """The newest summary's one-line «what is going on» for the project, with its day."""
+    """«What is going on» from the project's newest summary only, with its day.
+
+    An older lead is never reached for: when the newest summary has no lead, the page falls back to
+    that summary's first result rather than an out-of-date state."""
     for day in reversed(days):
-        details = _details((summaries or {}).get(day), product_id)
-        if details and details["lead"]:
-            return {"date": day, "text": details["lead"]}
+        summary = (summaries or {}).get(day)
+        details = _details(summary, product_id)
+        if details is None and not _bullets(summary, product_id):
+            continue
+        return {"date": day, "text": details["lead"]} if details and details["lead"] else None
     return None
 
 

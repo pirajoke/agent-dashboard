@@ -11431,8 +11431,10 @@ function mmProjectBrief(p, today) {
     ...(p.deadlines || []).map(d => `<li><b>${mmEsc(npDue(d.date, today))}</b> · ${mmEsc(d.what)}</li>`),
     ...p.next_steps.map(text => `<li>${mmEsc(text)}</li>`),
   ];
-  if (p.prs_open) {
-    next.push(`<li>${mmEsc(`${p.prs_open} ${mmPlural(p.prs_open, 'готовое изменение ждёт', 'готовых изменения ждут', 'готовых изменений ждут')} проверки`)}</li>`);
+  // Drafts are unfinished work, not something to check yet.
+  const ready = (p.open_prs_list || []).filter(pr => !pr.draft).length;
+  if (ready) {
+    next.push(`<li>${mmEsc(`${ready} ${mmPlural(ready, 'готовое изменение ждёт', 'готовых изменения ждут', 'готовых изменений ждут')} проверки`)}</li>`);
   }
   return `<section class="mm-panel mm-brief" aria-label="Сводка по проекту">
     <div class="mm-brief-block">
