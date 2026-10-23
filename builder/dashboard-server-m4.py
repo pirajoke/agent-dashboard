@@ -56,6 +56,7 @@ PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
+AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
@@ -2446,7 +2447,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         try:
             record = change_owner_todo(OWNER_TODO_FILE, body)
-            self._json_response(200, {'state': 'ready', **record})
+            self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
         except LookupError:
             self._json_response(404, {'error': 'item_not_found'})
         except ValueError as error:
@@ -2684,7 +2685,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except OSError:
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
-            self._json_response(200, {'state': 'ready', **record})
+            self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
             return
         if parsed.path == '/api/owner-projects':
             # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.
@@ -2947,6 +2948,20 @@ python3 ~/scripts/orchestrator_tokens.py update codex 23 '$46' '200' 'Apr 15'
 
     def log_message(self, format, *args):
         pass
+
+def _agent_runner_status(status_file=None):
+    """When the agent runner last ran and whether it could (owner-only, «Ждёт тебя»)."""
+    try:
+        data = json.loads((status_file or AGENT_TASK_STATUS_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"state": "unknown"}
+    if not isinstance(data, dict):
+        return {"state": "unknown"}
+    reason = str(data.get("reason") or "")
+    known = next((code for code in ("claude_not_found", "claude_auth_failed", "todo_unreadable") if reason.startswith(code)), None)
+    return {"state": "ok" if data.get("ok") else "error", "last_run": str(data.get("last_run") or "")[:20],
+            **({"reason": known or "other"} if not data.get("ok") else {})}
+
 
 def _site_version(state_file: Path | None = None) -> dict:
     """When the site code last went live, for «Сайт обновлён …» and the refresh prompt.
