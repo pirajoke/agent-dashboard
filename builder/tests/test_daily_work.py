@@ -666,6 +666,8 @@ class ProjectionTest(unittest.TestCase):
         self.assertEqual([pr["number"] for pr in todo["p-quietrepo"]["open_prs"]], [3])  # no activity in the window
         self.assertEqual(len(todo["jarvis"]["deadlines"]), 10)
         self.assertEqual(len(payload["deadlines"]), 8)  # the banner in «По дням» stays short
+        project = work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]
+        self.assertEqual([d["date"] for d in project["deadlines"]], [f"2026-10-{day}" for day in range(10, 20)])
 
     def test_a_quick_look_with_an_old_summary_is_still_quiet(self):
         self._write_day("mac-mini", "2026-10-06", [{
@@ -694,6 +696,14 @@ class ProjectionTest(unittest.TestCase):
         project = work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]
         self.assertEqual(([i["number"] for i in project["open_issues_list"]], project["open_issues_count"], project["next_steps"]),
                          ([7], 1, ["Проверить голос"]))
+        self.assertEqual(project["now"], {"date": "2026-10-08", "text": "Голос"})
+        self.assertEqual(project["deadlines"], [])
+        # A newer summary without a lead does not bring back the old one as «what is going on now».
+        self._write_paper_summary("2026-10-08", {"jarvis": {"lead": None, "you": [], "agents": ["Голос готов"],
+                                                            "next": [], "deadlines": []}})
+        self._write_paper_summary("2026-10-07", {"jarvis": {"lead": "Начали голос", "you": [], "agents": ["Начали"],
+                                                            "next": [], "deadlines": []}})
+        self.assertIsNone(work_projection(self.root, now=self.now, owner=True, project="jarvis")["project"]["now"])
         lexi = work_projection(self.root, now=self.now, owner=True, edition=True, project="mydictionary")
         self.assertEqual([i["title"] for i in lexi["project"]["open_issues_list"]], ["Продлить цены"])
         self.assertNotIn("Чужое", json.dumps(lexi, ensure_ascii=False))  # a repo with no product stays out
@@ -916,6 +926,68 @@ function mmAgo(){return 'old relative formatter';}
         self.assertIn("18:00", text, "16:00 UTC must display as 18:00 Paris on this date")
         self.assertNotIn("old relative formatter", text)
 
+    def _render(self, setup, call):
+        """Runs the page's own render functions in node on synthetic data and returns the HTML they build."""
+        import re
+        import shutil
+        import subprocess
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        names = ("mmPlural", "mmResultDay", "mmProjectBrief", "renderProjectPage", "mmMapResult", "mmMapCard",
+                 "mmAttention", "mmBullets", "mmEsc", "escapeHtml")
+        functions = [re.search(rf"function {name}\([^)]*\)\s*\{{[\s\S]*?\n\}}", html).group(0) for name in names]
+        javascript = r'''
+const nodes = {};
+const document = {getElementById: id => (nodes[id] = nodes[id] || {textContent: '', innerHTML: '', addEventListener() {}})};
+const MM_RESULT_DAYS_SHOWN = 5; let mmReturnView = 'map';
+function npDue(iso) { return `срок ${iso}`; }
+function mmDayHeading(iso) { return `день ${iso}`; }
+function mmRelDay() { return 'сегодня, 14:50'; }
+function mmArt() { return ''; } function mmPulse() { return ''; } function mmShowView() {}
+''' + "\n".join(functions) + "\n" + setup + f"\nprocess.stdout.write(JSON.stringify({call}));"
+        node = shutil.which("node") or str(Path.home() / ".cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node")
+        run = subprocess.run([node, "-e", javascript], capture_output=True, text=True, timeout=10)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        return json.loads(run.stdout)
+
+    def test_project_page_tells_results_in_plain_words(self):
+        # Mark 2026-10-23: «убери всю техническую дату … только результаты, чёткая сводка, понимание того,
+        # что происходит». No hours, sessions, prompts, PRs, GitHub issues or repo names on the page.
+        project = r'''
+const base = {name: 'JARVIS', description: 'Ассистент', last_activity: '2026-10-23T14:50:00Z',
+  dates: ['2026-10-22', '2026-10-23'], repos: ['pirajoke/jarvis'], sessions: 27, prompts: 22, total_minutes: 366,
+  prs_open: 2, open_prs_list: [{number: 148, title: 'Hand the photos', draft: false}, {number: 150, title: 'WIP', draft: true}],
+  open_issues_list: [{number: 98, title: 'Проверить агентов'}], open_issues_count: 1,
+  now: {date: '2026-10-23', text: 'Ассистент стал надёжнее'}, next_steps: ['Включить голос'],
+  deadlines: [{date: '2026-10-28', what: 'Выпустить версию'}],
+  timeline: [{date: '2026-10-23', summary: ['Разбирает почту'], merged: [{number: 140, title: 'Mail'}]},
+             {date: '2026-10-22', summary: null, merged: []}]};
+function page(p) { mmProjectData = p; renderProjectPage(); return nodes['mm-project-page'].innerHTML; }
+let mmProjectData;
+'''
+        full = self._render(project, "page(base)")
+        for shown in ("Что сейчас", "Ассистент стал надёжнее", "Что дальше", "срок 2026-10-28", "Выпустить версию",
+                      "Включить голос", "1 готовое изменение ждёт проверки", "Что получилось", "Разбирает почту"):
+            self.assertIn(shown, full)
+        for gone in ("pirajoke/jarvis", "#148", "Hand the photos", "WIP", "#98", "Проверить агентов", "#140",
+                     "сесс", "промпт", "мин", "PR"):
+            self.assertNotIn(gone, full)
+        # Without a lead the newest result says what is going on; with nothing at all the page says so plainly.
+        no_lead = self._render(project, "page({...base, now: null})")
+        self.assertRegex(no_lead, r"Что сейчас</h4>\s*<p class=\"mm-brief-now\">Разбирает почту")
+        empty = self._render(project, "page({...base, now: null, next_steps: [], deadlines: [], open_prs_list: [], timeline: []})")
+        for shown in ("Сводка появится после первого итога дня.", "Следующих шагов пока нет.", "Итогов за 30 дней пока нет."):
+            self.assertIn(shown, empty)
+
+    def test_project_card_shows_its_last_result_not_numbers(self):
+        card = self._render("", "mmMapCard({id: 'jarvis', name: 'JARVIS', last_activity: '2026-10-23T14:50:00Z', "
+                                "daily_minutes: [90, 60], daily_claude_minutes: [90, 0], daily_codex_minutes: [0, 60], "
+                                "last_summary: {date: '2026-10-23', bullets: ['Разбирает почту сам']}}, "
+                                "{deadlines: [], open_prs_count: 3}, '2026-10-23')")
+        self.assertIn("Разбирает почту сам", card)
+        self.assertIn("ждёт проверки: 3", card)
+        for gone in ("мин", " ч", "Claude", "Codex", "PR"):
+            self.assertNotIn(gone, card)
+
     def test_dashboard_has_work_section_and_nav(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
         self.assertIn('aria-controls="section-work"', html)
@@ -947,7 +1019,6 @@ function mmAgo(){return 'old relative formatter';}
         self.assertNotIn('data-mm-view="overview"', html)
         self.assertNotIn('id="mm-day-summary"', html)
         self.assertIn("mm-project-desc", html)
-        self.assertIn("Технические детали", html)
 
     def test_summarizer_is_deployed_on_the_mac_mini_only(self):
         deploy = (BUILDER_DIR / "deploy_to_scripts.sh").read_text(encoding="utf-8")
@@ -988,18 +1059,10 @@ function mmAgo(){return 'old relative formatter';}
         self.assertIn('<details class="mm-map-others">', html)
         self.assertIn("const MM_MAP_AGENT_KEY = 'command-center.board-agent';", html)
         self.assertIn("['all', 'Все агенты'], ['claude', 'Claude Code'], ['codex', 'Codex']", html)
-        self.assertIn("${mmMapAgent === 'all' ? mmAgentBar(split) : ''}", html)
-        # Less on a card: no two-week bars and no day summary there, the project page keeps them.
         self.assertNotIn("mmSpark", html)
-        self.assertNotIn("mm-map-last", html)
         self.assertIn("Карточки проектов видны только владельцу.", html)
         # A link with ?day= opens that day in the project's history, details unfolded.
         self.assertIn("if (day) mmOpenHistoryDay(day);", html)
-        # The project page shows its numbers, tasks and chart first; the day history is folded below.
-        page = html[html.index("function renderProjectPage()"):html.index("function mmOpenHistoryDay(")]
-        self.assertLess(page.index("${mmTodo(p)}"), page.index('id="mm-project-chart"'))
-        self.assertLess(page.index('id="mm-project-chart"'), page.index('<details class="mm-panel mm-project-more" id="mm-project-history">'))
-        self.assertIn("<summary>Технические детали", html)
         self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
         for gone in ("renderPaper", "np-articles", "Остальные проекты", "function renderDays()", "dpDay(", "loadDays"):
             self.assertNotIn(gone, html)

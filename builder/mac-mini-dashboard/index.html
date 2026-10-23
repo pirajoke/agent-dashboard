@@ -3124,27 +3124,10 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-section-heading h3 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
 .mm-section-heading h3 span { margin-left: 6px; color: var(--mm-muted); font-size: 14px; font-weight: 400; letter-spacing: 0; }
 .mm-section-note { margin-top: 4px; max-width: 640px; color: var(--mm-muted); font-size: 13px; }
-.mm-chart-legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--mm-muted); font-size: 13px; }
-.mm-chart-legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 3px; vertical-align: -1px; }
 .mm-os i.claude { background: var(--mm-claude); }
 .mm-os i.codex { background: var(--mm-codex); }
-.mm-chart { width: 100%; min-height: 200px; }
-.mm-chart-prs { min-height: 64px; margin-top: 2px; }
-.mm-chart svg { display: block; width: 100%; overflow: visible; }
-.mm-chart text { fill: var(--mm-muted); font-size: 12px; font-family: inherit; }
-.mm-chart .mm-grid { stroke: var(--mm-line); stroke-width: 1; }
-.mm-chart .mm-baseline { stroke: var(--mm-control-line); stroke-width: 1; }
-.mm-chart .mm-selected-band { fill: var(--mm-selection); }
-.mm-chart .seg-claude { fill: var(--mm-claude); }
-.mm-chart .seg-codex { fill: var(--mm-codex); }
-.mm-chart .seg-pr { fill: var(--mm-pr); }
-.mm-chart .is-current { fill: var(--mm-ink); font-weight: 700; }
 .mm-bar-hit { fill: transparent; cursor: pointer; }
 .mm-bar-hit:focus-visible { outline: none; stroke: var(--mm-accent); stroke-width: 2; }
-.mm-tooltip { position: absolute; z-index: 5; min-width: 190px; padding: 10px 12px; pointer-events: none; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; box-shadow: var(--mm-shadow); font-size: 13px; line-height: 1.6; }
-.mm-tooltip b { display: block; margin-bottom: 2px; }
-.mm-tooltip .row { display: flex; justify-content: space-between; gap: 16px; }
-.mm-tooltip .row span:last-child { font-weight: 650; font-variant-numeric: tabular-nums; }
 .mm-more { margin-top: 12px; font-size: 13px; }
 .mm-more summary { min-height: 44px; display: flex; align-items: center; color: var(--mm-accent); font-weight: 600; cursor: pointer; }
 
@@ -3264,7 +3247,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-project-more[open] > summary { border-bottom: 1px solid var(--mm-line); border-radius: 14px 14px 0 0; }
 .mm-project-more > summary span { color: var(--mm-muted); font-size: 13px; font-weight: 500; }
 .mm-project-more-body { padding: 20px; }
-.mm-chart-box { position: relative; margin-bottom: 24px; }
 .mm-day-lead + .mm-more { margin-top: 8px; }
 /* An open day already lists its bullets; the first one need not repeat in the header. */
 .mm-group-row.has-summary[open] > summary .mm-group-note { display: none; }
@@ -3465,12 +3447,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 /* Board 2026-10-21: main projects as compact cards, the Claude Code / Codex split, other folders folded. */
 .mm-map-agents { margin-bottom: 14px; }
 .mm-map-agents .mm-dot { display: inline-block; margin-right: 6px; }
-.mm-agent-bar { display: flex; gap: 2px; height: 6px; overflow: hidden; border-radius: 999px; }
-.mm-agent-bar i { display: block; min-width: 0; height: 100%; }
-.mm-agent-bar i[style="width:0%"] { display: none; }
-.mm-agent-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; color: var(--mm-muted); font-size: 12.5px; }
-.mm-agent-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.mm-map-card .mm-map-foot { flex-direction: column; align-items: flex-start; gap: 8px; }
 .mm-map-paused-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 16px 0 26px; color: var(--mm-muted); font-size: 13.5px; }
 .mm-os .mm-map-paused-line a { display: inline-flex; align-items: center; gap: 7px; color: var(--mm-muted); text-decoration: none; }
 .mm-os .mm-map-paused-line a:hover { color: var(--mm-ink); }
@@ -3483,7 +3459,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-map-others summary span { color: var(--mm-muted); font-size: 14px; }
 .mm-map-others summary small { flex-basis: 100%; color: var(--mm-muted); font-size: 12.5px; }
 .mm-map-rows { display: flex; flex-direction: column; }
-.mm-os a.mm-map-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(60px, 140px) 84px 150px; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; color: var(--mm-ink); text-decoration: none; border-top: 1px solid var(--mm-line); }
+.mm-os a.mm-map-row { display: grid; grid-template-columns: auto minmax(140px, 1fr) minmax(0, 2fr) 150px; align-items: center; gap: 12px; min-height: 52px; padding: 8px 12px; color: var(--mm-ink); text-decoration: none; border-top: 1px solid var(--mm-line); }
 .mm-map-rows a.mm-map-row:first-child { border-top: 0; }
 .mm-os a.mm-map-row:hover { background: var(--mm-surface-hover); text-decoration: none; }
 .mm-map-row .mm-project-art { width: 36px; height: 36px; border-radius: 10px; }
@@ -3494,14 +3470,25 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-map-row-name small i { flex: none; width: 7px; height: 7px; background: var(--mm-control-line); border-radius: 50%; }
 .mm-map-row-name small i.is-today { background: var(--mm-success); }
 .mm-map-row-name small i.is-week { background: var(--mm-accent); }
-.mm-map-row-time { color: var(--mm-muted); font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
 .mm-map-row > .mm-chip { justify-self: end; }
+/* Mark 2026-10-23: cards and project pages tell results in plain words, no technical numbers. */
+.mm-map-result { display: -webkit-box; overflow: hidden; color: var(--mm-ink-soft, var(--mm-muted)); font-size: 14px; line-height: 1.5; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.mm-map-row-result { overflow: hidden; color: var(--mm-muted); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.mm-brief { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-bottom: 20px; }
+.mm-brief h4, .mm-result-day h4 { margin: 0 0 8px; color: var(--mm-muted); font-size: 12.5px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.mm-brief-now { margin: 0; font-size: 16px; line-height: 1.55; }
+.mm-results { margin-bottom: 24px; }
+.mm-result-day { padding: 14px 0; border-top: 1px solid var(--mm-line); scroll-margin-top: 80px; }
+.mm-result-day:first-of-type { border-top: 0; padding-top: 4px; }
+.mm-results-older { border-top: 1px solid var(--mm-line); }
+.mm-results-older > summary { min-height: 44px; padding: 12px 0; font-weight: 650; cursor: pointer; }
+.mm-results-older > summary span { margin-left: 6px; color: var(--mm-muted); font-weight: 500; }
 @media (max-width: 760px) {
   .mm-os a.mm-map-row { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
-  .mm-map-row-bar { display: none; }
   .mm-map-row > .mm-chip, .mm-map-row > span:last-child:empty { grid-column: 2 / -1; justify-self: start; }
+  .mm-map-row-result { display: none; }
+  .mm-brief { grid-template-columns: 1fr; gap: 18px; }
 }
-.mm-chart-box { margin-bottom: 24px; }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
 /* «Всё ли живо» and «Ждёт тебя» (Mark 2026-10-22). */
 .mm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
@@ -10184,10 +10171,6 @@ function mmInit() {
   }, MM_REFRESH_MS);
 }
 
-function mmRedrawCharts() {
-  if (mmView === 'project') renderProjectChart();
-}
-
 function mmShowView(view) {
   if (!MM_VIEW_TITLES[view]) return;
   mmView = view;
@@ -10206,7 +10189,6 @@ function mmShowView(view) {
   document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
   if (view !== 'project') mmSetProjectUrl(null);
   mmRenderNotice();
-  mmRedrawCharts();
   if (view === 'map' || (view === 'project')) window.scrollTo({ top: 0 });
 }
 
@@ -10337,114 +10319,6 @@ function mmNiceStep(maxHours) {
   if (maxHours <= 5) return 1;
   if (maxHours <= 10) return 2;
   return 4;
-}
-
-function mmRoundedTop(x, y, width, height, radius) {
-  const r = Math.min(radius, width / 2, height);
-  return `M${x},${y + height}V${y + r}Q${x},${y} ${x + r},${y}H${x + width - r}Q${x + width},${y} ${x + width},${y + r}V${y + height}Z`;
-}
-
-function mmDrawChart({ host, prHost, series, selectedDate, onPick }) {
-  if (!host || host.offsetParent === null) return;
-  const width = Math.max(300, host.clientWidth || 900);
-  const height = 220;
-  const pad = { top: 12, right: 4, bottom: 26, left: 34 };
-  const plotW = width - pad.left - pad.right;
-  const plotH = height - pad.top - pad.bottom;
-  const step = plotW / series.length;
-  const barW = Math.max(4, Math.min(24, step * 0.62));
-  const maxHours = Math.max(1, ...series.map(d => (d.claude_minutes + d.codex_minutes) / 60));
-  const tick = mmNiceStep(maxHours);
-  const top = Math.ceil(maxHours / tick) * tick;
-  const y = hours => pad.top + plotH - (hours / top) * plotH;
-  const labelEvery = width < 520 ? 7 : (width < 900 ? 3 : 2);
-  const selectedIndex = series.findIndex(day => day.date === selectedDate);
-  const parts = [];
-  for (let value = 0; value <= top + 1e-9; value += tick) {
-    parts.push(`<line class="${value === 0 ? 'mm-baseline' : 'mm-grid'}" x1="${pad.left}" x2="${width - pad.right}" y1="${y(value)}" y2="${y(value)}"/>`);
-    parts.push(`<text x="${pad.left - 8}" y="${y(value) + 4}" text-anchor="end">${value}ч</text>`);
-  }
-  series.forEach((day, i) => {
-    const cx = pad.left + step * i + step / 2;
-    const x = cx - barW / 2;
-    const selected = day.date === selectedDate;
-    if (selected) parts.push(`<rect class="mm-selected-band" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}" rx="6"/>`);
-    // Each tool's own time is stacked; the tooltip also gives the de-duplicated total.
-    const claudeH = (day.claude_minutes / 60 / top) * plotH;
-    const codexH = (day.codex_minutes / 60 / top) * plotH;
-    const base = pad.top + plotH;
-    if (claudeH > 0) {
-      const path = codexH > 0 ? `M${x},${base}V${base - claudeH}H${x + barW}V${base}Z` : mmRoundedTop(x, base - claudeH, barW, claudeH, 4);
-      parts.push(`<path class="seg-claude" d="${path}"/>`);
-    }
-    if (codexH > 0) {
-      const gap = claudeH > 0 ? 2 : 0;
-      const h = Math.max(1, codexH - gap);
-      parts.push(`<path class="seg-codex" d="${mmRoundedTop(x, base - claudeH - gap - h, barW, h, 4)}"/>`);
-    }
-    const nearSelected = !selected && selectedIndex >= 0 && Math.abs(i - selectedIndex) * step < 44;
-    if (selected || (!nearSelected && i % labelEvery === (series.length - 1) % labelEvery)) {
-      parts.push(`<text class="${selected ? 'is-current' : ''}" x="${cx}" y="${height - 6}" text-anchor="middle">${mmEsc(mmDayShort(day.date))}</text>`);
-    }
-    parts.push(`<rect class="mm-bar-hit" data-index="${i}" tabindex="0" role="button" aria-label="${mmEsc(`${mmDayShort(day.date)}: ${workMinutes(day.total_minutes)}, слито PR: ${day.prs_merged}`)}" x="${pad.left + step * i}" y="${pad.top}" width="${step}" height="${plotH}"/>`);
-  });
-  host.innerHTML = `<svg viewBox="0 0 ${width} ${height}" height="${height}" role="img" aria-label="Часы работы с Claude и Codex за 30 дней">${parts.join('')}</svg>`;
-
-  // Merged PRs per day: a separate small chart on the same day axis, never a second y-scale.
-  const prHeight = 64;
-  const baseY = 42;
-  const maxPr = Math.max(1, ...series.map(d => d.prs_merged));
-  const prParts = [
-    `<text x="${pad.left - 8}" y="${baseY}" text-anchor="end">PR</text>`,
-    `<line class="mm-baseline" x1="${pad.left}" x2="${width - pad.right}" y1="${baseY + 0.5}" y2="${baseY + 0.5}"/>`,
-  ];
-  series.forEach((day, i) => {
-    if (!day.prs_merged) return;
-    const cx = pad.left + step * i + step / 2;
-    const h = Math.max(3, (day.prs_merged / maxPr) * 26);
-    prParts.push(`<path class="seg-pr" d="${mmRoundedTop(cx - barW / 2, baseY - h, barW, h, 3)}"/>`);
-    if ((maxPr > 1 && day.prs_merged === maxPr) || day.date === selectedDate) {
-      prParts.push(`<text class="is-current" x="${cx}" y="${baseY - h - 4}" text-anchor="middle">${day.prs_merged}</text>`);
-    }
-  });
-  prParts.push(`<text x="${pad.left}" y="${prHeight - 4}">слито PR за день</text>`);
-  prHost.innerHTML = `<svg viewBox="0 0 ${width} ${prHeight}" height="${prHeight}" role="img" aria-label="Слитые PR по дням">${prParts.join('')}</svg>`;
-
-  host.querySelectorAll('.mm-bar-hit').forEach(hit => {
-    const day = series[Number(hit.dataset.index)];
-    const show = event => showWorkTooltip(day, event.target);
-    hit.addEventListener('mouseenter', show);
-    hit.addEventListener('focus', show);
-    hit.addEventListener('mouseleave', hideWorkTooltip);
-    hit.addEventListener('blur', hideWorkTooltip);
-    hit.addEventListener('click', () => onPick(day.date));
-    hit.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        onPick(day.date);
-      }
-    });
-  });
-}
-
-function showWorkTooltip(day, target) {
-  const tip = target.closest('.mm-panel').querySelector('.mm-tooltip');
-  const panel = tip.parentElement.getBoundingClientRect();
-  tip.innerHTML = `<b>${mmEsc(mmDayShort(day.date))}</b>
-    <div class="row"><span>Всего без пересечений</span><span>${mmEsc(workMinutes(day.total_minutes))}</span></div>
-    <div class="row"><span><i class="claude mm-tip-dot"></i>Claude</span><span>${mmEsc(workMinutes(day.claude_minutes))}</span></div>
-    <div class="row"><span><i class="codex mm-tip-dot"></i>Codex</span><span>${mmEsc(workMinutes(day.codex_minutes))}</span></div>
-    <div class="row"><span>Сессий · промптов</span><span>${day.sessions} · ${day.prompts}</span></div>
-    <div class="row"><span>Слито PR</span><span>${day.prs_merged}</span></div>`;
-  tip.hidden = false;
-  const rect = target.getBoundingClientRect();
-  const left = Math.min(panel.width - tip.offsetWidth - 8, Math.max(8, rect.left - panel.left + rect.width / 2 - tip.offsetWidth / 2));
-  tip.style.left = `${left}px`;
-  tip.style.top = `${Math.max(8, rect.top - panel.top - tip.offsetHeight + 24)}px`;
-}
-
-function hideWorkTooltip() {
-  document.querySelectorAll('#mm-os .mm-tooltip').forEach(tip => { tip.hidden = true; });
 }
 
 function mmLooseRow(item, bucket) {
@@ -10661,26 +10535,11 @@ function mmWeekSplit(p) {
   return { claude, codex, all, shown: mmMapAgent === 'all' ? all : (mmMapAgent === 'claude' ? claude : codex) };
 }
 
-// One thin bar: the Claude Code part and the Codex part of the week's work.
-function mmAgentBar(split) {
-  const total = split.claude + split.codex;
-  if (!total) return '';
-  const claude = Math.round((split.claude / total) * 100);
-  return `<span class="mm-agent-bar" aria-hidden="true"><i class="claude" style="width:${claude}%"></i><i class="codex" style="width:${100 - claude}%"></i></span>`;
-}
-
-function mmAgentLegend(split) {
-  const parts = [];
-  if (split.claude && mmMapAgent !== 'codex') parts.push(`<span><i class="mm-dot claude"></i>Claude Code ${mmEsc(workMinutes(split.claude))}</span>`);
-  if (split.codex && mmMapAgent !== 'claude') parts.push(`<span><i class="mm-dot codex"></i>Codex ${mmEsc(workMinutes(split.codex))}</span>`);
-  return parts.length ? `<span class="mm-agent-legend">${parts.join('')}</span>` : '';
-}
-
 // At most one thing that waits on Mark: the nearest deadline, else PRs ready to merge.
 function mmAttention(todo, today) {
   if (!todo) return '';
   if (todo.deadlines.length) return `<span class="mm-chip is-warn">срок ${mmEsc(npDue(todo.deadlines[0].date, today))}</span>`;
-  if (todo.open_prs_count) return `<span class="mm-chip is-accent">PR к слиянию: ${todo.open_prs_count}</span>`;
+  if (todo.open_prs_count) return `<span class="mm-chip is-accent">ждёт проверки: ${todo.open_prs_count}</span>`;
   return '';
 }
 
@@ -10689,27 +10548,29 @@ function mmPulse(p) {
   return offset === null ? '' : (offset <= 0 ? 'is-today' : (offset < 7 ? 'is-week' : ''));
 }
 
+// Mark 2026-10-23: a card says what came out last, in plain words, and when; no hours or agent split.
+function mmMapResult(p) {
+  const text = p.last_summary?.bullets?.[0];
+  return text ? `<span class="mm-map-result">${mmEsc(text)}</span>` : '';
+}
+
 function mmMapCard(p, todo, today) {
-  const split = mmWeekSplit(p);
-  const when = [p.last_activity ? mmRelDay(p.last_activity) : 'без активности', split.shown ? `${workMinutes(split.shown)} за неделю` : '']
-    .filter(Boolean).join(' · ');
+  const when = p.last_activity ? mmRelDay(p.last_activity) : 'без активности';
   const attention = mmAttention(todo, today);
   return `<a class="mm-map-card" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${when}`)}">
     <span class="mm-map-top">${mmArt(p)}<span class="mm-map-head"><span class="mm-map-name">${mmEsc(p.name)}</span>
       <span class="mm-map-when"><i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}</span></span><span class="mm-map-go" aria-hidden="true">›</span></span>
-    ${mmMapAgent === 'all' ? mmAgentBar(split) : ''}
-    <span class="mm-map-foot">${mmAgentLegend(split)}${attention}</span>
+    ${mmMapResult(p)}
+    ${attention ? `<span class="mm-map-foot">${attention}</span>` : ''}
   </a>`;
 }
 
 // A one-line row for a secondary folder.
 function mmMapRow(p, todo, today) {
-  const split = mmWeekSplit(p);
   const when = p.last_activity ? mmRelDay(p.last_activity) : 'без активности';
   return `<a class="mm-map-row" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}">
     ${mmArt(p)}<span class="mm-map-row-name">${mmEsc(p.name)}<small><i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}</small></span>
-    <span class="mm-map-row-bar">${mmAgentBar(split)}</span>
-    <span class="mm-map-row-time">${split.shown ? mmEsc(workMinutes(split.shown)) : '—'}</span>
+    <span class="mm-map-row-result">${mmEsc(p.last_summary?.bullets?.[0] || '')}</span>
     ${mmAttention(todo, today) || '<span></span>'}
   </a>`;
 }
@@ -10771,7 +10632,7 @@ function renderMap(data) {
   const pausedHtml = paused.length ? `<div class="mm-map-paused-line"><span>На паузе:</span>${paused.map(p =>
     `<a href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}">${mmArt(p)}${mmEsc(p.name)}</a>`).join('')}</div>` : '';
   const othersHtml = others.length ? `<details class="mm-map-others">
-      <summary><b>Другие папки</b> <span>${others.length}</span><small>мелкие папки и заметки, не основные проекты · ${mmEsc(workMinutes(mmSum(others.map(p => mmWeekSplit(p).shown))))} за неделю</small></summary>
+      <summary><b>Другие папки</b> <span>${others.length}</span><small>мелкие папки и заметки, не основные проекты</small></summary>
       <div class="mm-map-rows">${others.sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown).map(p => mmMapRow(p, todoById[p.id], today)).join('')}</div>
     </details>` : '';
   const body = `<div class="mm-map-top">${head('Основные проекты', active.length, '')}${filter}</div><div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
@@ -10935,7 +10796,7 @@ function mmRenderToday(day, prsToMerge) {
   }
   // Today's hours are in «Сводка» right below; the title line keeps only what waits for a merge.
   line.hidden = !prsToMerge;
-  line.textContent = prsToMerge ? `Ждут слияния: ${prsToMerge} PR` : '';
+  line.textContent = prsToMerge ? `Ждут проверки: ${prsToMerge} ${mmPlural(prsToMerge, 'готовое изменение', 'готовых изменения', 'готовых изменений')}` : '';
 }
 
 // «Личное» (Mark 2026-10-20): owner-only project cards from the private portfolio registry, a short
@@ -11544,84 +11405,58 @@ async function openProject(id, day = null) {
   }
 }
 
-function mmProjectSeries(project) {
-  const byDate = Object.fromEntries((project.timeline || []).map(day => [day.date, day]));
-  return project.dates.map((date, i) => {
-    const day = byDate[date];
-    return {
-      date,
-      claude_minutes: project.daily_claude_minutes[i] || 0,
-      codex_minutes: project.daily_codex_minutes[i] || 0,
-      total_minutes: project.daily_minutes[i] || 0,
-      prs_merged: project.daily_prs_merged[i] || 0,
-      sessions: day ? day.sessions.length : 0,
-      prompts: day ? day.sessions.reduce((sum, session) => sum + (session.prompts || 0), 0) : 0,
-    };
-  });
+// Mark 2026-10-23: «убери всю техническую дату … только результаты, чёткая сводка, понимание того,
+// что происходит». A project page is the project in plain words: what is going on, what is next and
+// what came out, day by day. No hours, sessions, prompts, PRs, GitHub issues or repo names here.
+const MM_RESULT_DAYS_SHOWN = 5;
+
+function mmPlural(n, one, few, many) {
+  const mod10 = n % 10, mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
 }
 
-function mmProjectDay(day, open) {
-  const note = [
-    day.claude_minutes ? `Claude ${workMinutes(day.claude_minutes)}` : '',
-    day.codex_minutes ? `Codex ${workMinutes(day.codex_minutes)}` : '',
-    day.sessions.length ? `${day.sessions.length} сесс.` : '',
-    day.merged.length ? `слито PR ${day.merged.length}` : '',
-    day.opened.length ? `открыто PR ${day.opened.length}` : '',
-    day.closed_unmerged.length ? `закрыто без merge ${day.closed_unmerged.length}` : '',
-    day.commands.length ? `команд в инфраструктуре ${day.commands.length}` : '',
-  ].filter(Boolean).join(' · ');
-  const dot = day.claude_minutes || day.codex_minutes ? (day.claude_minutes >= day.codex_minutes ? 'claude' : 'codex') : 'cat-pr';
-  const prs = [
-    ...day.merged.map(pr => mmPrAction(pr, 'merged')),
-    ...day.opened.map(pr => mmPrAction(pr, 'open')),
-    ...day.closed_unmerged.map(pr => mmPrAction(pr, 'closed')),
+function mmResultDay(day) {
+  return `<div class="mm-result-day" id="mm-day-${mmEsc(day.date)}">
+    <h4>${mmEsc(mmDayHeading(day.date))}</h4>
+    ${mmBullets(day.summary)}
+  </div>`;
+}
+
+function mmProjectBrief(p, today) {
+  const done = p.timeline.filter(day => day.summary && day.summary.length);
+  const now = p.now?.text || (done[0] ? done[0].summary[0] : '');
+  const next = [
+    ...(p.deadlines || []).map(d => `<li><b>${mmEsc(npDue(d.date, today))}</b> · ${mmEsc(d.what)}</li>`),
+    ...p.next_steps.map(text => `<li>${mmEsc(text)}</li>`),
   ];
-  const sessions = day.sessions.length ? `<div class="mm-table-scroll"><table class="mm-data-table mm-day-table">
-      <colgroup><col class="mm-col-span"><col class="mm-col-tool"><col><col class="mm-col-min"></colgroup>
-      <thead><tr><th>Время</th><th>Инструмент</th><th>Что делал</th><th class="num">Мин</th></tr></thead>
-      <tbody>${day.sessions.map(s => `<tr>
-        <td class="cell-date" data-label="Время">${mmEsc(mmTime(s.start))}–${mmEsc(mmTime(s.end))}</td>
-        <td data-label="Инструмент"><b>${s.app === 'chatgpt' ? 'ChatGPT' : (s.tool === 'claude' ? 'Claude' : 'Codex')}</b><small>${mmEsc(s.machine || '')}${s.branch ? ` · ${mmEsc(s.branch)}` : ''}</small></td>
-        <td data-label="Что делал">${mmEsc(compactText(s.topic || '—', 160))}</td>
-        <td class="num" data-label="Мин">${s.active_minutes}</td>
-      </tr>`).join('')}</tbody></table></div>` : '';
-  const commands = day.commands.length ? `<div class="mm-command-list">${day.commands.map(c => `<div class="mm-command">
-      <small>${mmEsc(mmTime(c.at))} · ${c.tool === 'claude' ? 'Claude' : 'Codex'} · ${mmEsc(c.host || '')}</small><code>${mmEsc(c.command || '')}</code></div>`).join('')}</div>` : '';
-  const tech = `${prs.length ? `<div class="mm-group-foot">${prs.join('')}</div>` : ''}${sessions}${commands}`;
-  const summary = day.summary && day.summary.length ? day.summary : null;
-  const isToday = mmDayOffset(`${day.date}T12:00:00`) === 0;
-  const lead = summary
-    ? `<div class="mm-day-lead">${mmBullets(summary)}</div>`
-    : `<p class="mm-summary-empty mm-day-lead">${isToday ? 'Итог за сегодня появится после конца дня.' : 'Итог этого дня ещё не готов.'}</p>`;
-  return `<details class="mm-group-row${summary ? ' has-summary' : ''}" id="mm-day-${mmEsc(day.date)}"${open ? ' open' : ''}>
-    <summary>
-      <span class="mm-dot ${dot}" aria-hidden="true"></span>
-      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(mmDayHeading(day.date))}</span><span class="mm-group-note">${mmEsc(summary ? summary[0] : (note || 'без сессий'))}</span></span>
-      <span class="mm-group-aside">${day.minutes ? mmEsc(workMinutes(day.minutes)) : '—'}<small>${day.minutes ? 'работы' : 'только GitHub'}</small></span>
-      <span class="mm-chevron" aria-hidden="true">›</span>
-    </summary>
-    <div class="mm-group-body">
-      ${lead}
-      ${tech ? `<details class="mm-more"${summary ? '' : ' open'}><summary>Технические детали${note ? ` · ${mmEsc(note)}` : ''}</summary>${tech}</details>` : ''}
+  // Drafts are unfinished work, not something to check yet.
+  const ready = (p.open_prs_list || []).filter(pr => !pr.draft).length;
+  if (ready) {
+    next.push(`<li>${mmEsc(`${ready} ${mmPlural(ready, 'готовое изменение ждёт', 'готовых изменения ждут', 'готовых изменений ждут')} проверки`)}</li>`);
+  }
+  return `<section class="mm-panel mm-brief" aria-label="Сводка по проекту">
+    <div class="mm-brief-block">
+      <h4>Что сейчас</h4>
+      <p class="mm-brief-now">${now ? mmEsc(now) : 'Сводка появится после первого итога дня.'}</p>
     </div>
-  </details>`;
+    <div class="mm-brief-block">
+      <h4>Что дальше</h4>
+      ${next.length ? `<ul class="mm-bullets">${next.join('')}</ul>` : '<p class="mm-summary-empty">Следующих шагов пока нет.</p>'}
+    </div>
+  </section>`;
 }
 
 function renderProjectPage() {
   const p = mmProjectData;
   const page = document.getElementById('mm-project-page');
   document.getElementById('mm-view-title').textContent = p.name;
-  const week = p.last_7_minutes;
-  const prev = p.previous_7_minutes;
-  const delta = week - prev;
-  const stats = [
-    { label: 'За 30 дней', value: workMinutes(p.total_minutes), note: `Claude ${workMinutes(p.claude_minutes)} · Codex ${workMinutes(p.codex_minutes)}` },
-    { label: 'Последние 7 дней', value: workMinutes(week), note: prev ? `${delta >= 0 ? '+' : '−'}${workMinutes(Math.abs(delta))} к прошлой неделе` : 'прошлой недели в данных нет', cls: prev ? (delta >= 0 ? 'is-up' : 'is-down') : '' },
-    { label: 'Слито PR', value: String(p.prs_merged), note: `открыто сейчас: ${p.prs_open}` },
-    { label: 'Дней в работе', value: `${p.active_days} из 30`, note: `${p.sessions} сессий · ${p.prompts} промптов` },
-  ];
-  const merged = p.timeline.flatMap(day => day.merged);
-  const where = (p.repos.length ? p.repos : p.projects).map(name => `<span class="mm-chip">${mmEsc(name)}</span>`).join('');
+  const today = p.dates[p.dates.length - 1];
+  const done = p.timeline.filter(day => day.summary && day.summary.length);
+  const shown = done.slice(0, MM_RESULT_DAYS_SHOWN);
+  const older = done.slice(MM_RESULT_DAYS_SHOWN);
+  const pending = p.timeline.length && p.timeline[0].date === today && !(p.timeline[0].summary || []).length;
   page.innerHTML = `
     <button type="button" class="mm-back" id="mm-project-back"><span aria-hidden="true">‹</span> ${mmReturnView === 'todo' ? 'К делам' : 'К проектам'}</button>
     <section class="mm-project-hero">
@@ -11630,72 +11465,25 @@ function renderProjectPage() {
         <span class="mm-project-kicker">${mmEsc(p.last_activity ? `последняя работа: ${mmRelDay(p.last_activity)}` : 'без активности')}</span>
         <h3 class="mm-project-title">${mmEsc(p.name)}</h3>
         ${p.description ? `<p class="mm-project-desc">${mmEsc(p.description)}</p>` : ''}
-        <div class="mm-chip-row">${where}</div>
       </div>
     </section>
-    <div class="mm-stats">${stats.map(stat => `
-      <div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong class="${stat.cls || ''}">${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('')}
-    </div>
-    <div class="mm-panel">${mmTodo(p)}</div>
-    <section class="mm-panel mm-chart-box" aria-labelledby="mm-project-chart-title">
-      <div class="mm-section-heading">
-        <div><h3 id="mm-project-chart-title">Работа по дням <span>30 дней</span></h3><p class="mm-section-note">Нажмите на столбик, чтобы открыть этот день в истории ниже.</p></div>
-        <div class="mm-chart-legend" aria-label="Легенда"><span><i class="claude"></i>Claude</span><span><i class="codex"></i>Codex</span></div>
-      </div>
-      <div class="mm-chart" id="mm-project-chart"></div>
-      <div class="mm-chart mm-chart-prs" id="mm-project-chart-prs"></div>
-      <div class="mm-tooltip" role="tooltip" hidden></div>
-    </section>
-    <div class="mm-section-heading"><div><h3>Что получилось <span>${merged.length}</span></h3><p class="mm-section-note">PR, слитые за 30 дней.</p></div></div>
-    <div class="mm-outcomes">${merged.length ? merged.map(pr => mmPrAction(pr, 'merged')).join('') : '<span class="mm-chip">За 30 дней PR не слито</span>'}</div>
-    <details class="mm-panel mm-project-more" id="mm-project-history">
-      <summary>История по дням <span>${mmEsc(`дней с работой: ${p.timeline.length} · итоги, сессии, PR и команды`)}</span></summary>
-      <div class="mm-project-more-body">
-        <div class="mm-group-rows">${p.timeline.map((day, index) => mmProjectDay(day, index === 0)).join('') || '<p class="mm-empty">Работы по дням нет.</p>'}</div>
-      </div>
-    </details>
-    ${p.loose_list.length ? `<div class="mm-section-heading"><div><h3>Хвосты <span>${p.loose_list.length}</span></h3><p class="mm-section-note">Брошенное и забытое в этом проекте.</p></div></div>
-    <div class="mm-group-rows">${p.loose_list.map(item => mmLooseRow(item, item.bucket)).join('')}</div>` : ''}`;
+    ${mmProjectBrief(p, today)}
+    <section class="mm-panel mm-results" aria-labelledby="mm-results-title">
+      <div class="mm-section-heading"><div><h3 id="mm-results-title">Что получилось</h3><p class="mm-section-note">Итоги по дням, своими словами.</p></div></div>
+      ${pending ? '<p class="mm-summary-empty">Итог за сегодня появится после конца дня.</p>' : ''}
+      ${shown.length ? shown.map(mmResultDay).join('') : '<p class="mm-summary-empty">Итогов за 30 дней пока нет.</p>'}
+      ${older.length ? `<details class="mm-results-older" id="mm-project-history"><summary>Раньше <span>${older.length} ${mmPlural(older.length, 'день', 'дня', 'дней')}</span></summary>${older.map(mmResultDay).join('')}</details>` : ''}
+    </section>`;
   document.getElementById('mm-project-back').addEventListener('click', () => mmShowView(mmReturnView));
-  renderProjectChart();
 }
 
-// Opens one day in the project's history, technical details unfolded (links with ?day=, chart bars).
+// Opens one day in the project's results (links with ?day=).
 function mmOpenHistoryDay(day, smooth = false) {
   const row = document.getElementById(`mm-day-${day}`);
   if (!row) return;
-  const history = document.getElementById('mm-project-history');
-  if (history) history.open = true;
-  row.open = true;
-  const tech = row.querySelector('details.mm-more');
-  if (tech) tech.open = true;
+  const older = row.closest('details');
+  if (older) older.open = true;
   row.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
-}
-
-function mmTodo(p) {
-  const groups = [];
-  if (p.open_prs_list.length) groups.push(['Открытые PR', `<div class="mm-outcomes">${p.open_prs_list.map(pr => mmPrAction(pr, 'open')).join('')}</div>`]);
-  if (p.next_steps.length) groups.push(['Следующие шаги', mmBullets(p.next_steps)]);
-  if (p.open_issues_list.length) {
-    const more = p.open_issues_count > p.open_issues_list.length ? `<span class="mm-chip">и ещё ${p.open_issues_count - p.open_issues_list.length}</span>` : '';
-    groups.push(['Задачи на GitHub', `<div class="mm-outcomes">${p.open_issues_list.map(issue => mmPrAction(issue, 'open')).join('')}${more}</div>`]);
-  }
-  const count = p.open_prs_list.length + p.next_steps.length + p.open_issues_count;
-  return `<section id="mm-todo" aria-labelledby="mm-todo-title">
-    <div class="mm-section-heading"><div><h3 id="mm-todo-title">Задачи проекта <span>${count}</span></h3><p class="mm-section-note">Открытые PR, следующие шаги из итогов дня и открытые задачи на GitHub.</p></div></div>
-    ${groups.length ? groups.map(([title, body]) => `<div class="mm-todo-group"><h4>${mmEsc(title)}</h4>${body}</div>`).join('') : '<div class="mm-outcomes"><span class="mm-chip">Открытых задач нет</span></div>'}
-  </section>`;
-}
-
-function renderProjectChart() {
-  if (!mmProjectData) return;
-  mmDrawChart({
-    host: document.getElementById('mm-project-chart'),
-    prHost: document.getElementById('mm-project-chart-prs'),
-    series: mmProjectSeries(mmProjectData),
-    selectedDate: null,
-    onPick: date => mmOpenHistoryDay(date, true),
-  });
 }
 
 function mmSourceDescription(source, name) {
@@ -11720,12 +11508,6 @@ function mmRenderSources() {
   document.getElementById('mm-sources').textContent = parts.join(' · ');
 }
 
-let mmResizeTimer = null;
-window.addEventListener('resize', () => {
-  if (!dailyWorkData || !document.getElementById('section-work')?.classList.contains('active')) return;
-  clearTimeout(mmResizeTimer);
-  mmResizeTimer = setTimeout(mmRedrawCharts, 150);
-});
 // ── End MAIN MANAGER ──
 // ── «Открыть на телефоне» and deadline wording ──
 const NP_MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
