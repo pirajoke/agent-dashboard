@@ -11310,7 +11310,7 @@ function ccDocxxRenderRecords() {
   for(const row of rows) {
     const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
     const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',row.kind==='folder'?'▱':'▤'); icon.setAttribute('aria-hidden','true');
-    const name=ccDocxxEl('span',undefined,'docxx-record-name'); name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',`${row.source==='icloud'?'iCloud':row.source==='review'?'На разборе':'Google Drive'} · ${row.historical?'История · ':''}${ccDocxxDate(row.at)}`));
+    const name=ccDocxxEl('span',undefined,'docxx-record-name'); name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',`${row.source==='gmail'?'Gmail':row.source==='icloud'?'iCloud':row.source==='review'?'На разборе':'Google Drive'} · ${row.historical?'История · ':''}${ccDocxxDate(row.at)}`));
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(icon,name,badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
     const dl=ccDocxxEl('dl');

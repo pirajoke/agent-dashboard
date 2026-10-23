@@ -32,6 +32,15 @@ REASONS = {
     'bundle_contains_exact_duplicates_retained': 'В комплекте есть совпадения. Папка сохранена целиком.',
 }
 GMAIL_ERRORS = {
+    'auth_required': 'Нужно заново подключить Gmail только для чтения.',
+    'account_mismatch': 'Аккаунт почтового входа не совпал с настройкой.',
+    'gmail_unavailable': 'Gmail временно недоступен. Вложения сохранены для повторной попытки.',
+    'catalog_unavailable': 'Облачный каталог недоступен. Загруженные вложения сохранены.',
+    'delivery_pending': 'Вложения ожидают независимой проверки в Google Drive.',
+    'history_expired': 'История Gmail устарела. Нужна проверка непрочитанного периода.',
+    'processing_failed': 'Вложение пока не распределено. Нужна проверка.',
+    'staging_failed': 'Вложение пока не сохранено локально. Оригинал остаётся в Gmail.',
+    'message_not_found': 'Одно из писем недоступно. Остальные вложения продолжают обрабатываться.',
     'access_unavailable': 'Нет доступа к почтовому входу.',
     'rate_limited': 'Почтовый сервис временно ограничил запросы.',
     'import_failed': 'Вложение пока не передано в обработку. Нужна проверка.',
@@ -193,6 +202,37 @@ def _record(row, source, key, historical=False):
             'historical': historical, 'kind': 'folder' if row.get('kind') == 'folder' else 'file'}
 
 
+def _gmail_records(directory):
+    """Project only document metadata; never mail identities, addresses or text."""
+    saved = _read(directory / 'gmail-journal.json')
+    entries = saved.get('attachments')
+    if saved.get('schema_version') != 1 or not isinstance(entries, dict) or len(entries) > 20000:
+        raise ValueError('invalid_gmail_journal')
+    merged = {}
+    for key, value in entries.items():
+        if not isinstance(value, dict): continue
+        state = value.get('state')
+        review = value.get('needs_review') is True or state == 'review'
+        status = ('needs_review' if review else 'verified' if state == 'delivered'
+                  else 'awaiting_verification' if state == 'pending' else 'pending')
+        data = {'source': value.get('name'), 'destination': value.get('destination'),
+                'status': status, 'id': value.get('cloud_file_id') if state == 'delivered' else None,
+                'at': value.get('delivered_at') or value.get('attempted_at')}
+        if review: data['reason'] = 'unrecognized_or_conflicting_content'
+        row = _record(data, 'gmail', key, historical=state == 'delivered' and not review)
+        error = value.get('error_code')
+        if isinstance(error, str) and error in GMAIL_ERRORS: row['reason'] = GMAIL_ERRORS[error]
+        # Two original attachments may belong to one explicitly reviewed merge.
+        identity = row['url'] or row['destination'] or row['key']
+        previous = merged.get(identity)
+        if previous and previous['status'] == row['status']:
+            names = sorted(set(previous['original_name'].split(' + ') + [row['original_name']]))
+            previous['original_name'] = _text(' + '.join(names))
+        else:
+            merged[identity] = row
+    return list(merged.values())
+
+
 def docxx_projection(directory, *, owner=False, now=None):
     if not owner:
         return {'state': 'owner_required'}  # Do not even stat private sources.
@@ -214,10 +254,16 @@ def docxx_projection(directory, *, owner=False, now=None):
             journal = _read(directory / filename)
             if len(journal) > 20000: raise ValueError('journal_limit')
             for key, value in journal.items():
+                if source == 'icloud' and isinstance(value, dict) and '/gmail-staging/' in str(value.get('source', '')).replace('\\', '/'):
+                    continue  # Gmail's dedicated journal is authoritative for its cloud receipt.
                 row = _record(value, source, key, True)
                 if row: rows[row['key']] = row
         except (OSError, ValueError, TypeError):
             warnings.append('История ' + ('iCloud' if source == 'icloud' else 'Google Drive') + ' недоступна.')
+    try:
+        for row in _gmail_records(directory): rows[row['key']] = row
+    except FileNotFoundError: pass  # Optional until Gmail is connected.
+    except (OSError, ValueError, TypeError): warnings.append('История вложений Gmail недоступна.')
     current = []
     for values, source in ((status.get('results', []), 'icloud'), (ingress.get('results', []),'drive'), (status.get('review_pending', []),'review')):
         if not isinstance(values, list):
@@ -226,6 +272,10 @@ def docxx_projection(directory, *, owner=False, now=None):
             if not isinstance(value, dict): continue
             row = _record(value, source, value.get('id') or value.get('source') or index)
             if row:
+                if ('/gmail-staging/' in str(value.get('source', '')).replace('\\', '/') and
+                        row['destination'] and any(old['source'] == 'gmail' and
+                            old['destination'] == row['destination'] for old in rows.values())):
+                    continue  # Keep dedicated Gmail review/receipt metadata when available.
                 current.append(row)
                 # Latest snapshot supersedes history of the same source or destination.
                 for old_key in list(rows):

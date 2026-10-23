@@ -12,6 +12,8 @@ also blocked from the generic static file handler for GET, HEAD and aliases.
 
 The source is `~/Library/Application Support/DOCXX-intake/`: `status.json`,
 `runner.lock`, `journal.json`, `drive-ingress-journal.json` and `config.json`.
+When Gmail intake is configured, its private `gmail-journal.json` supplies the
+attachment processing records described below.
 An optional private `dashboard-links.json` supplies `guide`, `review`, `catalog`
 and `status` links. Keep real IDs and this configuration out of the public repo.
 Only validated HTTPS Google Drive/Docs links are exposed to the owner.
@@ -67,12 +69,27 @@ operational states, an older-than-15-minute, invalid or future timestamp becomes
 available without claiming a monitor; malformed or linked files are unavailable.
 Gmail counts and freshness are separate from the file intake queue.
 
-The API returns only Gmail `state`, `automatic`, normalized `checked_at`, nullable
-`pending`, and a generic `error`. Optional `error_code` accepts `access_unavailable`,
-`rate_limited` and `import_failed`; other errors receive a generic explanation.
-Accounts, subjects, sender data, attachment names, credentials and raw errors are
-never projected. This file uses the same bounded, symlink-rejecting, owner-only
-read path as the rest of the monitor. No status file is written by the dashboard.
+The Gmail status object returns only `state`, `automatic`, normalized `checked_at`,
+nullable `pending`, and a safe `error` explanation. Allowlisted source errors
+distinguish expired authorization, account mismatch, unavailable catalogue,
+pending cloud proof and import failures. Unknown errors receive a generic
+explanation; raw errors are never projected.
+
+The owner-only operations list labels Gmail attachments as **Gmail**. Its dedicated
+journal is authoritative for cloud verification, so an older entry in the shared
+classifier journal cannot mislabel the same attachment as an iCloud operation.
+Originals and translations already combined through an explicitly reviewed import
+manifest appear as one result when they share a verified destination. The row
+retains their original filenames for traceability; the dashboard itself never
+merges files. Unverified deliveries and unrecognized documents remain visible as
+needing attention. Verified rows are historical evidence, not a new live check.
+
+Only bounded document names, relative destinations and validated Drive links are
+shown to the owner. Mail accounts, subjects, senders, message/attachment IDs,
+message text, machine paths and credentials remain private to the intake worker.
+Malformed Gmail history produces a warning while other sources remain available.
+These files use the same bounded, symlink-rejecting, owner-only read path as the
+rest of the monitor. The dashboard does not write status or journal files.
 
 ## Validation and release
 
