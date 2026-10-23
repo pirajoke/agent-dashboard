@@ -114,9 +114,11 @@ def fold_twins(projects: list[dict[str, Any]], summary: dict[str, Any] | None) -
 
 
 def compose(day_entry: dict[str, Any] | None, summary: dict[str, Any] | None, todo: list[dict[str, Any]],
-            today: date) -> list[str]:
+            today: date, stale: bool = False) -> list[str]:
     """The message, split into Telegram-sized parts. Only real numbers; an empty day says so."""
     head = [f"📅 <b>Резюме дня · {date_label(today)}</b>", ""]
+    if stale:
+        head += ["⚠️ Свежие данные сегодня собрать не удалось, резюме может быть неполным.", ""]
     blocks: list[tuple[str, bool]] = []  # (text, starts with a rule line)
     entry = day_entry or {}
     projects = fold_twins([dict(p) for p in entry.get("projects") or [] if not p.get("quiet")], summary)
@@ -152,11 +154,17 @@ def compose(day_entry: dict[str, Any] | None, summary: dict[str, Any] | None, to
     parts, current = [], "\n".join(head)
     for block, ruled in blocks:
         piece = f"\n\n{RULE}\n{block}" if ruled else f"\n\n{block}"
-        if len(current) + len(piece) > LIMIT:
-            parts.append(current)
-            current = block[:LIMIT]
-        else:
+        if len(current) + len(piece) <= LIMIT:
             current += piece
+            continue
+        parts.append(current)
+        current = ""
+        # A block too long for one message goes on line by line; lines never split, so HTML stays whole.
+        for line in block.split("\n"):
+            if current and len(current) + 1 + len(line) > LIMIT:
+                parts.append(current)
+                current = ""
+            current = f"{current}\n{line}" if current else line
     parts.append(current)
     return parts
 
@@ -203,7 +211,7 @@ def run(*, now: datetime | None = None, root: Path = DAILY_WORK_DIR, todo_file: 
     projection = work_projection(root, now=now, days=7, owner=True, edition=True, selected=day)
     day_entry = next((item for item in projection.get("feed") or [] if item.get("date") == day), None)
     summary = load_summaries(root, [day]).get(day)
-    parts = compose(day_entry, summary, load_todo(todo_file), today)
+    parts = compose(day_entry, summary, load_todo(todo_file), today, stale=bool(problems))
     write(out / f"{day}.md", "\n\n".join(parts) + "\n")
     result: dict[str, Any] = {"day": day, "at": now.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                               "parts": len(parts), "refresh_problems": problems}

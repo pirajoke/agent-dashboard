@@ -84,6 +84,11 @@ class ComposeTests(unittest.TestCase):
         parts = DIGEST.compose(entry, summary(details, day=""), [], TODAY)
         self.assertGreater(len(parts), 1)
         self.assertTrue(all(len(part) <= 4096 for part in parts))
+        # One huge block is carried on whole lines, nothing dropped.
+        huge = {"p-0": {"agents": ["y" * 200] * 30}}
+        parts = DIGEST.compose({"total_minutes": 5, "projects": [project("p-0", "P0", 5)]}, summary(huge, day=""), [], TODAY)
+        self.assertTrue(all(len(part) <= 4096 for part in parts))
+        self.assertEqual("".join(parts).count("y" * 200), 30)
 
 
 class RunTests(unittest.TestCase):
@@ -136,6 +141,7 @@ class RunTests(unittest.TestCase):
                             config_file=self.root / "telegram_digest.json", opener=self.opener, runner=broken)
         self.assertTrue(result["sent"])
         self.assertEqual(result["refresh_problems"], ["collector_TimeoutExpired", "summarizer_TimeoutExpired"])
+        self.assertIn("⚠️ Свежие данные сегодня собрать не удалось", self.sent[0]["text"])
 
     def test_a_refusal_never_leaks_the_token(self):
         (self.root / "telegram_digest.json").write_text(json.dumps({"bot_token": TOKEN, "chat_id": "161537"}))
