@@ -15,7 +15,10 @@ class DocumentsRoute3DTest(unittest.TestCase):
         self.assertNotIn("fetch(", self.scene)
         self.assertIn('<div class="docxx-stage" id="docxx-stage" hidden>', PAGE)
         self.assertIn("stage.hidden = false;", self.scene)
-        self.assertIn(".catch(() =>", self.scene)
+        # A failed start is explained next to the flat route, never silent.
+        self.assertIn("fail('браузер не даёт WebGL')", self.scene)
+        self.assertIn("stage.hidden = true;", self.scene)
+        self.assertIn("3D-вид не открылся", self.scene)
 
     def test_papers_move_only_during_a_busy_pass_and_respect_reduced_motion(self):
         self.assertIn("dataset.active === 'true'", self.scene)
