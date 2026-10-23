@@ -45,6 +45,7 @@ class ComposeTests(unittest.TestCase):
             [{"text": "Поставить ИБП"}, {"text": "Готово", "done": True}], TODAY))
         self.assertTrue(text.startswith("📅 <b>Резюме дня · 23 октября 2026, пятница</b>"))
         self.assertIn("⏱ Работа: <b>6,5 ч</b> (Claude Code 5 ч · Codex 1,5 ч)", text)
+        self.assertNotIn("параллельно", text)
         self.assertIn("✅ Слито PR: <b>3</b> · 📂 Проектов: <b>3</b>", text)
         self.assertIn("💬 Сайт научился сам присылать итоги", text)
         self.assertIn("🧭 <b>Command Center</b> · 4 ч · ✅ PR: 2\n<i>Агенты берут задачи сами</i>", text)
@@ -52,12 +53,23 @@ class ComposeTests(unittest.TestCase):
         self.assertIn("👉 Дальше: Добавить задачу\n⏰ 31 окт: Accountable OS MVP", text)
         # Not retold yet: the merged PR titles, escaped for Telegram HTML.
         self.assertIn("📚 <b>Lexi</b> · 1 ч · ✅ PR: 1\n• Fix &lt;b&gt; &amp; stuff (#9)", text)
-        # Main products before other folders; quick looks only named.
+        # Busiest first (time plus merged PRs); quick looks are noise and left out.
+        self.assertLess(text.index("Command Center"), text.index("Lexi"))
         self.assertLess(text.index("Lexi"), text.index("📁 <b>tmp</b>"))
-        self.assertIn("👀 Заглядывали: Health OS", text)
+        self.assertNotIn("Health OS", text)
         self.assertIn("📌 <b>Ждёт тебя (1)</b>\n• Поставить ИБП", text)
         self.assertNotIn("Готово", text)
         self.assertTrue(text.endswith(DIGEST.SITE))
+
+    def test_parallel_agents_and_chatgpt_twins(self):
+        entry = {"total_minutes": 340, "claude_minutes": 190, "codex_minutes": 280, "prs_merged": 0, "projects": [
+            project("p-chatgptdocxx", "ChatGPT · DOCXX", 250), project("p-docxx", "DOCXX", 21),
+            project("p-hq", "HQ", 30)]}
+        text = "\n".join(DIGEST.compose(entry, summary({"p-chatgptdocxx": {"agents": ["Собрали библиотеку"]}}), [], TODAY))
+        self.assertIn("(Claude Code 3,2 ч · Codex 4,7 ч, шли параллельно)", text)
+        self.assertIn("📁 <b>ChatGPT · DOCXX</b> · 4,5 ч", text)
+        self.assertNotIn("<b>DOCXX</b>", text)
+        self.assertIn("📂 Проектов: <b>2</b>", text)
 
     def test_an_empty_day_says_so(self):
         text = "\n".join(DIGEST.compose(None, None, [], TODAY))

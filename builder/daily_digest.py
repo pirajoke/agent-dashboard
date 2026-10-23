@@ -39,6 +39,7 @@ WEEKDAYS = ["понедельник", "вторник", "среда", "четв�
 EMOJI = {"command-center": "🧭", "financial": "💼", "mydictionary": "📚", "health": "🩺", "context-news": "📰",
          "ai-singularity": "🌀", "accountable": "🧾", "jarvis": "🤖"}
 MAX_PROJECTS = 8
+PR_WEIGHT = 20  # minutes a merged PR counts for when ordering projects
 MAX_PRS = 3
 MAX_TODO = 5
 LIMIT = 3900  # Telegram allows 4096 characters per message
@@ -94,36 +95,53 @@ def project_block(project: dict[str, Any], details: dict[str, Any] | None) -> st
     return "\n".join(lines)
 
 
+def fold_twins(projects: list[dict[str, Any]], summary: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """A folder seen both in ChatGPT and in Claude Code / Codex («ChatGPT · DOCXX» and «DOCXX») is one project:
+    a twin Claude did not retell and without PRs adds its time to the other one instead of its own block."""
+    def bare(name: object) -> str:
+        return str(name or "").removeprefix("ChatGPT · ").strip().lower()
+
+    kept = []
+    for project in projects:
+        told = bool(project.get("merged") or project.get("bullets") or _details(summary, project.get("id")))
+        twin = next((other for other in projects if other is not project and bare(other.get("name")) == bare(project.get("name"))
+                     and (other.get("merged") or other.get("bullets") or _details(summary, other.get("id")))), None)
+        if not told and twin is not None:
+            twin["minutes"] = (twin.get("minutes") or 0) + (project.get("minutes") or 0)
+        else:
+            kept.append(project)
+    return kept
+
+
 def compose(day_entry: dict[str, Any] | None, summary: dict[str, Any] | None, todo: list[dict[str, Any]],
             today: date) -> list[str]:
     """The message, split into Telegram-sized parts. Only real numbers; an empty day says so."""
     head = [f"📅 <b>Резюме дня · {date_label(today)}</b>", ""]
     blocks: list[tuple[str, bool]] = []  # (text, starts with a rule line)
     entry = day_entry or {}
-    projects = [p for p in entry.get("projects") or [] if not p.get("quiet")]
+    projects = fold_twins([dict(p) for p in entry.get("projects") or [] if not p.get("quiet")], summary)
     if not projects:
         head.append("Сегодня работы агентов в данных нет.")
     else:
         total = int(entry.get("total_minutes") or 0)
-        split = " · ".join(part for part in (
-            f"Claude Code {hours(entry['claude_minutes'])}" if entry.get("claude_minutes") else "",
-            f"Codex {hours(entry['codex_minutes'])}" if entry.get("codex_minutes") else "") if part)
+        claude, codex = int(entry.get("claude_minutes") or 0), int(entry.get("codex_minutes") or 0)
+        split = " · ".join(part for part in (f"Claude Code {hours(claude)}" if claude else "",
+                                             f"Codex {hours(codex)}" if codex else "") if part)
         if total:
-            head.append(f"⏱ Работа: <b>{hours(total)}</b>" + (f" ({split})" if split else ""))
+            # Total is wall-clock time; Claude Code and Codex often run at the same time, so their sum is larger.
+            head.append(f"⏱ Работа: <b>{hours(total)}</b>" + (f" ({split}" + (", шли параллельно)" if claude + codex > total else ")")
+                                                            if split else ""))
         merged = int(entry.get("prs_merged") or 0)
         head.append(f"✅ Слито PR: <b>{merged}</b> · 📂 Проектов: <b>{len(projects)}</b>")
         if isinstance((summary or {}).get("day"), str) and summary["day"].strip():
             head += ["", f"💬 {esc(summary['day'])}"]
-        # Main products first, then other folders; busiest first inside each group.
-        projects.sort(key=lambda p: (p.get("id", "").startswith("p-"), -(p.get("minutes") or 0), -len(p.get("merged") or [])))
+        # Biggest day first: time plus merged PRs (cloud sessions leave PRs without local hours).
+        projects.sort(key=lambda p: -((p.get("minutes") or 0) + PR_WEIGHT * len(p.get("merged") or [])))
         for project in projects[:MAX_PROJECTS]:
             blocks.append((project_block(project, _details(summary, project.get("id"))), True))
         rest = projects[MAX_PROJECTS:]
         if rest:
             blocks.append(("📁 Ещё: " + ", ".join(esc(p.get("name")) for p in rest), False))
-    quiet = [p for p in entry.get("projects") or [] if p.get("quiet")]
-    if quiet and projects:
-        blocks.append(("👀 Заглядывали: " + ", ".join(esc(p.get("name")) for p in quiet), False))
     waiting = [item for item in todo if not item.get("done")]
     if waiting:
         lines = [f"📌 <b>Ждёт тебя ({len(waiting)})</b>"] + [f"• {esc(item['text'])}" for item in waiting[:MAX_TODO]]
