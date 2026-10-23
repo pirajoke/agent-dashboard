@@ -210,6 +210,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 ("growth", "Точки роста"),
                 ("agents", "Агенты"),
                 ("platforms", "Платформы"),
+                ("documents", "Документы"),
                 ("context", "Контекст"),
                 ("machines", "Техника"),
             ],
@@ -234,7 +235,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "platforms", "context", "work", "growth"],
+            ["mac-mini", "air", "pro", "machines", "agents", "platforms", "documents", "context", "work", "growth"],
         )
         self.assertIn(
             'aria-controls="agents-campus" aria-pressed="true"',

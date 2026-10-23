@@ -3933,6 +3933,85 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-links a { min-height:44px; margin:0; padding:10px 0; overflow-wrap:anywhere; }
 .context-links[hidden] { display:none; }
 @media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
+/* DOCXX: a readable route, with motion tied only to the processor lock. */
+#section-documents { max-width:1480px; }
+.docxx-head { align-items:center; gap:20px; }
+.docxx-button { font:inherit; font-size:13px; padding:10px 14px; color:var(--mm-ink); background:var(--mm-surface); border:1px solid var(--mm-control-line); border-radius:8px; cursor:pointer; }
+.docxx-button:hover { background:var(--mm-selection); }
+.docxx-button:disabled { opacity:.6; cursor:wait; }
+#section-documents :is(button,a,input):focus-visible { outline:3px solid var(--mm-accent); outline-offset:4px; }
+.docxx-statusbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px 12px; padding:18px 0; border-block:1px solid var(--mm-line); font-size:14px; }
+.docxx-statusbar #docxx-freshness { color:var(--mm-muted); font-size:13px; }
+.docxx-statusbar button { margin-left:auto; }
+.docxx-indicator { width:9px; height:9px; border-radius:50%; background:var(--mm-muted); }
+.docxx-indicator[data-state="ready"] { background:var(--mm-success); }
+.docxx-indicator[data-state="processing"] { background:var(--mm-accent); }
+.docxx-indicator[data-state="attention"],.docxx-indicator[data-state="stale"] { background:var(--mm-warning); }
+.docxx-flow { display:grid; grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr) 48px minmax(0,1fr); align-items:start; gap:12px; padding:32px 0 24px; }
+.docxx-column h3 { margin:0 0 20px; font-size:16px; font-weight:650; }
+.docxx-node { width:100%; display:flex; align-items:center; gap:12px; padding:18px 14px; background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:12px; color:var(--mm-ink); font:inherit; text-align:left; cursor:pointer; margin-bottom:12px; min-height:88px; }
+.docxx-node>span:nth-child(2) { flex:1; min-width:0; }
+.docxx-node strong { font-size:14px; display:block; margin-bottom:5px; }
+.docxx-node small { color:var(--mm-muted); display:block; font-size:12px; line-height:1.5; }
+.docxx-node:hover,.docxx-node[aria-pressed="true"] { border-color:var(--mm-accent); background:var(--mm-selection); }
+.docxx-symbol { font-size:25px; line-height:1; min-width:27px; color:var(--mm-accent); }
+.docxx-caption { color:var(--mm-muted); font-size:12px; line-height:1.6; margin:16px 0 0; max-width:40ch; }
+.docxx-connector { display:flex; align-items:center; gap:4px; margin-top:112px; color:var(--mm-muted); }
+.docxx-connector span { flex:1; height:2px; background:var(--mm-line); position:relative; overflow:hidden; }
+.docxx-connector b { font-size:21px; font-weight:400; }
+.docxx-flow[data-active="true"] .docxx-connector { color:var(--mm-accent); }
+.docxx-flow[data-active="true"] .docxx-connector span::after { content:''; position:absolute; background:var(--mm-accent); height:2px; width:16px; animation:docxx-travel 1.4s linear infinite; }
+.docxx-machine { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; color:var(--mm-ink); background:var(--mm-selection); border:1px solid var(--mm-accent); border-radius:12px; padding:15px; font:inherit; cursor:pointer; min-height:185px; }
+.docxx-machine svg { width:135px; height:85px; margin-bottom:8px; color:var(--mm-accent); }
+.docxx-machine strong { font-size:17px; }
+.docxx-machine span { font-size:12px; margin-top:5px; }
+.docxx-flow[data-active="true"] .docxx-machine-led { animation:docxx-pulse 1s ease-in-out infinite; }
+.docxx-steps { margin:16px 0 0; padding-left:22px; color:var(--mm-muted); font-size:12px; line-height:1.9; }
+.docxx-explainer { display:flex; align-items:flex-start; gap:14px; background:var(--mm-surface-hover); padding:18px 20px; border-radius:10px; }
+.docxx-detail-mark { color:var(--mm-accent); font-size:24px; }
+.docxx-explainer h3 { font-size:14px; margin:0 0 5px; }
+.docxx-explainer p { font-size:13px; line-height:1.65; margin:0; max-width:78ch; }
+.docxx-explainer a { flex-shrink:0; margin-left:auto; font-size:13px; color:var(--mm-accent); padding:4px; }
+.docxx-facts { display:flex; flex-wrap:wrap; gap:16px 28px; padding:20px 0; font-size:12px; color:var(--mm-muted); border-bottom:1px solid var(--mm-line); }
+.docxx-facts b { color:var(--mm-ink); margin-left:7px; font-variant-numeric:tabular-nums; }
+.docxx-results-head { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-top:30px; }
+.docxx-results-head h3 { font-size:18px; margin:0 0 8px; }
+.docxx-results-head p,.docxx-footnote { font-size:12px; color:var(--mm-muted); line-height:1.6; }
+.docxx-search { font-size:12px; color:var(--mm-muted); display:flex; flex-direction:column; gap:5px; min-width:240px; }
+.docxx-search input { font:inherit; font-size:14px; width:100%; background:var(--mm-surface); color:var(--mm-ink); border:1px solid var(--mm-control-line); border-radius:8px; padding:10px 12px; box-sizing:border-box; }
+.docxx-search input::placeholder { color:var(--mm-muted); }
+.docxx-filters { display:flex; flex-wrap:wrap; gap:6px; margin:15px 0; }
+.docxx-filters button { padding:8px 12px; border:0; border-radius:7px; font:inherit; font-size:12px; cursor:pointer; background:transparent; color:var(--mm-muted); }
+.docxx-filters button[aria-pressed="true"] { background:var(--mm-selection); color:var(--mm-ink); font-weight:600; }
+.docxx-record { border-top:1px solid var(--mm-line); padding:0; }
+.docxx-record summary { display:flex; align-items:center; gap:14px; list-style:none; cursor:pointer; padding:17px 0; }
+.docxx-record summary::-webkit-details-marker { display:none; }
+.docxx-record summary::after { content:'+'; color:var(--mm-muted); font-size:20px; }
+.docxx-record[open] summary::after { content:'−'; }
+.docxx-record-name { flex:1; min-width:0; }
+.docxx-record-name strong { font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.docxx-record-name small { display:block; font-size:12px; color:var(--mm-muted); margin-top:5px; }
+.docxx-record-state { font-size:11px; color:var(--mm-ink); padding:6px 9px; background:var(--mm-surface-hover); border-radius:6px; max-width:210px; text-align:right; }
+.docxx-record-state[data-tone="attention"] { background:var(--mm-warning-soft); color:var(--mm-warning); }
+.docxx-record-body { padding:0 0 18px 34px; font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
+.docxx-record-body dl { display:grid; grid-template-columns:95px minmax(0,1fr); gap:7px 14px; margin:0 0 12px; }
+.docxx-record-body dt { color:var(--mm-muted); }
+.docxx-record-body dd { margin:0; }
+.docxx-record-body a,.docxx-links a { color:var(--mm-accent); margin-right:18px; }
+.docxx-empty { padding:25px 0; color:var(--mm-muted); font-size:14px; line-height:1.7; }
+.docxx-help { padding:24px 0; border-bottom:1px solid var(--mm-line); font-size:14px; line-height:1.7; }
+.docxx-help h3 { font-size:18px; margin:0 0 12px; }
+.docxx-help ol { padding-left:22px; max-width:78ch; }
+.docxx-help li { padding:4px 0; }
+.docxx-help p { max-width:78ch; }
+.docxx-warnings { padding:14px 18px; margin-top:16px; border-radius:8px; color:var(--mm-warning); background:var(--mm-warning-soft); font-size:13px; line-height:1.6; }
+.docxx-footnote { margin-top:25px; max-width:90ch; }
+@keyframes docxx-travel { from { transform:translateX(-16px); } to { transform:translateX(48px); } }
+@keyframes docxx-pulse { 50% { opacity:.25; } }
+@media(max-width:1000px) { .docxx-flow { gap:8px; grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); } .docxx-node { padding:12px 10px; gap:8px; } .docxx-symbol { min-width:18px; font-size:20px; } }
+@media(max-width:700px) { .docxx-head { align-items:flex-start; } .docxx-flow { grid-template-columns:1fr; gap:16px; padding-top:24px; } .docxx-column h3 { margin-bottom:12px; } .docxx-connector { margin:0; justify-content:center; height:16px; } .docxx-connector span { flex:none; width:32px; } .docxx-connector b { transform:rotate(90deg); } .docxx-processor { display:grid; grid-template-columns:1fr 1fr; gap:12px; } .docxx-processor h3,.docxx-processor .docxx-caption { grid-column:1/-1; margin:0; } .docxx-machine { min-height:165px; } .docxx-steps { align-self:center; margin:0; } .docxx-explainer { flex-wrap:wrap; } .docxx-explainer>div { flex:1; min-width:0; } .docxx-explainer a { margin-left:34px; } .docxx-results-head { flex-direction:column; align-items:stretch; gap:12px; } .docxx-record summary { flex-wrap:wrap; gap:10px; } .docxx-record-name { flex-basis:75%; } .docxx-record-state { margin-left:30px; text-align:left; max-width:none; } .docxx-record-body { padding-left:0; } .docxx-record-body dl { grid-template-columns:1fr; gap:2px; } .docxx-record-body dd { margin-bottom:10px; } }
+@media(prefers-reduced-motion:reduce) { #section-documents *,#section-documents *::after { animation:none!important; transition:none!important; } }
+
 </style>
 </head>
 <body>
@@ -4251,6 +4330,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true">▤</span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
     <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true">🎙️</span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
@@ -4292,6 +4372,58 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   </div>
 
   <main class="cc-main">
+  <section id="section-documents" class="section" aria-labelledby="docxx-title">
+    <header class="cc-page-head docxx-head">
+      <div><h2 class="cc-page-title" id="docxx-title">Документы без суеты</h2><p class="cc-page-lede">Разные источники. Одна понятная библиотека.</p></div>
+      <button type="button" class="docxx-button" id="docxx-help-toggle" aria-expanded="false" aria-controls="docxx-help">Как добавить документ ↗</button>
+    </header>
+    <div class="docxx-statusbar" role="status" aria-live="polite">
+      <span class="docxx-indicator" id="docxx-indicator" data-state="unavailable"></span>
+      <strong id="docxx-state">Подключаемся к Mini…</strong><span id="docxx-freshness">Проверяем доступ владельца</span>
+      <button type="button" id="docxx-refresh" class="docxx-button">Обновить</button>
+    </div>
+    <div id="docxx-warnings" class="docxx-warnings" hidden></div>
+    <div class="docxx-flow" id="docxx-flow" data-active="false" aria-label="Путь документа: поступление, обработка на Mac mini, результат">
+      <div class="docxx-column">
+        <h3>Ты добавляешь</h3>
+        <button type="button" class="docxx-node" data-docxx-step="icloud" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">☁</span><span><strong>С iPhone</strong><small>iCloud Drive → DOCXX Inbox</small></span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="drive" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">▱</span><span><strong>С компьютера</strong><small>Файл или папка → DOCXXx</small></span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="gmail" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✉</span><span><strong>Из Gmail</strong><small id="docxx-gmail-state">Импорт через чат · фоновая проверка не подтверждена</small></span><span aria-hidden="true">↗</span></button>
+        <p class="docxx-caption" id="docxx-gmail-freshness">Для импорта укажи письмо или отправителя в чате.</p>
+        <p class="docxx-caption">ChatGPT и «Мой диск» тоже поддерживаются как дополнительные входы.</p>
+      </div>
+      <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
+      <div class="docxx-column docxx-processor">
+        <h3>Mini разбирает</h3>
+        <button type="button" class="docxx-machine" data-docxx-step="processor" aria-pressed="true">
+          <svg viewBox="0 0 160 100" aria-hidden="true"><path d="M25 65L62 43L137 60L100 84Z" fill="var(--mm-selection)" stroke="currentColor" stroke-width="2"/><path d="M25 65V78L100 95L137 72V60M100 84V95" fill="none" stroke="currentColor" stroke-width="2"/><path d="M64 28V5H96L111 20V45H64V28Z" fill="var(--mm-surface)" stroke="currentColor" stroke-width="2"/><path d="M96 5V20H111M75 27H99M75 35H91" fill="none" stroke="currentColor" stroke-width="2"/><circle class="docxx-machine-led" cx="113" cy="79" r="2" fill="currentColor"/></svg>
+          <strong>Mac mini</strong><span id="docxx-machine-label">Статус ещё не получен</span>
+        </button>
+        <ol class="docxx-steps"><li>Читает содержимое</li><li>Сверяет с каталогом</li><li>Уточняет имя и папку</li><li>Проверяет результат в облаке</li></ol>
+        <p class="docxx-caption">Проверка каждые 5 минут.<br>Синхронизация может занять дольше.</p>
+      </div>
+      <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
+      <div class="docxx-column">
+        <h3>Ты находишь</h3>
+        <button type="button" class="docxx-node" data-docxx-step="library" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✓</span><span><strong>На своём месте</strong><small>Название по содержимому</small></span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="review" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">?</span><span><strong>На разборе</strong><small>Если назначение неясно</small></span><span aria-hidden="true">↗</span></button>
+        <p class="docxx-caption">Точное совпадение сверяется с оригиналом. Неясный файл остаётся доступным.</p>
+      </div>
+    </div>
+    <div class="docxx-explainer" id="docxx-explainer"><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
+    <div class="docxx-facts" aria-label="Последний снимок обработки файлов из iCloud и Google Drive"><span>Очередь файлов <b id="docxx-pending">—</b></span><span>Нужен разбор <b id="docxx-review">—</b></span><span>В каталоге <b id="docxx-catalog-count">—</b></span><span>Вызовы модели за проход <b id="docxx-model">—</b></span></div>
+    <div id="docxx-help" class="docxx-help" hidden>
+      <h3>Сохрани документ. Остальное начнёт Mini.</h3>
+      <ol><li><strong>На iPhone:</strong> «Поделиться» → «Сохранить в Файлы» → iCloud Drive → DOCXX Inbox. Подходит для отдельных файлов.</li><li><strong>На компьютере:</strong> добавь новый файл или комплект прямо в корень DOCXXx в Google Drive. Постоянные разделы остаются на месте.</li><li><strong>Из Gmail:</strong> попроси в чате разобрать письмо или вложения. Содержимое проверяется перед выбором имени и папки. Фоновая проверка почты показана отдельно в узле Gmail; подключение чата само по себе её не включает.</li><li><strong>Дождись синхронизации.</strong> Новый файл должен полностью загрузиться и перестать меняться. Папки проверяются как единый комплект.</li><li><strong>Проверь результат ниже.</strong> Если нет уверенного назначения, открой «Разобрать позже».</li></ol>
+      <p>MacBook можно закрыть. Mini должен быть включён, пользователь — в системе, iCloud и Google Drive — доступны. Эта панель читает статус и ничего не переносит.</p>
+      <div class="docxx-links" id="docxx-guide-links"></div>
+    </div>
+    <div class="docxx-results-head"><div><h3>Что произошло с документами</h3><p id="docxx-results-note">Последний проход и ограниченная история обработчика.</p></div><label class="docxx-search">Поиск по показанным операциям<input id="docxx-search" type="search" placeholder="Название или папка" autocomplete="off" maxlength="200"></label></div>
+    <div class="docxx-filters" role="group" aria-label="Показать операции"><button type="button" data-docxx-filter="all" aria-pressed="true">Все</button><button type="button" data-docxx-filter="attention" aria-pressed="false">Нужно внимание</button><button type="button" data-docxx-filter="complete" aria-pressed="false">Обработанные</button></div>
+    <div id="docxx-records" class="docxx-records"><p class="docxx-empty">Проверяем доступ к журналу обработки…</p></div>
+    <p class="docxx-footnote">Журнал обработки — не список всех файлов на Диске. Содержимое документов здесь не публикуется. Анимация включается только при занятом обработчике; подробные шаги показаны как инструкция.</p>
+  </section>
+
   <section id="section-context" class="section" aria-labelledby="context-title">
     <header class="cc-page-head"><div><h2 class="cc-page-title" id="context-title">Встречи и контекст</h2>
     <p class="cc-page-lede">Транскрипты и последние обновления проектов. Основная версия хранится в Obsidian.</p></div></header>
@@ -5651,13 +5783,13 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'context', 'machines']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'documents', 'context', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
 })));
 let activeTabNames = { ...TAB_NAME_DEFAULTS };
-const TAB_PAGE_TITLE_IDS = Object.freeze({ work: 'mm-title', growth: 'growth-title', agents: 'agents-title', platforms: 'platforms-title', context: 'context-title', machines: 'machines-title' });
+const TAB_PAGE_TITLE_IDS = Object.freeze({ work: 'mm-title', growth: 'growth-title', agents: 'agents-title', platforms: 'platforms-title', context: 'context-title', documents: 'docxx-title', machines: 'machines-title' });
 
 function sanitizeTabName(value) {
   const normalized = String(value ?? '').normalize('NFC')
@@ -6445,6 +6577,8 @@ function showSection(name) {
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
   if (name === 'platforms') setTimeout(ccLoadPlatformResources, 0);
+  if (name === 'documents') setTimeout(ccLoadDocxx, 0);
+  else window.dispatchEvent(new Event('docxx-lock'));
   if (name === 'context') setTimeout(ccLoadContext, 0);
   else window.dispatchEvent(new Event('context-lock'));
 }
@@ -6453,7 +6587,7 @@ function showSection(name) {
 // what it said), so its old links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
 } else {
   showSection('work');
@@ -11092,6 +11226,156 @@ document.getElementById('np-device-show').addEventListener('click', npShowQr);
 document.getElementById('np-device-hide').addEventListener('click', npHideQr);
 document.addEventListener('visibilitychange', () => { if (document.hidden) npHideQr(); });
 // ── End «Открыть на телефоне» ──
+// DOCXX live view: no document text, no browser persistence, no actions on files.
+let ccDocxxData = null;
+let ccDocxxController = null;
+let ccDocxxTimer = null;
+let ccDocxxGeneration = 0;
+let ccDocxxFilter = 'all';
+let ccDocxxStep = 'processor';
+let ccDocxxRecordsSignature = null;
+const ccDocxxAttention = new Set(['needs_review','error','duplicate_found','retained','awaiting_verification']);
+const ccDocxxSteps = {
+  icloud:['С iPhone — в одну папку','В «Файлах» выбери iCloud Drive → DOCXX Inbox. Отдельный файл поступит на Mini после синхронизации. «На моём iPhone» и другие папки iCloud не входят в этот маршрут.',null],
+  drive:['Файлы и комплекты — прямо в DOCXXx','Добавь новый файл или папку в корень библиотеки. Комплект с одним понятным назначением переносится целиком. Смешанный комплект сохраняет структуру и требует разбора.','library'],
+  gmail:['Gmail — вложения в общую библиотеку','Через подключённый чат можно найти письмо, прочитать вложения и сохранить нужные документы в DOCXXx. Отправитель, тема и порядок вложений помогают определить комплект, но сами по себе не доказывают, что страницы относятся к одному документу.',null],
+  processor:['Mac mini — точка обработки','Локальное чтение и правила определяют известные типы документов. Перед завершением проверяется облачный результат. Движение на схеме означает занятый обработчик; точный внутренний шаг он пока не сообщает.',null],
+  library:['Одна основная библиотека','Документ получает понятное название и тематическую папку. Уже существующие разделы не сортируются заново. Последние результаты видны ниже; полный каталог доступен на Google Drive.','library'],
+  review:['Неясное — на разбор','Система не угадывает назначение. Входящий файл сохраняется или попадает в «Разобрать позже». Совпадение с другим документом само по себе не разрешает удалить его историю и доступы.','review']
+};
+function ccDocxxVisible() { return !document.hidden && !!document.querySelector('#section-documents.active'); }
+function ccDocxxText(id, value) { document.getElementById(id).textContent = value; }
+function ccDocxxEl(tag, text, cls) { const el=document.createElement(tag); if(text!==undefined) el.textContent=text; if(cls) el.className=cls; return el; }
+function ccDocxxSafeLink(url) {
+  try { const u=new URL(url); return u.protocol==='https:' && ['drive.google.com','docs.google.com'].includes(u.hostname) && !u.username && !u.password && !u.port && !u.search && !u.hash && /^\/(drive\/folders|file\/d|document\/d|spreadsheets\/d)\/[A-Za-z0-9_-]{10,160}(\/(view|edit))?$/.test(u.pathname) ? u.href : null; } catch { return null; }
+}
+function ccDocxxLink(label, url) {
+  const safe=ccDocxxSafeLink(url); if(!safe) return null;
+  const a=ccDocxxEl('a',label); a.href=safe; a.target='_blank'; a.rel='noopener noreferrer'; return a;
+}
+function ccDocxxDate(value) { const d=new Date(value || ''); return Number.isNaN(d.valueOf()) ? 'время не указано' : d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'})+' · Париж'; }
+function ccDocxxExplain(step=ccDocxxStep) {
+  ccDocxxStep=step; const info=ccDocxxSteps[step];
+  ccDocxxText('docxx-step-title',info[0]); ccDocxxText('docxx-step-description',info[1]+(step==='gmail'?' '+ccDocxxGmailDescription():''));
+  document.querySelectorAll('[data-docxx-step]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.docxxStep===step)));
+  const link=document.getElementById('docxx-step-link'); const url=ccDocxxSafeLink(ccDocxxData?.links?.[info[2]]);
+  link.hidden=!url; link.removeAttribute('href'); if(url) link.href=url;
+}
+function ccDocxxGmailDescription() {
+  const gmail=ccDocxxData?.gmail;
+  if(gmail?.automatic===true && ['ready','processing'].includes(gmail.state)) return 'Фоновый почтовый вход подтверждён свежим статусом Mini. Результат импорта проверяется отдельно от обнаружения вложения.';
+  if(gmail?.state==='error') return 'Последняя фоновая проверка почты завершилась ошибкой. Импорт новых вложений пока не подтверждён.';
+  if(gmail?.state==='stale') return 'Статус почтового входа устарел. Текущая фоновая работа не подтверждена.';
+  if(gmail?.state==='paused') return 'Фоновая проверка почты приостановлена. Разбор письма через чат остаётся отдельным действием.';
+  return 'Сейчас доступен разбор по запросу в чате. Автоматическое наблюдение за новыми письмами не подтверждено.';
+}
+function ccDocxxRenderGmail() {
+  const gmail=ccDocxxData?.gmail;
+  const labels={manual:'Импорт через чат · фон не подтверждён',paused:'Фоновая проверка приостановлена',error:'Ошибка фоновой проверки',stale:'Статус почтового входа устарел',unavailable:'Статус почтового входа недоступен'};
+  const automatic=gmail?.automatic===true && ['ready','processing'].includes(gmail.state);
+  ccDocxxText('docxx-gmail-state',automatic?(gmail.state==='processing'?'Mini проверяет почтовый вход':'Фоновый почтовый вход работает'):(labels[gmail?.state]||'Импорт через чат · фон не подтверждён'));
+  const details=[];
+  if(gmail?.checked_at) details.push('Проверка почты: '+ccDocxxDate(gmail.checked_at));
+  if(Number.isInteger(gmail?.pending)) details.push('В почтовой очереди: '+gmail.pending.toLocaleString('ru-RU'));
+  if(gmail?.error) details.push(gmail.error);
+  ccDocxxText('docxx-gmail-freshness',details.length?details.join('. '):'Для импорта укажи письмо или отправителя в чате.');
+}
+function ccDocxxReset(message, state='unavailable') {
+  ccDocxxData=null; ccDocxxRecordsSignature=null;
+  ccDocxxText('docxx-state',message); ccDocxxText('docxx-freshness','Нет подтверждённого текущего снимка');
+  ccDocxxText('docxx-machine-label','Состояние неизвестно');
+  document.getElementById('docxx-indicator').dataset.state=state;
+  document.getElementById('docxx-flow').dataset.active='false';
+  for(const id of ['pending','review','catalog-count','model']) ccDocxxText('docxx-'+id,'—');
+  const warnings=document.getElementById('docxx-warnings'); warnings.replaceChildren(); warnings.hidden=true;
+  document.getElementById('docxx-guide-links').replaceChildren();
+  document.getElementById('docxx-records').replaceChildren(ccDocxxEl('p',message,'docxx-empty'));
+  ccDocxxRenderGmail(); ccDocxxExplain();
+}
+function ccDocxxClear() {
+  ccDocxxGeneration++; ccDocxxController?.abort(); ccDocxxController=null;
+  clearTimeout(ccDocxxTimer); ccDocxxTimer=null;
+  ccDocxxReset('Статус доступен после проверки доступа владельца.','owner_required');
+}
+function ccDocxxRenderRecords() {
+  const list=document.getElementById('docxx-records');
+  const q=document.getElementById('docxx-search').value.trim().toLocaleLowerCase('ru');
+  const signature=JSON.stringify([ccDocxxData?.records || [],ccDocxxFilter,q]);
+  if(signature===ccDocxxRecordsSignature) return;
+  ccDocxxRecordsSignature=signature;
+  const opened=new Set([...list.querySelectorAll('details[open]')].map(d=>d.dataset.key));
+  list.replaceChildren();
+  const rows=(ccDocxxData?.records || []).filter(r=>(ccDocxxFilter==='all'||(ccDocxxFilter==='attention'?ccDocxxAttention.has(r.status):['verified','copied','already_present'].includes(r.status))) && `${r.name} ${r.original_name} ${r.destination}`.toLocaleLowerCase('ru').includes(q));
+  if(!rows.length) { list.append(ccDocxxEl('p',q||ccDocxxFilter!=='all'?'По выбранному фильтру операций нет.':'В журнале пока нет операций. Добавь документ через один из входов выше.','docxx-empty')); return; }
+  for(const row of rows) {
+    const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
+    const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',row.kind==='folder'?'▱':'▤'); icon.setAttribute('aria-hidden','true');
+    const name=ccDocxxEl('span',undefined,'docxx-record-name'); name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',`${row.source==='icloud'?'iCloud':row.source==='review'?'На разборе':'Google Drive'} · ${row.historical?'История · ':''}${ccDocxxDate(row.at)}`));
+    const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
+    summary.append(icon,name,badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
+    const dl=ccDocxxEl('dl');
+    for(const [label,value] of [['Было',row.original_name],['Теперь',row.destination],['Пояснение',row.reason]]) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
+    body.append(dl);
+    for(const [label,url] of [['Открыть документ ↗',row.url],['Открыть оригинал ↗',row.canonical_url]]) { const a=ccDocxxLink(label,url); if(a) body.append(a); }
+    if(row.historical) body.append(ccDocxxEl('p','Это запись о прошлой операции. Текущее местоположение документа могло измениться.'));
+    details.append(summary,body); list.append(details);
+  }
+}
+function ccDocxxRender(data) {
+  if(['owner_required','unavailable'].includes(data.state)) { ccDocxxReset(data.state==='owner_required'?'Нужен вход владельца': 'Не удалось прочитать статус Mac mini.',data.state); return; }
+  ccDocxxData=data;
+  const labels={ready:'Очередь файлов проверена',processing:'Mini проверяет документы',attention:'Есть вопросы для разбора',waiting:'Ожидаем синхронизацию',stale:'Данные устарели — нужна проверка Mini'};
+  ccDocxxText('docxx-state',labels[data.state]||'Состояние неизвестно');
+  ccDocxxText('docxx-freshness','Последний завершённый проход: '+ccDocxxDate(data.checked_at));
+  document.getElementById('docxx-indicator').dataset.state=data.state;
+  document.getElementById('docxx-flow').dataset.active=String(data.state==='processing' && data.busy===true);
+  ccDocxxText('docxx-machine-label',data.state==='processing'?'Сейчас выполняется проход':data.state==='stale'?'Последний результат устарел':data.busy===null?'Активность не подтверждена':'Ожидает следующего прохода');
+  for(const [id,value] of [['pending',data.pending],['review',data.review_count],['catalog-count',data.catalog_count],['model',data.model_calls]]) ccDocxxText('docxx-'+id,Number.isInteger(value)?value.toLocaleString('ru-RU'):'—');
+  const warnings=document.getElementById('docxx-warnings'); warnings.replaceChildren();
+  const messages=[...(data.warnings||[])]; if(data.state==='stale') messages.unshift('Это последний известный снимок, а не подтверждение текущей работы. Проверь питание, вход в систему и синхронизацию на Mini.');
+  for(const text of messages) warnings.append(ccDocxxEl('p',text)); warnings.hidden=!messages.length;
+  const links=document.getElementById('docxx-guide-links'); links.replaceChildren();
+  for(const [label,key] of [['Инструкция в Google Drive ↗','guide'],['Библиотека DOCXXx ↗','library'],['Разобрать позже ↗','review'],['Полный каталог ↗','catalog'],['Текстовый статус ↗','status']]) { const a=ccDocxxLink(label,data.links?.[key]); if(a) links.append(a); }
+  ccDocxxText('docxx-results-note',`Показано до 100 операций. В доступном журнале: ${Number.isInteger(data.records_total)?data.records_total:'—'}. Обновление панели каждые 5 секунд, пока она открыта.`);
+  ccDocxxRenderGmail(); ccDocxxExplain(); ccDocxxRenderRecords();
+}
+async function ccLoadDocxx() {
+  if(!ccDocxxVisible()) return;
+  const generation=++ccDocxxGeneration;
+  ccDocxxController?.abort(); clearTimeout(ccDocxxTimer);
+  const controller=new AbortController(); ccDocxxController=controller;
+  const timeout=setTimeout(()=>controller.abort(),8000); const button=document.getElementById('docxx-refresh'); button.disabled=true;
+  try {
+    const response=await fetch(`${DASHBOARD_API}/api/docxx`,{headers:jarvisRunHeaders(),cache:'no-store',signal:controller.signal});
+    if(generation!==ccDocxxGeneration || !ccDocxxVisible()) return;
+    if(response.status===401 || response.status===403) { ccDocxxReset('Нужен вход владельца','owner_required'); return; }
+    if(!response.ok) throw new Error('unavailable');
+    const data=await response.json();
+    if(generation!==ccDocxxGeneration || !ccDocxxVisible()) return;
+    if(!data || typeof data!=='object' || !data.state || (data.records && !Array.isArray(data.records))) throw new Error('invalid_data');
+    ccDocxxRender(data);
+  } catch(error) {
+    if(generation===ccDocxxGeneration && ccDocxxVisible()) ccDocxxReset('Нет связи с источником статуса.');
+  } finally {
+    clearTimeout(timeout);
+    if(generation===ccDocxxGeneration) { button.disabled=false; ccDocxxController=null; if(ccDocxxVisible()) ccDocxxTimer=setTimeout(ccLoadDocxx,5000); }
+  }
+}
+for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEventListener('click',()=>ccDocxxExplain(button.dataset.docxxStep));
+for(const button of document.querySelectorAll('[data-docxx-filter]')) button.addEventListener('click',()=>{
+  ccDocxxFilter=button.dataset.docxxFilter;
+  document.querySelectorAll('[data-docxx-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+  ccDocxxRenderRecords();
+});
+document.getElementById('docxx-refresh').addEventListener('click',ccLoadDocxx);
+document.getElementById('docxx-search').addEventListener('input',ccDocxxRenderRecords);
+document.getElementById('docxx-help-toggle').addEventListener('click',()=>{
+  const help=document.getElementById('docxx-help'); help.hidden=!help.hidden;
+  document.getElementById('docxx-help-toggle').setAttribute('aria-expanded',String(!help.hidden));
+});
+window.addEventListener('docxx-lock',ccDocxxClear);
+document.addEventListener('visibilitychange',()=>{ if(ccDocxxVisible()) ccLoadDocxx(); else ccDocxxClear(); });
+
 </script>
 <script>
 /* QR codes for «Открыть на телефоне»: qrcode-generator 2.0.4, Copyright (c) 2009 Kazuhiko Arase,

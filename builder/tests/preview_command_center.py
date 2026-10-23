@@ -17,6 +17,7 @@ import tempfile
 from urllib.parse import parse_qs, urlsplit
 
 from test_owner_decisions import SERVER, event, snapshot
+from docxx_fixture import fixture as docxx_fixture
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_TOKEN = "isolated-preview-owner"
@@ -188,6 +189,9 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path == "/api/platform-resources":
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
+            return
+        if parsed.path == "/api/docxx":
+            self._json_response(200, docxx_fixture(MODE))
             return
         if parsed.path == "/api/context-library":
             # Synthetic content only. Never read the operator's vault for previews.
