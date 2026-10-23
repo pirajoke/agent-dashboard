@@ -3561,6 +3561,46 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-summary-chart { display: flex; align-items: flex-end; gap: 3px; height: 48px; margin-top: 10px; }
 .mm-summary-chart i { flex: 1; min-width: 2px; background: var(--mm-codex); border-radius: 3px 3px 0 0; opacity: .75; }
 .mm-summary-more { margin-top: 8px; padding: 4px 0; color: var(--mm-accent); font-size: 13px; font-weight: 650; }
+/* Mark 2026-10-23: one line per block until it is opened; projects on top, history below. */
+.mm-folds { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 26px 0 0; }
+.mm-folds > * { min-width: 0; }
+.mm-folds > [hidden] { display: none; }
+.mm-folds .mm-fold, .mm-folds .mm-summary, .mm-folds .mm-todo-card, .mm-folds .mm-owner-group { margin: 0; padding: 0; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; box-shadow: var(--mm-shadow-soft); overflow: hidden; }
+.mm-fold-head { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 60px; padding: 12px 18px; color: var(--mm-ink); font: inherit; text-align: left; background: none !important; border: 0 !important; border-radius: 0; cursor: pointer; }
+.mm-fold-head:hover { background: var(--mm-surface-hover) !important; }
+.mm-fold-head:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -2px; }
+.mm-fold-head h3 { flex: none; display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; font-weight: 750; }
+.mm-fold-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; color: #fff; font-size: 12.5px; font-weight: 700; background: var(--mm-accent); border-radius: 999px; }
+.mm-fold-meta { flex: 1; min-width: 0; overflow: hidden; color: var(--mm-muted); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.mm-fold-chev { flex: none; width: 10px; height: 10px; margin: -4px 4px 0 auto; border-right: 2px solid var(--mm-muted); border-bottom: 2px solid var(--mm-muted); transform: rotate(45deg); transition: transform .15s ease; }
+.mm-fold.is-open > .mm-fold-head .mm-fold-chev { margin-top: 4px; transform: rotate(-135deg); }
+.mm-fold-body { padding: 4px 18px 18px; border-top: 1px solid var(--mm-line); }
+.mm-fold:not(.is-open) > .mm-fold-body { display: none; }
+.mm-fold-body > .mm-summary-head { justify-content: flex-start; margin: 12px 0; }
+.mm-fold-body > .mm-owner-row { margin-top: 12px; }
+.mm-fold-note { margin: 10px 0 0; color: var(--mm-muted); font-size: 12.5px; }
+.mm-map-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 14px; }
+.mm-map-top .mm-map-group-head, .mm-map-top .mm-map-group-head h3, .mm-map-top .mm-filter-tabs { margin: 0; }
+.mm-history { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--mm-line); }
+.mm-history-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.mm-history-head h3 { margin: 0; font-size: 20px; font-weight: 750; letter-spacing: -.01em; }
+.mm-history-head .mm-nav { margin: 0; }
+.mm-os[data-mm-view="project"] .mm-folds, .mm-os[data-mm-view="project"] .mm-history { display: none; }
+@media (prefers-reduced-motion: reduce) { .mm-fold-chev { transition: none; } }
+@media (max-width: 600px) { .mm-fold-head { padding: 12px 14px; gap: 10px; } .mm-fold-body { padding: 4px 14px 16px; } }
+/* Mark 2026-10-23: the Agents screen in the same light style as the rest of the site. */
+#section-agents .pixel-agents-shell { min-height: 0; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; box-shadow: var(--mm-shadow-soft); }
+#section-agents .pixel-agents-shell.is-pinned { border-color: var(--mm-accent); }
+#section-agents .pixel-agents-gamebar { position: static; flex-direction: row; align-items: center; padding: 10px 14px; color: var(--mm-ink); background: var(--mm-surface); border: 0; border-bottom: 1px solid var(--mm-line); border-radius: 0; box-shadow: none; }
+#section-agents .pixel-agents-gamebar-title { font-size: 15px; font-weight: 750; }
+#section-agents .pixel-agents-gamebar-title span { color: var(--mm-muted); font-size: 13px; font-weight: 500; }
+#section-agents .pixel-control-btn, #section-agents .pixel-pin-btn { min-height: 34px; padding: 5px 12px; color: var(--mm-ink); font-size: 13px; font-weight: 600; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; transform: none; }
+#section-agents .pixel-control-btn:hover, #section-agents .pixel-pin-btn:hover { background: var(--mm-surface-hover); border-color: var(--mm-control-line); color: var(--mm-ink); }
+#section-agents .pixel-control-btn.active, #section-agents .pixel-pin-btn.active { color: var(--mm-accent); background: var(--mm-surface); border-color: var(--mm-accent); }
+#section-agents .pixel-agents-actions a { padding: 0 6px; color: var(--mm-accent); font-size: 13px; font-weight: 650; }
+#section-agents .pixel-agents-viewport, #section-agents .pixel-agents-frame { background: var(--mm-surface); }
+#section-agents .pixel-agents-viewport { height: min(76vh, 860px); min-height: 560px; }
+@media (max-width: 760px) { #section-agents .pixel-agents-gamebar { flex-direction: column; align-items: stretch; } #section-agents .pixel-agents-viewport { min-height: 480px; } }
 .mm-more { margin-top: 28px; }
 .mm-more > summary { color: var(--mm-muted); font-size: 12.5px; cursor: pointer; }
 .mm-more .mm-sources { margin-top: 8px; }
@@ -3989,6 +4029,28 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-actions a[hidden] { display:none; }
 .context-links { margin-top:24px; padding-top:16px; border-top:1px solid var(--mm-line); }
 .context-links h4 { margin:0; font-size:15px; }
+/* Mark 2026-10-23: records as clear cards, one search field, no walls of text. */
+.context-controls { flex-wrap: nowrap; align-items: center; gap: 8px; margin: 18px 0 8px; }
+.context-controls label { flex: none; }
+.context-controls label.context-search-field { position: relative; flex: 1 1 auto; min-width: 0; }
+.context-search-field svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; color: var(--mm-muted); transform: translateY(-50%); pointer-events: none; }
+.context-controls .context-search-field input { width: 100%; min-height: 46px; padding-left: 42px; border-radius: 12px; font-size: 15px; }
+.context-controls select { min-height: 46px; border-radius: 12px; }
+.context-controls button { min-width: 46px; min-height: 46px; padding: 0; font-size: 18px; border-radius: 12px; }
+.context-status { margin: 4px 0 16px; font-size: 12.5px; }
+.context-list { display: grid; gap: 10px; }
+.context-row { flex-direction: row; align-items: center; gap: 14px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); }
+.context-row:hover, .context-row[aria-pressed="true"] { background: var(--mm-surface); border-color: var(--mm-accent); }
+.context-row-icon { display: grid; place-items: center; flex: none; width: 42px; height: 42px; color: #7a5bc7; background: #efeafb; border-radius: 12px; }
+.context-row-icon.is-update { color: var(--mm-accent); background: var(--mm-selection); }
+.context-row-icon svg { width: 22px; height: 22px; }
+.context-row-text { display: grid; gap: 3px; flex: 1; min-width: 0; }
+.context-row-text strong { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }
+.context-row-text small { font-size: 13px; }
+.context-row-go { flex: none; color: var(--mm-muted); font-size: 22px; }
+.context-reader { padding: 22px 24px; border-radius: 16px; box-shadow: var(--mm-shadow-soft); }
+.context-reader #context-close { border-radius: 10px; }
+@media (max-width: 600px) { .context-controls { flex-wrap: wrap; } .context-controls label.context-search-field { flex-basis: 100%; } .context-controls label:not(.context-search-field) { flex: 1 1 0; } .context-controls select { width: 100%; } }
 .context-links p { color:var(--mm-muted); font-size:13px; margin:8px 0; }
 .context-links ul { padding:0; margin:0; list-style:none; }
 .context-links a { min-height:44px; margin:0; padding:10px 0; overflow-wrap:anywhere; }
@@ -4067,6 +4129,38 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-help p { max-width:78ch; }
 .docxx-warnings { padding:14px 18px; margin-top:16px; border-radius:8px; color:var(--mm-warning); background:var(--mm-warning-soft); font-size:13px; line-height:1.6; }
 .docxx-footnote { margin-top:25px; max-width:90ch; }
+/* Mark 2026-10-23: a clear, calm flow with a 3D Mac mini in the middle. */
+.docxx-flow { padding: 26px 0 18px; }
+.docxx-column h3 { margin: 0 0 14px; color: var(--mm-muted); font-size: 13px; font-weight: 650; text-transform: none; }
+.docxx-node { min-height: 72px; padding: 14px; gap: 14px; border-radius: 14px; box-shadow: var(--mm-shadow-soft); transition: border-color .15s, transform .15s; }
+.docxx-node:hover { transform: translateY(-1px); }
+.docxx-node[aria-pressed="true"] { background: var(--mm-surface); }
+.docxx-symbol { display: grid; place-items: center; flex: none; width: 42px; height: 42px; min-width: 0; border-radius: 12px; font-size: 0; }
+.docxx-symbol svg { width: 22px; height: 22px; }
+.docxx-tone-blue { color: #2f7fd1; background: #e6f0fb; }
+.docxx-tone-violet { color: #7a5bc7; background: #efeafb; }
+.docxx-tone-red { color: #c4513f; background: #fbebe7; }
+.docxx-tone-green { color: #2f9361; background: #e5f5ec; }
+.docxx-tone-amber { color: #b97813; background: #fbf1df; }
+.docxx-go { color: var(--mm-muted); font-size: 20px; }
+.docxx-machine { min-height: 0; padding: 6px 12px 16px; background: linear-gradient(180deg, var(--mm-surface), var(--mm-background)); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
+.docxx-machine[aria-pressed="true"] { border-color: var(--mm-line); }
+.docxx-machine:hover { border-color: var(--mm-accent); }
+.docxx-machine svg.docxx-mini { width: 210px; height: 178px; margin: 0; color: inherit; }
+.docxx-machine strong { font-size: 16px; }
+.docxx-machine span { color: var(--mm-muted); }
+.docxx-connector { margin-top: 120px; }
+.docxx-mini-docs, .docxx-mini-arrow { transform-box: view-box; }
+.docxx-flow[data-active="true"] .docxx-mini-docs { animation: docxx-drop 2.4s ease-in-out infinite; }
+@keyframes docxx-drop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+.docxx-explainer[hidden] { display: none; }
+.docxx-record-icon { display: grid; place-items: center; flex: none; width: 34px; height: 34px; color: var(--mm-accent); background: var(--mm-selection); border-radius: 10px; }
+.docxx-record-icon svg { width: 18px; height: 18px; }
+.docxx-explainer { margin-bottom: 8px; padding: 14px 18px; border-radius: 14px; }
+.docxx-facts { gap: 8px; padding: 14px 0 18px; }
+.docxx-facts > span { padding: 6px 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; font-size: 12.5px; }
+@media (prefers-reduced-motion: reduce) { .docxx-flow[data-active="true"] .docxx-mini-docs { animation: none; } .docxx-node { transition: none; } }
+@media (max-width: 700px) { .docxx-connector { margin: 0; } .docxx-machine svg.docxx-mini { width: 170px; height: 144px; } }
 @keyframes docxx-travel { from { transform:translateX(-16px); } to { transform:translateX(48px); } }
 @keyframes docxx-pulse { 50% { opacity:.25; } }
 @media(max-width:1000px) { .docxx-flow { gap:8px; grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); } .docxx-node { padding:12px 10px; gap:8px; } .docxx-symbol { min-width:18px; font-size:20px; } }
@@ -4438,7 +4532,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <section id="section-documents" class="section" aria-labelledby="docxx-title">
     <header class="cc-page-head docxx-head">
       <div><h2 class="cc-page-title" id="docxx-title">Документы</h2><p class="cc-page-lede">Что Mac mini разобрал и куда положил.</p></div>
-      <button type="button" class="docxx-button" id="docxx-help-toggle" aria-expanded="false" aria-controls="docxx-help">Как добавить документ ↗</button>
+      <button type="button" class="docxx-button" id="docxx-help-toggle" aria-expanded="false" aria-controls="docxx-help">Как добавить документ</button>
     </header>
     <div class="docxx-statusbar" role="status" aria-live="polite">
       <span class="docxx-indicator" id="docxx-indicator" data-state="unavailable"></span>
@@ -4449,16 +4543,36 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="docxx-flow" id="docxx-flow" data-active="false" aria-label="Путь документа: поступление, обработка на Mac mini, результат">
       <div class="docxx-column">
         <h3>Ты добавляешь</h3>
-        <button type="button" class="docxx-node" data-docxx-step="icloud" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">☁</span><span><strong>С iPhone</strong><small>iCloud Drive → DOCXX Inbox</small></span><span aria-hidden="true">↗</span></button>
-        <button type="button" class="docxx-node" data-docxx-step="drive" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">▱</span><span><strong>С компьютера</strong><small>Файл или папка → DOCXXx</small></span><span aria-hidden="true">↗</span></button>
-        <button type="button" class="docxx-node" data-docxx-step="gmail" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✉</span><span><strong>Из Gmail</strong><small id="docxx-gmail-state">Импорт через чат · фоновая проверка не подтверждена</small></span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="icloud" aria-pressed="false"><span class="docxx-symbol docxx-tone-blue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.4 9.2 4.5 4.5 0 0 0 7 18Z"/></svg></span><span><strong>С iPhone</strong><small>iCloud Drive → DOCXX Inbox</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="drive" aria-pressed="false"><span class="docxx-symbol docxx-tone-violet" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.6"/><path d="M2.5 19h19"/></svg></span><span><strong>С компьютера</strong><small>Файл или папка → DOCXXx</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="gmail" aria-pressed="false"><span class="docxx-symbol docxx-tone-red" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m4 7 8 6 8-6"/></svg></span><span><strong>Из Gmail</strong><small id="docxx-gmail-state">Импорт через чат · фоновая проверка не подтверждена</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
         <p class="docxx-caption" id="docxx-gmail-freshness" hidden></p>
       </div>
       <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
       <div class="docxx-column docxx-processor">
         <h3>Mini разбирает</h3>
         <button type="button" class="docxx-machine" data-docxx-step="processor" aria-pressed="true">
-          <svg viewBox="0 0 160 100" aria-hidden="true"><path d="M25 65L62 43L137 60L100 84Z" fill="var(--mm-selection)" stroke="currentColor" stroke-width="2"/><path d="M25 65V78L100 95L137 72V60M100 84V95" fill="none" stroke="currentColor" stroke-width="2"/><path d="M64 28V5H96L111 20V45H64V28Z" fill="var(--mm-surface)" stroke="currentColor" stroke-width="2"/><path d="M96 5V20H111M75 27H99M75 35H91" fill="none" stroke="currentColor" stroke-width="2"/><circle class="docxx-machine-led" cx="113" cy="79" r="2" fill="currentColor"/></svg>
+          <svg class="docxx-mini" viewBox="0 0 200 170" aria-hidden="true">
+            <defs>
+              <linearGradient id="docxx-mini-top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbfcfd"/><stop offset="1" stop-color="#d9dee4"/></linearGradient>
+              <linearGradient id="docxx-mini-left" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9cfd6"/><stop offset="1" stop-color="#aeb6bf"/></linearGradient>
+              <linearGradient id="docxx-mini-right" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8c0c9"/><stop offset="1" stop-color="#97a1ac"/></linearGradient>
+              <radialGradient id="docxx-mini-glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="var(--mm-accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--mm-accent)" stop-opacity="0"/></radialGradient>
+              <filter id="docxx-mini-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+            </defs>
+            <ellipse cx="100" cy="132" rx="86" ry="30" fill="url(#docxx-mini-glow)"/>
+            <ellipse cx="100" cy="140" rx="62" ry="12" fill="#3c2d14" opacity=".16" filter="url(#docxx-mini-soft)"/>
+            <path d="M34 106 L100 139 L100 152 Q100 155 97 153.6 L36.5 123.4 Q34 122 34 119 Z" fill="url(#docxx-mini-left)"/>
+            <path d="M100 139 L166 106 L166 119 Q166 122 163.5 123.4 L103 153.6 Q100 155 100 152 Z" fill="url(#docxx-mini-right)"/>
+            <path d="M100 73 Q103 71.5 106 73 L163 101.5 Q169 104.5 163 107.5 L106 136 Q100 139 94 136 L37 107.5 Q31 104.5 37 101.5 L94 73 Q97 71.5 100 73 Z" fill="url(#docxx-mini-top)" stroke="#ffffff" stroke-width="1"/>
+            <ellipse cx="100" cy="104.5" rx="15" ry="7.5" fill="none" stroke="#c3cad2" stroke-width="1.2"/>
+            <circle class="docxx-machine-led" cx="152" cy="118" r="2.4" fill="#34c27a"/>
+            <g class="docxx-mini-docs">
+              <g transform="matrix(.894 .447 0 1 66 10)"><rect width="34" height="44" rx="3" fill="#ffffff" stroke="#cfd6de"/><path d="M7 11h20M7 18h20M7 25h13" stroke="var(--mm-accent)" stroke-width="2" stroke-linecap="round" opacity=".7"/></g>
+              <g transform="matrix(.894 .447 0 1 88 4)"><rect width="34" height="44" rx="3" fill="#ffffff" stroke="#cfd6de"/><path d="M7 11h20M7 18h20M7 25h13" stroke="#e6a23c" stroke-width="2" stroke-linecap="round" opacity=".8"/></g>
+            </g>
+            <path class="docxx-mini-arrow" d="M100 62 v8 m-4 -4 l4 4 l4 -4" stroke="var(--mm-accent)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           <strong>Mac mini</strong><span id="docxx-machine-label">Статус ещё не получен</span>
         </button>
 
@@ -4466,11 +4580,11 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="docxx-connector" aria-hidden="true"><span></span><b>→</b></div>
       <div class="docxx-column">
         <h3>Ты находишь</h3>
-        <button type="button" class="docxx-node" data-docxx-step="library" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">✓</span><span><strong>На своём месте</strong><small>Название по содержимому</small></span><span aria-hidden="true">↗</span></button>
-        <button type="button" class="docxx-node" data-docxx-step="review" aria-pressed="false"><span class="docxx-symbol" aria-hidden="true">?</span><span><strong>На разборе</strong><small>Если назначение неясно</small></span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="library" aria-pressed="false"><span class="docxx-symbol docxx-tone-green" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17l9-10"/></svg></span><span><strong>На своём месте</strong><small>Название по содержимому</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
+        <button type="button" class="docxx-node" data-docxx-step="review" aria-pressed="false"><span class="docxx-symbol docxx-tone-amber" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 9a3 3 0 1 1 4.1 2.8c-.8.3-1.3 1-1.3 1.9v.3"/><path d="M12 17.5h.01"/></svg></span><span><strong>На разборе</strong><small>Если назначение неясно</small></span><span class="docxx-go" aria-hidden="true">›</span></button>
       </div>
     </div>
-    <div class="docxx-explainer" id="docxx-explainer"><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
+    <div class="docxx-explainer" id="docxx-explainer" hidden><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
     <div class="docxx-facts" aria-label="Последний снимок обработки файлов из iCloud и Google Drive"><span>Очередь файлов <b id="docxx-pending">—</b></span><span>Нужен разбор <b id="docxx-review">—</b></span><span>В каталоге <b id="docxx-catalog-count">—</b></span><span>Вызовы модели за проход <b id="docxx-model">—</b></span></div>
     <div id="docxx-help" class="docxx-help" hidden>
       <h3>Сохрани документ. Остальное начнёт Mini.</h3>
@@ -4485,22 +4599,22 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 
   <section id="section-context" class="section" aria-labelledby="context-title">
     <header class="cc-page-head"><div><h2 class="cc-page-title" id="context-title">Встречи и контекст</h2>
-    <p class="cc-page-lede">Транскрипты встреч и обновления проектов.</p></div></header>
+    <p class="cc-page-lede">Записи встреч и обновления проектов. Нажми на запись, чтобы прочитать.</p></div></header>
     <form class="context-controls" id="context-filters" role="search">
-      <label>Найти в записях<input id="context-search" type="search" maxlength="1000" placeholder="Тема, решение или проект" autocomplete="off"></label>
-      <label>Источник<select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
-      <label>Тип<select id="context-kind"><option value="">Все записи</option><option value="transcript">Транскрипты</option><option value="update">Обновления</option></select></label>
-      <button type="submit">Обновить</button>
+      <label class="context-search-field"><span class="cc-visually-hidden">Найти в записях</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="context-search" type="search" maxlength="1000" placeholder="Найти: тема, решение или проект" autocomplete="off"></label>
+      <label><span class="cc-visually-hidden">Источник</span><select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
+      <label><span class="cc-visually-hidden">Тип</span><select id="context-kind"><option value="">Все записи</option><option value="transcript">Встречи</option><option value="update">Обновления</option></select></label>
+      <button type="submit" aria-label="Обновить записи" title="Обновить">↻</button>
     </form>
     <p id="context-status" class="context-status" role="status" aria-live="polite">Записи доступны после проверки доступа владельца.</p>
-    <p id="context-sources" class="context-sources"></p>
+    <p id="context-sources" class="context-sources" hidden></p>
     <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
       <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Просмотр записи">
         <button type="button" id="context-close">← Все записи</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p>
         <nav class="context-actions" aria-label="Перейти из записи">
-          <a id="context-obsidian"><span aria-hidden="true">📝</span> Оригинал в Obsidian</a>
-          <a id="context-work" href="?tab=work&amp;view=todo"><span aria-hidden="true">📋</span> Дела и результаты</a>
-          <a id="context-agents" href="?tab=agents"><span aria-hidden="true">🤖</span> Агенты</a>
+          <a id="context-obsidian">Оригинал в Obsidian</a>
+          <a id="context-work" href="?tab=work&amp;view=todo">Дела и результаты</a>
+          <a id="context-agents" href="?tab=agents">Агенты</a>
         </nav>
         <div id="context-body" class="context-body"></div>
         <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
@@ -4778,10 +4892,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <!-- Mark 2026-10-22: whether everything on the Mac mini is alive; since 2026-10-23 a small badge, not a banner. -->
         <button type="button" class="mm-health" id="mm-health" hidden></button>
       </header>
-      <!-- Mark 2026-10-23: a short summary of day / week / month first, then what is on him. -->
-      <section class="mm-summary" id="mm-summary" aria-labelledby="mm-summary-title" hidden></section>
-      <div id="mm-owner-todo" hidden></div>
-      <div id="mm-owner-projects" hidden></div>
       <dialog class="platform-archive-dialog platform-edit-dialog" id="todo-edit-dialog" aria-labelledby="todo-edit-title">
         <header class="platform-archive-head">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
@@ -4821,25 +4931,40 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </header>
         <div class="platform-archive-body" id="owner-project-body"></div>
       </dialog>
-      <nav class="cc-tabs mm-nav" aria-label="Разделы MAIN MANAGER">
-        <button type="button" data-mm-view="map" aria-pressed="true">Проекты <b id="mm-map-count">0</b></button>
-        <button type="button" data-mm-view="todo" aria-pressed="false">Дела <b id="mm-todo-count">0</b></button>
-        <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
-      </nav>
       <h3 class="cc-visually-hidden" id="mm-view-title">Проекты</h3>
       <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
+      <!-- Mark 2026-10-23: main projects first; the summary, his tasks and the personal block fold
+           under them; the history («Дела», «Изменения») comes last. -->
       <div class="mm-main">
         <div class="mm-view" data-mm-panel="map">
           <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
         </div>
 
-        <div class="mm-view" data-mm-panel="todo" hidden>
+        <div class="mm-view" data-mm-panel="project" hidden>
+          <div id="mm-project-page"></div>
+        </div>
+
+      </div>
+      <div class="mm-folds" id="mm-folds">
+        <section class="mm-summary mm-fold" id="mm-summary" aria-labelledby="mm-summary-title" hidden></section>
+        <div id="mm-owner-todo" hidden></div>
+        <div id="mm-owner-projects" hidden></div>
+      </div>
+      <section class="mm-history" id="mm-history" aria-labelledby="mm-history-title">
+        <div class="mm-history-head">
+          <h3 id="mm-history-title">История</h3>
+          <nav class="cc-tabs mm-nav" aria-label="История">
+            <button type="button" data-mm-view="todo" aria-pressed="true">Дела <b id="mm-todo-count">0</b></button>
+            <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
+          </nav>
+        </div>
+        <div class="mm-view" data-mm-panel="todo">
           <div class="mm-section-heading">
-            <div><h3>Из проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги из итогов дня и PR, готовые к слиянию.</p></div>
+            <div><h3>Из проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги и PR к слиянию.</p></div>
           </div>
           <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
           <div class="mm-section-heading mm-loose-heading">
-            <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — PR закрыт без merge или ветка без PR, которую не трогали 2–7 дней. «Забыл» — открытые PR и задачи без движения 7+ дней и ветки без PR старше недели.</p></div>
+            <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — закрыто без слияния. «Забыл» — без движения больше недели.</p></div>
           </div>
           <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр хвостов">
             <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
@@ -4849,15 +4974,11 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           <div class="mm-group-rows" id="mm-loose"></div>
         </div>
 
-        <div class="mm-view" data-mm-panel="project" hidden>
-          <div id="mm-project-page"></div>
-        </div>
-
         <div class="mm-view" data-mm-panel="infra" hidden>
           <div class="mm-filter-tabs" id="mm-infra-filter" role="group" aria-label="Тип изменения"></div>
           <div class="mm-group-rows" id="mm-infra"></div>
         </div>
-      </div>
+      </section>
       <details class="mm-more">
         <summary>Откуда данные · открыть на телефоне</summary>
       <p class="mm-sources" id="mm-sources">Источники загружаются…</p>
@@ -5151,7 +5272,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="agents-title">Агенты</h2>
-        <p class="cc-page-lede">Кампус отделов: кто над чем работает сейчас. Решения, которые ждут вас, на второй вкладке.</p>
+        <p class="cc-page-lede">Кто из агентов над чем работает сейчас.</p>
       </div>
     </header>
     <div class="cc-subnav cc-tabs" aria-label="Виды агентов">
@@ -5182,8 +5303,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="pixel-agents-shell">
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
-          <strong>Pixel Verse</strong>
-          <span>живые передачи задач между отделами</span>
+          <strong>Кампус</strong>
+          <span>агенты двигаются только по настоящим задачам</span>
         </div>
         <div class="pixel-agents-actions">
           <button
@@ -5204,7 +5325,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             onclick="togglePixelAgentsPin()"
             aria-pressed="false"
             title="Закрепить размер, не меняя вид"
-          >📌 Закрепить</button>
+          >Закрепить</button>
           <a id="pixel-agents-fullscreen" target="_blank" rel="noreferrer">На весь экран</a>
         </div>
       </div>
@@ -6878,7 +6999,7 @@ function applyPixelAgentsPin(isPinned) {
   shell.classList.toggle('is-pinned', isPinned);
   button.classList.toggle('active', isPinned);
   button.setAttribute('aria-pressed', isPinned ? 'true' : 'false');
-  button.textContent = isPinned ? '📌 Закреплено' : '📌 Закрепить';
+  button.textContent = isPinned ? 'Закреплено' : 'Закрепить';
   button.title = isPinned
     ? 'Размер закреплён. Нажмите, чтобы открепить.'
     : 'Закрепить размер, не меняя вид';
@@ -7174,6 +7295,14 @@ function ccContextClose() {
   document.getElementById('context-links').hidden = true;
   document.getElementById('context-obsidian').removeAttribute('href');
 }
+function ccContextShort(value) {
+  const parsed = new Date(value || '');
+  return Number.isNaN(parsed.valueOf()) ? 'время не указано' : parsed.toLocaleString('ru-RU', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'});
+}
+function ccContextDay(value) {
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? new Date(`${value}T12:00:00`) : null;
+  return parsed && !Number.isNaN(parsed.valueOf()) ? parsed.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'}) : 'дата не указана';
+}
 function ccContextTime(value) {
   if (!value) return 'не указана';
   const parsed = new Date(value);
@@ -7314,7 +7443,7 @@ async function ccLoadContext(recordId = null) {
     if (generation !== ccContextGeneration || !ccContextVisible()) return;
     if (!['ready','partial','stale'].includes(data.state)) throw new Error(data.state === 'owner_required' ? 'owner_required' : data.state === 'not_found' ? 'not_found' : 'unavailable');
     const warning = data.state === 'stale' ? 'Данные устарели. ' : data.state === 'partial' ? 'Часть источников не прочитана. ' : '';
-    document.getElementById('context-status').textContent = warning + 'Каталог проверен: ' + ccContextTime(data.generated_at) + '. Последние 200 обновлений проектов.';
+    document.getElementById('context-status').textContent = warning + 'Обновлено ' + ccContextShort(data.generated_at) + '.';
     if (recordId) {
       const r = data.record;
       if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
@@ -7327,16 +7456,25 @@ async function ccLoadContext(recordId = null) {
       return;
     }
     if (!Array.isArray(data.records)) throw new Error('unavailable');
+    // Mark 2026-10-23: one card per record — what it is, when, which project; the source note stays as a tooltip.
     document.getElementById('context-sources').textContent = (data.sources || []).map(s => `${ccContextNames[s.source] || 'Источник'}: ${s.state === 'observed' ? 'записи найдены' : 'записи не найдены'}`).join(' · ') + ' Наличие записей не подтверждает активное подключение сервиса.';
+    document.getElementById('context-status').title = document.getElementById('context-sources').textContent;
     const list=document.getElementById('context-list');
     for (const r of data.records) {
       if (!/^[a-f0-9]{32}$/.test(r.id)) continue;
       const li=document.createElement('li'); const button=document.createElement('button'); button.type='button';button.className='context-row';
+      const isUpdate = r.source === 'project-update';
+      const icon=document.createElement('span'); icon.className=`context-row-icon${isUpdate ? ' is-update' : ''}`; icon.setAttribute('aria-hidden','true');
+      icon.innerHTML = isUpdate
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
+      const text=document.createElement('span'); text.className='context-row-text';
       const title=document.createElement('strong');title.textContent=r.title;
-      const meta=document.createElement('small'); meta.textContent=`${ccContextNames[r.source] || 'Запись'} · ${r.date || 'Дата не указана'}${r.project ? ' · '+r.project : ''} · Изменено: ${ccContextTime(r.modified_at)}`;
-      button.append(title,meta);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
+      const meta=document.createElement('small'); meta.textContent=[ccContextNames[r.source] || 'Запись', ccContextDay(r.date), r.project].filter(Boolean).join(' · ');
+      const go=document.createElement('span'); go.className='context-row-go'; go.setAttribute('aria-hidden','true'); go.textContent='›';
+      text.append(title,meta); button.append(icon,text,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
     }
-    document.getElementById('context-status').textContent += data.records.length ? ` Показано ${data.records.length} из ${data.total}.` : ' По выбранным условиям записей нет.';
+    document.getElementById('context-status').textContent += data.records.length ? ` Записей: ${data.total}.` : ' По выбранным условиям записей нет.';
   } catch (error) {
     if (generation !== ccContextGeneration) return;
     ccContextClear(error.message === 'owner_required' ? 'Войдите как владелец, чтобы открыть записи.' : error.message === 'not_found' ? 'Запись не найдена. Обновите каталог.' : 'Источник временно недоступен. Попробуйте обновить каталог.');
@@ -9862,7 +10000,8 @@ let dailyWorkDate = null;
 let dailyWorkLoading = false;
 let infraData = null;
 let mmView = 'map';
-let mmReturnView = 'map'; // the view a project page was opened from; its back button returns there
+let mmReturnView = 'map';
+let mmHistoryView = 'todo'; // which history tab is open under the board // the view a project page was opened from; its back button returns there
 let mmProjectId = null;
 let mmProjectData = null;
 let mmLooseFilter = 'all';
@@ -9980,6 +10119,7 @@ function mmInit() {
   mmInitOwnerTodo();
   mmInitOwnerProjects();
   mmInitSummary();
+  mmInitFolds();
   // The board, «Дела» and «Изменения» refresh while MAIN MANAGER is on screen.
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
@@ -9999,19 +10139,22 @@ function mmShowView(view) {
   if (!MM_VIEW_TITLES[view]) return;
   mmView = view;
   if (view === 'map' || view === 'todo') mmReturnView = view;
-  // A project page stays under the view it was opened from.
-  const navView = view === 'project' ? mmReturnView : view;
+  // Mark 2026-10-23: the board stays on top; «Дела» and «Изменения» are tabs of the history below it.
+  if (view === 'todo' || view === 'infra') mmHistoryView = view;
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
-    button.setAttribute('aria-pressed', button.dataset.mmView === navView ? 'true' : 'false');
+    button.setAttribute('aria-pressed', button.dataset.mmView === mmHistoryView ? 'true' : 'false');
   });
   document.querySelectorAll('[data-mm-panel]').forEach(panel => {
-    panel.hidden = panel.dataset.mmPanel !== view;
+    const name = panel.dataset.mmPanel;
+    panel.hidden = view === 'project' ? name !== 'project'
+      : name === 'project' || (name !== 'map' && name !== mmHistoryView);
   });
-  document.getElementById('mm-os')?.setAttribute('data-mm-view', view);
+  document.getElementById('mm-os')?.setAttribute('data-mm-view', view === 'project' ? 'project' : 'map');
   document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
   if (view !== 'project') mmSetProjectUrl(null);
   mmRenderNotice();
   mmRedrawCharts();
+  if (view === 'map' || (view === 'project')) window.scrollTo({ top: 0 });
 }
 
 function mmSetProjectUrl(id) {
@@ -10082,12 +10225,13 @@ function mmRenderNotice(errorText) {
     notice.textContent = errorText;
     return;
   }
-  const source = mmView === 'infra' ? infraData : dailyWorkData;
+  // The line sits above the board, so it speaks about the board's data.
+  const source = dailyWorkData;
   if (!source) return;
   if (!source.ok) {
     notice.className = 'mm-notice error';
     notice.hidden = false;
-    notice.textContent = 'Журнал изменений с сервера не получен. Ничего не показываю, чтобы не гадать.';
+    notice.textContent = 'Данные с сервера не получены. Ничего не показываю, чтобы не гадать.';
     return;
   }
   notice.className = `mm-notice ${source.state}`;
@@ -10095,15 +10239,11 @@ function mmRenderNotice(errorText) {
   notice.hidden = source.state === 'live' && source.owner_view;
   let text;
   if (source.state === 'empty') {
-    text = mmView === 'infra'
-      ? 'Сборщик изменений ещё не запускался. Журнал начнёт заполняться после деплоя на Mac mini.'
-      : 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
+    text = 'Сборщик ещё ни разу не присылал данные. Раздел заполнится после первого запуска на Mac mini.';
   } else if (source.state === 'stale') {
     text = `Данные устарели: последний сбор ${mmAgo(source.collected_at)}. Проверь сборщик на Mac mini.`;
   } else {
-    text = mmView === 'infra'
-      ? `Обновлено: ${mmAgo(source.collected_at)}. Снимок машины каждые 10 минут плюс команды Claude и Codex и merge PR.`
-      : `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
+    text = `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
   }
   if (!source.owner_view) {
     text += ' Подробности видны только на устройстве владельца. Телефон подключается с Mac, где проекты уже видны: «Открыть на телефоне» внизу MAIN MANAGER.';
@@ -10541,7 +10681,7 @@ function renderMap(data) {
   const others = projects.filter(p => !p.main && isActive(p));
   const active = main.filter(isActive).sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown);
   const paused = main.filter(p => !isActive(p));
-  document.getElementById('mm-map-count').textContent = data.owner_view ? active.length + others.length : (data.project_total || 0);
+  const mapCount = document.getElementById('mm-map-count'); if (mapCount) mapCount.textContent = data.owner_view ? active.length + others.length : (data.project_total || 0);
   const weekClaude = mmSum(last7.map(day => day.claude_minutes));
   const weekCodex = mmSum(last7.map(day => day.codex_minutes));
   const stats = [
@@ -10581,7 +10721,7 @@ function renderMap(data) {
       <summary><b>Другие папки</b> <span>${others.length}</span><small>мелкие папки и заметки, не основные проекты · ${mmEsc(workMinutes(mmSum(others.map(p => mmWeekSplit(p).shown))))} за неделю</small></summary>
       <div class="mm-map-rows">${others.sort((a, b) => mmWeekSplit(b).shown - mmWeekSplit(a).shown).map(p => mmMapRow(p, todoById[p.id], today)).join('')}</div>
     </details>` : '';
-  const body = `${filter}${head('Основные проекты', active.length, '')}<div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
+  const body = `<div class="mm-map-top">${head('Основные проекты', active.length, '')}${filter}</div><div class="mm-map-grid">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')}</div>${pausedHtml}${othersHtml}`;
   host.innerHTML = statsHtml + body;
 }
 
@@ -10589,6 +10729,34 @@ function renderMap(data) {
 // Day, week or month at a glance: how long he worked, what got merged, what one result cost in
 // time, and where the time went by project. Only from the owner payload; the public page never
 // gets project names. Details fold away behind buttons.
+// Mark 2026-10-23: the summary, his tasks and the personal block are one line each until he opens
+// them. The choice is remembered per browser.
+const MM_FOLD_KEY = 'command-center.mm-fold';
+function mmFoldIsOpen(key) { return safeStorageGet(`${MM_FOLD_KEY}.${key}`) === 'open'; }
+function mmFoldHead(key, title, count, meta, titleId) {
+  const button = mmEl('button', 'mm-fold-head');
+  button.type = 'button';
+  button.dataset.fold = key;
+  button.setAttribute('aria-expanded', String(mmFoldIsOpen(key)));
+  const heading = mmEl('h3', '', title);
+  if (titleId) heading.id = titleId;
+  if (count !== null && count !== undefined) heading.appendChild(mmEl('span', 'mm-fold-count', String(count)));
+  button.appendChild(heading);
+  if (meta) button.appendChild(mmEl('span', 'mm-fold-meta', meta));
+  button.appendChild(mmEl('span', 'mm-fold-chev'));
+  return button;
+}
+function mmInitFolds() {
+  document.getElementById('mm-folds')?.addEventListener('click', event => {
+    const head = event.target.closest('[data-fold]');
+    if (!head) return;
+    const open = head.getAttribute('aria-expanded') !== 'true';
+    head.setAttribute('aria-expanded', String(open));
+    head.closest('.mm-fold')?.classList.toggle('is-open', open);
+    safeStorageSet(`${MM_FOLD_KEY}.${head.dataset.fold}`, open ? 'open' : 'closed');
+  });
+}
+
 const MM_SUMMARY_KEY = 'command-center.mm-summary-period';
 const MM_SUMMARY_PERIODS = [['day', 'День', 1], ['week', 'Неделя', 7], ['month', 'Месяц', 30]];
 let mmSummaryPeriod = MM_SUMMARY_PERIODS.some(([key]) => key === safeStorageGet(MM_SUMMARY_KEY)) ? safeStorageGet(MM_SUMMARY_KEY) : 'week';
@@ -10628,12 +10796,19 @@ function mmRenderSummary(data) {
   const [key, , days] = MM_SUMMARY_PERIODS.find(([name]) => name === mmSummaryPeriod);
   const now = mmSummaryNumbers(data, days);
   const before = mmSummaryNumbers(data, days, days);
-  const head = `<div class="mm-summary-head"><h3 id="mm-summary-title">Сводка</h3>
-    <div class="mm-seg" role="group" aria-label="Период">${MM_SUMMARY_PERIODS.map(([name, label]) =>
+  const periodLabel = MM_SUMMARY_PERIODS.find(([name]) => name === key)[1];
+  const fold = (meta, body) => {
+    host.classList.toggle('is-open', mmFoldIsOpen('summary'));
+    host.replaceChildren(mmFoldHead('summary', 'Сводка', null, meta, 'mm-summary-title'));
+    const box = mmEl('div', 'mm-fold-body');
+    box.innerHTML = body;
+    host.appendChild(box);
+    host.hidden = false;
+  };
+  const head = `<div class="mm-summary-head"><div class="mm-seg" role="group" aria-label="Период">${MM_SUMMARY_PERIODS.map(([name, label]) =>
       `<button type="button" data-summary-period="${name}" aria-pressed="${name === key}">${label}</button>`).join('')}</div></div>`;
   if (!now) {
-    host.innerHTML = `${head}<p class="mm-empty">Данных за этот период пока нет.</p>`;
-    host.hidden = false;
+    fold(`${periodLabel}: данных пока нет`, `${head}<p class="mm-empty">Данных за этот период пока нет.</p>`);
     return;
   }
   const compare = before ? now.minutes - before.minutes : null;
@@ -10643,7 +10818,7 @@ function mmRenderSummary(data) {
   const perResult = now.prs ? Math.round(now.minutes / now.prs) : null;
   const beforePer = before?.prs ? Math.round(before.minutes / before.prs) : null;
   const returnNote = perResult === null ? 'нет слитых PR за период'
-    : beforePer ? `на один PR · ${key === 'day' ? 'вчера' : 'неделей раньше'} ${workMinutes(beforePer)}`
+    : beforePer ? `на PR · было ${workMinutes(beforePer)}`
     : 'на один слитый PR';
   const projectMinutes = mmSum(now.projects.map(p => p.minutes));
   const mainShare = projectMinutes ? Math.round(mmSum(now.projects.filter(p => p.main).map(p => p.minutes)) / projectMinutes * 100) : 0;
@@ -10673,8 +10848,8 @@ function mmRenderSummary(data) {
   }).join('')}</div>` : '';
   const more = rows.length > 4 || chart || agentsLine
     ? `<button type="button" class="mm-summary-more" data-summary-more aria-expanded="${mmSummaryOpen}">${mmSummaryOpen ? 'Свернуть' : 'Подробнее'}</button>` : '';
-  host.innerHTML = `${head}${tilesHtml}<div class="mm-summary-split"><h4>Куда ушло время</h4>${listHtml}</div>${mmSummaryOpen ? agentsLine + chart : ''}${more}`;
-  host.hidden = false;
+  fold(`${periodLabel}: ${workMinutes(now.minutes)} · ${now.prs} PR`,
+    `${head}${tilesHtml}<div class="mm-summary-split"><h4>Куда ушло время</h4>${listHtml}</div>${mmSummaryOpen ? agentsLine + chart : ''}${more}`);
 }
 
 function mmInitSummary() {
@@ -10800,13 +10975,15 @@ function mmRenderOwnerProjects(payload) {
     return;
   }
   // Mark 2026-10-23: one compact line per card on the page; the whole card opens in a window.
-  const group = mmEl('section', 'mm-owner-group');
-  group.setAttribute('aria-label', 'Личное');
+  const group = mmEl('section', 'mm-owner-group mm-fold');
+  group.setAttribute('aria-labelledby', 'mm-owner-title');
+  group.classList.toggle('is-open', mmFoldIsOpen('personal'));
+  group.appendChild(mmFoldHead('personal', 'Личное', null, cards.map(card => card.name).join(' · '), 'mm-owner-title'));
+  const rows = mmEl('div', 'mm-fold-body');
   cards.forEach(card => {
     const row = mmEl('button', 'mm-owner-row');
     row.type = 'button';
     row.dataset.ownerOpen = card.id;
-    row.appendChild(mmEl('span', 'mm-owner-row-tag', 'Личное'));
     const text = mmEl('span', 'mm-owner-row-text');
     text.appendChild(mmEl('strong', '', card.name));
     const tasks = Array.isArray(card.tasks) ? card.tasks.length : 0;
@@ -10814,8 +10991,10 @@ function mmRenderOwnerProjects(payload) {
     row.appendChild(text);
     row.appendChild(mmEl('span', 'mm-owner-row-go', '›'));
     row.setAttribute('aria-label', `Открыть: ${card.name}`);
-    group.appendChild(row);
+    rows.appendChild(row);
   });
+  rows.appendChild(mmEl('p', 'mm-fold-note', 'Видно только тебе.'));
+  group.appendChild(rows);
   host.appendChild(group);
 }
 
@@ -10931,21 +11110,18 @@ function mmRenderOwnerTodo(payload) {
   mmOwnerTodoItems = payload.items.filter(item => item && /^t-[a-f0-9]{8}$/.test(item.id || '') && typeof item.text === 'string');
   const open = mmOwnerTodoItems.filter(item => !item.done);
   const done = mmOwnerTodoItems.filter(item => item.done);
-  const card = mmEl('section', 'mm-todo-card');
+  const card = mmEl('section', 'mm-todo-card mm-fold');
   card.setAttribute('aria-labelledby', 'mm-todo-card-title');
-  const head = mmEl('div', 'mm-todo-card-head');
-  const title = mmEl('h3', '', 'Ждёт тебя ');
-  title.id = 'mm-todo-card-title';
-  title.appendChild(mmEl('span', '', String(open.length)));
-  head.appendChild(title);
-  card.appendChild(head);
+  card.classList.toggle('is-open', mmFoldIsOpen('todo'));
+  card.appendChild(mmFoldHead('todo', 'Ждёт тебя', open.length, open.length ? open[0].text : 'ничего не ждёт', 'mm-todo-card-title'));
+  const foldBody = mmEl('div', 'mm-fold-body');
   const list = mmEl('ul', 'mm-todo-items');
   // Three at a time; the rest behind «Ещё N».
   (mmOwnerTodoAll ? open : open.slice(0, 3)).forEach(item => list.appendChild(mmOwnerTodoRow(item)));
   const lane = mmAgentLane(open);
-  if (lane) card.appendChild(lane);
-  if (open.length) card.appendChild(list);
-  else card.appendChild(mmEl('p', 'mm-todo-empty', 'Пока ничего не ждёт. Добавь дело, если что-то на тебе.'));
+  if (lane) foldBody.appendChild(lane);
+  if (open.length) foldBody.appendChild(list);
+  else foldBody.appendChild(mmEl('p', 'mm-todo-empty', 'Пока ничего не ждёт. Добавь дело, если что-то на тебе.'));
   // Mark 2026-10-23: two items ticked by mistake were hard to find; «Сделано» is a real button that
   // opens a window where each closed item can be put back.
   const foot = mmEl('div', 'mm-todo-foot');
@@ -10965,7 +11141,8 @@ function mmRenderOwnerTodo(payload) {
     toggle.dataset.todoShowDone = '';
     foot.appendChild(toggle);
   }
-  card.appendChild(foot);
+  foldBody.appendChild(foot);
+  card.appendChild(foldBody);
   host.appendChild(card);
   host.hidden = false;
   mmRenderTodoDone(done);
@@ -11641,7 +11818,7 @@ function ccDocxxRenderRecords() {
   if(!rows.length) { list.append(ccDocxxEl('p',q||ccDocxxFilter!=='all'?'По выбранному фильтру операций нет.':'В журнале пока нет операций. Добавь документ через один из входов выше.','docxx-empty')); return; }
   for(const row of rows) {
     const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
-    const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',row.kind==='folder'?'▱':'▤'); icon.setAttribute('aria-hidden','true');
+    const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
     const name=ccDocxxEl('span',undefined,'docxx-record-name'); name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',`${row.source==='gmail'?'Gmail':row.source==='icloud'?'iCloud':row.source==='review'?'На разборе':'Google Drive'} · ${row.historical?'История · ':''}${ccDocxxDate(row.at)}`));
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(icon,name,badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
@@ -11693,7 +11870,13 @@ async function ccLoadDocxx() {
     if(generation===ccDocxxGeneration) { button.disabled=false; ccDocxxController=null; if(ccDocxxVisible()) ccDocxxTimer=setTimeout(ccLoadDocxx,5000); }
   }
 }
-for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEventListener('click',()=>ccDocxxExplain(button.dataset.docxxStep));
+// Mark 2026-10-23: the explanation stays folded until a step is clicked; a second click folds it again.
+for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEventListener('click',()=>{
+  const box=document.getElementById('docxx-explainer');
+  const same=ccDocxxStep===button.dataset.docxxStep && !box.hidden;
+  ccDocxxExplain(button.dataset.docxxStep);
+  box.hidden=same;
+});
 for(const button of document.querySelectorAll('[data-docxx-filter]')) button.addEventListener('click',()=>{
   ccDocxxFilter=button.dataset.docxxFilter;
   document.querySelectorAll('[data-docxx-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));

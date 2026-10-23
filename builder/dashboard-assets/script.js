@@ -888,13 +888,13 @@
             ANALYST: {shirt: '#3f9a8f', pants: '#24282a', skin: '#6f4630', hair: '#151515'},
         };
         const ROOMS = {
-            sales: {x: -8.25, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
-            development: {x: -0.5, z: -6, w: 8, d: 6.5, tint: '#80553a'},
-            design: {x: 7.75, z: -6, w: 6.5, d: 6.5, tint: '#7b4f32'},
-            hq: {x: -11, z: 6, w: 6, d: 6.5, tint: '#845a3b'},
-            infrastructure: {x: -4.25, z: 6, w: 6.5, d: 6.5, tint: '#6f4a33'},
-            internal: {x: 2.75, z: 6, w: 6.5, d: 6.5, tint: '#7b4f32'},
-            finance: {x: 9.5, z: 6, w: 6, d: 6.5, tint: '#7a5236'},
+            sales: {x: -8.25, z: -6, w: 6.5, d: 6.5, tint: '#f3dcc0'},
+            development: {x: -0.5, z: -6, w: 8, d: 6.5, tint: '#f5dec2'},
+            design: {x: 7.75, z: -6, w: 6.5, d: 6.5, tint: '#f3dcc0'},
+            hq: {x: -11, z: 6, w: 6, d: 6.5, tint: '#f6e0c4'},
+            infrastructure: {x: -4.25, z: 6, w: 6.5, d: 6.5, tint: '#efd7ba'},
+            internal: {x: 2.75, z: 6, w: 6.5, d: 6.5, tint: '#f3dcc0'},
+            finance: {x: 9.5, z: 6, w: 6, d: 6.5, tint: '#f2dbbf'},
         };
         Object.entries(ROOMS).forEach(([id, room]) => {
             room.id = id;
@@ -913,7 +913,7 @@
 
         const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'low-power'});
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setClearColor(0x09090b, 1);
+        renderer.setClearColor(0xf3ede2, 1);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -921,12 +921,12 @@
         stage.prepend(renderer.domElement);
 
         const scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x09090b, 46, 90);
+        scene.fog = new THREE.Fog(0xf3ede2, 46, 90);
         const camera = new THREE.PerspectiveCamera(30, 16 / 9, 0.5, 200);
         const lookTarget = new THREE.Vector3(-0.8, 0, 0);
         const view = {azimuth: 0, elevation: 0.9};
 
-        scene.add(new THREE.HemisphereLight(0xfff0db, 0x1b1511, 1.25));
+        scene.add(new THREE.HemisphereLight(0xfff6e8, 0xb9a88f, 1.35));
         const sun = new THREE.DirectionalLight(0xffe0b5, 2.1);
         sun.position.set(-9, 26, 15);
         sun.castShadow = true;
@@ -973,20 +973,20 @@
         const plankTexture = canvasTexture(128, (ctx, size) => {
             const rows = 4;
             for (let row = 0; row < rows; row += 1) {
-                ctx.fillStyle = row % 2 ? '#b98a64' : '#c79a72';
+                ctx.fillStyle = row % 2 ? '#dcbb94' : '#e6c8a3';
                 ctx.fillRect(0, row * size / rows, size, size / rows);
-                ctx.fillStyle = '#8a6142';
+                ctx.fillStyle = '#c29d74';
                 ctx.fillRect(0, (row + 1) * size / rows - 2, size, 2);
                 ctx.fillRect((row * 53) % size, row * size / rows, 2, size / rows);
             }
         }, 3, 3);
         const tileTexture = canvasTexture(128, (ctx, size) => {
-            ctx.fillStyle = '#3b352d';
+            ctx.fillStyle = '#d6ccbb';
             ctx.fillRect(0, 0, size, size);
-            ctx.fillStyle = '#463f35';
+            ctx.fillStyle = '#e4dbcc';
             ctx.fillRect(3, 3, size / 2 - 6, size / 2 - 6);
             ctx.fillRect(size / 2 + 3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
-            ctx.fillStyle = '#413a31';
+            ctx.fillStyle = '#ddd3c3';
             ctx.fillRect(size / 2 + 3, 3, size / 2 - 6, size / 2 - 6);
             ctx.fillRect(3, size / 2 + 3, size / 2 - 6, size / 2 - 6);
         }, 14, 3);
@@ -994,7 +994,7 @@
         // ── Ground and boulevard ──
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(80, 60),
-            material('#121115', {flatShading: false}),
+            material('#ebe3d5', {flatShading: false}),
         );
         ground.rotation.x = -Math.PI / 2;
         ground.receiveShadow = true;
@@ -1006,11 +1006,11 @@
         boulevard.position.set(-0.75, 0.03, 0);
         boulevard.receiveShadow = true;
         scene.add(boulevard);
-        [-2.82, 2.82].forEach((z) => box(scene, 29.5, 0.1, 0.12, '#5c4a3a', -0.75, 0, z));
+        [-2.82, 2.82].forEach((z) => box(scene, 29.5, 0.1, 0.12, '#c8b79e', -0.75, 0, z));
 
         // ── Rooms ──
-        const WALL = '#2a272c';
-        const TRIM = '#5a3b27';
+        const WALL = '#f6f1e8';
+        const TRIM = '#cdb592';
         const pickRoots = [];
         const lampLights = [];
 
@@ -1161,7 +1161,7 @@
 
         // ── Shared waypoints ──
         Object.entries(WAYPOINTS).forEach(([id, waypoint]) => {
-            const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.1, 24), material('#1f1e24'));
+            const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.1, 24), material('#e2d8c8'));
             pad.position.set(waypoint.x, 0.11, waypoint.z);
             pad.receiveShadow = true;
             scene.add(pad);
@@ -1172,7 +1172,7 @@
             ring.rotation.x = Math.PI / 2;
             ring.position.set(waypoint.x, 0.18, waypoint.z);
             scene.add(ring);
-            box(scene, 0.5, 0.75, 0.35, '#2a272c', waypoint.x, 0.16, waypoint.z - 0.85);
+            box(scene, 0.5, 0.75, 0.35, '#d8cdbb', waypoint.x, 0.16, waypoint.z - 0.85);
             box(scene, 0.42, 0.26, 0.04, '#111', waypoint.x, 0.62, waypoint.z - 0.66, {
                 emissive: waypoint.color, emissiveIntensity: 0.5,
             });

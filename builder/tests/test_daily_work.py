@@ -923,15 +923,17 @@ function mmAgo(){return 'old relative formatter';}
         self.assertIn("/api/work/daily", html)
         self.assertRegex(html, r"'work'[^\]]*\]\.includes\(INITIAL_SECTION\)")
         # MAIN MANAGER (Mark, 2026-10-14: «чтобы была визуализация проекта, который я делаю»):
-        # the project board first, then «Дела» (2026-10-12) and «Изменения».
-        self.assertIn('<button type="button" data-mm-view="map" aria-pressed="true">', html)
-        self.assertIn('data-mm-view="todo"', html)
-        self.assertIn('data-mm-view="infra"', html)
+        # the project board first. Since 2026-10-23 («первые — основные проекты, снизу история»)
+        # «Дела» and «Изменения» are tabs of the history below the board, not views that replace it.
+        self.assertLess(html.index('data-mm-panel="map"'), html.index('id="mm-history"'))
+        history = html[html.index('id="mm-history"'):html.index('class="mm-more"')]
+        self.assertIn('<button type="button" data-mm-view="todo" aria-pressed="true">', history)
+        self.assertIn('data-mm-view="infra"', history)
         self.assertIn("renderMap(data);", html)
         self.assertIn("renderTodo(data);", html)
         # Loose ends are part of the same list (2026-10-13), not a separate view.
         self.assertNotIn('data-mm-view="loose"', html)
-        todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="project"')]
+        todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="infra"')]
         self.assertIn('id="mm-loose"', todo_panel)
         self.assertIn("(data.owner_view ? items.length : 0) + data.dropped_count + data.forgot_count", html)
         # Projects reuse the Platforms mascots and open a per-project page.

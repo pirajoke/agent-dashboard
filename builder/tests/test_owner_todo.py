@@ -130,6 +130,19 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         projects = PAGE[PAGE.index("function mmRenderOwnerProjects("):PAGE.index("let mmOwnerProjectCards")]
         self.assertIn("getElementById('owner-project-body')?.replaceChildren()", projects)
 
+    def test_projects_first_then_folded_blocks_then_history(self):
+        # Mark 2026-10-23: main projects on top; the summary, his tasks and «Личное» are one line each
+        # until opened (remembered per browser); «Дела» and «Изменения» come last as the history.
+        self.assertLess(PAGE.index('data-mm-panel="map"'), PAGE.index('id="mm-folds"'))
+        self.assertLess(PAGE.index('id="mm-folds"'), PAGE.index('id="mm-history"'))
+        folds = PAGE[PAGE.index('id="mm-folds"'):PAGE.index('id="mm-history"')]
+        for host in ('id="mm-summary"', 'id="mm-owner-todo"', 'id="mm-owner-projects"'):
+            self.assertIn(host, folds)
+        for key in ("'summary'", "'todo'", "'personal'"):
+            self.assertIn(f"mmFoldHead({key}", PAGE)
+        self.assertIn("safeStorageSet(`${MM_FOLD_KEY}.${head.dataset.fold}`", PAGE)
+        self.assertIn('.mm-fold:not(.is-open) > .mm-fold-body { display: none; }', PAGE)
+
     def test_summary_is_owner_only_and_has_three_periods(self):
         render = PAGE[PAGE.index("function mmRenderSummary("):PAGE.index("function mmInitSummary(")]
         self.assertIn("if (!data?.owner_view", render)
