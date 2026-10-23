@@ -3526,6 +3526,43 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-todo-check:focus-visible, .mm-todo-body:focus-visible, .mm-todo-add:focus-visible, .mm-todo-done-toggle:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .mm-todo-done-toggle { margin-top: 4px; padding: 4px 0; color: var(--mm-muted); font: inherit; font-size: 12.5px; background: none; border: 0; cursor: pointer; }
 .mm-todo-empty { margin: 4px 0 0; color: var(--mm-muted); font-size: 13px; }
+/* Agents take items off the list (Mark 2026-10-23): a chip on the item and a lane where they walk. */
+.mm-todo-main { flex: 1; min-width: 0; }
+.mm-todo-side { flex: none; display: flex; align-items: center; gap: 6px; margin-top: 1px; }
+.mm-todo-give { min-height: 30px; padding: 3px 10px; color: var(--mm-muted); font: inherit; font-size: 12.5px; font-weight: 600; background: none; border: 1px solid var(--mm-control-line); border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.mm-todo-give:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
+.mm-agent-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 3px 10px; font-size: 12.5px; font-weight: 650; color: var(--mm-ink); background: var(--mm-surface-2, rgba(127,127,127,.08)); border-radius: 999px; white-space: nowrap; }
+.mm-agent-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--mm-claude); }
+.mm-agent-chip.codex i { background: var(--mm-codex); }
+.mm-agent-chip.is-working i { animation: mm-agent-pulse 1.2s ease-in-out infinite; }
+.mm-agent-chip.is-done { color: var(--mm-success); }
+.mm-agent-chip.is-needs_mark, .mm-agent-chip.is-failed { color: var(--mm-danger, #b3412e); }
+.mm-todo-take { width: 28px; height: 28px; padding: 0; color: var(--mm-muted); font-size: 15px; background: none; border: 0; border-radius: 50%; cursor: pointer; }
+.mm-todo-take:hover { color: var(--mm-ink); background: rgba(127,127,127,.12); }
+.mm-todo-agent-note { display: block; margin-top: 4px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-todo-agent-note a { color: var(--mm-accent); font-weight: 650; }
+.mm-todo-give:focus-visible, .mm-todo-take:focus-visible, .mm-todo-agent-note a:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.mm-agent-lane { position: relative; height: 92px; margin: 4px 0 10px; border-radius: 12px; background: linear-gradient(90deg, rgba(127,127,127,.06), rgba(127,127,127,.03)); overflow: hidden; }
+.mm-agent-lane-stops { position: absolute; inset: auto 0 6px 0; display: grid; grid-template-columns: repeat(3, 1fr); color: var(--mm-muted); font-size: 11.5px; font-weight: 650; text-align: center; }
+.mm-agent-lane::before { content: ""; position: absolute; left: 8%; right: 8%; top: 54px; border-top: 2px dashed var(--mm-line); }
+.mm-agent-walker { position: absolute; top: 10px; width: 120px; margin-left: -60px; text-align: center; transition: left 1.6s ease-in-out; }
+.mm-agent-walker svg { display: block; width: 34px; height: 40px; margin: 0 auto; color: var(--mm-claude); }
+.mm-agent-walker.codex svg { color: var(--mm-codex); }
+.mm-agent-walker.is-working svg { animation: mm-agent-walk .5s ease-in-out infinite alternate; }
+.mm-agent-walker span { display: block; overflow: hidden; color: var(--mm-ink); font-size: 11px; line-height: 1.2; white-space: nowrap; text-overflow: ellipsis; }
+@keyframes mm-agent-walk { from { transform: translateY(0) rotate(-4deg); } to { transform: translateY(-3px) rotate(4deg); } }
+@keyframes mm-agent-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) {
+  .mm-agent-walker { transition: none; }
+  .mm-agent-walker.is-working svg, .mm-agent-chip.is-working i { animation: none; }
+}
+@media (max-width: 600px) {
+  .mm-todo-item { flex-wrap: wrap; }
+  .mm-todo-main { flex-basis: calc(100% - 36px); }
+  .mm-todo-side { margin-left: 36px; }
+  .mm-agent-walker { width: 40px; margin-left: -20px; }
+  .mm-agent-walker span { display: none; }
+}
 .mm-owner-grid { display: grid; gap: 14px; }
 .mm-owner-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; max-width: 860px; padding: 18px; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .mm-owner-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
@@ -10490,6 +10527,7 @@ function mmRenderOwnerTodo(payload) {
     host.hidden = true;  // Not the owner, or the Mac mini cannot answer: nothing to show.
     return;
   }
+  if (payload.runner) mmOwnerTodoRunner = payload.runner;
   mmOwnerTodoItems = payload.items.filter(item => item && /^t-[a-f0-9]{8}$/.test(item.id || '') && typeof item.text === 'string');
   const open = mmOwnerTodoItems.filter(item => !item.done);
   const done = mmOwnerTodoItems.filter(item => item.done);
@@ -10518,9 +10556,16 @@ function mmRenderOwnerTodo(payload) {
     body.type = 'button';
     body.dataset.todoEdit = item.id;
     if (item.note) body.appendChild(mmEl('small', '', item.note));
-    row.appendChild(body);
+    const main = mmEl('div', 'mm-todo-main');
+    main.appendChild(body);
+    const agentNote = mmAgentNote(item);
+    if (agentNote) main.appendChild(agentNote);
+    row.appendChild(main);
+    if (!item.done) row.appendChild(mmAgentSide(item));
     list.appendChild(row);
   });
+  const lane = mmAgentLane(open);
+  if (lane) card.appendChild(lane);
   if (shown.length) card.appendChild(list);
   else card.appendChild(mmEl('p', 'mm-todo-empty', 'Пока ничего не ждёт. Добавь дело, если что-то на тебе.'));
   if (done.length) {
@@ -10531,6 +10576,120 @@ function mmRenderOwnerTodo(payload) {
   }
   host.appendChild(card);
   host.hidden = false;
+}
+
+const MM_AGENT_NAMES = { claude: 'Claude', codex: 'Codex' };
+const MM_AGENT_STATES = {
+  queued: 'В очереди', working: 'Работает', done: 'Готово', needs_mark: 'Нужен ты', failed: 'Не вышло',
+};
+// Where each state stands on the lane, in percent: queue, at work, finished.
+const MM_AGENT_STOPS = { queued: 16.7, working: 50, done: 83.3, needs_mark: 83.3, failed: 83.3 };
+const mmAgentLastStop = new Map();
+let mmOwnerTodoRunner = null;
+
+function mmAgentFigure() {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 34 40');
+  svg.setAttribute('aria-hidden', 'true');
+  [['line', {x1: 17, y1: 2, x2: 17, y2: 7}], ['circle', {cx: 17, cy: 2.5, r: 2}],
+   ['rect', {x: 7, y: 7, width: 20, height: 15, rx: 5}], ['rect', {x: 10, y: 23, width: 14, height: 9, rx: 3}],
+   ['line', {x1: 13, y1: 32, x2: 12, y2: 38}], ['line', {x1: 21, y1: 32, x2: 22, y2: 38}]].forEach(([tag, attrs]) => {
+    const shape = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([key, value]) => shape.setAttribute(key, value));
+    shape.setAttribute(tag === 'line' ? 'stroke' : 'fill', 'currentColor');
+    if (tag === 'line') shape.setAttribute('stroke-width', '2.4');
+    if (tag === 'line') shape.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(shape);
+  });
+  [[13, 14], [21, 14]].forEach(([cx, cy]) => {
+    const eye = document.createElementNS(ns, 'circle');
+    eye.setAttribute('cx', cx); eye.setAttribute('cy', cy); eye.setAttribute('r', '2'); eye.setAttribute('fill', '#fff');
+    svg.appendChild(eye);
+  });
+  return svg;
+}
+
+function mmAgentLane(open) {
+  const busy = open.filter(item => item.agent && MM_AGENT_STOPS[item.agent.state] !== undefined);
+  if (!busy.length) return null;
+  const lane = mmEl('div', 'mm-agent-lane');
+  lane.setAttribute('role', 'img');
+  const working = busy.filter(item => item.agent.state === 'working').length;
+  lane.setAttribute('aria-label', `Агенты: ${working ? `работают над ${working}` : 'сейчас никто не работает'}, всего дел у агентов ${busy.length}`);
+  const stops = mmEl('div', 'mm-agent-lane-stops');
+  ['Очередь', 'Работает', 'Готово'].forEach(label => stops.appendChild(mmEl('span', '', label)));
+  lane.appendChild(stops);
+  const crowd = {};
+  busy.forEach(item => {
+    const target = MM_AGENT_STOPS[item.agent.state];
+    const nudge = (crowd[target] = (crowd[target] || 0) + 1) - 1;  // Several at one stop stand side by side.
+    const step = window.innerWidth <= 600 ? 9 : 14;
+    const spread = nudge % 2 ? -Math.ceil(nudge / 2) : nudge / 2;  // 0, left, right, further left…
+    const left = Math.max(6, Math.min(94, target + spread * step));
+    const walker = mmEl('div', `mm-agent-walker ${item.agent.by === 'codex' ? 'codex' : 'claude'} is-${item.agent.state}`);
+    walker.appendChild(mmAgentFigure());
+    walker.appendChild(mmEl('span', '', item.text));
+    const from = mmAgentLastStop.get(item.id);
+    walker.style.left = `${from ?? left}%`;
+    if (from !== undefined && from !== left) requestAnimationFrame(() => requestAnimationFrame(() => { walker.style.left = `${left}%`; }));
+    mmAgentLastStop.set(item.id, left);
+    lane.appendChild(walker);
+  });
+  return lane;
+}
+
+function mmAgentSide(item) {
+  const side = mmEl('div', 'mm-todo-side');
+  const agent = item.agent;
+  if (!agent) {
+    const give = mmEl('button', 'mm-todo-give', 'Агенту');
+    give.type = 'button';
+    give.dataset.todoGive = item.id;
+    give.title = item.triage && item.triage.agent === false && item.triage.why ? `Claude считает: ${item.triage.why}` : 'Отдать это дело агенту';
+    give.setAttribute('aria-label', `Отдать агенту: ${item.text}`);
+    side.appendChild(give);
+    return side;
+  }
+  const chip = mmEl('span', `mm-agent-chip ${agent.by === 'codex' ? 'codex' : 'claude'} is-${agent.state}`);
+  chip.appendChild(mmEl('i', ''));
+  chip.appendChild(document.createTextNode(`${MM_AGENT_STATES[agent.state] || agent.state} · ${MM_AGENT_NAMES[agent.by] || agent.by}`));
+  side.appendChild(chip);
+  if (agent.state !== 'working') {
+    const take = mmEl('button', 'mm-todo-take', '↩');
+    take.type = 'button';
+    take.dataset.todoTake = item.id;
+    take.title = 'Забрать себе';
+    take.setAttribute('aria-label', `Забрать себе: ${item.text}`);
+    side.appendChild(take);
+  }
+  return side;
+}
+
+function mmAgentNote(item) {
+  const agent = item.agent;
+  if (!agent) return null;
+  const note = mmEl('span', 'mm-todo-agent-note');
+  if (agent.state === 'queued') {
+    const runner = mmOwnerTodoRunner;
+    if (runner?.state === 'error' && runner.reason === 'claude_auth_failed') note.textContent = 'Агент не может войти в Claude на Mac mini.';
+    else if (runner?.state === 'error' && runner.reason === 'claude_not_found') note.textContent = 'На Mac mini не найден Claude Code.';
+    else if (!runner || runner.state === 'unknown') note.textContent = 'Агент на Mac mini ещё не запускался.';
+    else note.textContent = 'Агент возьмёт в ближайшие минуты.';
+  } else if (agent.state === 'working') {
+    note.textContent = 'Агент работает над этим сейчас.';
+  } else if (agent.result) {
+    note.textContent = agent.result;
+  }
+  if (agent.url && /^https:\/\//.test(agent.url)) {
+    const link = document.createElement('a');
+    link.href = agent.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = ' Открыть';
+    note.appendChild(link);
+  }
+  return note.textContent ? note : null;
 }
 
 async function mmLoadOwnerTodo() {
@@ -10600,6 +10759,15 @@ function mmInitOwnerTodo() {
     }
     const edit = event.target.closest('[data-todo-edit]');
     if (edit) return mmOpenTodoEdit(mmOwnerTodoItems.find(item => item.id === edit.dataset.todoEdit));
+    const handOff = event.target.closest('[data-todo-give], [data-todo-take]');
+    if (handOff) {
+      const giving = handOff.matches('[data-todo-give]');
+      handOff.disabled = true;
+      const result = await mmPostOwnerTodo(giving ? {action: 'assign', id: handOff.dataset.todoGive, by: 'claude'}
+                                                  : {action: 'unassign', id: handOff.dataset.todoTake});
+      if (result?.error) { handOff.disabled = false; handOff.title = mmTodoErrorText(result.error); }
+      return;
+    }
     const toggle = event.target.closest('[data-todo-toggle]');
     if (toggle) {
       const item = mmOwnerTodoItems.find(entry => entry.id === toggle.dataset.todoToggle);
@@ -10642,6 +10810,11 @@ function mmInitOwnerTodo() {
   const dialog = document.getElementById('todo-edit-dialog');
   dialog.addEventListener('click', event => { if (event.target === dialog) mmCloseTodoEdit(); });
   document.getElementById('mm-health').addEventListener('click', () => showSection('machines'));
+  // While an agent holds an item, look more often so its walk and result show up soon.
+  setInterval(() => {
+    if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
+    if (mmOwnerTodoItems.some(item => !item.done && ['queued', 'working'].includes(item.agent?.state))) mmLoadOwnerTodo();
+  }, 30000);
 }
 
 async function openProject(id, day = null) {
