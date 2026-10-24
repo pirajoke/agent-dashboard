@@ -4166,17 +4166,17 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .docxx-flow[data-active="true"] .docxx-mini-docs { animation: none; } .docxx-node { transition: none; } }
 @media (max-width: 700px) { .docxx-connector { margin: 0; } .docxx-machine svg.docxx-mini { width: 170px; height: 144px; } }
 /* 3D route (Mark 2026-10-23). */
-.docxx-stage { position: relative; height: 460px; margin: 22px 0 6px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, #fffdf8 0%, #f3ece0 70%, #ece3d4 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
+.docxx-stage { position: relative; height: 460px; margin: 22px 0 6px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, var(--mm-surface) 0%, var(--mm-background) 70%, var(--mm-surface-hover) 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
 .docxx-stage.is-dragging { cursor: grabbing; }
 .docxx-stage[hidden] { display: none; }
 .docxx-stage canvas { display: block; width: 100%; height: 100%; }
 .docxx-stage-labels { position: absolute; inset: 0; pointer-events: none; }
-.docxx-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: rgba(255, 252, 246, .94); border: 1px solid var(--mm-line); border-radius: 12px; box-shadow: 0 2px 8px rgba(60, 45, 20, .1); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
+.docxx-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 12px; box-shadow: var(--mm-shadow-soft); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
 .docxx-stage-label small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
 .docxx-stage-label:hover, .docxx-stage-label[aria-pressed="true"] { border-color: var(--mm-accent); }
 .docxx-stage-label:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .docxx-stage-label.is-hub { padding: 8px 14px; font-size: 14.5px; border-color: var(--mm-accent); }
-.docxx-stage-hint { position: absolute; left: 14px; bottom: 12px; margin: 0; padding: 5px 10px; color: var(--mm-muted); font-size: 12px; background: rgba(255, 252, 246, .85); border-radius: 999px; pointer-events: none; }
+.docxx-stage-hint { position: absolute; left: 14px; bottom: 12px; margin: 0; padding: 5px 10px; color: var(--mm-muted); font-size: 12px; background: var(--mm-surface); border-radius: 999px; pointer-events: none; }
 .docxx-stage-reset { position: absolute; right: 12px; bottom: 10px; min-height: 32px; padding: 4px 12px; color: var(--mm-accent); font: inherit; font-size: 12.5px; font-weight: 650; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
 #section-documents.has-3d .docxx-flow { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0 14px; }
 #section-documents.has-3d .docxx-flow > .docxx-connector, #section-documents.has-3d .docxx-column h3, #section-documents.has-3d .docxx-machine { display: none; }
@@ -11662,6 +11662,19 @@ function ccDocxxReset(message, state='unavailable') {
   document.getElementById('docxx-records').replaceChildren(ccDocxxEl('p',message,'docxx-empty'));
   ccDocxxRenderGmail(); ccDocxxExplain();
 }
+function ccDocxxRefreshFailed() {
+  if(!ccDocxxData) { ccDocxxReset('Нет связи с источником статуса.'); return; }
+  const snapshot={...ccDocxxData,state:'stale',busy:null};
+  if(snapshot.gmail) snapshot.gmail={...snapshot.gmail,state:'stale'};
+  if(snapshot.operations) snapshot.operations={...snapshot.operations,state:'stale'};
+  ccDocxxRender(snapshot);
+  const message='Не удалось обновить данные. Показан последний загруженный снимок; текущая работа не подтверждена.';
+  ccDocxxText('docxx-state','Нет связи — показаны последние данные');
+  ccDocxxText('docxx-machine-label','Состояние неизвестно');
+  const warnings=document.getElementById('docxx-warnings');
+  warnings.replaceChildren(ccDocxxEl('p',message)); warnings.hidden=false;
+  ccDocxxWarnings=[message,...(snapshot.warnings||[])];
+}
 function ccDocxxClear() {
   ccDocxxGeneration++; ccDocxxController?.abort(); ccDocxxController=null;
   clearTimeout(ccDocxxTimer); ccDocxxTimer=null;
@@ -11812,7 +11825,7 @@ async function ccLoadDocxx() {
     if(!data || typeof data!=='object' || !data.state || (data.records && !Array.isArray(data.records))) throw new Error('invalid_data');
     ccDocxxRender(data);
   } catch(error) {
-    if(generation===ccDocxxGeneration && ccDocxxVisible()) ccDocxxReset('Нет связи с источником статуса.');
+    if(generation===ccDocxxGeneration && ccDocxxVisible()) ccDocxxRefreshFailed();
   } finally {
     clearTimeout(timeout);
     if(generation===ccDocxxGeneration) { button.disabled=false; ccDocxxController=null; if(ccDocxxVisible()) ccDocxxTimer=setTimeout(ccLoadDocxx,5000); }
