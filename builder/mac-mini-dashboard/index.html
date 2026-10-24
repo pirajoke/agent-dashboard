@@ -4164,6 +4164,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-stage { position: relative; height: 460px; margin: 22px 0 6px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, #fffdf8 0%, #f3ece0 70%, #ece3d4 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
 .docxx-stage.is-dragging { cursor: grabbing; }
 .docxx-stage[hidden] { display: none; }
+.docxx-3d-note { margin: 10px 0 0; color: var(--mm-muted); font-size: 12.5px; }
 .docxx-stage canvas { display: block; width: 100%; height: 100%; }
 .docxx-stage-labels { position: absolute; inset: 0; pointer-events: none; }
 .docxx-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: rgba(255, 252, 246, .94); border: 1px solid var(--mm-line); border-radius: 12px; box-shadow: 0 2px 8px rgba(60, 45, 20, .1); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
@@ -11796,13 +11797,28 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
 (function ccDocxx3d() {
   const stage = document.getElementById('docxx-stage');
   const section = document.getElementById('section-documents');
-  if (!stage || !section || !/^https?:$/.test(window.location.protocol) || typeof window.WebGLRenderingContext === 'undefined') return;
+  if (!stage || !section || !/^https?:$/.test(window.location.protocol)) return;
+  // If the 3D view can't start, say why under the flat route instead of failing silently.
+  const fail = reason => {
+    console.warn('Documents 3D view:', reason);
+    let note = document.getElementById('docxx-3d-note');
+    if (!note) {
+      note = document.createElement('p');
+      note.id = 'docxx-3d-note';
+      note.className = 'docxx-3d-note';
+      stage.after(note);
+    }
+    note.textContent = `3D-вид не открылся (${reason}). Показана простая схема.`;
+  };
   try {
     const probe = document.createElement('canvas');
-    if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return;
-  } catch (error) { return; }
+    if (typeof window.WebGLRenderingContext === 'undefined' || !(probe.getContext('webgl2') || probe.getContext('webgl'))) { fail('браузер не даёт WebGL'); return; }
+  } catch (error) { fail('браузер не даёт WebGL'); return; }
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-  import(new URL('/dashboard-assets/three.module.min.js', window.location.href).href).then(THREE => {
+  import(new URL('/dashboard-assets/three.module.min.js', window.location.href).href).catch(error => {
+    console.warn('Documents 3D view: import failed', error);
+    throw new Error('не загрузилась библиотека 3D');
+  }).then(THREE => {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.shadowMap.enabled = true;
@@ -12149,7 +12165,11 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
     stage.hidden = false;
     section.classList.add('has-3d');
     requestAnimationFrame(frame);
-  }).catch(() => { /* The flat route below stays as it is. */ });
+  }).catch(error => {
+    stage.hidden = true;
+    section.classList.remove('has-3d');
+    fail(String(error && error.message || error).slice(0, 160));
+  });
 })();
 for(const button of document.querySelectorAll('[data-docxx-filter]')) button.addEventListener('click',()=>{
   ccDocxxFilter=button.dataset.docxxFilter;
