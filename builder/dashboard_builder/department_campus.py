@@ -54,6 +54,18 @@ DEPARTMENT_ZONES = {
     },
 }
 
+# Mark 2026-10-24: only plain Russian on screen. The English labels stay as data (events, roster);
+# this is what the campus shows for them.
+DEPARTMENT_DISPLAY_LABELS = {
+    "Центр управления": "Центр управления",
+    "Sales": "Продажи",
+    "Development": "Разработка",
+    "Design": "Дизайн",
+    "Infrastructure": "Инфраструктура",
+    "Internal": "Знания",
+    "Finance": "Финансы",
+}
+
 _CAMPUS_AGENT_DEPARTMENTS = {
     "COORDINATOR": "hq",
     "RESEARCHER": "sales",
@@ -610,7 +622,7 @@ def department_campus_projection(
 def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
     boundary = (
         '<span class="campus-owner-boundary" aria-label="Требуется разрешение владельца">'
-        "🔒 owner permission</span>"
+        "🔒 с твоего разрешения</span>"
         if zone["owner_permission_boundary"]
         else ""
     )
@@ -712,7 +724,7 @@ def _zone_html(department_id: str, zone: dict[str, Any]) -> str:
     return f"""
         <section class="campus-zone campus-zone-{department_id}" id="{zone['zone_id']}"
             data-department-id="{department_id}" aria-labelledby="{zone['zone_id']}-label">
-            <header><h3 id="{zone['zone_id']}-label">{zone['label']}</h3>{manager_presence}{boundary}</header>
+            <header><h3 id="{zone['zone_id']}-label">{DEPARTMENT_DISPLAY_LABELS.get(zone['label'], zone['label'])}</h3>{manager_presence}{boundary}</header>
             {residents_html}
             {project_folders_html}
             <div class="campus-furniture" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -769,9 +781,8 @@ def build_department_campus_html() -> str:
 <section class="section department-campus" id="department-campus" aria-labelledby="department-campus-title">
     <div class="section-head campus-head">
         <div class="section-dot" style="background:#e6a23c"></div>
-        <div><div class="section-title" id="department-campus-title">Кампус отделов</div>
-        <div class="campus-subtitle">Только просмотр</div></div>
-        <div class="section-count" data-campus-count>{len(CAMPUS_RESIDENTS)} в команде · все ожидают задач</div>
+        <div><div class="section-title" id="department-campus-title">Кампус отделов</div></div>
+        <div class="section-count" data-campus-count hidden>{len(CAMPUS_RESIDENTS)} в команде · все ожидают задач</div>
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
         <button class="campus-view-toggle" type="button" data-campus-view-toggle
             aria-pressed="false" aria-label="Объёмный 3D-вид кампуса" hidden>3D</button>
@@ -783,18 +794,18 @@ def build_department_campus_html() -> str:
     <div class="campus-stage-3d" data-campus-3d data-campus-3d-state="off" hidden aria-hidden="true">
         <div class="campus-3d-labels" data-campus-3d-labels></div>
         <div class="campus-3d-focus" data-campus-3d-focus hidden></div>
-        <p class="campus-3d-hint">Потяни, чтобы повернуть · нажми на отдел — кто чем занят</p>
+        <p class="campus-3d-hint" hidden>Потяни, чтобы повернуть · нажми на отдел — кто чем занят</p>
     </div>
     <div class="campus-map" aria-label="Семь отделов Pixel Verse">
         <div class="campus-boulevard" aria-hidden="true"></div>
         <div class="campus-route-layer" data-campus-route-layer aria-hidden="true"></div>
         {zones}
-        <section class="campus-waypoint campus-test-lab" data-campus-waypoint="test-lab" aria-label="Shared Test Lab">
-            <strong>Test Lab</strong><span>shared verification waypoint</span>
+        <section class="campus-waypoint campus-test-lab" data-campus-waypoint="test-lab" aria-label="Проверка">
+            <strong>Проверка</strong><span>здесь проверяют работу</span>
             <div class="campus-waypoint-agents" data-campus-waypoint-agents></div>
         </section>
-        <section class="campus-waypoint campus-github-station" data-campus-waypoint="github-station" aria-label="Shared GitHub Station">
-            <strong>GitHub Station</strong><span>completed work waypoint</span>
+        <section class="campus-waypoint campus-github-station" data-campus-waypoint="github-station" aria-label="Готово">
+            <strong>Готово</strong><span>сюда приносят готовую работу</span>
             <div class="campus-waypoint-agents" data-campus-waypoint-agents></div>
         </section>
     </div>

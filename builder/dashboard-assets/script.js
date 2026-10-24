@@ -180,12 +180,14 @@
         failed: 'department',
     };
     const movingStatuses = ['active', 'testing'];
+    // Mark 2026-10-24: department names in plain Russian on screen (the data keeps the English labels).
+    const campusDepartmentNames = {Sales: 'Продажи', Development: 'Разработка', Design: 'Дизайн', Infrastructure: 'Инфраструктура', Internal: 'Знания', Finance: 'Финансы'};
     const stateMessages = {
         loading: 'Загрузка кампуса…',
         empty: 'Команда на местах · ждёт задачи',
         stale: 'Команда на местах · свежих событий пока нет',
         unavailable: 'Команда на местах · live-данные временно недоступны',
-        active: 'Показаны свежие подтверждённые события',
+        active: 'Команда работает',
     };
 
     function campusOwnerHeaders() {
@@ -330,7 +332,7 @@
         if (stateEl) {
             const queueTime = state === 'loading' ? '' : formatCampusQueueTime(campusQueueUpdatedAt);
             const message = stateMessages[state] || stateMessages.unavailable;
-            stateEl.textContent = queueTime ? `${message} · очередь обновлена ${queueTime}` : message;
+            stateEl.textContent = message;
         }
         if (countEl) {
             const omitted = omittedTasks > 0 ? ` · скрыто задач: ${omittedTasks}` : '';
@@ -352,7 +354,7 @@
         lastTrigger = button;
         button.setAttribute('aria-expanded', 'true');
         detailFields.task_id.textContent = event.task_id;
-        detailFields.department.textContent = event.department_label;
+        detailFields.department.textContent = campusDepartmentNames[event.department_label] || event.department_label;
         detailFields.project.textContent = event.project;
         detailFields.role.textContent = event.role;
         detailFields.status.textContent = statusLabels[event.status] || '—';
@@ -907,8 +909,8 @@
             room.aisleZ = room.farZ + 2.3;
         });
         const WAYPOINTS = {
-            'test-lab': {x: 2.6, z: 0, color: 0x6fa8dc, label: 'Test Lab'},
-            'github-station': {x: 10.4, z: 0, color: 0x5fae74, label: 'GitHub Station'},
+            'test-lab': {x: 2.6, z: 0, color: 0x6fa8dc, label: 'Проверка'},
+            'github-station': {x: 10.4, z: 0, color: 0x5fae74, label: 'Готово'},
         };
 
         const renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'low-power'});

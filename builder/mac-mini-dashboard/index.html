@@ -4188,6 +4188,26 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media(max-width:700px) { .docxx-head { align-items:flex-start; } .docxx-flow { grid-template-columns:1fr; gap:16px; padding-top:24px; } .docxx-column h3 { margin-bottom:12px; } .docxx-connector { margin:0; justify-content:center; height:16px; } .docxx-connector span { flex:none; width:32px; } .docxx-connector b { transform:rotate(90deg); } .docxx-processor { display:grid; grid-template-columns:1fr 1fr; gap:12px; } .docxx-processor h3,.docxx-processor .docxx-caption { grid-column:1/-1; margin:0; } .docxx-machine { min-height:165px; } .docxx-steps { align-self:center; margin:0; } .docxx-explainer { flex-wrap:wrap; } .docxx-explainer>div { flex:1; min-width:0; } .docxx-explainer a { margin-left:34px; } .docxx-results-head { flex-direction:column; align-items:stretch; gap:12px; } .docxx-record summary { flex-wrap:wrap; gap:10px; } .docxx-record-name { flex-basis:75%; } .docxx-record-state { margin-left:30px; text-align:left; max-width:none; } .docxx-record-body { padding-left:0; } .docxx-record-body dl { grid-template-columns:1fr; gap:2px; } .docxx-record-body dd { margin-bottom:10px; } }
 @media(prefers-reduced-motion:reduce) { #section-documents *,#section-documents *::after { animation:none!important; transition:none!important; } }
 
+/* Mark 2026-10-24 «удали по максимуму ненужной инфы, метадату… замени на i»: counters, timings, ports and
+   service notes leave the page. What is still useful opens from a small «i» in one shared window. */
+.cc-i { display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 1px solid var(--mm-control-line); border-radius: 50%; background: transparent; color: var(--mm-muted); font: italic 600 13px/1 Georgia, 'Times New Roman', serif; cursor: pointer; flex: none; vertical-align: middle; }
+.cc-i:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
+.cc-i:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.cc-info-body { display: grid; gap: 12px; font-size: 14px; line-height: 1.55; }
+.cc-info-body p { margin: 0; }
+.cc-info-body dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 18px; margin: 0; }
+.cc-info-body dt { color: var(--mm-muted); }
+.cc-info-body dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.cc-info-body ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.nav-pill .pill-badge, .cc-side .footer, .cc-side .site-version { display: none !important; }
+.docxx-stage-hint, #docxx-content-help, #docxx-results-note { display: none !important; }
+.platforms-legend, .platform-index, .platform-note { display: none !important; }
+.context-status:empty { display: none; }
+.docxx-facts[hidden], .machine-gauges[hidden], .growth-summary[hidden], .mm-filter-tabs[hidden], .mm-section-heading[hidden], .svc-count:empty { display: none !important; }
+.docxx-statusbar > .cc-i { flex: 0 0 auto !important; width: 24px !important; margin: 0 auto 0 0 !important; }
+#mm-todo-count, #mm-infra-count, #mm-todo-total, #mm-loose-total, #mm-loose-all, #mm-loose-dropped, #mm-loose-forgot { display: none !important; }
+.docxx-warnings { display: flex; align-items: center; gap: 12px; }
+.docxx-warnings p { margin: 0; }
 </style>
 </head>
 <body>
@@ -4543,6 +4563,17 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </form>
   </dialog>
 
+  <!-- Mark 2026-10-24: one shared window for every «i». -->
+  <dialog class="tab-name-dialog cc-info-dialog" id="cc-info-dialog" aria-labelledby="cc-info-title">
+    <div class="tab-name-editor">
+      <div class="tab-name-head">
+        <strong class="tab-name-editor-title" id="cc-info-title">Подробнее</strong>
+        <button type="button" class="tab-name-close" id="cc-info-close" aria-label="Закрыть">×</button>
+      </div>
+      <div class="cc-info-body" id="cc-info-body"></div>
+    </div>
+  </dialog>
+
   <div class="site-update" id="site-update" role="status" aria-live="polite" hidden>
     <span>Вышла новая версия сайта</span>
     <button type="button" class="site-update-go" id="site-update-go">Обновить</button>
@@ -4557,7 +4588,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </header>
     <div class="docxx-statusbar" role="status" aria-live="polite">
       <span class="docxx-indicator" id="docxx-indicator" data-state="unavailable"></span>
-      <strong id="docxx-state">Подключаемся к Mini…</strong><span id="docxx-freshness">Проверяем доступ владельца</span>
+      <strong id="docxx-state">Подключаемся к Mini…</strong><span id="docxx-freshness" hidden>Проверяем доступ владельца</span><button type="button" class="cc-i" data-cc-info="docxx" aria-label="Подробнее о разборе документов">i</button>
       <button type="button" id="docxx-refresh" class="docxx-button">Обновить</button>
     </div>
     <div id="docxx-warnings" class="docxx-warnings" hidden></div>
@@ -4612,7 +4643,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </div>
     </div>
     <div class="docxx-explainer" id="docxx-explainer" hidden><span class="docxx-detail-mark" aria-hidden="true">↳</span><div><h3 id="docxx-step-title">Mac mini — точка обработки</h3><p id="docxx-step-description">Нажми на любой узел, чтобы узнать, что в нём происходит. Схема показывает общий маршрут; точный внутренний шаг обработчик пока не сообщает.</p></div><a id="docxx-step-link" hidden target="_blank" rel="noopener noreferrer">Открыть ↗</a></div>
-    <div class="docxx-facts" aria-label="Последний снимок обработки файлов из iCloud и Google Drive"><span>Очередь файлов <b id="docxx-pending">—</b></span><span>Нужен разбор <b id="docxx-review">—</b></span><span>В каталоге <b id="docxx-catalog-count">—</b></span><span>Вызовы модели за проход <b id="docxx-model">—</b></span></div>
+    <div class="docxx-facts" hidden aria-label="Последний снимок обработки файлов из iCloud и Google Drive"><span>Очередь файлов <b id="docxx-pending">—</b></span><span>Нужен разбор <b id="docxx-review">—</b></span><span>В каталоге <b id="docxx-catalog-count">—</b></span><span>Вызовы модели за проход <b id="docxx-model">—</b></span></div>
     <details class="docxx-unified" id="docxx-operations">
       <summary>Общая история обработки</summary>
       <p id="docxx-operations-state" class="docxx-footnote">Общая история ещё не подтверждена.</p>
@@ -4624,7 +4655,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button id="docxx-content-submit" class="docxx-button" type="submit">Найти</button>
     </form>
     <p id="docxx-content-help" class="docxx-footnote">Приватный поиск по зарегистрированным версиям. Результат поиска не подтверждает текущее состояние файла в облаке.</p>
-    <p id="docxx-content-state" class="docxx-footnote" role="status" aria-live="polite">Введите слово или точную фразу.</p>
+    <p id="docxx-content-state" class="docxx-footnote" role="status" aria-live="polite"></p>
     <ol id="docxx-content-results" class="docxx-search-results" aria-label="Результаты поиска документов"></ol>
     <div id="docxx-help" class="docxx-help" hidden>
       <h3>Сохрани документ. Остальное начнёт Mini.</h3>
@@ -4841,7 +4872,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="platform-toolbar">
     <button class="platform-archive-open platform-new" id="platform-new" type="button" aria-haspopup="dialog" aria-controls="platform-edit-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg><span>Новая карточка</span></button>
     <div class="platform-archive" id="platform-archive" hidden>
-      <button class="platform-archive-open" id="platform-archive-open" type="button" aria-haspopup="dialog" aria-controls="platform-archive-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · <span id="platform-archive-count">0</span></span></button>
+      <button class="platform-archive-open" id="platform-archive-open" type="button" aria-haspopup="dialog" aria-controls="platform-archive-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив<span id="platform-archive-count" hidden>0</span></span></button>
     </div>
     </div>
     <dialog class="platform-archive-dialog platform-edit-dialog" id="platform-edit-dialog" aria-labelledby="platform-edit-title">
@@ -5046,7 +5077,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="growth-title">Мои точки роста</h2>
-        <p class="cc-page-lede">Что хочу изучить и развить. Тот же список, что в Obsidian.</p>
+        <p class="cc-page-lede">Что хочу изучить и развить. <button type="button" class="cc-i" data-cc-info="growth" aria-label="Откуда список и сколько сделано">i</button></p>
       </div>
       <button class="platform-archive-open" id="growth-new-area" type="button" aria-haspopup="dialog" aria-controls="growth-edit-dialog" hidden><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-plus"/></svg><span>Новая точка роста</span></button>
     </header>
@@ -5081,17 +5112,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="machines-title">Техника</h2>
-        <p class="cc-page-lede">Mac mini, MacBook Air и MacBook Pro: нагрузка, сервисы и хуки.</p>
-      </div>
-      <div class="header-stats machines-stats">
-        <div class="stat-box">
-          <div class="stat-value" id="stat-services">-</div>
-          <div class="stat-label">сервисов</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="stat-hooks">5</div>
-          <div class="stat-label">хуков</div>
-        </div>
+        <p class="cc-page-lede">Работают ли компьютеры и сервисы на них.</p>
       </div>
     </header>
     <nav class="nav-pills cc-machine-nav" aria-label="Компьютеры">
@@ -5114,13 +5135,14 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="machine-icon mini">🖥</div>
       <div class="machine-info">
         <div class="machine-name">Mac Mini M4</div>
-        <div class="machine-status" id="mini-status">Checking connection...</div>
+        <div class="machine-status" id="mini-status">Проверяю связь…</div>
       </div>
-      <span class="machine-badge" id="mini-online-badge">checking</span>
+      <button type="button" class="cc-i" data-cc-info="machine-mini" aria-label="Mac mini: нагрузка и диск">i</button>
+      <span class="machine-badge" id="mini-online-badge">проверка</span>
     </div>
 
     <!-- System gauges row -->
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+    <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
       <div class="card" style="padding:16px;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">CPU</div>
         <div style="font-size:24px;font-weight:700;margin:4px 0;" id="mini-cpu">—</div>
@@ -5166,13 +5188,14 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="machine-icon air">💻</div>
       <div class="machine-info">
         <div class="machine-name" id="air-hostname">MacBook Air</div>
-        <div class="machine-status" id="air-status">Loading...</div>
+        <div class="machine-status" id="air-status">Проверяю связь…</div>
       </div>
-      <span class="machine-badge online" id="air-online-badge">online</span>
+      <button type="button" class="cc-i" data-cc-info="machine-air" aria-label="MacBook Air: нагрузка и диск">i</button>
+      <span class="machine-badge online" id="air-online-badge">в сети</span>
     </div>
 
     <!-- System gauges row — same layout as Mac Mini -->
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+    <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
       <div class="card" style="padding:16px;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">CPU</div>
         <div style="font-size:24px;font-weight:700;margin:4px 0;" id="air-cpu">—</div>
@@ -5198,7 +5221,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <!-- Services table — same layout as Mac Mini -->
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
-        <div style="font-size:16px; font-weight:600;">Services <span style="font-size:12px; color:var(--muted); font-weight:400;" id="air-svc-count"></span></div>
+        <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="air-svc-count"></span></div>
         <button class="svc-btn" onclick="refreshAir()" style="border:none;">↻ Refresh</button>
       </div>
       <div style="padding:8px 8px 0;">
@@ -5218,13 +5241,14 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="machine-icon air">💼</div>
       <div class="machine-info">
         <div class="machine-name" id="pro-hostname">MacBook Pro</div>
-        <div class="machine-status" id="pro-status">Loading...</div>
+        <div class="machine-status" id="pro-status">Проверяю связь…</div>
       </div>
-      <span class="machine-badge offline" id="pro-online-badge">checking</span>
+      <button type="button" class="cc-i" data-cc-info="machine-pro" aria-label="MacBook Pro: нагрузка и диск">i</button>
+      <span class="machine-badge offline" id="pro-online-badge">проверка</span>
     </div>
 
     <!-- System gauges row — same layout as Mac Mini/Air -->
-    <div style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
+    <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
       <div class="card" style="padding:16px;">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">CPU</div>
         <div style="font-size:24px;font-weight:700;margin:4px 0;" id="pro-cpu">—</div>
@@ -5250,7 +5274,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <!-- Services table — same layout as Mac Mini/Air -->
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
-        <div style="font-size:16px; font-weight:600;">Services <span style="font-size:12px; color:var(--muted); font-weight:400;" id="pro-svc-count"></span></div>
+        <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="pro-svc-count"></span></div>
         <button class="svc-btn" onclick="refreshPro()" style="border:none;">↻ Refresh</button>
       </div>
       <div style="padding:8px 8px 0;">
@@ -5344,7 +5368,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
           <strong>Кампус</strong>
-          <span>агенты двигаются только по настоящим задачам</span>
         </div>
         <div class="pixel-agents-actions">
           <button
@@ -5382,7 +5405,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </div>
     </div>
     <details class="agents-pipeline">
-      <summary>Agent Pipeline · инструменты и история</summary>
+      <summary>Инструменты и история</summary>
       <div class="jarvis-run-card jarvis-hud-card jarvis-pipeline-compact" id="jarvis-hud-card" data-jarvis-pipeline="compact">
         <div class="jarvis-run-header">
           <div>
@@ -5632,6 +5655,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 </div>
 
 <script>
+// «i» window sources (Mark 2026-10-24), filled by each tab below; the window itself is set up further down.
+const ccInfoSources = {};
 // Keep machine telemetry separate. Remote dashboards proxy Air via Tailscale so
 // public HTTPS pages do not depend on browser access to http://localhost:8880.
 const IS_FILE_DASHBOARD = window.location.protocol === 'file:';
@@ -7274,7 +7299,7 @@ function ccRenderPlatformResources(payload) {
     const details = count ? document.createElement('details') : null;
     const status = document.createElement(count ? 'summary' : 'span');
     if (ready && !count) status.className = 'platform-resources-empty';
-    status.textContent = ready ? (count ? `Материалы проекта · ${count}` : 'Материалы пока не подключены.') : (states[payload?.state] || states.unavailable);
+    status.textContent = ready ? (count ? 'Материалы проекта' : 'Материалы пока не подключены.') : (states[payload?.state] || states.unavailable);
     const container = details || area;
     container.appendChild(status);
     if (ready && typeof entry?.note === 'string' && entry.note.length <= 400 && !/[\p{Cc}\p{Cf}]/u.test(entry.note)) {
@@ -7483,12 +7508,13 @@ async function ccLoadContext(recordId = null) {
     if (generation !== ccContextGeneration || !ccContextVisible()) return;
     if (!['ready','partial','stale'].includes(data.state)) throw new Error(data.state === 'owner_required' ? 'owner_required' : data.state === 'not_found' ? 'not_found' : 'unavailable');
     const warning = data.state === 'stale' ? 'Данные устарели. ' : data.state === 'partial' ? 'Часть источников не прочитана. ' : '';
-    document.getElementById('context-status').textContent = warning + 'Обновлено ' + ccContextShort(data.generated_at) + '.';
+    // Mark 2026-10-24: no «Обновлено …» and no record count; only a warning when something is off.
+    document.getElementById('context-status').textContent = warning.trim();
     if (recordId) {
       const r = data.record;
       if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
       document.getElementById('context-reader-title').textContent = r.title;
-      document.getElementById('context-reader-meta').textContent = `${ccContextNames[r.source] || 'Запись'} · Дата записи: ${r.date || 'не указана'} · Изменено: ${ccContextTime(r.modified_at)}`;
+      document.getElementById('context-reader-meta').textContent = [ccContextNames[r.source] || 'Запись', ccContextDay(r.date)].filter(Boolean).join(' · ');
       ccContextRenderBody(r);
       const uri = ccContextURI(r.obsidian_url); const link = document.getElementById('context-obsidian');
       if (uri) link.href = uri; link.hidden = !uri;
@@ -7514,7 +7540,7 @@ async function ccLoadContext(recordId = null) {
       const go=document.createElement('span'); go.className='context-row-go'; go.setAttribute('aria-hidden','true'); go.textContent='›';
       text.append(title,meta); button.append(icon,text,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
     }
-    document.getElementById('context-status').textContent += data.records.length ? ` Записей: ${data.total}.` : ' По выбранным условиям записей нет.';
+    if (!data.records.length) document.getElementById('context-status').textContent = (warning + 'По выбранным условиям записей нет.').trim();
   } catch (error) {
     if (generation !== ccContextGeneration) return;
     ccContextClear(error.message === 'owner_required' ? 'Войдите как владелец, чтобы открыть записи.' : error.message === 'not_found' ? 'Запись не найдена. Обновите каталог.' : 'Источник временно недоступен. Попробуйте обновить каталог.');
@@ -9026,12 +9052,12 @@ function renderSvcTable(tbodyId, services, actionFn) {
   });
   const problems = (grouped.problem || []).length;
   const summary = problems
-    ? `<div class="svc-summary bad"><span class="svc-summary-icon" aria-hidden="true">!</span><span><strong>Нужно внимание: ${problems}</strong> · остальные ${active.length - problems} работают</span></div>`
-    : `<div class="svc-summary ok"><span class="svc-summary-icon" aria-hidden="true">✓</span><span><strong>Всё работает</strong> · ${active.length} ${svcWord(active.length)}</span></div>`;
+    ? `<div class="svc-summary bad"><span class="svc-summary-icon" aria-hidden="true">!</span><span><strong>Нужно внимание:</strong> ${escapeHtml((grouped.problem || []).map(s => s.name || s.label).join(', '))}</span></div>`
+    : `<div class="svc-summary ok"><span class="svc-summary-icon" aria-hidden="true">✓</span><span><strong>Всё работает</strong></span></div>`;
   const style = readSvcStyle();
   const toggle = `<span class="svc-style-switch" role="group" aria-label="Вид списка">${[['table', 'Таблица'], ['list', 'Список']].map(([key, label]) =>
     `<button type="button" aria-pressed="${style === key}" onclick="setSvcStyle('${key}')">${label}</button>`).join('')}</span>`;
-  let html = summary.replace(/<\/div>$/, `${toggle}</div>`);
+  let html = summary;
   if (style === 'table') {
     html += '<table class="svc-table"><thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th><th></th></tr></thead><tbody>';
     for (const [key, label] of SVC_GROUPS) {
@@ -9046,19 +9072,19 @@ function renderSvcTable(tbodyId, services, actionFn) {
     for (const [key, label] of SVC_GROUPS) {
       const list = grouped[key] || [];
       if (!list.length) continue;
-      html += `<section class="svc-group svc-group-${key}"><h4 class="svc-group-title">${label} <span>${list.length}</span></h4>`;
+      html += `<section class="svc-group svc-group-${key}"><h4 class="svc-group-title">${label}</h4>`;
       list.forEach(s => { html += renderSvcRow(s, tbodyId, actionFn, false); });
       html += '</section>';
     }
   }
   if (!active.length) html += '<p class="svc-empty">Здесь пусто: все сервисы в архиве.</p>';
   if (archived.length) {
-    html += `<div class="svc-archive-bar"><button class="platform-archive-open" type="button" aria-haspopup="dialog" onclick="openSvcArchive('${tbodyId}')"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив · ${archived.length}</span>${archivedProblems ? `<span class="svc-archive-problem">· с проблемой: ${archivedProblems}</span>` : ''}</button></div>`;
+    html += `<div class="svc-archive-bar"><button class="platform-archive-open" type="button" aria-haspopup="dialog" onclick="openSvcArchive('${tbodyId}')"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив</span>${archivedProblems ? `<span class="svc-archive-problem">· есть проблема</span>` : ''}</button></div>`;
   }
   host.innerHTML = html;
   const working = active.filter(s => !svcProblem(s)).length;
   const count = document.getElementById(tbodyId.replace('-svc-tbody', '-svc-count'));
-  if (count) count.textContent = `· ${working} из ${active.length} работают`;
+  if (count) count.textContent = '';
   const badge = document.getElementById(tbodyId.replace('-svc-tbody', '-badge'));
   if (badge) badge.textContent = `${working}/${active.length}`;
   const dialog = document.getElementById('svc-archive-dialog');
@@ -9072,9 +9098,10 @@ let svcStyleMemory = null;
 function readSvcStyle() {
   if (svcStyleMemory) return svcStyleMemory;
   try {
-    return localStorage.getItem(SVC_STYLE_STORAGE_KEY) === 'list' ? 'list' : 'table';
+    // Mark 2026-10-24: only the plain list; ports and runtime open on click.
+    return 'list';
   } catch (error) {
-    return 'table';
+    return 'list';
   }
 }
 
@@ -9253,6 +9280,15 @@ function renderHeaderDate() {
     new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
 }
 
+// Mark 2026-10-24: load, memory, disk and uptime moved from the page into each computer's «i».
+const machineUptime = {};
+for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro', 'MacBook Pro']]) {
+  ccInfoSources[`machine-${key}`] = () => {
+    const text = id => { const t = document.getElementById(`${key}-${id}`)?.textContent?.trim(); return t && t !== '—' ? t : ''; };
+    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Диск', text('disk')], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+  };
+}
+
 function renderGauges(prefix, sys) {
   if (!sys) return;
   const cpuPct = sys.cpu_percent || 0;
@@ -9274,8 +9310,8 @@ function renderGauges(prefix, sys) {
 // ─── Mac Mini ───
 async function refreshMini() {
   if (!MAC_MINI_API) {
-    document.getElementById('mini-status').textContent = 'Offline — set MAC_MINI_API after Tailscale';
-    document.getElementById('mini-online-badge').textContent = 'offline';
+    document.getElementById('mini-status').textContent = 'Нет связи';
+    document.getElementById('mini-online-badge').textContent = 'не в сети';
     document.getElementById('mini-online-badge').className = 'machine-badge offline';
     document.getElementById('mini-badge').textContent = 'offline';
     document.getElementById('mini-cpu').textContent = '—';
@@ -9287,26 +9323,27 @@ async function refreshMini() {
     const data = await fetchJSON(LOCAL_API, '/api/services/detailed');
     if (data && data.services) {
       const svcs = visibleRuntimeServices(data.services);
-      document.getElementById('mini-svc-count').textContent = `· ${svcs.length} в списке`;
+      document.getElementById('mini-svc-count').textContent = '';
       renderSvcTable('mini-svc-tbody', svcs, 'miniAction');
     }
     return;
   }
   const data = await fetchJSON(MAC_MINI_API, '/api/all');
   if (!data) {
-    document.getElementById('mini-online-badge').textContent = 'offline';
+    document.getElementById('mini-online-badge').textContent = 'не в сети';
     document.getElementById('mini-online-badge').className = 'machine-badge offline';
     document.getElementById('mini-badge').textContent = 'offline';
     return;
   }
-  document.getElementById('mini-online-badge').textContent = 'online';
+  document.getElementById('mini-online-badge').textContent = 'в сети';
   document.getElementById('mini-online-badge').className = 'machine-badge online';
   const sys = data.system || {};
-  document.getElementById('mini-status').textContent = `${sys.hostname || 'mac-mini'} · Uptime: ${sys.uptime || '—'}`;
+  document.getElementById('mini-status').textContent = 'Работает';
+  machineUptime.mini = sys.uptime || '';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('mini-badge').textContent = `${running}/${svcs.length}`;
-  document.getElementById('mini-svc-count').textContent = `· ${running} из ${svcs.length} работают`;
+  document.getElementById('mini-svc-count').textContent = '';
   renderSvcTable('mini-svc-tbody', svcs, 'miniAction');
   renderGauges('mini', sys);
 }
@@ -9321,23 +9358,23 @@ async function miniAction(label, action) {
 async function refreshAir() {
   const data = await fetchJSON(AIR_API, `${AIR_API_PATH_PREFIX}/all`);
   if (!data) {
-    document.getElementById('air-status').textContent = 'Health API offline — run mac-mini-health.py';
-    document.getElementById('air-online-badge').textContent = 'offline';
+    document.getElementById('air-status').textContent = 'Нет связи';
+    document.getElementById('air-online-badge').textContent = 'не в сети';
     document.getElementById('air-online-badge').className = 'machine-badge offline';
     document.getElementById('air-badge').textContent = 'off';
     return;
   }
   const sys = data.system;
   document.getElementById('air-hostname').textContent = sys.hostname || 'MacBook Air';
-  document.getElementById('air-status').textContent = `Uptime: ${sys.uptime}`;
-  document.getElementById('air-online-badge').textContent = 'online';
+  document.getElementById('air-status').textContent = 'Работает';
+  machineUptime.air = sys.uptime || '';
+  document.getElementById('air-online-badge').textContent = 'в сети';
   document.getElementById('air-online-badge').className = 'machine-badge online';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('air-badge').textContent = `${running}/${svcs.length}`;
-  document.getElementById('air-svc-count').textContent = `· ${running} из ${svcs.length} работают`;
+  document.getElementById('air-svc-count').textContent = '';
   const shown = renderSvcTable('air-svc-tbody', svcs, 'airAction');
-  if (shown) document.getElementById('stat-services').textContent = `${shown.working}/${shown.total}`;
   renderGauges('air', sys);
 }
 
@@ -9350,8 +9387,8 @@ async function airAction(label, action) {
 async function refreshPro() {
   const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`);
   if (!data) {
-    document.getElementById('pro-status').textContent = 'Health API offline — run mac-mini-health.py on MacBook Pro';
-    document.getElementById('pro-online-badge').textContent = 'offline';
+    document.getElementById('pro-status').textContent = 'Нет связи';
+    document.getElementById('pro-online-badge').textContent = 'не в сети';
     document.getElementById('pro-online-badge').className = 'machine-badge offline';
     document.getElementById('pro-badge').textContent = 'off';
     document.getElementById('pro-cpu').textContent = '—';
@@ -9363,13 +9400,14 @@ async function refreshPro() {
   }
   const sys = data.system;
   document.getElementById('pro-hostname').textContent = sys.hostname || 'MacBook Pro';
-  document.getElementById('pro-status').textContent = `Uptime: ${sys.uptime}`;
-  document.getElementById('pro-online-badge').textContent = 'online';
+  document.getElementById('pro-status').textContent = 'Работает';
+  machineUptime.pro = sys.uptime || '';
+  document.getElementById('pro-online-badge').textContent = 'в сети';
   document.getElementById('pro-online-badge').className = 'machine-badge online';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
   document.getElementById('pro-badge').textContent = `${running}/${svcs.length}`;
-  document.getElementById('pro-svc-count').textContent = `· ${running} из ${svcs.length} работают`;
+  document.getElementById('pro-svc-count').textContent = '';
   renderSvcTable('pro-svc-tbody', svcs, 'proAction');
   renderGauges('pro', sys);
 }
@@ -9787,6 +9825,55 @@ window.addEventListener('focus', checkSiteVersion);
 setInterval(checkSiteVersion, 3 * 60 * 1000);
 checkSiteVersion();
 
+// ─── «i» window ─── Mark 2026-10-24: details that used to sit on the page open here.
+// A button with data-cc-info="<key>" asks ccInfoSources[key]() for a title and a list of [label, value] rows
+// and/or plain lines; without a source it copies the element whose id is the key.
+function ccInfoRows(rows) {
+  const dl = document.createElement('dl');
+  for (const [label, value] of rows) {
+    if (value === undefined || value === null || value === '') continue;
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = String(value);
+    dl.append(dt, dd);
+  }
+  return dl;
+}
+function ccOpenInfo(key, fallbackTitle) {
+  const dialog = document.getElementById('cc-info-dialog');
+  const body = document.getElementById('cc-info-body');
+  if (!dialog || !body) return;
+  body.replaceChildren();
+  let title = fallbackTitle || 'Подробнее';
+  const source = ccInfoSources[key];
+  if (typeof source === 'function') {
+    const info = source() || {};
+    if (info.title) title = info.title;
+    for (const line of info.lines || []) { const p = document.createElement('p'); p.textContent = line; body.append(p); }
+    if (info.rows && info.rows.length) body.append(ccInfoRows(info.rows));
+    if (info.list && info.list.length) { const ul = document.createElement('ul'); for (const item of info.list) { const li = document.createElement('li'); li.textContent = item; ul.append(li); } body.append(ul); }
+    if (info.node) body.append(info.node);
+  } else {
+    const node = document.getElementById(key);
+    if (node) { const copy = node.cloneNode(true); copy.removeAttribute('id'); copy.hidden = false; body.append(copy); }
+  }
+  if (!body.childNodes.length) { const p = document.createElement('p'); p.textContent = 'Подробностей пока нет.'; body.append(p); }
+  document.getElementById('cc-info-title').textContent = title;
+  if (typeof dialog.showModal === 'function') { if (!dialog.open) dialog.showModal(); } else dialog.setAttribute('open', '');
+}
+document.addEventListener('click', event => {
+  const button = event.target.closest && event.target.closest('[data-cc-info]');
+  if (!button) return;
+  event.preventDefault(); event.stopPropagation();
+  ccOpenInfo(button.dataset.ccInfo, button.dataset.ccInfoTitle);
+});
+(function () {
+  const dialog = document.getElementById('cc-info-dialog');
+  if (!dialog) return;
+  const close = () => { if (typeof dialog.close === 'function') dialog.close(); else dialog.removeAttribute('open'); };
+  document.getElementById('cc-info-close').addEventListener('click', close);
+  dialog.addEventListener('click', event => { if (event.target === dialog) close(); });
+})();
+
 // ─── Init ───
 function refreshAll() {
   refreshAir();
@@ -9963,11 +10050,13 @@ function renderGrowth(data) {
   const updated = data.note_updated_at ? mmDayShort(data.note_updated_at.slice(0, 10)) : null;
   if (data.state === 'stale') {
     state.className = 'mm-notice stale';
-    state.textContent = `Заметка не менялась ${data.note_age_days} дн. (с ${updated}): отметки шагов могут быть устаревшими. Источник: ${data.source}.`;
+    state.textContent = `Заметка не менялась ${data.note_age_days} дн.: отметки шагов могут быть устаревшими.`;
   } else {
+    // Mark 2026-10-24: the source line moved into «i».
     state.className = 'mm-notice live';
-    state.textContent = `Источник: ${data.source}, обновлена ${updated}. Время — работа Claude и Codex в связанных проектах за ${data.window_days} дней.`;
+    state.textContent = '';
   }
+  state.hidden = data.state !== 'stale';
   const areas = data.areas || [];
   const steps = areas.reduce((sum, area) => sum + area.progress.total, 0);
   const done = areas.reduce((sum, area) => sum + area.progress.done, 0);
@@ -9979,11 +10068,13 @@ function renderGrowth(data) {
     : data.time_available
       ? { value: workMinutes(minutes), note: 'в связанных проектах' }
       : { value: 'Неизвестно', note: 'нет данных о работе' };
-  summary.innerHTML = [
-    { label: 'Направлений', value: String(areas.length), note: 'в заметке' },
-    { label: 'Шагов сделано', value: steps ? `${done} из ${steps}` : '—', note: steps ? `${Math.round(done / steps * 100)}% пути` : 'шагов пока нет' },
-    { label: 'Время за 30 дней', ...timeStat },
-  ].map(stat => `<div class="mm-stat"><span>${mmEsc(stat.label)}</span><strong>${mmEsc(stat.value)}</strong><small>${mmEsc(stat.note)}</small></div>`).join('');
+  // Mark 2026-10-24: the counters row became the «i» next to the page title.
+  summary.hidden = true;
+  ccInfoSources.growth = () => ({
+    title: 'Точки роста',
+    lines: ['Тот же список, что в заметке Obsidian. Время считается по работе Claude и Codex в связанных проектах.'],
+    rows: [['Заметка', data.source], ['Обновлена', updated], ['Направлений', String(areas.length)], ['Шагов сделано', steps ? `${done} из ${steps}` : ''], [`Время за ${data.window_days || 30} дней`, timeStat.value === '—' ? '' : timeStat.value]],
+  });
   if (!areas.length) {
     grid.innerHTML = '<p class="growth-empty">В заметке пока нет направлений. Добавьте раздел «## Название» со списком шагов.</p>';
     return;
@@ -9995,14 +10086,6 @@ function renderGrowth(data) {
     const ring = total
       ? `<div class="growth-ring" style="--p:${Math.round(area.progress.done / total * 100)}" role="img" aria-label="Сделано ${area.progress.done} из ${total} шагов"><span>${Math.round(area.progress.done / total * 100)}%</span></div>`
       : '';
-    const progress = total
-      ? `<span class="growth-chip">${area.progress.done} из ${total} шагов</span>`
-      : '<span class="growth-chip is-muted">Шагов пока нет</span>';
-    const time = !area.linked
-      ? '<span class="growth-chip is-muted">Проекты не связаны</span>'
-      : area.minutes_30d == null
-        ? '<span class="growth-chip is-muted">Время неизвестно</span>'
-        : `<span class="growth-chip">${mmEsc(workMinutes(area.minutes_30d))} за 30 дней</span>`;
     const steps = area.steps.length
       ? `<ul class="growth-steps">${area.steps.map((step, index) => growthCanEdit
         ? `<li class="is-editable${step.done ? ' is-done' : ''}"><button type="button" class="growth-step-toggle" data-growth-toggle="${index}" aria-pressed="${step.done}">${mmEsc(step.text)}</button><button type="button" class="growth-step-delete" data-growth-delete="${index}" aria-label="Удалить шаг: ${mmEsc(step.text)}">✕</button></li>`
@@ -10014,7 +10097,6 @@ function renderGrowth(data) {
       <div class="growth-body">
         <h3 class="growth-title">${mmEsc(area.title)}</h3>
         ${area.why ? `<p class="growth-why">${mmEsc(area.why)}</p>` : ''}
-        <div class="growth-meta">${progress}${time}</div>
         ${steps}
         ${growthCanEdit ? '<button type="button" class="growth-add-step" data-growth-add-step>+ Шаг</button>' : ''}
       </div>
@@ -10370,6 +10452,9 @@ function renderLoose(data) {
     ...(mmLooseFilter !== 'dropped' ? (data.forgot || []).map(item => mmLooseRow(item, 'forgot')) : []),
   ];
   const githubOk = data.sources?.github?.ok;
+  // Mark 2026-10-24: an empty block is not shown at all.
+  const looseEmpty = !looseTotal && githubOk;
+  for (const node of [host, document.getElementById('mm-loose-filter'), document.querySelector('.mm-loose-heading')]) if (node) node.hidden = looseEmpty;
   host.innerHTML = items.length
     ? items.join('')
     : `<p class="mm-empty">${githubOk ? 'Здесь пусто: ничего не брошено и не забыто.' : 'GitHub ещё не собран, поэтому список может быть неполным.'}</p>`;
@@ -10713,7 +10798,8 @@ function mmRenderSummary(data) {
   const periodLabel = MM_SUMMARY_PERIODS.find(([name]) => name === key)[1];
   const fold = (meta, body) => {
     host.classList.toggle('is-open', mmFoldIsOpen('summary'));
-    host.replaceChildren(mmFoldHead('summary', 'Сводка', null, meta, 'mm-summary-title'));
+    // Mark 2026-10-24: no numbers on the folded line; they are inside.
+    host.replaceChildren(mmFoldHead('summary', 'Сводка', null, '', 'mm-summary-title'));
     const box = mmEl('div', 'mm-fold-body');
     box.innerHTML = body;
     host.appendChild(box);
@@ -11027,7 +11113,7 @@ function mmRenderOwnerTodo(payload) {
   const card = mmEl('section', 'mm-todo-card mm-fold');
   card.setAttribute('aria-labelledby', 'mm-todo-card-title');
   card.classList.toggle('is-open', mmFoldIsOpen('todo'));
-  card.appendChild(mmFoldHead('todo', 'Ждёт тебя', open.length, open.length ? open[0].text : 'ничего не ждёт', 'mm-todo-card-title'));
+  card.appendChild(mmFoldHead('todo', 'Ждёт тебя', null, open.length ? open[0].text : 'ничего не ждёт', 'mm-todo-card-title'));
   const foldBody = mmEl('div', 'mm-fold-body');
   const list = mmEl('ul', 'mm-todo-items');
   // Three at a time; the rest behind «Ещё N».
@@ -11586,7 +11672,7 @@ const ccDocxxSteps = {
   icloud:['С iPhone — в одну папку','В «Файлах» выбери iCloud Drive → DOCXX Inbox. Отдельный файл поступит на Mini после синхронизации. «На моём iPhone» и другие папки iCloud не входят в этот маршрут.',null],
   drive:['Файлы и комплекты — прямо в DOCXXx','Добавь новый файл или папку в корень библиотеки. Комплект с одним понятным назначением переносится целиком. Смешанный комплект сохраняет структуру и требует разбора.','library'],
   gmail:['Gmail — вложения в общую библиотеку','Через подключённый чат можно найти письмо, прочитать вложения и сохранить нужные документы в DOCXXx. Отправитель, тема и порядок вложений помогают определить комплект, но сами по себе не доказывают, что страницы относятся к одному документу.',null],
-  processor:['Mac mini — точка обработки','Локальное чтение и правила определяют известные типы документов. Перед завершением проверяется облачный результат. Движение на схеме означает занятый обработчик; точный внутренний шаг он пока не сообщает.',null],
+  processor:['Mac mini','Читает каждый новый файл, даёт ему понятное название и кладёт в нужную папку.',null],
   library:['Одна основная библиотека','Документ получает понятное название и тематическую папку. Уже существующие разделы не сортируются заново. Последние результаты видны ниже; полный каталог доступен на Google Drive.','library'],
   review:['Неясное — на разбор','Система не угадывает назначение. Входящий файл сохраняется или попадает в «Разобрать позже». Совпадение с другим документом само по себе не разрешает удалить его историю и доступы.','review']
 };
@@ -11600,6 +11686,13 @@ function ccDocxxLink(label, url) {
   const safe=ccDocxxSafeLink(url); if(!safe) return null;
   const a=ccDocxxEl('a',label); a.href=safe; a.target='_blank'; a.rel='noopener noreferrer'; return a;
 }
+let ccDocxxWarnings=[];
+function ccDocxxCount(n,one,few,many) { const m10=n%10, m100=n%100; return n+' '+(m10===1&&m100!==11?one:m10>=2&&m10<=4&&(m100<12||m100>14)?few:many); }
+function ccDocxxShortDate(value) { const d=new Date(value || ''); return Number.isNaN(d.valueOf()) ? '' : d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',timeZone:'Europe/Paris'}).replace('.',''); }
+ccInfoSources.docxx=()=>{
+  const n=id=>{ const t=document.getElementById(id)?.textContent?.trim(); return t && t!=='—' ? t : ''; };
+  return { title:'Документы', lines:ccDocxxWarnings, rows:[['Последний проход',ccDocxxData?ccDocxxDate(ccDocxxData.checked_at):''],['Ждут в очереди',n('docxx-pending')],['На проверку',n('docxx-review')],['В каталоге',n('docxx-catalog-count')],['Вызовы модели за проход',n('docxx-model')]] };
+};
 function ccDocxxDate(value) { const d=new Date(value || ''); return Number.isNaN(d.valueOf()) ? 'время не указано' : d.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'})+' · Париж'; }
 function ccDocxxExplain(step=ccDocxxStep) {
   ccDocxxStep=step; const info=ccDocxxSteps[step];
@@ -11619,9 +11712,9 @@ function ccDocxxGmailDescription() {
 }
 function ccDocxxRenderGmail() {
   const gmail=ccDocxxData?.gmail;
-  const labels={manual:'Импорт через чат · фон не подтверждён',paused:'Фоновая проверка приостановлена',warning:'Почта проверена · одно письмо недоступно',error:'Ошибка фоновой проверки',stale:'Статус почтового входа устарел',unavailable:'Статус почтового входа недоступен'};
+  const labels={manual:'Через чат',paused:'Проверка почты на паузе',warning:'Почта проверена',error:'Ошибка фоновой проверки',stale:'Статус почтового входа устарел',unavailable:'Статус почтового входа недоступен'};
   const automatic=gmail?.automatic===true && ['ready','processing'].includes(gmail.state);
-  ccDocxxText('docxx-gmail-state',automatic?(gmail.state==='processing'?'Mini проверяет почтовый вход':'Фоновый почтовый вход работает'):(labels[gmail?.state]||'Импорт через чат · фон не подтверждён'));
+  ccDocxxText('docxx-gmail-state',automatic?(gmail.state==='processing'?'Mini проверяет почтовый вход':'Почта проверяется сама'):(labels[gmail?.state]||'Через чат'));
   const details=[];
   if(gmail?.checked_at) details.push('Проверка почты: '+ccDocxxDate(gmail.checked_at));
   if(Number.isInteger(gmail?.pending)) details.push('В почтовой очереди: '+gmail.pending.toLocaleString('ru-RU'));
@@ -11730,7 +11823,7 @@ function ccDocxxRenderRecords() {
   for(const row of rows) {
     const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
     const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
-    const name=ccDocxxEl('span',undefined,'docxx-record-name'); name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',`${row.source==='gmail'?'Gmail':row.source==='icloud'?'iCloud':row.source==='review'?'На разборе':'Google Drive'} · ${row.historical?'История · ':''}${ccDocxxDate(row.at)}`));
+    const name=ccDocxxEl('span',undefined,'docxx-record-name'); name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',[row.source==='gmail'?'Gmail':row.source==='icloud'?'iCloud':row.source==='review'?'На разборе':'Google Drive',ccDocxxShortDate(row.at)].filter(Boolean).join(' · ')));
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(icon,name,badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
     const dl=ccDocxxEl('dl');
@@ -11746,14 +11839,19 @@ function ccDocxxRender(data) {
   ccDocxxData=data;
   const labels={ready:'Очередь файлов проверена',processing:'Mini проверяет документы',attention:'Есть вопросы для разбора',waiting:'Ожидаем синхронизацию',stale:'Данные устарели — нужна проверка Mini'};
   ccDocxxText('docxx-state',labels[data.state]||'Состояние неизвестно');
-  ccDocxxText('docxx-freshness','Последний завершённый проход: '+ccDocxxDate(data.checked_at));
+  ccDocxxText('docxx-freshness','Последний проход: '+ccDocxxDate(data.checked_at));
   document.getElementById('docxx-indicator').dataset.state=data.state;
   document.getElementById('docxx-flow').dataset.active=String(data.state==='processing' && data.busy===true);
-  ccDocxxText('docxx-machine-label',data.state==='processing'?'Сейчас выполняется проход':data.state==='stale'?'Последний результат устарел':data.busy===null?'Активность не подтверждена':'Ожидает следующего прохода');
+  ccDocxxText('docxx-machine-label',data.state==='processing'?'Разбирает документы':data.state==='stale'?'Давно не отвечал':data.busy===null?'Нет ответа':'Ждёт новые файлы');
   for(const [id,value] of [['pending',data.pending],['review',data.review_count],['catalog-count',data.catalog_count],['model',data.model_calls]]) ccDocxxText('docxx-'+id,Number.isInteger(value)?value.toLocaleString('ru-RU'):'—');
+  // Mark 2026-10-24: one plain line instead of a line per internal warning; the warnings themselves open from «i».
   const warnings=document.getElementById('docxx-warnings'); warnings.replaceChildren();
   const messages=[...(data.warnings||[])]; if(data.state==='stale') messages.unshift('Это последний известный снимок, а не подтверждение текущей работы. Проверь питание, вход в систему и синхронизацию на Mini.');
-  for(const text of messages) warnings.append(ccDocxxEl('p',text)); warnings.hidden=!messages.length;
+  const review=Number.isInteger(data.review_count)?data.review_count:0;
+  const line=data.state==='stale'?'Mac mini давно не отвечал: проверь, что он включён.':review>0?`Есть ${ccDocxxCount(review,'документ','документа','документов')} на проверку.`:'Часть файлов пока не разобрана, Mini попробует снова.';
+  if(messages.length || review>0) { const info=ccDocxxEl('button','i','cc-i'); info.type='button'; info.dataset.ccInfo='docxx'; info.setAttribute('aria-label','Подробнее'); warnings.append(ccDocxxEl('p',line),info); }
+  warnings.hidden=!(messages.length || review>0);
+  ccDocxxWarnings=messages;
   const links=document.getElementById('docxx-guide-links'); links.replaceChildren();
   for(const [label,key] of [['Инструкция в Google Drive ↗','guide'],['Библиотека DOCXXx ↗','library'],['Разобрать позже ↗','review'],['Полный каталог ↗','catalog'],['Текстовый статус ↗','status']]) { const a=ccDocxxLink(label,data.links?.[key]); if(a) links.append(a); }
   ccDocxxText('docxx-results-note',`Показано до 100 операций. В доступном журнале: ${Number.isInteger(data.records_total)?data.records_total:'—'}. Обновление панели каждые 5 секунд, пока она открыта.`);
@@ -12065,8 +12163,8 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
       labels.forEach(label => {
         label.button.setAttribute('aria-pressed', String(ccDocxxStep === label.step && !document.getElementById('docxx-explainer').hidden));
         if (label.step === 'processor') label.small.textContent = text('docxx-machine-label');
-        if (label.step === 'library') label.small.textContent = /^\d+$/.test(text('docxx-catalog-count')) ? `в каталоге ${text('docxx-catalog-count')}` : 'название по содержимому';
-        if (label.step === 'review') label.small.textContent = /^\d+$/.test(text('docxx-review')) ? `ждут: ${text('docxx-review')}` : 'если неясно';
+        if (label.step === 'library') label.small.textContent = 'название по содержимому';
+        if (label.step === 'review') label.small.textContent = 'если неясно';
       });
     };
 
