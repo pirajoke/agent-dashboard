@@ -1003,11 +1003,12 @@ let mmProjectData;
         self.assertIn('data-mm-view="infra"', history)
         self.assertIn("renderMap(data);", html)
         self.assertIn("renderTodo(data);", html)
-        # Loose ends are part of the same list (2026-10-13), not a separate view.
+        # Mark 2026-10-24: loose ends and PR chips are not his to track; «Дела» keeps deadlines and steps only.
         self.assertNotIn('data-mm-view="loose"', html)
         todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="infra"')]
-        self.assertIn('id="mm-loose"', todo_panel)
-        self.assertIn("(data.owner_view ? items.length : 0) + data.dropped_count + data.forgot_count", html)
+        self.assertNotIn('id="mm-loose"', todo_panel)
+        self.assertNotIn('Хвосты', html)
+        self.assertNotIn('Готовы к слиянию', html)
         # Projects reuse the Platforms mascots and open a per-project page.
         self.assertIn('<use href="#cc-mascot-${mmEsc(item.mascot)}"/>', html)
         self.assertIn("project: id", html)
