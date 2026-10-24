@@ -411,7 +411,8 @@ vm.createContext(context);
 
     def test_materials_disclosure_preserves_every_link_and_starts_collapsed(self):
         out = self.run_js("context.ccRenderPlatformResources(good);process.stdout.write(JSON.stringify(areas.map(n=>n.innerHTML)));")
-        self.assertRegex(out[0], r'<details><summary>[^<]*4</summary>')
+        # Mark 2026-10-24: no counters, the disclosure just says what it holds.
+        self.assertIn('<details><summary>Материалы проекта</summary>', out[0])
         self.assertNotRegex(out[0], r'<details[^>]+open')
         self.assertEqual(len(re.findall(r'<a\b', out[0])), 4)
         self.assertNotIn('<details', out[1], 'Empty cards must not offer an empty disclosure')
