@@ -4311,6 +4311,46 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 #mm-todo-count, #mm-infra-count, #mm-todo-total { display: none !important; }
 .docxx-warnings { display: flex; align-items: center; gap: 12px; }
 .docxx-warnings p { margin: 0; }
+
+/* Mark 2026-10-24 «я ничего не понимаю, кто зачем следит»: every helper that runs by itself, on one map. */
+#agents-watchers[hidden] { display: none; }
+.watch-lede { max-width: 70ch; margin: 0 0 4px; color: var(--mm-muted); font-size: 15px; line-height: 1.55; }
+.watch-stage { position: relative; height: 500px; margin: 16px 0 8px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, #fffdf8 0%, #f3ece0 70%, #ece3d4 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
+.watch-stage.is-dragging { cursor: grabbing; }
+.watch-stage[hidden] { display: none; }
+.watch-stage canvas { display: block; width: 100%; height: 100%; }
+.watch-stage-labels { position: absolute; inset: 0; pointer-events: none; }
+.watch-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: rgba(255, 252, 246, .95); border: 1px solid var(--mm-line); border-left: 4px solid var(--watch-tone, var(--mm-accent)); border-radius: 12px; box-shadow: 0 2px 8px rgba(60, 45, 20, .1); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
+.watch-stage-label small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
+.watch-stage-label:hover { border-color: var(--watch-tone, var(--mm-accent)); }
+.watch-stage-label:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.watch-stage-label.is-hub { padding: 8px 14px; font-size: 14.5px; border-left-width: 1px; border-color: var(--mm-accent); }
+.watch-stage-reset { position: absolute; right: 12px; bottom: 10px; min-height: 32px; padding: 4px 12px; color: var(--mm-accent); font: inherit; font-size: 12.5px; font-weight: 650; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+.watch-path { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 18px 0 6px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; font-size: 13.5px; }
+.watch-path h3 { flex-basis: 100%; margin: 0 0 4px; font-size: 14px; font-weight: 700; }
+.watch-path span { padding: 5px 11px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 999px; }
+.watch-path b { color: var(--mm-muted); font-weight: 500; }
+.watch-path p { flex-basis: 100%; margin: 6px 0 0; color: var(--mm-muted); font-size: 13px; }
+.watch-group { margin-top: 22px; }
+.watch-group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 10px; }
+.watch-group-head h3 { flex: none; margin: 0; font-size: 16px; font-weight: 700; }
+.watch-group-head h3::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; background: var(--watch-tone); vertical-align: 1px; }
+.watch-group-head p { margin: 0; color: var(--mm-muted); font-size: 13.5px; }
+.watch-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.watch-card { display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; color: var(--mm-ink); font: inherit; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); cursor: pointer; transition: border-color .15s, transform .15s; }
+.watch-card:hover { border-color: var(--watch-tone); transform: translateY(-1px); }
+.watch-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.watch-card.is-flash { border-color: var(--watch-tone); box-shadow: 0 0 0 3px color-mix(in srgb, var(--watch-tone) 25%, transparent); }
+.watch-face { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 12px; color: var(--watch-tone); background: color-mix(in srgb, var(--watch-tone) 14%, var(--mm-surface)); }
+.watch-face svg { width: 22px; height: 22px; }
+.watch-card strong { display: block; font-size: 14.5px; line-height: 1.3; }
+.watch-card small { display: block; margin-top: 3px; color: var(--mm-muted); font-size: 13px; line-height: 1.4; }
+.watch-state { display: inline-block; margin-top: 7px; padding: 2px 9px; font-size: 12px; font-weight: 600; border-radius: 999px; color: #2f9361; background: #e5f5ec; }
+.watch-state[data-state="ask"] { color: #2f7fd1; background: #e6f0fb; }
+.watch-state[data-state="off"] { color: #b97813; background: #fbf1df; }
+.watch-off { margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
+@media (max-width: 700px) { .watch-stage { height: 380px; border-radius: 16px; } .watch-stage-label { font-size: 12px; padding: 5px 9px; } .watch-stage-label small { display: none; } .watch-cards { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .watch-card { transition: none; } .watch-card:hover { transform: none; } }
 </style>
 </head>
 <body>
@@ -5458,8 +5498,24 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </header>
     <div class="cc-subnav cc-tabs" aria-label="Виды агентов">
       <button type="button" aria-controls="agents-campus" aria-pressed="true" onclick="showAgentsView('campus')">Кампус отделов</button>
+      <button type="button" aria-controls="agents-watchers" aria-pressed="false" onclick="showAgentsView('watchers')">Кто за чем следит</button>
       <button type="button" aria-controls="agents-decisions" aria-pressed="false" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
     </div>
+    <!-- Mark 2026-10-24: «кто зачем следит, какие агенты существуют» — the same kind of 3D map as Документы. -->
+    <section id="agents-watchers" aria-label="Кто за чем следит" hidden>
+      <p class="watch-lede">Эти помощники работают сами, днём и ночью, на Mac mini. Нажми на любого — расскажу, за чем он следит, что делает и зачем это тебе.</p>
+      <div class="watch-stage" id="watch-stage" hidden>
+        <div class="watch-stage-labels" id="watch-stage-labels"></div>
+        <button type="button" class="watch-stage-reset" id="watch-stage-reset">Вернуть вид</button>
+      </div>
+      <div class="watch-path" aria-label="Путь одного изменения">
+        <h3>Кто ведёт изменение до сайта</h3>
+        <span>Ты просишь</span><b>→</b><span>Claude или Codex делает PR</span><b>→</b><span>Проверки GitHub</span><b>→</b><span>Ты говоришь «го»</span><b>→</b><span>Автовыкладка ставит на сайт</span><b>→</b><span>Сборщик записывает в «Проекты»</span>
+        <p>PR — это готовое изменение, которое ждёт слияния. Если PR закрыли без слияния или он стоит без движения больше недели, Сборщик кладёт его в «Хвосты» на главной.</p>
+      </div>
+      <div id="watch-groups"></div>
+      <p class="watch-off">Старые помощники, которых ты выключил, здесь не показаны: они ни за чем не следят. <button type="button" class="cc-i" data-cc-info="watch-off" aria-label="Какие помощники выключены">i</button></p>
+    </section>
     <section id="agents-decisions" aria-labelledby="decisions-title" lang="ru" hidden>
       <div class="decision-head">
         <div><div class="decision-eyebrow">MAIN MANAGER</div>
@@ -5897,9 +5953,10 @@ let ownerDecisionSubmitting = false;
 const ownerDecisionDrafts = new Map();
 
 function showAgentsView(view) {
-  if (!['decisions', 'campus'].includes(view)) return;
+  if (!['decisions', 'campus', 'watchers'].includes(view)) return;
   document.getElementById('agents-decisions').hidden = view !== 'decisions';
   document.getElementById('agents-campus').hidden = view !== 'campus';
+  document.getElementById('agents-watchers').hidden = view !== 'watchers';
   document.querySelectorAll('#section-agents > .cc-subnav button').forEach(button => {
     button.setAttribute('aria-pressed', String(button.getAttribute('aria-controls') === `agents-${view}`));
   });
@@ -6973,6 +7030,7 @@ const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
 if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
+  if (INITIAL_SECTION === 'agents' && new URLSearchParams(window.location.search).get('view') === 'watchers') showAgentsView('watchers');
 } else {
   showSection('work');
 }
@@ -12770,6 +12828,298 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
     section.classList.add('has-3d');
     requestAnimationFrame(frame);
   }).catch(() => { /* The flat route below stays as it is. */ });
+})();
+
+// ── Кто за чем следит ── Mark 2026-10-24: «я ничего не понимаю, кто зачем следит, какие агенты существуют».
+// Every helper that runs by itself, taken from the Mac mini on 2026-10-24 (launchd jobs, agent routines,
+// always-on servers). Plain words only: what it watches, what it does, why it matters, how often.
+// The same map as Документы: groups stand around the Mac mini, a click opens the shared «i» window.
+const WATCH_GROUPS = [
+  { id: 'guard', title: 'Сторожа', why: 'Следят, чтобы Mac mini и всё на нём было включено.', short: 'держат всё включённым', tone: '#2f9361', floor: 0xcfe9da },
+  { id: 'site', title: 'Сайт', why: 'Ставят новые версии этого сайта и держат его открытым.', short: 'новые версии и вход', tone: '#2f7fd1', floor: 0xcfe0f4 },
+  { id: 'scribe', title: 'Летописцы', why: 'Записывают, что сделано, чтобы ты видел это на сайте.', short: 'записывают сделанное', tone: '#7a5bc7', floor: 0xe0d8f4 },
+  { id: 'doers', title: 'Исполнители', why: 'Делают работу: задачи, PR, разбор документов.', short: 'делают работу', tone: '#0a7f93', floor: 0xcbe8ec },
+  { id: 'tell', title: 'Пишут тебе', why: 'Присылают в Telegram то, что тебе стоит знать.', short: 'пишут в Telegram', tone: '#c4513f', floor: 0xf4d6cf },
+  { id: 'apps', title: 'Твои проекты', why: 'Держат включёнными твои приложения и ставят их новые версии.', short: 'держат приложения', tone: '#b97813', floor: 0xf4e3c4 },
+];
+const WATCHERS = [
+  { id: 'watchdog', group: 'guard', name: 'Сторож служб', watches: 'Все службы Mac mini', does: 'Если служба не запустилась (например, после отключения света), запускает её снова. Выключенные тобой не трогает.', why: '12 октября после отключения света половина служб два дня стояла. Теперь они поднимаются сами.', when: 'Каждые 5 минут и при включении' },
+  { id: 'docker', group: 'guard', name: 'Сторож контейнеров', watches: 'Docker и контейнеры: базы данных, Lexi, Meshly, сайты', does: 'Если Docker или контейнер упал, запускает его снова.', why: 'Lexi, базы данных и сайты живут в контейнерах. Без них они не работают.', when: 'Каждые 5 минут' },
+  { id: 'health', group: 'guard', name: 'Пульс Mac mini', watches: 'Память, диск, процессор и службы', does: 'Отвечает сайту, как себя чувствует Mac mini.', why: 'Отсюда берётся вкладка «Техника» и строка «Всё работает».', when: 'Всегда включён' },
+  { id: 'backup', group: 'guard', name: 'Ночной бэкап', watches: 'Базы данных Lexi и основная база', does: 'Делает копию, проверяет её и хранит. Если не вышло, пишет тебе в Telegram.', why: 'Если диск или база сломаются, данные можно вернуть.', when: 'Каждую ночь в 03:30' },
+  { id: 'desktop', group: 'guard', name: 'Сторож ChatGPT', watches: 'Приложение ChatGPT на Mac mini', does: 'После входа в систему проверяет, что приложение открыто, и открывает его, если нет. Сам ничего не закрывает.', why: 'Через него работают задачи Codex на Mac mini.', when: 'Каждую минуту' },
+  { id: 'hygiene', group: 'guard', name: 'Ежедневная уборка', watches: 'Порядок в рабочих папках и заметках', does: 'Запускает агента порядка, который проверяет рабочее место по списку.', why: 'Чтобы мусор и забытые мелочи не копились.', when: 'Каждые 30 минут' },
+
+  { id: 'deploy', group: 'site', name: 'Автовыкладка', watches: 'Главную ветку сайта на GitHub', does: 'Когда PR слит и проверки зелёные, ставит новую версию сайта на Mac mini. Если сайт после этого не ответил, сам возвращает прошлую версию.', why: 'Тебе не нужно ничего запускать: слил — через пару минут на сайте.', when: 'Каждые 5 минут' },
+  { id: 'ci', group: 'site', name: 'Проверки GitHub', watches: 'Каждый новый PR', does: 'Прогоняют все тесты сайта. Пока проверки красные, Автовыкладка ничего не ставит.', why: 'Сломанное изменение не попадает на сайт.', when: 'При каждом изменении PR' },
+  { id: 'server', group: 'site', name: 'Сервер сайта', watches: 'Твои открытия сайта', does: 'Показывает этот сайт и отдаёт ему данные.', why: 'Без него сайт не открывается.', when: 'Всегда включён' },
+  { id: 'tunnel', group: 'site', name: 'Туннель Cloudflare', watches: 'Адрес command.meshly.fr', does: 'Связывает адрес сайта с Mac mini. Пускает только тебя, по твоей почте.', why: 'Сайт открывается из любого места, но чужие его не видят.', when: 'Всегда включён' },
+  { id: 'sync', group: 'site', name: 'Подвоз с MacBook', watches: 'Данные на MacBook', does: 'Привозит на Mac mini то, что сайт берёт с MacBook.', why: 'Работа на MacBook тоже видна на сайте.', when: 'Каждые 5 минут' },
+  { id: 'feed', group: 'site', name: 'Живая лента', watches: 'Журналы служб', does: 'Собирает свежие события служб в одну ленту для сайта.', why: 'Сайт знает, что сейчас происходит, без ручной проверки.', when: 'Каждые 5 минут' },
+
+  { id: 'collector', group: 'scribe', name: 'Сборщик работы', watches: 'Сессии Claude Code и Codex на Mac mini и MacBook, PR на GitHub', does: 'Записывает, над чем шла работа, по проектам и дням. Находит PR, которые закрыли без слияния или забыли, и кладёт их в «Хвосты».', why: 'Из этого строятся доска «Проекты», главная и «Хвосты».', when: 'Каждые 2 часа' },
+  { id: 'summarizer', group: 'scribe', name: 'Летописец дня', watches: 'Записи Сборщика', does: 'Claude пишет простыми словами, что сделано за день в каждом проекте и что дальше.', why: 'Ты читаешь итог, а не список технических событий.', when: 'Каждые 3 часа' },
+  { id: 'infra', group: 'scribe', name: 'Журнал техники', watches: 'Что установлено и запущено на Mac mini', does: 'Делает снимок и записывает, что изменилось с прошлого раза.', why: 'Если что-то сломалось, видно, что поменялось перед этим.', when: 'Каждые 10 минут' },
+  { id: 'context', group: 'scribe', name: 'Библиотека контекста', watches: 'Новые расшифровки встреч и заметки', does: 'Принимает их и раскладывает для вкладки «Контекст».', why: 'Агенты знают, о чём ты договаривался.', when: 'Каждую минуту' },
+  { id: 'plaud', group: 'scribe', name: 'Записи PLAUD', watches: 'Новые записи диктофона PLAUD', does: 'Переносит их во входящие заметки.', why: 'Записанное голосом не теряется.', when: 'Каждую минуту' },
+
+  { id: 'runner', group: 'doers', name: 'Агент задач', watches: 'Твой список «Ждёт тебя»', does: 'Решает, что можно сделать без тебя, и делает по одной задаче: черновик PR или отчёт. Никогда не сливает, не выкладывает и не платит.', why: 'Часть твоего списка закрывается сама.', when: 'Каждые 5 минут' },
+  { id: 'manager', group: 'doers', name: 'MAIN MANAGER', watches: 'Очередь работы по всем проектам', does: 'Собирает, что надо продолжить, раздаёт задачи исполнителям и показывает очередь в кампусе.', why: 'Работа по проектам идёт, даже когда ты не пишешь.', when: 'Каждые 15 минут, раздача каждую минуту' },
+  { id: 'bridge', group: 'doers', name: 'Рабочие Codex', watches: 'Очередь задач MAIN MANAGER', does: 'Шесть рабочих берут задачи из очереди и выполняют их через Codex.', why: 'Это руки MAIN MANAGER.', when: 'Всегда включены, проверяют очередь каждые 30 секунд' },
+  { id: 'claude', group: 'doers', name: 'Claude Code', watches: 'Твои просьбы здесь, в чате, и свои PR', does: 'Делает изменения и открывает PR. Сам чинит красные проверки и отвечает на замечания, пока PR не станет готовым.', why: 'За каждым PR, который открыл Claude, следит сам Claude.', when: 'Когда ты просишь' },
+  { id: 'docxx', group: 'doers', name: 'Разбор документов', watches: 'Папку DOCXX Inbox в iCloud и DOCXXx в Google Drive', does: 'Забирает новые документы, называет их по содержимому и кладёт на место. Неясные откладывает тебе на разбор.', why: 'Документы с телефона сами оказываются в нужной папке.', when: 'Каждые 5 минут, уборка каждый день в 10:00' },
+
+  { id: 'alerts', group: 'tell', name: 'Тревоги служб', watches: 'Службы Mac mini', does: 'Пишет в Telegram, когда служба упала и когда поднялась снова.', why: 'Ты узнаёшь о поломке сразу, а не когда что-то не открылось.', when: 'Каждые 2 минуты' },
+  { id: 'jarvis', group: 'tell', name: 'JARVIS в Telegram', watches: 'Твои сообщения боту', does: 'Отвечает в Telegram и присылает сообщения других помощников.', why: 'Через него к тебе приходят тревоги и сводки.', when: 'Всегда включён' },
+  { id: 'linear', group: 'tell', name: 'Готовые задачи Linear', watches: 'Задачи в Linear', does: 'Пишет в Telegram, когда задача закрыта.', why: 'Видно, что сделано, без захода в Linear.', when: 'Каждые 2 минуты' },
+  { id: 'weekly', group: 'tell', name: 'Сводка недели', watches: 'Записи Сборщика и «Ждёт тебя»', does: 'Пишет короткий итог прошлой недели и что ждёт тебя.', why: 'Раз в неделю видно всю картину.', when: 'По понедельникам в 09:00' },
+  { id: 'sales', group: 'tell', name: 'Чек-ин продаж', watches: 'Воронку продаж AI Studio', does: 'Раз в неделю проверяет, как идут продажи, и пишет, что сделать.', why: 'Продажи не забываются за другими делами.', when: 'По воскресеньям в 18:00' },
+  { id: 'daily', group: 'tell', name: 'Резюме дня', watches: 'Работу за день', does: 'Будет присылать вечером короткий итог дня.', why: 'Вечером видно, что сделано за день.', when: 'Каждый вечер в 21:30', state: 'off', note: 'Ещё не включено: ждёт твоего «Включай».' },
+
+  { id: 'appsup', group: 'apps', name: 'Твои приложения', watches: 'Lexi, Context News, Property OS, Health OS, Accountable OS и другие', does: 'Держат каждое приложение включённым.', why: 'Приложения работают, даже когда ты ими не занимаешься.', when: 'Всегда включены' },
+  { id: 'appdeploy', group: 'apps', name: 'Выкладка проектов', watches: 'Новые версии JARVIS и Property OS', does: 'Когда новая версия принята, сама ставит её. Для JARVIS сначала проверяет, что версия подписана.', why: 'Как у сайта: слил — и приложение обновилось.', when: 'Каждую минуту' },
+  { id: 'radar', group: 'apps', name: 'Job Radar', watches: 'Новые вакансии и задачи Job Radar', does: 'Codex каждое утро проходит по новым вакансиям, а бот сверяет задачи и PR проекта.', why: 'Подходящие вакансии не теряются, пока ты занят другим.', when: 'Каждый день в 09:00, сверка каждые 10 минут' },
+];
+const WATCH_STATE_TEXT = { on: 'Работает сам', ask: 'Когда попросишь', off: 'Не включено' };
+const watchState = item => item.state || (item.id === 'claude' ? 'ask' : 'on');
+function watchFace() {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML = '<rect x="4.5" y="7" width="15" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9.5" cy="12.8" r="1.5" fill="currentColor"/><circle cx="14.5" cy="12.8" r="1.5" fill="currentColor"/><path d="M12 7V4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="3.4" r="1.3" fill="currentColor"/>';
+  return svg;
+}
+for (const item of WATCHERS) {
+  ccInfoSources[`watch-${item.id}`] = () => {
+    const group = WATCH_GROUPS.find(entry => entry.id === item.group);
+    return { title: item.name, lines: item.note ? [item.note] : [], rows: [['Следит за', item.watches], ['Что делает', item.does], ['Зачем тебе', item.why], ['Как часто', item.when], ['Группа', group ? group.title : '']] };
+  };
+}
+for (const group of WATCH_GROUPS) {
+  ccInfoSources[`watch-group-${group.id}`] = () => ({ title: group.title, lines: [group.why], list: WATCHERS.filter(item => item.group === group.id).map(item => `${item.name}: ${item.watches}`) });
+}
+ccInfoSources['watch-off'] = () => ({ title: 'Выключенные помощники', lines: ['Они остались на Mac mini, но не запускаются и ни за чем не следят. Сторож служб их тоже не включает.'], list: ['Старые Telegram-боты и мосты', 'Старые сторожа и проверки здоровья', 'Синхронизация Obsidian с Linear', 'Голосовой JARVIS и его вебхуки', 'Турецкий агент, FastData, Tag Website, Ollama', 'Синхронизация Strava и WHOOP'] });
+(function ccWatchList() {
+  const host = document.getElementById('watch-groups');
+  if (!host) return;
+  for (const group of WATCH_GROUPS) {
+    const block = document.createElement('section');
+    block.className = 'watch-group'; block.id = `watch-group-${group.id}`;
+    block.style.setProperty('--watch-tone', group.tone);
+    const head = document.createElement('div'); head.className = 'watch-group-head';
+    const title = document.createElement('h3'); title.textContent = group.title;
+    const why = document.createElement('p'); why.textContent = group.why;
+    head.append(title, why);
+    const cards = document.createElement('div'); cards.className = 'watch-cards';
+    for (const item of WATCHERS.filter(entry => entry.group === group.id)) {
+      const card = document.createElement('button');
+      card.type = 'button'; card.className = 'watch-card'; card.dataset.ccInfo = `watch-${item.id}`; card.dataset.watchId = item.id;
+      const face = document.createElement('span'); face.className = 'watch-face'; face.append(watchFace());
+      const text = document.createElement('span');
+      const name = document.createElement('strong'); name.textContent = item.name;
+      const watches = document.createElement('small'); watches.textContent = item.watches;
+      const state = document.createElement('span'); state.className = 'watch-state'; state.dataset.state = watchState(item); state.textContent = WATCH_STATE_TEXT[watchState(item)];
+      text.append(name, watches, state);
+      card.append(face, text);
+      cards.append(card);
+    }
+    block.append(head, cards);
+    host.append(block);
+  }
+})();
+
+// The 3D map: the Mac mini in the middle, each group on its own coloured floor around it, one little
+// robot per helper, a soft line from each group to the Mac mini. The robots only turn their heads; nothing
+// pretends to be work in progress. Rendering pauses whenever this view is not on screen.
+(function ccWatch3d() {
+  const stage = document.getElementById('watch-stage');
+  const section = document.getElementById('section-agents');
+  const view = document.getElementById('agents-watchers');
+  if (!stage || !section || !view || !/^https?:$/.test(window.location.protocol) || typeof window.WebGLRenderingContext === 'undefined') return;
+  try {
+    const probe = document.createElement('canvas');
+    if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return;
+  } catch (error) { return; }
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  import(new URL('/dashboard-assets/three.module.min.js', window.location.href).href).then(THREE => {
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setClearColor(0x000000, 0);
+    stage.prepend(renderer.domElement);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(32, 2, 0.1, 100);
+    const target = new THREE.Vector3(0, 0.2, 1.1);
+    const HOME = { azimuth: 0, elevation: 0.78, distance: 23 };
+    const look = { ...HOME };
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xd9ccb6, 0.95));
+    const sun = new THREE.DirectionalLight(0xfff1dc, 1.8);
+    sun.position.set(-6, 14, 8); sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 40 });
+    sun.shadow.radius = 4;
+    scene.add(sun);
+    const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, ...extra });
+    function slab(w, d, h, r, material) {
+      const shape = new THREE.Shape();
+      const x = -w / 2, y = -d / 2;
+      shape.moveTo(x + r, y); shape.lineTo(x + w - r, y); shape.quadraticCurveTo(x + w, y, x + w, y + r);
+      shape.lineTo(x + w, y + d - r); shape.quadraticCurveTo(x + w, y + d, x + w - r, y + d);
+      shape.lineTo(x + r, y + d); shape.quadraticCurveTo(x, y + d, x, y + d - r);
+      shape.lineTo(x, y + r); shape.quadraticCurveTo(x, y, x + r, y);
+      const bevel = Math.min(h * 0.35, r * 0.5, 0.06);
+      const geometry = new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.001, h - bevel * 2), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 10 });
+      geometry.rotateX(-Math.PI / 2); geometry.translate(0, bevel, 0);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      return mesh;
+    }
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(13, 64), new THREE.ShadowMaterial({ opacity: 0.12 }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+    // Mac mini in the middle: the home of every helper.
+    const aluminium = mat(0xe4e7eb, { metalness: 0.15, roughness: 0.4 });
+    const mini = new THREE.Group();
+    mini.add(slab(2.3, 2.3, 0.08, 0.5, mat(0x2a2c30, { roughness: 0.8 })));
+    const shell = slab(2.7, 2.7, 0.66, 0.5, aluminium); shell.position.y = 0.06; mini.add(shell);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), new THREE.MeshBasicMaterial({ color: 0x34c27a }));
+    led.position.set(1.0, 0.34, 1.345); mini.add(led);
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(2.4, 64), new THREE.MeshBasicMaterial({ color: 0x0a7f93, transparent: true, opacity: 0.1 }));
+    glow.rotation.x = -Math.PI / 2; glow.position.y = 0.012; mini.add(glow);
+    mini.rotation.y = 0.785; scene.add(mini);
+    const anchors = { hub: new THREE.Vector3(0, 1.9, 0) };
+
+    // One robot per helper: a soft body in the group colour, a white head with a dark visor and two eyes.
+    const heads = [];
+    const bodyGeometry = new THREE.CapsuleGeometry(0.2, 0.26, 6, 16);
+    const headGeometry = new THREE.SphereGeometry(0.24, 24, 16);
+    const visorGeometry = new THREE.BoxGeometry(0.3, 0.14, 0.06);
+    const eyeGeometry = new THREE.SphereGeometry(0.03, 10, 10);
+    const antennaGeometry = new THREE.CylinderGeometry(0.012, 0.012, 0.16, 6);
+    const tipGeometry = new THREE.SphereGeometry(0.045, 10, 10);
+    const white = mat(0xfdfbf6, { roughness: 0.45 });
+    const visorMaterial = mat(0x1d1f23, { roughness: 0.2 });
+    function robot(tone, asleep) {
+      const group = new THREE.Group();
+      const toneMaterial = mat(tone, { roughness: 0.5 });
+      const body = new THREE.Mesh(bodyGeometry, asleep ? mat(0xc9c4bb) : toneMaterial);
+      body.position.y = 0.36; body.castShadow = true; group.add(body);
+      const head = new THREE.Group(); head.position.y = 0.86; group.add(head);
+      const skull = new THREE.Mesh(headGeometry, white); skull.castShadow = true; head.add(skull);
+      const visor = new THREE.Mesh(visorGeometry, visorMaterial); visor.position.set(0, 0, 0.2); head.add(visor);
+      const eyeMaterial = new THREE.MeshBasicMaterial({ color: asleep ? 0x6c6a63 : tone });
+      [-0.065, 0.065].forEach(x => { const eye = new THREE.Mesh(eyeGeometry, eyeMaterial); eye.position.set(x, 0, 0.235); head.add(eye); });
+      const antenna = new THREE.Mesh(antennaGeometry, white); antenna.position.y = 0.3; head.add(antenna);
+      const tip = new THREE.Mesh(tipGeometry, toneMaterial); tip.position.y = 0.39; head.add(tip);
+      return { group, head };
+    }
+
+    const RADIUS = 6.4;
+    const labelsHost = document.getElementById('watch-stage-labels');
+    const labels = [];
+    const addLabel = (key, title, note, tone, info, hub) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `watch-stage-label${hub ? ' is-hub' : ''}`;
+      if (tone) button.style.setProperty('--watch-tone', tone);
+      button.dataset.ccInfo = info;
+      const strong = document.createElement('strong'); strong.textContent = title;
+      const small = document.createElement('small'); small.textContent = note;
+      button.append(strong, small);
+      labelsHost.appendChild(button);
+      labels.push({ key, button });
+    };
+    ccInfoSources['watch-hub'] = () => ({ title: 'Mac mini', lines: ['Здесь живут все помощники с этой карты. Mac mini включён всегда; если он выключится, они остановятся вместе с ним.', 'Нажми на группу вокруг, чтобы увидеть, кто в ней и за чем следит.'] });
+    addLabel('hub', 'Mac mini', 'дом всех помощников', null, 'watch-hub', true);
+
+    WATCH_GROUPS.forEach((group, index) => {
+      const angle = (index / WATCH_GROUPS.length) * Math.PI * 2 + Math.PI / WATCH_GROUPS.length;
+      const cx = Math.sin(angle) * RADIUS, cz = Math.cos(angle) * RADIUS;
+      const floor = new THREE.Mesh(new THREE.CylinderGeometry(2.05, 2.05, 0.08, 56), mat(group.floor, { roughness: 0.9 }));
+      floor.position.set(cx, 0.04, cz); floor.receiveShadow = true; scene.add(floor);
+      const tone = new THREE.Color(group.tone).getHex();
+      const from = new THREE.Vector3(cx * 0.72, 0.1, cz * 0.72), to = new THREE.Vector3(cx * 0.24, 0.1, cz * 0.24);
+      const mid = from.clone().lerp(to, 0.5); mid.y += 0.5;
+      const line = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([from, mid, to]), 32, 0.03, 8, false), new THREE.MeshBasicMaterial({ color: tone, transparent: true, opacity: 0.45 }));
+      scene.add(line);
+      const members = WATCHERS.filter(item => item.group === group.id);
+      members.forEach((item, slot) => {
+        const ring = members.length <= 4 ? 0.95 : 1.25;
+        const turn = (slot / members.length) * Math.PI * 2 + angle;
+        const bot = robot(tone, watchState(item) === 'off');
+        bot.group.position.set(cx + Math.sin(turn) * ring, 0.08, cz + Math.cos(turn) * ring);
+        bot.group.lookAt(0, 0.08, 0);
+        bot.group.rotation.y += (slot % 2 ? 0.35 : -0.35);
+        scene.add(bot.group);
+        heads.push({ head: bot.head, phase: index * 1.3 + slot * 0.9, awake: watchState(item) !== 'off' });
+      });
+      anchors[group.id] = new THREE.Vector3(cx, 2.05, cz);
+      addLabel(group.id, group.title, group.short, group.tone, `watch-group-${group.id}`);
+    });
+
+    let drag = null;
+    const pointers = new Map();
+    stage.addEventListener('pointerdown', event => {
+      if (event.target.closest('button')) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      stage.setPointerCapture(event.pointerId);
+      drag = { x: event.clientX, y: event.clientY, azimuth: look.azimuth, elevation: look.elevation };
+      stage.classList.add('is-dragging');
+    });
+    stage.addEventListener('pointermove', event => {
+      if (!pointers.has(event.pointerId)) return;
+      const before = [...pointers.values()];
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pointers.size === 2) {
+        const after = [...pointers.values()];
+        const gap = list => Math.hypot(list[0].x - list[1].x, list[0].y - list[1].y);
+        look.distance = Math.min(36, Math.max(11, look.distance * gap(before) / Math.max(1, gap(after))));
+        return;
+      }
+      if (!drag) return;
+      look.azimuth = drag.azimuth - (event.clientX - drag.x) * 0.008;
+      look.elevation = Math.min(1.35, Math.max(0.25, drag.elevation + (event.clientY - drag.y) * 0.006));
+    });
+    const release = event => { pointers.delete(event.pointerId); if (!pointers.size) { drag = null; stage.classList.remove('is-dragging'); } };
+    stage.addEventListener('pointerup', release);
+    stage.addEventListener('pointercancel', release);
+    stage.addEventListener('wheel', event => {
+      event.preventDefault();
+      look.distance = Math.min(36, Math.max(11, look.distance * (1 + Math.sign(event.deltaY) * 0.08)));
+    }, { passive: false });
+    document.getElementById('watch-stage-reset').addEventListener('click', () => Object.assign(look, HOME));
+
+    const projected = new THREE.Vector3();
+    function frame(now) {
+      const visible = !document.hidden && section.classList.contains('active') && !view.hidden;
+      if (!visible) { setTimeout(() => requestAnimationFrame(frame), 800); return; }
+      const width = stage.clientWidth, height = stage.clientHeight;
+      if (renderer.domElement.width !== Math.round(width * renderer.getPixelRatio()) || renderer.domElement.height !== Math.round(height * renderer.getPixelRatio())) {
+        renderer.setSize(width, height, false);
+        camera.aspect = width / Math.max(1, height);
+        camera.updateProjectionMatrix();
+        // A narrow phone screen needs the camera further back to keep every group in view.
+        HOME.distance = camera.aspect < 1 ? 32 : 23;
+        if (!drag && look.distance < HOME.distance && camera.aspect < 1) look.distance = HOME.distance;
+      }
+      camera.position.set(
+        target.x + look.distance * Math.cos(look.elevation) * Math.sin(look.azimuth),
+        target.y + look.distance * Math.sin(look.elevation),
+        target.z + look.distance * Math.cos(look.elevation) * Math.cos(look.azimuth));
+      camera.lookAt(target);
+      if (!reduced.matches) heads.forEach(entry => { if (entry.awake) entry.head.rotation.y = Math.sin(now / 1600 + entry.phase) * 0.7; });
+      renderer.render(scene, camera);
+      labels.forEach(label => {
+        projected.copy(anchors[label.key]).project(camera);
+        label.button.style.transform = `translate(${(projected.x * 0.5 + 0.5) * width}px, ${(-projected.y * 0.5 + 0.5) * height}px) translate(-50%, -100%)`;
+      });
+      requestAnimationFrame(frame);
+    }
+    stage.hidden = false;
+    requestAnimationFrame(frame);
+  }).catch(() => { /* The list below stays as it is. */ });
 })();
 for(const button of document.querySelectorAll('[data-docxx-filter]')) button.addEventListener('click',()=>{
   ccDocxxFilter=button.dataset.docxxFilter;
