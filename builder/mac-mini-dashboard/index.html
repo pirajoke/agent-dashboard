@@ -3484,6 +3484,31 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
   .mm-brief { grid-template-columns: 1fr; gap: 18px; }
 }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
+/* «Ответы работодателей» (Mark 2026-10-24): invites first, then the numbers. */
+.mm-jm-sub { margin: 12px 0 4px; color: var(--mm-muted); font-size: 12.5px; font-weight: 600; }
+.mm-jm-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.mm-jm-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--mm-line); }
+.mm-jm-row:first-child { border-top: 0; }
+.mm-jm-row::before { content: ""; flex: none; width: 9px; height: 9px; background: var(--mm-muted); border-radius: 50%; }
+.mm-jm-row.is-positive::before { background: var(--mm-success); }
+.mm-jm-body { flex: 1; min-width: 0; }
+.mm-jm-body strong { display: block; font-size: 14.5px; font-weight: 650; overflow-wrap: anywhere; }
+.mm-jm-body small { display: block; margin-top: 1px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-jm-open { flex: none; padding: 5px 12px; color: var(--mm-accent); font-size: 13px; font-weight: 650; text-decoration: none; border: 1px solid var(--mm-control-line); border-radius: 10px; }
+.mm-jm-open:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.mm-jm-tiles { margin-top: 14px; }
+.mm-jm-weeks { display: flex; align-items: flex-end; gap: 8px; height: 48px; max-width: 360px; margin-top: 14px; }
+.mm-jm-week { display: flex; flex: 1; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px; }
+.mm-jm-week i { display: block; min-height: 0; border-radius: 3px; }
+.mm-jm-week i.is-yes { background: var(--mm-success); }
+.mm-jm-week i.is-no { background: var(--mm-control-line); }
+.mm-jm-all { margin-top: 12px; }
+.mm-jm-all > summary, .mm-jm-paste > summary { color: var(--mm-muted); font-size: 13px; cursor: pointer; }
+.mm-jm-note { margin: 12px 0 0; padding: 8px 12px; font-size: 13.5px; background: var(--mm-surface-hover); border-radius: 10px; }
+.mm-jm-paste { margin-top: 10px; }
+.mm-jm-paste-form { display: flex; gap: 8px; margin-top: 8px; }
+.mm-jm-paste-form input { flex: 1; min-width: 0; min-height: 34px; padding: 4px 10px; color: var(--mm-ink); font: inherit; font-size: 13px; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; }
+.mm-jm .mm-todo-foot .mm-todo-add { margin-left: 0; }
 /* «Всё ли живо» and «Ждёт тебя» (Mark 2026-10-22). */
 .mm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .mm-health { display: inline-flex; flex: none; align-items: center; gap: 8px; max-width: 46%; margin-top: 4px; padding: 6px 12px; color: var(--mm-success); font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: var(--mm-success-soft); border: 0; border-radius: 999px; cursor: pointer; }
@@ -5023,6 +5048,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </div>
       <div class="mm-folds" id="mm-folds">
         <section class="mm-summary mm-fold" id="mm-summary" aria-labelledby="mm-summary-title" hidden></section>
+        <div id="mm-job-mail" hidden></div>
         <div id="mm-owner-todo" hidden></div>
         <div id="mm-owner-projects" hidden></div>
       </div>
@@ -10226,6 +10252,7 @@ function mmInit() {
     openProject(link.dataset.project);
   }));
   mmInitOwnerTodo();
+  mmInitJobMail();
   mmInitOwnerProjects();
   mmInitSummary();
   mmInitFolds();
@@ -10236,6 +10263,7 @@ function mmInit() {
     loadInfraChanges();
     mmLoadOwnerProjects();
     mmLoadOwnerTodo();
+    mmLoadJobMail();
     mmLoadHealth();
   }, MM_REFRESH_MS);
 }
@@ -10279,6 +10307,7 @@ function openMainManager() {
   loadInfraChanges();
   mmLoadOwnerProjects();
   mmLoadOwnerTodo();
+  mmLoadJobMail();
   mmLoadHealth();
   const query = new URLSearchParams(window.location.search);
   const wanted = firstOpen ? query.get('project') : null;
@@ -11006,6 +11035,223 @@ async function mmLoadHealth() {
   const generation = ++mmHealthGeneration;
   const data = await fetchJSON(MAC_MINI_API, '/api/all');
   if (generation === mmHealthGeneration) mmRenderHealth(data);
+}
+
+// ─── «Ответы работодателей» (Mark 2026-10-24) ───
+// Replies from Mark's job mailbox, sorted on the Mac mini: invites first, then simple numbers.
+// The mailbox is connected read-only by Mark himself; the page never sees the key or mail text.
+const JOB_MAIL_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/job-mail`;
+let mmJobMailGeneration = 0;
+let mmJobMailData = null;
+const MM_JOB_MAIL_NOTES = {
+  connected: 'Почта подключена. Первая проверка займёт пару минут.',
+  refused: 'Google не дал доступ. Можно попробовать ещё раз.',
+  state_mismatch: 'Ссылка устарела. Нажми «Подключить почту» ещё раз.',
+  scope_not_read_only: 'Нужен доступ только на чтение. Нажми «Подключить почту» ещё раз.',
+  no_refresh_token: 'Google не выдал постоянный доступ. Нажми «Подключить почту» ещё раз.',
+  not_configured: 'Подключение почты ещё не настроено на Mac mini.',
+  error: 'Не получилось подключить почту. Попробуй ещё раз.',
+};
+let mmJobMailNote = (() => {
+  try { return MM_JOB_MAIL_NOTES[new URLSearchParams(window.location.search).get('job-mail')] || ''; } catch (_) { return ''; }
+})();
+
+function mmJobMailDate(value) {
+  const when = value ? new Date(value) : null;
+  return when && !Number.isNaN(when.getTime()) ? when.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'}) : '';
+}
+
+function mmJobMailRow(reply, waiting) {
+  const row = mmEl('li', `mm-jm-row is-${reply.verdict}`);
+  const body = mmEl('div', 'mm-jm-body');
+  body.appendChild(mmEl('strong', '', reply.company || 'Неизвестно'));
+  const verdict = {positive: 'зовут дальше', negative: 'отказ', ack: 'заявка получена', other: 'другое'}[reply.verdict] || '';
+  body.appendChild(mmEl('small', '', [reply.role, waiting ? 'зовут на собеседование' : verdict, mmJobMailDate(reply.date)].filter(Boolean).join(' · ')));
+  row.appendChild(body);
+  if (/^https:\/\/mail\.google\.com\//.test(reply.link || '')) {
+    const open = mmEl('a', 'mm-jm-open', waiting ? 'Открыть письмо' : 'Письмо');
+    open.href = reply.link;
+    open.target = '_blank';
+    open.rel = 'noopener noreferrer';
+    row.appendChild(open);
+  }
+  return row;
+}
+
+function mmRenderJobMail(payload) {
+  const host = document.getElementById('mm-job-mail');
+  if (!host) return;
+  host.replaceChildren();
+  if (!payload || !['not_configured', 'not_connected', 'connected', 'error'].includes(payload.state)) {
+    host.hidden = true;  // Not the owner, or the Mac mini cannot answer.
+    return;
+  }
+  mmJobMailData = payload;
+  const waiting = Array.isArray(payload.waiting) ? payload.waiting : [];
+  const totals = payload.stats?.totals || {};
+  const card = mmEl('section', 'mm-todo-card mm-fold mm-jm');
+  card.setAttribute('aria-labelledby', 'mm-jm-title');
+  const open = mmFoldIsOpen('job-mail') || waiting.length > 0 || Boolean(mmJobMailNote) || payload.state !== 'connected';
+  card.classList.toggle('is-open', open);
+  const meta = payload.state !== 'connected' ? 'почта не подключена'
+    : waiting.length ? `${waiting[0].company} зовёт на собеседование`
+    : 'новых приглашений нет';
+  const head = mmFoldHead('job-mail', 'Ответы работодателей', waiting.length || null, meta, 'mm-jm-title');
+  head.setAttribute('aria-expanded', String(open));
+  card.appendChild(head);
+  const foldBody = mmEl('div', 'mm-fold-body');
+  if (mmJobMailNote) foldBody.appendChild(mmEl('p', 'mm-jm-note', mmJobMailNote));
+  if (payload.state === 'connected') {
+    if (waiting.length) {
+      foldBody.appendChild(mmEl('h4', 'mm-jm-sub', 'Ждут твоего ответа'));
+      const list = mmEl('ul', 'mm-jm-list');
+      waiting.forEach(reply => list.appendChild(mmJobMailRow(reply, true)));
+      foldBody.appendChild(list);
+    } else {
+      foldBody.appendChild(mmEl('p', 'mm-todo-empty', payload.first_scan_done
+        ? 'Все приглашения отвечены. Новое придёт в Telegram и сюда.'
+        : 'Проверяю почту за последние 60 дней…'));
+    }
+    const tiles = mmEl('div', 'mm-summary-tiles mm-jm-tiles');
+    [['Приглашения', totals.positive, 'is-up'], ['Отказы', totals.negative, ''], ['Автоответы', totals.ack, '']].forEach(([label, value, cls]) => {
+      const tile = mmEl('div');
+      tile.appendChild(mmEl('span', '', label));
+      tile.appendChild(mmEl('strong', cls, String(value || 0)));
+      tiles.appendChild(tile);
+    });
+    const rate = payload.stats?.positive_rate;
+    const rateTile = mmEl('div');
+    rateTile.appendChild(mmEl('span', '', 'Да из решивших'));
+    rateTile.appendChild(mmEl('strong', '', rate === null || rate === undefined ? '—' : `${rate}%`));
+    tiles.appendChild(rateTile);
+    foldBody.appendChild(tiles);
+    const weeks = Array.isArray(payload.stats?.weeks) ? payload.stats.weeks : [];
+    const peak = Math.max(1, ...weeks.map(week => (week.positive || 0) + (week.negative || 0)));
+    if (weeks.length) {
+      const chart = mmEl('div', 'mm-jm-weeks');
+      chart.setAttribute('role', 'img');
+      chart.setAttribute('aria-label', 'По неделям: ' + weeks.map(week => `${week.positive || 0} да, ${week.negative || 0} нет`).join('; '));
+      weeks.forEach(week => {
+        const column = mmEl('span', 'mm-jm-week');
+        const yes = mmEl('i', 'is-yes');
+        yes.style.height = `${Math.round(100 * (week.positive || 0) / peak)}%`;
+        const no = mmEl('i', 'is-no');
+        no.style.height = `${Math.round(100 * (week.negative || 0) / peak)}%`;
+        column.append(no, yes);
+        chart.appendChild(column);
+      });
+      foldBody.appendChild(chart);
+      foldBody.appendChild(mmEl('p', 'mm-fold-note', 'Последние 8 недель: зелёным приглашения, серым отказы.'));
+    }
+    const recent = (payload.recent || []).filter(reply => reply.verdict === 'positive' || reply.verdict === 'negative');
+    if (recent.length) {
+      const all = mmEl('details', 'mm-jm-all');
+      all.appendChild(mmEl('summary', '', `Все ответы · ${recent.length}`));
+      const list = mmEl('ul', 'mm-jm-list');
+      recent.forEach(reply => list.appendChild(mmJobMailRow(reply, false)));
+      all.appendChild(list);
+      foldBody.appendChild(all);
+    }
+    if (payload.error) foldBody.appendChild(mmEl('p', 'mm-jm-note', 'Почта сейчас не отвечает. Если не пройдёт само, подключи её заново.'));
+  } else if (payload.state === 'not_configured') {
+    foldBody.appendChild(mmEl('p', 'mm-todo-empty', 'Подключение почты ещё не настроено на Mac mini.'));
+  } else {
+    foldBody.appendChild(mmEl('p', 'mm-todo-empty', payload.state === 'error'
+      ? 'Почта отключилась. Подключи её заново, это одна кнопка.'
+      : 'Подключи почту с откликами. Система будет только читать письма: не отвечает, не удаляет и не помечает прочитанным. Когда работодатель позовёт дальше, придёт сигнал.'));
+  }
+  const foot = mmEl('div', 'mm-todo-foot');
+  if (payload.state === 'connected') {
+    const check = mmEl('button', 'mm-todo-done-toggle', 'Проверить сейчас');
+    check.type = 'button';
+    check.dataset.jmCheck = '';
+    foot.appendChild(check);
+    const off = mmEl('button', 'mm-todo-done-toggle mm-todo-all', 'Отключить почту');
+    off.type = 'button';
+    off.dataset.jmDisconnect = '';
+    foot.appendChild(off);
+  } else if (payload.state !== 'not_configured') {
+    const connect = mmEl('button', 'mm-todo-add', 'Подключить почту');
+    connect.type = 'button';
+    connect.dataset.jmConnect = '';
+    foot.appendChild(connect);
+    // Google may send a phone back to an address only the Mac mini opens; then its link is pasted here.
+    const paste = mmEl('details', 'mm-jm-paste');
+    paste.appendChild(mmEl('summary', '', 'Страница после Google не открылась?'));
+    const form = mmEl('form', 'mm-jm-paste-form');
+    const input = mmEl('input');
+    input.type = 'url';
+    input.name = 'url';
+    input.required = true;
+    input.placeholder = 'Вставь сюда адрес той страницы';
+    input.setAttribute('aria-label', 'Адрес страницы после Google');
+    const done = mmEl('button', 'mm-todo-add', 'Готово');
+    done.type = 'submit';
+    form.append(input, done);
+    paste.appendChild(form);
+    foldBody.appendChild(foot);
+    foldBody.appendChild(paste);
+    card.appendChild(foldBody);
+    host.appendChild(card);
+    host.hidden = false;
+    return;
+  }
+  foldBody.appendChild(foot);
+  card.appendChild(foldBody);
+  host.appendChild(card);
+  host.hidden = false;
+}
+
+async function mmLoadJobMail() {
+  const generation = ++mmJobMailGeneration;
+  if (!JOB_MAIL_API) return mmRenderJobMail(null);
+  try {
+    const response = await fetch(JOB_MAIL_API, { headers: mmHeaders(), cache: 'no-store' });
+    const payload = response.ok ? await response.json() : null;
+    if (generation === mmJobMailGeneration) mmRenderJobMail(payload);
+  } catch (_) {
+    if (generation === mmJobMailGeneration) mmRenderJobMail(null);
+  }
+}
+
+async function mmPostJobMail(path, body = {}) {
+  if (!JOB_MAIL_API) return {error: 'offline'};
+  try {
+    const response = await fetch(`${JOB_MAIL_API}/${path}`, { method: 'POST', headers: mmHeaders(), cache: 'no-store', body: JSON.stringify(body) });
+    const payload = await response.json().catch(() => null);
+    return response.ok ? payload : {error: payload?.error || `http_${response.status}`};
+  } catch (_) {
+    return {error: 'network'};
+  }
+}
+
+function mmInitJobMail() {
+  const host = document.getElementById('mm-job-mail');
+  if (!host) return;
+  host.addEventListener('click', async event => {
+    const button = event.target.closest('[data-jm-connect], [data-jm-check], [data-jm-disconnect]');
+    if (!button) return;
+    if (button.matches('[data-jm-disconnect]') && !window.confirm('Отключить почту? Система перестанет её читать, история ответов останется.')) return;
+    button.disabled = true;
+    const path = button.matches('[data-jm-connect]') ? 'connect' : button.matches('[data-jm-check]') ? 'check' : 'disconnect';
+    const result = await mmPostJobMail(path);
+    if (path === 'connect' && /^https:\/\/accounts\.google\.com\//.test(result?.url || '')) {
+      window.location.assign(result.url);
+      return;
+    }
+    button.disabled = false;
+    mmJobMailNote = result?.error ? 'Не получилось. Попробуй ещё раз.' : path === 'check' ? 'Проверяю почту, через минуту обновится.' : 'Почта отключена.';
+    if (result && !result.error) { ++mmJobMailGeneration; mmRenderJobMail(result); } else mmRenderJobMail(mmJobMailData);
+    if (path === 'check') setTimeout(mmLoadJobMail, 60000);
+  });
+  host.addEventListener('submit', async event => {
+    const form = event.target.closest('.mm-jm-paste-form');
+    if (!form) return;
+    event.preventDefault();
+    const result = await mmPostJobMail('finish', {url: form.elements.url.value});
+    mmJobMailNote = result?.error ? MM_JOB_MAIL_NOTES[result.error] || MM_JOB_MAIL_NOTES.error : MM_JOB_MAIL_NOTES.connected;
+    if (result && !result.error) { ++mmJobMailGeneration; mmRenderJobMail(result); } else mmRenderJobMail(mmJobMailData);
+  });
 }
 
 // ─── «Ждёт тебя» (Mark 2026-10-22) ───
