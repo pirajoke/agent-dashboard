@@ -4754,6 +4754,7 @@ tr:last-child td { border-bottom: none; }
 
 .campus-project-folder.is-testing { --campus-project-color: #8b73c9; }
 .campus-project-folder.is-waiting,
+.campus-project-folder.is-needs_mark,
 .campus-project-folder.is-queued { --campus-project-color: #d49a30; }
 .campus-project-folder.is-done { --campus-project-color: #728f78; }
 .campus-project-folder.is-failed { --campus-project-color: #c7554c; }
@@ -4862,7 +4863,8 @@ tr:last-child td { border-bottom: none; }
 .campus-agent.is-queued { --campus-status: #e6a23c; }
 .campus-agent.is-active { --campus-status: #65a873; }
 .campus-agent.is-testing { --campus-status: #8b73c9; }
-.campus-agent.is-waiting { --campus-status: #e6a23c; border-style: dashed; }
+.campus-agent.is-waiting,
+.campus-agent.is-needs_mark { --campus-status: #e6a23c; border-style: dashed; }
 .campus-agent.is-done { --campus-status: #a5b3a8; }
 .campus-agent.is-failed { --campus-status: #d25b50; border-width: 3px; }
 

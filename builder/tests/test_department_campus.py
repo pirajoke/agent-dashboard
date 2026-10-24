@@ -153,6 +153,7 @@ class DepartmentCampusContractTests(unittest.TestCase):
             "queued": "в очереди",
             "active": "работает",
             "testing": "проверяет",
+            "needs_mark": "нужно решение Марка",
             "waiting": "ждёт решения",
             "done": "готово",
             "failed": "ошибка",
@@ -166,7 +167,7 @@ class DepartmentCampusContractTests(unittest.TestCase):
                 self.assertIn(visible, html + script)
         self.assertIn("active", script)
         self.assertIn("testing", script)
-        for nonmoving in ("queued", "waiting", "done", "failed"):
+        for nonmoving in ("queued", "needs_mark", "waiting", "done", "failed"):
             self.assertIn(nonmoving, script)
         self.assertIn("aria-live", html)
 
@@ -671,6 +672,7 @@ class DepartmentCampusContractTests(unittest.TestCase):
             "testing",
             "done",
             "queued",
+            "needs_mark",
             "waiting",
             "failed",
             "department",

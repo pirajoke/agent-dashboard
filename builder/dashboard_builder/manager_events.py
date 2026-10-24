@@ -55,6 +55,7 @@ _STATUS_LABELS = {
     "waiting": "нужно решение Марка",
     "needs_input": "нужно решение Марка",
     "needs_approval": "нужно решение Марка",
+    "needs_mark": "нужно решение Марка",
     "failed": "ошибка",
     "error": "ошибка",
 }

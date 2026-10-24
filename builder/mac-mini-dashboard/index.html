@@ -6005,7 +6005,7 @@ function renderOwnerDecisions(payload) {
   const events = Array.isArray(payload.activity) ? payload.activity : [];
   if (events.length) {
     activity.append(decisionNode('h3', '', decisions.length ? 'Что ещё происходит' : 'Текущая работа и следующий результат'));
-    const statuses = { queued: 'в очереди', active: 'работает', testing: 'проверяет', waiting: 'ждёт решения', done: 'готово', failed: 'ошибка' };
+    const statuses = { queued: 'в очереди', active: 'работает', testing: 'проверяет', needs_mark: 'нужно решение Марка', waiting: 'ждёт решения', done: 'готово', failed: 'ошибка' };
     events.forEach(event => {
       const item = decisionNode('div', 'decision-activity-item');
       item.append(decisionNode('strong', '', `${event.department_label} · ${event.project} · ${statuses[event.status] || '—'}`));
@@ -8396,6 +8396,7 @@ function renderJarvisAgentRoster(payload) {
     ['queued', 'в очереди'],
     ['active', 'работает'],
     ['testing', 'проверяет'],
+    ['needs_mark', 'нужно решение Марка'],
     ['waiting', 'ждёт решения'],
     ['done', 'готово'],
     ['failed', 'ошибка'],
@@ -8426,7 +8427,7 @@ function renderJarvisAgentRoster(payload) {
     update.card.classList.remove('working', 'done', 'failed', 'pending');
     const stateClass = update.status === 'done'
       ? 'done'
-      : update.status === 'failed' ? 'failed' : update.status === 'queued' || update.status === 'waiting' ? 'pending' : 'working';
+      : update.status === 'failed' ? 'failed' : update.status === 'queued' || update.status === 'waiting' || update.status === 'needs_mark' ? 'pending' : 'working';
     update.card.classList.add(stateClass);
     const statusNode = update.card.querySelector('.jarvis-role-status');
     const nextNode = update.card.querySelector('.jarvis-role-next');
@@ -8438,8 +8439,10 @@ function renderJarvisAgentRoster(payload) {
         ? 'Дальше: дождитесь результата и проверки.'
         : update.status === 'queued'
           ? 'Дальше: задача ожидает запуска.'
-          : update.status === 'waiting'
+          : update.status === 'needs_mark'
             ? 'Дальше: требуется решение владельца.'
+            : update.status === 'waiting'
+              ? 'Дальше: задача ожидает внешнего условия.'
             : 'Дальше: нажмите «Пинг» для проверки.';
     }
     if (button) {

@@ -38,13 +38,14 @@ DEFAULT_TOKEN_FILE = Path.home() / "jarvis/.secrets/bridge_api_token"
 # Scheduler human_projection status -> campus status. DONE items are history
 # and are not shown as live work.
 CAMPUS_STATUS = {
-    "NEEDS MARK": "waiting",
+    "NEEDS MARK": "needs_mark",
     "WORKING": "active",
     "PROBLEM": "failed",
     "WAITING": "queued",
 }
-STATUS_PRIORITY = {"failed": 0, "waiting": 1, "active": 2, "queued": 3}
+STATUS_PRIORITY = {"failed": 0, "needs_mark": 1, "waiting": 1, "active": 2, "queued": 3}
 NEXT_STEP = {
+    "needs_mark": "Нужно решение Марка",
     "waiting": "Ждёт решения Марка",
     "active": "Агент работает над задачей",
     "failed": "Доставка не подтверждена, нужна проверка",

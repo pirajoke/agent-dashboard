@@ -159,6 +159,7 @@
         queued: 'в очереди',
         active: 'работает',
         testing: 'проверяет',
+        needs_mark: 'нужно решение Марка',
         waiting: 'ждёт решения',
         done: 'готово',
         failed: 'ошибка',
@@ -167,6 +168,7 @@
         queued: 'Ожидает выполнения',
         active: 'В работе',
         testing: 'На проверке',
+        needs_mark: 'Требуется решение владельца',
         waiting: 'Ожидает решения',
         done: 'Завершено',
         failed: 'Завершено с ошибкой',
@@ -176,6 +178,7 @@
         testing: 'test-lab',
         done: 'github-station',
         queued: 'department',
+        needs_mark: 'department',
         waiting: 'department',
         failed: 'department',
     };
@@ -546,7 +549,7 @@
 
     function renderCampusRoutes(events, newJourneySignatures) {
         if (!routeLayerEl) return;
-        const route_status_precedence = ['testing', 'active', 'done', 'queued', 'waiting', 'failed'];
+        const route_status_precedence = ['testing', 'active', 'done', 'queued', 'waiting', 'needs_mark', 'failed'];
         const routedTasks = new Set();
         events.forEach((event) => {
             if (routedTasks.size >= 3 || routedTasks.has(event.task_id)) return;

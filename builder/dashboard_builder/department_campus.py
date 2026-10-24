@@ -260,6 +260,7 @@ STATUS_LABELS = {
     "queued": "в очереди",
     "active": "работает",
     "testing": "проверяет",
+    "needs_mark": "нужно решение Марка",
     "waiting": "ждёт решения",
     "done": "готово",
     "failed": "ошибка",

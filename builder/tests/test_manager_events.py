@@ -42,6 +42,7 @@ class ManagerEventProjectionTests(unittest.TestCase):
             "running": "работает",
             "done": "готово",
             "needs_input": "нужно решение Марка",
+            "needs_mark": "нужно решение Марка",
             "failed": "ошибка",
         }
         for raw, label in expected.items():
@@ -87,6 +88,7 @@ class ManagerEventProjectionTests(unittest.TestCase):
             "running": "wait_for_result",
             "done": "verify_evidence",
             "needs_input": "mark_decision",
+            "needs_mark": "mark_decision",
             "failed": "inspect_failure",
         }
         for status, code in expected.items():

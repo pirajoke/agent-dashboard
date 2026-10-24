@@ -1311,6 +1311,7 @@ _BRIDGE_CAMPUS_STATUSES = {
     "failed": "failed",
     "blocked": "waiting",
     "waiting": "waiting",
+    "needs_mark": "needs_mark",
     "needs_input": "waiting",
     "needs_approval": "waiting",
 }
@@ -1326,7 +1327,7 @@ def _campus_bridge_identity(value: object, *, separator: str) -> str | None:
 
 
 def _campus_bridge_timestamp(task: dict, status: str) -> object:
-    if status in {"blocked", "waiting", "needs_input", "needs_approval"}:
+    if status in {"blocked", "waiting", "needs_mark", "needs_input", "needs_approval"}:
         return task.get("updated_at") or task.get("claimed_at") or task.get("created_at")
     if status in {"done", "failed"}:
         return (
@@ -1536,7 +1537,7 @@ def _manager_decisions_payload(data: object, *, owner: bool, records: list, now:
             previous = latest.get(validated['task_id'])
             if previous is None or _department_snapshot_time(validated['updated_at']) > _department_snapshot_time(previous['updated_at']):
                 latest[validated['task_id']] = validated
-    waiting = [event for event in latest.values() if event['status'] == 'waiting']
+    waiting = [event for event in latest.values() if event['status'] in {'needs_mark', 'waiting'}]
     waiting.sort(key=lambda event: _department_snapshot_time(event['updated_at']), reverse=True)
     proposals = _manager_decision_proposals(events) if owner else {}
     return decision_projection(campus, proposals, records, owner=owner, waiting_events=waiting)
