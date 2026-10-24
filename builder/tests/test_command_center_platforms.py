@@ -15,7 +15,7 @@ EXPECTED_PLATFORMS = {
     "financial": (
         "JobRadar",
         (
-            "https://command.meshly.fr/job-radar/",
+            "https://jobradar.meshly.fr/job-radar/",
             "https://t.me/JobsRadarS_bot",
         ),
     ),
@@ -175,7 +175,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
                         self.assertEqual(parsed.scheme, "https")
                         self.assertIn(
                             parsed.hostname,
-                            {"t.me", "command.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr"},
+                            {"t.me", "command.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr", "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr", "sushi-parisien.meshly.fr", "jobradar.meshly.fr"},
                         )
 
     def test_ac_1_accountable_copy_describes_french_micro_bnc(self):

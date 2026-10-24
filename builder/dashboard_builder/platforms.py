@@ -19,7 +19,7 @@ PLATFORM_REGISTRY = (
         "tier": "primary",
         "status": "Public HTTPS + Telegram",
         "actions": (
-            {"label": "Open JobRadar", "url": "https://command.meshly.fr/job-radar/", "access": "public"},
+            {"label": "Open JobRadar", "url": "https://jobradar.meshly.fr/job-radar/", "access": "public"},
             {"label": "Open JobRadar bot", "url": "https://t.me/JobsRadarS_bot", "access": "telegram"},
         ),
     },
@@ -141,7 +141,7 @@ _PLATFORM_FIELDS = ("id", "name", "description", "tier", "status", "actions")
 _ACTION_FIELDS = ("label", "url", "access")
 _APPROVED_HTTPS_HOSTS = {"t.me", "command.meshly.fr", "health.meshly.fr", "properties.meshly.fr", "pixel-agents.meshly.fr",
                          "mydictionary.meshly.fr", "singularity.meshly.fr", "accountable.meshly.fr",
-                         "sushi-parisien.meshly.fr"}
+                         "sushi-parisien.meshly.fr", "jobradar.meshly.fr"}
 _APPROVED_ACCESS = {"private", "public", "telegram"}
 _CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 _SENSITIVE_COPY = re.compile(
