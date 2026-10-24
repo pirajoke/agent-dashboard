@@ -10017,6 +10017,7 @@ async function loadGrowth() {
     if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
     renderGrowth(data);
   } catch (error) {
+    state.hidden = false;
     state.className = 'mm-notice error';
     state.textContent = 'Не удалось получить точки роста с сервера Command Center. Ничего не показываю, чтобы не гадать.';
     document.getElementById('growth-summary').innerHTML = '';
@@ -10034,6 +10035,8 @@ function renderGrowth(data) {
   const state = document.getElementById('growth-state');
   const summary = document.getElementById('growth-summary');
   const grid = document.getElementById('growth-grid');
+  // Only the routine source line stays hidden (below); every other state must show.
+  state.hidden = false;
   summary.innerHTML = '';
   if (data.state === 'empty') {
     state.className = 'mm-notice';
