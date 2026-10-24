@@ -153,7 +153,6 @@ class DepartmentCampusContractTests(unittest.TestCase):
             "queued": "в очереди",
             "active": "работает",
             "testing": "проверяет",
-            "needs_mark": "нужно решение Марка",
             "waiting": "ждёт решения",
             "done": "готово",
             "failed": "ошибка",
@@ -167,7 +166,7 @@ class DepartmentCampusContractTests(unittest.TestCase):
                 self.assertIn(visible, html + script)
         self.assertIn("active", script)
         self.assertIn("testing", script)
-        for nonmoving in ("queued", "needs_mark", "waiting", "done", "failed"):
+        for nonmoving in ("queued", "waiting", "done", "failed"):
             self.assertIn(nonmoving, script)
         self.assertIn("aria-live", html)
 
@@ -276,6 +275,14 @@ class DepartmentCampusContractTests(unittest.TestCase):
         )
         self.assertIn("textContent", script)
         self.assertNotRegex(script, r"innerHTML\s*=\s*(?:event|agent|details|value)")
+
+    def test_owner_gate_flag_is_preserved_without_changing_waiting_status(self):
+        flagged = self._project([self._event(status="waiting", needs_mark=True)])["events"][0]
+        ordinary = self._project([self._event(status="waiting", needs_mark=False)])["events"][0]
+
+        self.assertEqual(flagged["status"], "waiting")
+        self.assertIs(flagged["needs_mark"], True)
+        self.assertNotIn("needs_mark", ordinary)
 
     def test_ac_9_agent_triggers_have_keyboard_touch_and_focus_return_contract(self):
         html = self.campus.build_department_campus_html()
@@ -672,7 +679,6 @@ class DepartmentCampusContractTests(unittest.TestCase):
             "testing",
             "done",
             "queued",
-            "needs_mark",
             "waiting",
             "failed",
             "department",

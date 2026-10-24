@@ -260,7 +260,6 @@ STATUS_LABELS = {
     "queued": "в очереди",
     "active": "работает",
     "testing": "проверяет",
-    "needs_mark": "нужно решение Марка",
     "waiting": "ждёт решения",
     "done": "готово",
     "failed": "ошибка",
@@ -275,6 +274,7 @@ _PUBLIC_EVENT_FIELDS = (
     "agent_id",
     "role",
     "status",
+    "needs_mark",
     "updated_at",
     "next_step",
     "evidence_count",
@@ -546,6 +546,8 @@ def _validated_event(
         "ephemeral": True,
         "zone_id": zone["zone_id"],
     }
+    if event.get("needs_mark") is True:
+        public["needs_mark"] = True
     if owner_view is True:
         public.update(_validated_owner_fields(event))
     return public, "valid", updated

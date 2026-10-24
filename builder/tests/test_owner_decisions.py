@@ -69,12 +69,6 @@ class DecisionProjectionTests(unittest.TestCase):
         for private in ("Какой вариант", "проверенных направления", "Сравнение направлений", "options"):
             self.assertNotIn(private, json.dumps(public, ensure_ascii=False))
 
-    def test_needs_mark_is_an_owner_decision_not_generic_waiting(self):
-        payload = project([event(status="needs_mark")])
-
-        self.assertEqual(len(payload["decisions"]), 1)
-        self.assertEqual(payload["activity"][0]["status"], "needs_mark")
-
     def test_fourth_blocker_is_not_lost_to_three_campus_lanes(self):
         events = [event(task_id=f"task-{i}", event_id=f"evt-{i}") for i in range(4)]
         payload = project(events)

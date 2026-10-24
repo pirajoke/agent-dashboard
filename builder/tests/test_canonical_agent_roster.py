@@ -49,7 +49,6 @@ PUBLIC_STATUS_COPY = {
     "queued": "в очереди",
     "active": "работает",
     "testing": "проверяет",
-    "needs_mark": "нужно решение Марка",
     "waiting": "ждёт решения",
     "done": "готово",
     "failed": "ошибка",
@@ -220,6 +219,8 @@ class CanonicalAgentRosterMarkupTests(unittest.TestCase):
         self.assertTrue(render, "the roster needs one fail-closed projection renderer")
         self.assertIn("event.agent_id", render)
         self.assertIn("event.status", render)
+        self.assertIn("event.needs_mark", render)
+        self.assertIn("нужно решение Марка", render)
         self.assertNotRegex(render, r"event\.(?:role|alias|name)\b")
         for status, visible in PUBLIC_STATUS_COPY.items():
             with self.subTest(status=status):

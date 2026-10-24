@@ -57,7 +57,7 @@ def _proposal(raw: object) -> dict:
 
 
 def decision_projection(campus: dict, proposals: dict, records: list, *, owner: bool, waiting_events: list | None = None) -> dict:
-    """Only fresh validated owner-decision events can become owner decisions."""
+    """Only fresh validated waiting events can become owner decisions."""
     activity = campus.get("events") if isinstance(campus.get("events"), list) else []
     result = {
         "state": campus.get("state", "unavailable"),
@@ -71,7 +71,7 @@ def decision_projection(campus: dict, proposals: dict, records: list, *, owner: 
     seen = set()
     for event in waiting_events if waiting_events is not None else activity:
         task_id = event.get("task_id")
-        if event.get("status") not in {"needs_mark", "waiting"} or task_id in seen:
+        if event.get("status") != "waiting" or task_id in seen:
             continue
         seen.add(task_id)
         proposal = _proposal(proposals.get((task_id, event.get("event_id"), event.get("updated_at"))))

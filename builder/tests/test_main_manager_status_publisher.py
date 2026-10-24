@@ -62,10 +62,12 @@ class BuildEventsTests(unittest.TestCase):
             _status(("JARVIS", "NEEDS MARK"), ("MY DICTIONARY", "WAITING"), ("HEALTH OS", "WORKING")),
         )
         by_project = {event["project"]: event for event in events}
-        self.assertEqual(by_project["JARVIS"]["status"], "needs_mark")
+        self.assertEqual(by_project["JARVIS"]["status"], "waiting")
+        self.assertIs(by_project["JARVIS"]["needs_mark"], True)
         self.assertEqual(by_project["JARVIS"]["department_id"], "infrastructure")
         self.assertEqual(by_project["JARVIS"]["agent_id"], "INFRASTRUCTURE")
         self.assertEqual(by_project["MY DICTIONARY"]["status"], "queued")
+        self.assertNotIn("needs_mark", by_project["MY DICTIONARY"])
         self.assertEqual(by_project["HEALTH OS"]["status"], "active")
         for event in events:
             self.assertEqual(event["updated_at"], "2026-08-18T11:47:31Z")
@@ -79,7 +81,8 @@ class BuildEventsTests(unittest.TestCase):
         events = PUBLISHER.build_events(
             _status(("JARVIS", "DONE"), ("JARVIS", "WAITING"), ("JARVIS", "NEEDS MARK")),
         )
-        self.assertEqual([(e["project"], e["status"]) for e in events], [("JARVIS", "needs_mark")])
+        self.assertEqual([(e["project"], e["status"]) for e in events], [("JARVIS", "waiting")])
+        self.assertIs(events[0]["needs_mark"], True)
 
     def test_project_names_are_normalised_and_unknown_projects_skipped(self):
         events = PUBLISHER.build_events(
@@ -207,17 +210,19 @@ class CampusServerIntegrationTests(unittest.TestCase):
         payload = SERVER._department_campus_payload(data, now=NOW + timedelta(minutes=2))
         self.assertEqual(payload["state"], "active")
         self.assertEqual(payload["events"][0]["project"], "JARVIS")
-        self.assertEqual(payload["events"][0]["status"], "needs_mark")
+        self.assertEqual(payload["events"][0]["status"], "waiting")
+        self.assertIs(payload["events"][0]["needs_mark"], True)
         self.assertEqual(payload["queue_updated_at"], "2026-10-08T23:50:00Z")
 
-    def test_owner_gate_remains_needs_mark_through_the_private_projection(self):
+    def test_owner_gate_remains_explicit_without_changing_the_waiting_enum(self):
         data = self._bridge(self._snapshot(("JARVIS", "NEEDS MARK")), completed_at="2026-10-09T00:10:01Z")
 
         payload = SERVER._department_campus_payload(
             data, now=NOW + timedelta(minutes=2), owner_view=True,
         )
 
-        self.assertEqual(payload["events"][0]["status"], "needs_mark")
+        self.assertEqual(payload["events"][0]["status"], "waiting")
+        self.assertIs(payload["events"][0]["needs_mark"], True)
 
     def test_snapshot_without_open_work_is_empty_not_stale(self):
         data = self._bridge(self._snapshot(("JARVIS", "DONE")), completed_at="2026-10-09T00:10:01Z")

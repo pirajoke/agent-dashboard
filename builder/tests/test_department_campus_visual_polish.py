@@ -350,7 +350,7 @@ class DepartmentCampusVisualPolishTests(unittest.TestCase):
             classes = _classes(attributes)
             self.assertEqual(attributes.get("data-campus-project-status"), "idle")
             self.assertTrue(classes.isdisjoint({
-                "is-live", "is-active", "is-testing", "is-needs_mark", "is-waiting", "is-queued",
+                "is-live", "is-active", "is-testing", "is-waiting", "is-queued",
                 "is-done", "is-failed", "is-busy",
             }))
 

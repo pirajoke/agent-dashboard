@@ -38,14 +38,13 @@ DEFAULT_TOKEN_FILE = Path.home() / "jarvis/.secrets/bridge_api_token"
 # Scheduler human_projection status -> campus status. DONE items are history
 # and are not shown as live work.
 CAMPUS_STATUS = {
-    "NEEDS MARK": "needs_mark",
+    "NEEDS MARK": "waiting",
     "WORKING": "active",
     "PROBLEM": "failed",
     "WAITING": "queued",
 }
-STATUS_PRIORITY = {"failed": 0, "needs_mark": 1, "waiting": 1, "active": 2, "queued": 3}
+STATUS_PRIORITY = {"failed": 0, "waiting": 1, "active": 2, "queued": 3}
 NEXT_STEP = {
-    "needs_mark": "Нужно решение Марка",
     "waiting": "Ждёт решения Марка",
     "active": "Агент работает над задачей",
     "failed": "Доставка не подтверждена, нужна проверка",
@@ -125,7 +124,7 @@ def build_events(status: dict[str, Any]) -> list[dict[str, Any]]:
         department_id = record["department_id"]
         zone = DEPARTMENT_ZONES[department_id]
         task_id = f"mm-{slug(record['project'])}"
-        by_project[record["project"]] = {
+        event = {
             "event_id": f"{task_id}-{campus_status}",
             "task_id": task_id,
             "department_id": department_id,
@@ -140,6 +139,9 @@ def build_events(status: dict[str, Any]) -> list[dict[str, Any]]:
             "evidence_count": 0,
             "ephemeral": True,
         }
+        if person.get("status") == "NEEDS MARK" and person.get("needs_mark") is True:
+            event["needs_mark"] = True
+        by_project[record["project"]] = event
     return sorted(by_project.values(), key=lambda event: (STATUS_PRIORITY[event["status"]], event["project"]))
 
 
