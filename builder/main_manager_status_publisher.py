@@ -25,6 +25,11 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from dashboard_builder.department_campus import CAMPUS_PROJECTS, DEPARTMENT_ZONES  # noqa: E402
+from dashboard_builder.native_activity import (  # noqa: E402
+    collect_native_activity,
+    default_native_roots,
+    validate_native_activity_checkpoint,
+)
 
 SOURCE_AGENT = "main-manager"
 RUNTIME_DIR = Path.home() / "Library/Application Support/MainManagerPortfolioContinuation"
@@ -145,7 +150,13 @@ def build_events(status: dict[str, Any]) -> list[dict[str, Any]]:
     return sorted(by_project.values(), key=lambda event: (STATUS_PRIORITY[event["status"]], event["project"]))
 
 
-def build_snapshot(status: dict[str, Any], *, now: datetime, queue_path: Path) -> dict[str, Any]:
+def build_snapshot(
+    status: dict[str, Any],
+    *,
+    now: datetime,
+    queue_path: Path,
+    native_activity: object = None,
+) -> dict[str, Any]:
     if status.get("ok") is not True:
         raise PublisherError("scheduler_status_failed")
     observed_at = iso_z(now)
@@ -160,6 +171,20 @@ def build_snapshot(status: dict[str, Any], *, now: datetime, queue_path: Path) -
     }
     if isinstance(counts, dict) and all(type(v) is int and v >= 0 for v in counts.values()):
         snapshot["counts"] = counts
+    work_counts = status.get("work_counts")
+    if (
+        isinstance(work_counts, dict)
+        and set(work_counts) == {"executable_queued", "owner_gate", "stop_notice"}
+        and all(type(value) is int and value >= 0 for value in work_counts.values())
+    ):
+        snapshot["work_counts"] = dict(work_counts)
+    native = validate_native_activity_checkpoint(native_activity, now=now)
+    if native is not None:
+        snapshot["native_activity"] = native
+    elif native_activity is not None:
+        # Preserve only the fact that the optional source was invalid so the
+        # server can fail that lane closed without transporting unsafe fields.
+        snapshot["native_activity"] = {}
     return snapshot
 
 
@@ -219,7 +244,22 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     now = datetime.now(timezone.utc)
     try:
-        snapshot = build_snapshot(run_scheduler_status(args, now), now=now, queue_path=args.queue)
+        try:
+            native_activity = collect_native_activity(
+                routes_path=args.routes,
+                roots=default_native_roots(),
+                now=now,
+            )
+        except Exception:
+            # Keep the lane explicit and unavailable without exposing local
+            # failure details or suppressing the independent owner-gate feed.
+            native_activity = {}
+        snapshot = build_snapshot(
+            run_scheduler_status(args, now),
+            now=now,
+            queue_path=args.queue,
+            native_activity=native_activity,
+        )
         if args.dry_run:
             print(json.dumps(snapshot, ensure_ascii=False, indent=2))
             return 0
