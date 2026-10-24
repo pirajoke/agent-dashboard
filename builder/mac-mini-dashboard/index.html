@@ -4019,6 +4019,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-controls select { min-height: 46px; border-radius: 12px; }
 .context-controls button { min-width: 46px; min-height: 46px; padding: 0; font-size: 18px; border-radius: 12px; }
 .context-status { margin: 4px 0 16px; font-size: 12.5px; }
+.cc-owner-gate { display: flex; gap: 14px; align-items: flex-start; padding: 18px; margin: 4px 0 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); color: var(--mm-ink); }
+.cc-owner-gate-icon { display: grid; place-items: center; flex: none; width: 42px; height: 42px; color: var(--mm-accent); background: var(--mm-selection); border-radius: 12px; }
+.cc-owner-gate strong { display: block; font-size: 15px; margin-bottom: 4px; }
+.cc-owner-gate p { margin: 0 0 12px; color: var(--mm-muted); font-size: 13.5px; line-height: 1.5; }
+.cc-owner-gate-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cc-owner-gate-actions button, .cc-owner-gate-actions a { font: inherit; font-size: 13.5px; font-weight: 600; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--mm-line); background: var(--mm-surface); color: var(--mm-ink); cursor: pointer; text-decoration: none; }
+.cc-owner-gate-actions button { background: var(--mm-accent); border-color: var(--mm-accent); color: #fff; }
 .context-list { display: grid; gap: 10px; }
 .context-row { flex-direction: row; align-items: center; gap: 14px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); }
 .context-row:hover, .context-row[aria-pressed="true"] { background: var(--mm-surface); border-color: var(--mm-accent); }
@@ -7329,6 +7336,26 @@ let ccContextController = null;
 let ccContextTimer = null;
 let ccContextRecordId = null;
 const ccContextNames = {plaud:'PLAUD',krisp:'Krisp',granola:'Granola',other:'Другие записи','project-update':'Обновления проектов'};
+// Mark 2026-10-24: «в контексте ничего не показывается». When the site doesn't recognise the owner,
+// a private tab used to show one small grey line and looked broken. Now it says so plainly, with a way out.
+function ccOwnerGate(what) {
+  const box = document.createElement('div'); box.className = 'cc-owner-gate'; box.setAttribute('role', 'note');
+  const icon = document.createElement('span'); icon.className = 'cc-owner-gate-icon'; icon.setAttribute('aria-hidden', 'true');
+  icon.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const text = document.createElement('div');
+  const title = document.createElement('strong'); title.textContent = 'Сайт пока не узнал тебя';
+  const body = document.createElement('p'); body.textContent = `${what} видны только тебе. Обычно помогает обновить страницу. Если не помогло, войди заново через Google.`;
+  const actions = document.createElement('div'); actions.className = 'cc-owner-gate-actions';
+  const reload = document.createElement('button'); reload.type = 'button'; reload.textContent = 'Обновить страницу';
+  reload.addEventListener('click', () => window.location.reload());
+  actions.append(reload);
+  if (window.location?.hostname === 'command.meshly.fr') {
+    const again = document.createElement('a'); again.href = '/cdn-cgi/access/logout'; again.textContent = 'Войти заново';
+    actions.append(again);
+  }
+  text.append(title, body, actions); box.append(icon, text);
+  return box;
+}
 function ccContextVisible() { return !document.hidden && !!document.querySelector('#section-context.active'); }
 function ccContextClear(message = 'Записи доступны после проверки доступа владельца.') {
   ccContextGeneration++;
@@ -7528,7 +7555,8 @@ async function ccLoadContext(recordId = null) {
     if (!data.records.length) document.getElementById('context-status').textContent = (warning + 'По выбранным условиям записей нет.').trim();
   } catch (error) {
     if (generation !== ccContextGeneration) return;
-    ccContextClear(error.message === 'owner_required' ? 'Войдите как владелец, чтобы открыть записи.' : error.message === 'not_found' ? 'Запись не найдена. Обновите каталог.' : 'Источник временно недоступен. Попробуйте обновить каталог.');
+    if (error.message === 'owner_required') { ccContextClear(''); document.getElementById('context-list').replaceChildren(ccOwnerGate('Записи встреч и обновления проектов')); return; }
+    ccContextClear( error.message === 'not_found' ? 'Запись не найдена. Обновите каталог.' : 'Источник временно недоступен. Попробуйте обновить каталог.');
   } finally { clearTimeout(timeout); if (generation === ccContextGeneration) ccContextController=null; }
 }
 document.getElementById('context-filters').addEventListener('submit', event => {event.preventDefault();ccLoadContext();});
@@ -11641,7 +11669,7 @@ function ccDocxxReset(message, state='unavailable') {
   for(const id of ['pending','review','catalog-count','model']) ccDocxxText('docxx-'+id,'—');
   const warnings=document.getElementById('docxx-warnings'); warnings.replaceChildren(); warnings.hidden=true;
   document.getElementById('docxx-guide-links').replaceChildren();
-  document.getElementById('docxx-records').replaceChildren(ccDocxxEl('p',message,'docxx-empty'));
+  document.getElementById('docxx-records').replaceChildren(state==='owner_required' ? ccOwnerGate('Документы и их разбор') : ccDocxxEl('p',message,'docxx-empty'));
   ccDocxxRenderGmail(); ccDocxxExplain();
 }
 function ccDocxxClear() {
