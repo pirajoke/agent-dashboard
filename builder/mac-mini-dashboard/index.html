@@ -4008,6 +4008,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-actions a { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin:0; text-decoration:none; font-size:14px; font-weight:600; }
 .context-actions a:hover { text-decoration:underline; }
 .context-actions a[hidden] { display:none; }
+.context-update-lead { font-size:16px; line-height:1.6; }
 .context-links { margin-top:24px; padding-top:16px; border-top:1px solid var(--mm-line); }
 .context-links h4 { margin:0; font-size:15px; }
 /* Mark 2026-10-23: records as clear cards, one search field, no walls of text. */
@@ -4685,8 +4686,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <button type="button" id="context-close">← Все записи</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p>
         <nav class="context-actions" aria-label="Перейти из записи">
           <a id="context-obsidian">Оригинал в Obsidian</a>
-          <a id="context-work" href="?tab=work&amp;view=todo">Дела и результаты</a>
-          <a id="context-agents" href="?tab=agents">Агенты</a>
+          <a id="context-work" href="?tab=work&amp;view=todo" hidden>Дела и результаты</a>
+          <a id="context-agents" href="?tab=agents" hidden>Агенты</a>
         </nav>
         <div id="context-body" class="context-body"></div>
         <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
@@ -7473,12 +7474,38 @@ function ccContextRenderLinks(links) {
   }
   area.append(title, hint, list);
 }
+// Mark 2026-10-25: «сделай минимализм… это невозможно читать» about a project update full of State,
+// Changed Files and timestamps. An update now shows only its summary; the rest folds under «Подробности».
+function ccContextRenderUpdate(container, text, record, links) {
+  const sections = []; let current = {heading: '', lines: []};
+  for (const line of text.split('\n')) {
+    const heading = line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*#*$/);
+    if (heading) { sections.push(current); current = {heading: heading[1].trim(), lines: []}; continue; }
+    // «Recorded: 2026-…» and similar stamp lines are not for reading.
+    if (/^\s*(?:\*\*)?(?:recorded|записано|created|updated|date|дата)(?:\*\*)?\s*:/i.test(line)) continue;
+    current.lines.push(line);
+  }
+  sections.push(current);
+  const isSummary = h => /^(?:summary|tl;?dr|итог|итоги|резюме|кратко|что сделано|что сделали|result|outcome)$/i.test(h);
+  const isTitle = h => h === record.title;
+  const filled = sections.filter(s => s.lines.join('\n').trim());
+  let main = filled.find(s => isSummary(s.heading));
+  if (!main) main = filled.find(s => !s.heading || isTitle(s.heading)) || filled[0];
+  if (!main) { const p = document.createElement('p'); p.textContent = 'В записи пока нет текста.'; container.append(p); return; }
+  const lead = document.createElement('div'); lead.className = 'context-update-lead';
+  ccContextParagraphs(lead, main.lines.join('\n').trim(), links); container.append(lead);
+  const rest = filled.filter(s => s !== main && !(isTitle(s.heading) && !s.lines.join('').trim()));
+  if (!rest.length) return;
+  const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = 'Подробности'; details.append(toggle);
+  ccContextParagraphs(details, rest.map(s => (s.heading && !isTitle(s.heading) ? `#### ${s.heading}\n` : '') + s.lines.join('\n')).join('\n\n'), links);
+  container.append(details);
+}
 function ccContextRenderBody(record) {
   const container = document.getElementById('context-body'); container.replaceChildren();
   const links = new Map();
   const text = record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
     .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, '');
-  if (record.kind !== 'transcript') { ccContextParagraphs(container, text, links); ccContextRenderLinks(links); return; }
+  if (record.kind !== 'transcript') { ccContextRenderUpdate(container, text, record, links); ccContextRenderLinks(links); return; }
   const parts = {summary: [], transcript: []}; let section = 'transcript', firstContent = true;
   for (const line of text.split('\n')) {
     // The importer banner is operational guidance, not part of the conversation.
