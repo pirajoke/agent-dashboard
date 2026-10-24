@@ -169,6 +169,23 @@ class AgentPageAndApiTests(unittest.TestCase):
                        "mm-agent-lane", "prefers-reduced-motion: reduce) {\n  .mm-agent-walker"):
             self.assertIn(needle, PAGE)
 
+    def test_one_button_and_an_instant_thinking_state(self):
+        # Mark 2026-10-24: «просто выполнить кнопку … я нажимаю и он думает».
+        for needle in ("'Выполнить'", "queued: 'Думает…'", "working: 'Работает…'", "mm-agent-spin",
+                       "thinking.replaceWith(handOff)"):
+            self.assertIn(needle, PAGE)
+        self.assertNotIn("to_agent", PAGE)
+
+    def test_pressing_the_button_starts_the_runner_at_once(self):
+        calls = []
+        self.assertTrue(SERVER._kick_agent_runner(lambda args, **_: calls.append(args)))
+        self.assertEqual(calls, [["launchctl", "kickstart", f"gui/{os.getuid()}/com.pirajoke.agent-task-runner"]])
+        self.assertNotIn("-k", calls[0])  # Never kills a run in progress.
+
+        def missing(*_args, **_kwargs):
+            raise FileNotFoundError("launchctl")
+        self.assertFalse(SERVER._kick_agent_runner(missing))
+
 
     def test_deploy_ships_and_installs_the_runner(self):
         deploy = (BUILDER / "deploy_to_scripts.sh").read_text()

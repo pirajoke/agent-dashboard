@@ -2471,6 +2471,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         try:
             record = change_owner_todo(OWNER_TODO_FILE, body)
+            if body.get('action') == 'assign':
+                _kick_agent_runner()  # Mark pressed «Выполнить»: start now, not at the next 5-minute tick.
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
         except LookupError:
             self._json_response(404, {'error': 'item_not_found'})
@@ -2985,6 +2987,19 @@ python3 ~/scripts/orchestrator_tokens.py update codex 23 '$46' '200' 'Apr 15'
 
     def log_message(self, format, *args):
         pass
+
+AGENT_TASK_RUNNER_LABEL = "com.pirajoke.agent-task-runner"
+
+
+def _kick_agent_runner(start=subprocess.Popen):
+    """Start the agent runner right away; launchd ignores this while it is already running."""
+    try:
+        start(["launchctl", "kickstart", f"gui/{os.getuid()}/{AGENT_TASK_RUNNER_LABEL}"],
+              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except OSError:
+        return False  # No launchctl (not the Mac mini): the 5-minute tick still picks it up.
+
 
 def _agent_runner_status(status_file=None):
     """When the agent runner last ran and whether it could (owner-only, «Ждёт тебя»)."""

@@ -3614,7 +3614,9 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-agent-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 3px 10px; font-size: 12.5px; font-weight: 650; color: var(--mm-ink); background: var(--mm-surface-2, rgba(127,127,127,.08)); border-radius: 999px; white-space: nowrap; }
 .mm-agent-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--mm-claude); }
 .mm-agent-chip.codex i { background: var(--mm-codex); }
-.mm-agent-chip.is-working i { animation: mm-agent-pulse 1.2s ease-in-out infinite; }
+/* «Думает…»: a turning ring instead of the dot while the agent holds the item. */
+.mm-agent-chip.is-queued i, .mm-agent-chip.is-working i { width: 12px; height: 12px; background: none; border: 2px solid currentColor; border-right-color: transparent; color: var(--mm-claude); animation: mm-agent-spin .8s linear infinite; }
+@keyframes mm-agent-spin { to { transform: rotate(360deg); } }
 .mm-agent-chip.is-done { color: var(--mm-success); }
 .mm-agent-chip.is-needs_mark, .mm-agent-chip.is-failed { color: var(--mm-danger, #b3412e); }
 .mm-todo-take { width: 28px; height: 28px; padding: 0; color: var(--mm-muted); font-size: 15px; background: none; border: 0; border-radius: 50%; cursor: pointer; }
@@ -3634,7 +3636,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 @keyframes mm-agent-pulse { 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) {
   .mm-agent-walker { transition: none; }
-  .mm-agent-walker.is-working svg, .mm-agent-chip.is-working i { animation: none; }
+  .mm-agent-walker.is-working svg, .mm-agent-chip.is-working i, .mm-agent-chip.is-queued i { animation: none; }
 }
 @media (max-width: 600px) {
   .mm-todo-item { flex-wrap: wrap; }
@@ -11108,7 +11110,7 @@ function mmOwnerTodoRow(item) {
 
 const MM_AGENT_NAMES = { claude: 'Claude', codex: 'Codex' };
 const MM_AGENT_STATES = {
-  queued: 'В очереди', working: 'Работает', done: 'Готово', needs_mark: 'Нужен ты', failed: 'Не вышло',
+  queued: 'Думает…', working: 'Работает…', done: 'Готово', needs_mark: 'Нужен ты', failed: 'Не вышло',
 };
 // Where each state stands on the lane, in percent: queue, at work, finished.
 const MM_AGENT_STOPS = { queued: 16.7, working: 50, done: 83.3, needs_mark: 83.3, failed: 83.3 };
@@ -11171,17 +11173,20 @@ function mmAgentSide(item) {
   const side = mmEl('div', 'mm-todo-side');
   const agent = item.agent;
   if (!agent) {
-    const give = mmEl('button', 'mm-todo-give', 'Агенту');
+    const give = mmEl('button', 'mm-todo-give', 'Выполнить');
     give.type = 'button';
     give.dataset.todoGive = item.id;
-    give.title = item.triage && item.triage.agent === false && item.triage.why ? `Claude считает: ${item.triage.why}` : 'Отдать это дело агенту';
-    give.setAttribute('aria-label', `Отдать агенту: ${item.text}`);
+    give.title = item.triage && item.triage.agent === false && item.triage.why ? `Claude считает: ${item.triage.why}` : 'Агент сделает это сам';
+    give.setAttribute('aria-label', `Выполнить агентом: ${item.text}`);
     side.appendChild(give);
     return side;
   }
   const chip = mmEl('span', `mm-agent-chip ${agent.by === 'codex' ? 'codex' : 'claude'} is-${agent.state}`);
   chip.appendChild(mmEl('i', ''));
-  chip.appendChild(document.createTextNode(`${MM_AGENT_STATES[agent.state] || agent.state} · ${MM_AGENT_NAMES[agent.by] || agent.by}`));
+  const busy = agent.state === 'queued' || agent.state === 'working';
+  chip.appendChild(document.createTextNode(busy ? MM_AGENT_STATES[agent.state]
+    : `${MM_AGENT_STATES[agent.state] || agent.state} · ${MM_AGENT_NAMES[agent.by] || agent.by}`));
+  if (busy) chip.setAttribute('role', 'status');
   side.appendChild(chip);
   if (agent.state !== 'working') {
     const take = mmEl('button', 'mm-todo-take', '↩');
@@ -11202,10 +11207,9 @@ function mmAgentNote(item) {
     const runner = mmOwnerTodoRunner;
     if (runner?.state === 'error' && runner.reason === 'claude_auth_failed') note.textContent = 'Агент не может войти в Claude на Mac mini.';
     else if (runner?.state === 'error' && runner.reason === 'claude_not_found') note.textContent = 'На Mac mini не найден Claude Code.';
-    else if (!runner || runner.state === 'unknown') note.textContent = 'Агент на Mac mini ещё не запускался.';
-    else note.textContent = 'Агент возьмёт в ближайшие минуты.';
+    else note.textContent = 'Запускаю агента…';
   } else if (agent.state === 'working') {
-    note.textContent = 'Агент работает над этим сейчас.';
+    note.textContent = 'Агент работает. Обычно это 5–20 минут, страница обновится сама.';
   } else if (agent.result) {
     note.textContent = agent.result;
   }
@@ -11305,9 +11309,26 @@ function mmInitOwnerTodo() {
     if (handOff) {
       const giving = handOff.matches('[data-todo-give]');
       handOff.disabled = true;
+      let thinking = null;
+      if (giving) {
+        // Show «Думает…» at once; the saved answer from the Mac mini repaints the row a moment later.
+        thinking = mmEl('span', 'mm-agent-chip claude is-queued', '');
+        thinking.appendChild(mmEl('i', ''));
+        thinking.appendChild(document.createTextNode(MM_AGENT_STATES.queued));
+        thinking.setAttribute('role', 'status');
+        handOff.replaceWith(thinking);
+      }
       const result = await mmPostOwnerTodo(giving ? {action: 'assign', id: handOff.dataset.todoGive, by: 'claude'}
                                                   : {action: 'unassign', id: handOff.dataset.todoTake});
-      if (result?.error) { handOff.disabled = false; handOff.title = mmTodoErrorText(result.error); }
+      if (result?.error) {
+        if (giving) {
+          // Not saved: put the row back with its button and say why on the button.
+          thinking.replaceWith(handOff);
+          handOff.textContent = 'Повторить';
+        }
+        handOff.disabled = false;
+        handOff.title = mmTodoErrorText(result.error);
+      }
       return;
     }
     const toggle = event.target.closest('[data-todo-toggle]');
@@ -11367,7 +11388,7 @@ function mmInitOwnerTodo() {
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
     if (mmOwnerTodoItems.some(item => !item.done && ['queued', 'working'].includes(item.agent?.state))) mmLoadOwnerTodo();
-  }, 30000);
+  }, 8000);
 }
 
 async function openProject(id, day = null) {
