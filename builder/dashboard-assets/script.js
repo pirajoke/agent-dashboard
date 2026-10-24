@@ -203,6 +203,7 @@
     const stateMessages = {
         loading: 'Загрузка кампуса…',
         empty: 'Команда на местах · ждёт задачи',
+        inactive: 'Подтверждённого исполнения сейчас нет',
         stale: 'Команда на местах · свежих событий пока нет',
         unavailable: 'Команда на местах · live-данные временно недоступны',
         active: 'Команда работает',
@@ -313,7 +314,10 @@
             destination.replaceChildren();
         });
         campus.querySelectorAll('[data-campus-roster-agent]').forEach((resident) => {
-            resident.hidden = false;
+            resident.hidden = Object.prototype.hasOwnProperty.call(
+                campus.dataset,
+                'campusNativeRoster',
+            );
         });
         if (taskLanesEl) taskLanesEl.replaceChildren();
         if (taskPanelEl) taskPanelEl.hidden = true;
@@ -355,9 +359,21 @@
         }
         if (countEl) {
             const omitted = omittedTasks > 0 ? ` · скрыто задач: ${omittedTasks}` : '';
-            if (activityCounts && Number.isInteger(activityCounts.enabled)) {
-                const unavailable = Number(activityCounts.unavailable) || 0;
-                const running = Number(activityCounts.running) || 0;
+            const nativeCountsDeclared = activityCounts !== null
+                && typeof activityCounts === 'object'
+                && Number.isInteger(activityCounts.enabled)
+                && activityCounts.enabled > 0
+                && Number.isInteger(activityCounts.running)
+                && activityCounts.running >= 0
+                && activityCounts.running <= activityCounts.enabled
+                && Number.isInteger(activityCounts.unavailable)
+                && activityCounts.unavailable >= 0
+                && activityCounts.unavailable <= activityCounts.enabled
+                && activityCounts.running + activityCounts.unavailable <= activityCounts.enabled;
+            countEl.hidden = !nativeCountsDeclared;
+            if (nativeCountsDeclared) {
+                const unavailable = activityCounts.unavailable;
+                const running = activityCounts.running;
                 countEl.textContent = `${activityCounts.enabled} маршрутов · работают: ${running} · без подтверждения: ${unavailable}${omitted}`;
             } else {
                 const live = agentCount > 0
@@ -521,7 +537,7 @@
         button.dataset.campusTaskId = String(event.task_id || '');
         button.dataset.campusStatus = String(event.status || '');
         button.dataset.campusProject = String(event.project || '');
-        button.setAttribute('aria-label', `${event.role}, ${statusLabels[event.status] || event.status}`);
+        button.setAttribute('aria-label', `${event.project}, ${event.role}, ${statusLabels[event.status] || event.status}`);
         button.setAttribute('aria-controls', 'campus-agent-details');
         button.setAttribute('aria-expanded', 'false');
 
@@ -633,9 +649,9 @@
         };
     }
 
-    function renderNativeAgents(agents) {
-        if (!agents.length) return;
-        rosterEls.forEach((resident) => { resident.hidden = true; });
+    function renderNativeAgents(agents, nativeRosterDeclared) {
+        rosterEls.forEach((resident) => { resident.hidden = nativeRosterDeclared; });
+        if (!nativeRosterDeclared) return;
         const liveRoutes = new Set();
         const managerOriginRect = managerMarkerEl?.getBoundingClientRect() || null;
         agents.forEach((agent) => {
@@ -657,6 +673,9 @@
             animateCampusJourney(button, shouldAnimate, managerOriginRect);
             if (agent.route_id === 'main-manager') setManagerPresence(event);
         });
+        if (!agents.some((agent) => agent?.route_id === 'main-manager')) {
+            setManagerPresence({status: 'unavailable'});
+        }
         nativeJourneySignatures.clear();
         liveRoutes.forEach((signature) => nativeJourneySignatures.add(signature));
     }
@@ -667,11 +686,43 @@
             : null;
         const state = payload && typeof payload.state === 'string' ? payload.state : 'unavailable';
         const events = state === 'active' && Array.isArray(payload.events) ? payload.events : [];
-        const nativeAgents = Array.isArray(payload.agents) ? payload.agents : [];
+        const nativeRosterDeclared = Array.isArray(payload?.agents);
+        const nativeAgents = nativeRosterDeclared ? payload.agents : [];
         const nativeProjects = new Set(nativeAgents.map((agent) => agent?.project).filter(Boolean));
         const activityCounts = payload && typeof payload.activity_counts === 'object'
             ? payload.activity_counts
             : null;
+        if (nativeRosterDeclared) {
+            campus.dataset.campusNativeRoster = JSON.stringify(nativeAgents.flatMap((agent) => (
+                agent
+                && typeof agent.route_id === 'string'
+                && typeof agent.project === 'string'
+                    ? [{routeId: agent.route_id, project: agent.project}]
+                    : []
+            )));
+        } else {
+            delete campus.dataset.campusNativeRoster;
+        }
+        const nativeRunningDeclared = Number.isInteger(activityCounts?.running)
+            && activityCounts.running >= 0
+            && Number.isInteger(activityCounts?.enabled)
+            && activityCounts.enabled > 0
+            && activityCounts.enabled >= activityCounts.running
+            && Number.isInteger(activityCounts?.unavailable)
+            && activityCounts.unavailable >= 0
+            && activityCounts.running + activityCounts.unavailable <= activityCounts.enabled;
+        const nativeRunning = nativeRunningDeclared ? activityCounts.running : 0;
+        const nativeCampusState = () => {
+            if (!nativeRosterDeclared) return state;
+            if (state === 'stale' || state === 'unavailable') return state;
+            if (!nativeRunningDeclared) return 'unavailable';
+            if (nativeRunning > 0) return 'active';
+            if (
+                activityCounts.enabled > 0
+                && activityCounts.unavailable === activityCounts.enabled
+            ) return 'unavailable';
+            return 'inactive';
+        };
         if (
             state === 'empty'
             || state === 'stale'
@@ -681,11 +732,12 @@
             journeySignatures.clear();
         }
         clearCampusAgents();
-        renderNativeAgents(nativeAgents);
+        renderNativeAgents(nativeAgents, nativeRosterDeclared);
         if (state !== 'active' || !events.length) {
-            const nativeRunning = Number(activityCounts?.running) || 0;
             setCampusState(
-                nativeRunning > 0 ? 'active' : (state === 'active' ? 'empty' : state),
+                nativeRosterDeclared
+                    ? nativeCampusState()
+                    : (state === 'active' ? 'empty' : state),
                 0,
                 nativeRunning,
                 Number(payload?.omitted_task_count) || 0,
@@ -703,9 +755,9 @@
         if (!matchedEvents.length) {
             journeySignatures.clear();
             setCampusState(
-                (Number(activityCounts?.running) || 0) > 0 ? 'active' : 'empty',
+                nativeRosterDeclared ? nativeCampusState() : 'empty',
                 0,
-                Number(activityCounts?.running) || 0,
+                nativeRunning,
                 Number(payload?.omitted_task_count) || 0,
                 activityCounts,
             );
@@ -750,9 +802,9 @@
             matchedEvents.map((event) => String(event.task_id || '')).filter(Boolean),
         ).size;
         setCampusState(
-            'active',
+            nativeRosterDeclared ? nativeCampusState() : 'active',
             new Set(matchedEvents.map((event) => event.task_id)).size,
-            activeAgentCount,
+            nativeRosterDeclared ? nativeRunning : activeAgentCount,
             Number(payload.omitted_task_count) || 0,
             activityCounts,
         );
@@ -1422,10 +1474,17 @@
             close.addEventListener('click', () => { deptOpen = null; renderDeptCard(); });
             head.append(title, close);
             const people = document.createElement('ul');
-            actors.filter((actor) => actor.homeRoom === room.id || actor.room === room.id).forEach((actor) => {
+            actors.filter((actor) => (
+                !actor.suspended
+                && (actor.routeId
+                    ? actor.room === room.id
+                    : (actor.homeRoom === room.id || actor.room === room.id))
+            )).forEach((actor) => {
                 const li = document.createElement('li');
                 const name = document.createElement('strong');
-                name.textContent = actor.name;
+                name.textContent = actor.projectLabel
+                    ? `${actor.projectLabel} · ${actor.name}`
+                    : actor.name;
                 const state = document.createElement('small');
                 state.textContent = actor.label?.el.querySelector('small')?.textContent?.replace(/^·\s*/, '') || 'ожидает задач';
                 li.append(name, state);
@@ -1595,6 +1654,9 @@
                 status: null,
                 destinationKey: null,
                 taskId: null,
+                routeId: null,
+                projectLabel: null,
+                suspended: false,
                 button: null,
                 label: null,
                 bubble: null,
@@ -1745,9 +1807,51 @@
 
         function sync() {
             const state = campus.dataset.campusState || 'loading';
+            const nativeRosterValue = campus.dataset.campusNativeRoster;
+            const nativeRosterDeclared = typeof nativeRosterValue === 'string';
+            if (state === 'loading' && nativeRosterDeclared) {
+                actors.forEach((actor) => {
+                    actor.suspended = true;
+                    actor.steps = [];
+                    actor.person.group.visible = false;
+                    actor.person.ring.visible = false;
+                    actor.label.visible = false;
+                    actor.bubble.visible = false;
+                });
+                deptCard.hidden = true;
+                requestRender();
+            }
             if (state === 'loading') return;
             if (typeof renderDeptCard === 'function' && deptOpen) setTimeout(renderDeptCard, 0);
             stage.setAttribute('data-campus-3d-live', state);
+
+            let nativeRoster = [];
+            if (nativeRosterDeclared) {
+                try {
+                    const parsed = JSON.parse(nativeRosterValue);
+                    if (Array.isArray(parsed)) nativeRoster = parsed;
+                } catch (_error) {
+                    // A malformed declared roster stays declared but empty: fail closed.
+                }
+            }
+            const nativeRoutes = new Map(nativeRoster.flatMap((agent) => (
+                agent
+                && typeof agent.routeId === 'string'
+                && typeof agent.project === 'string'
+                    ? [[agent.routeId, agent.project]]
+                    : []
+            )));
+            residents.forEach((actor) => {
+                actor.suspended = nativeRosterDeclared;
+                actor.person.group.visible = !nativeRosterDeclared;
+                actor.label.visible = !nativeRosterDeclared;
+                actor.bubble.visible = false;
+                if (nativeRosterDeclared) {
+                    actor.steps = [];
+                    actor.mode = 'idle';
+                    actor.person.ring.visible = false;
+                }
+            });
 
             folderViews.forEach((view) => {
                 const status = view.el?.dataset.campusProjectStatus || 'idle';
@@ -1763,6 +1867,16 @@
                 .filter((button) => button.dataset.campusAgentId && button.dataset.campusTaskId);
             const wanted = new Map();
             buttons.forEach((button) => {
+                const routeId = button.dataset.campusRouteId;
+                if (nativeRosterDeclared) {
+                    if (
+                        !routeId
+                        || !nativeRoutes.has(routeId)
+                        || nativeRoutes.get(routeId) !== button.dataset.campusProject
+                    ) return;
+                    wanted.set(`route:${routeId}`, button);
+                    return;
+                }
                 wanted.set(`${button.dataset.campusTaskId}|${button.dataset.campusAgentId}`, button);
             });
 
@@ -1774,6 +1888,8 @@
                     actor.status = null;
                     actor.destinationKey = null;
                     actor.taskId = null;
+                    actor.routeId = null;
+                    actor.projectLabel = null;
                     actor.button = null;
                     actor.room = actor.homeRoom;
                     actor.mode = 'idle';
@@ -1811,13 +1927,24 @@
                 const destination = destinationFor(button, slotCounters[slotKey] - 1);
                 actor.button = button;
                 actor.taskId = button.dataset.campusTaskId;
+                actor.routeId = button.dataset.campusRouteId || null;
+                actor.projectLabel = nativeRosterDeclared
+                    ? nativeRoutes.get(actor.routeId) || null
+                    : null;
+                actor.suspended = false;
+                actor.person.group.visible = true;
+                actor.label.visible = true;
                 const role = button.querySelector('strong')?.textContent || actor.name;
                 const statusText = button.querySelector('.campus-agent-status')?.textContent || '';
-                setLabelText(actor.label, role, describeStatus(status, statusText));
+                const actorLabel = actor.projectLabel ? `${actor.projectLabel} · ${role}` : role;
+                setLabelText(actor.label, actorLabel, describeStatus(status, statusText));
                 actor.label.el.dataset.clickable = 'true';
                 actor.label.el.classList.add('is-live');
-                actor.person.ring.visible = true;
-                actor.person.ring.material.color.setHex(STATUS_COLORS[status] || 0xe6a23c);
+                const verifiedActivity = !nativeRosterDeclared || status === 'running';
+                actor.person.ring.visible = verifiedActivity;
+                if (verifiedActivity) {
+                    actor.person.ring.material.color.setHex(STATUS_COLORS[status] || 0xe6a23c);
+                }
                 if (!destination) return;
                 const changed = actor.destinationKey !== destination.key || actor.status !== status;
                 const moving = button.dataset.campusMoving === 'true' && !reducedMotion.matches;
@@ -1835,13 +1962,31 @@
                 const current = primaryByTask.get(taskId);
                 const rank = ROUTE_PRECEDENCE.indexOf(status);
                 // Cap new tasks at three lanes, but let a known task take a higher-precedence event.
-                if (agentId !== 'COORDINATOR' && (current ? rank < current.rank : primaryByTask.size < 3)) {
+                if (
+                    verifiedActivity
+                    && agentId !== 'COORDINATOR'
+                    && (current ? rank < current.rank : primaryByTask.size < 3)
+                ) {
                     primaryByTask.set(taskId, {rank, destination});
                 }
             });
 
             residents.forEach((actor) => {
                 if (Array.from(liveActors.values()).includes(actor)) return;
+                if (nativeRosterDeclared) {
+                    actor.suspended = true;
+                    actor.person.group.visible = false;
+                    actor.label.visible = false;
+                    actor.bubble.visible = false;
+                    actor.steps = [];
+                    actor.button = null;
+                    actor.routeId = null;
+                    actor.projectLabel = null;
+                    return;
+                }
+                actor.suspended = false;
+                actor.person.group.visible = true;
+                actor.label.visible = true;
                 const managerStatus = actor === coordinator
                     ? campus.querySelector('[data-campus-manager-status]')?.textContent
                     : null;
@@ -1864,6 +2009,11 @@
                 actor.bubble.visible = false;
             });
             actors.forEach((actor) => {
+                if (actor.suspended) {
+                    actor.steps = [];
+                    actor.bubble.visible = false;
+                    return;
+                }
                 // Mark 2026-10-23: people at rest stroll a little inside their own room now and then.
                 // Their label still says they wait for tasks; only verified events send them elsewhere.
                 if (actor.mode === 'idle' && !actor.meeting && actor !== coordinator && !actor.steps.length && actor.room === actor.homeRoom && actor.home && ROOMS[actor.homeRoom]) {
@@ -1925,7 +2075,8 @@
                 }
                 // Breathing, blinking and looking around keep the room alive.
                 if (actor.mode === 'idle' || actor.mode === 'arrived' || actor.mode === 'meet') animating = true;
-                const working = actor.mode === 'arrived' && (actor.status === 'active' || actor.status === 'testing');
+                const working = actor.mode === 'arrived'
+                    && (actor.status === 'active' || actor.status === 'testing' || actor.status === 'running');
                 if (working) {
                     animating = true;
                     actor.phase += dt * 10;
@@ -2044,11 +2195,11 @@
             frame = 0;
             const dt = lastFrame ? Math.min(0.05, (now - lastFrame) / 1000) : 1 / 60;
             let animating = false;
+            const visibleActors = actors.filter((actor) => !actor.suspended);
             if (reducedMotion.matches) {
-                actors.forEach((actor) => {
+                visibleActors.forEach((actor) => {
                     const last = actor.steps.filter((step) => step.to).pop();
-                    if (last) {
-                        placeActor(actor, last.to, last.facing ?? actor.facing);
+                    if (last) { placeActor(actor, last.to, last.facing ?? actor.facing);
                         if (last.room !== undefined) actor.room = last.room;
                     }
                     actor.bubble.visible = false;
@@ -2080,8 +2231,14 @@
                 let node = hit.object;
                 while (node) {
                     if (node.userData.pickActor) {
-                        const button = node.userData.pickActor.button;
-                        return button?.isConnected ? button : null;
+                        const actor = node.userData.pickActor;
+                        const button = actor.button;
+                        if (
+                            !actor.suspended
+                            && actor.person?.group?.visible !== false
+                            && button?.isConnected
+                        ) return button;
+                        break;
                     }
                     if (node.userData.pickTarget) return node.userData.pickTarget;
                     node = node.parent;
@@ -2169,7 +2326,12 @@
             subtree: true,
             childList: true,
             attributes: true,
-            attributeFilter: ['data-campus-state', 'data-campus-project-status', 'data-campus-manager-state'],
+            attributeFilter: [
+                'data-campus-state',
+                'data-campus-project-status',
+                'data-campus-manager-state',
+                'data-campus-native-roster',
+            ],
         });
         reducedMotion.addEventListener?.('change', requestRender);
         document.addEventListener('visibilitychange', () => {
