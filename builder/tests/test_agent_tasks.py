@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import stat
 import sys
@@ -120,8 +121,9 @@ class RunnerTests(unittest.TestCase):
         self.cli.chmod(self.cli.stat().st_mode | stat.S_IXUSR)
         os.environ.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
 
-    def run_once(self):
-        return RUNNER.main(["--todo", str(self.todo), "--tasks", str(self.tasks), "--claude", str(self.cli)])
+    def run_once(self, *extra):
+        return RUNNER.main(["--todo", str(self.todo), "--tasks", str(self.tasks), "--claude", str(self.cli),
+                            *extra])
 
     def test_sorts_queues_and_works_one_item(self):
         record = change_items(self.todo, {"action": "add", "text": "Сравнить три модели ИБП"})
@@ -149,6 +151,35 @@ class RunnerTests(unittest.TestCase):
             set_triage(self.todo, item_id, False, "только Марк")
         self.assertEqual(self.run_once(), 0)
         self.assertFalse(self.calls.exists())
+
+    def test_stale_working_item_is_blocked_without_replaying_unknown_actions(self):
+        change_items(self.todo, {"action": "assign", "id": "t-00000001"})
+        update_agent(self.todo, "t-00000001", "working", by="claude",
+                     now=datetime(2020, 1, 1, tzinfo=timezone.utc))
+
+        self.assertEqual(self.run_once("--no-triage", "--timeout", "60"), 0)
+
+        item = next(entry for entry in load_items(self.todo)["items"] if entry["id"] == "t-00000001")
+        self.assertEqual(item["agent"]["state"], "needs_mark")
+        self.assertIn("не повтор", item["agent"]["result"].lower())
+        self.assertFalse(self.calls.exists())
+        status = json.loads((self.tasks / "status.json").read_text())
+        self.assertEqual(status["reconciled"], [{"id": "t-00000001", "state": "needs_mark"}])
+
+    def test_recent_working_item_keeps_the_next_queued_item_from_starting(self):
+        change_items(self.todo, {"action": "assign", "id": "t-00000001"})
+        update_agent(self.todo, "t-00000001", "working", by="claude",
+                     now=datetime.now(timezone.utc))
+        change_items(self.todo, {"action": "assign", "id": "t-00000002"})
+
+        self.assertEqual(self.run_once("--no-triage", "--timeout", "3600"), 0)
+
+        items = {entry["id"]: entry for entry in load_items(self.todo)["items"]}
+        self.assertEqual(items["t-00000001"]["agent"]["state"], "working")
+        self.assertEqual(items["t-00000002"]["agent"]["state"], "queued")
+        self.assertFalse(self.calls.exists())
+        status = json.loads((self.tasks / "status.json").read_text())
+        self.assertEqual(status["working"], [{"id": "t-00000001", "by": "claude"}])
 
     def test_reply_parsing_takes_the_last_json_object(self):
         self.assertEqual(RUNNER.parse_json_reply('Сделал.\n```json\n{"state": "done"}\n```'), {"state": "done"})

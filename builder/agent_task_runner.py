@@ -26,7 +26,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from daily_work_summarizer import AUTH_ERROR, CLI_DIRS, DEFAULT_MODEL, call_claude, find_cli, redact, token_env  # noqa: E402
 from dashboard_builder.owner_todo import (  # noqa: E402
-    StoreUnavailable, queued_items, set_triage, untriaged_items, update_agent)
+    StoreUnavailable, load_items, queued_items, set_triage, untriaged_items, update_agent)
 
 HOME = Path.home()
 TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
@@ -42,6 +42,10 @@ TASKS_DIR = HOME / ".agent-bridge" / "agent-tasks"
 TASK_TIMEOUT = 40 * 60
 MAX_TURNS = 80
 MAX_TRIAGE_PER_RUN = 5
+WORKING_RECONCILE_GRACE = 5 * 60
+INTERRUPTED_RESULT = (
+    "Работа прервалась; повтор не запущен, чтобы не повторить неизвестные внешние действия."
+)
 
 # What the working session may use. Everything else is refused without a prompt (headless mode).
 ALLOWED_TOOLS = [
@@ -120,6 +124,42 @@ def parse_json_reply(text: str) -> dict | None:
     return None
 
 
+def reconcile_working(todo: Path, *, stale_after: int,
+                      now: datetime | None = None) -> tuple[list[dict], list[dict]]:
+    """Block stale Claude work for owner review and report work that may still be active.
+
+    Acquiring the runner lock proves that the previous runner process is gone, but its child may
+    have survived. A recent ``working`` record therefore blocks the queue until its bounded session
+    timeout passes. Once stale, it becomes ``needs_mark`` instead of being replayed.
+    """
+    moment = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    cutoff = moment - timedelta(seconds=max(1, stale_after))
+    reconciled: list[dict] = []
+    for item in load_items(todo)["items"]:
+        agent = item.get("agent", {})
+        if item["done"] or agent.get("state") != "working" or agent.get("by") != "claude":
+            continue
+        try:
+            updated = datetime.strptime(agent.get("updated_at", ""), "%Y-%m-%dT%H:%M:%SZ").replace(
+                tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            updated = None
+        if updated is not None and cutoff < updated <= moment:
+            continue
+        try:
+            update_agent(todo, item["id"], "needs_mark", by="claude", result=INTERRUPTED_RESULT,
+                         now=moment)
+        except (ValueError, LookupError):
+            continue  # Mark changed the item concurrently; his choice stands.
+        reconciled.append({"id": item["id"], "state": "needs_mark"})
+    working = [
+        {"id": item["id"], "by": item["agent"]["by"]}
+        for item in load_items(todo)["items"]
+        if not item["done"] and item.get("agent", {}).get("state") == "working"
+    ]
+    return reconciled, working
+
+
 def triage(cli: str, model: str, todo: Path, workdir: Path, limit: int = MAX_TRIAGE_PER_RUN) -> list[str]:
     items = untriaged_items(todo)[:limit]
     if not items:
@@ -192,15 +232,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     args.tasks.mkdir(parents=True, exist_ok=True)
     status: dict[str, Any] = {"last_run": iso_z(datetime.now(timezone.utc)), "ok": True, "reason": None,
-                              "triaged": [], "worked": None}
+                              "triaged": [], "worked": None, "reconciled": [], "working": []}
     with open(args.tasks / "runner.lock", "w") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return 0  # The previous run is still working on an item.
         try:
-            needs_cli = bool(untriaged_items(args.todo) and not args.no_triage) or any(
-                item["agent"]["by"] == "claude" for item in queued_items(args.todo))
+            status["reconciled"], status["working"] = reconcile_working(
+                args.todo, stale_after=max(1, args.timeout) + WORKING_RECONCILE_GRACE)
+            needs_cli = not status["working"] and (
+                bool(untriaged_items(args.todo) and not args.no_triage)
+                or any(item["agent"]["by"] == "claude" for item in queued_items(args.todo)))
         except StoreUnavailable:
             status.update(ok=False, reason="todo_unreadable")
             needs_cli = False
