@@ -3176,11 +3176,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-infra-table .mm-col-time { width: 76px; }
 .mm-infra-table .mm-col-where { width: 160px; }
 .mm-data-table code { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--mm-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
-.mm-row-action { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 5px 13px; color: var(--mm-ink) !important; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 999px; font-size: 13px; font-weight: 600; line-height: 1.2; white-space: normal; }
-.mm-row-action:hover { background: var(--mm-surface-hover); text-decoration: none !important; }
-.mm-row-action > span { color: var(--mm-accent); white-space: nowrap; }
-.mm-row-action.is-merged > span { color: var(--mm-success); }
-.mm-row-action.is-closed > span { color: var(--mm-danger); }
 .mm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: var(--mm-muted); border: 1px solid var(--mm-line); border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 
 /* Filters look like every other switch on the site: one light segmented control. */
@@ -3225,7 +3220,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-todo-item .mm-bullets, .mm-todo-item .mm-outcomes { margin-bottom: 12px; }
 .mm-todo-item .mm-todo-group:last-child .mm-bullets, .mm-todo-item .mm-todo-group:last-child .mm-outcomes { margin-bottom: 4px; }
 .mm-due b { color: var(--mm-warning); font-weight: 650; }
-.mm-loose-heading { margin-top: 32px; }
 .mm-block { margin-bottom: 28px; }
 .mm-project-desc { margin-top: 2px; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; }
 .mm-project-hero .mm-project-desc { max-width: 64ch; margin: 2px 0 4px; font-size: 15px; }
@@ -4205,7 +4199,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-status:empty { display: none; }
 .docxx-facts[hidden], .machine-gauges[hidden], .growth-summary[hidden], .mm-filter-tabs[hidden], .mm-section-heading[hidden], .svc-count:empty { display: none !important; }
 .docxx-statusbar > .cc-i { flex: 0 0 auto !important; width: 24px !important; margin: 0 auto 0 0 !important; }
-#mm-todo-count, #mm-infra-count, #mm-todo-total, #mm-loose-total, #mm-loose-all, #mm-loose-dropped, #mm-loose-forgot { display: none !important; }
+#mm-todo-count, #mm-infra-count, #mm-todo-total { display: none !important; }
 .docxx-warnings { display: flex; align-items: center; gap: 12px; }
 .docxx-warnings p { margin: 0; }
 </style>
@@ -5031,18 +5025,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="mm-view" data-mm-panel="todo">
           <div class="mm-section-heading">
-            <div><h3>Из проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки, следующие шаги и PR к слиянию.</p></div>
+            <div><h3>Из проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки и следующие шаги.</p></div>
           </div>
           <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
-          <div class="mm-section-heading mm-loose-heading">
-            <div><h3>Хвосты <span id="mm-loose-total"></span></h3><p class="mm-section-note">«Сбросил» — закрыто без слияния. «Забыл» — без движения больше недели.</p></div>
-          </div>
-          <div class="mm-filter-tabs" id="mm-loose-filter" role="group" aria-label="Фильтр хвостов">
-            <button type="button" data-filter="all" aria-pressed="true">Все <span id="mm-loose-all">0</span></button>
-            <button type="button" data-filter="dropped" aria-pressed="false">Сбросил <span id="mm-loose-dropped">0</span></button>
-            <button type="button" data-filter="forgot" aria-pressed="false">Забыл <span id="mm-loose-forgot">0</span></button>
-          </div>
-          <div class="mm-group-rows" id="mm-loose"></div>
         </div>
 
         <div class="mm-view" data-mm-panel="infra" hidden>
@@ -10135,7 +10120,6 @@ let mmReturnView = 'map';
 let mmHistoryView = 'todo'; // which history tab is open under the board // the view a project page was opened from; its back button returns there
 let mmProjectId = null;
 let mmProjectData = null;
-let mmLooseFilter = 'all';
 let mmInfraFilter = 'all';
 let mmInitialised = false;
 
@@ -10200,17 +10184,6 @@ function mmGithubUrl(value) {
   }
 }
 
-function mmPrAction(pr, state) {
-  const label = `${pr.repo ? pr.repo.split('/').pop() : ''}#${pr.number ?? ''}`;
-  const mark = state === 'merged' ? '✓' : (state === 'closed' ? '×' : '↗');
-  const body = `<span>${mark} ${mmEsc(label)}</span> ${mmEsc(compactText(pr.title || '', 70))}`;
-  const url = mmGithubUrl(pr.url);
-  const cls = `mm-row-action is-${state}`;
-  return url
-    ? `<a class="${cls}" href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${body}</a>`
-    : `<span class="${cls}">${body}</span>`;
-}
-
 function mmHeaders() {
   return typeof jarvisRunHeaders === 'function' ? jarvisRunHeaders() : {};
 }
@@ -10220,12 +10193,6 @@ function mmInit() {
   mmInitialised = true;
   document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
     button.addEventListener('click', () => mmShowView(button.dataset.mmView));
-  });
-  document.getElementById('mm-loose-filter').addEventListener('click', event => {
-    const button = event.target.closest('[data-filter]');
-    if (!button) return;
-    mmLooseFilter = button.dataset.filter;
-    renderLoose(dailyWorkData);
   });
   document.getElementById('mm-infra-filter').addEventListener('click', event => {
     const button = event.target.closest('[data-filter]');
@@ -10382,7 +10349,6 @@ function renderDailyWork() {
   if (!data) return;
   mmRenderNotice();
   renderMap(data);
-  renderLoose(data);
   renderTodo(data);
   mmRenderSources();
   npDeviceSetup(data.owner_view);
@@ -10410,63 +10376,6 @@ function mmNiceStep(maxHours) {
   if (maxHours <= 5) return 1;
   if (maxHours <= 10) return 2;
   return 4;
-}
-
-function mmLooseRow(item, bucket) {
-  const age = item.age_days ? `${item.age_days} дн` : 'меньше суток';
-  if (item.kind === 'branch') {
-    const tools = (item.tools || []).map(tool => tool === 'claude' ? 'Claude' : 'Codex').join(' + ');
-    return `<details class="mm-group-row">
-      <summary>
-        <span class="mm-dot ${bucket}" aria-hidden="true"></span>
-        <span class="mm-group-main"><span class="mm-group-title">⑂ ${mmEsc(item.branch)}</span><span class="mm-group-note">${mmEsc(`${item.project || item.repo} · ветка без PR · ${tools}`)}</span></span>
-        <span class="mm-group-aside">${mmEsc(age)}<small>не трогал</small></span>
-        <span class="mm-chevron" aria-hidden="true">›</span>
-      </summary>
-      <div class="mm-group-body"><table class="mm-data-table"><tbody>
-        <tr><td data-label="Репозиторий">${mmEsc(item.repo)}</td></tr>
-        <tr><td data-label="Работы">${mmEsc(workMinutes(item.minutes))} · последняя активность ${mmEsc(new Date(item.last_activity).toLocaleString('ru-RU'))}</td></tr>
-        ${item.topic ? `<tr><td data-label="Тема">${mmEsc(item.topic)}</td></tr>` : ''}
-      </tbody></table></div>
-    </details>`;
-  }
-  const kind = item.kind === 'pr_closed' ? 'PR закрыт без merge' : (item.kind === 'issue_open' ? 'Задача открыта' : 'PR открыт');
-  const state = item.kind === 'pr_closed' ? 'closed' : 'open';
-  const when = item.kind === 'pr_closed' ? (item.age_days ? `${age} назад` : 'сегодня') : age;
-  return `<div class="mm-group-row"><div class="mm-group-row-static">
-      <span class="mm-dot ${bucket}" aria-hidden="true"></span>
-      <span class="mm-group-main"><span class="mm-group-title">${mmEsc(compactText(item.title || '', 90))}</span><span class="mm-group-note">${mmEsc(`${item.repo}#${item.number} · ${kind}${item.draft ? ' · черновик' : ''}`)}</span></span>
-      <span class="mm-group-aside">${mmEsc(when)}<small>${item.kind === 'pr_closed' ? 'закрыт' : 'без движения'}</small></span>
-      ${mmPrAction(item, state)}
-    </div></div>`;
-}
-
-function renderLoose(data) {
-  const host = document.getElementById('mm-loose');
-  if (!data) return;
-  const looseTotal = data.dropped_count + data.forgot_count;
-  document.getElementById('mm-loose-total').textContent = looseTotal || '';
-  document.getElementById('mm-loose-all').textContent = looseTotal;
-  document.getElementById('mm-loose-dropped').textContent = data.dropped_count;
-  document.getElementById('mm-loose-forgot').textContent = data.forgot_count;
-  document.querySelectorAll('#mm-loose-filter [data-filter]').forEach(button => {
-    button.setAttribute('aria-pressed', button.dataset.filter === mmLooseFilter ? 'true' : 'false');
-  });
-  if (!data.owner_view) {
-    host.innerHTML = `<p class="mm-empty">Сбросил: ${data.dropped_count}, забыл: ${data.forgot_count}. Подробности видны только владельцу.</p>`;
-    return;
-  }
-  const items = [
-    ...(mmLooseFilter !== 'forgot' ? (data.dropped || []).map(item => mmLooseRow(item, 'dropped')) : []),
-    ...(mmLooseFilter !== 'dropped' ? (data.forgot || []).map(item => mmLooseRow(item, 'forgot')) : []),
-  ];
-  const githubOk = data.sources?.github?.ok;
-  // Mark 2026-10-24: an empty block is not shown at all.
-  const looseEmpty = !looseTotal && githubOk;
-  for (const node of [host, document.getElementById('mm-loose-filter'), document.querySelector('.mm-loose-heading')]) if (node) node.hidden = looseEmpty;
-  host.innerHTML = items.length
-    ? items.join('')
-    : `<p class="mm-empty">${githubOk ? 'Здесь пусто: ничего не брошено и не забыто.' : 'GitHub ещё не собран, поэтому список может быть неполным.'}</p>`;
 }
 
 function mmInfraRow(event) {
@@ -10576,19 +10485,12 @@ function mmTodoItem(item, today) {
     groups.push(['Сроки', `<ul class="mm-bullets mm-due">${item.deadlines.map(d => `<li><b>${mmEsc(npDue(d.date, today))}</b> · ${mmEsc(d.what)}</li>`).join('')}</ul>`]);
   }
   if (item.next.length) {
-    groups.push([`Следующие шаги · из итога ${item.next_from ? mmDayHeading(item.next_from).toLowerCase() : ''}`.trim(), mmBullets(item.next)]);
+    groups.push(['Следующие шаги', mmBullets(item.next)]);
   }
-  if (item.open_prs.length) {
-    const more = item.open_prs_count > item.open_prs.length ? `<span class="mm-chip">и ещё ${item.open_prs_count - item.open_prs.length}</span>` : '';
-    groups.push([`Готовы к слиянию · ${item.open_prs_count}`, `<div class="mm-outcomes">${item.open_prs.map(pr => mmPrAction(pr, 'open')).join('')}${more}</div>`]);
-  }
-  const extra = [
-    item.drafts ? `черновиков PR: ${item.drafts}` : '',
-    item.loose ? `хвостов: ${item.loose}` : '',
-  ].filter(Boolean).join(' · ');
+  // Mark 2026-10-24: PRs, drafts and loose ends are agents' business, not his; only plain steps stay.
   const href = `?tab=work&amp;project=${encodeURIComponent(item.id)}`;
   return `<section class="dp-project mm-todo-item">
-    <h4 class="dp-project-name">${mmArt(item)}<a href="${href}" data-project="${mmEsc(item.id)}">${mmEsc(item.name)}</a>${extra ? `<small>${mmEsc(extra)}</small>` : ''}</h4>
+    <h4 class="dp-project-name">${mmArt(item)}<a href="${href}" data-project="${mmEsc(item.id)}">${mmEsc(item.name)}</a></h4>
     ${groups.map(([title, body]) => `<div class="mm-todo-group"><h4>${mmEsc(title)}</h4>${body}</div>`).join('')}
   </section>`;
 }
@@ -10596,9 +10498,8 @@ function mmTodoItem(item, today) {
 // «Дела» (2026-10-12, Mark chose «Список дел»): only what waits on Mark now, per project.
 function renderTodo(data) {
   const host = document.getElementById('mm-todo-list');
-  const items = data.todo || [];
-  // The one «Дела» badge counts the loose ends too, now that they sit in the same view.
-  document.getElementById('mm-todo-count').textContent = (data.owner_view ? items.length : 0) + data.dropped_count + data.forgot_count;
+  const items = (data.todo || []).filter(item => item.deadlines.length || item.next.length);
+  document.getElementById('mm-todo-count').textContent = data.owner_view ? items.length : 0;
   document.getElementById('mm-todo-total').textContent = data.owner_view && items.length ? items.length : '';
   if (!data.owner_view) {
     host.innerHTML = '<p class="mm-empty">Дела по проектам видны только владельцу.</p>';
@@ -10607,7 +10508,7 @@ function renderTodo(data) {
   const today = data.series[data.series.length - 1]?.date;
   host.innerHTML = (items.length
     ? items.map(item => mmTodoItem(item, today)).join('')
-    : '<p class="mm-empty">Сейчас ничего не ждёт вас: нет сроков, следующих шагов и PR, готовых к слиянию.</p>');
+    : '<p class="mm-empty">Сейчас ничего не ждёт вас: нет сроков и следующих шагов.</p>');
 }
 
 // «Проекты» (Mark 2026-10-14: «чтобы была визуализация проекта, который я делаю»): every project as a
