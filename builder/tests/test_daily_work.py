@@ -1081,12 +1081,9 @@ let mmProjectData;
         # The QR library is inline (only index.html is deployed) and carries its licence notice.
         self.assertIn("qrcode-generator 2.0.4, Copyright (c) 2009 Kazuhiko Arase", html)
         self.assertIn("const ccQrcode=", html)
-        # Service counters moved from the header into «Техника».
-        header = html[html.index('<div class="header">'):html.index('<nav class="nav-pills cc-main-nav"')]
-        self.assertNotIn('id="stat-services"', header)
-        machines = html[html.index('<section id="section-machines"'):html.index('<nav class="nav-pills cc-machine-nav"')]
-        self.assertIn('id="stat-services"', machines)
-        self.assertIn('id="stat-hooks"', machines)
+        # Mark 2026-10-24: no service or hook counters anywhere, neither in the header nor in «Техника».
+        self.assertNotIn('id="stat-services"', html)
+        self.assertNotIn('id="stat-hooks"', html)
 
 
 if __name__ == "__main__":

@@ -640,8 +640,8 @@ class DepartmentCampusContractTests(unittest.TestCase):
         self.assertEqual(html.count("data-campus-route-layer"), 1)
         self.assertEqual(html.count('data-campus-waypoint="test-lab"'), 1)
         self.assertEqual(html.count('data-campus-waypoint="github-station"'), 1)
-        self.assertIn("Test Lab", html)
-        self.assertIn("GitHub Station", html)
+        self.assertIn("Проверка", html)
+        self.assertIn("Готово", html)
         self.assertEqual(len(re.findall(r'data-department-id="[^"]+"', html)), 7)
         self.assertNotRegex(
             html,
