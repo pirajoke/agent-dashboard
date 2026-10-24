@@ -104,6 +104,8 @@ def _valid_agent(entry: object) -> dict | None:
     url = entry.get("url")
     if isinstance(url, str) and len(url) <= URL_MAX and _RESULT_URL.match(url):
         agent["url"] = url
+    if agent["state"] == "needs_mark" and entry.get("execution_unknown") is True:
+        agent["execution_unknown"] = True
     return agent
 
 
@@ -194,7 +196,8 @@ def change_items(path: Path, payload: object, *, now: datetime | None = None, ne
 
 
 def update_agent(path: Path, item_id: str, state: str, *, by: str, result: str | None = None,
-                 url: str | None = None, now: datetime | None = None) -> dict:
+                 url: str | None = None, execution_unknown: bool = False,
+                 now: datetime | None = None) -> dict:
     """The agent side: claim a queued item or report how it went. Raises ValueError / LookupError."""
     if not isinstance(item_id, str) or not _ID.match(item_id):
         raise ValueError("invalid_id")
@@ -202,6 +205,8 @@ def update_agent(path: Path, item_id: str, state: str, *, by: str, result: str |
         raise ValueError("invalid_agent")
     if state not in AGENT_STATES or state == "queued":
         raise ValueError("invalid_state")
+    if not isinstance(execution_unknown, bool) or (execution_unknown and state != "needs_mark"):
+        raise ValueError("invalid_execution_state")
     clean_result = _clean_text(result, RESULT_MAX)
     if url is not None and (not isinstance(url, str) or len(url) > URL_MAX or not _RESULT_URL.match(url)):
         raise ValueError("invalid_url")
@@ -213,16 +218,18 @@ def update_agent(path: Path, item_id: str, state: str, *, by: str, result: str |
         agent = match.get("agent")
         if not agent:
             raise ValueError("not_assigned")  # Mark took it back, or never gave it.
+        if agent["by"] != by:
+            raise ValueError("taken_by_other_agent")
         if state not in _AGENT_MOVES.get(agent["state"], set()):
             raise ValueError("invalid_move")
-        if agent["state"] == "working" and agent["by"] != by:
-            raise ValueError("taken_by_other_agent")
         stamp = _now(now)
         match["agent"] = {"by": by, "state": state, "updated_at": stamp}
         if clean_result:
             match["agent"]["result"] = clean_result
         if url:
             match["agent"]["url"] = url
+        if execution_unknown:
+            match["agent"]["execution_unknown"] = True
         record = {"items": record["items"], "updated_at": stamp}
         _write_json(path, record, prefix=".owner-todo-")
         return record

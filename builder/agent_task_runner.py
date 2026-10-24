@@ -125,12 +125,12 @@ def parse_json_reply(text: str) -> dict | None:
 
 
 def reconcile_working(todo: Path, *, stale_after: int,
-                      now: datetime | None = None) -> tuple[list[dict], list[dict]]:
-    """Block stale Claude work for owner review and report work that may still be active.
+                      now: datetime | None = None) -> tuple[list[dict], list[dict], list[dict]]:
+    """Block uncertain Claude execution and report work that may still be active.
 
     Acquiring the runner lock proves that the previous runner process is gone, but its child may
-    have survived. A recent ``working`` record therefore blocks the queue until its bounded session
-    timeout passes. Once stale, it becomes ``needs_mark`` instead of being replayed.
+    have survived. Elapsed time cannot prove that child exited, so a stale ``working`` record becomes
+    a durable owner-visible lane block instead of releasing the queue or replaying the item.
     """
     moment = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     cutoff = moment - timedelta(seconds=max(1, stale_after))
@@ -148,16 +148,24 @@ def reconcile_working(todo: Path, *, stale_after: int,
             continue
         try:
             update_agent(todo, item["id"], "needs_mark", by="claude", result=INTERRUPTED_RESULT,
-                         now=moment)
+                         execution_unknown=True, now=moment)
         except (ValueError, LookupError):
             continue  # Mark changed the item concurrently; his choice stands.
         reconciled.append({"id": item["id"], "state": "needs_mark"})
+    items = load_items(todo)["items"]
     working = [
         {"id": item["id"], "by": item["agent"]["by"]}
-        for item in load_items(todo)["items"]
+        for item in items
         if not item["done"] and item.get("agent", {}).get("state") == "working"
     ]
-    return reconciled, working
+    blocked = [
+        {"id": item["id"], "by": "claude", "reason": "execution_unknown"}
+        for item in items
+        if not item["done"] and item.get("agent", {}).get("by") == "claude"
+        and item["agent"].get("state") == "needs_mark"
+        and item["agent"].get("execution_unknown") is True
+    ]
+    return reconciled, working, blocked
 
 
 def triage(cli: str, model: str, todo: Path, workdir: Path, limit: int = MAX_TRIAGE_PER_RUN) -> list[str]:
@@ -232,16 +240,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     args.tasks.mkdir(parents=True, exist_ok=True)
     status: dict[str, Any] = {"last_run": iso_z(datetime.now(timezone.utc)), "ok": True, "reason": None,
-                              "triaged": [], "worked": None, "reconciled": [], "working": []}
+                              "triaged": [], "worked": None, "reconciled": [], "working": [], "blocked": []}
     with open(args.tasks / "runner.lock", "w") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             return 0  # The previous run is still working on an item.
         try:
-            status["reconciled"], status["working"] = reconcile_working(
+            status["reconciled"], status["working"], status["blocked"] = reconcile_working(
                 args.todo, stale_after=max(1, args.timeout) + WORKING_RECONCILE_GRACE)
-            needs_cli = not status["working"] and (
+            needs_cli = not status["working"] and not status["blocked"] and (
                 bool(untriaged_items(args.todo) and not args.no_triage)
                 or any(item["agent"]["by"] == "claude" for item in queued_items(args.todo)))
         except StoreUnavailable:

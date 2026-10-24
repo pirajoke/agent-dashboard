@@ -11204,7 +11204,8 @@ function mmAgentNote(item) {
   const note = mmEl('span', 'mm-todo-agent-note');
   if (agent.state === 'queued') {
     const runner = mmOwnerTodoRunner;
-    if (runner?.state === 'error' && runner.reason === 'claude_auth_failed') note.textContent = 'Агент не может войти в Claude на Mac mini.';
+    if (runner?.state === 'blocked') note.textContent = 'Очередь остановлена: предыдущее исполнение требует проверки Марка.';
+    else if (runner?.state === 'error' && runner.reason === 'claude_auth_failed') note.textContent = 'Агент не может войти в Claude на Mac mini.';
     else if (runner?.state === 'error' && runner.reason === 'claude_not_found') note.textContent = 'На Mac mini не найден Claude Code.';
     else if (!runner || runner.state === 'unknown') note.textContent = 'Агент на Mac mini ещё не запускался.';
     else note.textContent = 'Агент возьмёт в ближайшие минуты.';
