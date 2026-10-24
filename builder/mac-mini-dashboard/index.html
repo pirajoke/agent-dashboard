@@ -8418,7 +8418,13 @@ function renderJarvisAgentRoster(payload) {
     if (seenAgentIds.has(agentId)) return;
     seenAgentIds.add(agentId);
     if (!publicStatuses.has(status)) return;
-    updates.push({ card, status, copy: publicStatuses.get(status) });
+    const needsMark = event.needs_mark === true;
+    updates.push({
+      card,
+      status,
+      needsMark,
+      copy: needsMark ? 'нужно решение Марка' : publicStatuses.get(status),
+    });
   }
 
   for (const update of updates) {
@@ -8438,7 +8444,7 @@ function renderJarvisAgentRoster(payload) {
         ? 'Дальше: дождитесь результата и проверки.'
         : update.status === 'queued'
           ? 'Дальше: задача ожидает запуска.'
-          : update.status === 'waiting'
+          : update.needsMark || update.status === 'waiting'
             ? 'Дальше: требуется решение владельца.'
             : 'Дальше: нажмите «Пинг» для проверки.';
     }

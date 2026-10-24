@@ -276,6 +276,14 @@ class DepartmentCampusContractTests(unittest.TestCase):
         self.assertIn("textContent", script)
         self.assertNotRegex(script, r"innerHTML\s*=\s*(?:event|agent|details|value)")
 
+    def test_owner_gate_flag_is_preserved_without_changing_waiting_status(self):
+        flagged = self._project([self._event(status="waiting", needs_mark=True)])["events"][0]
+        ordinary = self._project([self._event(status="waiting", needs_mark=False)])["events"][0]
+
+        self.assertEqual(flagged["status"], "waiting")
+        self.assertIs(flagged["needs_mark"], True)
+        self.assertNotIn("needs_mark", ordinary)
+
     def test_ac_9_agent_triggers_have_keyboard_touch_and_focus_return_contract(self):
         html = self.campus.build_department_campus_html()
         script = self._script()
