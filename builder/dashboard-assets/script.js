@@ -162,6 +162,11 @@
         waiting: 'ждёт решения',
         done: 'готово',
         failed: 'ошибка',
+        running: 'работает',
+        idle: 'свободен',
+        blocked: 'заблокирован',
+        unavailable: 'нет подтверждения',
+        uncertain: 'состояние не подтверждено',
     };
     const resultLabels = {
         queued: 'Ожидает выполнения',
@@ -170,6 +175,11 @@
         waiting: 'Ожидает решения',
         done: 'Завершено',
         failed: 'Завершено с ошибкой',
+        running: 'Подтверждённое исполнение',
+        idle: 'Нативный ход завершён',
+        blocked: 'Исполнение заблокировано',
+        unavailable: 'Нет свежего подтверждения',
+        uncertain: 'Недостаточно доказательств исполнения',
     };
     const destinationByStatus = {
         active: 'department',
@@ -180,8 +190,16 @@
         failed: 'department',
     };
     const movingStatuses = ['active', 'testing'];
+    Object.assign(destinationByStatus, {
+        running: 'department',
+        idle: 'department',
+        blocked: 'department',
+        unavailable: 'department',
+        uncertain: 'department',
+    });
     // Mark 2026-10-24: department names in plain Russian on screen (the data keeps the English labels).
     const campusDepartmentNames = {Sales: 'Продажи', Development: 'Разработка', Design: 'Дизайн', Infrastructure: 'Инфраструктура', Internal: 'Знания', Finance: 'Финансы'};
+    const nativeDepartmentLabels = {hq: 'Центр управления', sales: 'Sales', development: 'Development', design: 'Design', infrastructure: 'Infrastructure', internal: 'Internal', finance: 'Finance'};
     const stateMessages = {
         loading: 'Загрузка кампуса…',
         empty: 'Команда на местах · ждёт задачи',
@@ -238,6 +256,7 @@
     let refreshController = null;
     let refreshGeneration = 0;
     const journeySignatures = new Set();
+    const nativeJourneySignatures = new Set();
 
     function notifyCampusContentHeight() {
         if (window.parent === window) return;
@@ -328,7 +347,7 @@
         });
     }
 
-    function setCampusState(state, visibleTasks, agentCount, omittedTasks) {
+    function setCampusState(state, visibleTasks, agentCount, omittedTasks, activityCounts = null) {
         if (stateEl) {
             const queueTime = state === 'loading' ? '' : formatCampusQueueTime(campusQueueUpdatedAt);
             const message = stateMessages[state] || stateMessages.unavailable;
@@ -336,10 +355,16 @@
         }
         if (countEl) {
             const omitted = omittedTasks > 0 ? ` · скрыто задач: ${omittedTasks}` : '';
-            const live = agentCount > 0
-                ? `активных агентов: ${agentCount} · задач: ${visibleTasks}`
-                : 'все ожидают задач';
-            countEl.textContent = `${rosterCount} в команде · ${live}${omitted}`;
+            if (activityCounts && Number.isInteger(activityCounts.enabled)) {
+                const unavailable = Number(activityCounts.unavailable) || 0;
+                const running = Number(activityCounts.running) || 0;
+                countEl.textContent = `${activityCounts.enabled} маршрутов · работают: ${running} · без подтверждения: ${unavailable}${omitted}`;
+            } else {
+                const live = agentCount > 0
+                    ? `активных агентов: ${agentCount} · задач: ${visibleTasks}`
+                    : 'все ожидают задач';
+                countEl.textContent = `${rosterCount} в команде · ${live}${omitted}`;
+            }
         }
         campus.dataset.campusState = state;
         notifyCampusContentHeight();
@@ -582,12 +607,71 @@
         );
     }
 
+    function nativeAgentStatus(agent) {
+        if (typeof agent?.state === 'string' && Object.prototype.hasOwnProperty.call(statusLabels, agent.state)) {
+            return agent.state;
+        }
+        return agent?.availability === 'uncertain' ? 'uncertain' : 'unavailable';
+    }
+
+    function nativeAgentEvent(agent) {
+        const status = nativeAgentStatus(agent);
+        return {
+            task_id: agent.route_id,
+            route_id: agent.route_id,
+            agent_id: agent.agent_role,
+            department_id: agent.department_id,
+            department_label: nativeDepartmentLabels[agent.department_id] || agent.department_id,
+            project: agent.project,
+            role: agent.agent_role,
+            status,
+            updated_at: agent.state_at || 'нет подтверждённого события',
+            next_step: agent.outcome_stage === 'turn_completed'
+                ? 'Нативный ход завершён; результат проекта не подтверждён'
+                : (status === 'running' ? 'Идёт подтверждённое исполнение' : 'Ожидается свежее подтверждение'),
+            evidence_count: 0,
+        };
+    }
+
+    function renderNativeAgents(agents) {
+        if (!agents.length) return;
+        rosterEls.forEach((resident) => { resident.hidden = true; });
+        const liveRoutes = new Set();
+        const managerOriginRect = managerMarkerEl?.getBoundingClientRect() || null;
+        agents.forEach((agent) => {
+            if (!agent || typeof agent.route_id !== 'string') return;
+            const event = nativeAgentEvent(agent);
+            const canMove = agent.state === 'running'
+                && agent.availability === 'available'
+                && agent.freshness === 'fresh';
+            const signature = JSON.stringify([agent.route_id, agent.state_at, agent.state]);
+            const shouldAnimate = canMove && !nativeJourneySignatures.has(signature);
+            if (canMove) liveRoutes.add(signature);
+            const destination = destinationForEvent(event);
+            if (!destination) return;
+            const resident = residentForEvent(event);
+            const button = createCampusAgent(event, shouldAnimate, resident);
+            button.dataset.campusRouteId = agent.route_id;
+            button.dataset.campusOutcomeStage = agent.outcome_stage || '';
+            destination.append(button);
+            animateCampusJourney(button, shouldAnimate, managerOriginRect);
+            if (agent.route_id === 'main-manager') setManagerPresence(event);
+        });
+        nativeJourneySignatures.clear();
+        liveRoutes.forEach((signature) => nativeJourneySignatures.add(signature));
+    }
+
     function renderDepartmentCampus(payload) {
         campusQueueUpdatedAt = typeof payload?.queue_updated_at === 'string'
             ? payload.queue_updated_at
             : null;
         const state = payload && typeof payload.state === 'string' ? payload.state : 'unavailable';
         const events = state === 'active' && Array.isArray(payload.events) ? payload.events : [];
+        const nativeAgents = Array.isArray(payload.agents) ? payload.agents : [];
+        const nativeProjects = new Set(nativeAgents.map((agent) => agent?.project).filter(Boolean));
+        const activityCounts = payload && typeof payload.activity_counts === 'object'
+            ? payload.activity_counts
+            : null;
         if (
             state === 'empty'
             || state === 'stale'
@@ -597,12 +681,15 @@
             journeySignatures.clear();
         }
         clearCampusAgents();
+        renderNativeAgents(nativeAgents);
         if (state !== 'active' || !events.length) {
+            const nativeRunning = Number(activityCounts?.running) || 0;
             setCampusState(
-                state === 'active' ? 'empty' : state,
+                nativeRunning > 0 ? 'active' : (state === 'active' ? 'empty' : state),
                 0,
-                0,
+                nativeRunning,
                 Number(payload?.omitted_task_count) || 0,
+                activityCounts,
             );
             return;
         }
@@ -615,12 +702,20 @@
         });
         if (!matchedEvents.length) {
             journeySignatures.clear();
-            setCampusState('empty', 0, 0, Number(payload?.omitted_task_count) || 0);
+            setCampusState(
+                (Number(activityCounts?.running) || 0) > 0 ? 'active' : 'empty',
+                0,
+                Number(activityCounts?.running) || 0,
+                Number(payload?.omitted_task_count) || 0,
+                activityCounts,
+            );
             return;
         }
-        setManagerPresence(
-            matchedEvents.find((event) => event.agent_id === 'COORDINATOR') || null,
-        );
+        if (!nativeAgents.some((agent) => agent?.route_id === 'main-manager')) {
+            setManagerPresence(
+                matchedEvents.find((event) => event.agent_id === 'COORDINATOR') || null,
+            );
+        }
         const newJourneySignatures = new Set();
         const managerOriginRect = managerMarkerEl?.getBoundingClientRect() || null;
         matchedEvents.forEach((event) => {
@@ -637,6 +732,9 @@
             const folder = projectFolderForEvent(event);
             if (!folder) return;
             activateCampusProjectFolder(folder, event);
+            // A gate remains a folder/task overlay; the native route is the
+            // single agent presence for this project.
+            if (nativeProjects.has(event.project)) return;
             const destination = focusedDepartment
                 ? folder.closest('.campus-zone')?.querySelector('[data-campus-zone-agents]')
                 : destinationForEvent(event);
@@ -649,13 +747,14 @@
             animateCampusJourney(button, shouldAnimate, managerOriginRect);
         });
         const activeAgentCount = new Set(
-            matchedEvents.map((event) => String(event.agent_id || '')).filter(Boolean),
+            matchedEvents.map((event) => String(event.task_id || '')).filter(Boolean),
         ).size;
         setCampusState(
             'active',
             new Set(matchedEvents.map((event) => event.task_id)).size,
             activeAgentCount,
             Number(payload.omitted_task_count) || 0,
+            activityCounts,
         );
     }
 

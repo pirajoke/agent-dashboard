@@ -44,6 +44,7 @@ from dashboard_builder.department_campus import (
     build_department_campus_html,
     department_campus_projection,
 )
+from dashboard_builder.native_activity import validate_native_activity_checkpoint
 
 PORT = 7777
 HOME = Path.home()
@@ -1391,14 +1392,8 @@ def _is_heartbeat_snapshot(metadata: dict) -> bool:
     return metadata.get("entrypoint") == _HEARTBEAT_ENTRYPOINT and metadata.get("executable") is False
 
 
-def _select_manager_snapshot(data: object, *, now: datetime) -> tuple[dict | None, bool]:
-    """Return (newest usable MAIN MANAGER snapshot, saw_malformed_snapshot).
-
-    A fresh handoff/status snapshot written by MAIN MANAGER itself is richer
-    (it can carry decision options), so it wins over newer publisher
-    heartbeats. Otherwise the newest snapshot wins; max() keeps the first
-    source item when timestamps tie.
-    """
+def _manager_snapshot_candidates(data: object, *, now: datetime) -> tuple[list[dict], bool]:
+    """Return bounded manager snapshot envelopes without exposing task bodies."""
     tasks = data.get("tasks") if isinstance(data, dict) else None
     candidates: list[dict] = []
     malformed = False
@@ -1435,12 +1430,154 @@ def _select_manager_snapshot(data: object, *, now: datetime) -> tuple[dict | Non
             "queue_updated": queue_updated,
             "heartbeat": _is_heartbeat_snapshot(metadata),
             "fresh": (now - updated).total_seconds() <= _MANAGER_SNAPSHOT_FRESH_SECONDS,
+            "native_activity": metadata.get("native_activity"),
+            "has_native_activity": "native_activity" in metadata,
+            "work_counts": metadata.get("work_counts"),
+            "has_work_counts": "work_counts" in metadata,
         })
+    return candidates, malformed
+
+
+def _select_manager_snapshot(data: object, *, now: datetime) -> tuple[dict | None, bool]:
+    """Return (newest usable MAIN MANAGER task snapshot, saw malformed input).
+
+    A fresh handoff/status snapshot written by MAIN MANAGER itself is richer
+    (it can carry decision options), so it wins over newer publisher
+    heartbeats. Execution evidence is selected independently below so a
+    handoff cannot hide a newer native activity checkpoint.
+    """
+    candidates, malformed = _manager_snapshot_candidates(data, now=now)
     if not candidates:
         return None, malformed
     handoffs = [item for item in candidates if not item["heartbeat"] and item["fresh"]]
     chosen = max(handoffs or candidates, key=lambda item: item["updated"])
     return chosen, malformed
+
+
+def _empty_activity_counts() -> dict[str, int]:
+    return {
+        "enabled": 0,
+        "running": 0,
+        "idle": 0,
+        "waiting": 0,
+        "blocked": 0,
+        "done": 0,
+        "unavailable": 0,
+        "turn_completed": 0,
+    }
+
+
+def _native_activity_declarations(data: object) -> list[dict]:
+    tasks = data.get("tasks") if isinstance(data, dict) else None
+    declarations: list[dict] = []
+    for index, task in enumerate(tasks if isinstance(tasks, list) else []):
+        if not isinstance(task, dict):
+            continue
+        metadata = _manager_metadata(task)
+        source_agent = metadata.get("source_agent")
+        event_marker = str(metadata.get("event") or "").strip().lower()
+        if (
+            not isinstance(source_agent, str)
+            or re.sub(r"[^a-z0-9]+", "", source_agent.lower()) != "mainmanager"
+            or event_marker not in {"handoff", "status"}
+            or "native_activity" not in metadata
+        ):
+            continue
+        declarations.append({
+            "index": index,
+            "updated": _department_snapshot_time(
+                task.get("updated_at")
+                or task.get("completed_at")
+                or task.get("claimed_at")
+                or task.get("created_at")
+            ),
+            "checkpoint": metadata.get("native_activity"),
+        })
+    return declarations
+
+
+def _native_activity_projection(data: object, *, now: datetime) -> tuple[list[dict], dict, bool]:
+    declarations = _native_activity_declarations(data)
+    if not declarations:
+        return [], _empty_activity_counts(), False
+    orderable = [declaration for declaration in declarations if declaration["updated"] is not None]
+    if not orderable:
+        return [], _empty_activity_counts(), True
+
+    newest_time = max(declaration["updated"] for declaration in orderable)
+    newest = [declaration for declaration in orderable if declaration["updated"] == newest_time]
+    if newest_time > now or (now - newest_time).total_seconds() > _MANAGER_SNAPSHOT_FRESH_SECONDS:
+        return [], _empty_activity_counts(), True
+    newest_validated: list[tuple[datetime, dict]] = []
+    for declaration in newest:
+        checkpoint = validate_native_activity_checkpoint(declaration["checkpoint"], now=now)
+        observed_at = _department_snapshot_time(checkpoint.get("observed_at")) if checkpoint else None
+        if checkpoint is None or observed_at is None or observed_at > declaration["updated"]:
+            return [], _empty_activity_counts(), True
+        newest_validated.append((observed_at, checkpoint))
+    if not newest_validated:
+        return [], _empty_activity_counts(), True
+
+    valid: list[tuple[datetime, dict]] = []
+    for declaration in orderable:
+        updated = declaration["updated"]
+        if updated > now or (now - updated).total_seconds() > _MANAGER_SNAPSHOT_FRESH_SECONDS:
+            continue
+        checkpoint = validate_native_activity_checkpoint(declaration["checkpoint"], now=now)
+        if checkpoint is None:
+            continue
+        observed_at = _department_snapshot_time(checkpoint.get("observed_at"))
+        if observed_at is None or observed_at > updated:
+            continue
+        valid.append((observed_at, checkpoint))
+    if not valid:
+        return [], _empty_activity_counts(), True
+    checkpoint = max(valid, key=lambda item: item[0])[1]
+    agents = checkpoint["agents"]
+    return agents, {
+        "enabled": len(agents),
+        "running": sum(agent["state"] == "running" for agent in agents),
+        "idle": sum(agent["state"] == "idle" for agent in agents),
+        "waiting": sum(agent["state"] == "waiting" for agent in agents),
+        "blocked": sum(agent["state"] == "blocked" for agent in agents),
+        "done": sum(agent["state"] == "done" for agent in agents),
+        "unavailable": sum(agent["availability"] != "available" for agent in agents),
+        "turn_completed": sum(agent["outcome_stage"] == "turn_completed" for agent in agents),
+    }, True
+
+
+def _manager_work_counts(data: object, *, now: datetime) -> dict[str, int]:
+    candidates, _ = _manager_snapshot_candidates(data, now=now)
+    valid: list[tuple[datetime, dict[str, int]]] = []
+    expected = {"executable_queued", "owner_gate", "stop_notice"}
+    for candidate in candidates:
+        counts = candidate.get("work_counts")
+        if (
+            candidate["fresh"]
+            and isinstance(counts, dict)
+            and set(counts) == expected
+            and all(type(value) is int and value >= 0 for value in counts.values())
+        ):
+            valid.append((candidate["updated"], dict(counts)))
+    return max(valid, key=lambda item: item[0])[1] if valid else {}
+
+
+def _with_manager_activity(payload: dict, data: object, *, now: datetime) -> dict:
+    agents, activity_counts, native_declared = _native_activity_projection(data, now=now)
+    candidates, _ = _manager_snapshot_candidates(data, now=now)
+    work_counts = _manager_work_counts(data, now=now)
+    work_counts_declared = any(candidate["has_work_counts"] for candidate in candidates)
+    if native_declared:
+        payload["agents"] = agents
+        payload["activity_counts"] = activity_counts
+        payload["owner_gates"] = [
+            dict(event)
+            for event in payload.get("events", [])
+            if isinstance(event, dict) and event.get("needs_mark") is True
+        ]
+    if work_counts or work_counts_declared:
+        payload["work_counts"] = work_counts
+    return payload
 
 
 def _snapshot_event_age_limit(snapshot: dict) -> int | None:
@@ -1461,12 +1598,20 @@ def _department_campus_payload(
         current = current.replace(tzinfo=timezone.utc)
     current = current.astimezone(timezone.utc)
     if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
-        return department_campus_projection(None, now=current, owner_view=owner_view)
+        return _with_manager_activity(
+            department_campus_projection(None, now=current, owner_view=owner_view),
+            data,
+            now=current,
+        )
 
     snapshot, malformed_verified_snapshot = _select_manager_snapshot(data, now=current)
     if snapshot is None:
         if malformed_verified_snapshot:
-            return department_campus_projection(None, now=current, owner_view=owner_view)
+            return _with_manager_activity(
+                department_campus_projection(None, now=current, owner_view=owner_view),
+                data,
+                now=current,
+            )
         events = [
             event
             for task in data["tasks"]
@@ -1474,11 +1619,15 @@ def _department_campus_payload(
             for event in [_campus_bridge_event(task)]
             if event is not None
         ]
-        return department_campus_projection(
-            events,
+        return _with_manager_activity(
+            department_campus_projection(
+                events,
+                now=current,
+                max_tasks=3,
+                owner_view=owner_view,
+            ),
+            data,
             now=current,
-            max_tasks=3,
-            owner_view=owner_view,
         )
 
     if not snapshot["fresh"]:
@@ -1493,7 +1642,7 @@ def _department_campus_payload(
         )
     if snapshot["queue_updated"] is not None:
         payload["queue_updated_at"] = snapshot["queue_updated"].isoformat().replace("+00:00", "Z")
-    return payload
+    return _with_manager_activity(payload, data, now=current)
 
 
 def _manager_decision_snapshot(data: object, *, now: datetime) -> tuple[list, int | None] | None:
