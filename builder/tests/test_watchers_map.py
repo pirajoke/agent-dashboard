@@ -14,8 +14,8 @@ class WatchersMapTest(unittest.TestCase):
 
     def test_view_sits_next_to_the_campus_and_opens_from_a_link(self):
         self.assertIn("onclick=\"showAgentsView('watchers')\">Кто за чем следит</button>", PAGE)
-        self.assertIn("['decisions', 'campus', 'watchers'].includes(view)", PAGE)
-        self.assertIn("get('view') === 'watchers'", PAGE)
+        self.assertIn("['sessions', 'decisions', 'campus', 'watchers'].includes(view)", PAGE)
+        self.assertIn("['watchers', 'campus', 'decisions'].includes(agentsView)", PAGE)
 
     def test_every_helper_belongs_to_a_group_and_says_what_it_watches(self):
         groups = set(re.findall(r"\{ id: '([a-z]+)', title: '", self.code))

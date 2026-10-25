@@ -4358,6 +4358,36 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .watch-off { margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
 @media (max-width: 700px) { .watch-stage { height: 380px; border-radius: 16px; } .watch-stage-label { font-size: 12px; padding: 5px 9px; } .watch-stage-label small { display: none; } .watch-cards { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .watch-card { transition: none; } .watch-card:hover { transform: none; } }
+/* Mark 2026-10-25: «все сессии, которые бегут, в одном месте»: Claude Code and Codex on his Macs. */
+#agents-sessions[hidden] { display: none; }
+.live-group { margin-top: 18px; }
+.live-group h3 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
+.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.live-card { --live-tone: #2f9361; display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; color: var(--mm-ink); font: inherit; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-left: 4px solid var(--live-tone); border-radius: 14px; box-shadow: var(--mm-shadow-soft); cursor: pointer; transition: border-color .15s, transform .15s; }
+.live-card[data-state="waiting"] { --live-tone: #2f7fd1; }
+.live-card[data-state="approve"] { --live-tone: #c7801a; }
+.live-card.is-quiet { --live-tone: var(--mm-line); box-shadow: none; }
+.live-card:hover { border-color: var(--live-tone); transform: translateY(-1px); }
+.live-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.live-card > span { min-width: 0; }
+.live-card strong { display: block; font-size: 14.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.live-card small { display: block; margin-top: 3px; color: var(--mm-muted); font-size: 13px; line-height: 1.4; }
+.live-state { display: inline-block; margin-top: 7px; padding: 2px 9px; font-size: 12px; font-weight: 600; border-radius: 999px; color: var(--live-tone); background: color-mix(in srgb, var(--live-tone) 13%, var(--mm-surface)); }
+.live-card.is-quiet .live-state { color: var(--mm-muted); }
+.live-empty { margin: 14px 0 0; color: var(--mm-muted); font-size: 14px; }
+.live-quiet summary { margin-top: 18px; color: var(--mm-muted); font-size: 14px; font-weight: 600; cursor: pointer; }
+.live-elsewhere { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
+.live-elsewhere a { color: var(--mm-accent); font-weight: 600; text-decoration: none; }
+.live-open { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.live-open a, .live-open button { display: inline-flex; align-items: center; min-height: 36px; padding: 6px 14px; color: #fff; font: inherit; font-size: 14px; font-weight: 650; text-decoration: none; background: var(--mm-accent); border: 0; border-radius: 10px; cursor: pointer; }
+.live-open button { color: var(--mm-accent); background: var(--mm-surface); border: 1px solid var(--mm-control-line); }
+.cc-info-body .live-info { min-width: 0; max-width: 100%; }
+.live-reply, .live-command { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
+.live-reply { margin: 0; padding: 10px 12px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 12px; font-size: 14px; line-height: 1.5; }
+.live-command { display: block; margin-top: 4px; padding: 8px 10px; overflow-x: auto; font-size: 12.5px; white-space: nowrap; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
+.live-note { color: var(--mm-muted); font-size: 13px; }
+@media (max-width: 700px) { .live-cards { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .live-card { transition: none; } .live-card:hover { transform: none; } }
 </style>
 </head>
 <body>
@@ -5505,10 +5535,17 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </div>
     </header>
     <div class="cc-subnav cc-tabs" aria-label="Виды агентов">
-      <button type="button" aria-controls="agents-campus" aria-pressed="true" onclick="showAgentsView('campus')">Кампус отделов</button>
+      <button type="button" aria-controls="agents-sessions" aria-pressed="true" onclick="showAgentsView('sessions')">Сессии</button>
+      <button type="button" aria-controls="agents-campus" aria-pressed="false" onclick="showAgentsView('campus')">Кампус отделов</button>
       <button type="button" aria-controls="agents-watchers" aria-pressed="false" onclick="showAgentsView('watchers')">Кто за чем следит</button>
       <button type="button" aria-controls="agents-decisions" aria-pressed="false" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
     </div>
+    <!-- Mark 2026-10-25: every Claude Code and Codex session open on his Macs, in one place. -->
+    <section id="agents-sessions" aria-label="Сессии">
+      <p class="watch-lede">Все сессии Claude и Codex, открытые сейчас на твоих Mac. Нажми на сессию — увидишь её последний ответ и откроешь её.</p>
+      <div id="live-sessions"><p class="live-empty">Загружаю сессии…</p></div>
+      <p class="live-elsewhere">Отсюда не видно чаты на сайтах и в телефоне: <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude в облаке ↗</a><a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT ↗</a><button type="button" class="cc-i" data-cc-info="live-help" aria-label="Как отвечать сессиям с телефона">i</button></p>
+    </section>
     <!-- Mark 2026-10-24: «кто зачем следит, какие агенты существуют» — the same kind of 3D map as Документы. -->
     <section id="agents-watchers" aria-label="Кто за чем следит" hidden>
       <p class="watch-lede">Эти помощники работают сами, днём и ночью, на Mac mini. Нажми на любого — расскажу, за чем он следит, что делает и зачем это тебе.</p>
@@ -5544,7 +5581,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="decision-activity" id="decision-activity"></div>
     </section>
 
-    <div id="agents-campus">
+    <div id="agents-campus" hidden>
       <div class="pixel-agents-shell">
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
@@ -5838,6 +5875,155 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 <script>
 // «i» window sources (Mark 2026-10-24), filled by each tab below; the window itself is set up further down.
 const ccInfoSources = {};
+
+// ─── Агенты → Сессии ─── Mark 2026-10-25: every Claude Code and Codex session open on his Macs, with its
+// state and a way into it. live_sessions_collector.py writes them every minute; owner only.
+var liveSessionsData = null;
+var liveSessionsBusy = false;
+var LIVE_STATE_TEXT = { working: 'Работает', waiting: 'Ждёт тебя', approve: 'Наверное, ждёт подтверждения' };
+var LIVE_TOOL_TEXT = { claude: 'Claude', codex: 'Codex' };
+
+function liveSessionsVisible() {
+  const section = document.getElementById('section-agents');
+  const view = document.getElementById('agents-sessions');
+  return !document.hidden && section && section.classList.contains('active') && view && !view.hidden;
+}
+
+async function liveSessionsLoad() {
+  if (liveSessionsBusy || IS_FILE_DASHBOARD || !liveSessionsVisible()) return;
+  liveSessionsBusy = true;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/live-sessions`, { headers: mmHeaders(), cache: 'no-store' });
+    liveSessionsData = response.ok ? await response.json() : { state: response.status === 401 ? 'owner_required' : 'unavailable' };
+  } catch (_) {
+    liveSessionsData = { state: 'unavailable' };
+  } finally {
+    liveSessionsBusy = false;
+  }
+  liveSessionsRender(liveSessionsData);
+}
+
+function liveAgo(value) {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60000));
+  if (!Number.isFinite(minutes)) return '';
+  if (minutes < 1) return 'только что';
+  if (minutes < 60) return `${minutes} мин назад`;
+  const hours = Math.round(minutes / 60);
+  return `${hours} ч назад`;
+}
+
+function liveCard(session, index) {
+  const card = mmEl('button', 'live-card');
+  card.type = 'button';
+  card.dataset.state = session.state;
+  card.dataset.ccInfo = `live-${index}`;
+  card.classList.toggle('is-quiet', Boolean(session.quiet));
+  const text = mmEl('span');
+  text.appendChild(mmEl('strong', '', session.title || 'Без названия'));
+  text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine].filter(Boolean).join(' · ')));
+  const state = session.quiet ? `Затихла · ${liveAgo(session.last_at)}` : session.state === 'working' ? LIVE_STATE_TEXT.working : `${LIVE_STATE_TEXT[session.state]} · ${liveAgo(session.last_at)}`;
+  text.appendChild(mmEl('span', 'live-state', state));
+  card.appendChild(text);
+  return card;
+}
+
+function liveInfo(session) {
+  const node = mmEl('div', 'live-info');
+  if (session.reply) {
+    node.appendChild(mmEl('p', 'live-note', 'Последний ответ'));
+    node.appendChild(mmEl('p', 'live-reply', session.reply));
+  }
+  const open = mmEl('div', 'live-open');
+  if (session.link && session.link.startsWith('https://')) {
+    const link = mmEl('a', '', 'Открыть в Claude ↗');
+    link.href = session.link; link.target = '_blank'; link.rel = 'noopener';
+    open.appendChild(link);
+  } else if (session.link && session.link.startsWith('codex://')) {
+    const link = mmEl('a', '', 'Открыть в приложении Codex');
+    link.href = session.link;
+    open.appendChild(link);
+  }
+  if (session.resume) {
+    const copy = mmEl('button', '', 'Скопировать команду');
+    copy.type = 'button';
+    copy.addEventListener('click', () => {
+      navigator.clipboard?.writeText(session.resume).then(() => { copy.textContent = 'Скопировано'; }, () => {});
+    });
+    open.appendChild(copy);
+  }
+  if (open.childNodes.length) node.appendChild(open);
+  if (session.link && session.link.startsWith('codex://')) {
+    node.appendChild(mmEl('p', 'live-note', `Откроется только на ${session.machine}, где идёт эта сессия.`));
+  } else if (session.tool === 'claude' && !session.link) {
+    node.appendChild(mmEl('p', 'live-note', `Эта сессия идёт в терминале на ${session.machine}. Чтобы отвечать ей с телефона, включи в Claude Code Remote Control (подробнее под «i» внизу).`));
+  }
+  if (session.resume) {
+    node.appendChild(mmEl('p', 'live-note', 'Продолжить в терминале:'));
+    node.appendChild(mmEl('code', 'live-command', session.resume));
+  }
+  return node;
+}
+
+function liveSessionsRender(payload) {
+  const host = document.getElementById('live-sessions');
+  if (!host) return;
+  host.replaceChildren();
+  if (payload?.state === 'owner_required') {
+    host.appendChild(mmEl('p', 'live-empty', 'Сессии видны только тебе, когда ты вошёл на сайт.'));
+    return;
+  }
+  if (payload?.state !== 'ready' || !Array.isArray(payload.sessions)) {
+    host.appendChild(mmEl('p', 'live-empty', 'Mac mini сейчас не отвечает. Попробую ещё раз через минуту.'));
+    return;
+  }
+  const sessions = payload.sessions;
+  sessions.forEach((session, index) => {
+    ccInfoSources[`live-${index}`] = () => ({
+      title: session.title || 'Сессия',
+      rows: [['Где', `${LIVE_TOOL_TEXT[session.tool] || ''} · ${session.app || ''} · ${session.machine || ''}`], ['Проект', session.project], ['Ветка', session.branch], ['Сейчас', session.quiet ? `затихла, последний шаг ${liveAgo(session.last_at)}` : LIVE_STATE_TEXT[session.state]]],
+      node: liveInfo(session),
+    });
+  });
+  const groups = [
+    ['Ждут тебя', sessions.filter(s => !s.quiet && s.state !== 'working')],
+    ['Работают', sessions.filter(s => s.state === 'working')],
+  ];
+  for (const [title, list] of groups) {
+    if (!list.length) continue;
+    const block = mmEl('section', 'live-group');
+    block.appendChild(mmEl('h3', '', title));
+    const cards = mmEl('div', 'live-cards');
+    list.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
+    block.appendChild(cards);
+    host.appendChild(block);
+  }
+  const quiet = sessions.filter(s => s.quiet);
+  if (quiet.length) {
+    const fold = mmEl('details', 'live-quiet');
+    fold.appendChild(mmEl('summary', '', `Затихли · ${quiet.length}`));
+    const cards = mmEl('div', 'live-cards');
+    quiet.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
+    fold.appendChild(cards);
+    host.appendChild(fold);
+  }
+  if (!sessions.length) host.appendChild(mmEl('p', 'live-empty', 'Сейчас ни одна сессия не открыта.'));
+  const lost = (payload.machines || []).filter(machine => !machine.fresh).map(machine => machine.label);
+  if (lost.length) host.appendChild(mmEl('p', 'live-empty', `Нет связи с ${lost.join(', ')}: его сессий здесь нет.`));
+}
+
+ccInfoSources['live-help'] = () => ({
+  title: 'Как отвечать сессиям с телефона',
+  lines: [
+    'Здесь видны сессии Claude Code и Codex на Mac mini и MacBook: в терминале, в приложениях Claude, Codex и ChatGPT.',
+    'Claude Code: включи Remote Control для всех сессий. В терминале: /config → «Enable Remote Control for all sessions» = true. В приложении Claude: Настройки → Claude Code → «Connect new sessions to Remote Control». Тогда у каждой сессии здесь будет ссылка «Открыть в Claude»: с телефона можно отвечать и подтверждать.',
+    'Чтобы телефон сам звал тебя, когда сессия ждёт подтверждения: там же в /config включи «Push when actions required».',
+    'Codex: ссылка открывает чат в приложении Codex на том Mac, где он идёт.',
+    'Чаты на chatgpt.com, в телефоне и облачные сессии Claude сюда не попадают: у них нет следа на твоих Mac.',
+  ],
+});
+window.addEventListener('DOMContentLoaded', () => { liveSessionsLoad(); });
+setInterval(liveSessionsLoad, 30 * 1000);
+document.addEventListener('visibilitychange', liveSessionsLoad);
 // Keep machine telemetry separate. Remote dashboards proxy Air via Tailscale so
 // public HTTPS pages do not depend on browser access to http://localhost:8880.
 const IS_FILE_DASHBOARD = window.location.protocol === 'file:';
@@ -5961,7 +6147,8 @@ let ownerDecisionSubmitting = false;
 const ownerDecisionDrafts = new Map();
 
 function showAgentsView(view) {
-  if (!['decisions', 'campus', 'watchers'].includes(view)) return;
+  if (!['sessions', 'decisions', 'campus', 'watchers'].includes(view)) return;
+  document.getElementById('agents-sessions').hidden = view !== 'sessions';
   document.getElementById('agents-decisions').hidden = view !== 'decisions';
   document.getElementById('agents-campus').hidden = view !== 'campus';
   document.getElementById('agents-watchers').hidden = view !== 'watchers';
@@ -5970,6 +6157,7 @@ function showAgentsView(view) {
   });
   if (view === 'decisions' && ownerDecisionsReady) refreshOwnerDecisions(true);
   if (view === 'campus') window.dispatchEvent(new Event('resize'));
+  if (view === 'sessions') liveSessionsLoad();
 }
 
 function decisionNode(tag, className = '', text = '') {
@@ -7025,6 +7213,7 @@ function showSection(name) {
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
+  if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') setTimeout(ccLoadPlatformResources, 0);
   if (name === 'documents') setTimeout(ccLoadDocxx, 0);
   else window.dispatchEvent(new Event('docxx-lock'));
@@ -7038,7 +7227,8 @@ const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
 if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
-  if (INITIAL_SECTION === 'agents' && new URLSearchParams(window.location.search).get('view') === 'watchers') showAgentsView('watchers');
+  const agentsView = new URLSearchParams(window.location.search).get('view');
+  if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
 } else {
   showSection('work');
 }
