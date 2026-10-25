@@ -3214,6 +3214,11 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 #mm-todo .mm-outcomes { margin-bottom: 20px; }
 /* «Дела»: one row per project with what waits on Mark, in the «По дням» project look. */
 .mm-todo-list { max-width: 880px; }
+.mm-shared-tasks { max-width: 880px; margin-bottom: 28px; }
+.mm-shared-tasks ul { list-style: none; margin: 0; padding: 0; }
+.mm-shared-tasks li { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--mm-line); }
+.mm-shared-tasks li a { color: var(--mm-ink); font-weight: 650; }
+.mm-shared-tasks li small { color: var(--mm-muted); }
 .mm-todo-item .dp-project-name a { color: var(--mm-ink); }
 .mm-todo-item .dp-project-name a:hover { color: var(--mm-accent); }
 .mm-todo-item .mm-todo-group h4 { margin-bottom: 6px; }
@@ -5199,7 +5204,11 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         </div>
         <div class="mm-view" data-mm-panel="todo">
           <div class="mm-section-heading">
-            <div><h3>Из проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки и следующие шаги.</p></div>
+            <div><h3>Общие задачи</h3><p class="mm-section-note">Актуальная очередь из Notion; та же доска в JARVIS.</p></div>
+          </div>
+          <div class="mm-shared-tasks" id="mm-shared-tasks"><p class="mm-empty">Загружаю задачи…</p></div>
+          <div class="mm-section-heading">
+            <div><h3>Контекст проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки и следующие шаги из проектных заметок.</p></div>
           </div>
           <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
         </div>
@@ -10469,6 +10478,7 @@ function mmInit() {
     loadInfraChanges();
     mmLoadOwnerProjects();
     mmLoadOwnerTodo();
+    mmLoadSharedTasks();
     mmLoadJobMail();
     mmLoadHealth();
   }, MM_REFRESH_MS);
@@ -10513,6 +10523,7 @@ function openMainManager() {
   loadInfraChanges();
   mmLoadOwnerProjects();
   mmLoadOwnerTodo();
+  mmLoadSharedTasks();
   mmLoadJobMail();
   mmLoadHealth();
   const query = new URLSearchParams(window.location.search);
@@ -11521,6 +11532,74 @@ function mmInitJobMail() {
 
 // ─── «Ждёт тебя» (Mark 2026-10-22) ───
 // Things only Mark can do, added and closed by him on the site. Owner-only, stored on the Mac mini.
+// Owner-only read projection. Notion remains the task owner.
+const SHARED_TASKS_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/shared-tasks`;
+let mmSharedTaskGeneration = 0;
+
+function mmNotionLink(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && ['notion.so', 'www.notion.so', 'app.notion.com'].includes(url.hostname) ? url.href : '';
+  } catch (_) { return ''; }
+}
+
+function mmRenderSharedTasks(payload) {
+  const host = document.getElementById('mm-shared-tasks');
+  if (!host) return;
+  host.replaceChildren();
+  if (payload?.state === 'owner_required') {
+    host.appendChild(mmEl('p', 'mm-empty', 'Задачи видны только владельцу.'));
+    return;
+  }
+  if (payload?.state !== 'ready' || !Array.isArray(payload.tasks)) {
+    host.appendChild(mmEl('p', 'mm-empty', 'Не удалось обновить общую доску. Данные сейчас недоступны.'));
+    return;
+  }
+  const tasks = payload.tasks.filter(task => task && typeof task.title === 'string');
+  if (!tasks.length) {
+    host.appendChild(mmEl('p', 'mm-empty', 'Новых задач пока нет. Старый архив здесь не показывается.'));
+    return;
+  }
+  const grouped = [['doing', '▶️ В работе'], ['todo', '📌 В очереди'], ['done', '✅ Сделано']];
+  for (const [status, heading] of grouped) {
+    const items = tasks.filter(task => task.status === status);
+    if (!items.length) continue;
+    const section = mmEl('section', 'mm-todo-group');
+    section.appendChild(mmEl('h4', '', `${heading} · ${items.length}`));
+    const list = mmEl('ul', '');
+    for (const task of items.slice(0, 30)) {
+      const row = mmEl('li', '');
+      const href = mmNotionLink(task.url);
+      const title = mmEl(href ? 'a' : 'span', '', task.title.slice(0, 240));
+      if (href) { title.href = href; title.target = '_blank'; title.rel = 'noopener noreferrer'; }
+      row.appendChild(title);
+      const meta = [task.project, task.due_date].filter(Boolean).join(' · ');
+      if (meta) row.appendChild(mmEl('small', '', meta.slice(0, 140)));
+      list.appendChild(row);
+    }
+    section.appendChild(list);
+    host.appendChild(section);
+  }
+  const board = mmNotionLink(payload.board_url);
+  if (board) {
+    const link = mmEl('a', '', 'Открыть доску в Notion ↗');
+    link.href = board; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    host.appendChild(link);
+  }
+}
+
+async function mmLoadSharedTasks() {
+  const generation = ++mmSharedTaskGeneration;
+  if (!SHARED_TASKS_API) { mmRenderSharedTasks(null); return; }
+  try {
+    const response = await fetch(SHARED_TASKS_API, {headers: mmHeaders(), cache: 'no-store'});
+    const payload = await response.json();
+    if (generation === mmSharedTaskGeneration) mmRenderSharedTasks(response.ok ? payload : {state: 'owner_required'});
+  } catch (_) {
+    if (generation === mmSharedTaskGeneration) mmRenderSharedTasks(null);
+  }
+}
+
 const OWNER_TODO_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/owner-todo`;
 let mmOwnerTodoItems = [];
 let mmOwnerTodoEditing = null;
