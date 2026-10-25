@@ -448,6 +448,16 @@ def export_catalog(catalog, output, state):
         return {'state': catalog['state'], 'written': len(writes), 'records': len(catalog['records'])}
 
 
+def _retold(catalog_path):
+    """Russian retellings written next to the catalog by context_retell.py; empty when missing."""
+    try:
+        data = json.loads(_read(Path(catalog_path).with_name('retold.json'), MAX_CATALOG)[0])
+    except (OSError, ValueError, UnicodeError, TypeError):
+        return {}
+    items = data.get('items') if isinstance(data, dict) else None
+    return items if isinstance(items, dict) else {}
+
+
 def context_library_projection(path, owner=False, query='', source='', kind='', record_id=None, now=None):
     if not owner:
         return {'state': 'owner_required', 'records': []}
@@ -461,9 +471,14 @@ def context_library_projection(path, owner=False, query='', source='', kind='', 
     if state != 'unavailable' and ((_date(now or _now()) - _date(data['generated_at'])).total_seconds() > 3600):
         state = 'stale'
     safe_keys = ('id', 'kind', 'source', 'title', 'date', 'modified_at', 'project', 'sha256')
+    retold = _retold(path)
     def public_record(r, detail=False):
         projected = {k: r[k] for k in safe_keys}
         projected['obsidian_url'] = _url_safe(r['obsidian_url'])
+        plain = retold.get(r['id'])
+        # A Russian retelling (context_retell.py) only while it matches the record's current text.
+        if isinstance(plain, dict) and plain.get('sha256') == r['sha256'] and isinstance(plain.get('title'), str) and isinstance(plain.get('text'), str):
+            projected['plain'] = {'title': plain['title'][:200], 'text': plain['text'][:1000]}
         if detail:
             projected['body'] = r['body']
         return projected
