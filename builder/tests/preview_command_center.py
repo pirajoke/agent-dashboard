@@ -313,7 +313,7 @@ def job_mail_fixture():
                 "date": (now - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ"), "answered": answered,
                 "link": f"https://mail.google.com/mail/#all/t{index}", "subject": "Пример"}
                for index, (company, role, verdict, days, answered) in enumerate(rows)]
-    return {"state": "connected", "email": "preview@example.com", "first_scan_done": True,
+    return {"state": "connected", "email": "preview@example.com", "first_scan_done": True, "stale": False,
             "waiting": [reply for reply in replies if reply["verdict"] == "positive" and not reply["answered"]],
             "recent": replies, "stats": job_mail.stats(replies, today=now)}
 

@@ -58,6 +58,11 @@ class ClassifyTests(unittest.TestCase):
                      "Thank you for applying! We will review your application and get back to you."):
             self.assertEqual(job_mail.classify("Candidature reçue", body), "ack", body)
 
+    def test_conditional_promise_is_still_a_receipt(self):
+        body = "Thank you for applying. If your application is selected, we will invite you to the next stage."
+        self.assertEqual(job_mail.classify("Your application", body), "ack")
+        self.assertEqual(job_mail.classify("Interview", "If you have questions, reply. Please book a slot in my calendly for your interview."), "positive")
+
     def test_alerts_and_unrelated_mail_are_skipped(self):
         self.assertIsNone(job_mail.classify("10 nouvelles offres qui pourraient vous intéresser", "Business Developer CDI"))
         self.assertIsNone(job_mail.classify("Votre colis", "Livraison demain", "colis@laposte.fr"))
@@ -217,6 +222,40 @@ class WatcherTests(unittest.TestCase):
         WATCHER.run(self.root, opener=self.opener)
         self.assertEqual(job_mail.projection(self.root)["waiting"], [])
         self.assertTrue(load_items(self.todo)["items"][0]["done"])
+
+    def test_failed_telegram_is_retried_and_downtime_is_rescanned(self):
+        self.telegram.write_text(json.dumps({"bot_token": "b", "chat_id": "c"}))
+        real = self.opener
+        down = {"on": True}
+
+        def flaky(request, timeout=None):
+            if request.full_url.startswith("https://api.telegram.org/") and down["on"]:
+                raise OSError("telegram down")
+            return real(request, timeout)
+        self.assertEqual(WATCHER.run(self.root, opener=flaky)["telegram"], "telegram_failed")
+        down["on"] = False
+        self.assertEqual(WATCHER.run(self.root, opener=flaky)["telegram"], "sent")
+        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(sum(item["text"].startswith("Ответить") for item in load_items(self.todo)["items"]), 1)  # Not one per try.
+        WATCHER.run(self.root, opener=flaky)
+        self.assertEqual(len(self.sent), 1)
+        saved = json.loads((self.root / "replies.json").read_text())
+        self.assertTrue(saved["last_scan_ok"])
+        queries = []
+
+        def watch(request, timeout=None):
+            if "/messages?" in request.full_url:
+                queries.append(urllib.parse.parse_qs(urllib.parse.urlsplit(request.full_url).query)["q"][0])
+            return real(request, timeout)
+        WATCHER.run(self.root, opener=watch)
+        self.assertTrue(queries[0].startswith("after:"))
+
+    def test_stale_check_is_not_shown_as_all_clear(self):
+        WATCHER.run(self.root, opener=self.opener)
+        from datetime import datetime, timedelta, timezone
+        later = datetime.now(timezone.utc) + timedelta(hours=3)
+        self.assertTrue(job_mail.projection(self.root, today=later)["stale"])
+        self.assertFalse(job_mail.projection(self.root)["stale"])
 
     def test_without_telegram_the_site_still_shows_it(self):
         result = WATCHER.run(self.root, opener=self.opener)

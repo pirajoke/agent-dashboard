@@ -48,6 +48,13 @@ def _iso(moment: datetime) -> str:
     return moment.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _since(value) -> datetime | None:
+    try:
+        return datetime.strptime(str(value), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 def _header(message: dict, name: str) -> str:
     for header in message.get("payload", {}).get("headers", []) or []:
         if str(header.get("name", "")).lower() == name.lower():
@@ -161,11 +168,14 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
     replies = [reply for reply in saved.get("replies", []) if isinstance(reply, dict)] if isinstance(saved, dict) else []
     seen = set(saved.get("seen", [])) if isinstance(saved, dict) else set()
     first = not (isinstance(saved, dict) and saved.get("first_scan_done"))
-    alerts: list[dict] = []
+    last_scan = saved.get("last_scan_ok") if isinstance(saved, dict) else None
+    new_invites = 0
     try:
         token, email = job_mail.access_token(root, opener)
         gmail = Gmail(token, opener)
-        window = f"newer_than:{FIRST_SCAN_DAYS}d" if first else "newer_than:3d"
+        # After the first scan, start a day before the last complete one, so days the Mac mini was off are not lost.
+        since = _since(last_scan) if not first else None
+        window = f"after:{int(since.timestamp()) - 86400}" if since else f"newer_than:{FIRST_SCAN_DAYS}d"
         new_ids = [mid for mid in gmail.search(f"{window} {SEARCH}", 500 if first else 100) if mid not in seen][:500 if first else MAX_NEW_PER_RUN]
         for message_id in new_ids:
             message = gmail.message(message_id)
@@ -185,7 +195,8 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
                      "link": _link(email, message.get("threadId") or message_id), "ms": int(message.get("internalDate") or 0)}
             replies.append(reply)
             if verdict == "positive":
-                alerts.append(reply)
+                reply["alert_pending"] = True
+                new_invites += 1
         # Has Mark answered an open invite? Then it is no longer waiting on him.
         for reply in replies:
             if reply.get("verdict") == "positive" and not reply.get("answered"):
@@ -194,26 +205,36 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
                     if reply.get("todo_id"):
                         _close_todo(reply["todo_id"])
         status["email"] = email
+        last_scan = _iso(now)
     except LookupError as error:
         status.update(ok=False, reason=str(error))
     except (RuntimeError, OSError, ValueError) as error:
         status.update(ok=False, reason=str(error)[:60] or "gmail_unavailable")
-    open_alerts = [reply for reply in alerts if not reply.get("answered")]
-    for reply in open_alerts:
-        reply["todo_id"] = _add_todo(reply)
-    if open_alerts:
+    # Every open invite gets its «Ждёт тебя» item once and its Telegram line until one is delivered.
+    pending = [reply for reply in replies if reply.get("verdict") == "positive" and not reply.get("answered")
+               and reply.get("alert_pending")]
+    for reply in pending:
+        if not reply.get("todo_id"):
+            reply["todo_id"] = _add_todo(reply)
+    if pending:
         lines = [f"🟢 {reply['company']}: зовут на собеседование" + (f" ({reply['role']})" if reply.get("role") else "") + f"\n{reply['link']}"
-                 for reply in open_alerts[:10]]
-        head = "Ответы работодателей, которые ждут тебя:" if first else "Новый положительный ответ:"
+                 for reply in pending[:10]]
+        head = "Ответы работодателей, которые ждут тебя:" if len(pending) > 1 else "Новый положительный ответ:"
         status["telegram"] = _telegram(head + "\n\n" + "\n\n".join(lines) + "\n\nОтвечаешь и выбираешь время ты.", opener)
+        if status["telegram"] == "sent":
+            for reply in pending[:10]:
+                reply.pop("alert_pending", None)
+    for reply in replies:
+        if reply.get("answered"):
+            reply.pop("alert_pending", None)
     replies.sort(key=lambda reply: reply.get("date", ""), reverse=True)
     record = {"replies": replies[:MAX_REPLIES], "seen": sorted(seen)[-5000:], "updated_at": _iso(now),
-              "first_scan_done": (not first) or status["ok"]}
+              "first_scan_done": (not first) or status["ok"], "last_scan_ok": last_scan}
     p["dir"].mkdir(parents=True, exist_ok=True)
     os.chmod(p["dir"], 0o700)
     _write_json(p["replies"], record, prefix=".replies-")
     _write_json(p["status"], status, prefix=".status-")
-    return {**status, "new": len(alerts)}
+    return {**status, "new": new_invites}
 
 
 def main(argv: list[str] | None = None) -> int:

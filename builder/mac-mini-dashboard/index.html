@@ -11091,10 +11091,11 @@ function mmRenderJobMail(payload) {
   const totals = payload.stats?.totals || {};
   const card = mmEl('section', 'mm-todo-card mm-fold mm-jm');
   card.setAttribute('aria-labelledby', 'mm-jm-title');
-  const open = mmFoldIsOpen('job-mail') || waiting.length > 0 || Boolean(mmJobMailNote) || payload.state !== 'connected';
+  const open = mmFoldIsOpen('job-mail') || waiting.length > 0 || Boolean(mmJobMailNote) || payload.state !== 'connected' || Boolean(payload.stale);
   card.classList.toggle('is-open', open);
   const meta = payload.state !== 'connected' ? 'почта не подключена'
     : waiting.length ? `${waiting[0].company} зовёт на собеседование`
+    : payload.stale ? 'почта давно не проверялась'
     : 'новых приглашений нет';
   const head = mmFoldHead('job-mail', 'Ответы работодателей', waiting.length || null, meta, 'mm-jm-title');
   head.setAttribute('aria-expanded', String(open));
@@ -11108,7 +11109,9 @@ function mmRenderJobMail(payload) {
       waiting.forEach(reply => list.appendChild(mmJobMailRow(reply, true)));
       foldBody.appendChild(list);
     } else {
-      foldBody.appendChild(mmEl('p', 'mm-todo-empty', payload.first_scan_done
+      foldBody.appendChild(mmEl('p', 'mm-todo-empty', payload.stale
+        ? 'Почта давно не проверялась, поэтому новых приглашений здесь может не быть. Загляни в почту сам.'
+        : payload.first_scan_done
         ? 'Все приглашения отвечены. Новое придёт в Telegram и сюда.'
         : 'Проверяю почту за последние 60 дней…'));
     }

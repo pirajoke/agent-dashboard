@@ -239,9 +239,13 @@ _NEGATIVE = re.compile(
     r"decided to (move|proceed|pursue|go) (forward )?with (other|another)|other candidates|not (been )?selected|"
     r"will not be (progressing|proceeding|taking)|position has been filled|poste (a ete|est) pourvu|"
     r"no longer (considering|available)|declin|suite defavorable|pas de suite favorable|pas en mesure de (vous )?proposer")
+# A concrete meeting to book: an invite even inside polite «if…» wording.
+_BOOKING = re.compile(r"invites? you to (a|an) (meeting|call|interview)|(choisir|reserver|selectionner|book|pick|schedule) (un |a |an |le |your |ton |votre )?"
+                      r"(creneau|slot|time|call|interview|meeting|entretien)|calendly|cal\.com|meetings\.hubspot|creneau|disponibilites|your availability|"
+                      r"a retenu (mon|notre) attention|retenu notre attention|(premier|1er) (echange|entretien|appel|call)")
 _STRONG_POSITIVE = re.compile(
     r"invites? you|t'?invite|vous invite|invitation (a|to) (un|an|a|the)? ?(entretien|interview|echange|call|meeting)|"
-    r"(premier|1er|court) (echange|entretien|appel|call)|(choisir|reserver|selectionner|book|pick|schedule) (un |a |le |your |ton |votre )?"
+    r"(premier|1er|court) (echange|entretien|appel|call)|(choisir|reserver|selectionner|book|pick|schedule) (un |a |an |le |your |ton |votre )?"
     r"(creneau|slot|time|call|interview|meeting|entretien)|calendly|cal\.com|meetings\.hubspot|creneau|disponibilites|your availability|"
     r"a retenu (mon|notre) attention|retenu notre attention|caught (my|our) (attention|eye)|(aimerions|aimerais|souhaiterions|souhaiterais) "
     r"(vous|te) (rencontrer|parler|echanger|proposer un)|(would|we'?d) (like|love) to (meet|speak|chat|schedule|invite|talk)|"
@@ -249,7 +253,7 @@ _STRONG_POSITIVE = re.compile(
     r"rendez-vous|(nous|je) (vous|te) propos(e|ons) (un|une)|offre d'?embauche|job offer|lettre d'?offre|promesse d'?embauche")
 _WEAK_POSITIVE = re.compile(r"entretien|interview|\becha?nger\b|\bechange\b|\bappel\b|\bcall\b|visio|\bmeet")
 # «Если вас выберут, мы назначим интервью» is still just a receipt.
-_CONDITIONAL = re.compile(r"\bsi (votre|ta) (candidature|profil)|\bsi (vous|tu) (etes|es) (retenu|selectionne)|\bif (your|you|we)\b|"
+_CONDITIONAL = re.compile(r"\bsi (votre|ta) (candidature|profil)|\bif selected\b|\bshould (you|your)\b|\bsi (vous|tu) (etes|es) (retenu|selectionne)|\bif (your|you|we)\b|"
                           r"\ble cas echeant|\bdans le cas ou")
 _ACK = re.compile(r"(avons|a) bien (ete )?recu|bien recu|a bien ete (recue|enregistree|transmise)|accuse de reception|"
                   r"thank(s| you) for (applying|your application|your interest)|we (have )?received your application|"
@@ -267,9 +271,10 @@ def classify(subject: str, body: str, sender: str = "") -> str | None:
         return None
     if _NEGATIVE.search(text):
         return "negative"
-    if _STRONG_POSITIVE.search(text):
+    conditional = bool(_CONDITIONAL.search(text))
+    if _BOOKING.search(text) or (_STRONG_POSITIVE.search(text) and not conditional):
         return "positive"
-    if _WEAK_POSITIVE.search(text) and not _CONDITIONAL.search(text) and not _ACK.search(text):
+    if _WEAK_POSITIVE.search(text) and not conditional and not _ACK.search(text):
         return "positive"
     if _ACK.search(text):
         return "ack"
@@ -354,6 +359,16 @@ def stats(replies: list[dict], *, today: datetime | None = None, weeks: int = 8)
             "companies": sorted(companies.values(), key=lambda row: (-row["positive"], row["last"]), reverse=False)[:40]}
 
 
+STALE_AFTER = timedelta(minutes=45)
+
+
+def _when(value) -> datetime | None:
+    try:
+        return datetime.strptime(str(value), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 def projection(root: Path | None = None, *, today: datetime | None = None) -> dict:
     """Owner-only view for the site: never the token, never mail text."""
     p = paths(root)
@@ -370,10 +385,13 @@ def projection(root: Path | None = None, *, today: datetime | None = None) -> di
         state = "error"
     else:
         state = "connected"
+    # The watcher runs every 10 minutes; an older check means it stopped, not that nothing came.
+    checked = _when(status.get("last_run"))
+    stale = state == "connected" and (checked is None or (today or datetime.now(timezone.utc)) - checked > STALE_AFTER)
     public_keys = ("id", "thread_id", "date", "company", "role", "subject", "verdict", "answered", "link")
     clean = [{key: reply.get(key) for key in public_keys if key in reply} for reply in replies]
     waiting = [reply for reply in clean if reply.get("verdict") == "positive" and not reply.get("answered")]
     return {"state": state, "email": token.get("email") if isinstance(token, dict) else None,
-            "last_check": status.get("last_run"), "error": status.get("reason") if status.get("ok") is False else None,
+            "last_check": status.get("last_run"), "stale": stale, "error": status.get("reason") if status.get("ok") is False else None,
             "first_scan_done": bool(saved.get("first_scan_done")) if isinstance(saved, dict) else False,
             "waiting": waiting[:20], "recent": clean[:40], "stats": stats(clean, today=today)}
