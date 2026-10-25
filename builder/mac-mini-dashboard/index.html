@@ -7617,8 +7617,12 @@ function ccContextRenderUpdate(container, text, record, links) {
   if (!main) main = filled.find(s => !s.heading || isTitle(s.heading)) || filled[0];
   if (!main) { const p = document.createElement('p'); p.textContent = 'В записи пока нет текста.'; container.append(p); return; }
   const lead = document.createElement('div'); lead.className = 'context-update-lead';
-  ccContextParagraphs(lead, main.lines.join('\n').trim(), links); container.append(lead);
-  const rest = filled.filter(s => s !== main && !(isTitle(s.heading) && !s.lines.join('').trim()));
+  // A Russian retelling from the Mac mini comes first; the original text then moves under «Подробности».
+  const plain = record.plain && typeof record.plain.text === 'string' ? record.plain.text : '';
+  if (plain) { const p = document.createElement('p'); p.textContent = plain; lead.append(p); }
+  else ccContextParagraphs(lead, main.lines.join('\n').trim(), links);
+  container.append(lead);
+  const rest = filled.filter(s => (plain || s !== main) && !(isTitle(s.heading) && !s.lines.join('').trim()));
   if (!rest.length) return;
   const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = 'Подробности'; details.append(toggle);
   ccContextParagraphs(details, rest.map(s => (s.heading && !isTitle(s.heading) ? `#### ${s.heading}\n` : '') + s.lines.join('\n')).join('\n\n'), links);
@@ -7676,7 +7680,7 @@ async function ccLoadContext(recordId = null) {
     if (recordId) {
       const r = data.record;
       if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
-      document.getElementById('context-reader-title').textContent = r.title;
+      document.getElementById('context-reader-title').textContent = r.plain?.title || r.title;
       document.getElementById('context-reader-meta').textContent = [ccContextNames[r.source] || 'Запись', ccContextDay(r.date)].filter(Boolean).join(' · ');
       ccContextRenderBody(r);
       const uri = ccContextURI(r.obsidian_url); const link = document.getElementById('context-obsidian');
@@ -7698,7 +7702,7 @@ async function ccLoadContext(recordId = null) {
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
       const text=document.createElement('span'); text.className='context-row-text';
-      const title=document.createElement('strong');title.textContent=r.title;
+      const title=document.createElement('strong');title.textContent=r.plain?.title || r.title;
       const meta=document.createElement('small'); meta.textContent=[ccContextNames[r.source] || 'Запись', ccContextDay(r.date), r.project].filter(Boolean).join(' · ');
       const go=document.createElement('span'); go.className='context-row-go'; go.setAttribute('aria-hidden','true'); go.textContent='›';
       text.append(title,meta); button.append(icon,text,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
@@ -12107,7 +12111,7 @@ function ccDocxxReset(message, state='unavailable') {
   for(const id of ['pending','review','catalog-count','model']) ccDocxxText('docxx-'+id,'—');
   const warnings=document.getElementById('docxx-warnings'); warnings.replaceChildren(); warnings.hidden=true;
   document.getElementById('docxx-guide-links').replaceChildren();
-  document.getElementById('docxx-records').replaceChildren(state==='owner_required' ? ccOwnerGate('Документы и их разбор') : ccDocxxEl('p',message,'docxx-empty'));
+  document.getElementById('docxx-records').replaceChildren(state==='owner_required' && typeof ccOwnerGate==='function' ? ccOwnerGate('Документы и их разбор') : ccDocxxEl('p',message,'docxx-empty'));
   ccDocxxRenderGmail(); ccDocxxExplain();
 }
 function ccDocxxRefreshFailed() {
