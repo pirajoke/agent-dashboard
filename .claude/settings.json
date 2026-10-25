@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh api -X PUT repos/pirajoke/agent-dashboard/pulls/*/merge *)",
+      "Bash(gh pr merge *)"
+    ]
+  }
+}
