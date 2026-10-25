@@ -168,7 +168,7 @@ class PreviewHandler(SERVER.Handler):
             return
         if parsed.path.startswith('/fixture/'):
             mode = parsed.path.removeprefix('/fixture/')
-            if mode in {'waiting', 'ready', 'google-owner', 'changed', 'empty', 'stale', 'unavailable', 'anonymous', 'long-label', 'unknown', 'failure'}:
+            if mode in {'sorting', 'waiting', 'ready', 'google-owner', 'changed', 'empty', 'stale', 'unavailable', 'anonymous', 'long-label', 'unknown', 'failure'}:
                 MODE = mode
                 self._json_response(200, {'fixture': MODE})
             else:
@@ -189,6 +189,10 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path == "/api/platform-resources":
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
+            return
+        if parsed.path in {"/api/docxx", "/api/docxx/folders"} and MODE == "sorting":
+            prepare_docxx_sorting()
+            super().do_GET()  # The real projection and sorting over a synthetic library.
             return
         if parsed.path == "/api/docxx":
             self._json_response(200, docxx_fixture(MODE))
@@ -229,6 +233,13 @@ class PreviewHandler(SERVER.Handler):
             else:
                 payload["records"] = [record]
             self._json_response(200, payload)
+            return
+        if parsed.path == "/api/job-mail":
+            # Synthetic replies only (PREVIEW_JOB_MAIL=not_connected shows the connect step).
+            if not self._decision_owner_authorized():
+                self._json_response(401, {"error": "owner_token_required", "state": "owner_required"})
+                return
+            self._json_response(200, job_mail_fixture())
             return
         if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
@@ -287,10 +298,63 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_cards_save()
         elif urlsplit(self.path).path == "/api/growth":
             self._handle_growth_edit()  # Writes only the synthetic note in the fixture state.
+        elif urlsplit(self.path).path == "/api/docxx/decide":
+            self._handle_docxx_decide()  # Moves only synthetic files in the fixture library.
         elif urlsplit(self.path).path == "/api/owner-todo":
             self._handle_owner_todo_save()  # Writes only to the isolated fixture state.
         else:
             self._json_response(403, {"error": "fixture_read_only"})
+
+
+def prepare_docxx_sorting():
+    """Synthetic «Нужен разбор» documents in a throwaway DOCXXx library (?fixture=sorting)."""
+    state = SERVER.HOME / "Library/Application Support/DOCXX-intake"
+    if (state / "status.json").exists():
+        status = json.loads((state / "status.json").read_text())
+        status["checked_at"] = datetime.now(timezone.utc).isoformat()
+        (state / "status.json").write_text(json.dumps(status))
+        return
+    library = SERVER.HOME / "Drive/DOCXXx"
+    review = library / "10 — 📥 To review/Documents to review"
+    for folder in ("10 — 📥 To review/Documents to review", "20 — France/Médiathèque", "20 — France/Impôts",
+                   "20 — France/Logement", "30 — Santé", "40 — Travail/Bulletins de paie", "90 — Archive"):
+        (library / folder).mkdir(parents=True, exist_ok=True)
+    state.mkdir(parents=True, exist_ok=True)
+    now = datetime.now(timezone.utc)
+    attachments = {}
+    for index, name in enumerate(("ticketa4_a4_24102026-115416.pdf", "scan_0042.pdf", "IMG_2291.jpeg")):
+        (review / name).write_bytes(b"synthetic")
+        attachments[name] = {"state": "delivered", "needs_review": True, "name": name, "destination": str(review / name),
+                             "delivered_at": (now - timedelta(hours=index + 1)).isoformat()}
+    (state / "gmail-journal.json").write_text(json.dumps({"schema_version": 1, "attachments": attachments}))
+    for name in ("journal.json", "drive-ingress-journal.json", "config.json"):
+        (state / name).write_text("{}")
+    (state / "runner.lock").touch()
+    (state / "status.json").write_text(json.dumps({
+        "checked_at": now.isoformat(), "phase": "needs_review", "model_calls": 0,
+        "catalog": {"status": "ready", "documents": 42}, "results": [],
+        "drive_ingress": {"status": "idle", "pending": 0, "results": []}, "review_pending": []}))
+
+
+def job_mail_fixture():
+    import os
+    from dashboard_builder import job_mail
+    if os.environ.get("PREVIEW_JOB_MAIL") == "not_connected":
+        return {"state": "not_connected", "email": None, "waiting": [], "recent": [], "stats": job_mail.stats([])}
+    now = datetime.now(timezone.utc)
+    rows = [("Пример А", "Business Developer", "positive", 3, False), ("Пример Б", "GTM Engineer", "negative", 1, True),
+            ("Пример В", "Product Manager", "negative", 9, True), ("Пример Г", "Consultant", "positive", 16, True),
+            ("Пример Д", "Sales", "ack", 3, False), ("Пример Е", "Account Executive", "negative", 23, True),
+            ("Пример Ж", "Growth", "negative", 12, True), ("Пример З", "Ops", "negative", 30, True),
+            ("Пример И", "Sales", "positive", 6, True), ("Пример К", "CSM", "negative", 5, True),
+            ("Пример Л", "BizDev", "negative", 38, True), ("Пример М", "PM", "negative", 19, True)]
+    replies = [{"id": f"m{index}", "thread_id": f"t{index}", "company": company, "role": role, "verdict": verdict,
+                "date": (now - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ"), "answered": answered,
+                "link": f"https://mail.google.com/mail/#all/t{index}", "subject": "Пример"}
+               for index, (company, role, verdict, days, answered) in enumerate(rows)]
+    return {"state": "connected", "email": "preview@example.com", "first_scan_done": True, "stale": False,
+            "waiting": [reply for reply in replies if reply["verdict"] == "positive" and not reply["answered"]],
+            "recent": replies, "stats": job_mail.stats(replies, today=now)}
 
 
 if __name__ == "__main__":
@@ -300,6 +364,7 @@ if __name__ == "__main__":
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
+        SERVER.HOME = FIXTURE_STATE / "home"  # Synthetic DOCXX state and library for ?fixture=sorting.
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
         SERVER.GROWTH_NOTE_FILE = FIXTURE_STATE / "growth-note.md"

@@ -29,6 +29,7 @@ from dashboard_builder.owner_decisions import (
 from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
 from dashboard_builder.docxx_search import docxx_search
+from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions
 from dashboard_builder.docxx_public_pages import PAGES as DOCXX_INFO_PAGES, CONTENT_SECURITY_POLICY as DOCXX_INFO_CSP
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
@@ -36,6 +37,7 @@ from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MA
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.infra_changes import infra_projection
+from dashboard_builder import job_mail
 from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list, parse_launchctl_running
 from dashboard_builder.department_campus import (
@@ -44,6 +46,7 @@ from dashboard_builder.department_campus import (
     build_department_campus_html,
     department_campus_projection,
 )
+from dashboard_builder.native_activity import validate_native_activity_checkpoint
 
 PORT = 7777
 HOME = Path.home()
@@ -60,6 +63,7 @@ PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
+JOB_MAIL_LABEL = "com.pirajoke.job-mail-watcher"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
@@ -1391,14 +1395,8 @@ def _is_heartbeat_snapshot(metadata: dict) -> bool:
     return metadata.get("entrypoint") == _HEARTBEAT_ENTRYPOINT and metadata.get("executable") is False
 
 
-def _select_manager_snapshot(data: object, *, now: datetime) -> tuple[dict | None, bool]:
-    """Return (newest usable MAIN MANAGER snapshot, saw_malformed_snapshot).
-
-    A fresh handoff/status snapshot written by MAIN MANAGER itself is richer
-    (it can carry decision options), so it wins over newer publisher
-    heartbeats. Otherwise the newest snapshot wins; max() keeps the first
-    source item when timestamps tie.
-    """
+def _manager_snapshot_candidates(data: object, *, now: datetime) -> tuple[list[dict], bool]:
+    """Return bounded manager snapshot envelopes without exposing task bodies."""
     tasks = data.get("tasks") if isinstance(data, dict) else None
     candidates: list[dict] = []
     malformed = False
@@ -1435,12 +1433,154 @@ def _select_manager_snapshot(data: object, *, now: datetime) -> tuple[dict | Non
             "queue_updated": queue_updated,
             "heartbeat": _is_heartbeat_snapshot(metadata),
             "fresh": (now - updated).total_seconds() <= _MANAGER_SNAPSHOT_FRESH_SECONDS,
+            "native_activity": metadata.get("native_activity"),
+            "has_native_activity": "native_activity" in metadata,
+            "work_counts": metadata.get("work_counts"),
+            "has_work_counts": "work_counts" in metadata,
         })
+    return candidates, malformed
+
+
+def _select_manager_snapshot(data: object, *, now: datetime) -> tuple[dict | None, bool]:
+    """Return (newest usable MAIN MANAGER task snapshot, saw malformed input).
+
+    A fresh handoff/status snapshot written by MAIN MANAGER itself is richer
+    (it can carry decision options), so it wins over newer publisher
+    heartbeats. Execution evidence is selected independently below so a
+    handoff cannot hide a newer native activity checkpoint.
+    """
+    candidates, malformed = _manager_snapshot_candidates(data, now=now)
     if not candidates:
         return None, malformed
     handoffs = [item for item in candidates if not item["heartbeat"] and item["fresh"]]
     chosen = max(handoffs or candidates, key=lambda item: item["updated"])
     return chosen, malformed
+
+
+def _empty_activity_counts() -> dict[str, int]:
+    return {
+        "enabled": 0,
+        "running": 0,
+        "idle": 0,
+        "waiting": 0,
+        "blocked": 0,
+        "done": 0,
+        "unavailable": 0,
+        "turn_completed": 0,
+    }
+
+
+def _native_activity_declarations(data: object) -> list[dict]:
+    tasks = data.get("tasks") if isinstance(data, dict) else None
+    declarations: list[dict] = []
+    for index, task in enumerate(tasks if isinstance(tasks, list) else []):
+        if not isinstance(task, dict):
+            continue
+        metadata = _manager_metadata(task)
+        source_agent = metadata.get("source_agent")
+        event_marker = str(metadata.get("event") or "").strip().lower()
+        if (
+            not isinstance(source_agent, str)
+            or re.sub(r"[^a-z0-9]+", "", source_agent.lower()) != "mainmanager"
+            or event_marker not in {"handoff", "status"}
+            or "native_activity" not in metadata
+        ):
+            continue
+        declarations.append({
+            "index": index,
+            "updated": _department_snapshot_time(
+                task.get("updated_at")
+                or task.get("completed_at")
+                or task.get("claimed_at")
+                or task.get("created_at")
+            ),
+            "checkpoint": metadata.get("native_activity"),
+        })
+    return declarations
+
+
+def _native_activity_projection(data: object, *, now: datetime) -> tuple[list[dict], dict, bool]:
+    declarations = _native_activity_declarations(data)
+    if not declarations:
+        return [], _empty_activity_counts(), False
+    orderable = [declaration for declaration in declarations if declaration["updated"] is not None]
+    if not orderable:
+        return [], _empty_activity_counts(), True
+
+    newest_time = max(declaration["updated"] for declaration in orderable)
+    newest = [declaration for declaration in orderable if declaration["updated"] == newest_time]
+    if newest_time > now or (now - newest_time).total_seconds() > _MANAGER_SNAPSHOT_FRESH_SECONDS:
+        return [], _empty_activity_counts(), True
+    newest_validated: list[tuple[datetime, dict]] = []
+    for declaration in newest:
+        checkpoint = validate_native_activity_checkpoint(declaration["checkpoint"], now=now)
+        observed_at = _department_snapshot_time(checkpoint.get("observed_at")) if checkpoint else None
+        if checkpoint is None or observed_at is None or observed_at > declaration["updated"]:
+            return [], _empty_activity_counts(), True
+        newest_validated.append((observed_at, checkpoint))
+    if not newest_validated:
+        return [], _empty_activity_counts(), True
+
+    valid: list[tuple[datetime, dict]] = []
+    for declaration in orderable:
+        updated = declaration["updated"]
+        if updated > now or (now - updated).total_seconds() > _MANAGER_SNAPSHOT_FRESH_SECONDS:
+            continue
+        checkpoint = validate_native_activity_checkpoint(declaration["checkpoint"], now=now)
+        if checkpoint is None:
+            continue
+        observed_at = _department_snapshot_time(checkpoint.get("observed_at"))
+        if observed_at is None or observed_at > updated:
+            continue
+        valid.append((observed_at, checkpoint))
+    if not valid:
+        return [], _empty_activity_counts(), True
+    checkpoint = max(valid, key=lambda item: item[0])[1]
+    agents = checkpoint["agents"]
+    return agents, {
+        "enabled": len(agents),
+        "running": sum(agent["state"] == "running" for agent in agents),
+        "idle": sum(agent["state"] == "idle" for agent in agents),
+        "waiting": sum(agent["state"] == "waiting" for agent in agents),
+        "blocked": sum(agent["state"] == "blocked" for agent in agents),
+        "done": sum(agent["state"] == "done" for agent in agents),
+        "unavailable": sum(agent["availability"] != "available" for agent in agents),
+        "turn_completed": sum(agent["outcome_stage"] == "turn_completed" for agent in agents),
+    }, True
+
+
+def _manager_work_counts(data: object, *, now: datetime) -> dict[str, int]:
+    candidates, _ = _manager_snapshot_candidates(data, now=now)
+    valid: list[tuple[datetime, dict[str, int]]] = []
+    expected = {"executable_queued", "owner_gate", "stop_notice"}
+    for candidate in candidates:
+        counts = candidate.get("work_counts")
+        if (
+            candidate["fresh"]
+            and isinstance(counts, dict)
+            and set(counts) == expected
+            and all(type(value) is int and value >= 0 for value in counts.values())
+        ):
+            valid.append((candidate["updated"], dict(counts)))
+    return max(valid, key=lambda item: item[0])[1] if valid else {}
+
+
+def _with_manager_activity(payload: dict, data: object, *, now: datetime) -> dict:
+    agents, activity_counts, native_declared = _native_activity_projection(data, now=now)
+    candidates, _ = _manager_snapshot_candidates(data, now=now)
+    work_counts = _manager_work_counts(data, now=now)
+    work_counts_declared = any(candidate["has_work_counts"] for candidate in candidates)
+    if native_declared:
+        payload["agents"] = agents
+        payload["activity_counts"] = activity_counts
+        payload["owner_gates"] = [
+            dict(event)
+            for event in payload.get("events", [])
+            if isinstance(event, dict) and event.get("needs_mark") is True
+        ]
+    if work_counts or work_counts_declared:
+        payload["work_counts"] = work_counts
+    return payload
 
 
 def _snapshot_event_age_limit(snapshot: dict) -> int | None:
@@ -1461,12 +1601,20 @@ def _department_campus_payload(
         current = current.replace(tzinfo=timezone.utc)
     current = current.astimezone(timezone.utc)
     if not isinstance(data, dict) or not isinstance(data.get("tasks"), list):
-        return department_campus_projection(None, now=current, owner_view=owner_view)
+        return _with_manager_activity(
+            department_campus_projection(None, now=current, owner_view=owner_view),
+            data,
+            now=current,
+        )
 
     snapshot, malformed_verified_snapshot = _select_manager_snapshot(data, now=current)
     if snapshot is None:
         if malformed_verified_snapshot:
-            return department_campus_projection(None, now=current, owner_view=owner_view)
+            return _with_manager_activity(
+                department_campus_projection(None, now=current, owner_view=owner_view),
+                data,
+                now=current,
+            )
         events = [
             event
             for task in data["tasks"]
@@ -1474,11 +1622,15 @@ def _department_campus_payload(
             for event in [_campus_bridge_event(task)]
             if event is not None
         ]
-        return department_campus_projection(
-            events,
+        return _with_manager_activity(
+            department_campus_projection(
+                events,
+                now=current,
+                max_tasks=3,
+                owner_view=owner_view,
+            ),
+            data,
             now=current,
-            max_tasks=3,
-            owner_view=owner_view,
         )
 
     if not snapshot["fresh"]:
@@ -1493,7 +1645,7 @@ def _department_campus_payload(
         )
     if snapshot["queue_updated"] is not None:
         payload["queue_updated_at"] = snapshot["queue_updated"].isoformat().replace("+00:00", "Z")
-    return payload
+    return _with_manager_activity(payload, data, now=current)
 
 
 def _manager_decision_snapshot(data: object, *, now: datetime) -> tuple[list, int | None] | None:
@@ -1753,6 +1905,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
+            return
+        if parsed.path == '/api/docxx/decide':
+            self._handle_docxx_decide()
+            return
+        if parsed.path in {'/api/job-mail/connect', '/api/job-mail/finish', '/api/job-mail/disconnect', '/api/job-mail/check'}:
+            self._handle_job_mail_post(parsed.path)
             return
         if parsed.path == '/api/jarvis/pipeline/ping':
             self._handle_jarvis_pipeline_ping()
@@ -2439,6 +2597,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(400, {'error': 'invalid_request'})
             return None
 
+    def _handle_docxx_decide(self):
+        # Mark sorts a «Нужен разбор» document from the Documents tab; same owner guard as Platforms.
+        body = self._platform_owner_body(8192)
+        if body is None:
+            return
+        try:
+            self._json_response(200, docxx_apply(docxx_state_path(HOME), docxx_decisions_path(HOME), body))
+        except ValueError as error:
+            self._json_response(400, {'error': str(error) if str(error) in {
+                'invalid_action', 'invalid_keys', 'invalid_folder', 'library_unavailable'} else 'invalid_request'})
+        except OSError:
+            self._json_response(503, {'error': 'docxx_decisions_unavailable'})
+
     def _handle_platform_edits_save(self):
         body = self._platform_owner_body(PLATFORM_EDITS_MAX_BYTES)
         if body is None:
@@ -2480,6 +2651,38 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(400, {'error': 'invalid_owner_todo', 'reason': str(error)})
         except OSError:
             self._json_response(503, {'error': 'owner_todo_unavailable'})
+
+    def _redirect(self, location: str):
+        self.send_response(302)
+        self.send_header('Location', location)
+        self.send_header('Content-Length', '0')
+        self.send_header('Referrer-Policy', 'no-referrer')
+        self.end_headers()
+
+    def _handle_job_mail_post(self, path: str):
+        body = self._platform_owner_body(4096)
+        if body is None:
+            return
+        try:
+            if path == '/api/job-mail/connect':
+                # The page opens Google's consent screen at this address (read-only scope only).
+                self._json_response(200, {'url': job_mail.start_connect()})
+                return
+            if path == '/api/job-mail/finish':
+                code, state = job_mail.parse_pasted_return(body.get('url'))
+                job_mail.finish_connect(code, state)
+                _kick_job_mail_watcher()
+            elif path == '/api/job-mail/disconnect':
+                job_mail.disconnect()
+            else:
+                _kick_job_mail_watcher()
+            self._json_response(200, job_mail.projection())
+        except LookupError as error:
+            self._json_response(409, {'error': str(error)})
+        except ValueError as error:
+            self._json_response(400, {'error': str(error)})
+        except (RuntimeError, OSError):
+            self._json_response(502, {'error': 'google_unavailable'})
 
     def _handle_manager_decision_response(self):
         if not self._decision_owner_authorized():
@@ -2672,7 +2875,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/docxx':
             owner = self._decision_owner_authorized()
-            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner))
+            decisions = docxx_load_decisions(docxx_decisions_path(HOME)) if owner else None
+            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner, decisions=decisions))
+            return
+        if parsed.path == '/api/docxx/folders':
+            if not self._decision_owner_authorized():
+                self._json_response(200, {'state': 'owner_required'})
+                return
+            self._json_response(200, docxx_folders(docxx_state_path(HOME), docxx_decisions_path(HOME)))
             return
         if parsed.path == '/api/docxx/search':
             owner = self._decision_owner_authorized()
@@ -2723,6 +2933,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
+            return
+        if parsed.path == '/api/job-mail':
+            # Employer replies from Mark's job mailbox (Mark 2026-10-24). Owner only; never the token or mail text.
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required'})
+                return
+            self._json_response(200, job_mail.projection())
+            return
+        if parsed.path == '/api/job-mail/oauth/callback':
+            # Google sends the browser back here. The one-time state, made for the owner by /connect and kept
+            # with its PKCE verifier on the Mac mini, is what ties this answer to Mark.
+            query = parse_qs(parsed.query)
+            if query.get('error'):
+                self._redirect('/?tab=work&job-mail=refused')
+                return
+            try:
+                job_mail.finish_connect((query.get('code') or [''])[0], (query.get('state') or [''])[0])
+                _kick_job_mail_watcher()
+                self._redirect('/?tab=work&job-mail=connected')
+            except (ValueError, LookupError, RuntimeError, OSError) as error:
+                reason = str(error) if str(error) in {'state_mismatch', 'scope_not_read_only', 'no_refresh_token', 'client_not_configured'} else 'error'
+                self._redirect(f'/?tab=work&job-mail={reason}')
             return
         if parsed.path == '/api/owner-projects':
             # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.
@@ -2999,6 +3231,15 @@ def _kick_agent_runner(start=subprocess.Popen):
         return True
     except OSError:
         return False  # No launchctl (not the Mac mini): the 5-minute tick still picks it up.
+
+
+def _kick_job_mail_watcher():
+    """Check the mailbox now instead of within 10 minutes (best effort)."""
+    try:
+        subprocess.run(["launchctl", "kickstart", f"gui/{os.getuid()}/{JOB_MAIL_LABEL}"],
+                       capture_output=True, timeout=10, check=False)
+    except (OSError, subprocess.SubprocessError):
+        pass
 
 
 def _agent_runner_status(status_file=None):
