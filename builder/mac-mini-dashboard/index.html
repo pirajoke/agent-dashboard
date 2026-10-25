@@ -7283,7 +7283,7 @@ function initPixelAgentsPin() {
 
 async function fetchJSON(base, path) {
   try {
-    const timeoutMs = base === MAC_MINI_API && path === '/api/all' ? 10000 : 3000;
+    const timeoutMs = base === MAC_MINI_API && (path === '/api/all' || path === '/api/services/detailed') ? 15000 : 3000;
     const r = await fetch(base + path, { signal: AbortSignal.timeout(timeoutMs) });
     return await r.json();
   } catch { return null; }
@@ -11213,7 +11213,7 @@ function mmRenderHealth(data) {
 
 async function mmLoadHealth() {
   const generation = ++mmHealthGeneration;
-  const data = await fetchJSON(MAC_MINI_API, '/api/all');
+  const data = await fetchJSON(MAC_MINI_API, '/api/services/detailed');
   if (generation === mmHealthGeneration) mmRenderHealth(data);
 }
 
