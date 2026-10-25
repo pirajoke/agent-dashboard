@@ -44,7 +44,7 @@ EXPECTED_PLATFORM_NAMES = (
 )
 EXPECTED_LINKS = {
     "financial-os": (
-        "https://command.meshly.fr/job-radar/",
+        "https://jobradar.meshly.fr/job-radar/",
         "https://t.me/JobsRadarS_bot",
     ),
     "mydictionary": (
