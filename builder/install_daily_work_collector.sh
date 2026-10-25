@@ -7,8 +7,8 @@
 #   Any other Mac (sends its session days to the Mac mini over ssh):
 #     builder/install_daily_work_collector.sh --machine macbook-pro --push-to maxxs-mac-mini
 #
-# Daily Work runs every 2 hours, the Infra change log every 10 minutes, both
-# at load. Both are tokenless. With --summaries, the day summarizer runs every
+# Daily Work runs every 2 hours, the Infra change log every 10 minutes and the
+# list of open sessions (Агенты → Сессии) every minute, all at load. All are tokenless. With --summaries, the day summarizer runs every
 # 3 hours and calls Claude only for finished days whose activity changed.
 set -euo pipefail
 
@@ -33,9 +33,9 @@ for ((i = 0; i < ${#args[@]}; i++)); do
   esac
 done
 
-mkdir -p "$INSTALL_DIR" "$HOME/.agent-bridge/daily-work" "$HOME/.agent-bridge/infra-changes"
-chmod 700 "$HOME/.agent-bridge/daily-work" "$HOME/.agent-bridge/infra-changes"
-SCRIPTS=(daily_work_collector.py infra_change_collector.py)
+mkdir -p "$INSTALL_DIR" "$HOME/.agent-bridge/daily-work" "$HOME/.agent-bridge/infra-changes" "$HOME/.agent-bridge/live-sessions"
+chmod 700 "$HOME/.agent-bridge/daily-work" "$HOME/.agent-bridge/infra-changes" "$HOME/.agent-bridge/live-sessions"
+SCRIPTS=(daily_work_collector.py infra_change_collector.py live_sessions_collector.py)
 if [[ "$SUMMARIES" == "1" ]]; then
   SCRIPTS+=(daily_work_summarizer.py)
   # The summarizer groups days by product with the dashboard's own code.
@@ -79,6 +79,7 @@ PY
 
 install_agent com.pirajoke.daily-work-collector daily_work_collector.py 7200 ${COLLECTOR_ARGS[@]+"${COLLECTOR_ARGS[@]}"}
 install_agent com.pirajoke.infra-change-collector infra_change_collector.py 600 ${INFRA_ARGS[@]+"${INFRA_ARGS[@]}"}
+install_agent com.pirajoke.live-sessions live_sessions_collector.py 60 ${INFRA_ARGS[@]+"${INFRA_ARGS[@]}"}
 if [[ "$SUMMARIES" == "1" ]]; then
   install_agent com.pirajoke.daily-work-summarizer daily_work_summarizer.py 10800
 fi

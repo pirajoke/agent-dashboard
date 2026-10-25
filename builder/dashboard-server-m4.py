@@ -35,6 +35,7 @@ from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
+from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.infra_changes import infra_projection
@@ -63,6 +64,7 @@ PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
+LIVE_SESSIONS_DIR = HOME / ".agent-bridge" / "live-sessions"
 AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
 JOB_MAIL_LABEL = "com.pirajoke.job-mail-watcher"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
@@ -2934,6 +2936,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
+            return
+        if parsed.path == '/api/live-sessions':
+            # Claude Code and Codex sessions open on Mark's Macs (Mark 2026-10-25). Owner only.
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'sessions': []})
+                return
+            self._json_response(200, live_sessions_projection(LIVE_SESSIONS_DIR))
             return
         if parsed.path == '/api/shared-tasks':
             if not self._decision_owner_authorized():

@@ -293,6 +293,9 @@ class PreviewHandler(SERVER.Handler):
                                                    running={"com.example.fixture-extra"}, plist_exists=lambda path: True)
             self._json_response(200, payload)
             return
+        if parsed.path == "/api/live-sessions":
+            super().do_GET()
+            return
         if parsed.path.startswith("/api/"):
             self._json_response(200, {"status": "ok", "tasks": [], "services": [], "history": [], "counts": {}})
             return
@@ -366,6 +369,32 @@ def job_mail_fixture():
             "recent": replies, "stats": job_mail.stats(replies, today=now)}
 
 
+def prepare_live_sessions():
+    """Synthetic sessions for Агенты → Сессии: one Mac answering, one silent."""
+    now = datetime.now(timezone.utc)
+    at = lambda minutes: (now - timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rows = [
+        ("claude", "Терминал", "Дашборд сессий в командном центре", "agent-dashboard", "approve", 4,
+         "Хочу запустить проверки сайта, нужно твоё «да» в терминале.", "https://claude.ai/code/session_01PreviewAAAA"),
+        ("codex", "Приложение Codex", "Починить корзину в магазине", "shop", "waiting", 12,
+         "Готово: корзина снова считает доставку, PR открыт.", "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0000"),
+        ("claude", "Приложение Claude", "Документы для натурализации", "naturalisation", "waiting", 35,
+         "Собрал список справок, двух не хватает. Скажи, искать дальше?", None),
+        ("claude", "Терминал", "Выкладка Lexi", "lexi", "working", 0, None, "https://claude.ai/code/session_01PreviewBBBB"),
+        ("codex", "ChatGPT", "Разбор писем работодателей", "ChatGPT · Работа", "working", 1, None, "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0001"),
+        ("claude", "Терминал", "Резервные копии на Mac mini", "scripts", "waiting", 190, "Копия за ночь на месте.", None),
+    ]
+    sessions = [{"id": f"0199aaaa-bbbb-cccc-dddd-eeeeffff00{index:02d}", "tool": tool, "app": app, "title": title,
+                 "project": project, "branch": None, "state": state, "started_at": at(minutes + 30), "last_at": at(minutes),
+                 "reply": reply, "link": link, "resume": f"cd ~/{project} && {'claude --resume' if tool == 'claude' else 'codex resume'} 0199aaaa-bbbb-cccc-dddd-eeeeffff00{index:02d}"}
+                for index, (tool, app, title, project, state, minutes, reply, link) in enumerate(rows)]
+    SERVER.LIVE_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    (SERVER.LIVE_SESSIONS_DIR / "mac-mini.json").write_text(json.dumps(
+        {"schema": 1, "machine": "mac-mini", "collected_at": at(0), "sessions": sessions[:4] + sessions[5:]}))
+    (SERVER.LIVE_SESSIONS_DIR / "macbook-pro.json").write_text(json.dumps(
+        {"schema": 1, "machine": "macbook-pro", "collected_at": at(0), "sessions": sessions[4:5]}))
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="command-center-preview-") as state:
         FIXTURE_STATE = Path(state)
@@ -373,6 +402,7 @@ if __name__ == "__main__":
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
+        SERVER.LIVE_SESSIONS_DIR = FIXTURE_STATE / "live-sessions"
         SERVER.HOME = FIXTURE_STATE / "home"  # Synthetic DOCXX state and library for ?fixture=sorting.
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
@@ -382,6 +412,7 @@ if __name__ == "__main__":
         SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
         SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": (STARTED - timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}))
         prepare_navigation_fixture()
+        prepare_live_sessions()
         with http.server.ThreadingHTTPServer(("127.0.0.1", 0), PreviewHandler) as server:
             print(f"http://127.0.0.1:{server.server_port}/", flush=True)
             try:

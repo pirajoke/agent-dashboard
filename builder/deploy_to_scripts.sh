@@ -20,6 +20,7 @@ cp "$SRC_DIR/jarvis-pixel-agent-event" "$SCRIPTS_DIR/jarvis-pixel-agent-event"
 cp "$SRC_DIR/main_manager_status_publisher.py" "$SCRIPTS_DIR/main_manager_status_publisher.py"
 cp "$SRC_DIR/daily_work_collector.py" "$SCRIPTS_DIR/daily_work_collector.py"
 cp "$SRC_DIR/infra_change_collector.py" "$SCRIPTS_DIR/infra_change_collector.py"
+cp "$SRC_DIR/live_sessions_collector.py" "$SCRIPTS_DIR/live_sessions_collector.py"
 cp "$SRC_DIR/daily_work_summarizer.py" "$SCRIPTS_DIR/daily_work_summarizer.py"
 cp "$SRC_DIR/auto_deploy.py" "$SCRIPTS_DIR/auto_deploy.py"
 cp "$SRC_DIR/launchd_watchdog.py" "$SCRIPTS_DIR/launchd_watchdog.py"
@@ -56,6 +57,7 @@ python3 -m py_compile weekly_digest.py daily_digest.py
 python3 -m py_compile agent_task_runner.py
 python3 -m py_compile context_retell.py
 python3 -m py_compile job_mail_watcher.py
+python3 -m py_compile live_sessions_collector.py
 python3 build-agent-dashboard.py
 
 if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]] && launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then
