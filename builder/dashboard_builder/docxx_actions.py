@@ -9,9 +9,13 @@ the library root (the worker treats new root items as incoming), and a file is n
 """
 from __future__ import annotations
 
+import ctypes
+import ctypes.util
+import errno
 import fcntl
 import json
 import os
+import sys
 import re
 import stat
 import tempfile
@@ -146,10 +150,34 @@ def _free_name(folder: Path, name: str) -> Path:
     return target
 
 
-def _move(source: Path, folder: Path) -> Path:
-    target = _free_name(folder, source.name)
-    os.rename(source, target)  # Same library, same disk: never a copy that could leave two.
-    return target
+_LIBC = None
+
+
+def _rename_noreplace(source: Path, target: Path) -> None:
+    """One atomic rename that fails with FileExistsError instead of replacing a file Drive just synced."""
+    global _LIBC
+    try:
+        if _LIBC is None:
+            _LIBC = ctypes.CDLL(ctypes.util.find_library('c'), use_errno=True)
+        old, new = os.fsencode(source), os.fsencode(target)
+        if sys.platform == 'darwin':
+            result = _LIBC.renamex_np(old, new, ctypes.c_uint(0x4))  # RENAME_EXCL
+        else:
+            result = _LIBC.renameat2(-100, old, -100, new, ctypes.c_uint(1))  # AT_FDCWD, RENAME_NOREPLACE
+    except (OSError, AttributeError, TypeError):
+        result, code = -1, errno.ENOSYS
+    else:
+        code = ctypes.get_errno() if result else 0
+    if not result:
+        return
+    if code == errno.EEXIST:
+        raise FileExistsError(errno.EEXIST, 'target exists', str(target))
+    if code not in (errno.ENOSYS, errno.ENOTSUP, errno.EINVAL, getattr(errno, 'EOPNOTSUPP', errno.ENOTSUP)):
+        raise OSError(code, os.strerror(code), str(source))
+    # The file system has no exclusive rename: the narrowest check we can make.
+    if os.path.lexists(target):
+        raise FileExistsError(errno.EEXIST, 'target exists', str(target))
+    os.rename(source, target)
 
 
 def apply(directory, decisions_file, body: dict) -> dict:
@@ -179,13 +207,15 @@ def apply(directory, decisions_file, body: dict) -> dict:
                 raise ValueError('invalid_folder')
         results = []
         now = datetime.now(timezone.utc).isoformat()
+        commit = lambda: _save_decisions(decisions_file, decisions)  # noqa: E731
         for key in dict.fromkeys(keys):
-            results.append(_one(key, action, folder_rel, rows, root, decisions, now))
-        _save_decisions(decisions_file, decisions)
+            results.append(_one(key, action, folder_rel, rows, root, decisions, now, commit))
+        commit()
     return {'state': 'ready', 'results': results}
 
 
-def _one(key, action, folder_rel, rows, root, decisions, now) -> dict:
+def _one(key, action, folder_rel, rows, root, decisions, now, commit) -> dict:
+    # A file only moves after the record that can undo it is on disk.
     row = rows.get(key)
     if row is None:
         return {'key': key, 'ok': False, 'error': 'not_found'}
@@ -201,10 +231,19 @@ def _one(key, action, folder_rel, rows, root, decisions, now) -> dict:
                 return {'key': key, 'ok': False, 'error': 'not_found'}
             if os.path.lexists(original) or not os.path.isdir(original.parent):
                 return {'key': key, 'ok': False, 'error': 'occupied'}
+            del decisions[key]
             try:
-                os.rename(moved, original)
+                commit()
             except OSError:
-                return {'key': key, 'ok': False, 'error': 'move_failed'}
+                decisions[key] = decision
+                raise
+            try:
+                _rename_noreplace(moved, original)
+            except OSError as error:
+                decisions[key] = decision
+                commit()
+                return {'key': key, 'ok': False, 'error': 'occupied' if isinstance(error, FileExistsError) else 'move_failed'}
+            return {'key': key, 'ok': True}
         del decisions[key]
         return {'key': key, 'ok': True}
     if row.get('status') != 'needs_review':
@@ -228,9 +267,26 @@ def _one(key, action, folder_rel, rows, root, decisions, now) -> dict:
         if not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
             return {'key': key, 'ok': False, 'error': 'not_found'}
         original = _relative(root, source)
-        target = _move(source, folder)
     except OSError:
-        return {'key': key, 'ok': False, 'error': 'move_failed'}
-    decisions[key] = {'action': action, 'folder': folder_rel, 'from': original,
-                      'to': _relative(root, target), 'root': str(root), 'at': now}
-    return {'key': key, 'ok': True, 'destination': decisions[key]['to']}
+        return {'key': key, 'ok': False, 'error': 'not_found'}
+    for _ in range(20):
+        target = _free_name(folder, source.name)
+        decisions[key] = {'action': action, 'folder': folder_rel, 'from': original,
+                          'to': _relative(root, target), 'root': str(root), 'at': now}
+        try:
+            commit()
+        except OSError:
+            del decisions[key]
+            raise
+        try:
+            _rename_noreplace(source, target)  # Same library, same disk: never a copy that could leave two.
+        except FileExistsError:
+            continue  # Drive put a file there just now: take the next free name.
+        except OSError:
+            del decisions[key]
+            commit()
+            return {'key': key, 'ok': False, 'error': 'move_failed'}
+        return {'key': key, 'ok': True, 'destination': decisions[key]['to']}
+    del decisions[key]
+    commit()
+    return {'key': key, 'ok': False, 'error': 'occupied'}

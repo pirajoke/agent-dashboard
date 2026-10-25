@@ -12264,14 +12264,20 @@ async function ccDocxxDecide(action,keys,folder) {
   ccDocxxText('docxx-sort-note',action==='keep'?'Отмечаем…':action==='undo'?'Возвращаем…':'Перекладываем…'); ccDocxxSortBar();
   let note;
   try {
-    const response=await fetch(`${DASHBOARD_API}/api/docxx/decide`,{method:'POST',headers:jarvisRunHeaders(),cache:'no-store',body:JSON.stringify({action,keys,folder})});
-    const data=await response.json().catch(()=>null);
-    if(!response.ok || !Array.isArray(data?.results)) note=response.status===401?'Нужен вход владельца.':'Не получилось. Обнови страницу и попробуй ещё раз.';
+    // The server takes at most 50 documents per request: send a long selection in parts.
+    const data={results:[]}; let response={ok:true,status:200};
+    for(let i=0;i<keys.length && response.ok;i+=50) {
+      response=await fetch(`${DASHBOARD_API}/api/docxx/decide`,{method:'POST',headers:jarvisRunHeaders(),cache:'no-store',body:JSON.stringify({action,keys:keys.slice(i,i+50),folder})});
+      const part=await response.json().catch(()=>null);
+      if(response.ok && Array.isArray(part?.results)) data.results.push(...part.results); else response={ok:false,status:response.status};
+    }
+    if(!response.ok && !data.results.length) note=response.status===401?'Нужен вход владельца.':'Не получилось. Обнови страницу и попробуй ещё раз.';
     else {
       const ok=data.results.filter(r=>r.ok), bad=data.results.filter(r=>!r.ok);
       const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было'}[action];
       note=ok.length?(keys.length===1?done+(action==='move'&&folder?': '+folder.split('/').join(' / '):'')+'.':done+': '+ok.length+'.'):'';
       if(bad.length) note+=(note?' ':'')+'Не получилось: '+bad.length+' ('+[...new Set(bad.map(r=>CC_DOCXX_ERRORS[r.error]||'ошибка'))].join(', ')+').';
+      if(!response.ok) note+=(note?' ':'')+'Остальные не успели: обнови страницу и повтори.';
       for(const r of ok) ccDocxxSelected.delete(r.key);
       if(action==='move') ccDocxxFolders=null;
     }

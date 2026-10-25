@@ -6,9 +6,11 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from dashboard_builder.docxx import docxx_projection
-from dashboard_builder.docxx_actions import apply, folders_view, load_decisions
+from dashboard_builder import docxx_actions
+from dashboard_builder.docxx_actions import _rename_noreplace, apply, folders_view, load_decisions
 
 REVIEW = '10 — 📥 To review/Documents to review'
 
@@ -114,6 +116,39 @@ class SortingTests(unittest.TestCase):
         apply(self.state, self.decisions, {'action': 'keep', 'keys': [key]})
         again = apply(self.state, self.decisions, {'action': 'move', 'keys': [key], 'folder': 'France/Impôts'})
         self.assertEqual(again['results'][0]['error'], 'already_sorted')
+
+    def test_exclusive_rename_never_replaces(self):
+        a, b = self.library / 'France/a.pdf', self.library / 'France/b.pdf'
+        a.write_bytes(b'a')
+        b.write_bytes(b'b')
+        with self.assertRaises(FileExistsError):
+            _rename_noreplace(a, b)
+        self.assertEqual((a.read_bytes(), b.read_bytes()), (b'a', b'b'))
+
+    def test_name_taken_during_move_gets_the_next_free_name(self):
+        key = self.keys()['scan.pdf']
+        folder = self.library / 'France/Impôts'
+        real = docxx_actions._free_name
+        calls = []
+
+        def racing(target_folder, name):
+            calls.append(name)
+            if len(calls) == 1:  # Drive syncs a same-named file in right after the name was chosen.
+                (target_folder / name).write_bytes(b'synced')
+            return real(target_folder, name) if len(calls) > 1 else target_folder / name
+        with patch.object(docxx_actions, '_free_name', racing):
+            result = apply(self.state, self.decisions, {'action': 'move', 'keys': [key], 'folder': 'France/Impôts'})
+        self.assertEqual(result['results'][0]['destination'], 'France/Impôts/scan (2).pdf')
+        self.assertEqual((folder / 'scan.pdf').read_bytes(), b'synced')
+        self.assertEqual(load_decisions(self.decisions)[key]['to'], 'France/Impôts/scan (2).pdf')
+
+    def test_unsaved_decision_moves_nothing(self):
+        key = self.keys()['scan.pdf']
+        with patch.object(docxx_actions, '_save_decisions', side_effect=OSError('disk full')):
+            with self.assertRaises(OSError):
+                apply(self.state, self.decisions, {'action': 'move', 'keys': [key], 'folder': 'France/Impôts'})
+        self.assertTrue((self.library / REVIEW / 'scan.pdf').exists())
+        self.assertFalse((self.library / 'France/Impôts/scan.pdf').exists())
 
 
 if __name__ == '__main__':
