@@ -230,8 +230,6 @@ def _plain(text: str) -> str:
 # Newsletters and job alerts are not replies to Mark.
 _NOT_A_REPLY = re.compile(r"job ?alert|alerte(s)? (emploi|e-mail)|offres? (qui )?pourrai|new jobs? for you|jobs? you may|recommended jobs|"
                           r"emplois? recommand|nouvelles? offres?|jobs? (similaires|similar)|newsletter|webinar|unsubscribe from (job|this alert)")
-_JOB = re.compile(r"candidat|application|apply|applied|poste|position|role\b|recrut|recruit|hiring|talent|entretien|interview|"
-                  r"\bcdi\b|\bcdd\b|stage|alternance|job|emploi|opportunit|process(us)? de recrutement")
 _NEGATIVE = re.compile(
     r"malheureusement|ne (pas )?(pouvons|pourrons) (pas )?(donner|repondre) (une )?suite|pas (pu )?donner (une )?suite|"
     r"(ne|pas) donner suite|ne donnerons pas suite|n'?avons pas retenu|pas (ete )?retenu|n'?a pas ete retenu|"
@@ -239,19 +237,6 @@ _NEGATIVE = re.compile(
     r"decided to (move|proceed|pursue|go) (forward )?with (other|another)|other candidates|not (been )?selected|"
     r"will not be (progressing|proceeding|taking)|position has been filled|poste (a ete|est) pourvu|"
     r"no longer (considering|available)|declin|suite defavorable|pas de suite favorable|pas en mesure de (vous )?proposer")
-# A concrete meeting to book: an invite even inside polite «if…» wording.
-_BOOKING = re.compile(r"invites? you to (a|an) (meeting|call|interview)|(choisir|reserver|selectionner|book|pick|schedule) (un |a |an |le |your |ton |votre )?"
-                      r"(creneau|slot|time|call|interview|meeting|entretien)|calendly|cal\.com|meetings\.hubspot|creneau|disponibilites|your availability|"
-                      r"a retenu (mon|notre) attention|retenu notre attention|(premier|1er) (echange|entretien|appel|call)")
-_STRONG_POSITIVE = re.compile(
-    r"invites? you|t'?invite|vous invite|invitation (a|to) (un|an|a|the)? ?(entretien|interview|echange|call|meeting)|"
-    r"(premier|1er|court) (echange|entretien|appel|call)|(choisir|reserver|selectionner|book|pick|schedule) (un |a |an |le |your |ton |votre )?"
-    r"(creneau|slot|time|call|interview|meeting|entretien)|calendly|cal\.com|meetings\.hubspot|creneau|disponibilites|your availability|"
-    r"a retenu (mon|notre) attention|retenu notre attention|caught (my|our) (attention|eye)|(aimerions|aimerais|souhaiterions|souhaiterais) "
-    r"(vous|te) (rencontrer|parler|echanger|proposer un)|(would|we'?d) (like|love) to (meet|speak|chat|schedule|invite|talk)|"
-    r"next (step|round|stage)|prochaine etape|etape suivante|test technique|cas pratique|case study|home assignment|phone screen|"
-    r"rendez-vous|(nous|je) (vous|te) propos(e|ons) (un|une)|offre d'?embauche|job offer|lettre d'?offre|promesse d'?embauche")
-_WEAK_POSITIVE = re.compile(r"entretien|interview|\becha?nger\b|\bechange\b|\bappel\b|\bcall\b|visio|\bmeet")
 # «Если вас выберут, мы назначим интервью» is still just a receipt.
 _CONDITIONAL = re.compile(r"\bsi (votre|ta) (candidature|profil)|\bif selected\b|\bshould (you|your)\b|\bsi (vous|tu) (etes|es) (retenu|selectionne)|\bif (your|you|we)\b|"
                           r"\ble cas echeant|\bdans le cas ou")
@@ -260,21 +245,39 @@ _ACK = re.compile(r"(avons|a) bien (ete )?recu|bien recu|a bien ete (recue|enreg
                   r"application (has been|was) (received|submitted)|merci (pour|de) (votre|ta) candidature|candidature (a bien|est bien)|"
                   r"reviendrons vers (vous|toi)|will (get back|be in touch|review)|reviewing your application|etudi(ons|er) (votre|ta) candidature")
 
+# A footer advertising vacancies or a Calendly link must not turn a travel, health or
+# account email into an employer reply. Prefer missing a vague invitation to inventing one.
+_CAREER_SUBJECT = re.compile(r"candidat|application|applying|applied|recrut|recruit|\bjob\b|\bposte\b|"
+                             r"\bposition\b|entretien|interview|hiring|talent")
+_CAREER_SENDER = re.compile(r"recrut|recruit|hiring|talent|teamtailor|ashby|greenhouse|"
+                            r"workable|smartrecruiters|recruitee|lever\.co|(?:jobs|careers)@")
+_DIRECT_INVITE = re.compile(r"invites? you to (a|an) (meeting|call|interview)|vous invite|t'?invite|"
+                            r"invitation (a|to) (un|an|a|the)? ?(entretien|interview|echange|call|meeting)|"
+                            r"(choisir|reserver|selectionner|book|pick|schedule) (un |a |an |le |your |ton |votre )?"
+                            r"(creneau|slot|time|call|interview|meeting|entretien)|"
+                            r"(aimerions|aimerais|souhaiterions|souhaiterais) (vous|te) (rencontrer|parler|echanger)|"
+                            r"(would|we'?d) (like|love) to (meet|speak|chat|schedule|invite|talk)|"
+                            r"(nous|je) (vous|te) propos(e|ons) (un|une)|"
+                            r"(premier|1er) (echange|entretien|appel|call)|"
+                            r"(a retenu (mon|notre) attention|retenu notre attention)")
+
 
 def classify(subject: str, body: str, sender: str = "") -> str | None:
     """positive / negative / ack / other, or None when the mail is not about Mark's applications."""
-    text = _plain(f"{subject}\n{body[:6000]}")
+    text = _plain(f"{subject}\n{body[:1500]}")
     who = _plain(sender)
     if _NOT_A_REPLY.search(text) or re.search(r"jobalerts?|jobs-listings|job-alert|alert@|newsletter", who):
         return None
-    if not _JOB.search(text):
+    if not (_CAREER_SUBJECT.search(_plain(subject)) or _CAREER_SENDER.search(who)):
         return None
     if _NEGATIVE.search(text):
         return "negative"
     conditional = bool(_CONDITIONAL.search(text))
-    if _BOOKING.search(text) or (_STRONG_POSITIVE.search(text) and not conditional):
+    if _DIRECT_INVITE.search(text) and not conditional:
         return "positive"
-    if _WEAK_POSITIVE.search(text) and not conditional and not _ACK.search(text):
+    # An explicit booking request remains actionable after unrelated conditional wording.
+    if re.search(r"(choisir|reserver|selectionner|book|pick|schedule) (un |a |an |le |your |ton |votre )?"
+                 r"(creneau|slot|time|call|interview|meeting|entretien)", text):
         return "positive"
     if _ACK.search(text):
         return "ack"

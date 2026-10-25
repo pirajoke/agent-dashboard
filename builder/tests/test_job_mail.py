@@ -68,6 +68,27 @@ class ClassifyTests(unittest.TestCase):
         self.assertIsNone(job_mail.classify("Votre colis", "Livraison demain", "colis@laposte.fr"))
         self.assertIsNone(job_mail.classify("Jobs for you", "Apply now", "LinkedIn <jobalerts-noreply@linkedin.com>"))
 
+    def test_unrelated_messages_with_job_words_in_footer_are_not_interviews(self):
+        cases = (
+            ("Bienvenue chez Basic-Fit", "Bienvenue. Découvrez nos offres d'emploi et réservez un créneau pour votre prochain rendez-vous.",
+             "Basic-Fit <hello@communication.basic-fit.com>"),
+            ("Réponse de la Caf à votre demande", "Votre demande a été reçue. Notre équipe vous répondra. Recrutement: prochaine étape.",
+             "CAF <contact@service-mail.caf.fr>"),
+            ("Informations importantes pour votre vol", "Votre vol est confirmé. Consultez nos offres d'emploi et contactez-nous pour un appel.",
+             "Trip.com <notice@trip.com>"),
+            ("Nous rencontrons un problème dans la livraison de votre colis.",
+             "Votre colis aura du retard. Consultez nos offres d'emploi et appelez-nous.",
+             "La Poste <contact@notif-colissimo-laposte.info>"),
+        )
+        for subject, body, sender in cases:
+            with self.subTest(subject=subject):
+                self.assertIsNone(job_mail.classify(subject, body, sender))
+
+    def test_application_receipt_footer_is_not_an_invitation(self):
+        self.assertEqual(job_mail.classify("Thanks for applying to Dedale Intelligence!",
+                                           "Thank you for applying. We have received your application. Next steps will follow.",
+                                           "Dedale <no-reply@ashbyhq.com>"), "ack")
+
     def test_company_and_role(self):
         self.assertEqual(job_mail.company_of("Orus <no-reply@teamtailor.com>"), "Orus")
         self.assertEqual(job_mail.company_of("Talent Acquisition <jobs@mytraffic.io>"), "Mytraffic")
