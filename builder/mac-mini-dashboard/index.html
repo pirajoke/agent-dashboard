@@ -3485,30 +3485,72 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
 /* «Ответы работодателей» (Mark 2026-10-24): invites first, then the numbers. */
-.mm-jm-sub { margin: 12px 0 4px; color: var(--mm-muted); font-size: 12.5px; font-weight: 600; }
-.mm-jm-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.mm-jm.has-invite { border-color: color-mix(in srgb, var(--mm-success) 45%, var(--mm-line)); }
+.mm-jm .mm-fold-count { background: var(--mm-success); }
+.mm-jm-sub { margin: 0 0 8px; color: var(--mm-muted); font-size: 12.5px; font-weight: 650; letter-spacing: .01em; }
+.mm-jm-invites { display: grid; gap: 10px; margin-top: 14px; }
+.mm-jm-invite { display: flex; align-items: center; gap: 16px; padding: 16px 18px; background: var(--mm-success-soft); border: 1px solid color-mix(in srgb, var(--mm-success) 30%, transparent); border-radius: 14px; }
+.mm-jm-invite-text { flex: 1; min-width: 0; }
+.mm-jm-tag { display: inline-flex; align-items: center; gap: 6px; color: var(--mm-success); font-size: 12.5px; font-weight: 700; }
+.mm-jm-tag::before { content: ""; width: 8px; height: 8px; background: currentColor; border-radius: 50%; }
+.mm-jm-invite strong { display: block; margin-top: 2px; font-size: 19px; font-weight: 750; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.mm-jm-invite small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 13.5px; }
+.mm-jm-cta, .mm-jm-primary { flex: none; display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 18px; color: var(--mm-surface); font: inherit; font-size: 14px; font-weight: 700; text-decoration: none; background: var(--mm-success); border: 0; border-radius: 12px; cursor: pointer; }
+.mm-jm-primary { margin-top: 16px; background: var(--mm-accent); }
+.mm-jm-secondary { min-height: 36px; padding: 6px 14px; color: var(--mm-ink); font: inherit; font-size: 13.5px; font-weight: 650; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+.mm-jm-quiet { min-height: 36px; padding: 6px 4px; color: var(--mm-muted); font: inherit; font-size: 13px; background: none; border: 0; cursor: pointer; }
+.mm-jm-cta:focus-visible, .mm-jm-primary:focus-visible, .mm-jm-secondary:focus-visible, .mm-jm-quiet:focus-visible, .mm-jm-open:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.mm-jm-calm { margin: 14px 0 0; padding: 12px 14px; color: var(--mm-ink); font-size: 14px; background: var(--mm-background); border-radius: 12px; }
+.mm-jm-calm.is-stale { color: var(--mm-warning); background: var(--mm-warning-soft); }
+.mm-jm-numbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.mm-jm-number { padding: 12px 14px; background: var(--mm-background); border-radius: 12px; }
+.mm-jm-number strong { display: block; font-size: 26px; font-weight: 750; line-height: 1.1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.mm-jm-number span { color: var(--mm-muted); font-size: 12.5px; }
+.mm-jm-number.is-yes strong { color: var(--mm-success); }
+.mm-jm-ratio { margin-top: 12px; }
+.mm-jm-ratio-bar { height: 10px; background: var(--mm-control-line); border-radius: 999px; overflow: hidden; }
+.mm-jm-ratio-bar i { display: block; height: 100%; background: var(--mm-success); border-radius: 999px; }
+.mm-jm-ratio p { margin: 6px 0 0; color: var(--mm-muted); font-size: 13px; }
+.mm-jm-chart { margin-top: 18px; }
+.mm-jm-weeks { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; align-items: end; }
+.mm-jm-week { display: grid; gap: 4px; justify-items: center; }
+.mm-jm-stack { display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; width: 100%; max-width: 30px; height: 64px; border-bottom: 2px solid var(--mm-line); }
+.mm-jm-stack i { display: block; border-radius: 4px; }
+.mm-jm-stack i.is-yes, .mm-jm-legend i.is-yes { background: var(--mm-success); }
+.mm-jm-stack i.is-no, .mm-jm-legend i.is-no { background: var(--mm-control-line); }
+.mm-jm-week > span { color: var(--mm-muted); font-size: 11px; white-space: nowrap; }
+.mm-jm-legend { display: flex; gap: 14px; margin-top: 8px; color: var(--mm-muted); font-size: 12.5px; }
+.mm-jm-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; }
+.mm-jm-all { margin-top: 16px; }
+.mm-jm-all > summary, .mm-jm-paste > summary { color: var(--mm-accent); font-size: 13.5px; font-weight: 650; cursor: pointer; }
+.mm-jm-list { display: grid; margin: 8px 0 0; padding: 0; list-style: none; }
 .mm-jm-row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--mm-line); }
 .mm-jm-row:first-child { border-top: 0; }
-.mm-jm-row::before { content: ""; flex: none; width: 9px; height: 9px; background: var(--mm-muted); border-radius: 50%; }
-.mm-jm-row.is-positive::before { background: var(--mm-success); }
 .mm-jm-body { flex: 1; min-width: 0; }
 .mm-jm-body strong { display: block; font-size: 14.5px; font-weight: 650; overflow-wrap: anywhere; }
 .mm-jm-body small { display: block; margin-top: 1px; color: var(--mm-muted); font-size: 12.5px; }
-.mm-jm-open { flex: none; padding: 5px 12px; color: var(--mm-accent); font-size: 13px; font-weight: 650; text-decoration: none; border: 1px solid var(--mm-control-line); border-radius: 10px; }
-.mm-jm-open:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.mm-jm-tiles { margin-top: 14px; }
-.mm-jm-weeks { display: flex; align-items: flex-end; gap: 8px; height: 48px; max-width: 360px; margin-top: 14px; }
-.mm-jm-week { display: flex; flex: 1; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px; }
-.mm-jm-week i { display: block; min-height: 0; border-radius: 3px; }
-.mm-jm-week i.is-yes { background: var(--mm-success); }
-.mm-jm-week i.is-no { background: var(--mm-control-line); }
-.mm-jm-all { margin-top: 12px; }
-.mm-jm-all > summary, .mm-jm-paste > summary { color: var(--mm-muted); font-size: 13px; cursor: pointer; }
-.mm-jm-note { margin: 12px 0 0; padding: 8px 12px; font-size: 13.5px; background: var(--mm-surface-hover); border-radius: 10px; }
-.mm-jm-paste { margin-top: 10px; }
+.mm-jm-pill { flex: none; padding: 3px 10px; color: var(--mm-muted); font-size: 12px; font-weight: 650; background: var(--mm-background); border-radius: 999px; }
+.mm-jm-pill.is-positive { color: var(--mm-success); background: var(--mm-success-soft); }
+.mm-jm-open { flex: none; display: grid; place-items: center; width: 30px; height: 30px; color: var(--mm-muted); font-size: 20px; text-decoration: none; border-radius: 8px; }
+.mm-jm-open:hover { color: var(--mm-accent); background: var(--mm-surface-hover); }
+.mm-jm-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--mm-line); }
+.mm-jm-note { margin: 14px 0 0; padding: 10px 14px; font-size: 13.5px; background: var(--mm-surface-hover); border-radius: 12px; }
+.mm-jm-connect { display: flex; gap: 14px; margin-top: 14px; }
+.mm-jm-connect-icon { flex: none; display: grid; place-items: center; width: 44px; height: 44px; color: var(--mm-accent); font-size: 22px; background: var(--mm-background); border-radius: 12px; }
+.mm-jm-connect-text { min-width: 0; }
+.mm-jm-connect-text strong { display: block; font-size: 16px; font-weight: 750; }
+.mm-jm-connect-text p { margin: 4px 0 0; color: var(--mm-muted); font-size: 14px; line-height: 1.45; }
+.mm-jm-safe { display: grid; gap: 4px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 13.5px; }
+.mm-jm-safe li::before { content: "✓"; margin-right: 8px; color: var(--mm-success); font-weight: 700; }
+.mm-jm-paste { margin-top: 12px; }
 .mm-jm-paste-form { display: flex; gap: 8px; margin-top: 8px; }
-.mm-jm-paste-form input { flex: 1; min-width: 0; min-height: 34px; padding: 4px 10px; color: var(--mm-ink); font: inherit; font-size: 13px; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; }
-.mm-jm .mm-todo-foot .mm-todo-add { margin-left: 0; }
+.mm-jm-paste-form input { flex: 1; min-width: 0; min-height: 36px; padding: 4px 10px; color: var(--mm-ink); font: inherit; font-size: 13px; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; }
+@media (max-width: 600px) {
+  .mm-jm-invite { flex-direction: column; align-items: stretch; gap: 12px; }
+  .mm-jm-cta { width: 100%; }
+  .mm-jm-number strong { font-size: 22px; }
+  .mm-jm-week:nth-child(odd) > span { visibility: hidden; }
+}
 /* «Всё ли живо» and «Ждёт тебя» (Mark 2026-10-22). */
 .mm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .mm-health { display: inline-flex; flex: none; align-items: center; gap: 8px; max-width: 46%; margin-top: 4px; padding: 6px 12px; color: var(--mm-success); font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: var(--mm-success-soft); border: 0; border-radius: 999px; cursor: pointer; }
@@ -11065,17 +11107,46 @@ function mmJobMailRow(reply, waiting) {
   const row = mmEl('li', `mm-jm-row is-${reply.verdict}`);
   const body = mmEl('div', 'mm-jm-body');
   body.appendChild(mmEl('strong', '', reply.company || 'Неизвестно'));
-  const verdict = {positive: 'зовут дальше', negative: 'отказ', ack: 'заявка получена', other: 'другое'}[reply.verdict] || '';
-  body.appendChild(mmEl('small', '', [reply.role, waiting ? 'зовут на собеседование' : verdict, mmJobMailDate(reply.date)].filter(Boolean).join(' · ')));
+  const detail = [reply.role, mmJobMailDate(reply.date)].filter(Boolean).join(' · ');
+  if (detail) body.appendChild(mmEl('small', '', detail));
   row.appendChild(body);
+  row.appendChild(mmEl('span', `mm-jm-pill is-${reply.verdict}`, {positive: 'позвали', negative: 'отказ', ack: 'получено', other: 'другое'}[reply.verdict] || ''));
   if (/^https:\/\/mail\.google\.com\//.test(reply.link || '')) {
-    const open = mmEl('a', 'mm-jm-open', waiting ? 'Открыть письмо' : 'Письмо');
+    const open = mmEl('a', 'mm-jm-open', '›');
     open.href = reply.link;
     open.target = '_blank';
     open.rel = 'noopener noreferrer';
+    open.setAttribute('aria-label', `Письмо от ${reply.company || 'работодателя'}`);
     row.appendChild(open);
   }
   return row;
+}
+
+function mmJobMailWeekLabel(key) {
+  // ISO week «2026-W43» → «20 окт», the Monday it starts.
+  const match = /^(\d{4})-W(\d{2})$/.exec(key || '');
+  if (!match) return '';
+  const jan4 = new Date(Date.UTC(+match[1], 0, 4));
+  const monday = new Date(jan4.getTime() - ((jan4.getUTCDay() + 6) % 7) * 86400000 + (+match[2] - 1) * 7 * 86400000);
+  return monday.toLocaleDateString('ru-RU', {day: 'numeric', month: 'short', timeZone: 'UTC'}).replace('.', '');
+}
+
+function mmJobMailInvite(reply) {
+  const card = mmEl('article', 'mm-jm-invite');
+  const text = mmEl('div', 'mm-jm-invite-text');
+  text.appendChild(mmEl('span', 'mm-jm-tag', 'Зовут на собеседование'));
+  text.appendChild(mmEl('strong', '', reply.company || 'Неизвестно'));
+  const line = [reply.role, mmJobMailDate(reply.date)].filter(Boolean).join(' · ');
+  if (line) text.appendChild(mmEl('small', '', line));
+  card.appendChild(text);
+  if (/^https:\/\/mail\.google\.com\//.test(reply.link || '')) {
+    const open = mmEl('a', 'mm-jm-cta', 'Открыть письмо');
+    open.href = reply.link;
+    open.target = '_blank';
+    open.rel = 'noopener noreferrer';
+    card.appendChild(open);
+  }
+  return card;
 }
 
 function mmRenderJobMail(payload) {
@@ -11087,13 +11158,15 @@ function mmRenderJobMail(payload) {
     return;
   }
   mmJobMailData = payload;
+  const connected = payload.state === 'connected';
   const waiting = Array.isArray(payload.waiting) ? payload.waiting : [];
   const totals = payload.stats?.totals || {};
   const card = mmEl('section', 'mm-todo-card mm-fold mm-jm');
   card.setAttribute('aria-labelledby', 'mm-jm-title');
-  const open = mmFoldIsOpen('job-mail') || waiting.length > 0 || Boolean(mmJobMailNote) || payload.state !== 'connected' || Boolean(payload.stale);
+  const open = mmFoldIsOpen('job-mail') || waiting.length > 0 || Boolean(mmJobMailNote) || !connected || Boolean(payload.stale);
   card.classList.toggle('is-open', open);
-  const meta = payload.state !== 'connected' ? 'почта не подключена'
+  card.classList.toggle('has-invite', connected && waiting.length > 0);
+  const meta = !connected ? 'почта не подключена'
     : waiting.length ? `${waiting[0].company} зовёт на собеседование`
     : payload.stale ? 'почта давно не проверялась'
     : 'новых приглашений нет';
@@ -11102,103 +11175,128 @@ function mmRenderJobMail(payload) {
   card.appendChild(head);
   const foldBody = mmEl('div', 'mm-fold-body');
   if (mmJobMailNote) foldBody.appendChild(mmEl('p', 'mm-jm-note', mmJobMailNote));
-  if (payload.state === 'connected') {
-    if (waiting.length) {
-      foldBody.appendChild(mmEl('h4', 'mm-jm-sub', 'Ждут твоего ответа'));
-      const list = mmEl('ul', 'mm-jm-list');
-      waiting.forEach(reply => list.appendChild(mmJobMailRow(reply, true)));
-      foldBody.appendChild(list);
-    } else {
-      foldBody.appendChild(mmEl('p', 'mm-todo-empty', payload.stale
-        ? 'Почта давно не проверялась, поэтому новых приглашений здесь может не быть. Загляни в почту сам.'
-        : payload.first_scan_done
-        ? 'Все приглашения отвечены. Новое придёт в Telegram и сюда.'
-        : 'Проверяю почту за последние 60 дней…'));
+
+  if (!connected) {
+    const intro = mmEl('div', 'mm-jm-connect');
+    intro.appendChild(mmEl('div', 'mm-jm-connect-icon', '✉'));
+    const words = mmEl('div', 'mm-jm-connect-text');
+    words.appendChild(mmEl('strong', '', payload.state === 'error' ? 'Почта отключилась' : 'Подключи почту с откликами'));
+    words.appendChild(mmEl('p', '', payload.state === 'not_configured'
+      ? 'Подключение почты ещё не настроено на Mac mini.'
+      : 'Когда работодатель позовёт на собеседование, сразу придёт сигнал, а здесь будет вся статистика ответов.'));
+    const safe = mmEl('ul', 'mm-jm-safe');
+    ['Только чтение: ничего не отправляет и не удаляет', 'Ключ хранится только на Mac mini', 'Отключить можно в любой момент'].forEach(text => safe.appendChild(mmEl('li', '', text)));
+    words.appendChild(safe);
+    intro.appendChild(words);
+    foldBody.appendChild(intro);
+    if (payload.state !== 'not_configured') {
+      const connect = mmEl('button', 'mm-jm-primary', payload.state === 'error' ? 'Подключить заново' : 'Подключить почту');
+      connect.type = 'button';
+      connect.dataset.jmConnect = '';
+      foldBody.appendChild(connect);
+      // Google may send a phone back to an address only the Mac mini opens; then its link is pasted here.
+      const paste = mmEl('details', 'mm-jm-paste');
+      paste.appendChild(mmEl('summary', '', 'Страница после Google не открылась?'));
+      const form = mmEl('form', 'mm-jm-paste-form');
+      const input = mmEl('input');
+      input.type = 'url';
+      input.name = 'url';
+      input.required = true;
+      input.placeholder = 'Вставь сюда адрес той страницы';
+      input.setAttribute('aria-label', 'Адрес страницы после Google');
+      const done = mmEl('button', 'mm-jm-secondary', 'Готово');
+      done.type = 'submit';
+      form.append(input, done);
+      paste.appendChild(form);
+      foldBody.appendChild(paste);
     }
-    const tiles = mmEl('div', 'mm-summary-tiles mm-jm-tiles');
-    [['Приглашения', totals.positive, 'is-up'], ['Отказы', totals.negative, ''], ['Автоответы', totals.ack, '']].forEach(([label, value, cls]) => {
-      const tile = mmEl('div');
-      tile.appendChild(mmEl('span', '', label));
-      tile.appendChild(mmEl('strong', cls, String(value || 0)));
-      tiles.appendChild(tile);
-    });
-    const rate = payload.stats?.positive_rate;
-    const rateTile = mmEl('div');
-    rateTile.appendChild(mmEl('span', '', 'Да из решивших'));
-    rateTile.appendChild(mmEl('strong', '', rate === null || rate === undefined ? '—' : `${rate}%`));
-    tiles.appendChild(rateTile);
-    foldBody.appendChild(tiles);
-    const weeks = Array.isArray(payload.stats?.weeks) ? payload.stats.weeks : [];
-    const peak = Math.max(1, ...weeks.map(week => (week.positive || 0) + (week.negative || 0)));
-    if (weeks.length) {
-      const chart = mmEl('div', 'mm-jm-weeks');
-      chart.setAttribute('role', 'img');
-      chart.setAttribute('aria-label', 'По неделям: ' + weeks.map(week => `${week.positive || 0} да, ${week.negative || 0} нет`).join('; '));
-      weeks.forEach(week => {
-        const column = mmEl('span', 'mm-jm-week');
-        const yes = mmEl('i', 'is-yes');
-        yes.style.height = `${Math.round(100 * (week.positive || 0) / peak)}%`;
-        const no = mmEl('i', 'is-no');
-        no.style.height = `${Math.round(100 * (week.negative || 0) / peak)}%`;
-        column.append(no, yes);
-        chart.appendChild(column);
-      });
-      foldBody.appendChild(chart);
-      foldBody.appendChild(mmEl('p', 'mm-fold-note', 'Последние 8 недель: зелёным приглашения, серым отказы.'));
-    }
-    const recent = (payload.recent || []).filter(reply => reply.verdict === 'positive' || reply.verdict === 'negative');
-    if (recent.length) {
-      const all = mmEl('details', 'mm-jm-all');
-      all.appendChild(mmEl('summary', '', `Все ответы · ${recent.length}`));
-      const list = mmEl('ul', 'mm-jm-list');
-      recent.forEach(reply => list.appendChild(mmJobMailRow(reply, false)));
-      all.appendChild(list);
-      foldBody.appendChild(all);
-    }
-    if (payload.error) foldBody.appendChild(mmEl('p', 'mm-jm-note', 'Почта сейчас не отвечает. Если не пройдёт само, подключи её заново.'));
-  } else if (payload.state === 'not_configured') {
-    foldBody.appendChild(mmEl('p', 'mm-todo-empty', 'Подключение почты ещё не настроено на Mac mini.'));
-  } else {
-    foldBody.appendChild(mmEl('p', 'mm-todo-empty', payload.state === 'error'
-      ? 'Почта отключилась. Подключи её заново, это одна кнопка.'
-      : 'Подключи почту с откликами. Система будет только читать письма: не отвечает, не удаляет и не помечает прочитанным. Когда работодатель позовёт дальше, придёт сигнал.'));
-  }
-  const foot = mmEl('div', 'mm-todo-foot');
-  if (payload.state === 'connected') {
-    const check = mmEl('button', 'mm-todo-done-toggle', 'Проверить сейчас');
-    check.type = 'button';
-    check.dataset.jmCheck = '';
-    foot.appendChild(check);
-    const off = mmEl('button', 'mm-todo-done-toggle mm-todo-all', 'Отключить почту');
-    off.type = 'button';
-    off.dataset.jmDisconnect = '';
-    foot.appendChild(off);
-  } else if (payload.state !== 'not_configured') {
-    const connect = mmEl('button', 'mm-todo-add', 'Подключить почту');
-    connect.type = 'button';
-    connect.dataset.jmConnect = '';
-    foot.appendChild(connect);
-    // Google may send a phone back to an address only the Mac mini opens; then its link is pasted here.
-    const paste = mmEl('details', 'mm-jm-paste');
-    paste.appendChild(mmEl('summary', '', 'Страница после Google не открылась?'));
-    const form = mmEl('form', 'mm-jm-paste-form');
-    const input = mmEl('input');
-    input.type = 'url';
-    input.name = 'url';
-    input.required = true;
-    input.placeholder = 'Вставь сюда адрес той страницы';
-    input.setAttribute('aria-label', 'Адрес страницы после Google');
-    const done = mmEl('button', 'mm-todo-add', 'Готово');
-    done.type = 'submit';
-    form.append(input, done);
-    paste.appendChild(form);
-    foldBody.appendChild(foot);
-    foldBody.appendChild(paste);
     card.appendChild(foldBody);
     host.appendChild(card);
     host.hidden = false;
     return;
   }
+
+  if (waiting.length) {
+    const invites = mmEl('div', 'mm-jm-invites');
+    waiting.forEach(reply => invites.appendChild(mmJobMailInvite(reply)));
+    foldBody.appendChild(invites);
+  } else {
+    foldBody.appendChild(mmEl('p', `mm-jm-calm${payload.stale ? ' is-stale' : ''}`, payload.stale
+      ? 'Почта давно не проверялась, поэтому новых приглашений здесь может не быть. Загляни в почту сам.'
+      : payload.first_scan_done
+      ? 'Все приглашения отвечены. Новое придёт в Telegram и появится здесь.'
+      : 'Проверяю почту за последние 60 дней…'));
+  }
+
+  // Numbers: three plain counts and one yes/no bar.
+  const numbers = mmEl('div', 'mm-jm-numbers');
+  [['Приглашения', totals.positive, 'is-yes'], ['Отказы', totals.negative, 'is-no'], ['Автоответы', totals.ack, '']].forEach(([label, value, cls]) => {
+    const cell = mmEl('div', `mm-jm-number ${cls}`.trim());
+    cell.appendChild(mmEl('strong', '', String(value || 0)));
+    cell.appendChild(mmEl('span', '', label));
+    numbers.appendChild(cell);
+  });
+  foldBody.appendChild(numbers);
+  const decided = (totals.positive || 0) + (totals.negative || 0);
+  if (decided) {
+    const share = Math.round(100 * (totals.positive || 0) / decided);
+    const ratio = mmEl('div', 'mm-jm-ratio');
+    const bar = mmEl('div', 'mm-jm-ratio-bar');
+    bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', `Из ${decided} решений ${share}% приглашений`);
+    const yes = mmEl('i', 'is-yes');
+    yes.style.width = `${share}%`;
+    bar.appendChild(yes);
+    ratio.appendChild(bar);
+    ratio.appendChild(mmEl('p', '', `Из ${decided} компаний, которые решили, позвали ${totals.positive || 0} (${share}%).`));
+    foldBody.appendChild(ratio);
+  }
+
+  const weeks = Array.isArray(payload.stats?.weeks) ? payload.stats.weeks : [];
+  if (weeks.some(week => (week.positive || 0) + (week.negative || 0))) {
+    const peak = Math.max(1, ...weeks.map(week => (week.positive || 0) + (week.negative || 0)));
+    const chart = mmEl('div', 'mm-jm-weeks');
+    chart.setAttribute('role', 'img');
+    chart.setAttribute('aria-label', 'По неделям: ' + weeks.map(week => `${mmJobMailWeekLabel(week.week)}: ${week.positive || 0} да, ${week.negative || 0} нет`).join('; '));
+    weeks.forEach(week => {
+      const column = mmEl('div', 'mm-jm-week');
+      const stack = mmEl('div', 'mm-jm-stack');
+      const no = mmEl('i', 'is-no');
+      no.style.height = `${Math.round(100 * (week.negative || 0) / peak)}%`;
+      const yes = mmEl('i', 'is-yes');
+      yes.style.height = `${Math.round(100 * (week.positive || 0) / peak)}%`;
+      stack.append(no, yes);
+      column.appendChild(stack);
+      column.appendChild(mmEl('span', '', mmJobMailWeekLabel(week.week)));
+      chart.appendChild(column);
+    });
+    const legend = mmEl('div', 'mm-jm-legend');
+    legend.innerHTML = '<span><i class="is-yes"></i>приглашения</span><span><i class="is-no"></i>отказы</span>';
+    const chartBox = mmEl('div', 'mm-jm-chart');
+    chartBox.appendChild(mmEl('h4', 'mm-jm-sub', 'По неделям'));
+    chartBox.appendChild(chart);
+    chartBox.appendChild(legend);
+    foldBody.appendChild(chartBox);
+  }
+
+  const recent = (payload.recent || []).filter(reply => reply.verdict === 'positive' || reply.verdict === 'negative');
+  if (recent.length) {
+    const all = mmEl('details', 'mm-jm-all');
+    all.appendChild(mmEl('summary', '', `Все ответы · ${recent.length}`));
+    const list = mmEl('ul', 'mm-jm-list');
+    recent.forEach(reply => list.appendChild(mmJobMailRow(reply, false)));
+    all.appendChild(list);
+    foldBody.appendChild(all);
+  }
+  if (payload.error) foldBody.appendChild(mmEl('p', 'mm-jm-note', 'Почта сейчас не отвечает. Если не пройдёт само, подключи её заново.'));
+  const foot = mmEl('div', 'mm-jm-foot');
+  const check = mmEl('button', 'mm-jm-secondary', 'Проверить сейчас');
+  check.type = 'button';
+  check.dataset.jmCheck = '';
+  const off = mmEl('button', 'mm-jm-quiet', 'Отключить почту');
+  off.type = 'button';
+  off.dataset.jmDisconnect = '';
+  foot.append(check, off);
   foldBody.appendChild(foot);
   card.appendChild(foldBody);
   host.appendChild(card);

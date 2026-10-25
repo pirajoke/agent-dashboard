@@ -306,9 +306,12 @@ def job_mail_fixture():
     if os.environ.get("PREVIEW_JOB_MAIL") == "not_connected":
         return {"state": "not_connected", "email": None, "waiting": [], "recent": [], "stats": job_mail.stats([])}
     now = datetime.now(timezone.utc)
-    rows = [("Пример А", "Business Developer", "positive", 1, False), ("Пример Б", "GTM Engineer", "negative", 2, True),
+    rows = [("Пример А", "Business Developer", "positive", 3, False), ("Пример Б", "GTM Engineer", "negative", 1, True),
             ("Пример В", "Product Manager", "negative", 9, True), ("Пример Г", "Consultant", "positive", 16, True),
-            ("Пример Д", "Sales", "ack", 3, False), ("Пример Е", "Account Executive", "negative", 23, True)]
+            ("Пример Д", "Sales", "ack", 3, False), ("Пример Е", "Account Executive", "negative", 23, True),
+            ("Пример Ж", "Growth", "negative", 12, True), ("Пример З", "Ops", "negative", 30, True),
+            ("Пример И", "Sales", "positive", 6, True), ("Пример К", "CSM", "negative", 5, True),
+            ("Пример Л", "BizDev", "negative", 38, True), ("Пример М", "PM", "negative", 19, True)]
     replies = [{"id": f"m{index}", "thread_id": f"t{index}", "company": company, "role": role, "verdict": verdict,
                 "date": (now - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ"), "answered": answered,
                 "link": f"https://mail.google.com/mail/#all/t{index}", "subject": "Пример"}
