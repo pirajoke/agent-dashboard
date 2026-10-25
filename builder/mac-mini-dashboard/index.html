@@ -5176,8 +5176,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </dialog>
       <h3 class="cc-visually-hidden" id="mm-view-title">Проекты</h3>
       <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
-      <!-- Mark 2026-10-23: main projects first; the summary, his tasks and the personal block fold
-           under them; the history («Дела», «Изменения») comes last. -->
+      <!-- Main projects first, then private context; the current Notion board is under «Дела». -->
       <div class="mm-main">
         <div class="mm-view" data-mm-panel="map">
           <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
@@ -5191,6 +5190,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="mm-folds" id="mm-folds">
         <section class="mm-summary mm-fold" id="mm-summary" aria-labelledby="mm-summary-title" hidden></section>
         <div id="mm-job-mail" hidden></div>
+        <!-- Historical owner-todo records remain recoverable through the owner API;
+             this screen uses the shared Notion board as its only task list. -->
         <div id="mm-owner-todo" hidden></div>
         <div id="mm-owner-projects" hidden></div>
       </div>
@@ -5198,7 +5199,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <div class="mm-history-head">
           <h3 id="mm-history-title">История</h3>
           <nav class="cc-tabs mm-nav" aria-label="История">
-            <button type="button" data-mm-view="todo" aria-pressed="true">Дела <b id="mm-todo-count">0</b></button>
+            <button type="button" data-mm-view="todo" aria-pressed="true">Общие задачи <b id="mm-todo-count">0</b></button>
             <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
           </nav>
         </div>
@@ -10477,7 +10478,6 @@ function mmInit() {
     loadDailyWork();
     loadInfraChanges();
     mmLoadOwnerProjects();
-    mmLoadOwnerTodo();
     mmLoadSharedTasks();
     mmLoadJobMail();
     mmLoadHealth();
@@ -10522,7 +10522,6 @@ function openMainManager() {
   loadDailyWork(dailyWorkDate);
   loadInfraChanges();
   mmLoadOwnerProjects();
-  mmLoadOwnerTodo();
   mmLoadSharedTasks();
   mmLoadJobMail();
   mmLoadHealth();
