@@ -111,6 +111,9 @@ class RouteTests(unittest.TestCase):
   out['body']=h.wfile.getvalue().decode();out['gate']=gate.called;return out
  def test_anonymous_loopback_is_locked(self):
   d=self.request('/api/docxx');self.assertTrue(d['gate']);self.assertEqual(json.loads(d['body']),{'state':'owner_required'});self.assertIn('no-store',d['headers']['Cache-Control'])
+ def test_sorting_endpoints_are_owner_only(self):
+  d=self.request('/api/docxx/folders');self.assertTrue(d['gate']);self.assertEqual(json.loads(d['body']),{'state':'owner_required'})
+  d=self.request('/api/docxx/decide',method='POST');self.assertEqual(d['code'],401)
  def test_owner_only_projection(self):
   d=self.request('/api/docxx',True);self.assertTrue(d['gate']);self.assertEqual(json.loads(d['body'])['state'],'unavailable');self.assertNotIn('PRIVATE_STATE',d['body'])
  def test_static_no_get_no_head_even_owner_or_alias(self):

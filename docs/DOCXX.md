@@ -1,7 +1,20 @@
 # DOCXX document monitor
 
 The Documents tab (`?tab=documents`) projects the existing Mac mini intake worker.
-It does not run intake, rename files, call a model, or introduce another sync path.
+It does not run intake, call a model, or introduce another sync path.
+
+## Sorting from the site
+
+Since 2026-10-25 the owner can settle a «Нужен разбор» document from its card, or several at
+once («Выбрать все»): **Переложить в папку…** (an existing folder up to two levels deep in the
+same DOCXXx library), **В архив** (shown only when the library has an Archive/Архив folder) or
+**Оставить как есть**. `builder/dashboard_builder/docxx_actions.py` moves the file inside the
+library with one rename, never overwrites (a free name gets ` (2)`), never deletes and never
+creates anything at the library root. Decisions are kept in `~/.agent-bridge/docxx-decisions.json`
+(mode 600) and settle the row as «Разобрано»; «Вернуть как было» undoes a move. The worker's own
+state and journal files stay untouched. Endpoints: owner-only `GET /api/docxx/folders` and
+`POST /api/docxx/decide` (`{action: move|archive|keep|undo, keys: [...], folder}`, at most 50 keys),
+with the same Origin-checked owner guard as the Platforms writes. Local paths are never served.
 
 ## Data and privacy
 

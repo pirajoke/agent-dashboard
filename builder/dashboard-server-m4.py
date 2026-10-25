@@ -29,6 +29,7 @@ from dashboard_builder.owner_decisions import (
 from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
 from dashboard_builder.docxx_search import docxx_search
+from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions
 from dashboard_builder.docxx_public_pages import PAGES as DOCXX_INFO_PAGES, CONTENT_SECURITY_POLICY as DOCXX_INFO_CSP
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
@@ -1905,6 +1906,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
             return
+        if parsed.path == '/api/docxx/decide':
+            self._handle_docxx_decide()
+            return
         if parsed.path in {'/api/job-mail/connect', '/api/job-mail/finish', '/api/job-mail/disconnect', '/api/job-mail/check'}:
             self._handle_job_mail_post(parsed.path)
             return
@@ -2593,6 +2597,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(400, {'error': 'invalid_request'})
             return None
 
+    def _handle_docxx_decide(self):
+        # Mark sorts a «Нужен разбор» document from the Documents tab; same owner guard as Platforms.
+        body = self._platform_owner_body(8192)
+        if body is None:
+            return
+        try:
+            self._json_response(200, docxx_apply(docxx_state_path(HOME), docxx_decisions_path(HOME), body))
+        except ValueError as error:
+            self._json_response(400, {'error': str(error) if str(error) in {
+                'invalid_action', 'invalid_keys', 'invalid_folder', 'library_unavailable'} else 'invalid_request'})
+        except OSError:
+            self._json_response(503, {'error': 'docxx_decisions_unavailable'})
+
     def _handle_platform_edits_save(self):
         body = self._platform_owner_body(PLATFORM_EDITS_MAX_BYTES)
         if body is None:
@@ -2856,7 +2873,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/docxx':
             owner = self._decision_owner_authorized()
-            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner))
+            decisions = docxx_load_decisions(docxx_decisions_path(HOME)) if owner else None
+            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner, decisions=decisions))
+            return
+        if parsed.path == '/api/docxx/folders':
+            if not self._decision_owner_authorized():
+                self._json_response(200, {'state': 'owner_required'})
+                return
+            self._json_response(200, docxx_folders(docxx_state_path(HOME), docxx_decisions_path(HOME)))
             return
         if parsed.path == '/api/docxx/search':
             owner = self._decision_owner_authorized()
