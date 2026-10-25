@@ -38,6 +38,7 @@ DEFAULT_STATE = RUNTIME_DIR / "state/scheduler-state.json"
 DEFAULT_QUEUE = RUNTIME_DIR / "state/continuation-queue.json"
 DEFAULT_LOCK = RUNTIME_DIR / "state/scheduler.lock"
 DEFAULT_ROUTES = RUNTIME_DIR / "agent-routes.json"
+DEFAULT_LIFECYCLE = Path.home() / ".codex/thread_history_1.sqlite"
 DEFAULT_TOKEN_FILE = Path.home() / "jarvis/.secrets/bridge_api_token"
 
 # Scheduler human_projection status -> campus status. DONE items are history
@@ -234,6 +235,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--queue", type=Path, default=DEFAULT_QUEUE)
     parser.add_argument("--lock", type=Path, default=DEFAULT_LOCK)
     parser.add_argument("--routes", type=Path, default=DEFAULT_ROUTES)
+    parser.add_argument("--lifecycle", type=Path, default=DEFAULT_LIFECYCLE)
     parser.add_argument("--bridge-url", default="http://127.0.0.1:8899")
     parser.add_argument("--token-file", type=Path, default=DEFAULT_TOKEN_FILE)
     parser.add_argument("--dry-run", action="store_true", help="print the snapshot instead of posting it")
@@ -249,14 +251,16 @@ def main(argv: list[str] | None = None) -> int:
                 routes_path=args.routes,
                 roots=default_native_roots(),
                 now=now,
+                lifecycle_path=args.lifecycle,
             )
         except Exception:
             # Keep the lane explicit and unavailable without exposing local
             # failure details or suppressing the independent owner-gate feed.
             native_activity = {}
+        snapshot_now = datetime.now(timezone.utc)
         snapshot = build_snapshot(
-            run_scheduler_status(args, now),
-            now=now,
+            run_scheduler_status(args, snapshot_now),
+            now=snapshot_now,
             queue_path=args.queue,
             native_activity=native_activity,
         )
