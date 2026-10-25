@@ -5199,7 +5199,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <div class="mm-history-head">
           <h3 id="mm-history-title">История</h3>
           <nav class="cc-tabs mm-nav" aria-label="История">
-            <button type="button" data-mm-view="todo" aria-pressed="true">Общие задачи <b id="mm-todo-count">0</b></button>
+            <button type="button" data-mm-view="todo" aria-pressed="true">Общие задачи</button>
             <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
           </nav>
         </div>
@@ -5208,10 +5208,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <div><h3>Общие задачи</h3><p class="mm-section-note">Актуальная очередь из Notion; та же доска в JARVIS.</p></div>
           </div>
           <div class="mm-shared-tasks" id="mm-shared-tasks"><p class="mm-empty">Загружаю задачи…</p></div>
-          <div class="mm-section-heading">
-            <div><h3>Контекст проектов <span id="mm-todo-total"></span></h3><p class="mm-section-note">Сроки и следующие шаги из проектных заметок.</p></div>
-          </div>
-          <div class="mm-todo-list" id="mm-todo-list"><p class="mm-empty">Загружаю дела…</p></div>
         </div>
 
         <div class="mm-view" data-mm-panel="infra" hidden>
@@ -10360,7 +10356,7 @@ const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
   : 'https://command.meshly.fr/api/infra/changes';
 const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-const MM_VIEW_TITLES = { map: 'Проекты', todo: 'Дела', project: 'Проект', infra: 'Изменения в инфраструктуре' };
+const MM_VIEW_TITLES = { map: 'Проекты', todo: 'Общие задачи', project: 'Проект', infra: 'Изменения в инфраструктуре' };
 // Platforms products that have their own mascot tint; anything else uses the neutral tint.
 const MM_TINTS = new Set(['command-center', 'financial', 'mydictionary', 'health', 'ai-singularity', 'context-news', 'accountable', 'jarvis']);
 const MM_REFRESH_MS = 5 * 60 * 1000;
@@ -10453,7 +10449,7 @@ function mmInit() {
     mmInfraFilter = button.dataset.filter;
     renderInfra(infraData);
   });
-  // A project name in «Дела» or a card on the board opens its page; a modified click opens a new tab.
+  // A card on the project board opens its page; a modified click opens a new tab.
   document.getElementById('mm-map').addEventListener('click', event => {
     const button = event.target.closest('[data-map-agent]');
     if (!button) return;
@@ -10461,12 +10457,12 @@ function mmInit() {
     safeStorageSet(MM_MAP_AGENT_KEY, mmMapAgent);
     if (dailyWorkData) renderMap(dailyWorkData);
   });
-  ['mm-todo-list', 'mm-map'].forEach(id => document.getElementById(id).addEventListener('click', event => {
+  document.getElementById('mm-map').addEventListener('click', event => {
     const link = event.target.closest('[data-project]');
     if (!link || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
     event.preventDefault();
     openProject(link.dataset.project);
-  }));
+  });
   mmInitOwnerTodo();
   mmInitJobMail();
   mmInitOwnerProjects();
@@ -10605,7 +10601,6 @@ function renderDailyWork() {
   if (!data) return;
   mmRenderNotice();
   renderMap(data);
-  renderTodo(data);
   mmRenderSources();
   npDeviceSetup(data.owner_view);
 }
@@ -10733,38 +10728,6 @@ function mmDayHeading(iso) {
   if (offset === 0) return 'Сегодня';
   if (offset === 1) return 'Вчера';
   return `${mmDayShort(iso)}, ${MM_WEEKDAYS[mmDate(iso).getDay()]}`;
-}
-
-function mmTodoItem(item, today) {
-  const groups = [];
-  if (item.deadlines.length) {
-    groups.push(['Сроки', `<ul class="mm-bullets mm-due">${item.deadlines.map(d => `<li><b>${mmEsc(npDue(d.date, today))}</b> · ${mmEsc(d.what)}</li>`).join('')}</ul>`]);
-  }
-  if (item.next.length) {
-    groups.push(['Следующие шаги', mmBullets(item.next)]);
-  }
-  // Mark 2026-10-24: PRs, drafts and loose ends are agents' business, not his; only plain steps stay.
-  const href = `?tab=work&amp;project=${encodeURIComponent(item.id)}`;
-  return `<section class="dp-project mm-todo-item">
-    <h4 class="dp-project-name">${mmArt(item)}<a href="${href}" data-project="${mmEsc(item.id)}">${mmEsc(item.name)}</a></h4>
-    ${groups.map(([title, body]) => `<div class="mm-todo-group"><h4>${mmEsc(title)}</h4>${body}</div>`).join('')}
-  </section>`;
-}
-
-// «Дела» (2026-10-12, Mark chose «Список дел»): only what waits on Mark now, per project.
-function renderTodo(data) {
-  const host = document.getElementById('mm-todo-list');
-  const items = (data.todo || []).filter(item => item.deadlines.length || item.next.length);
-  document.getElementById('mm-todo-count').textContent = data.owner_view ? items.length : 0;
-  document.getElementById('mm-todo-total').textContent = data.owner_view && items.length ? items.length : '';
-  if (!data.owner_view) {
-    host.innerHTML = '<p class="mm-empty">Дела по проектам видны только владельцу.</p>';
-    return;
-  }
-  const today = data.series[data.series.length - 1]?.date;
-  host.innerHTML = (items.length
-    ? items.map(item => mmTodoItem(item, today)).join('')
-    : '<p class="mm-empty">Сейчас ничего не ждёт вас: нет сроков и следующих шагов.</p>');
 }
 
 // «Проекты» (Mark 2026-10-14: «чтобы была визуализация проекта, который я делаю»): every project as a
