@@ -47,7 +47,8 @@ VERDICTS = ("positive", "negative", "ack", "other")
 def paths(root: Path | None = None) -> dict[str, Path]:
     base = root or JOB_MAIL_DIR
     return {"dir": base, "client": base / "google_client.json", "token": base / "token.json",
-            "state": base / "oauth_state.json", "replies": base / "replies.json", "status": base / "status.json"}
+            "state": base / "oauth_state.json", "replies": base / "replies.json", "status": base / "status.json",
+            "expected": base / "expected_account"}
 
 
 def _read(path: Path):
@@ -55,6 +56,19 @@ def _read(path: Path):
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def expected_account(root: Path | None = None) -> str:
+    """The job mailbox Mark means (one address in ``expected_account`` on the Mac mini), or "" for any.
+
+    On 2026-10-25 Google's account picker connected his personal inbox instead; with this set, any
+    other account is handed back to Google at once.
+    """
+    try:
+        value = paths(root)["expected"].read_text(encoding="utf-8").strip().lower()
+    except OSError:
+        return ""
+    return value if re.fullmatch(r"[^@\s]{1,64}@[^@\s]{1,120}", value) else ""
 
 
 # ─── Connecting (OAuth with PKCE) ───
@@ -108,6 +122,8 @@ def start_connect(root: Path | None = None, *, now: float | None = None) -> str:
     query = {"client_id": client["client_id"], "redirect_uri": client["redirect_uri"], "response_type": "code",
              "scope": SCOPE, "access_type": "offline", "prompt": "consent select_account", "state": state,
              "code_challenge": challenge, "code_challenge_method": "S256"}
+    if expected_account(root):
+        query["login_hint"] = expected_account(root)
     return f"{AUTH_URL}?{urllib.parse.urlencode(query)}"
 
 
@@ -134,6 +150,15 @@ def _get_json(url: str, access_token: str, opener=urllib.request.urlopen) -> dic
         raise RuntimeError("auth_required" if error.code in (401, 403) else f"gmail_http_{error.code}") from None
 
 
+def _revoke(answer: dict, opener) -> None:
+    for token in (answer.get("refresh_token"), answer.get("access_token")):
+        if token:
+            try:
+                _post_form(REVOKE_URL, {"token": token}, opener)
+            except RuntimeError:
+                pass
+
+
 def finish_connect(code: str, state: str, root: Path | None = None, *, now: float | None = None,
                    opener=urllib.request.urlopen) -> dict:
     """Swap Google's one-time code for a read-only refresh token; store it on the Mac mini only."""
@@ -157,17 +182,15 @@ def finish_connect(code: str, state: str, root: Path | None = None, *, now: floa
     granted = set(str(answer.get("scope") or "").split())
     if granted != {SCOPE}:
         # Only ever keep a read-only grant. Anything wider is handed straight back to Google.
-        for token in (answer.get("refresh_token"), answer.get("access_token")):
-            if token:
-                try:
-                    _post_form(REVOKE_URL, {"token": token}, opener)
-                except RuntimeError:
-                    pass
+        _revoke(answer, opener)
         raise ValueError("scope_not_read_only")
     if not answer.get("refresh_token"):
         raise ValueError("no_refresh_token")
     profile = _get_json(f"{GMAIL_API}/profile", answer["access_token"], opener)
     email = str(profile.get("emailAddress") or "")[:120]
+    if expected_account(root) and email.lower() != expected_account(root):
+        _revoke(answer, opener)
+        raise ValueError("wrong_account")
     record = {"refresh_token": answer["refresh_token"], "scope": SCOPE, "email": email,
               "connected_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
     _write_json(p["token"], record, prefix=".token-")
@@ -210,6 +233,8 @@ def access_token(root: Path | None = None, opener=urllib.request.urlopen) -> tup
         raise LookupError("not_connected")
     if not client:
         raise LookupError("client_not_configured")
+    if expected_account(root) and str(token.get("email") or "").lower() != expected_account(root):
+        raise LookupError("wrong_account")
     try:
         answer = _post_form(TOKEN_URL, {"refresh_token": token["refresh_token"], "client_id": client["client_id"],
                                         "client_secret": client["client_secret"], "grant_type": "refresh_token"}, opener)
@@ -222,6 +247,9 @@ def access_token(root: Path | None = None, opener=urllib.request.urlopen) -> tup
 
 # ─── Sorting a reply ───
 
+# Raised whenever the sorting rules change: the watcher then sorts the last 60 days again.
+CLASSIFIER_VERSION = 3
+
 def _plain(text: str) -> str:
     text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode().lower()
     return " ".join(text.replace("’", "'").split())
@@ -230,8 +258,19 @@ def _plain(text: str) -> str:
 # Newsletters and job alerts are not replies to Mark.
 _NOT_A_REPLY = re.compile(r"job ?alert|alerte(s)? (emploi|e-mail)|offres? (qui )?pourrai|new jobs? for you|jobs? you may|recommended jobs|"
                           r"emplois? recommand|nouvelles? offres?|jobs? (similaires|similar)|newsletter|webinar|unsubscribe from (job|this alert)")
-_JOB = re.compile(r"candidat|application|apply|applied|poste|position|role\b|recrut|recruit|hiring|talent|entretien|interview|"
-                  r"\bcdi\b|\bcdd\b|stage|alternance|job|emploi|opportunit|process(us)? de recrutement")
+# About an application of Mark's: bare «job», «emploi», «stage» or «position» also appear in parcel, bank and
+# benefits mail (CAF, Colissimo on 2026-10-25), so the wording has to be about hiring.
+_JOB = re.compile(r"candidat|your application|job application|\bappl(y|ied|ying) (for|to)\b|\bapplied\b|recrut|recruit|hiring|"
+                  r"talent acquisition|\binterview|entretien (d'?embauche|de recrutement|telephonique|rh|individuel avec|avec (notre|l'?equipe))|"
+                  r"\bposte (de|d'|du|en|chez|:)|\bposition (of|as|at|with|in|de|:)|\brole (of|as|at|with|in)|\bcdi\b|\bcdd\b|alternance|"
+                  r"offre d'?(emploi|embauche)|job offer|processus de recrutement|\bopportunit(y|e)")
+# Administrations, deliveries, banks, shops and subscriptions write about «rendez-vous» and «créneau» too; never employers.
+_NOT_EMPLOYER = re.compile(r"(^|[@.\s])(caf|laposte|colissimo|chronopost|dpd|ups|fedex|dhl|mondialrelay|relaiscolis|ameli|impots|"
+                           r"service-public|franceconnect|ants|urssaf|cpam|mutuelle|edf|engie|sncf|ouigo|ratp|navigo|amazon|vinted|leboncoin|"
+                           r"doctolib|banque|bnp|societegenerale|credit-agricole|lcl|boursorama|revolut|qonto|paypal|orange|sfr|bouygues|free-mobile|"
+                           r"basic-fit|basicfit|fitnesspark|neoness|uber|deliveroo|airbnb|booking)([.\s>@-]|$)|"
+                           r"votre (colis|livraison|caf|allocation|dossier caf|abonnement|adhesion|club)|"
+                           r"\b(caf|colissimo|basic-fit|basic fit)\b")
 _NEGATIVE = re.compile(
     r"malheureusement|ne (pas )?(pouvons|pourrons) (pas )?(donner|repondre) (une )?suite|pas (pu )?donner (une )?suite|"
     r"(ne|pas) donner suite|ne donnerons pas suite|n'?avons pas retenu|pas (ete )?retenu|n'?a pas ete retenu|"
@@ -261,23 +300,34 @@ _ACK = re.compile(r"(avons|a) bien (ete )?recu|bien recu|a bien ete (recue|enreg
                   r"reviendrons vers (vous|toi)|will (get back|be in touch|review)|reviewing your application|etudi(ons|er) (votre|ta) candidature")
 
 
+# Hiring systems and job boards: their mail is about an application even when the words are vague.
+_ATS = re.compile(r"teamtailor|lever\.co|greenhouse|ashbyhq|workable|smartrecruiters|recruitee|taleo|workday|successfactors|jobvite|"
+                  r"breezy|welcometothejungle|wttj|hellowork|apec|jobteaser|flatchr|talentsoft|talent-soft|taleez|personio|bamboohr|"
+                  r"jazzhr|icims|pinpointhq|homerun|join\.com|indeed|linkedin|recrut|recruit|talent|careers?@|jobs?@|rh@|hr@")
+_SENTENCE = re.compile(r"(?<=[.!?\n])\s+")
+
+
 def classify(subject: str, body: str, sender: str = "") -> str | None:
     """positive / negative / ack / other, or None when the mail is not about Mark's applications."""
     text = _plain(f"{subject}\n{body[:6000]}")
     who = _plain(sender)
     if _NOT_A_REPLY.search(text) or re.search(r"jobalerts?|jobs-listings|job-alert|alert@|newsletter", who):
         return None
-    if not _JOB.search(text):
+    if _NOT_EMPLOYER.search(who) or _NOT_EMPLOYER.search(_plain(subject)):
+        return None
+    # Only mail about an application counts: from a hiring system, or plainly about hiring.
+    if not (_ATS.search(who) and _JOB.search(text) or _JOB.search(_plain(subject)) or len(_JOB.findall(text)) >= 2):
         return None
     if _NEGATIVE.search(text):
         return "negative"
-    conditional = bool(_CONDITIONAL.search(text))
-    if _BOOKING.search(text) or (_STRONG_POSITIVE.search(text) and not conditional):
-        return "positive"
-    if _WEAK_POSITIVE.search(text) and not conditional and not _ACK.search(text):
+    # «Если ваш профиль подойдёт, мы позовём на интервью» is a promise, not an invite: drop those sentences.
+    firm = " ".join(part for part in _SENTENCE.split(text) if not _CONDITIONAL.search(part))
+    if _BOOKING.search(firm):
         return "positive"
     if _ACK.search(text):
         return "ack"
+    if _STRONG_POSITIVE.search(firm) or _WEAK_POSITIVE.search(firm):
+        return "positive"
     return "other"
 
 
@@ -381,6 +431,9 @@ def projection(root: Path | None = None, *, today: datetime | None = None) -> di
         state = "not_configured"
     elif not isinstance(token, dict) or not token.get("refresh_token"):
         state = "not_connected"
+    elif expected_account(root) and str(token.get("email") or "").lower() != expected_account(root):
+        state = "wrong_account"  # Another inbox: its mail is not shown or counted.
+        replies = []
     elif status.get("ok") is False:
         state = "error"
     else:
@@ -392,6 +445,7 @@ def projection(root: Path | None = None, *, today: datetime | None = None) -> di
     clean = [{key: reply.get(key) for key in public_keys if key in reply} for reply in replies]
     waiting = [reply for reply in clean if reply.get("verdict") == "positive" and not reply.get("answered")]
     return {"state": state, "email": token.get("email") if isinstance(token, dict) else None,
+            "expected": expected_account(root) or None,
             "last_check": status.get("last_run"), "stale": stale, "error": status.get("reason") if status.get("ok") is False else None,
             "first_scan_done": bool(saved.get("first_scan_done")) if isinstance(saved, dict) else False,
             "waiting": waiting[:20], "recent": clean[:40], "stats": stats(clean, today=today)}

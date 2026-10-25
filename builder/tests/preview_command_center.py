@@ -348,6 +348,9 @@ def prepare_docxx_sorting():
 def job_mail_fixture():
     import os
     from dashboard_builder import job_mail
+    if os.environ.get("PREVIEW_JOB_MAIL") == "wrong_account":
+        return {"state": "wrong_account", "email": "personal@example.com", "expected": "job@example.com",
+                "waiting": [], "recent": [], "stats": job_mail.stats([])}
     if os.environ.get("PREVIEW_JOB_MAIL") == "not_connected":
         return {"state": "not_connected", "email": None, "waiting": [], "recent": [], "stats": job_mail.stats([])}
     now = datetime.now(timezone.utc)

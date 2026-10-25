@@ -68,6 +68,37 @@ class ClassifyTests(unittest.TestCase):
         self.assertIsNone(job_mail.classify("Votre colis", "Livraison demain", "colis@laposte.fr"))
         self.assertIsNone(job_mail.classify("Jobs for you", "Apply now", "LinkedIn <jobalerts-noreply@linkedin.com>"))
 
+    def test_benefits_parcels_and_gyms_are_not_employers(self):
+        # Seen as «зовут на собеседование» on 2026-10-25.
+        self.assertIsNone(job_mail.classify("Votre CAF vous informe", "Prenez rendez-vous pour votre dossier. Reprise d'emploi : déclarez-la.",
+                                            "Caf <ne-pas-repondre@caf.fr>"))
+        self.assertIsNone(job_mail.classify("Votre colis arrive", "Choisissez votre créneau de livraison. Position du colis : en transit.",
+                                            "La Poste - Colissimo <noreply@notif-colissimo-laposte.info>"))
+        self.assertIsNone(job_mail.classify("Ton rendez-vous au club", "Réserve ton créneau avec un coach.", "Basic-Fit <info@basic-fit.com>"))
+        self.assertIsNone(job_mail.classify("Rendez-vous confirmé", "Votre créneau du lundi est réservé.", "Doctolib <no-reply@doctolib.fr>"))
+
+    def test_bare_job_words_are_not_enough(self):
+        self.assertIsNone(job_mail.classify("Your call is booked", "Pick a slot for your demo call", "Acme <sales@acme.io>"))
+        self.assertEqual(job_mail.classify("Business Developer", "Votre candidature a retenu notre attention, choisissez un créneau.",
+                                           "Kaora <jobs@kaora.fr>"), "positive")
+
+    def test_personal_mail_from_the_wrong_inbox_is_skipped(self):
+        # What the personal inbox produced on 2026-10-25.
+        for sender, subject, body in (
+                ("Vélib' Métropole <noreply@velib-metropole.fr>", "Vos codes d'accès", "Votre réponse est confirmée. Rendez-vous en station."),
+                ("Trip.com <noreply@trip.com>", "Votre réservation est confirmée", "Rendez-vous à l'aéroport. Échangez avec notre service."),
+                ("GetYourGuide <no-reply@getyourguide.com>", "Your activity", "Meet your guide at the meeting point. Call us."),
+                ("AliExpress <promo@aliexpress.com>", "Offre spéciale", "Une opportunité à ne pas manquer ! Échangez vos points."),
+                ("Mon espace santé <ne-pas-repondre@monespacesante.fr>", "Nouveau document", "Rendez-vous dans votre espace pour échanger."),
+                ("CIC <alertes@cic.fr>", "Rappel de rendez-vous", "Malheureusement votre conseiller est absent, rendez-vous décalé.")):
+            self.assertIsNone(job_mail.classify(subject, body, sender), sender)
+
+    def test_thanks_for_applying_with_next_steps_is_a_receipt(self):
+        body = "Thanks for applying to Dedale! Next steps: our team reviews every application and will get back to you."
+        self.assertEqual(job_mail.classify("Thanks for applying", body, "Dedale <no-reply@ashbyhq.com>"), "ack")
+        body = "Merci pour votre candidature. Si votre profil correspond, nous vous proposerons un premier échange."
+        self.assertEqual(job_mail.classify("Votre candidature", body, "Kaora <rh@kaora.fr>"), "ack")
+
     def test_company_and_role(self):
         self.assertEqual(job_mail.company_of("Orus <no-reply@teamtailor.com>"), "Orus")
         self.assertEqual(job_mail.company_of("Talent Acquisition <jobs@mytraffic.io>"), "Mytraffic")
@@ -136,6 +167,16 @@ class ConnectTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             job_mail.finish_connect("4/0AbCdEfGhIj", state, self.root,
                                     opener=self._opener(f"{job_mail.SCOPE} https://mail.google.com/", calls))
+        self.assertIn(job_mail.REVOKE_URL, calls)
+        self.assertFalse((self.root / "token.json").exists())
+
+    def test_another_inbox_is_revoked_and_refused(self):
+        client_file(self.root)
+        (self.root / "expected_account").write_text("job.inbox@gmail.com")
+        state = urllib.parse.parse_qs(urllib.parse.urlsplit(job_mail.start_connect(self.root)).query)["state"][0]
+        calls = []
+        with self.assertRaisesRegex(ValueError, "wrong_account"):
+            job_mail.finish_connect("4/0AbCdEfGhIj", state, self.root, opener=self._opener(job_mail.SCOPE, calls))
         self.assertIn(job_mail.REVOKE_URL, calls)
         self.assertFalse((self.root / "token.json").exists())
 
@@ -249,6 +290,46 @@ class WatcherTests(unittest.TestCase):
             return real(request, timeout)
         WATCHER.run(self.root, opener=watch)
         self.assertTrue(queries[0].startswith("after:"))
+
+    def test_new_rules_resort_the_inbox_and_drop_false_invites(self):
+        self.messages["m4"] = gmail_message("m4", "t4", "Caf <ne-pas-repondre@caf.fr>", "Votre CAF : prenez rendez-vous",
+                                            "Réservez un créneau. Candidature au RSA.", 1_792_100_000_000)
+        real = job_mail.classify
+        loose = lambda subject, body, sender="": "positive" if "caf" in sender.lower() else real(subject, body, sender)
+        with patch.object(job_mail, "CLASSIFIER_VERSION", 1), patch.object(job_mail, "classify", loose):
+            WATCHER.run(self.root, opener=self.opener)
+        self.assertEqual(sorted(reply["company"] for reply in job_mail.projection(self.root)["waiting"]), ["Caf", "Orus"])
+        WATCHER.run(self.root, opener=self.opener)  # Current rules: sorted again.
+        self.assertEqual([reply["company"] for reply in job_mail.projection(self.root)["waiting"]], ["Orus"])
+        items = {item["text"]: item for item in load_items(self.todo)["items"]}
+        self.assertNotIn("Ответить Caf: зовут на собеседование", items)  # A false invite leaves no trace in «Ждёт тебя».
+        self.assertFalse(items["Ответить Orus: зовут на собеседование"]["done"])  # Kept, not added twice.
+        self.assertEqual(sum(text.startswith("Ответить Orus") for text in items), 1)
+        saved = json.loads((self.root / "replies.json").read_text())
+        self.assertEqual(saved["classifier"], job_mail.CLASSIFIER_VERSION)
+
+    def test_only_the_job_inbox_is_watched(self):
+        (self.root / "expected_account").write_text("maximegrachev@gmail.com\n")
+        url = job_mail.start_connect(self.root)
+        self.assertIn("login_hint=maximegrachev%40gmail.com", url)
+        (self.root / "token.json").write_text(json.dumps({"refresh_token": "r", "email": "someone.else@gmail.com"}))
+        result = WATCHER.run(self.root, opener=self.opener)
+        self.assertEqual((result["ok"], result["reason"]), (False, "wrong_account"))
+        view = job_mail.projection(self.root)
+        self.assertEqual((view["state"], view["expected"], view["recent"]), ("wrong_account", "maximegrachev@gmail.com", []))
+
+    def test_switching_inbox_starts_over(self):
+        self.messages["m4"] = gmail_message("m4", "t4", "Acme Talent <talent@acme.io>", "Interview invitation",
+                                            "We would like to invite you to an interview. Pick a slot.", 1_792_100_000_000)
+        (self.root / "token.json").write_text(json.dumps({"refresh_token": "r", "email": "personal@gmail.com"}))
+        WATCHER.run(self.root, opener=self.opener)
+        self.assertEqual(len(job_mail.projection(self.root)["waiting"]), 2)
+        del self.messages["m4"]
+        (self.root / "token.json").write_text(json.dumps({"refresh_token": "r", "email": "maximegrachev@gmail.com"}))
+        WATCHER.run(self.root, opener=self.opener)
+        self.assertEqual([reply["company"] for reply in job_mail.projection(self.root)["waiting"]], ["Orus"])
+        self.assertEqual([item["text"] for item in load_items(self.todo)["items"] if item["text"].startswith("Ответить")],
+                         ["Ответить Orus: зовут на собеседование"])
 
     def test_stale_check_is_not_shown_as_all_clear(self):
         WATCHER.run(self.root, opener=self.opener)

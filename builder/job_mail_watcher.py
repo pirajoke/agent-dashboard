@@ -153,9 +153,9 @@ def _add_todo(reply: dict) -> str | None:
         return None
 
 
-def _close_todo(item_id: str) -> None:
+def _close_todo(item_id: str, action: str = "done") -> None:
     try:
-        owner_todo.change_items(OWNER_TODO_FILE, {"action": "done", "id": item_id})
+        owner_todo.change_items(OWNER_TODO_FILE, {"action": action, "id": item_id})
     except (OSError, ValueError, LookupError):
         pass
 
@@ -169,6 +169,20 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
     seen = set(saved.get("seen", [])) if isinstance(saved, dict) else set()
     first = not (isinstance(saved, dict) and saved.get("first_scan_done"))
     last_scan = saved.get("last_scan_ok") if isinstance(saved, dict) else None
+    token = job_mail._read(p["token"])
+    account = str(token.get("email") or "").lower() if isinstance(token, dict) else ""
+    # Another inbox was connected: what the old one gave is not Mark's job mail, so start over.
+    if not first and account and isinstance(saved, dict) and saved.get("account") and saved.get("account") != account:
+        for reply in replies:
+            if reply.get("todo_id"):
+                _close_todo(reply["todo_id"], "delete")
+        replies, seen, first, last_scan = [], set(), True, None
+        saved = {}
+    # New sorting rules: sort the last 60 days again, keeping what Mark already saw and answered.
+    earlier: dict[str, dict] = {}
+    if not first and isinstance(saved, dict) and saved.get("classifier") != job_mail.CLASSIFIER_VERSION:
+        earlier = {reply["id"]: reply for reply in replies if reply.get("id")}
+        replies, seen, first = [], set(), True
     new_invites = 0
     try:
         token, email = job_mail.access_token(root, opener)
@@ -193,8 +207,13 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
                      "company": job_mail.company_of(sender, subject), "role": job_mail.role_of(subject, body),
                      "subject": " ".join(subject.split())[:140], "verdict": verdict, "answered": False,
                      "link": _link(email, message.get("threadId") or message_id), "ms": int(message.get("internalDate") or 0)}
+            before = earlier.get(message_id)
+            if before and before.get("verdict") == verdict:
+                for key in ("answered", "todo_id", "alert_pending"):
+                    if key in before:
+                        reply[key] = before[key]
             replies.append(reply)
-            if verdict == "positive":
+            if verdict == "positive" and (not before or before.get("verdict") != "positive"):
                 reply["alert_pending"] = True
                 new_invites += 1
         # Has Mark answered an open invite? Then it is no longer waiting on him.
@@ -204,10 +223,22 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
                     reply["answered"] = True
                     if reply.get("todo_id"):
                         _close_todo(reply["todo_id"])
+        # A former «invite» that the new rules no longer call one: take its item off «Ждёт тебя».
+        kept = {reply["id"] for reply in replies if reply.get("verdict") == "positive"}
+        for old in earlier.values():
+            if old.get("verdict") == "positive" and old["id"] not in kept and old.get("todo_id"):
+                _close_todo(old["todo_id"], "delete")
+        earlier = {}
         status["email"] = email
         last_scan = _iso(now)
     except LookupError as error:
         status.update(ok=False, reason=str(error))
+        if str(error) == "wrong_account":
+            # Not the job inbox: its «invites» must not wait for Mark in «Ждёт тебя».
+            for reply in list(earlier.values()) + replies:
+                if reply.get("todo_id"):
+                    _close_todo(reply.pop("todo_id"), "delete")
+                reply.pop("alert_pending", None)
     except (RuntimeError, OSError, ValueError) as error:
         status.update(ok=False, reason=str(error)[:60] or "gmail_unavailable")
     # Every open invite gets its «Ждёт тебя» item once and its Telegram line until one is delivered.
@@ -227,9 +258,13 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
     for reply in replies:
         if reply.get("answered"):
             reply.pop("alert_pending", None)
+    if earlier:
+        # Gmail failed during the re-sort: keep the earlier list and try again next run.
+        replies, seen, first = list(earlier.values()), set(saved.get("seen", [])), False
     replies.sort(key=lambda reply: reply.get("date", ""), reverse=True)
     record = {"replies": replies[:MAX_REPLIES], "seen": sorted(seen)[-5000:], "updated_at": _iso(now),
-              "first_scan_done": (not first) or status["ok"], "last_scan_ok": last_scan}
+              "first_scan_done": (not first) or status["ok"], "last_scan_ok": last_scan, "account": account or None,
+              "classifier": job_mail.CLASSIFIER_VERSION if status["ok"] or not earlier else saved.get("classifier")}
     p["dir"].mkdir(parents=True, exist_ok=True)
     os.chmod(p["dir"], 0o700)
     _write_json(p["replies"], record, prefix=".replies-")

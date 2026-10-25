@@ -11267,6 +11267,7 @@ const MM_JOB_MAIL_NOTES = {
   scope_not_read_only: 'Нужен доступ только на чтение. Нажми «Подключить почту» ещё раз.',
   no_refresh_token: 'Google не выдал постоянный доступ. Нажми «Подключить почту» ещё раз.',
   not_configured: 'Подключение почты ещё не настроено на Mac mini.',
+  wrong_account: 'Это не та почта. В окне Google выбери почту, на которую приходят ответы по вакансиям.',
   error: 'Не получилось подключить почту. Попробуй ещё раз.',
 };
 let mmJobMailNote = (() => {
@@ -11328,7 +11329,7 @@ function mmRenderJobMail(payload) {
   const host = document.getElementById('mm-job-mail');
   if (!host) return;
   host.replaceChildren();
-  if (!payload || !['not_configured', 'not_connected', 'connected', 'error'].includes(payload.state)) {
+  if (!payload || !['not_configured', 'not_connected', 'connected', 'error', 'wrong_account'].includes(payload.state)) {
     host.hidden = true;  // Not the owner, or the Mac mini cannot answer.
     return;
   }
@@ -11341,7 +11342,8 @@ function mmRenderJobMail(payload) {
   const open = mmFoldIsOpen('job-mail') || waiting.length > 0 || Boolean(mmJobMailNote) || !connected || Boolean(payload.stale);
   card.classList.toggle('is-open', open);
   card.classList.toggle('has-invite', connected && waiting.length > 0);
-  const meta = !connected ? 'почта не подключена'
+  const meta = payload.state === 'wrong_account' ? 'подключена не та почта'
+    : !connected ? 'почта не подключена'
     : waiting.length ? `${waiting[0].company} зовёт на собеседование`
     : payload.stale ? 'почта давно не проверялась'
     : 'новых приглашений нет';
@@ -11355,9 +11357,11 @@ function mmRenderJobMail(payload) {
     const intro = mmEl('div', 'mm-jm-connect');
     intro.appendChild(mmEl('div', 'mm-jm-connect-icon', '✉'));
     const words = mmEl('div', 'mm-jm-connect-text');
-    words.appendChild(mmEl('strong', '', payload.state === 'error' ? 'Почта отключилась' : 'Подключи почту с откликами'));
+    const wrong = payload.state === 'wrong_account';
+    words.appendChild(mmEl('strong', '', wrong ? 'Подключена не та почта' : payload.state === 'error' ? 'Почта отключилась' : 'Подключи почту с откликами'));
     words.appendChild(mmEl('p', '', payload.state === 'not_configured'
       ? 'Подключение почты ещё не настроено на Mac mini.'
+      : wrong ? `Сейчас подключена ${payload.email || 'другая почта'}. Нажми кнопку и выбери ${payload.expected || 'почту с откликами'}.`
       : 'Когда работодатель позовёт на собеседование, сразу придёт сигнал, а здесь будет вся статистика ответов.'));
     const safe = mmEl('ul', 'mm-jm-safe');
     ['Только чтение: ничего не отправляет и не удаляет', 'Ключ хранится только на Mac mini', 'Отключить можно в любой момент'].forEach(text => safe.appendChild(mmEl('li', '', text)));
@@ -11365,7 +11369,8 @@ function mmRenderJobMail(payload) {
     intro.appendChild(words);
     foldBody.appendChild(intro);
     if (payload.state !== 'not_configured') {
-      const connect = mmEl('button', 'mm-jm-primary', payload.state === 'error' ? 'Подключить заново' : 'Подключить почту');
+      const connect = mmEl('button', 'mm-jm-primary', payload.state === 'wrong_account' ? 'Подключить нужную почту'
+        : payload.state === 'error' ? 'Подключить заново' : 'Подключить почту');
       connect.type = 'button';
       connect.dataset.jmConnect = '';
       foldBody.appendChild(connect);

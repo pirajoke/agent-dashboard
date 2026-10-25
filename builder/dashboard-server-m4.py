@@ -2960,7 +2960,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 _kick_job_mail_watcher()
                 self._redirect('/?tab=work&job-mail=connected')
             except (ValueError, LookupError, RuntimeError, OSError) as error:
-                reason = str(error) if str(error) in {'state_mismatch', 'scope_not_read_only', 'no_refresh_token', 'client_not_configured'} else 'error'
+                reason = str(error) if str(error) in {'state_mismatch', 'scope_not_read_only', 'no_refresh_token', 'client_not_configured', 'wrong_account'} else 'error'
                 self._redirect(f'/?tab=work&job-mail={reason}')
             return
         if parsed.path == '/api/owner-projects':
