@@ -241,6 +241,9 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
                 reply.pop("alert_pending", None)
     except (RuntimeError, OSError, ValueError) as error:
         status.update(ok=False, reason=str(error)[:60] or "gmail_unavailable")
+    if earlier:
+        # Gmail failed during the re-sort: keep the earlier list (before any alert or item) and try again next run.
+        replies, seen, first = list(earlier.values()), set(saved.get("seen", [])), False
     # Every open invite gets its «Ждёт тебя» item once and its Telegram line until one is delivered.
     pending = [reply for reply in replies if reply.get("verdict") == "positive" and not reply.get("answered")
                and reply.get("alert_pending")]
@@ -258,9 +261,6 @@ def run(root: Path | None = None, *, opener=urllib.request.urlopen, now: datetim
     for reply in replies:
         if reply.get("answered"):
             reply.pop("alert_pending", None)
-    if earlier:
-        # Gmail failed during the re-sort: keep the earlier list and try again next run.
-        replies, seen, first = list(earlier.values()), set(saved.get("seen", [])), False
     replies.sort(key=lambda reply: reply.get("date", ""), reverse=True)
     record = {"replies": replies[:MAX_REPLIES], "seen": sorted(seen)[-5000:], "updated_at": _iso(now),
               "first_scan_done": (not first) or status["ok"], "last_scan_ok": last_scan, "account": account or None,

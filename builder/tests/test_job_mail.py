@@ -77,6 +77,10 @@ class ClassifyTests(unittest.TestCase):
         self.assertIsNone(job_mail.classify("Ton rendez-vous au club", "Réserve ton créneau avec un coach.", "Basic-Fit <info@basic-fit.com>"))
         self.assertIsNone(job_mail.classify("Rendez-vous confirmé", "Votre créneau du lundi est réservé.", "Doctolib <no-reply@doctolib.fr>"))
 
+    def test_hiring_side_of_a_service_company_still_counts(self):
+        self.assertEqual(job_mail.classify("Interview invitation", "Please book a slot for your interview.", "Amazon <jobs@amazon.com>"), "positive")
+        self.assertEqual(job_mail.classify("Your application", "If you are interested, please book a slot for your interview."), "positive")
+
     def test_bare_job_words_are_not_enough(self):
         self.assertIsNone(job_mail.classify("Your call is booked", "Pick a slot for your demo call", "Acme <sales@acme.io>"))
         self.assertEqual(job_mail.classify("Business Developer", "Votre candidature a retenu notre attention, choisissez un créneau.",
@@ -330,6 +334,27 @@ class WatcherTests(unittest.TestCase):
         self.assertEqual([reply["company"] for reply in job_mail.projection(self.root)["waiting"]], ["Orus"])
         self.assertEqual([item["text"] for item in load_items(self.todo)["items"] if item["text"].startswith("Ответить")],
                          ["Ответить Orus: зовут на собеседование"])
+
+    def test_failed_resort_sends_nothing_twice(self):
+        self.telegram.write_text(json.dumps({"bot_token": "b", "chat_id": "c"}))
+        with patch.object(job_mail, "CLASSIFIER_VERSION", 1):
+            WATCHER.run(self.root, opener=self.opener)
+        self.assertEqual(len(self.sent), 1)
+        self.messages["m5"] = gmail_message("m5", "t5", "Acme Talent <talent@acme.io>", "Interview invitation",
+                                            "We would like to invite you to an interview. Pick a slot.", 1_792_100_000_000)
+        real = self.opener
+
+        def broken_threads(request, timeout=None):
+            if "/threads/" in request.full_url:
+                raise OSError("gmail down")
+            return real(request, timeout)
+        self.assertFalse(WATCHER.run(self.root, opener=broken_threads)["ok"])  # Re-sort read Acme, then Gmail failed.
+        self.assertEqual(len(self.sent), 1)
+        WATCHER.run(self.root, opener=self.opener)
+        WATCHER.run(self.root, opener=self.opener)
+        self.assertEqual(len(self.sent), 2)  # Acme once, Orus never again.
+        self.assertEqual(sorted(item["text"] for item in load_items(self.todo)["items"] if item["text"].startswith("Ответить")),
+                         ["Ответить Acme: зовут на собеседование", "Ответить Orus: зовут на собеседование"])
 
     def test_stale_check_is_not_shown_as_all_clear(self):
         WATCHER.run(self.root, opener=self.opener)

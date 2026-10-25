@@ -304,6 +304,10 @@ _ACK = re.compile(r"(avons|a) bien (ete )?recu|bien recu|a bien ete (recue|enreg
 _ATS = re.compile(r"teamtailor|lever\.co|greenhouse|ashbyhq|workable|smartrecruiters|recruitee|taleo|workday|successfactors|jobvite|"
                   r"breezy|welcometothejungle|wttj|hellowork|apec|jobteaser|flatchr|talentsoft|talent-soft|taleez|personio|bamboohr|"
                   r"jazzhr|icims|pinpointhq|homerun|join\.com|indeed|linkedin|recrut|recruit|talent|careers?@|jobs?@|rh@|hr@")
+# Only a promise that depends on being picked; «if you are interested, book a slot» is still an invite.
+_PROMISE = re.compile(r"\bsi (votre|ta) (candidature|profil)|\bif (you are |you're )?(selected|shortlisted|successful)\b|"
+                      r"\bshould (you|your (application|profile))\b|\bsi (vous|tu) (etes|es) (retenu|selectionne|preselectionne)|"
+                      r"\bif (your|our) (application|profile|team)|\ble cas echeant|\bdans le cas ou|\bs'?il y a une correspondance")
 _SENTENCE = re.compile(r"(?<=[.!?\n])\s+")
 
 
@@ -313,7 +317,8 @@ def classify(subject: str, body: str, sender: str = "") -> str | None:
     who = _plain(sender)
     if _NOT_A_REPLY.search(text) or re.search(r"jobalerts?|jobs-listings|job-alert|alert@|newsletter", who):
         return None
-    if _NOT_EMPLOYER.search(who) or _NOT_EMPLOYER.search(_plain(subject)):
+    # Service mail from banks, shops, deliveries…, unless it comes from their hiring side or is about hiring.
+    if (_NOT_EMPLOYER.search(who) or _NOT_EMPLOYER.search(_plain(subject))) and not (_ATS.search(who) or _JOB.search(_plain(subject))):
         return None
     # Only mail about an application counts: from a hiring system, or plainly about hiring.
     if not (_ATS.search(who) and _JOB.search(text) or _JOB.search(_plain(subject)) or len(_JOB.findall(text)) >= 2):
@@ -321,7 +326,7 @@ def classify(subject: str, body: str, sender: str = "") -> str | None:
     if _NEGATIVE.search(text):
         return "negative"
     # «Если ваш профиль подойдёт, мы позовём на интервью» is a promise, not an invite: drop those sentences.
-    firm = " ".join(part for part in _SENTENCE.split(text) if not _CONDITIONAL.search(part))
+    firm = " ".join(part for part in _SENTENCE.split(text) if not _PROMISE.search(part))
     if _BOOKING.search(firm):
         return "positive"
     if _ACK.search(text):
