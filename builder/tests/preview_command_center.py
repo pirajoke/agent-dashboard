@@ -243,13 +243,6 @@ class PreviewHandler(SERVER.Handler):
                 payload["records"] = [record]
             self._json_response(200, payload)
             return
-        if parsed.path == "/api/job-mail":
-            # Synthetic replies only (PREVIEW_JOB_MAIL=not_connected shows the connect step).
-            if not self._decision_owner_authorized():
-                self._json_response(401, {"error": "owner_token_required", "state": "owner_required"})
-                return
-            self._json_response(200, job_mail_fixture())
-            return
         if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
@@ -343,30 +336,6 @@ def prepare_docxx_sorting():
         "checked_at": now.isoformat(), "phase": "needs_review", "model_calls": 0,
         "catalog": {"status": "ready", "documents": 42}, "results": [],
         "drive_ingress": {"status": "idle", "pending": 0, "results": []}, "review_pending": []}))
-
-
-def job_mail_fixture():
-    import os
-    from dashboard_builder import job_mail
-    if os.environ.get("PREVIEW_JOB_MAIL") == "wrong_account":
-        return {"state": "wrong_account", "email": "personal@example.com", "expected": "job@example.com",
-                "waiting": [], "recent": [], "stats": job_mail.stats([])}
-    if os.environ.get("PREVIEW_JOB_MAIL") == "not_connected":
-        return {"state": "not_connected", "email": None, "waiting": [], "recent": [], "stats": job_mail.stats([])}
-    now = datetime.now(timezone.utc)
-    rows = [("Пример А", "Business Developer", "positive", 3, False), ("Пример Б", "GTM Engineer", "negative", 1, True),
-            ("Пример В", "Product Manager", "negative", 9, True), ("Пример Г", "Consultant", "positive", 16, True),
-            ("Пример Д", "Sales", "ack", 3, False), ("Пример Е", "Account Executive", "negative", 23, True),
-            ("Пример Ж", "Growth", "negative", 12, True), ("Пример З", "Ops", "negative", 30, True),
-            ("Пример И", "Sales", "positive", 6, True), ("Пример К", "CSM", "negative", 5, True),
-            ("Пример Л", "BizDev", "negative", 38, True), ("Пример М", "PM", "negative", 19, True)]
-    replies = [{"id": f"m{index}", "thread_id": f"t{index}", "company": company, "role": role, "verdict": verdict,
-                "date": (now - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ"), "answered": answered,
-                "link": f"https://mail.google.com/mail/#all/t{index}", "subject": "Пример"}
-               for index, (company, role, verdict, days, answered) in enumerate(rows)]
-    return {"state": "connected", "email": "preview@example.com", "first_scan_done": True, "stale": False,
-            "waiting": [reply for reply in replies if reply["verdict"] == "positive" and not reply["answered"]],
-            "recent": replies, "stats": job_mail.stats(replies, today=now)}
 
 
 if __name__ == "__main__":

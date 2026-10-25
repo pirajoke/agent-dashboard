@@ -38,7 +38,6 @@ from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MA
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.infra_changes import infra_projection
-from dashboard_builder import job_mail
 from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list, parse_launchctl_running
 from dashboard_builder.department_campus import (
@@ -64,7 +63,6 @@ PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
-JOB_MAIL_LABEL = "com.pirajoke.job-mail-watcher"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
 AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
@@ -1910,9 +1908,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/docxx/decide':
             self._handle_docxx_decide()
             return
-        if parsed.path in {'/api/job-mail/connect', '/api/job-mail/finish', '/api/job-mail/disconnect', '/api/job-mail/check'}:
-            self._handle_job_mail_post(parsed.path)
-            return
         if parsed.path == '/api/jarvis/pipeline/ping':
             self._handle_jarvis_pipeline_ping()
             return
@@ -2653,38 +2648,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except OSError:
             self._json_response(503, {'error': 'owner_todo_unavailable'})
 
-    def _redirect(self, location: str):
-        self.send_response(302)
-        self.send_header('Location', location)
-        self.send_header('Content-Length', '0')
-        self.send_header('Referrer-Policy', 'no-referrer')
-        self.end_headers()
-
-    def _handle_job_mail_post(self, path: str):
-        body = self._platform_owner_body(4096)
-        if body is None:
-            return
-        try:
-            if path == '/api/job-mail/connect':
-                # The page opens Google's consent screen at this address (read-only scope only).
-                self._json_response(200, {'url': job_mail.start_connect()})
-                return
-            if path == '/api/job-mail/finish':
-                code, state = job_mail.parse_pasted_return(body.get('url'))
-                job_mail.finish_connect(code, state)
-                _kick_job_mail_watcher()
-            elif path == '/api/job-mail/disconnect':
-                job_mail.disconnect()
-            else:
-                _kick_job_mail_watcher()
-            self._json_response(200, job_mail.projection())
-        except LookupError as error:
-            self._json_response(409, {'error': str(error)})
-        except ValueError as error:
-            self._json_response(400, {'error': str(error)})
-        except (RuntimeError, OSError):
-            self._json_response(502, {'error': 'google_unavailable'})
-
     def _handle_manager_decision_response(self):
         if not self._decision_owner_authorized():
             self._json_response(401, {'error': 'owner_token_required'})
@@ -2940,28 +2903,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(401, {'state': 'owner_required', 'tasks': []})
                 return
             self._json_response(200, shared_task_board_projection())
-            return
-        if parsed.path == '/api/job-mail':
-            # Employer replies from Mark's job mailbox (Mark 2026-10-24). Owner only; never the token or mail text.
-            if not self._decision_owner_authorized():
-                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required'})
-                return
-            self._json_response(200, job_mail.projection())
-            return
-        if parsed.path == '/api/job-mail/oauth/callback':
-            # Google sends the browser back here. The one-time state, made for the owner by /connect and kept
-            # with its PKCE verifier on the Mac mini, is what ties this answer to Mark.
-            query = parse_qs(parsed.query)
-            if query.get('error'):
-                self._redirect('/?tab=work&job-mail=refused')
-                return
-            try:
-                job_mail.finish_connect((query.get('code') or [''])[0], (query.get('state') or [''])[0])
-                _kick_job_mail_watcher()
-                self._redirect('/?tab=work&job-mail=connected')
-            except (ValueError, LookupError, RuntimeError, OSError) as error:
-                reason = str(error) if str(error) in {'state_mismatch', 'scope_not_read_only', 'no_refresh_token', 'client_not_configured', 'wrong_account'} else 'error'
-                self._redirect(f'/?tab=work&job-mail={reason}')
             return
         if parsed.path == '/api/owner-projects':
             # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.
@@ -3238,15 +3179,6 @@ def _kick_agent_runner(start=subprocess.Popen):
         return True
     except OSError:
         return False  # No launchctl (not the Mac mini): the 5-minute tick still picks it up.
-
-
-def _kick_job_mail_watcher():
-    """Check the mailbox now instead of within 10 minutes (best effort)."""
-    try:
-        subprocess.run(["launchctl", "kickstart", f"gui/{os.getuid()}/{JOB_MAIL_LABEL}"],
-                       capture_output=True, timeout=10, check=False)
-    except (OSError, subprocess.SubprocessError):
-        pass
 
 
 def _agent_runner_status(status_file=None):
