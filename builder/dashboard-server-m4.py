@@ -1066,7 +1066,10 @@ def _health_request(method: str, path: str, payload: dict | None = None) -> dict
 
 # After a laptop fails to answer, GET reads fail fast for a while instead of
 # holding a server thread for the full timeout on every dashboard refresh.
-REMOTE_HEALTH_COOLDOWN_SECONDS = 60
+REMOTE_HEALTH_COOLDOWN_SECONDS = 20
+# A laptop's /api/all lists every launchd job and can take several seconds,
+# so one slow answer must not count as "offline" (Mark 2026-10-26, «Нет связи» on the MacBook Pro).
+REMOTE_HEALTH_TIMEOUT_SECONDS = 12
 _remote_health_down_until: dict[str, float] = {}
 
 
@@ -1079,7 +1082,7 @@ def _remote_health_request(base_url: str, method: str, path: str, payload: dict 
         data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(f"{base_url}{path}", data=data, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=REMOTE_HEALTH_TIMEOUT_SECONDS) as resp:
             raw = resp.read().decode("utf-8")
     except urllib.error.HTTPError:
         _remote_health_down_until.pop(base_url, None)

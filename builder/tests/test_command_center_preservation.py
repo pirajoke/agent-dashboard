@@ -22,10 +22,11 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # Baseline: the owner-approved repository revision 8530103; the Mac mini services card
         # changed 2026-10-20 on Mark's word (grouped list, archive), the gauges did not. Re-baselined
         # 2026-10-24 on Mark's «го» to the rebuild plan: no metadata, gauges moved behind «i», Russian labels.
+        # 2026-10-26 on Mark's ask to watch memory and disk: a plain «ок / перегружена» row under each header.
         expected = {
-            "section-mac-mini": "fe9d5a398418f80d1f70e662e889395eb69334c0d1c314d3709fcb733628e9b1",
-            "section-air": "68a62bd0dc1b0b0d94bc397c863d3fe0db2104406b53e751cc5f1b56a7c19339",
-            "section-pro": "4d92d8caa10af2596c25b2131d6ff4e7acc00218b3ff6cd6e74af7de20b3aeb7",
+            "section-mac-mini": "b15950fae61ce6d7916440de2efb111c1cac074f0fc8ec24421b63eb0f910d0a",
+            "section-air": "5a559c820d6144f67008ba67874358f3b4a8ec27379f373cf549084580b6d274",
+            "section-pro": "3b110d68de46f65d40beec30267351c1b86faa6877ecf693850d1be78ada6450",
         }
         source = HTML.read_text()
         for identity, digest in expected.items():
@@ -34,12 +35,13 @@ class ExistingMachinePreservationTests(unittest.TestCase):
 
     def test_existing_machine_renderers_refresh_and_service_controls_are_unchanged(self):
         # Re-baselined 2026-10-20 with Mark's word for the grouped service list, and 2026-10-24 on his
-        # «го» to the rebuild plan (list only, no counters, Russian status words).
+        # «го» to the rebuild plan (list only, no counters, Russian status words), and 2026-10-26 for the
+        # memory/disk/load words and the grace period that stops a slow laptop from flashing «Нет связи».
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "50c6fc2f38fa62c276c9060a275aeb38741ea0ca11de5fccb40566710aa5b2b3")
+                         "7a509800672441a4ef9b2dcb5ed6e29be8adb4d4447c1aa15a5502ff9739771e")
 
 
 if __name__ == "__main__":
