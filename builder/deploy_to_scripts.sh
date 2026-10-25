@@ -25,6 +25,7 @@ cp "$SRC_DIR/auto_deploy.py" "$SCRIPTS_DIR/auto_deploy.py"
 cp "$SRC_DIR/launchd_watchdog.py" "$SCRIPTS_DIR/launchd_watchdog.py"
 cp "$SRC_DIR/owner_project_card.py" "$SCRIPTS_DIR/owner_project_card.py"
 cp "$SRC_DIR/weekly_digest.py" "$SCRIPTS_DIR/weekly_digest.py"
+cp "$SRC_DIR/daily_digest.py" "$SCRIPTS_DIR/daily_digest.py"
 cp "$SRC_DIR/agent_task_runner.py" "$SCRIPTS_DIR/agent_task_runner.py"
 cp "$SRC_DIR/context_retell.py" "$SCRIPTS_DIR/context_retell.py"
 cp "$SRC_DIR/job_mail_watcher.py" "$SCRIPTS_DIR/job_mail_watcher.py"
@@ -51,7 +52,7 @@ chmod +x "$LOCAL_BIN_DIR/mm-command-center-auth"
 
 cd "$SCRIPTS_DIR"
 python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manager_status_publisher.py daily_work_collector.py infra_change_collector.py daily_work_summarizer.py auto_deploy.py launchd_watchdog.py dashboard_builder/*.py
-python3 -m py_compile weekly_digest.py
+python3 -m py_compile weekly_digest.py daily_digest.py
 python3 -m py_compile agent_task_runner.py
 python3 -m py_compile context_retell.py
 python3 -m py_compile job_mail_watcher.py
@@ -85,6 +86,18 @@ if [[ "${DASHBOARD_INSTALL_WEEKLY_DIGEST:-1}" == "1" ]]; then
     "$SRC_DIR/launchd/$DIGEST_LABEL.plist.template" > "$DIGEST_PLIST.tmp"
   plutil -lint "$DIGEST_PLIST.tmp" >/dev/null
   install_launchd_agent "$DIGEST_PLIST.tmp" "$DIGEST_PLIST" "$DIGEST_LABEL"
+fi
+
+# Evening summary of the day in Telegram, every day at 21:30 so it arrives by 22:00 (Mark 2026-10-23).
+# Same Telegram settings as the Monday digest; without them it only writes ~/.agent-bridge/daily-digest/.
+DAILY_DIGEST_LABEL="com.pirajoke.daily-digest"
+DAILY_DIGEST_PLIST="$HOME/Library/LaunchAgents/$DAILY_DIGEST_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_DAILY_DIGEST:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$DAILY_DIGEST_LABEL"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$DAILY_DIGEST_LABEL.plist.template" > "$DAILY_DIGEST_PLIST.tmp"
+  plutil -lint "$DAILY_DIGEST_PLIST.tmp" >/dev/null
+  install_launchd_agent "$DAILY_DIGEST_PLIST.tmp" "$DAILY_DIGEST_PLIST" "$DAILY_DIGEST_LABEL"
 fi
 
 # Agents take things off Mark's «Ждёт тебя» list (Mark 2026-10-23: «включай исполнителя агентов на
