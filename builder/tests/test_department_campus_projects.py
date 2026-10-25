@@ -5,6 +5,7 @@ import importlib
 from pathlib import Path
 import re
 import unittest
+from campus_archive_write import without_archive_write
 
 
 NOW = datetime(2026, 8, 10, 12, 0, tzinfo=timezone.utc)
@@ -31,7 +32,7 @@ class DepartmentCampusProjectTests(unittest.TestCase):
         cls.campus = importlib.import_module("dashboard_builder.department_campus")
         cls.html = cls.campus.build_department_campus_html()
         cls.css = (ASSETS_DIR / "style.css").read_text(encoding="utf-8")
-        cls.script = (ASSETS_DIR / "script.js").read_text(encoding="utf-8")
+        cls.script = without_archive_write((ASSETS_DIR / "script.js").read_text(encoding="utf-8"))
 
     def _registry(self):
         if not hasattr(self.campus, "CAMPUS_PROJECTS"):

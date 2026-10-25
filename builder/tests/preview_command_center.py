@@ -268,6 +268,7 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path == "/api/manager/departments":
             try:
                 payload = SERVER._department_campus_payload(fixture_tasks(), owner_view=self._decision_owner_authorized())
+                payload = SERVER.apply_campus_archive(payload, SERVER.CAMPUS_ARCHIVE_FILE, now=datetime.now(timezone.utc))
             except OSError:
                 payload = {"state": "unavailable", "events": []}
             self._json_response(200, payload)
@@ -311,6 +312,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_docxx_decide()  # Moves only synthetic files in the fixture library.
         elif urlsplit(self.path).path == "/api/owner-todo":
             self._handle_owner_todo_save()  # Writes only to the isolated fixture state.
+        elif urlsplit(self.path).path == "/api/manager/campus-archive":
+            self._handle_campus_archive_change()  # Writes only to the isolated fixture state.
         else:
             self._json_response(403, {"error": "fixture_read_only"})
 
@@ -373,6 +376,7 @@ if __name__ == "__main__":
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
+        SERVER.CAMPUS_ARCHIVE_FILE = FIXTURE_STATE / "campus-archive.json"
         SERVER.HOME = FIXTURE_STATE / "home"  # Synthetic DOCXX state and library for ?fixture=sorting.
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"

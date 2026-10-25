@@ -47,7 +47,13 @@ from dashboard_builder.department_campus import (
     build_department_campus_html,
     department_campus_projection,
 )
-from dashboard_builder.native_activity import validate_native_activity_checkpoint
+from dashboard_builder.native_activity import ROUTE_CONTRACT as NATIVE_ROUTE_CONTRACT, validate_native_activity_checkpoint
+from dashboard_builder.campus_archive import (
+    MAX_BODY_BYTES as CAMPUS_ARCHIVE_MAX_BYTES,
+    activity_counts as _activity_counts,
+    apply_campus_archive,
+    change_archive as change_campus_archive,
+)
 
 PORT = 7777
 HOME = Path.home()
@@ -63,6 +69,7 @@ PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
+CAMPUS_ARCHIVE_FILE = HOME / ".agent-bridge" / "campus-archive.json"
 AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
 JOB_MAIL_LABEL = "com.pirajoke.job-mail-watcher"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
@@ -1471,6 +1478,10 @@ def _empty_activity_counts() -> dict[str, int]:
     }
 
 
+def _campus_route_ids() -> set[str]:
+    return {route[0] for route in NATIVE_ROUTE_CONTRACT}
+
+
 def _native_activity_declarations(data: object) -> list[dict]:
     tasks = data.get("tasks") if isinstance(data, dict) else None
     declarations: list[dict] = []
@@ -1538,16 +1549,7 @@ def _native_activity_projection(data: object, *, now: datetime) -> tuple[list[di
         return [], _empty_activity_counts(), True
     checkpoint = max(valid, key=lambda item: item[0])[1]
     agents = checkpoint["agents"]
-    return agents, {
-        "enabled": len(agents),
-        "running": sum(agent["state"] == "running" for agent in agents),
-        "idle": sum(agent["state"] == "idle" for agent in agents),
-        "waiting": sum(agent["state"] == "waiting" for agent in agents),
-        "blocked": sum(agent["state"] == "blocked" for agent in agents),
-        "done": sum(agent["state"] == "done" for agent in agents),
-        "unavailable": sum(agent["availability"] != "available" for agent in agents),
-        "turn_completed": sum(agent["outcome_stage"] == "turn_completed" for agent in agents),
-    }, True
+    return agents, _activity_counts(agents), True
 
 
 def _manager_work_counts(data: object, *, now: datetime) -> dict[str, int]:
@@ -1906,6 +1908,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
+            return
+        if parsed.path == '/api/manager/campus-archive':
+            self._handle_campus_archive_change()
             return
         if parsed.path == '/api/docxx/decide':
             self._handle_docxx_decide()
@@ -2611,6 +2616,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except OSError:
             self._json_response(503, {'error': 'docxx_decisions_unavailable'})
 
+    def _handle_campus_archive_change(self):
+        # Mark's «В архив» / «Вернуть» on the Agents campus; same owner guard as Platforms.
+        body = self._platform_owner_body(CAMPUS_ARCHIVE_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            change_campus_archive(CAMPUS_ARCHIVE_FILE, body, known_routes=_campus_route_ids(),
+                                  now=datetime.now(timezone.utc))
+            self._json_response(200, {'state': 'ready'})
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_campus_archive_change'})
+        except OSError:
+            self._json_response(503, {'error': 'campus_archive_unavailable'})
+
     def _handle_platform_edits_save(self):
         body = self._platform_owner_body(PLATFORM_EDITS_MAX_BYTES)
         if body is None:
@@ -3066,6 +3085,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     payload = _department_campus_payload(data, owner_view=True)
                 else:
                     payload = _department_campus_payload(data)
+                payload = apply_campus_archive(payload, CAMPUS_ARCHIVE_FILE, now=datetime.now(timezone.utc))
                 self._json_response(200, payload)
             except Exception:
                 self._json_response(
