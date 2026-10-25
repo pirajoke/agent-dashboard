@@ -76,6 +76,8 @@ _PROGRESS_TYPES = frozenset(
         "reasoning",
         "tool_result",
         "tool_use",
+        "custom_tool_call",
+        "custom_tool_call_output",
     }
 )
 
@@ -598,6 +600,86 @@ def _jsonl_line_views(raw: bytes) -> Iterator[memoryview]:
             yield line
 
 
+def _read_source_window(path: Path, limit: int, bytes_read: list[int]) -> tuple[bytes, os.stat_result, bool, int] | None:
+    """Read stable small sources or a bounded Codex owner header and tail."""
+    no_follow = getattr(os, "O_NOFOLLOW", None)
+    if no_follow is None or limit <= 0:
+        return None
+    descriptor = None
+    try:
+        descriptor = os.open(path, os.O_RDONLY | no_follow)
+        before = os.fstat(descriptor)
+        if not stat_module.S_ISREG(before.st_mode) or before.st_size <= 0:
+            return None
+        windowed = before.st_size > limit
+        with os.fdopen(descriptor, "rb", buffering=0, closefd=True) as handle:
+            descriptor = None
+            if not windowed:
+                raw = handle.read(limit)
+                consumed = len(raw)
+                bytes_read[0] += consumed
+                if len(raw) != before.st_size:
+                    return None
+            else:
+                # Keep aggregate scanning practical without increasing configured bounds.
+                budget = min(limit, 1024 * 1024)
+                if budget <= 4:
+                    return None
+                prefix = handle.read(min(64 * 1024, budget // 4) - 1)
+                bytes_read[0] += len(prefix)
+                boundary = prefix.find(b"\n")
+                if boundary < 0:
+                    return None
+                header = prefix[:boundary + 1]
+                envelope = _parse_jsonl_envelope(header)
+                payload = envelope.get("payload")
+                if envelope.get("type") != "session_meta" or not isinstance(payload, dict):
+                    return None
+                owner = payload.get("id")
+                if not isinstance(owner, str) or not owner:
+                    return None
+                if payload.get("session_id", owner) != owner:
+                    return None
+                # Validate every complete line we already read. Only incomplete
+                # boundary fragments and the unread middle are omitted. The native
+                # append-only format makes the initial session header authoritative;
+                # this is not a full-file audit of the skipped history.
+                complete_prefix = prefix[:prefix.rfind(b"\n") + 1]
+                for line in list(_jsonl_line_views(complete_prefix))[1:]:
+                    visible = _parse_jsonl_envelope(line)
+                    if _record_identities(visible) - {owner}:
+                        return None
+                tail_size = budget - len(prefix) - 1
+                if tail_size <= 1:
+                    return None
+                handle.seek(before.st_size - tail_size - 1)
+                preceding = handle.read(1)
+                bytes_read[0] += len(preceding)
+                tail = handle.read(tail_size)
+                bytes_read[0] += len(tail)
+                consumed = len(prefix) + len(preceding) + len(tail)
+                # Only the leading boundary fragment may be discarded. A partial
+                # final record remains visible to the parser and fails closed.
+                if preceding == b"\n":
+                    raw = header + tail
+                else:
+                    boundary = tail.find(b"\n")
+                    if boundary < 0:
+                        return None
+                    raw = header + tail[boundary + 1:]
+            after = os.fstat(handle.fileno())
+        current = path.lstat()
+        fingerprint = lambda value: (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns)
+        if fingerprint(before) != fingerprint(after) or fingerprint(before) != fingerprint(current):
+            return None
+        return raw, before, windowed, consumed
+    except (OSError, _EnvelopeJsonError):
+        return None
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
 def _parse_source(
     path: Path,
     *,
@@ -606,22 +688,36 @@ def _parse_source(
     remaining_bytes: int,
 ) -> tuple[dict[str, Any] | None, int]:
     read_limit = min(max_bytes, remaining_bytes)
-    opened = _read_regular_file(path, limit=read_limit)
+    bytes_read = [0]
+    opened = _read_source_window(path, read_limit, bytes_read)
     if opened is None:
-        return None, 0
-    raw, stat = opened
+        return None, bytes_read[0]
+    raw, stat, windowed, consumed = opened
 
     identities: set[str] = {path.stem} if path.stem else set()
     records: list[tuple[datetime, str | None]] = []
     invalid = False
     last_time: datetime | None = None
+    owner: str | None = None
+    window_started = not windowed
     for line in _jsonl_line_views(raw):
         try:
             record = _parse_jsonl_envelope(line)
         except _EnvelopeJsonError:
             invalid = True
             continue
-        identities.update(_record_identities(record))
+        if windowed:
+            payload = record.get("payload")
+            if owner is None:
+                owner = payload.get("id") if isinstance(payload, dict) else None
+                identities = {owner} if isinstance(owner, str) else set()
+            else:
+                # Parent/fork metadata is not authority to reroute a sampled file.
+                record_ids = _record_identities(record)
+                if record_ids - {owner}:
+                    invalid = True
+        else:
+            identities.update(_record_identities(record))
         timestamp = _parse_time(
             record.get("timestamp") or record.get("created_at") or record.get("updated_at")
         )
@@ -636,7 +732,10 @@ def _parse_source(
         if timestamp > now + MAX_FUTURE_SKEW or (last_time is not None and timestamp < last_time):
             invalid = True
         last_time = timestamp
-        records.append((timestamp, transition))
+        if transition == "started":
+            window_started = True
+        if window_started:
+            records.append((timestamp, transition))
     return {
         "identities": identities,
         "records": records,
@@ -645,7 +744,8 @@ def _parse_source(
         "modified_ns": stat.st_mtime_ns,
         "device": stat.st_dev,
         "inode": stat.st_ino,
-    }, len(raw)
+        "size": stat.st_size,
+    }, consumed
 
 
 def _matches_regular_inode(path: Path, *, expected_device: int, expected_inode: int) -> bool:
@@ -937,6 +1037,18 @@ def _project_source(
         expected_device=parsed["device"],
         expected_inode=parsed["inode"],
     )
+    # An open process is not evidence for the earlier snapshot if it appended a
+    # completion (or otherwise changed the file) while being attested.
+    try:
+        current_stat = parsed["path"].lstat()
+        stable = (current_stat.st_mtime_ns == parsed["modified_ns"]
+                  and current_stat.st_size == parsed["size"])
+    except OSError:
+        stable = False
+    if not stable:
+        agent = _empty_agent(route)
+        agent["freshness"] = "invalid"
+        return agent
     if progress is not None and process_available:
         agent["state"] = "running"
         agent["availability"] = "available"
