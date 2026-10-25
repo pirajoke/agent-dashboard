@@ -48,6 +48,8 @@ TAIL_BYTES = 768 * 1024
 REPLY_LIMIT = 280
 MAX_SESSIONS = 60
 CLAUDE_LINK_RE = re.compile(r"https://claude\.ai/code/session_[A-Za-z0-9_-]{8,80}")
+# Messages the harness wraps around a session, not something Mark asked.
+WRAPPER_PREFIXES = ("[", "<", "Caveat:", "This session is being continued")
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_.-]{6,80}$")
 CLAUDE_APPS = {"cli": "Терминал", "claude-desktop": "Приложение Claude", "claude-vscode": "VS Code",
                "remote": "Claude в облаке"}
@@ -111,13 +113,17 @@ def find_claude_link(path: Path) -> str | None:
 def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None = None) -> dict[str, Any] | None:
     head, tail = read_lines(path)
     records = head + tail
-    title = topic = cwd = branch = entry = link = reply = None
+    title = custom = topic = cwd = branch = entry = link = reply = None
     started = last_at = None
     last_kind: str | None = None
     pending: set[str] = set()
     session_id = path.stem
     for record in records:
         kind = record.get("type")
+        if kind == "custom-title":
+            # A name Mark gave with /rename wins over Claude's own title.
+            custom = redact_topic(record.get("customTitle")) or custom
+            continue
         if kind == "ai-title":
             title = redact_topic(record.get("aiTitle")) or title
             continue
@@ -162,7 +168,7 @@ def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None 
             if "[Request interrupted by user" in text:
                 last_kind = "reply"
                 continue
-            if not results:
+            if not results and not text.lstrip().startswith(WRAPPER_PREFIXES):
                 topic = topic or redact_topic(text)
             last_kind = "step"
     if last_at is None or (entry or "").startswith("sdk"):
@@ -180,7 +186,7 @@ def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None 
                 link = find_claude_link(path)
                 links[session_id] = link or {"size": size}
     app = "Claude в облаке" if (entry or "").startswith("remote") else CLAUDE_APPS.get(entry or "", "Терминал")
-    return _session("claude", session_id, title or topic, cwd, branch, app,
+    return _session("claude", session_id, custom or title or topic, cwd, branch, app,
                     started, last_at, _state(last_kind, last_at, now, bool(pending)), reply, link)
 
 
@@ -282,7 +288,7 @@ def _session(tool: str, session_id: str, title: str | None, cwd: str | None, bra
         "id": session_id,
         "tool": tool,
         "app": app,
-        "title": title or "Без названия",
+        "title": title or f"Сессия в {project_name(cwd, repo)}",
         "project": project_name(cwd, repo),
         "branch": branch if isinstance(branch, str) and branch and branch not in {"main", "master", "HEAD"} else None,
         "state": state,

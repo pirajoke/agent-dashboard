@@ -106,6 +106,13 @@ class ClaudeStateTests(unittest.TestCase):
             later = collector.parse_claude(self.path, NOW, links)
         self.assertEqual(later["link"], "https://claude.ai/code/session_01LaterOnABC")
 
+    def test_title_skips_wrappers_and_falls_back_to_the_project(self):
+        wrapped = self.parse([claude_user(3, "[MESSAGE FROM NON-USER SOURCE] wake"), claude_assistant(1, [{"type": "text", "text": "ok"}])])
+        self.assertEqual(wrapped["title"], "Сессия в agent-dashboard")
+        renamed = self.parse([claude_user(3, "go"), {"type": "ai-title", "aiTitle": "Авто"},
+                              {"type": "custom-title", "customTitle": "Моё имя"}, claude_assistant(1, [{"type": "text", "text": "ok"}])])
+        self.assertEqual(renamed["title"], "Моё имя")
+
     def test_headless_runs_are_left_out(self):
         record = {**claude_user(1, "summarise"), "entrypoint": "sdk-cli"}
         self.assertIsNone(self.parse([record]))
