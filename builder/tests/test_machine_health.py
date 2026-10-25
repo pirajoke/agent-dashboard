@@ -13,6 +13,8 @@ SERVER = ROOT / "dashboard-server-m4.py"
 
 def js_function(source, name):
     start = source.index(f"function {name}(")
+    if source[max(0, start - 6):start] == "async ":
+        start -= 6
     depth = 0
     for index in range(source.index("{", start), len(source)):
         depth += {"{": 1, "}": -1}.get(source[index], 0)
@@ -55,17 +57,88 @@ class MachineHealthPageTests(unittest.TestCase):
             self.assertIn(f'<div class="machine-health" id="{key}-health"', source)
         self.assertIn("button.dataset.ccInfo = `machine-${key}`", source)
 
-    def test_slow_laptop_does_not_flash_no_connection(self):
-        source = HTML.read_text()
-        self.assertIn("(base === AIR_API || base === PRO_API) && path.endsWith('/all')", source)
-        for key in ("air", "pro"):
-            self.assertIn(f"if (machineRecentlySeen('{key}')) return;", source)
-            self.assertIn(f"if (machineInFlight.{key}) return;", source)
+    def test_proxy_waits_long_enough_for_a_laptop(self):
         server = SERVER.read_text()
         timeout = int(re.search(r"REMOTE_HEALTH_TIMEOUT_SECONDS = (\d+)", server).group(1))
         self.assertGreaterEqual(timeout, 10)
         self.assertIn("urlopen(req, timeout=REMOTE_HEALTH_TIMEOUT_SECONDS)", server)
 
+
+# A small fake DOM: enough for the MacBook Pro refresh and the health tiles.
+FAKE_DOM = r"""
+class El {
+  constructor(tag) { this.tagName = tag; this.children = []; this.dataset = {}; this.style = {}; this.attrs = {}; this.className = ''; this._text = ''; }
+  get textContent() { return this._text + this.children.map(c => c.textContent).join(''); }
+  set textContent(v) { this._text = String(v); this.children = []; }
+  setAttribute(k, v) { this.attrs[k] = v; }
+  append(...nodes) { this.children.push(...nodes); }
+  replaceChildren(...nodes) { this.children = nodes; }
+  all() { return this.children.flatMap(c => [c, ...c.all()]); }
+  querySelector(sel) {
+    let m = sel.match(/^\[data-health="(.+)"\]$/);
+    if (m) return this.all().find(e => e.dataset.health === m[1]) || null;
+    m = sel.match(/^\.([\w-]+)(?: > span)?$/);
+    const found = this.all().find(e => e.className.split(' ').includes(m[1])) || null;
+    return found && sel.includes('>') ? found.children[0] : found;
+  }
+}
+const nodes = {};
+const document = { getElementById: id => (nodes[id] ||= new El('div')), createElement: tag => new El(tag) };
+let now = 1e12; Date.now = () => now;
+let answers = []; let pending = null;
+function fetchJSON() { const next = answers.shift(); return next === 'hang' ? new Promise(r => { pending = r; }) : Promise.resolve(next); }
+const visibleRuntimeServices = s => s; const renderSvcTable = () => {}; const renderHeaderDate = () => {};
+const PRO_API = '/api/pro'; const PRO_API_PATH_PREFIX = '';
+const ccInfoSources = {};
+"""
+
+
+@unittest.skipUnless(shutil.which("node"), "node is needed to run the page code")
+class MachineRefreshBehaviourTests(unittest.TestCase):
+    def run_page(self, steps):
+        source = HTML.read_text()
+        consts = re.search(r"const MACHINE_GRACE_MS = .*?;\nconst machineLastSeen = \{\};\nconst machineInFlight = \{\};", source, re.S).group(0)
+        script = "\n".join([
+            FAKE_DOM, "const machineUptime = {}; const machineSystem = {};", consts,
+            *(js_function(source, name) for name in ("machinePercent", "machineHealthItems", "renderMachineHealth",
+                                                      "machineRecentlySeen", "renderGauges", "refreshPro")),
+            "const sys = {hostname: 'MBP', cpu_percent: 10, memory_used_gb: 15, memory_total_gb: 16, disk_used_gb: 50, disk_total_gb: 500};",
+            "const words = () => document.getElementById('pro-health').children.map(b => b.querySelector('.machine-health-word').textContent);",
+            "const log = []; const snap = () => log.push([document.getElementById('pro-status').textContent, words()]);",
+            "(async () => {", steps, "console.log(JSON.stringify(log)); })();",
+        ])
+        out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout
+        return json.loads(out)
+
+    def test_one_missed_answer_keeps_the_picture_until_the_grace_period_ends(self):
+        log = self.run_page("""
+          answers = [{system: sys, services: []}, null, null];
+          await refreshPro(); snap();
+          now += 60 * 1000; await refreshPro(); snap();
+          now += 3 * 60 * 1000; await refreshPro(); snap();
+        """)
+        self.assertEqual(log[0], ["Работает", ["перегружена", "ок", "спокойно"]])
+        self.assertEqual(log[1], log[0])
+        self.assertEqual(log[2], ["Нет связи", []])
+
+    def test_a_slow_answer_is_not_asked_for_twice(self):
+        log = self.run_page("""
+          answers = ['hang'];
+          const first = refreshPro();
+          answers = [null]; await refreshPro(); snap();
+          pending({system: sys, services: []}); await first; snap();
+        """)
+        self.assertEqual(log[0][0], "")  # the second call waited instead of reporting «Нет связи»
+        self.assertEqual(log[1][0], "Работает")
+
+    def test_tiles_are_updated_in_place_so_focus_survives(self):
+        log = self.run_page("""
+          answers = [{system: sys, services: []}, {system: {...sys, memory_used_gb: 4}, services: []}];
+          await refreshPro(); const before = nodes['pro-health'].children[0];
+          await refreshPro(); log.push(before === nodes['pro-health'].children[0]); snap();
+        """)
+        self.assertTrue(log[0])
+        self.assertEqual(log[1][1][0], "ок")
 
 if __name__ == "__main__":
     unittest.main()

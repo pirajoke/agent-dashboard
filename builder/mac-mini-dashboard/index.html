@@ -9772,21 +9772,26 @@ function renderMachineHealth(key, sys) {
   if (!host) return;
   if (!sys) { host.replaceChildren(); return; }
   machineSystem[key] = sys;
-  const buttons = machineHealthItems(sys).map(item => {
-    const button = document.createElement('button');
-    button.type = 'button';
+  // Tiles are built once and then updated in place, so a refresh every 5 s keeps keyboard focus.
+  for (const item of machineHealthItems(sys)) {
+    let button = host.querySelector(`[data-health="${item.id}"]`);
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.health = item.id;
+      button.dataset.ccInfo = `machine-${key}`;
+      const label = document.createElement('span'); label.className = 'machine-health-label'; label.textContent = item.label;
+      const word = document.createElement('span'); word.className = 'machine-health-word';
+      const bar = document.createElement('span'); bar.className = 'machine-health-bar';
+      bar.append(document.createElement('span'));
+      button.append(label, word, bar);
+      host.append(button);
+    }
     button.className = `machine-health-item is-${item.level}`;
-    button.dataset.ccInfo = `machine-${key}`;
     button.setAttribute('aria-label', `${item.label}: ${item.word}. Нажми, чтобы увидеть цифры`);
-    const label = document.createElement('span'); label.className = 'machine-health-label'; label.textContent = item.label;
-    const word = document.createElement('span'); word.className = 'machine-health-word'; word.textContent = item.word;
-    const bar = document.createElement('span'); bar.className = 'machine-health-bar';
-    const fill = document.createElement('span'); fill.style.width = `${Math.min(100, item.pct || 0)}%`;
-    bar.append(fill);
-    button.append(label, word, bar);
-    return button;
-  });
-  host.replaceChildren(...buttons);
+    button.querySelector('.machine-health-word').textContent = item.word;
+    button.querySelector('.machine-health-bar > span').style.width = `${Math.min(100, item.pct || 0)}%`;
+  }
 }
 
 // A laptop that misses one refresh keeps its last picture for a while instead of flashing «Нет связи».
