@@ -23,6 +23,7 @@ class E {
   setAttribute(k,v) { this[k]=v; }
   removeAttribute(k) { delete this[k]; }
   querySelectorAll() { return []; }
+  addEventListener() {}
 }
 const elements=new Map();
 const document={hidden:false, createElement:t=>new E(t),

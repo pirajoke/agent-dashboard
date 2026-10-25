@@ -105,6 +105,12 @@ def _relative(value):
     return _text(value.split('/DOCXXx/', 1)[1], 600) if '/DOCXXx/' in value else ''
 
 
+def _local_path(value):
+    # Private: the file's place inside the library on this Mac, for owner sorting only; never served.
+    value = str(value or '')
+    return value if value.startswith('/') and '/DOCXXx/' in value and '\x00' not in value else None
+
+
 def _drive_link(value, folder=False):
     if not isinstance(value, str) or not ID.fullmatch(value): return None
     return 'https://drive.google.com/' + ('drive/folders/' + value if folder else 'file/d/' + value + '/view')
@@ -262,7 +268,8 @@ def _record(row, source, key, historical=False):
             'source': source, 'status': status, 'label': LABELS[status], 'reason': reason,
             'at': _stamp(row.get('at') or row.get('processed_at')),
             'url': _drive_link(ident, row.get('kind') == 'folder'), 'canonical_url': canonical,
-            'historical': historical, 'kind': 'folder' if row.get('kind') == 'folder' else 'file'}
+            'historical': historical, 'kind': 'folder' if row.get('kind') == 'folder' else 'file',
+            '_path': _local_path(dest or row.get('path'))}
 
 
 MAX_DATABASE = 512 * 1024 * 1024
@@ -411,7 +418,25 @@ def _gmail_records(directory):
     return list(merged.values())
 
 
-def docxx_projection(directory, *, owner=False, now=None):
+def _apply_decisions(rows, decisions):
+    """Mark's own sorting from the site (docxx_actions) settles a «Нужен разбор» row."""
+    settled = 0
+    for row in rows.values():
+        decision = decisions.get(row['key']) if isinstance(decisions, dict) else None
+        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep'):
+            continue
+        if row['status'] != 'needs_review':
+            continue
+        moved = decision['action'] != 'keep'
+        row.update(status='sorted', label='Разобрано', historical=False, decision=decision['action'],
+                   reason='Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
+        if moved and isinstance(decision.get('to'), str):
+            row['destination'] = _text(decision['to'], 600)
+        settled += 1
+    return settled
+
+
+def docxx_projection(directory, *, owner=False, now=None, decisions=None, include_paths=False):
     if not owner:
         return {'state': 'owner_required'}  # Do not even stat private sources.
     directory = Path(directory)
@@ -470,6 +495,7 @@ def docxx_projection(directory, *, owner=False, now=None):
                 rows[row['key']] = row
     # Runner may include the same document in results and review_pending.
     # Count the latest visible identity once, just as the operation list does.
+    settled = _apply_decisions(rows, decisions)
     current = [row for row in rows.values() if not row['historical']]
     issues = {'needs_review','error','duplicate_found','retained','awaiting_verification'}
     review = sum(row['status'] in issues for row in current)
@@ -498,7 +524,7 @@ def docxx_projection(directory, *, owner=False, now=None):
     isolated_gmail = gmail['state'] == 'warning'
     if gmail.get('error'): warnings.append(gmail['error'])
     if gmail['state'] == 'stale': warnings.append('Статус почтового входа устарел.')
-    error = (status.get('error') or not queue_known or unified_attention or (status.get('phase') == 'needs_review' and not isolated_gmail)
+    error = (status.get('error') or not queue_known or unified_attention or (status.get('phase') == 'needs_review' and not isolated_gmail and not (settled and not review))
              or catalog.get('status') != 'ready' or ingress.get('status') in ('error','awaiting_verification')
              or gmail['state'] in ('error', 'stale', 'unavailable'))
     if catalog.get('status') == 'error': warnings.append('Облачный каталог временно недоступен. Входящие файлы сохранены.')
@@ -522,6 +548,10 @@ def docxx_projection(directory, *, owner=False, now=None):
             if link: links[key] = link
     except (OSError, ValueError, TypeError): pass
     records = sorted(rows.values(), key=lambda r:(not r['historical'], r['at'] or ''), reverse=True)
+    for row in records:
+        path = row.pop('_path', None)
+        if include_paths and path:
+            row['_path'] = path
     return {'state': state, 'checked_at': _stamp(checked), 'observed_at': _stamp(now),
             'busy': busy, 'scan_started_at': _stamp(status.get('scan_started_at')),
             'stale_after_seconds': STALE_AFTER, 'scan_interval_seconds': 300,
