@@ -23,14 +23,16 @@ class ReadableRecordUITests(unittest.TestCase):
         source = HTML.read_text()
         functions = '\n'.join(function(source, name) for name in (
             'ccDocxxEl', 'ccDocxxSafeLink', 'ccDocxxLink', 'ccDocxxSourceLink',
-            'ccDocxxShortDate', 'ccDocxxRecordDate', 'ccDocxxDate', 'ccDocxxRenderRecords'))
+            'ccDocxxShortDate', 'ccDocxxRecordDate', 'ccDocxxDate', 'ccDocxxRenderRecords',
+            'ccDocxxText', 'ccDocxxCount', 'ccDocxxPick', 'ccDocxxRecordActions', 'ccDocxxSortBar'))
         script = '''const assert=require('node:assert/strict');
 class E { constructor(tag){this.tag=tag;this.children=[];this.dataset={};this.value='';this.textContent='';}
-append(...xs){this.children.push(...xs)} replaceChildren(){this.children=[]} setAttribute(k,v){this[k]=v} querySelectorAll(){return []}}
+append(...xs){this.children.push(...xs)} replaceChildren(){this.children=[]} setAttribute(k,v){this[k]=v} querySelectorAll(){return []} addEventListener(){}}
 const list=new E('div'), search=new E('input');
 const document={createElement:t=>new E(t),getElementById:id=>id==='docxx-records'?list:search};
 const flatten=e=>e.textContent+' '+e.children.map(flatten).join(' ');
 const ccDocxxAttention=new Set(['needs_review']); let ccDocxxRecordsSignature=null,ccDocxxFilter='all';
+const ccDocxxSelected=new Set(); let ccDocxxSortVisible=[],ccDocxxFolders=null,ccDocxxBusy=false;
 let ccDocxxData={records:[{key:'one',name:'Ticket — Médiathèque',original_name:'scan.pdf',source:'gmail',status:'needs_review',label:'Нужен разбор',at:'2026-10-24T09:54:16Z',date_kind:'added',description:'Доступ к компьютерам библиотеки.',valid_from:'2026-10-24',valid_until:'2027-10-24',source_url:'https://mail.google.com/mail/#all/0123456789abcdef'}]};
 ''' + functions + '''
 ccDocxxRenderRecords();
