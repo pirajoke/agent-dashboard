@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import sqlite3
 import time
 from datetime import datetime, timezone
 from urllib.parse import urlsplit
@@ -102,6 +103,12 @@ def _relative(value):
     # Strip machine/account path; unexpected paths are never exposed.
     value = str(value or '')
     return _text(value.split('/DOCXXx/', 1)[1], 600) if '/DOCXXx/' in value else ''
+
+
+def _local_path(value):
+    # Private: the file's place inside the library on this Mac, for owner sorting only; never served.
+    value = str(value or '')
+    return value if value.startswith('/') and '/DOCXXx/' in value and '\x00' not in value else None
 
 
 def _drive_link(value, folder=False):
@@ -261,15 +268,123 @@ def _record(row, source, key, historical=False):
             'source': source, 'status': status, 'label': LABELS[status], 'reason': reason,
             'at': _stamp(row.get('at') or row.get('processed_at')),
             'url': _drive_link(ident, row.get('kind') == 'folder'), 'canonical_url': canonical,
-            'historical': historical, 'kind': 'folder' if row.get('kind') == 'folder' else 'file'}
+            'historical': historical, 'kind': 'folder' if row.get('kind') == 'folder' else 'file',
+            '_path': _local_path(dest or row.get('path'))}
+
+
+MAX_DATABASE = 512 * 1024 * 1024
+MAX_ENRICHMENTS = 100
+MAX_EXTRACTION = 12000
+
+
+def _gmail_source_link(value):
+    for key in ('thread_id', 'message_id'):
+        ident = value.get(key)
+        if isinstance(ident, str) and re.fullmatch(r'[0-9a-fA-F]{16,32}', ident):
+            return 'https://mail.google.com/mail/#all/' + ident.lower()
+    return None
+
+
+def _ticket_metadata(text):
+    # A narrow known template, never a generic OCR excerpt. Credentials, names
+    # and arbitrary profile labels must never enter this owner-facing payload.
+    if not isinstance(text, str) or not re.search(
+            r'^[ \t]*Profil[ \t]+Public-Mediatheque-Ormesson[ \t]*$', text, re.MULTILINE):
+        return {}
+    dates = re.findall(
+        r"Dates\s+de\s+validité\s+Valide\s+à\s+partir\s+du\s+(\d{2}/\d{2}/\d{4})\s+à\s+(\d{2}:\d{2})"
+        r"\s+jusqu['’]au\s+(\d{2}/\d{2}/\d{4})\s+à\s+(\d{2}:\d{2})", text)
+    if len(dates) != 1:
+        return {}
+    try:
+        start, end = (datetime.strptime(' '.join(parts), '%d/%m/%Y %H:%M')
+                      for parts in (dates[0][:2], dates[0][2:]))
+        if end < start:
+            return {}
+    except ValueError:
+        return {}
+    return {'name': 'Ticket d’accès aux ordinateurs — Médiathèque Ormesson',
+            'description': 'Талон доступа к компьютерам медиатеки Ormesson. Данные для входа находятся в оригинале документа.',
+            'valid_from': start.date().isoformat(), 'valid_until': end.date().isoformat()}
+
+
+def _gmail_enrichments(directory, entries):
+    """Bounded optional metadata from the existing private journal, read-only."""
+    identities = []
+    for value in reversed(list(entries.values())):
+        if not isinstance(value, dict):
+            continue
+        sha, size = value.get('sha256'), value.get('size')
+        if (isinstance(sha, str) and re.fullmatch(r'[0-9a-f]{64}', sha)
+                and type(size) is int and 0 < size <= 100 * 1024 * 1024
+                and (sha, size) not in identities):
+            identities.append((sha, size))
+        if len(identities) >= MAX_ENRICHMENTS:
+            break
+    if not identities:
+        return {}
+    connection = None
+    try:
+        directory = Path(directory).absolute()
+        if directory.is_symlink():
+            return {}
+        database = directory / 'operations.sqlite3'
+        def snapshots():
+            result = {}
+            for suffix in ('', '-wal', '-shm', '-journal'):
+                path = Path(str(database) + suffix)
+                try:
+                    info = path.lstat()
+                except FileNotFoundError:
+                    if not suffix:
+                        raise
+                    continue
+                if (not stat.S_ISREG(info.st_mode) or info.st_size > MAX_DATABASE
+                        or (not suffix and not info.st_size)):
+                    raise ValueError('invalid_database')
+                result[suffix] = (info.st_dev, info.st_ino)
+            return result
+        before = snapshots()
+        connection = sqlite3.connect(database.as_uri() + '?mode=ro', uri=True, timeout=1)
+        after = snapshots()
+        if before != after:
+            return {}
+        connection.execute('PRAGMA query_only=ON')
+        connection.execute('PRAGMA trusted_schema=OFF')
+        deadline = time.monotonic() + 2
+        connection.set_progress_handler(lambda: int(time.monotonic() > deadline), 1000)
+        placeholders = ','.join('(?,?)' for _ in identities)
+        query = ("WITH wanted(sha256,size) AS (VALUES " + placeholders + ") "
+                 "SELECT o.sha256,o.size,MIN(o.created_at),"
+                 "(SELECT substr(e.text,1,?) FROM extractions e WHERE e.sha256=o.sha256 "
+                 "ORDER BY e.created_at DESC,e.extractor_id LIMIT 1) "
+                 "FROM operations o JOIN wanted w ON w.sha256=o.sha256 AND w.size=o.size "
+                 "GROUP BY o.sha256,o.size LIMIT ?")
+        parameters = [part for identity in identities for part in identity] + [MAX_EXTRACTION, MAX_ENRICHMENTS]
+        enriched = {}
+        for sha, size, created, text in connection.execute(query, parameters):
+            metadata = _ticket_metadata(text)
+            stamp = _stamp(created)
+            if stamp:
+                metadata.update(at=stamp, date_kind='added')
+            enriched[(sha, size)] = metadata
+        if snapshots() != after:
+            return {}
+        return enriched
+    except (OSError, ValueError, TypeError, sqlite3.Error):
+        return {}
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 def _gmail_records(directory):
-    """Project only document metadata; never mail identities, addresses or text."""
+    """Project safe document metadata and validated source links, never raw mail bodies or credentials."""
     saved = _read(directory / 'gmail-journal.json')
     entries = saved.get('attachments')
     if saved.get('schema_version') != 1 or not isinstance(entries, dict) or len(entries) > 20000:
         raise ValueError('invalid_gmail_journal')
+    enrichments = _gmail_enrichments(directory, entries)
     merged = {}
     for key, value in entries.items():
         if not isinstance(value, dict): continue
@@ -282,6 +397,14 @@ def _gmail_records(directory):
                 'at': value.get('delivered_at') or value.get('attempted_at')}
         if review: data['reason'] = 'unrecognized_or_conflicting_content'
         row = _record(data, 'gmail', key, historical=state == 'delivered' and not review)
+        source_url = _gmail_source_link(value)
+        if source_url: row['source_url'] = source_url
+        sha, size = value.get('sha256'), value.get('size')
+        if isinstance(sha, str) and type(size) is int:
+            metadata = enrichments.get((sha, size), {})
+            row.update({k: v for k, v in metadata.items() if k not in ('at', 'date_kind')})
+            if not row['at'] and metadata.get('at'):
+                row.update(at=metadata['at'], date_kind='added')
         error = value.get('error_code')
         if isinstance(error, str) and error in GMAIL_ERRORS: row['reason'] = GMAIL_ERRORS[error]
         # Two original attachments may belong to one explicitly reviewed merge.
@@ -295,7 +418,25 @@ def _gmail_records(directory):
     return list(merged.values())
 
 
-def docxx_projection(directory, *, owner=False, now=None):
+def _apply_decisions(rows, decisions):
+    """Mark's own sorting from the site (docxx_actions) settles a «Нужен разбор» row."""
+    settled = 0
+    for row in rows.values():
+        decision = decisions.get(row['key']) if isinstance(decisions, dict) else None
+        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep'):
+            continue
+        if row['status'] != 'needs_review':
+            continue
+        moved = decision['action'] != 'keep'
+        row.update(status='sorted', label='Разобрано', historical=False, decision=decision['action'],
+                   reason='Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
+        if moved and isinstance(decision.get('to'), str):
+            row['destination'] = _text(decision['to'], 600)
+        settled += 1
+    return settled
+
+
+def docxx_projection(directory, *, owner=False, now=None, decisions=None, include_paths=False):
     if not owner:
         return {'state': 'owner_required'}  # Do not even stat private sources.
     directory = Path(directory)
@@ -354,6 +495,7 @@ def docxx_projection(directory, *, owner=False, now=None):
                 rows[row['key']] = row
     # Runner may include the same document in results and review_pending.
     # Count the latest visible identity once, just as the operation list does.
+    settled = _apply_decisions(rows, decisions)
     current = [row for row in rows.values() if not row['historical']]
     issues = {'needs_review','error','duplicate_found','retained','awaiting_verification'}
     review = sum(row['status'] in issues for row in current)
@@ -382,7 +524,7 @@ def docxx_projection(directory, *, owner=False, now=None):
     isolated_gmail = gmail['state'] == 'warning'
     if gmail.get('error'): warnings.append(gmail['error'])
     if gmail['state'] == 'stale': warnings.append('Статус почтового входа устарел.')
-    error = (status.get('error') or not queue_known or unified_attention or (status.get('phase') == 'needs_review' and not isolated_gmail)
+    error = (status.get('error') or not queue_known or unified_attention or (status.get('phase') == 'needs_review' and not isolated_gmail and not (settled and not review))
              or catalog.get('status') != 'ready' or ingress.get('status') in ('error','awaiting_verification')
              or gmail['state'] in ('error', 'stale', 'unavailable'))
     if catalog.get('status') == 'error': warnings.append('Облачный каталог временно недоступен. Входящие файлы сохранены.')
@@ -406,6 +548,10 @@ def docxx_projection(directory, *, owner=False, now=None):
             if link: links[key] = link
     except (OSError, ValueError, TypeError): pass
     records = sorted(rows.values(), key=lambda r:(not r['historical'], r['at'] or ''), reverse=True)
+    for row in records:
+        path = row.pop('_path', None)
+        if include_paths and path:
+            row['_path'] = path
     return {'state': state, 'checked_at': _stamp(checked), 'observed_at': _stamp(now),
             'busy': busy, 'scan_started_at': _stamp(status.get('scan_started_at')),
             'stale_after_seconds': STALE_AFTER, 'scan_interval_seconds': 300,

@@ -27,6 +27,7 @@ cp "$SRC_DIR/owner_project_card.py" "$SCRIPTS_DIR/owner_project_card.py"
 cp "$SRC_DIR/weekly_digest.py" "$SCRIPTS_DIR/weekly_digest.py"
 cp "$SRC_DIR/agent_task_runner.py" "$SCRIPTS_DIR/agent_task_runner.py"
 cp "$SRC_DIR/context_retell.py" "$SCRIPTS_DIR/context_retell.py"
+cp "$SRC_DIR/job_mail_watcher.py" "$SCRIPTS_DIR/job_mail_watcher.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
 cp "$SRC_DIR/dashboard-assets/style.css" "$SCRIPTS_DIR/dashboard-assets/style.css"
@@ -53,6 +54,7 @@ python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manag
 python3 -m py_compile weekly_digest.py
 python3 -m py_compile agent_task_runner.py
 python3 -m py_compile context_retell.py
+python3 -m py_compile job_mail_watcher.py
 python3 build-agent-dashboard.py
 
 if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]] && launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then
@@ -107,6 +109,19 @@ if [[ "${DASHBOARD_INSTALL_CONTEXT_RETELL:-1}" == "1" ]]; then
     "$SRC_DIR/launchd/$RETELL_LABEL.plist.template" > "$RETELL_PLIST.tmp"
   plutil -lint "$RETELL_PLIST.tmp" >/dev/null
   install_launchd_agent "$RETELL_PLIST.tmp" "$RETELL_PLIST" "$RETELL_LABEL"
+fi
+
+# Employer replies in Mark's job mailbox (Mark 2026-10-24: «не пропускать положительные ответы»).
+# Every 10 minutes; does nothing until Mark presses «Подключить почту» (Gmail read-only).
+JOB_MAIL_LABEL="com.pirajoke.job-mail-watcher"
+JOB_MAIL_PLIST="$HOME/Library/LaunchAgents/$JOB_MAIL_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_JOB_MAIL:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$JOB_MAIL_LABEL"
+  mkdir -p -m 700 "$HOME/.agent-bridge/job-mail"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$JOB_MAIL_LABEL.plist.template" > "$JOB_MAIL_PLIST.tmp"
+  plutil -lint "$JOB_MAIL_PLIST.tmp" >/dev/null
+  install_launchd_agent "$JOB_MAIL_PLIST.tmp" "$JOB_MAIL_PLIST" "$JOB_MAIL_LABEL"
 fi
 
 # Record what is deployed now, before the agent starts (RunAtLoad), so the auto-deploy agent compares main against it.

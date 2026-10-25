@@ -4865,6 +4865,11 @@ tr:last-child td { border-bottom: none; }
 .campus-agent.is-waiting { --campus-status: #e6a23c; border-style: dashed; }
 .campus-agent.is-done { --campus-status: #a5b3a8; }
 .campus-agent.is-failed { --campus-status: #d25b50; border-width: 3px; }
+.campus-agent.is-running { --campus-status: #65a873; }
+.campus-agent.is-idle { --campus-status: #a5b3a8; }
+.campus-agent.is-blocked { --campus-status: #d25b50; border-style: dashed; }
+.campus-agent.is-unavailable { --campus-status: #908a82; opacity: 0.78; }
+.campus-agent.is-uncertain { --campus-status: #e6a23c; border-style: dashed; }
 
 .campus-agent-sprite,
 .campus-manager-sprite,
