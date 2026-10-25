@@ -36,6 +36,7 @@ from dashboard_builder.platform_resources import owner_projects_projection, plat
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
+from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder import job_mail
 from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
@@ -2933,6 +2934,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
+            return
+        if parsed.path == '/api/shared-tasks':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'state': 'owner_required', 'tasks': []})
+                return
+            self._json_response(200, shared_task_board_projection())
             return
         if parsed.path == '/api/job-mail':
             # Employer replies from Mark's job mailbox (Mark 2026-10-24). Owner only; never the token or mail text.

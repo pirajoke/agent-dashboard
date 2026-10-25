@@ -190,6 +190,15 @@ class PreviewHandler(SERVER.Handler):
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
             return
+        if parsed.path == "/api/shared-tasks":
+            if not self._decision_owner_authorized():
+                self._json_response(401, {"state": "owner_required", "tasks": []})
+                return
+            self._json_response(200, {"state": "ready", "source": "notion", "board_url": "https://www.notion.so/preview",
+                                      "tasks": [{"id": "preview", "title": "Пример новой задачи из PLAUD",
+                                                 "status": "doing", "project": "JARVIS", "due_date": "",
+                                                 "url": "https://www.notion.so/preview", "revision": STARTED.isoformat()}]})
+            return
         if parsed.path in {"/api/docxx", "/api/docxx/folders"} and MODE == "sorting":
             prepare_docxx_sorting()
             super().do_GET()  # The real projection and sorting over a synthetic library.
