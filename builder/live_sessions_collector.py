@@ -169,10 +169,16 @@ def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None 
         # Headless runs (day summaries, the agent task runner) are not sessions Mark talks to.
         return None
     if link is None and links is not None:
-        # The link sits in the middle of a long log; look for it once per session.
-        if session_id not in links:
-            links[session_id] = find_claude_link(path)
-        link = links[session_id]
+        # The link sits in the middle of a long log: a found link is kept, and a log without one is
+        # searched again only once it has grown (Remote Control can be switched on mid-session).
+        known = links.get(session_id)
+        if isinstance(known, str):
+            link = known
+        else:
+            size = _size(path)
+            if not isinstance(known, dict) or known.get("size") != size:
+                link = find_claude_link(path)
+                links[session_id] = link or {"size": size}
     app = "Claude в облаке" if (entry or "").startswith("remote") else CLAUDE_APPS.get(entry or "", "Терминал")
     return _session("claude", session_id, title or topic, cwd, branch, app,
                     started, last_at, _state(last_kind, last_at, now, bool(pending)), reply, link)
@@ -244,6 +250,10 @@ def parse_codex(path: Path, now: datetime, names: dict[str, str]) -> dict[str, A
                 text = " ".join(part.get("text", "") for part in payload.get("content") or []
                                 if isinstance(part, dict) and isinstance(part.get("text"), str))
                 reply = redact_topic(text, REPLY_LIMIT) or reply
+                # Rollouts with response items only mark the answer that ends the turn as final.
+                if payload.get("channel") == "final" or payload.get("phase") in {"final", "final_answer"}:
+                    last_kind = "reply"
+                    pending.clear()
             elif last_kind != "tool":
                 last_kind = "step"
         started = started or moment
@@ -296,6 +306,13 @@ def codex_thread_names(home: Path = HOME) -> dict[str, str]:
         if isinstance(record.get("id"), str) and name:
             names[record["id"]] = name
     return names
+
+
+def _size(path: Path) -> int:
+    try:
+        return path.stat().st_size
+    except OSError:
+        return -1
 
 
 def _read(path: Path) -> bytes:

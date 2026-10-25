@@ -95,6 +95,17 @@ class ClaudeStateTests(unittest.TestCase):
         self.assertEqual(session["link"], "https://claude.ai/code/session_01ABCdefGHIjkl")
         self.assertEqual(links, {"c1a2b3c4-0000": "https://claude.ai/code/session_01ABCdefGHIjkl"})
 
+    def test_link_is_searched_again_once_the_log_grows(self):
+        links = {}
+        first = self.parse([claude_user(3, "go"), claude_assistant(2, [{"type": "text", "text": "ok"}])], links)
+        self.assertIsNone(first["link"])
+        self.assertIsInstance(links["c1a2b3c4-0000"], dict)
+        with self.path.open("a") as handle:
+            handle.write(json.dumps({"type": "system", "content": "https://claude.ai/code/session_01LaterOnABC"}) + "\n")
+        with patch.object(collector, "repo_for_cwd", return_value=None):
+            later = collector.parse_claude(self.path, NOW, links)
+        self.assertEqual(later["link"], "https://claude.ai/code/session_01LaterOnABC")
+
     def test_headless_runs_are_left_out(self):
         record = {**claude_user(1, "summarise"), "entrypoint": "sdk-cli"}
         self.assertIsNone(self.parse([record]))
@@ -125,6 +136,13 @@ class CodexStateTests(unittest.TestCase):
         self.assertEqual(session["link"], "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0000")
         self.assertEqual(session["reply"], "Корзина починена")
         self.assertTrue(session["resume"].endswith("codex resume 0199aaaa-bbbb-cccc-dddd-eeeeffff0000"))
+
+    def test_final_response_item_ends_the_turn(self):
+        session = self.parse([self.meta(),
+                              {"type": "response_item", "timestamp": ts(3), "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "go"}]}},
+                              {"type": "response_item", "timestamp": ts(2), "payload": {"type": "message", "role": "assistant", "channel": "commentary", "content": [{"type": "output_text", "text": "смотрю"}]}},
+                              {"type": "response_item", "timestamp": ts(1), "payload": {"type": "message", "role": "assistant", "channel": "final", "content": [{"type": "output_text", "text": "Готово"}]}}])
+        self.assertEqual((session["state"], session["reply"]), ("waiting", "Готово"))
 
     def test_approval_request_and_running_call(self):
         approval = self.parse([self.meta(),
