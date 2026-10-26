@@ -20,13 +20,16 @@ cp "$SRC_DIR/jarvis-pixel-agent-event" "$SCRIPTS_DIR/jarvis-pixel-agent-event"
 cp "$SRC_DIR/main_manager_status_publisher.py" "$SCRIPTS_DIR/main_manager_status_publisher.py"
 cp "$SRC_DIR/daily_work_collector.py" "$SCRIPTS_DIR/daily_work_collector.py"
 cp "$SRC_DIR/infra_change_collector.py" "$SCRIPTS_DIR/infra_change_collector.py"
+cp "$SRC_DIR/live_sessions_collector.py" "$SCRIPTS_DIR/live_sessions_collector.py"
 cp "$SRC_DIR/daily_work_summarizer.py" "$SCRIPTS_DIR/daily_work_summarizer.py"
 cp "$SRC_DIR/auto_deploy.py" "$SCRIPTS_DIR/auto_deploy.py"
 cp "$SRC_DIR/launchd_watchdog.py" "$SCRIPTS_DIR/launchd_watchdog.py"
 cp "$SRC_DIR/owner_project_card.py" "$SCRIPTS_DIR/owner_project_card.py"
 cp "$SRC_DIR/weekly_digest.py" "$SCRIPTS_DIR/weekly_digest.py"
+cp "$SRC_DIR/daily_digest.py" "$SCRIPTS_DIR/daily_digest.py"
 cp "$SRC_DIR/agent_task_runner.py" "$SCRIPTS_DIR/agent_task_runner.py"
 cp "$SRC_DIR/context_retell.py" "$SCRIPTS_DIR/context_retell.py"
+cp "$SRC_DIR/docxx_suggest.py" "$SCRIPTS_DIR/docxx_suggest.py"
 cp "$SRC_DIR/retire_job_mail.py" "$SCRIPTS_DIR/retire_job_mail.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
@@ -51,10 +54,12 @@ chmod +x "$LOCAL_BIN_DIR/mm-command-center-auth"
 
 cd "$SCRIPTS_DIR"
 python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manager_status_publisher.py daily_work_collector.py infra_change_collector.py daily_work_summarizer.py auto_deploy.py launchd_watchdog.py dashboard_builder/*.py
-python3 -m py_compile weekly_digest.py
+python3 -m py_compile weekly_digest.py daily_digest.py
 python3 -m py_compile agent_task_runner.py
 python3 -m py_compile context_retell.py
+python3 -m py_compile docxx_suggest.py
 python3 -m py_compile retire_job_mail.py
+python3 -m py_compile live_sessions_collector.py
 python3 build-agent-dashboard.py
 
 if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]] && launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then
@@ -87,6 +92,18 @@ if [[ "${DASHBOARD_INSTALL_WEEKLY_DIGEST:-1}" == "1" ]]; then
   install_launchd_agent "$DIGEST_PLIST.tmp" "$DIGEST_PLIST" "$DIGEST_LABEL"
 fi
 
+# Evening summary of the day in Telegram, every day at 21:30 so it arrives by 22:00 (Mark 2026-10-23).
+# Same Telegram settings as the Monday digest; without them it only writes ~/.agent-bridge/daily-digest/.
+DAILY_DIGEST_LABEL="com.pirajoke.daily-digest"
+DAILY_DIGEST_PLIST="$HOME/Library/LaunchAgents/$DAILY_DIGEST_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_DAILY_DIGEST:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$DAILY_DIGEST_LABEL"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$DAILY_DIGEST_LABEL.plist.template" > "$DAILY_DIGEST_PLIST.tmp"
+  plutil -lint "$DAILY_DIGEST_PLIST.tmp" >/dev/null
+  install_launchd_agent "$DAILY_DIGEST_PLIST.tmp" "$DAILY_DIGEST_PLIST" "$DAILY_DIGEST_LABEL"
+fi
+
 # Agents take things off Mark's «Ждёт тебя» list (Mark 2026-10-23: «включай исполнителя агентов на
 # Mac mini»). Every 5 minutes, one item at a time, a draft PR or a report at most; see agent_task_runner.py.
 RUNNER_LABEL="com.pirajoke.agent-task-runner"
@@ -109,6 +126,18 @@ if [[ "${DASHBOARD_INSTALL_CONTEXT_RETELL:-1}" == "1" ]]; then
     "$SRC_DIR/launchd/$RETELL_LABEL.plist.template" > "$RETELL_PLIST.tmp"
   plutil -lint "$RETELL_PLIST.tmp" >/dev/null
   install_launchd_agent "$RETELL_PLIST.tmp" "$RETELL_PLIST" "$RETELL_LABEL"
+fi
+
+# Folder suggestions for «Нужен разбор» documents (Mark 2026-10-26: «смотреть по контексту»).
+# Every 10 minutes new review documents get one folder from the library, «мусор» or nothing.
+SUGGEST_LABEL="com.pirajoke.docxx-suggest"
+SUGGEST_PLIST="$HOME/Library/LaunchAgents/$SUGGEST_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_DOCXX_SUGGEST:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$SUGGEST_LABEL"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$SUGGEST_LABEL.plist.template" > "$SUGGEST_PLIST.tmp"
+  plutil -lint "$SUGGEST_PLIST.tmp" >/dev/null
+  install_launchd_agent "$SUGGEST_PLIST.tmp" "$SUGGEST_PLIST" "$SUGGEST_LABEL"
 fi
 
 # Employer replies now live only in Job Radar's «Ответы» (Mark 2026-10-25). Stop Command Center's own

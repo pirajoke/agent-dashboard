@@ -786,11 +786,21 @@ def build_department_campus_html() -> str:
         <div class="section-dot" style="background:#e6a23c"></div>
         <div><div class="section-title" id="department-campus-title">Кампус отделов</div></div>
         <div class="section-count" data-campus-count hidden>{len(CAMPUS_RESIDENTS)} в команде · все ожидают задач</div>
+        <button class="campus-archive-toggle" type="button" data-campus-archive-toggle
+            aria-controls="campus-archive" aria-expanded="false" hidden>Архив</button>
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
         <button class="campus-view-toggle" type="button" data-campus-view-toggle
             aria-pressed="false" aria-label="Объёмный 3D-вид кампуса" hidden>3D</button>
     </div>
     <div class="campus-state" data-campus-state aria-live="polite">Загрузка кампуса…</div>
+    <section class="campus-archive" id="campus-archive" data-campus-archive role="dialog"
+        aria-labelledby="campus-archive-title" hidden>
+        <header><h3 id="campus-archive-title">Архив</h3>
+        <button type="button" data-campus-archive-close aria-label="Закрыть архив">×</button></header>
+        <p>Проекты, над которыми ты сейчас не работаешь. Новая работа вернёт проект на карту сама.</p>
+        <ul data-campus-archive-list></ul>
+        <p class="campus-archive-error" data-campus-archive-error hidden></p>
+    </section>
     <label class="campus-department-picker" data-campus-department-picker hidden>
         Отдел <span data-campus-department-picker-slot></span>
     </label>
@@ -824,6 +834,9 @@ def build_department_campus_html() -> str:
             <header><div><span>Selected specialist</span><h3 id="campus-detail-title">Read-only details</h3></div>
             <button type="button" data-campus-detail-close aria-label="Закрыть сведения">×</button></header>
             <dl>{detail_rows}</dl>
+            <footer data-campus-detail-archive-row hidden>
+                <button type="button" data-campus-detail-archive>Убрать в архив</button>
+            </footer>
         </aside>
         <aside class="campus-details campus-project-detail" data-campus-project-detail
             id="campus-project-details" role="dialog" hidden

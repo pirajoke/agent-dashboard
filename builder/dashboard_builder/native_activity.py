@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 import re
 import select
+import sqlite3
 import stat as stat_module
 import subprocess
 import time
@@ -38,6 +39,11 @@ _PROCESS_OUTPUT_MAX_BYTES = 16 * 1024
 _PROCESS_TIMEOUT_SECONDS = 2.0
 _PROCESS_RECORD_LIMIT = 32
 _PROC_PIDPATH_BUFFER_SIZE = 4096
+_LIFECYCLE_QUERY_TIMEOUT_SECONDS = 0.2
+_LIFECYCLE_PROGRESS_INSTRUCTIONS = 1000
+_LIFECYCLE_COLUMNS = frozenset(
+    {"thread_id", "rollout_ordinal", "status", "started_at", "completed_at"}
+)
 
 ROUTE_CONTRACT = (
     ("accountable-os", "ACCOUNTABLE OS", "finance", "ANALYST"),
@@ -92,6 +98,12 @@ class _SourceCandidate(NamedTuple):
     modified_ns: int
     device: int
     inode: int
+
+
+class _LifecycleTurn(NamedTuple):
+    status: str
+    started_at: int | None
+    completed_at: int | None
 
 
 def _utc(moment: datetime) -> datetime:
@@ -426,6 +438,103 @@ def _read_route_registry(path: Path) -> tuple[bytes, dict[str, str]]:
     return raw, private_threads
 
 
+def _read_lifecycle_snapshot(
+    path: Path,
+    *,
+    thread_routes: dict[str, str],
+) -> dict[str, _LifecycleTurn] | None:
+    """Read only the latest allowlisted turn fields in one SQLite snapshot."""
+    try:
+        before = path.lstat()
+    except OSError:
+        return None
+    if not stat_module.S_ISREG(before.st_mode):
+        return None
+
+    connection: sqlite3.Connection | None = None
+    transaction = False
+    try:
+        # ``absolute`` does not follow the final path component. The lstat
+        # checks before and after the transaction reject links and replacement.
+        uri = path.absolute().as_uri() + "?mode=ro"
+        connection = sqlite3.connect(uri, uri=True, timeout=0.2, isolation_level=None)
+        deadline = time.monotonic() + _LIFECYCLE_QUERY_TIMEOUT_SECONDS
+        connection.set_progress_handler(
+            lambda: int(time.monotonic() > deadline),
+            _LIFECYCLE_PROGRESS_INSTRUCTIONS,
+        )
+        connection.execute("PRAGMA query_only = ON")
+        if connection.execute("PRAGMA query_only").fetchone() != (1,):
+            return None
+        connection.execute("PRAGMA trusted_schema = OFF")
+        connection.execute("BEGIN")
+        transaction = True
+
+        columns = {
+            row[1]
+            for row in connection.execute("PRAGMA table_info(thread_turns)")
+            if len(row) >= 2 and isinstance(row[1], str)
+        }
+        if not _LIFECYCLE_COLUMNS.issubset(columns):
+            return None
+
+        thread_ids = tuple(sorted(thread_routes))
+        placeholders = ",".join("?" for _ in thread_ids)
+        query = f"""
+            SELECT current.thread_id, current.status, current.started_at,
+                   current.completed_at, current.rollout_ordinal
+              FROM thread_turns AS current
+             WHERE current.thread_id IN ({placeholders})
+               AND current.rollout_ordinal = (
+                   SELECT MAX(candidate.rollout_ordinal)
+                     FROM thread_turns AS candidate
+                    WHERE candidate.thread_id = current.thread_id
+               )
+             ORDER BY current.thread_id
+             LIMIT ?
+        """
+        rows = connection.execute(query, (*thread_ids, len(thread_ids) + 1)).fetchall()
+        connection.execute("COMMIT")
+        transaction = False
+
+        after = path.lstat()
+        if (
+            not stat_module.S_ISREG(after.st_mode)
+            or (before.st_dev, before.st_ino) != (after.st_dev, after.st_ino)
+            or len(rows) > len(thread_ids)
+        ):
+            return None
+
+        snapshot: dict[str, _LifecycleTurn] = {}
+        for thread_id, status, started_at, completed_at, rollout_ordinal in rows:
+            if (
+                not isinstance(thread_id, str)
+                or thread_id not in thread_routes
+                or thread_routes[thread_id] in snapshot
+                or not isinstance(status, str)
+                or type(rollout_ordinal) is not int
+                or type(started_at) not in {int, type(None)}
+                or type(completed_at) not in {int, type(None)}
+            ):
+                return None
+            snapshot[thread_routes[thread_id]] = _LifecycleTurn(
+                status=status,
+                started_at=started_at,
+                completed_at=completed_at,
+            )
+        return snapshot
+    except (OSError, sqlite3.Error, TypeError, ValueError):
+        return None
+    finally:
+        if connection is not None:
+            if transaction:
+                try:
+                    connection.execute("ROLLBACK")
+                except sqlite3.Error:
+                    pass
+            connection.close()
+
+
 def _read_regular_file(path: Path, *, limit: int) -> tuple[bytes, os.stat_result] | None:
     """Read one bounded regular file while refusing a final-component symlink."""
     no_follow = getattr(os, "O_NOFOLLOW", None)
@@ -686,6 +795,7 @@ def _parse_source(
     now: datetime,
     max_bytes: int,
     remaining_bytes: int,
+    defer_future_validation: bool = False,
 ) -> tuple[dict[str, Any] | None, int]:
     read_limit = min(max_bytes, remaining_bytes)
     bytes_read = [0]
@@ -696,6 +806,7 @@ def _parse_source(
 
     identities: set[str] = {path.stem} if path.stem else set()
     records: list[tuple[datetime, str | None]] = []
+    all_records: list[tuple[datetime, str | None]] = []
     invalid = False
     last_time: datetime | None = None
     owner: str | None = None
@@ -718,6 +829,13 @@ def _parse_source(
                     invalid = True
         else:
             identities.update(_record_identities(record))
+            if record.get("type") == "session_meta" and isinstance(record.get("payload"), dict):
+                record_owner = record["payload"].get("id")
+                if isinstance(record_owner, str) and record_owner:
+                    if owner is None:
+                        owner = record_owner
+                    elif owner != record_owner:
+                        invalid = True
         timestamp = _parse_time(
             record.get("timestamp") or record.get("created_at") or record.get("updated_at")
         )
@@ -729,9 +847,13 @@ def _parse_source(
             # Unknown envelopes cannot establish state and do not make known
             # metadata unsafe; they are otherwise ignored without inspection.
             continue
-        if timestamp > now + MAX_FUTURE_SKEW or (last_time is not None and timestamp < last_time):
+        if (
+            (not defer_future_validation and timestamp > now + MAX_FUTURE_SKEW)
+            or (last_time is not None and timestamp < last_time)
+        ):
             invalid = True
         last_time = timestamp
+        all_records.append((timestamp, transition))
         if transition == "started":
             window_started = True
         if window_started:
@@ -739,6 +861,9 @@ def _parse_source(
     return {
         "identities": identities,
         "records": records,
+        "all_records": all_records,
+        "owner": owner,
+        "latest_timestamp": last_time,
         "invalid": invalid,
         "path": path,
         "modified_ns": stat.st_mtime_ns,
@@ -758,6 +883,21 @@ def _matches_regular_inode(path: Path, *, expected_device: int, expected_inode: 
         stat_module.S_ISREG(current.st_mode)
         and current.st_dev == expected_device
         and current.st_ino == expected_inode
+    )
+
+
+def _matches_source_snapshot(parsed: dict[str, Any]) -> bool:
+    """Confirm a parsed source stayed the same regular file through attestation."""
+    try:
+        current = parsed["path"].lstat()
+    except (KeyError, OSError, TypeError):
+        return False
+    return (
+        stat_module.S_ISREG(current.st_mode)
+        and current.st_dev == parsed.get("device")
+        and current.st_ino == parsed.get("inode")
+        and current.st_size == parsed.get("size")
+        and current.st_mtime_ns == parsed.get("modified_ns")
     )
 
 
@@ -1057,17 +1197,105 @@ def _project_source(
     return agent
 
 
+def _epoch_time(value: int | None) -> datetime | None:
+    if type(value) is not int:
+        return None
+    try:
+        return datetime.fromtimestamp(value, tz=timezone.utc)
+    except (OSError, OverflowError, ValueError):
+        return None
+
+
+def _project_lifecycle_source(
+    parsed: dict[str, Any],
+    *,
+    route: tuple[str, str, str, str],
+    now: datetime,
+    lifecycle: _LifecycleTurn | None,
+) -> dict[str, Any]:
+    """Combine an exact-owner lifecycle row with bounded JSONL progress."""
+    agent = _empty_agent(route)
+    if parsed["invalid"] or lifecycle is None:
+        agent["freshness"] = "invalid"
+        return agent
+
+    started = _epoch_time(lifecycle.started_at)
+    completed = _epoch_time(lifecycle.completed_at)
+    if started is None or started > now:
+        agent["freshness"] = "invalid"
+        return agent
+
+    if lifecycle.status == "completed":
+        if completed is None or completed < started or completed > now:
+            agent["freshness"] = "invalid"
+            return agent
+        matching_completions = [
+            timestamp
+            for timestamp, transition in parsed["all_records"]
+            if transition == "completed" and started <= timestamp <= completed + timedelta(seconds=1)
+        ]
+        if not matching_completions:
+            agent["freshness"] = "invalid"
+            return agent
+        state_at = max(completed, max(matching_completions))
+        agent["state_at"] = _iso(state_at)
+        agent["freshness"] = "fresh" if now - state_at <= FRESH_FOR else "stale"
+        if agent["freshness"] == "fresh":
+            agent["state"] = "idle"
+            agent["availability"] = "available"
+            agent["outcome_stage"] = "turn_completed"
+        return agent
+
+    if lifecycle.status != "inProgress" or completed is not None:
+        agent["freshness"] = "invalid"
+        return agent
+    if now - started > FRESH_FOR:
+        agent["state_at"] = _iso(started)
+        agent["freshness"] = "stale"
+        return agent
+
+    relevant = [
+        (timestamp, transition)
+        for timestamp, transition in parsed["all_records"]
+        if timestamp >= started
+    ]
+    if any(transition == "completed" for _, transition in relevant):
+        agent["freshness"] = "invalid"
+        return agent
+    progress = max(
+        (timestamp for timestamp, transition in relevant if transition == "progress"),
+        default=None,
+    )
+    if progress is None:
+        agent["state_at"] = _iso(started)
+        agent["freshness"] = "fresh"
+        agent["availability"] = "uncertain"
+        return agent
+    if now - progress > FRESH_FOR:
+        agent["state_at"] = _iso(progress)
+        agent["freshness"] = "stale"
+        return agent
+    agent["state"] = "running"
+    agent["availability"] = "available"
+    agent["freshness"] = "fresh"
+    agent["state_at"] = _iso(progress)
+    return agent
+
+
 def collect_native_activity(
     *,
     routes_path: Path,
     roots: dict[str, list[Path]],
     now: datetime,
+    lifecycle_path: Path | None = None,
     process_probe: Callable[..., object] = default_process_probe,
     max_files: int = DEFAULT_MAX_FILES,
     max_bytes: int = DEFAULT_MAX_BYTES,
 ) -> dict[str, Any]:
     """Collect an allowlisted full roster from bounded native JSONL metadata."""
     current = _utc(now)
+    lifecycle_enabled = lifecycle_path is not None
+    scan_started = time.monotonic() if lifecycle_enabled else None
     if (
         type(max_files) is not int
         or not 0 < max_files <= MAX_FILES_CEILING
@@ -1109,6 +1337,7 @@ def collect_native_activity(
             now=current,
             max_bytes=max_bytes,
             remaining_bytes=remaining_bytes,
+            defer_future_validation=lifecycle_enabled,
         )
         remaining_bytes -= consumed
         if parsed is None:
@@ -1118,10 +1347,14 @@ def collect_native_activity(
             reject(candidate, replaced=True)
             continue
         identities = parsed.get("identities")
-        matched_routes = {
-            thread_routes[identity]
-            for identity in identities if isinstance(identity, str) and identity in thread_routes
-        } if isinstance(identities, set) else set()
+        if lifecycle_enabled:
+            owner = parsed.get("owner")
+            matched_routes = {thread_routes[owner]} if owner in thread_routes else set()
+        else:
+            matched_routes = {
+                thread_routes[identity]
+                for identity in identities if isinstance(identity, str) and identity in thread_routes
+            } if isinstance(identities, set) else set()
         if len(matched_routes) != 1:
             continue
         route_id = next(iter(matched_routes))
@@ -1130,10 +1363,28 @@ def collect_native_activity(
         if existing is None or modified_ns > existing[0]:
             observations[route_id] = (modified_ns, candidate.source, parsed)
 
+    lifecycle = (
+        _read_lifecycle_snapshot(Path(lifecycle_path), thread_routes=thread_routes)
+        if lifecycle_enabled
+        else None
+    )
+    if lifecycle_enabled:
+        finished = time.monotonic()
+        elapsed = finished - scan_started if scan_started is not None else 0.0
+        if not isinstance(elapsed, (int, float)) or elapsed < 0 or elapsed != elapsed:
+            elapsed = 0.0
+        current += timedelta(seconds=elapsed)
+        for _, _, parsed in observations.values():
+            if not _matches_source_snapshot(parsed):
+                parsed["invalid"] = True
+            latest_timestamp = parsed.get("latest_timestamp")
+            if isinstance(latest_timestamp, datetime) and latest_timestamp > current + MAX_FUTURE_SKEW:
+                parsed["invalid"] = True
+
     for route_id, route in ((item[0], item) for item in ROUTE_CONTRACT):
         observation = observations.get(route_id)
         if observation is None:
-            if route_id in rejected_all or route_id in rejected_after:
+            if lifecycle_enabled or route_id in rejected_all or route_id in rejected_after:
                 agents[route_id]["freshness"] = "invalid"
             continue
         modified_ns, source, parsed = observation
@@ -1149,13 +1400,21 @@ def collect_native_activity(
         if poisoned:
             agents[route_id]["freshness"] = "invalid"
             continue
-        agents[route_id] = _project_source(
-            parsed,
-            route=route,
-            now=current,
-            source=source,
-            process_probe=process_probe,
-        )
+        if lifecycle_enabled:
+            agents[route_id] = _project_lifecycle_source(
+                parsed,
+                route=route,
+                now=current,
+                lifecycle=lifecycle.get(route_id) if lifecycle is not None else None,
+            )
+        else:
+            agents[route_id] = _project_source(
+                parsed,
+                route=route,
+                now=current,
+                source=source,
+                process_probe=process_probe,
+            )
     return {
         "schema": SCHEMA,
         "observed_at": _iso(current),

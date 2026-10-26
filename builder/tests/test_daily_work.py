@@ -1002,10 +1002,12 @@ let mmProjectData;
         self.assertIn('<button type="button" data-mm-view="todo" aria-pressed="true">', history)
         self.assertIn('data-mm-view="infra"', history)
         self.assertIn("renderMap(data);", html)
-        self.assertIn("renderTodo(data);", html)
-        # Mark 2026-10-24: loose ends and PR chips are not his to track; «Дела» keeps deadlines and steps only.
+        # The shared Notion board is the sole overview queue. Project notes stay on each project page.
+        self.assertNotIn("renderTodo(data);", html)
         self.assertNotIn('data-mm-view="loose"', html)
         todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="infra"')]
+        self.assertIn('id="mm-shared-tasks"', todo_panel)
+        self.assertNotIn('Контекст проектов', todo_panel)
         self.assertNotIn('id="mm-loose"', todo_panel)
         self.assertNotIn('Хвосты', html)
         self.assertNotIn('Готовы к слиянию', html)

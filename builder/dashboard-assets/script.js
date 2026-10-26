@@ -132,6 +132,12 @@
     const projectDetailEl = campus.querySelector('[data-campus-project-detail]');
     const projectDetailCloseEl = campus.querySelector('[data-campus-project-detail-close]');
     const refreshEl = campus.querySelector('[data-campus-refresh]');
+    const archiveToggleEl = campus.querySelector('[data-campus-archive-toggle]');
+    const archiveEl = campus.querySelector('[data-campus-archive]');
+    const archiveListEl = campus.querySelector('[data-campus-archive-list]');
+    const archiveErrorEl = campus.querySelector('[data-campus-archive-error]');
+    const detailArchiveRowEl = campus.querySelector('[data-campus-detail-archive-row]');
+    const detailArchiveEl = campus.querySelector('[data-campus-detail-archive]');
     const taskLanesEl = campus.querySelector('[data-campus-task-lanes]');
     const taskPanelEl = campus.querySelector('[data-campus-task-panel]');
     const routeLayerEl = campus.querySelector('[data-campus-route-layer]');
@@ -386,6 +392,84 @@
         notifyCampusContentHeight();
     }
 
+    // Mark 2026-10-25: projects he is not working on go to the archive instead of cluttering the map.
+    // The Mac mini decides who is archived (no work for a week, or «В архив» by hand); nothing is deleted.
+    function campusProjectKey(name) {
+        return String(name || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+    }
+
+    function renderCampusArchive(rows) {
+        const archived = Array.isArray(rows)
+            ? rows.filter((row) => row && typeof row.route_id === 'string' && typeof row.project === 'string')
+            : [];
+        if (archiveToggleEl) archiveToggleEl.hidden = !archived.length;
+        // The project folder of an archived agent leaves the map too, unless it has a live task.
+        const archivedProjects = new Set(archived.map((row) => campusProjectKey(row.project)));
+        projectFolderEls.forEach((folder) => {
+            folder.dataset.campusProjectArchived = String(
+                archivedProjects.has(campusProjectKey(folder.dataset.campusProject)),
+            );
+        });
+        if (!archiveListEl) return;
+        archiveListEl.replaceChildren(...archived.map((row) => {
+            const li = document.createElement('li');
+            const name = document.createElement('strong');
+            name.textContent = row.project;
+            const back = document.createElement('button');
+            back.type = 'button';
+            back.textContent = 'Вернуть';
+            back.addEventListener('click', () => changeCampusArchive(row.route_id, false, back));
+            li.append(name, back);
+            return li;
+        }));
+        if (!archived.length) closeCampusArchive(false);
+    }
+
+    function openCampusArchive() {
+        if (!archiveEl) return;
+        if (archiveErrorEl) archiveErrorEl.hidden = true;
+        archiveEl.hidden = false;
+        archiveToggleEl?.setAttribute('aria-expanded', 'true');
+        archiveEl.querySelector('[data-campus-archive-close]')?.focus();
+        notifyCampusContentHeight();
+    }
+
+    function closeCampusArchive(returnFocus) {
+        if (!archiveEl || archiveEl.hidden) return;
+        archiveEl.hidden = true;
+        archiveToggleEl?.setAttribute('aria-expanded', 'false');
+        if (returnFocus) archiveToggleEl?.focus();
+        notifyCampusContentHeight();
+    }
+
+    // campus-archive-write:start — the campus's only write: Mark's own «В архив» / «Вернуть»
+    // (owner-guarded on the server). It never starts or changes agent work.
+    async function changeCampusArchive(route, archived, control) {
+        if (control) control.disabled = true;
+        if (archiveErrorEl) archiveErrorEl.hidden = true;
+        try {
+            const response = await fetch('/api/manager/campus-archive', {
+                method: 'POST',
+                headers: {...campusOwnerHeaders(), 'Content-Type': 'application/json'},
+                body: JSON.stringify({route, archived}),
+            });
+            if (!response.ok) throw new Error(String(response.status));
+            closeCampusDetails(false);
+            refreshDepartmentCampus(true);
+        } catch (error) {
+            if (control) control.disabled = false;
+            if (archiveErrorEl && !archived) {
+                archiveErrorEl.textContent = error.message === '401'
+                    ? 'Вернуть может только владелец: открой сайт под своим входом.'
+                    : 'Не получилось. Попробуй ещё раз.';
+                archiveErrorEl.hidden = false;
+            } else if (control) {
+                control.textContent = error.message === '401' ? 'Только владелец' : 'Не получилось';
+            }
+        }
+    }
+    // campus-archive-write:end
+
     function openCampusDetails(button, event) {
         if (!detailEl) return;
         closeCampusProjectDetails(false);
@@ -403,6 +487,13 @@
         detailFields.next_step.textContent = event.next_step;
         detailFields.result.textContent = resultLabels[event.status] || '—';
         detailFields.evidence_count.textContent = String(event.evidence_count);
+        const routeId = button.dataset.campusRouteId || '';
+        if (detailArchiveRowEl && detailArchiveEl) {
+            detailArchiveRowEl.hidden = !routeId || routeId === 'main-manager';
+            detailArchiveEl.disabled = false;
+            detailArchiveEl.textContent = 'Убрать в архив';
+            detailArchiveEl.dataset.campusArchiveRoute = routeId;
+        }
         detailEl.hidden = false;
         notifyCampusContentHeight();
     }
@@ -830,6 +921,7 @@
             const payload = await response.json();
             if (generation !== refreshGeneration || document.hidden) return;
             renderDepartmentCampus(payload);
+            renderCampusArchive(payload?.archive);
         } catch (error) {
             if (generation !== refreshGeneration || document.hidden || error.name === 'AbortError') return;
             renderDepartmentCampus({state: 'unavailable', events: []});
@@ -859,6 +951,17 @@
         projectDetailCloseEl.addEventListener('click', () => closeCampusProjectDetails(true));
     }
     if (refreshEl) refreshEl.addEventListener('click', () => refreshDepartmentCampus());
+    archiveToggleEl?.addEventListener('click', () => (
+        archiveEl?.hidden ? openCampusArchive() : closeCampusArchive(true)
+    ));
+    campus.querySelector('[data-campus-archive-close]')
+        ?.addEventListener('click', () => closeCampusArchive(true));
+    detailArchiveEl?.addEventListener('click', () => {
+        const route = detailArchiveEl.dataset.campusArchiveRoute;
+        if (route) changeCampusArchive(route, true, detailArchiveEl);
+    });
+    // The 3D department card's «В архив» calls this.
+    campus.campusArchive = (route, control) => changeCampusArchive(route, true, control);
     campus.querySelectorAll('[data-campus-project-folder]').forEach((folder) => {
         folder.addEventListener('click', () => openCampusProjectDetails(folder));
         folder.addEventListener('keydown', (event) => {
@@ -869,6 +972,11 @@
         });
     });
     campus.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && archiveEl && !archiveEl.hidden) {
+            event.preventDefault();
+            closeCampusArchive(true);
+            return;
+        }
         if (event.key === 'Escape' && projectDetailEl && !projectDetailEl.hidden) {
             event.preventDefault();
             closeCampusProjectDetails(false);
@@ -1488,10 +1596,23 @@
                 const state = document.createElement('small');
                 state.textContent = actor.label?.el.querySelector('small')?.textContent?.replace(/^·\s*/, '') || 'ожидает задач';
                 li.append(name, state);
+                if (actor.routeId && actor.routeId !== 'main-manager') {
+                    const archive = document.createElement('button');
+                    archive.type = 'button';
+                    archive.className = 'campus-3d-dept-archive';
+                    archive.textContent = 'В архив';
+                    archive.addEventListener('click', () => campus.campusArchive?.(actor.routeId, archive));
+                    li.append(archive);
+                }
                 people.append(li);
             });
             const projects = document.createElement('ul');
-            folderViews.filter((view) => view.room.id === room.id && view.el).forEach((view) => {
+            folderViews.filter((view) => (
+                view.room.id === room.id
+                && view.el
+                && !(view.el.dataset.campusProjectArchived === 'true'
+                    && (view.el.dataset.campusProjectStatus || 'idle') === 'idle')
+            )).forEach((view) => {
                 const li = document.createElement('li');
                 const status = view.el.dataset.campusProjectStatus || 'idle';
                 li.className = status === 'idle' ? '' : 'is-live';

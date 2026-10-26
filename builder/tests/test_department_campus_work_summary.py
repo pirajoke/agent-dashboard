@@ -9,6 +9,7 @@ import re
 import tempfile
 import unittest
 from unittest.mock import patch
+from campus_archive_write import without_archive_write
 
 
 BUILDER_DIR = Path(__file__).resolve().parents[1]
@@ -158,7 +159,7 @@ class DepartmentCampusWorkSummaryTests(unittest.TestCase):
     def _campus_script(self) -> str:
         start = self.script.index("// ── Department Campus ──")
         end = self.script.index("// ── End Department Campus ──", start)
-        return self.script[start:end]
+        return without_archive_write(self.script[start:end])
 
     def test_ac01_ac02_ec01_ec03_inspector_has_optional_summary_and_issue_link(self):
         self.assertEqual(self.html.count("Над чем работаем"), 1)

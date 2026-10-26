@@ -237,8 +237,13 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             allowed,
             ["mac-mini", "air", "pro", "machines", "agents", "platforms", "documents", "context", "work", "growth"],
         )
+        # Агенты opens on «Сессии» since 2026-10-25; the campus is one tap away.
         self.assertIn(
-            'aria-controls="agents-campus" aria-pressed="true"',
+            'aria-controls="agents-sessions" aria-pressed="true"',
+            self.dashboard_html,
+        )
+        self.assertIn(
+            'aria-controls="agents-campus" aria-pressed="false"',
             self.dashboard_html,
         )
         self.assertIn(
@@ -249,7 +254,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             '<section id="agents-decisions" aria-labelledby="decisions-title" lang="ru" hidden>',
             self.dashboard_html,
         )
-        self.assertIn('<div id="agents-campus">', self.dashboard_html)
+        self.assertIn('<div id="agents-campus" hidden>', self.dashboard_html)
         for duplicate_projects_marker in (
             'aria-controls="section-projects"',
             'id="section-projects"',

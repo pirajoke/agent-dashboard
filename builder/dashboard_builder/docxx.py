@@ -401,6 +401,8 @@ def _gmail_records(directory):
         if source_url: row['source_url'] = source_url
         sha, size = value.get('sha256'), value.get('size')
         if isinstance(sha, str) and type(size) is int:
+            if re.fullmatch(r'[0-9a-f]{64}', sha):
+                row['_sha'] = (sha, size)  # Private: lets the folder suggester read the saved text.
             metadata = enrichments.get((sha, size), {})
             row.update({k: v for k, v in metadata.items() if k not in ('at', 'date_kind')})
             if not row['at'] and metadata.get('at'):
@@ -423,20 +425,40 @@ def _apply_decisions(rows, decisions):
     settled = 0
     for row in rows.values():
         decision = decisions.get(row['key']) if isinstance(decisions, dict) else None
-        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep'):
+        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep', 'trash'):
             continue
         if row['status'] != 'needs_review':
             continue
         moved = decision['action'] != 'keep'
-        row.update(status='sorted', label='Разобрано', historical=False, decision=decision['action'],
-                   reason='Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
+        trashed = decision['action'] == 'trash'
+        row.update(status='sorted', label='В корзине' if trashed else 'Разобрано', historical=False,
+                   decision=decision['action'],
+                   reason='Ты убрал документ в корзину. «Вернуть как было» достанет его обратно.' if trashed
+                   else 'Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
         if moved and isinstance(decision.get('to'), str):
             row['destination'] = _text(decision['to'], 600)
         settled += 1
     return settled
 
 
-def docxx_projection(directory, *, owner=False, now=None, decisions=None, include_paths=False):
+def _apply_suggestions(rows, suggestions):
+    """The Mac mini's folder guess from the document's content (docxx_suggest.py), for rows still open."""
+    if not isinstance(suggestions, dict):
+        return
+    for row in rows.values():
+        guess = suggestions.get(row['key'])
+        if row['status'] != 'needs_review' or not isinstance(guess, dict) or guess.get('name') != row['name']:
+            continue
+        why = _text(guess.get('why'), 200)
+        if guess.get('junk') is True:
+            row['suggest'] = {'junk': True, 'why': why}
+        elif isinstance(guess.get('folder'), str) and guess['folder']:
+            row['suggest'] = {'folder': _text(guess['folder'], 300), 'why': why}
+        elif guess.get('folder') is None:
+            row['suggest'] = {'folder': None, 'why': why}
+
+
+def docxx_projection(directory, *, owner=False, now=None, decisions=None, include_paths=False, suggestions=None):
     if not owner:
         return {'state': 'owner_required'}  # Do not even stat private sources.
     directory = Path(directory)
@@ -496,6 +518,7 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
     # Runner may include the same document in results and review_pending.
     # Count the latest visible identity once, just as the operation list does.
     settled = _apply_decisions(rows, decisions)
+    _apply_suggestions(rows, suggestions)
     current = [row for row in rows.values() if not row['historical']]
     issues = {'needs_review','error','duplicate_found','retained','awaiting_verification'}
     review = sum(row['status'] in issues for row in current)
@@ -549,9 +572,11 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
     except (OSError, ValueError, TypeError): pass
     records = sorted(rows.values(), key=lambda r:(not r['historical'], r['at'] or ''), reverse=True)
     for row in records:
-        path = row.pop('_path', None)
+        path, sha = row.pop('_path', None), row.pop('_sha', None)
         if include_paths and path:
             row['_path'] = path
+        if include_paths and sha:
+            row['_sha'] = sha
     return {'state': state, 'checked_at': _stamp(checked), 'observed_at': _stamp(now),
             'busy': busy, 'scan_started_at': _stamp(status.get('scan_started_at')),
             'stale_after_seconds': STALE_AFTER, 'scan_interval_seconds': 300,
