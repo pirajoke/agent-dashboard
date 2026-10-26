@@ -4218,7 +4218,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-record-source { grid-area:action; justify-self:end; display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 12px; border:1px solid var(--mm-control-line); border-radius:7px; background:transparent; color:var(--mm-accent); font-size:13px; font-weight:600; line-height:1.4; text-decoration:none; white-space:nowrap; transition:background-color 150ms ease-out; }
 .docxx-record-source:hover { background:var(--mm-selection); text-decoration:none; }
 .docxx-record-source:active { background:var(--mm-surface-hover); }
-.docxx-record-state { grid-area:state; justify-self:end; max-width:190px; border-radius:0; padding:0; background:none; color:var(--mm-muted); font-size:12px; line-height:1.5; text-align:right; }
+.docxx-record-state { grid-area:state; justify-self:end; max-width:220px; border-radius:999px; padding:4px 12px; background:var(--mm-selection); color:var(--mm-ink); font-size:13px; font-weight:600; line-height:1.4; text-align:center; }
+.docxx-record-state[data-tone="attention"] { background:var(--mm-warning-soft); color:var(--mm-warning); }
+/* Mark 2026-10-26: open and delete side by side, the same size as the other card buttons. */
+.docxx-warnings[hidden], #docxx-state-info[hidden] { display:none !important; }
+.docxx-record-actions { grid-area:action; justify-self:end; display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
+.docxx-record-actions .docxx-record-source { min-height:46px; padding:10px 18px; border-radius:12px; font-size:15px; }
+.docxx-undo { margin-left:6px; padding:4px 12px; border:1px solid var(--mm-control-line); border-radius:999px; background:var(--mm-surface); color:var(--mm-accent); font:650 13px/1.3 'Inter', -apple-system, sans-serif; cursor:pointer; }
 .docxx-record-state[data-tone="attention"] { color:var(--mm-warning); }
 .docxx-record-body { margin:0 0 0 48px; border-top:1px solid var(--mm-line); padding:16px 0 20px; color:var(--mm-ink); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
 .docxx-record-body dl { display:grid; grid-template-columns:95px minmax(0,1fr); gap:10px 18px; margin:0 0 16px; }
@@ -4325,6 +4331,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @keyframes docxx-pulse { 50% { opacity:.25; } }
 @media(max-width:1000px) { .docxx-flow { gap:8px; grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); } .docxx-node { padding:12px 10px; gap:8px; } .docxx-symbol { min-width:18px; font-size:20px; } }
 @media(max-width:700px) { .docxx-head { align-items:flex-start; } .docxx-flow { grid-template-columns:1fr; gap:16px; padding-top:24px; } .docxx-column h3 { margin-bottom:12px; } .docxx-connector { margin:0; justify-content:center; height:16px; } .docxx-connector span { flex:none; width:32px; } .docxx-connector b { transform:rotate(90deg); } .docxx-processor { display:grid; grid-template-columns:1fr 1fr; gap:12px; } .docxx-processor h3,.docxx-processor .docxx-caption { grid-column:1/-1; margin:0; } .docxx-machine { min-height:165px; } .docxx-steps { align-self:center; margin:0; } .docxx-explainer { flex-wrap:wrap; } .docxx-explainer>div { flex:1; min-width:0; } .docxx-explainer a { margin-left:34px; } .docxx-results-head { flex-direction:column; align-items:stretch; gap:12px; } .docxx-record summary { grid-template-columns:28px minmax(0,1fr) 16px; grid-template-areas:"icon name toggle" ". state ." ". action ."; column-gap:10px; row-gap:10px; padding:20px 0; } .docxx-record-icon { width:28px; height:32px; } .docxx-record-name > strong { font-size:16px; margin-top:0; } .docxx-record-name > small,.docxx-record-validity > span,.docxx-record-state { font-size:14px; } .docxx-record-validity { display:grid; gap:2px; margin-top:10px; } .docxx-record-source { justify-self:start; min-height:44px; font-size:14px; } .docxx-record-state { justify-self:start; max-width:none; text-align:left; } .docxx-record summary::after { align-self:start; font-size:18px; } .docxx-record-body { margin:0 0 0 38px; padding:16px 0; font-size:14px; } .docxx-record-body dl { grid-template-columns:1fr; gap:2px; } .docxx-record-body dd { margin-bottom:10px; } }
+@media(max-width:700px) { .docxx-record-actions { justify-self:stretch; justify-content:flex-start; } .docxx-record-actions > * { flex:1 1 auto; } .docxx-record-state { justify-self:start; text-align:center; } }
 @media(prefers-reduced-motion:reduce) { #section-documents *,#section-documents *::after { animation:none!important; transition:none!important; } }
 
 /* Mark 2026-10-24 «удали по максимуму ненужной инфы, метадату… замени на i»: counters, timings, ports and
@@ -4813,7 +4820,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </header>
     <div class="docxx-statusbar" role="status" aria-live="polite">
       <span class="docxx-indicator" id="docxx-indicator" data-state="unavailable"></span>
-      <strong id="docxx-state">Подключаемся к Mini…</strong><span id="docxx-freshness" hidden>Проверяем доступ владельца</span><button type="button" class="cc-i" data-cc-info="docxx" aria-label="Подробнее о разборе документов">i</button>
+      <strong id="docxx-state">Подключаемся к Mini…</strong><span id="docxx-freshness" hidden>Проверяем доступ владельца</span><button type="button" class="cc-i" id="docxx-state-info" data-cc-info="docxx" aria-label="Подробнее о разборе документов" hidden>i</button>
       <button type="button" id="docxx-refresh" class="docxx-button">Обновить</button>
     </div>
     <div id="docxx-warnings" class="docxx-warnings" hidden></div>
@@ -4876,7 +4883,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <ol id="docxx-operation-timeline" class="docxx-timeline" aria-label="Последние операции"></ol>
     </details>
     <form id="docxx-content-search-form" class="docxx-content-search" role="search" aria-label="Поиск в документах">
-      <label class="docxx-search" for="docxx-content-query">Поиск по содержимому документов<input id="docxx-content-query" type="search" maxlength="500" autocomplete="off" placeholder="Слово или фраза" aria-describedby="docxx-content-help"></label>
+      <label class="docxx-search" for="docxx-content-query"><input id="docxx-content-query" type="search" maxlength="500" autocomplete="off" placeholder="Найти в тексте документов" aria-label="Найти в тексте документов" aria-describedby="docxx-content-help"></label>
       <button id="docxx-content-submit" class="docxx-button" type="submit">Найти</button>
     </form>
     <p id="docxx-content-help" class="docxx-footnote">Приватный поиск по зарегистрированным версиям. Результат поиска не подтверждает текущее состояние файла в облаке.</p>
@@ -4888,17 +4895,17 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <p>MacBook можно закрыть. Mini должен быть включён, пользователь — в системе, iCloud и Google Drive — доступны. Эта панель читает статус и ничего не переносит.</p>
       <div class="docxx-links" id="docxx-guide-links"></div>
     </div>
-    <div class="docxx-results-head"><div><h3>Что произошло с документами</h3><p id="docxx-results-note">Последний проход и ограниченная история обработчика.</p></div><label class="docxx-search">Поиск по показанным операциям<input id="docxx-search" type="search" placeholder="Название или папка" autocomplete="off" maxlength="200"></label></div>
+    <div class="docxx-results-head"><div><h3>Что произошло с документами</h3><p id="docxx-results-note">Последний проход и ограниченная история обработчика.</p></div><label class="docxx-search"><input id="docxx-search" type="search" placeholder="Найти в списке" aria-label="Найти в списке" autocomplete="off" maxlength="200"></label></div>
     <div class="docxx-filters" role="group" aria-label="Показать операции"><button type="button" data-docxx-filter="all" aria-pressed="true">Все</button><button type="button" data-docxx-filter="attention" aria-pressed="false">Нужно внимание</button><button type="button" data-docxx-filter="complete" aria-pressed="false">Обработанные</button></div>
     <div class="docxx-sort-bar" id="docxx-sort-bar" hidden>
       <strong id="docxx-sort-count"></strong>
       <div class="docxx-sort-actions">
         <button type="button" class="docxx-act is-main" id="docxx-sort-auto" hidden>Разложить по подсказкам</button>
-        <button type="button" class="docxx-act is-trash" id="docxx-sort-junk" hidden>Мусор в корзину</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-junk" hidden>Удалить мусор</button>
         <button type="button" class="docxx-act" id="docxx-sort-all">Выбрать все</button>
         <button type="button" class="docxx-act is-main" id="docxx-sort-move" hidden>Переложить в папку…</button>
         <button type="button" class="docxx-act" id="docxx-sort-archive" hidden>В архив</button>
-        <button type="button" class="docxx-act is-trash" id="docxx-sort-trash" hidden>В корзину</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-trash" hidden>Удалить</button>
         <button type="button" class="docxx-act" id="docxx-sort-keep" hidden>Оставить как есть</button>
       </div>
       <p class="docxx-sort-note" id="docxx-sort-note" role="status" aria-live="polite"></p>
@@ -12395,7 +12402,7 @@ function ccDocxxResetSearch() {
   document.getElementById('docxx-content-results').replaceChildren();
   document.getElementById('docxx-content-query').value='';
   document.getElementById('docxx-content-submit').disabled=false;
-  ccDocxxText('docxx-content-state','Введите слово или точную фразу.');
+  ccDocxxText('docxx-content-state','');
 }
 async function ccDocxxSearchContent(event) {
   event.preventDefault();
@@ -12404,7 +12411,7 @@ async function ccDocxxSearchContent(event) {
   ccDocxxSearchController?.abort();
   const list=document.getElementById('docxx-content-results'); list.replaceChildren();
   if(!ccDocxxData) { ccDocxxText('docxx-content-state','Сначала подтвердите доступ владельца.'); return; }
-  if(!query) { ccDocxxText('docxx-content-state','Введите слово или точную фразу.'); return; }
+  if(!query) { ccDocxxText('docxx-content-state',''); return; }
   const controller=new AbortController(); ccDocxxSearchController=controller;
   const timeout=setTimeout(()=>controller.abort(),8000);
   const button=document.getElementById('docxx-content-submit'); button.disabled=true;
@@ -12444,25 +12451,28 @@ function ccDocxxRenderRecords() {
   list.replaceChildren();
   const rows=(ccDocxxData?.records || []).filter(r=>(ccDocxxFilter==='all'||(ccDocxxFilter==='attention'?ccDocxxAttention.has(r.status):['verified','copied','already_present','sorted'].includes(r.status))) && `${r.name} ${r.original_name} ${r.destination} ${r.description || ''}`.toLocaleLowerCase('ru').includes(q));
   ccDocxxSortVisible=rows.filter(r=>r.status==='needs_review').map(r=>r.key);
-  for(const key of [...ccDocxxSelected]) if(!ccDocxxSortVisible.includes(key)) ccDocxxSelected.delete(key);
+  // 2026-10-26 «добавь возможность всё это удалять»: every shown document can be picked for «Удалить».
+  ccDocxxPickable=rows.map(r=>r.key);
+  for(const key of [...ccDocxxSelected]) if(!ccDocxxPickable.includes(key)) ccDocxxSelected.delete(key);
   ccDocxxSortBar();
   if(!rows.length) { list.append(ccDocxxEl('p',q||ccDocxxFilter!=='all'?'По выбранному фильтру операций нет.':'В журнале пока нет операций. Добавь документ через один из входов выше.','docxx-empty')); return; }
   for(const row of rows) {
     const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
     const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
-    const source=row.source==='gmail'?'Gmail':row.source==='icloud'?'iCloud':row.source==='manual'?'С компьютера':row.source==='review'?'На разборе':'Google Drive';
-    const date=row.at ? (row.date_kind==='added'?'Добавлен ':'Обработан ')+ccDocxxRecordDate(row.at) : 'Дата не указана';
+    // Mark 2026-10-26 «удали мелкие надписи»: no source · date line under the name.
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
-    name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',source+' · '+date));
+    name.append(ccDocxxEl('strong',row.name));
     if(row.description) name.append(ccDocxxEl('span',row.description,'docxx-record-description'));
-    else if(row.status==='needs_review' && !row.suggest) name.append(ccDocxxEl('span','Содержимое ещё не определено.','docxx-record-description'));
     if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Срок действия'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
     if(row.status==='needs_review') { const todo=ccDocxxRecordActions(row); if(todo) name.append(todo); }
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
-    summary.append(row.status==='needs_review'?ccDocxxPick(row.key,row.name):icon,name);
+    summary.append(ccDocxxPick(row.key,row.name),name);
     const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку ↗':'Открыть документ ↗',row.url) || ccDocxxSourceLink('Открыть в Gmail ↗',row.source_url);
-    if(openLink) { openLink.className='docxx-record-source'; summary.append(openLink); }
-    summary.append(badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
+    const acts=ccDocxxEl('span',undefined,'docxx-record-actions');
+    if(openLink) { openLink.className='docxx-record-source'; acts.append(openLink); }
+    if(row.status!=='needs_review') acts.append(ccDocxxAct('Удалить','is-trash docxx-record-delete',()=>ccDocxxDecide('remove',[row.key])));
+    summary.append(badge); if(acts.children.length) summary.append(acts);
+    const body=ccDocxxEl('div',undefined,'docxx-record-body');
     if(row.status==='sorted') body.append(ccDocxxRecordActions(row));
     const dl=ccDocxxEl('dl');
     for(const [label,value] of [['Было',row.original_name],['Теперь',row.destination],['Пояснение',row.reason]]) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
@@ -12476,7 +12486,7 @@ function ccDocxxRenderRecords() {
 }
 // ─── Sorting «Нужен разбор» from the site (Mark 2026-10-25) ───
 const ccDocxxSelected=new Set();
-let ccDocxxSortVisible=[], ccDocxxFolders=null, ccDocxxBusy=false, ccDocxxMoveKeys=[];
+let ccDocxxSortVisible=[], ccDocxxPickable=[], ccDocxxFolders=null, ccDocxxBusy=false, ccDocxxMoveKeys=[];
 const CC_DOCXX_ERRORS={not_found:'Mac mini не нашёл файл у себя на диске',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена',no_suggestion:'нет подходящей папки'};
 function ccDocxxMovable(key) { return !Array.isArray(ccDocxxFolders?.movable) || ccDocxxFolders.movable.includes(key); }
 function ccDocxxFolderName(folder) { return folder.split('/').pop(); }
@@ -12505,11 +12515,10 @@ function ccDocxxRecordActions(row) {
   const box=ccDocxxEl('div',undefined,'docxx-record-todo');
   if(!ccDocxxMovable(row.key)) {
     // 2026-10-26: a Drive document the journal gives no place for; moving it would only fail.
-    const hint=ccDocxxEl('p','Mac mini не нашёл этот файл у себя на диске, поэтому переложить или убрать его отсюда нельзя. Удали или перенеси его в Google Drive, а здесь нажми «Оставить», чтобы он не висел в разборе.','docxx-suggest'); hint.dataset.tone='none';
-    box.append(hint,ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
+    box.append(ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])),ccDocxxAct('Удалить','is-trash',()=>ccDocxxDecide('remove',[row.key])));
     return box;
   }
-  const folder=ccDocxxSuggested(row), junk=row.suggest?.junk===true, canTrash=ccDocxxFolders?.can_trash===true;
+  const folder=ccDocxxSuggested(row), junk=row.suggest?.junk===true;
   const why=row.suggest?.why ? ' — '+row.suggest.why : '';
   if(folder) {
     const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='folder';
@@ -12519,14 +12528,14 @@ function ccDocxxRecordActions(row) {
     const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='junk';
     hint.append(ccDocxxEl('b','Похоже на мусор'),why);
     box.append(hint);
-    if(canTrash) box.append(ccDocxxAct('В корзину','is-trash is-main',()=>ccDocxxDecide('trash',[row.key])));
+    box.append(ccDocxxAct('Удалить','is-trash is-main',()=>ccDocxxDecide('remove',[row.key])));
   } else if(row.suggest) {
     const hint=ccDocxxEl('p','Подходящей папки не нашлось'+why,'docxx-suggest'); hint.dataset.tone='none'; box.append(hint);
   }
   box.append(ccDocxxAct(folder?'Другая папка…':'Выбрать папку…',folder||junk?'':'is-main',()=>ccDocxxOpenMove([row.key])));
   if(ccDocxxFolders?.archive) box.append(ccDocxxAct('В архив','',()=>ccDocxxDecide('archive',[row.key])));
   box.append(ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
-  if(canTrash && !junk) box.append(ccDocxxAct('В корзину','is-trash',()=>ccDocxxDecide('trash',[row.key])));
+  if(!junk) box.append(ccDocxxAct('Удалить','is-trash',()=>ccDocxxDecide('remove',[row.key])));
   return box;
 }
 function ccDocxxGuessed(kind) {
@@ -12535,17 +12544,19 @@ function ccDocxxGuessed(kind) {
   return keys.filter(k=>rows.has(k) && ccDocxxMovable(k) && (kind==='junk'?rows.get(k).suggest?.junk===true:!!ccDocxxSuggested(rows.get(k))));
 }
 function ccDocxxSortBar() {
-  const bar=document.getElementById('docxx-sort-bar'); const total=ccDocxxSortVisible.length, picked=ccDocxxSelected.size;
-  bar.hidden=!total && !document.getElementById('docxx-sort-note').textContent;
+  const bar=document.getElementById('docxx-sort-bar'); const total=ccDocxxSortVisible.length, picked=ccDocxxSelected.size, shown=ccDocxxPickable.length;
+  bar.hidden=!shown && !document.getElementById('docxx-sort-note').textContent;
   ccDocxxText('docxx-sort-count',picked?'Выбрано: '+picked:total?ccDocxxCount(total,'документ ждёт','документа ждут','документов ждут')+' решения':'Всё разобрано');
-  const all=document.getElementById('docxx-sort-all'); all.hidden=!total; all.textContent=picked && picked===total?'Снять выбор':'Выбрать все';
-  document.getElementById('docxx-sort-move').hidden=!picked;
-  document.getElementById('docxx-sort-keep').hidden=!picked;
-  document.getElementById('docxx-sort-archive').hidden=!picked || !ccDocxxFolders?.archive;
-  document.getElementById('docxx-sort-trash').hidden=!picked || ccDocxxFolders?.can_trash!==true;
-  const auto=ccDocxxGuessed('folder'), junk=ccDocxxFolders?.can_trash===true?ccDocxxGuessed('junk'):[];
+  const all=document.getElementById('docxx-sort-all'); all.hidden=!shown; all.textContent=picked && picked===shown?'Снять выбор':'Выбрать все';
+  // Folder choices fit only documents still waiting; «Удалить» fits any.
+  const onlyReview=picked>0 && [...ccDocxxSelected].every(k=>ccDocxxSortVisible.includes(k));
+  document.getElementById('docxx-sort-move').hidden=!onlyReview;
+  document.getElementById('docxx-sort-keep').hidden=!onlyReview;
+  document.getElementById('docxx-sort-archive').hidden=!onlyReview || !ccDocxxFolders?.archive;
+  document.getElementById('docxx-sort-trash').hidden=!picked;
+  const auto=ccDocxxGuessed('folder'), junk=ccDocxxGuessed('junk');
   const autoButton=document.getElementById('docxx-sort-auto'); autoButton.hidden=!auto.length; autoButton.textContent='Разложить по подсказкам ('+auto.length+')';
-  const junkButton=document.getElementById('docxx-sort-junk'); junkButton.hidden=!junk.length; junkButton.textContent='Мусор в корзину ('+junk.length+')';
+  const junkButton=document.getElementById('docxx-sort-junk'); junkButton.hidden=!junk.length; junkButton.textContent='Удалить мусор ('+junk.length+')';
   for(const b of bar.querySelectorAll('button')) b.disabled=ccDocxxBusy;
 }
 async function ccDocxxLoadFolders() {
@@ -12588,8 +12599,8 @@ async function ccDocxxOpenMove(keys) {
 async function ccDocxxDecide(action,keys,folder) {
   if(ccDocxxBusy || !keys.length) return;
   ccDocxxBusy=true; ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
-  ccDocxxText('docxx-sort-note',{keep:'Отмечаем…',undo:'Возвращаем…',trash:'Убираем в корзину…',auto:'Раскладываем по подсказкам…'}[action]||'Перекладываем…'); ccDocxxSortBar();
-  let note;
+  ccDocxxText('docxx-sort-note',{keep:'Отмечаем…',undo:'Возвращаем…',trash:'Удаляем…',remove:'Удаляем…',auto:'Раскладываем по подсказкам…'}[action]||'Перекладываем…'); ccDocxxSortBar();
+  let note, undo=[];
   try {
     // The server takes at most 50 documents per request: send a long selection in parts.
     const data={results:[]}; let response={ok:true,status:200};
@@ -12601,47 +12612,52 @@ async function ccDocxxDecide(action,keys,folder) {
     if(!response.ok && !data.results.length) note=response.status===401?'Нужен вход владельца.':'Не получилось. Обнови страницу и попробуй ещё раз.';
     else {
       const ok=data.results.filter(r=>r.ok), bad=data.results.filter(r=>!r.ok);
-      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было',trash:'В корзине',auto:'Разложено по папкам'}[action];
+      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было',trash:'Удалено',remove:'Удалено',auto:'Разложено по папкам'}[action];
       note=ok.length?(keys.length===1?done+(action==='move'&&folder?': '+folder.split('/').join(' / '):'')+'.':done+': '+ok.length+'.'):'';
       if(bad.length) note+=(note?' ':'')+'Не получилось: '+bad.length+' ('+[...new Set(bad.map(r=>CC_DOCXX_ERRORS[r.error]||'ошибка'))].join(', ')+').';
       if(!response.ok) note+=(note?' ':'')+'Остальные не успели: обнови страницу и повтори.';
       for(const r of ok) ccDocxxSelected.delete(r.key);
-      if(['move','trash','auto','undo'].includes(action)) ccDocxxFolders=null;
+      if(['move','trash','remove','auto','undo'].includes(action)) ccDocxxFolders=null;
+      undo=['trash','remove'].includes(action)?ok.map(r=>r.key):[];
     }
   } catch { note='Нет связи с Mac mini. Попробуй ещё раз.'; }
   ccDocxxBusy=false; ccDocxxText('docxx-sort-note',note||'');
+  // Nothing is really erased: right after «Удалить» one tap brings the documents back.
+  if(undo.length) { const back=ccDocxxEl('button','Вернуть','docxx-undo'); back.type='button'; back.addEventListener('click',()=>ccDocxxDecide('undo',undo)); document.getElementById('docxx-sort-note').append(' ',back); }
   await ccLoadDocxx(); if(!ccDocxxFolders) ccDocxxLoadFolders(); ccDocxxSortBar();
 }
 document.getElementById('docxx-sort-all').addEventListener('click',()=>{
-  if(ccDocxxSelected.size===ccDocxxSortVisible.length) ccDocxxSelected.clear(); else ccDocxxSortVisible.forEach(k=>ccDocxxSelected.add(k));
+  if(ccDocxxSelected.size===ccDocxxPickable.length) ccDocxxSelected.clear(); else ccDocxxPickable.forEach(k=>ccDocxxSelected.add(k));
   ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
 });
 document.getElementById('docxx-sort-move').addEventListener('click',()=>ccDocxxOpenMove([...ccDocxxSelected]));
 document.getElementById('docxx-sort-archive').addEventListener('click',()=>ccDocxxDecide('archive',[...ccDocxxSelected]));
 document.getElementById('docxx-sort-keep').addEventListener('click',()=>ccDocxxDecide('keep',[...ccDocxxSelected]));
-document.getElementById('docxx-sort-trash').addEventListener('click',()=>ccDocxxDecide('trash',[...ccDocxxSelected]));
+document.getElementById('docxx-sort-trash').addEventListener('click',()=>ccDocxxDecide('remove',[...ccDocxxSelected]));
 document.getElementById('docxx-sort-auto').addEventListener('click',()=>ccDocxxDecide('auto',ccDocxxGuessed('folder')));
-document.getElementById('docxx-sort-junk').addEventListener('click',()=>ccDocxxDecide('trash',ccDocxxGuessed('junk')));
+document.getElementById('docxx-sort-junk').addEventListener('click',()=>ccDocxxDecide('remove',ccDocxxGuessed('junk')));
 document.getElementById('docxx-move-close').addEventListener('click',()=>document.getElementById('docxx-move-dialog').close());
 document.getElementById('docxx-move-dialog').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.close(); });
 document.getElementById('docxx-move-search').addEventListener('input',ccDocxxRenderFolders);
 function ccDocxxRender(data) {
   if(['owner_required','unavailable'].includes(data.state)) { ccDocxxReset(data.state==='owner_required'?'Нужен вход владельца': 'Не удалось прочитать статус Mac mini.',data.state); return; }
   ccDocxxData=data;
-  const labels={ready:'Очередь файлов проверена',processing:'Mini проверяет документы',attention:'Есть вопросы для разбора',waiting:'Ожидаем синхронизацию',stale:'Данные устарели — нужна проверка Mini'};
-  ccDocxxText('docxx-state',labels[data.state]||'Состояние неизвестно');
+  // Mark 2026-10-26 «показывай когда всё работает или когда встаёт система»: two states only.
+  // Questions about single documents live on their cards, not in this line.
+  const stopped=data.state==='stale' || ['blocked','stale','unavailable'].includes(data.health?.state);
+  ccDocxxText('docxx-state',stopped?'Система остановилась':'Всё работает');
   ccDocxxText('docxx-freshness','Последний проход: '+ccDocxxDate(data.checked_at));
-  document.getElementById('docxx-indicator').dataset.state=data.state;
+  document.getElementById('docxx-indicator').dataset.state=stopped?'stale':'ready';
+  document.getElementById('docxx-state-info').hidden=!stopped;
   document.getElementById('docxx-flow').dataset.active=String(data.state==='processing' && data.busy===true);
   ccDocxxText('docxx-machine-label',data.state==='processing'?'Разбирает документы':data.state==='stale'?'Давно не отвечал':data.busy===null?'Нет ответа':'Ждёт новые файлы');
   for(const [id,value] of [['pending',data.pending],['review',data.review_count],['catalog-count',data.catalog_count],['model',data.model_calls]]) ccDocxxText('docxx-'+id,Number.isInteger(value)?value.toLocaleString('ru-RU'):'—');
   // Mark 2026-10-24: one plain line instead of a line per internal warning; the warnings themselves open from «i».
   const warnings=document.getElementById('docxx-warnings'); warnings.replaceChildren();
   const messages=[...(data.warnings||[])]; if(data.state==='stale') messages.unshift('Это последний известный снимок, а не подтверждение текущей работы. Проверь питание, вход в систему и синхронизацию на Mini.');
-  const review=Number.isInteger(data.review_count)?data.review_count:0;
-  const line=data.state==='stale'?'Mac mini давно не отвечал: проверь, что он включён.':review>0?`Есть ${ccDocxxCount(review,'документ','документа','документов')} на проверку.`:'Часть файлов пока не разобрана, Mini попробует снова.';
-  if(messages.length || review>0) { const info=ccDocxxEl('button','i','cc-i'); info.type='button'; info.dataset.ccInfo='docxx'; info.setAttribute('aria-label','Подробнее'); warnings.append(ccDocxxEl('p',line),info); }
-  warnings.hidden=!(messages.length || review>0);
+  const line=data.state==='stale'?'Mac mini давно не отвечал: проверь, что он включён и вошёл в систему.':'Обработка документов остановилась на Mac mini. Нажми «i», чтобы увидеть причину.';
+  if(stopped) { const info=ccDocxxEl('button','i','cc-i'); info.type='button'; info.dataset.ccInfo='docxx'; info.setAttribute('aria-label','Подробнее'); warnings.append(ccDocxxEl('p',line),info); }
+  warnings.hidden=!stopped;
   ccDocxxWarnings=messages;
   const links=document.getElementById('docxx-guide-links'); links.replaceChildren();
   for(const [label,key] of [['Инструкция в Google Drive ↗','guide'],['Библиотека DOCXXx ↗','library'],['Разобрать позже ↗','review'],['Полный каталог ↗','catalog'],['Текстовый статус ↗','status']]) { const a=ccDocxxLink(label,data.links?.[key]); if(a) links.append(a); }
