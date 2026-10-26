@@ -34,12 +34,13 @@ class ExistingMachinePreservationTests(unittest.TestCase):
 
     def test_existing_machine_renderers_refresh_and_service_controls_are_unchanged(self):
         # Re-baselined 2026-10-20 with Mark's word for the grouped service list, and 2026-10-24 on his
-        # «го» to the rebuild plan (list only, no counters, Russian status words).
+        # «го» to the rebuild plan (list only, no counters, Russian status words), and 2026-10-26 on his
+        # ask to see the Pro's memory and disk (longer laptop timeout, «мало памяти» status).
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "50c6fc2f38fa62c276c9060a275aeb38741ea0ca11de5fccb40566710aa5b2b3")
+                         "70745b56e88639173f7c6ddf96434b30bbe0f40175de19a96224e10af59536fa")
 
 
 if __name__ == "__main__":
