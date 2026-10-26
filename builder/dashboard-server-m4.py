@@ -3273,7 +3273,9 @@ def _agent_runner_status(status_file=None):
         return {"state": "unknown"}
     reason = str(data.get("reason") or "")
     known = next((code for code in ("claude_not_found", "claude_auth_failed", "todo_unreadable") if reason.startswith(code)), None)
-    return {"state": "ok" if data.get("ok") else "error", "last_run": str(data.get("last_run") or "")[:20],
+    state = "blocked" if data.get("ok") and isinstance(data.get("blocked"), list) and data["blocked"] else (
+        "ok" if data.get("ok") else "error")
+    return {"state": state, "last_run": str(data.get("last_run") or "")[:20],
             **({"reason": known or "other"} if not data.get("ok") else {})}
 
 

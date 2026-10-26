@@ -4,6 +4,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import stat
 import sys
@@ -63,6 +64,11 @@ class AgentStoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             update_agent(self.path, "t-00000003", "working", by="claude")  # Finished stays finished.
 
+        change_items(self.path, {"action": "assign", "id": "t-00000002", "by": "codex"})
+        with self.assertRaises(ValueError):
+            update_agent(self.path, "t-00000002", "needs_mark", by="claude",
+                         execution_unknown=True)  # Mark reassigned it to another lane.
+
     def test_agent_cannot_touch_items_mark_did_not_give(self):
         with self.assertRaises(ValueError):
             update_agent(self.path, "t-00000001", "working", by="claude")
@@ -120,8 +126,9 @@ class RunnerTests(unittest.TestCase):
         self.cli.chmod(self.cli.stat().st_mode | stat.S_IXUSR)
         os.environ.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
 
-    def run_once(self):
-        return RUNNER.main(["--todo", str(self.todo), "--tasks", str(self.tasks), "--claude", str(self.cli)])
+    def run_once(self, *extra):
+        return RUNNER.main(["--todo", str(self.todo), "--tasks", str(self.tasks), "--claude", str(self.cli),
+                            *extra])
 
     def test_sorts_queues_and_works_one_item(self):
         record = change_items(self.todo, {"action": "add", "text": "Сравнить три модели ИБП"})
@@ -150,6 +157,59 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(self.run_once(), 0)
         self.assertFalse(self.calls.exists())
 
+    def test_stale_working_item_keeps_the_lane_blocked_when_its_child_may_survive(self):
+        change_items(self.todo, {"action": "assign", "id": "t-00000001"})
+        update_agent(self.todo, "t-00000001", "working", by="claude",
+                     now=datetime(2020, 1, 1, tzinfo=timezone.utc))
+        change_items(self.todo, {"action": "assign", "id": "t-00000002"})
+
+        self.assertEqual(self.run_once("--no-triage", "--timeout", "60"), 0)
+
+        items = {entry["id"]: entry for entry in load_items(self.todo)["items"]}
+        self.assertEqual(items["t-00000001"]["agent"]["state"], "needs_mark")
+        self.assertIs(items["t-00000001"]["agent"]["execution_unknown"], True)
+        self.assertIn("не повтор", items["t-00000001"]["agent"]["result"].lower())
+        self.assertEqual(items["t-00000002"]["agent"]["state"], "queued")
+        self.assertFalse(self.calls.exists())
+        status = json.loads((self.tasks / "status.json").read_text())
+        self.assertEqual(status["reconciled"], [{"id": "t-00000001", "state": "needs_mark"}])
+        self.assertEqual(status["blocked"], [
+            {"id": "t-00000001", "by": "claude", "reason": "execution_unknown"},
+        ])
+
+        # The hold survives later runner invocations until Mark explicitly resolves the item.
+        self.assertEqual(self.run_once("--no-triage", "--timeout", "60"), 0)
+        queued = next(entry for entry in load_items(self.todo)["items"] if entry["id"] == "t-00000002")
+        self.assertEqual(queued["agent"]["state"], "queued")
+        self.assertFalse(self.calls.exists())
+
+    def test_completed_session_needs_mark_does_not_block_the_lane(self):
+        change_items(self.todo, {"action": "assign", "id": "t-00000001"})
+        update_agent(self.todo, "t-00000001", "working", by="claude")
+        update_agent(self.todo, "t-00000001", "needs_mark", by="claude", result="Нужно решение Марка.")
+        change_items(self.todo, {"action": "assign", "id": "t-00000002"})
+
+        self.assertEqual(self.run_once("--no-triage", "--timeout", "60"), 0)
+
+        items = {entry["id"]: entry for entry in load_items(self.todo)["items"]}
+        self.assertNotIn("execution_unknown", items["t-00000001"]["agent"])
+        self.assertEqual(items["t-00000002"]["agent"]["state"], "done")
+
+    def test_recent_working_item_keeps_the_next_queued_item_from_starting(self):
+        change_items(self.todo, {"action": "assign", "id": "t-00000001"})
+        update_agent(self.todo, "t-00000001", "working", by="claude",
+                     now=datetime.now(timezone.utc))
+        change_items(self.todo, {"action": "assign", "id": "t-00000002"})
+
+        self.assertEqual(self.run_once("--no-triage", "--timeout", "3600"), 0)
+
+        items = {entry["id"]: entry for entry in load_items(self.todo)["items"]}
+        self.assertEqual(items["t-00000001"]["agent"]["state"], "working")
+        self.assertEqual(items["t-00000002"]["agent"]["state"], "queued")
+        self.assertFalse(self.calls.exists())
+        status = json.loads((self.tasks / "status.json").read_text())
+        self.assertEqual(status["working"], [{"id": "t-00000001", "by": "claude"}])
+
     def test_reply_parsing_takes_the_last_json_object(self):
         self.assertEqual(RUNNER.parse_json_reply('Сделал.\n```json\n{"state": "done"}\n```'), {"state": "done"})
         self.assertIsNone(RUNNER.parse_json_reply("без ответа"))
@@ -163,10 +223,16 @@ class AgentPageAndApiTests(unittest.TestCase):
             path.write_text(json.dumps({"ok": False, "reason": "claude_auth_failed: token sk-ant-xyz", "last_run": "2026-10-23T12:00:00Z"}))
             self.assertEqual(SERVER._agent_runner_status(path),
                              {"state": "error", "last_run": "2026-10-23T12:00:00Z", "reason": "claude_auth_failed"})
+            path.write_text(json.dumps({"ok": True, "blocked": [{"id": "t-00000001"}],
+                                        "last_run": "2026-10-24T12:00:00Z"}))
+            self.assertEqual(SERVER._agent_runner_status(path),
+                             {"state": "blocked", "last_run": "2026-10-24T12:00:00Z"})
 
     def test_page_offers_hand_off_and_shows_agents_walking(self):
         for needle in ("data-todo-give", "data-todo-take", "action: 'assign'", "action: 'unassign'",
-                       "mm-agent-lane", "prefers-reduced-motion: reduce) {\n  .mm-agent-walker"):
+                       "mm-agent-lane", "runner?.state === 'blocked'",
+                       "предыдущее исполнение требует проверки",
+                       "prefers-reduced-motion: reduce) {\n  .mm-agent-walker"):
             self.assertIn(needle, PAGE)
 
     def test_one_button_and_an_instant_thinking_state(self):
