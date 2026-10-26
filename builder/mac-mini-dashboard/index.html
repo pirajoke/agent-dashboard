@@ -4498,7 +4498,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .arch-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 18px; color: var(--mm-muted); font-size: 12.5px; }
 .arch-legend span { display: inline-flex; align-items: center; gap: 6px; }
 /* «Устройство»: only who is wired to whom, no live states. */
-#section-architecture.is-map .arch-dot, #section-architecture.is-map .arch-when, #section-architecture.is-map .arch-kpis, #section-architecture.is-map .arch-blockers, #section-architecture.is-map .arch-legend.is-live, #section-architecture.is-map .arch-node em.is-live { display: none; }
+#section-architecture.is-map .arch-dot, #section-architecture.is-map .arch-kpis, #section-architecture.is-map .arch-blockers, #section-architecture.is-map .arch-legend.is-live { display: none; }
 #section-architecture:not(.is-map) .arch-legend.is-map { display: none; }
 .cc-info-body .arch-steps { margin: 4px 0 8px; padding-left: 20px; }
 .cc-info-body .arch-steps li { margin: 3px 0; }
@@ -4540,11 +4540,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .ax-pulse.is-off::after { display: none; }
 @keyframes ax-ping { 0% { transform: scale(.6); opacity: .7; } 100% { transform: scale(1.8); opacity: 0; } }
 /* control cards */
-.ax-ctl { width: 250px; }
+.ax-ctl { flex: 1 1 190px; max-width: 280px; }
+.ax-ctls { flex-wrap: nowrap; }
 .ax-ctl.t-registry .ax-ico { background: var(--mm-info-soft); color: var(--mm-info); }
 .ax-ctl.t-queue .ax-ico { background: var(--mm-warning-soft); color: var(--mm-warning); }
 .ax-ctl.t-onboarding .ax-ico { background: var(--mm-success-soft); color: var(--mm-success); }
-.ax-badge { position: absolute; top: -8px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; display: grid; place-items: center; border-radius: 11px; background: var(--mm-warning); color: #fff; font-size: 12px; font-weight: 750; box-shadow: 0 0 0 3px var(--mm-background); }
+.ax-badge { position: absolute; top: -8px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; display: grid; place-items: center; border-radius: 11px; background: var(--mm-warning-soft); color: var(--mm-ink); border: 1.5px solid var(--mm-warning); font-size: 12px; font-weight: 750; box-shadow: 0 0 0 3px var(--mm-background); }
 /* districts */
 .ax-districts { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; margin-bottom: 44px; }
 .ax-district { position: relative; padding: 16px; border-radius: 22px; border: 1px solid var(--mm-line); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
@@ -4602,7 +4603,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   .ax-districts { grid-template-columns: 1fr; }
   .ax-row { gap: 10px; margin-bottom: 30px; }
   .ax-device { min-width: 0; flex: 1 1 100px; flex-direction: column; text-align: center; padding: 10px; gap: 6px; }
-  .ax-ctl { width: 100%; }
+  .ax-ctls { flex-wrap: wrap; }
+  .ax-ctl { flex-basis: 100%; max-width: none; }
   .ax-hub { padding: 14px; gap: 12px; }
   .ax-hub .ax-ico { width: 60px; height: 60px; } .ax-hub .ax-ico svg { width: 54px; height: 54px; }
   .ax-hub b { font-size: 18px; }
@@ -11256,7 +11258,6 @@ function archCard(id, className, symbol, title, subtitle) {
   card.dataset.ccInfo = `arch-${id}`;
   card.dataset.axNode = id;
   ccInfoSources[`arch-${id}`] = () => archNodeInfo(id);
-  card.setAttribute('aria-label', `${node.name}: подробнее`);
   const text = archEl('span');
   text.append(archEl('b', '', title || node.name));
   if (subtitle) text.append(archEl('small', '', subtitle));
@@ -11380,7 +11381,6 @@ function archDraw(root, data) {
     stage.dataset.ccInfo = `arch-${id}`;
     stage.dataset.axNode = id;
     ccInfoSources[`arch-${id}`] = () => archNodeInfo(id);
-    stage.setAttribute('aria-label', `${ARCH_NODES[id].name}: подробнее`);
     stage.append(archIcon(icon), archEl('b', '', title), archEl('small', '', sub));
     pipe.append(stage);
   });
@@ -11415,7 +11415,9 @@ function archWire(ax) {
   if (!box.width) return;
   svg.replaceChildren();
   svg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
-  const narrow = box.width < 860;
+  // Same switch as the CSS: one column of districts means the stacked phone layout.
+  const districts = ax.querySelector('.ax-districts');
+  const narrow = !districts || getComputedStyle(districts).gridTemplateColumns.trim().split(/\s+/).length < 2;
   const links = narrow ? ax._spine.map(([a, b]) => [a, b, '', '']) : ax._wires;
   const ns = 'http://www.w3.org/2000/svg';
   for (const [from, to, label, mode] of links) {
