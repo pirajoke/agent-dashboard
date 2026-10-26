@@ -10855,14 +10855,7 @@ function mmHeaders() {
 function mmInit() {
   if (mmInitialised) return;
   mmInitialised = true;
-  const about = document.getElementById('mm-about-dialog');
-  document.getElementById('mm-about-open').addEventListener('click', () => {
-    if (typeof about.showModal === 'function') { if (!about.open) about.showModal(); } else about.setAttribute('open', '');
-  });
-  document.getElementById('mm-about-close').addEventListener('click', () => {
-    if (typeof about.close === 'function') about.close(); else about.removeAttribute('open');
-  });
-  about.addEventListener('close', npHideQr);
+  mmInitAbout();
   // A card on the project board opens its page; a modified click opens a new tab.
   document.getElementById('mm-map').addEventListener('click', event => {
     const button = event.target.closest('[data-map-agent]');
@@ -10888,6 +10881,19 @@ function mmInit() {
     mmLoadOwnerProjects();
     mmLoadHealth();
   }, MM_REFRESH_MS);
+}
+
+// Mark 2026-10-26: data sources and «открыть на телефоне» open from the «i» in the header;
+// closing the window (✕, Escape) also hides the owner QR code.
+function mmInitAbout() {
+  const about = document.getElementById('mm-about-dialog');
+  document.getElementById('mm-about-open').addEventListener('click', () => {
+    if (typeof about.showModal === 'function') { if (!about.open) about.showModal(); } else about.setAttribute('open', '');
+  });
+  document.getElementById('mm-about-close').addEventListener('click', () => {
+    if (typeof about.close === 'function') about.close(); else about.removeAttribute('open');
+  });
+  about.addEventListener('close', npHideQr);
 }
 
 function mmShowView(view) {

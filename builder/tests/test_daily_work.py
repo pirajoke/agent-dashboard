@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 import importlib.util
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 import tempfile
 import time
@@ -1067,6 +1069,40 @@ let mmProjectData;
         self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
         for gone in ("renderPaper", "np-articles", "Остальные проекты", "function renderDays()", "dpDay(", "loadDays"):
             self.assertNotIn(gone, html)
+
+    def test_about_window_opens_closes_and_hides_the_qr(self):
+        # Mark 2026-10-26: sources and the phone QR live behind «i»; run the real handlers on a small DOM.
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        def source(name):
+            start = html.index(f"function {name}(")
+            return html[start:html.index("\n}\n", start) + 3]
+        script = r"""
+class El { constructor(id){ this.id=id; this.hidden=false; this.innerHTML=''; this.open=false; this.l={}; }
+  addEventListener(t,f){ (this.l[t]=this.l[t]||[]).push(f); } fire(t){ (this.l[t]||[]).forEach(f=>f({})); }
+  showModal(){ this.open=true; } close(){ if(!this.open) return; this.open=false; this.fire('close'); } }
+const els={}; const document={ getElementById:id=>els[id]||(els[id]=new El(id)) };
+let npQrTimer=null;
+""" + source("npHideQr") + source("mmInitAbout") + r"""
+const $=id=>document.getElementById(id);
+mmInitAbout();
+const about=$('mm-about-dialog');
+$('mm-about-open').fire('click');
+if(!about.open) throw new Error('«i» did not open the window');
+$('np-qr').innerHTML='<svg>qr</svg>'; $('np-device-qr').hidden=false; $('np-device-show').hidden=true;
+$('mm-about-close').fire('click');
+if(about.open) throw new Error('✕ did not close the window');
+if($('np-qr').innerHTML!=='' || !$('np-device-qr').hidden || $('np-device-show').hidden) throw new Error('QR stayed after closing');
+$('mm-about-open').fire('click'); $('np-qr').innerHTML='<svg>qr</svg>';
+about.close();  // Escape closes a modal dialog the same way
+if($('np-qr').innerHTML!=='') throw new Error('QR stayed after Escape');
+"""
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node runtime is required")
+        run = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        # The «i» is a real button wired to the modal, so it works from the keyboard and by touch.
+        self.assertIn('<button type="button" class="cc-i" id="mm-about-open" aria-haspopup="dialog" aria-controls="mm-about-dialog"', html)
 
     def test_owner_browser_can_open_the_phone_by_qr(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
