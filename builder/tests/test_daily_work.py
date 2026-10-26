@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 import importlib.util
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 import tempfile
 import time
@@ -998,20 +1000,18 @@ let mmProjectData;
         self.assertIn("/api/work/daily", html)
         self.assertRegex(html, r"'work'[^\]]*\]\.includes\(INITIAL_SECTION\)")
         # MAIN MANAGER (Mark, 2026-10-14: «чтобы была визуализация проекта, который я делаю»):
-        # the project board first. Since 2026-10-23 («первые — основные проекты, снизу история»)
-        # «Дела» and «Изменения» are tabs of the history below the board, not views that replace it.
-        self.assertLess(html.index('data-mm-panel="map"'), html.index('id="mm-history"'))
-        history = html[html.index('id="mm-history"'):html.index('class="mm-more"')]
-        self.assertIn('<button type="button" data-mm-view="todo" aria-pressed="true">', history)
-        self.assertIn('data-mm-view="infra"', history)
+        # the project board. Since 2026-10-26 («это все мусор») there is no history under it: no Notion
+        # task list, no change log, no «Откуда данные» footer; sources and the phone QR sit behind «i».
         self.assertIn("renderMap(data);", html)
-        # The shared Notion board is the sole overview queue. Project notes stay on each project page.
         self.assertNotIn("renderTodo(data);", html)
         self.assertNotIn('data-mm-view="loose"', html)
-        todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="infra"')]
-        self.assertIn('id="mm-shared-tasks"', todo_panel)
-        self.assertNotIn('Контекст проектов', todo_panel)
-        self.assertNotIn('id="mm-loose"', todo_panel)
+        for gone in ('id="mm-history"', 'id="mm-shared-tasks"', 'data-mm-panel="todo"', 'data-mm-panel="infra"',
+                     'Открыть доску в Notion', 'class="mm-more"', 'Откуда данные · открыть на телефоне'):
+            self.assertNotIn(gone, html)
+        about = html[html.index('id="mm-about-dialog"'):html.index('</dialog>', html.index('id="mm-about-dialog"'))]
+        self.assertIn('id="mm-sources"', about)
+        self.assertIn('id="np-device"', about)
+        self.assertIn('aria-controls="mm-about-dialog"', html)
         self.assertNotIn('Хвосты', html)
         self.assertNotIn('Готовы к слиянию', html)
         # Projects reuse the Platforms mascots and open a per-project page.
@@ -1072,6 +1072,40 @@ let mmProjectData;
         self.assertNotIn("через mm-command-center-auth", html)  # plain words, not a helper's name
         for gone in ("renderPaper", "np-articles", "Остальные проекты", "function renderDays()", "dpDay(", "loadDays"):
             self.assertNotIn(gone, html)
+
+    def test_about_window_opens_closes_and_hides_the_qr(self):
+        # Mark 2026-10-26: sources and the phone QR live behind «i»; run the real handlers on a small DOM.
+        html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+        def source(name):
+            start = html.index(f"function {name}(")
+            return html[start:html.index("\n}\n", start) + 3]
+        script = r"""
+class El { constructor(id){ this.id=id; this.hidden=false; this.innerHTML=''; this.open=false; this.l={}; }
+  addEventListener(t,f){ (this.l[t]=this.l[t]||[]).push(f); } fire(t){ (this.l[t]||[]).forEach(f=>f({})); }
+  showModal(){ this.open=true; } close(){ if(!this.open) return; this.open=false; this.fire('close'); } }
+const els={}; const document={ getElementById:id=>els[id]||(els[id]=new El(id)) };
+let npQrTimer=null;
+""" + source("npHideQr") + source("mmInitAbout") + r"""
+const $=id=>document.getElementById(id);
+mmInitAbout();
+const about=$('mm-about-dialog');
+$('mm-about-open').fire('click');
+if(!about.open) throw new Error('«i» did not open the window');
+$('np-qr').innerHTML='<svg>qr</svg>'; $('np-device-qr').hidden=false; $('np-device-show').hidden=true;
+$('mm-about-close').fire('click');
+if(about.open) throw new Error('✕ did not close the window');
+if($('np-qr').innerHTML!=='' || !$('np-device-qr').hidden || $('np-device-show').hidden) throw new Error('QR stayed after closing');
+$('mm-about-open').fire('click'); $('np-qr').innerHTML='<svg>qr</svg>';
+about.close();  // Escape closes a modal dialog the same way
+if($('np-qr').innerHTML!=='') throw new Error('QR stayed after Escape');
+"""
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node runtime is required")
+        run = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        # The «i» is a real button wired to the modal, so it works from the keyboard and by touch.
+        self.assertIn('<button type="button" class="cc-i" id="mm-about-open" aria-haspopup="dialog" aria-controls="mm-about-dialog"', html)
 
     def test_owner_browser_can_open_the_phone_by_qr(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
