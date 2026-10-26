@@ -4488,54 +4488,136 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .arch-blockers strong { display: block; margin-bottom: 2px; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--mm-warning); }
 .arch-blockers ul { margin: 0; padding-left: 18px; }
 .arch-flow { display: flex; flex-direction: column; align-items: center; }
-.arch-step { width: min(600px, 100%); }
-.arch-node { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); color: var(--mm-ink); font: inherit; cursor: pointer; }
-.arch-node:hover { background: var(--mm-surface-hover); }
-.arch-node:focus-visible, .arch-chip:focus-visible, .arch-modes button:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 3px; }
-.arch-node small, .arch-tag { display: block; color: var(--mm-muted); font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
-.arch-node b { display: block; font-size: 15.5px; font-weight: 700; }
-.arch-node em { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; font-style: normal; }
-.arch-node .cc-i { pointer-events: none; }
-.arch-node.is-core { border: 2px solid var(--mm-accent); background: var(--mm-selection); }
-.arch-node.is-core b { font-size: 18px; }
-.arch-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.arch-pair.three { grid-template-columns: repeat(3, 1fr); width: min(900px, 100%); }
-.arch-arrow { position: relative; width: 2px; height: 30px; margin: 0 auto; background: var(--mm-control-line); }
-.arch-arrow::after { content: ""; position: absolute; bottom: -2px; left: -5px; border: 6px solid transparent; border-top-color: var(--mm-control-line); }
-.arch-arrow span { position: absolute; left: 12px; top: 7px; color: var(--mm-muted); font-size: 11.5px; white-space: nowrap; }
-.arch-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; }
-.arch-lane { padding: 14px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-top: 4px solid var(--mm-codex); border-radius: 14px; box-shadow: var(--mm-shadow-soft); }
-.arch-lane.is-services { border-top-color: var(--mm-violet); }
-.arch-lane-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.arch-lane h3 { font-size: 15px; font-weight: 750; }
-.arch-lane p { margin: 2px 0 6px; color: var(--mm-muted); font-size: 12.5px; line-height: 1.45; }
-.arch-group { margin-top: 9px; }
-.arch-group .arch-tag { margin-bottom: 5px; }
-.arch-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.arch-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 4px 11px 4px 9px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 999px; color: var(--mm-ink); font: 500 13px/1.2 var(--cc-font); cursor: pointer; }
-.arch-chip:hover { border-color: var(--mm-control-line); background: var(--mm-surface-hover); }
 .arch-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--mm-pr); }
 .arch-dot.s-working, .arch-dot.s-running { background: var(--mm-success); }
-.arch-dot.s-scheduled { background: var(--mm-success); box-shadow: inset 0 0 0 2px var(--mm-background); outline: 1.5px solid var(--mm-success); width: 8px; height: 8px; }
+.arch-dot.s-scheduled { background: transparent; border: 2px solid var(--mm-accent); width: 8px; height: 8px; }
 .arch-dot.s-needs_mark, .arch-dot.s-waiting { background: var(--mm-warning); }
 .arch-dot.s-blocked, .arch-dot.s-failed, .arch-dot.s-stopped { background: var(--mm-danger); border-radius: 2px; }
 .arch-dot.s-unknown { background: transparent; border: 1.5px dashed var(--mm-muted); }
 .arch-dot.s-disabled { background: var(--mm-pr); border-radius: 2px; }
-.arch-chip .arch-when { color: var(--mm-muted); font-size: 11.5px; }
-.arch-loop { margin-top: 4px; color: var(--mm-accent); font-size: 12.5px; }
 .arch-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 18px; color: var(--mm-muted); font-size: 12.5px; }
 .arch-legend span { display: inline-flex; align-items: center; gap: 6px; }
 /* «Устройство»: only who is wired to whom, no live states. */
 #section-architecture.is-map .arch-dot, #section-architecture.is-map .arch-when, #section-architecture.is-map .arch-kpis, #section-architecture.is-map .arch-blockers, #section-architecture.is-map .arch-legend.is-live, #section-architecture.is-map .arch-node em.is-live { display: none; }
-#section-architecture:not(.is-map) .arch-arrow span.is-map, #section-architecture:not(.is-map) .arch-legend.is-map { display: none; }
+#section-architecture:not(.is-map) .arch-legend.is-map { display: none; }
 .cc-info-body .arch-steps { margin: 4px 0 8px; padding-left: 20px; }
 .cc-info-body .arch-steps li { margin: 3px 0; }
-@media (max-width: 760px) {
-  .arch-lanes, .arch-pair.three { grid-template-columns: 1fr; }
-  .arch-pair { grid-template-columns: 1fr; }
-  .arch-arrow span { font-size: 11px; }
-}
+.arch-modes button:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { #section-architecture * { transition: none !important; animation: none !important; } }
+/* Mark 2026-10-26 «можно красивый классный дизайн?»: the map as mascot cards and live wires. */
+.arch-flow > .ax { align-self: stretch; }
+.ax { position: relative; --ax-chat: var(--mm-codex); --ax-svc: var(--mm-violet); }
+.ax-wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 0; }
+.ax-wires path { fill: none; stroke: var(--mm-control-line); stroke-width: 2; stroke-linecap: round; }
+.ax-wires path.is-live { stroke: var(--mm-accent); stroke-dasharray: 6 8; animation: ax-flow 1.4s linear infinite; }
+.ax-wires path.is-wait { stroke: var(--mm-warning); stroke-dasharray: 2 7; }
+@keyframes ax-flow { to { stroke-dashoffset: -28; } }
+.ax-row { position: relative; z-index: 1; display: flex; justify-content: center; gap: 14px; margin-bottom: 44px; flex-wrap: wrap; }
+.ax-row:last-child { margin-bottom: 0; }
+.ax-label { position: relative; z-index: 1; display: table; margin: 0 auto 10px; padding: 2px 10px; border-radius: 999px; background: var(--mm-background); text-align: center; color: var(--mm-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.ax-card { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 12px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); color: var(--mm-ink); font: inherit; cursor: pointer; transition: transform .18s ease-out, box-shadow .18s ease-out, border-color .18s; }
+.ax-card:hover { transform: translateY(-2px); box-shadow: var(--mm-shadow); border-color: var(--mm-control-line); }
+.ax-card:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 3px; }
+.ax-card b { display: block; font-size: 15px; font-weight: 750; line-height: 1.2; }
+.ax-card small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; line-height: 1.35; }
+.ax-ico { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: var(--mm-tint-other); color: var(--mm-ink); }
+.ax-ico svg { width: 26px; height: 26px; }
+.ax-ico.is-mascot svg { width: 40px; height: 40px; }
+.ax-device { min-width: 168px; }
+.ax-device .ax-ico { width: 38px; height: 38px; border-radius: 12px; background: var(--mm-info-soft); color: var(--mm-info); }
+.ax-device .ax-ico svg { width: 22px; height: 22px; }
+/* MAIN MANAGER */
+.ax-hub { min-width: min(460px, 100%); padding: 18px 22px 18px 18px; gap: 18px; border: 2px solid var(--mm-accent); background: linear-gradient(180deg, var(--mm-surface), var(--mm-selection)); border-radius: 24px; }
+.ax-hub .ax-ico { width: 78px; height: 78px; border-radius: 24px; background: var(--mm-surface); box-shadow: inset 0 0 0 1px var(--mm-line); }
+.ax-hub .ax-ico svg { width: 70px; height: 70px; }
+.ax-hub b { font-size: 21px; letter-spacing: -.01em; }
+.ax-hub .ax-kicker { color: var(--mm-accent); font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.ax-hub .ax-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.ax-hub .ax-tags span { padding: 3px 9px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; font-size: 12px; }
+.ax-pulse { position: absolute; top: 14px; right: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--mm-success); }
+.ax-pulse::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--mm-success); opacity: 0; animation: ax-ping 2.4s ease-out infinite; }
+.ax-pulse.is-off { background: transparent; border: 1.5px dashed var(--mm-muted); }
+.ax-pulse.is-off::after { display: none; }
+@keyframes ax-ping { 0% { transform: scale(.6); opacity: .7; } 100% { transform: scale(1.8); opacity: 0; } }
+/* control cards */
+.ax-ctl { width: 250px; }
+.ax-ctl.t-registry .ax-ico { background: var(--mm-info-soft); color: var(--mm-info); }
+.ax-ctl.t-queue .ax-ico { background: var(--mm-warning-soft); color: var(--mm-warning); }
+.ax-ctl.t-onboarding .ax-ico { background: var(--mm-success-soft); color: var(--mm-success); }
+.ax-badge { position: absolute; top: -8px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; display: grid; place-items: center; border-radius: 11px; background: var(--mm-warning); color: #fff; font-size: 12px; font-weight: 750; box-shadow: 0 0 0 3px var(--mm-background); }
+/* districts */
+.ax-districts { position: relative; z-index: 1; display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; margin-bottom: 44px; }
+.ax-district { position: relative; padding: 16px; border-radius: 22px; border: 1px solid var(--mm-line); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
+.ax-district::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; border-radius: 22px 22px 0 0; background: var(--ax-chat); }
+.ax-district.is-svc::before { background: var(--ax-svc); }
+.ax-dhead { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.ax-dhead .ax-ico { background: color-mix(in srgb, var(--ax-chat) 14%, var(--mm-surface)); color: var(--ax-chat); }
+.ax-district.is-svc .ax-dhead .ax-ico { background: color-mix(in srgb, var(--ax-svc) 14%, var(--mm-surface)); color: var(--ax-svc); }
+.ax-dhead h3 { font-size: 16px; font-weight: 750; }
+.ax-dhead p { margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; line-height: 1.45; }
+.ax-dhead .cc-i { margin-left: auto; }
+.ax-agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.ax-agent { position: relative; display: flex; align-items: center; gap: 9px; min-height: 58px; padding: 7px 10px 7px 7px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 14px; color: var(--mm-ink); font: inherit; text-align: left; cursor: pointer; transition: transform .15s ease-out, border-color .15s; }
+.ax-agent:hover { transform: translateY(-1px); border-color: var(--mm-control-line); }
+.ax-agent:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 2px; }
+.ax-agent .ax-ico { width: 42px; height: 42px; border-radius: 12px; background: var(--mm-surface); box-shadow: inset 0 0 0 1px var(--mm-line); }
+.ax-agent .ax-ico svg { width: 36px; height: 36px; }
+.ax-agent b { display: block; font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+.ax-agent small { display: block; color: var(--mm-muted); font-size: 11.5px; }
+.ax-agent.s-unknown .ax-ico svg { opacity: .55; filter: grayscale(.6); }
+.ax-agent.s-working .ax-ico { box-shadow: inset 0 0 0 2px var(--mm-success); }
+.ax-agent.s-needs_mark { border-color: var(--mm-warning); background: var(--mm-warning-soft); }
+.ax-agent.s-disabled { opacity: .55; }
+.ax-st { display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; font-size: 11.5px; font-weight: 600; color: var(--mm-muted); }
+.ax-st i { width: 8px; height: 8px; border-radius: 50%; background: var(--mm-pr); }
+.ax-st.s-working, .ax-st.s-running { color: var(--mm-success); } .ax-st.s-working i, .ax-st.s-running i { background: var(--mm-success); }
+.ax-st.s-scheduled { color: var(--mm-accent); } .ax-st.s-scheduled i { background: transparent; border: 2px solid var(--mm-accent); width: 7px; height: 7px; }
+.ax-st.s-needs_mark, .ax-st.s-waiting { color: var(--mm-warning); } .ax-st.s-needs_mark i, .ax-st.s-waiting i { background: var(--mm-warning); }
+.ax-st.s-failed, .ax-st.s-stopped, .ax-st.s-blocked { color: var(--mm-danger); } .ax-st.s-failed i, .ax-st.s-stopped i, .ax-st.s-blocked i { background: var(--mm-danger); border-radius: 2px; }
+.ax-st.s-unknown i { background: transparent; border: 1.5px dashed var(--mm-muted); width: 7px; height: 7px; }
+.ax-sgroup + .ax-sgroup { margin-top: 10px; }
+.ax-sgroup > span { display: block; margin-bottom: 5px; color: var(--mm-muted); font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.ax-services { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ax-svc { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 10px 6px 6px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 12px; color: var(--mm-ink); font: inherit; text-align: left; cursor: pointer; }
+.ax-svc:hover { border-color: var(--mm-control-line); }
+.ax-svc:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 2px; }
+.ax-svc .ax-ico { width: 32px; height: 32px; border-radius: 10px; background: color-mix(in srgb, var(--ax-svc) 12%, var(--mm-surface)); color: var(--ax-svc); }
+.ax-svc .ax-ico svg { width: 19px; height: 19px; }
+.ax-svc .ax-ico.is-mascot { background: var(--mm-surface); box-shadow: inset 0 0 0 1px var(--mm-line); }
+.ax-svc .ax-ico.is-mascot svg { width: 28px; height: 28px; }
+.ax-svc b { display: block; font-size: 12.5px; font-weight: 650; line-height: 1.2; }
+.ax-svc .ax-st { margin-top: 1px; font-size: 11px; }
+.ax-svc.s-failed, .ax-svc.s-stopped { border-color: color-mix(in srgb, var(--mm-danger) 45%, var(--mm-line)); background: var(--mm-danger-soft); }
+/* pipeline */
+.ax-pipe { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.ax-pipe::before { content: ""; position: absolute; top: 35px; left: 12.5%; right: 12.5%; height: 2px; background: linear-gradient(90deg, var(--mm-control-line) 0 70%, var(--mm-accent)); z-index: -1; }
+.ax-stage { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px; background: transparent; border: 0; color: var(--mm-ink); font: inherit; text-align: center; cursor: pointer; }
+.ax-stage .ax-ico { width: 58px; height: 58px; border-radius: 50%; background: var(--mm-surface); border: 2px solid var(--mm-line); box-shadow: var(--mm-shadow-soft); color: var(--mm-accent); transition: transform .18s ease-out; }
+.ax-stage:hover .ax-ico { transform: scale(1.06); }
+.ax-stage:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 2px; border-radius: 14px; }
+.ax-stage b { font-size: 13.5px; font-weight: 700; }
+.ax-stage small { color: var(--mm-muted); font-size: 12px; line-height: 1.35; max-width: 180px; }
+.ax-loop { position: relative; z-index: 1; margin-top: 8px; text-align: center; color: var(--mm-accent); font-size: 12.5px; font-weight: 600; }
+@media (max-width: 860px) {
+  .ax-districts { grid-template-columns: 1fr; }
+  .ax-row { gap: 10px; margin-bottom: 30px; }
+  .ax-device { min-width: 0; flex: 1 1 100px; flex-direction: column; text-align: center; padding: 10px; gap: 6px; }
+  .ax-ctl { width: 100%; }
+  .ax-hub { padding: 14px; gap: 12px; }
+  .ax-hub .ax-ico { width: 60px; height: 60px; } .ax-hub .ax-ico svg { width: 54px; height: 54px; }
+  .ax-hub b { font-size: 18px; }
+  .ax-pipe { grid-template-columns: 1fr 1fr; row-gap: 16px; }
+  .ax-pipe::before { display: none; }
+  .ax-districts { margin-bottom: 30px; }
+}
+@media (max-width: 420px) { .ax-services { grid-template-columns: 1fr; } .ax-agents { grid-template-columns: 1fr 1fr; } }
+@media (prefers-reduced-motion: reduce) { .ax *, .ax *::after { animation: none !important; transition: none !important; } .ax-wires path.is-live { stroke-dasharray: none; } }
+.ax-wlabel { fill: var(--mm-muted); font: 600 11px var(--cc-font); text-anchor: middle; paint-order: stroke; stroke: var(--mm-background); stroke-width: 5px; stroke-linejoin: round; }
+#section-architecture:not(.is-map) .ax-wlabel { display: none; }
+#section-architecture.is-map .ax-st, #section-architecture.is-map .ax-badge, #section-architecture.is-map .ax-pulse, #section-architecture.is-map .ax-live { display: none; }
+#section-architecture.is-map .ax-wires path { animation: none; stroke: var(--mm-control-line); stroke-dasharray: none; }
+#section-architecture.is-map .ax-agent, #section-architecture.is-map .ax-svc { border-color: var(--mm-line); background: var(--mm-background); }
+#section-architecture.is-map .ax-agent .ax-ico svg { opacity: 1; filter: none; }
 </style>
 </head>
 <body>
@@ -4732,6 +4814,26 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="cc-icon-today" viewBox="0 0 24 24"><path d="M5 5h11v14H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Zm11 4h3a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h5M8 12.5h5M8 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="ax-i-laptop" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/></g></symbol>
+  <symbol id="ax-i-phone" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></g></symbol>
+  <symbol id="ax-i-screen" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M9 20h6M12 16v4M7 12l3-3 2 2 4-4"/></g></symbol>
+  <symbol id="ax-i-stack" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5M3 16.5l9 4.5 9-4.5"/></g></symbol>
+  <symbol id="ax-i-queue" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="4" y="4" width="16" height="4" rx="1.5"/><rect x="4" y="10" width="16" height="4" rx="1.5"/><rect x="4" y="16" width="10" height="4" rx="1.5"/></g></symbol>
+  <symbol id="ax-i-userplus" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M19 8v6M16 11h6"/></g></symbol>
+  <symbol id="ax-i-chat" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></g></symbol>
+  <symbol id="ax-i-gear" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></g></symbol>
+  <symbol id="ax-i-clock" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+  <symbol id="ax-i-send" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></g></symbol>
+  <symbol id="ax-i-broadcast" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="2"/><path d="M8.5 15.5a5 5 0 0 1 0-7M15.5 8.5a5 5 0 0 1 0 7M5.6 18.4a9 9 0 0 1 0-12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></g></symbol>
+  <symbol id="ax-i-bell" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></g></symbol>
+  <symbol id="ax-i-bolt" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/></g></symbol>
+  <symbol id="ax-i-cpu" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></g></symbol>
+  <symbol id="ax-i-play" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.5l5 3.5-5 3.5z"/></g></symbol>
+  <symbol id="ax-i-book" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M5 4.5h10a3 3 0 0 1 3 3V20H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h10M9 8.5h5"/></g></symbol>
+  <symbol id="ax-i-rocket" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M14 4c3-1 6-1 6-1s0 3-1 6l-6 6-5-5z"/><path d="M8 10l-3.5.5L3 13l4 1M14 16l-.5 3.5L11 21l-1-4M15.5 8.5h.01"/></g></symbol>
+  <symbol id="ax-i-proof" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10.5a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5z"/><path d="M14 3.5V8h4M9 14l2 2 4-4.5"/></g></symbol>
+  <symbol id="ax-i-shield" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></g></symbol>
+  <symbol id="ax-i-loop" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/></g></symbol>
   <symbol id="cc-icon-architecture" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="15" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4M6 16v-2h12v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-growth" viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4 3-7 8-7 0 4-3 7-8 7zM12 15c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <!-- «Точки роста» pictures -->
@@ -11106,41 +11208,253 @@ function archServiceInfo(service) {
   return { title: service.name, lines: [service.does], rows, node: extra };
 }
 
-function archNodeButton(id, extraClass, liveText) {
+// Mark 2026-10-26: «можно красивый классный дизайн?». The map is drawn as cards with the site's mascots and
+// wires between them. A wire moves only while its link has a fresh event; amber dots mean it waits on Mark.
+const ARCH_AGENT_MASCOTS = {
+  'main-manager': 'cc-mascot-hub', jarvis: 'cc-mascot-jarvis', 'my-dictionary': 'cc-mascot-dictionary',
+  'health-os': 'cc-mascot-health', 'context-news': 'cc-mascot-news', 'accountable-os': 'cc-mascot-accountable',
+  'pixelverse-dashboard': 'cc-mascot-pixel', 'ai-studio': 'cc-mascot-singularity', 'financial-os': 'cc-growth-trading',
+  'github-hygiene': 'cc-mascot-n8n', 'skills-library': 'cc-growth-research', 'unfinished-stuff': 'cc-growth-coworking',
+};
+const ARCH_SERVICE_ICONS = {
+  continuation: 'ax-i-clock', dispatcher: 'ax-i-send', 'status-publisher': 'ax-i-broadcast', notifier: 'ax-i-bell',
+  'bridge-api': 'ax-i-bolt', 'bridge-workers': 'ax-i-cpu', 'agent-task-runner': 'ax-i-play', 'jarvis-bot': 'cc-mascot-jarvis',
+  news: 'cc-mascot-news', 'job-radar': 'cc-mascot-jobradar', 'project-update': 'ax-i-book', dashboard: 'cc-icon-web',
+  'auto-deploy': 'ax-i-rocket',
+};
+const ARCH_FRESH_MINUTES = 15;
+let archWireObserver = null;
+
+function archIcon(symbol, extraClass) {
+  const box = archEl('span', `ax-ico${symbol.startsWith('cc-mascot') || symbol.startsWith('cc-growth') ? ' is-mascot' : ''}${extraClass ? ' ' + extraClass : ''}`);
+  box.setAttribute('aria-hidden', 'true');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', symbol.startsWith('ax-i') || symbol.startsWith('cc-icon') ? '0 0 24 24' : '0 0 120 120');
+  svg.setAttribute('focusable', 'false');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', `#${symbol}`);
+  svg.append(use);
+  box.append(svg);
+  return box;
+}
+
+function archStatus(state, label) {
+  const st = archEl('span', `ax-st s-${state}`);
+  st.append(archEl('i'), document.createTextNode(label));
+  return st;
+}
+
+function archFresh(value) {
+  const at = value ? new Date(value).getTime() : NaN;
+  return Number.isFinite(at) && Date.now() - at < ARCH_FRESH_MINUTES * 60000;
+}
+
+function archCard(id, className, symbol, title, subtitle) {
   const node = ARCH_NODES[id];
-  const button = archEl('button', `arch-node${extraClass ? ' ' + extraClass : ''}`);
-  button.type = 'button';
-  button.dataset.ccInfo = `arch-${id}`;
+  const card = archEl('button', `ax-card ${className}`);
+  card.type = 'button';
+  card.dataset.ccInfo = `arch-${id}`;
+  card.dataset.axNode = id;
   ccInfoSources[`arch-${id}`] = () => archNodeInfo(id);
+  card.setAttribute('aria-label', `${node.name}: подробнее`);
   const text = archEl('span');
-  text.append(archEl('small', '', node.where), archEl('b', '', node.name));
-  if (liveText) text.append(archEl('em', 'is-live', liveText));
-  const i = archEl('span', 'cc-i', 'i');
-  i.setAttribute('aria-hidden', 'true');
-  button.append(text, i);
-  button.setAttribute('aria-label', `${node.name}: подробнее`);
-  return button;
+  text.append(archEl('b', '', title || node.name));
+  if (subtitle) text.append(archEl('small', '', subtitle));
+  card.append(archIcon(symbol), text);
+  return card;
 }
 
-function archArrow(label) {
-  const arrow = archEl('div', 'arch-arrow');
-  arrow.setAttribute('aria-hidden', 'true');
-  if (label) arrow.append(archEl('span', 'is-map', label));
-  return arrow;
+function archDraw(root, data) {
+  const c = data.agent_counts || {};
+  const q = data.queue || {};
+  const on = data.onboarding || {};
+  const bridge = data.bridge || {};
+  const bridgeFresh = bridge.available && archFresh(bridge.last_event_at);
+  const ax = archEl('div', 'ax');
+  const wires = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  wires.setAttribute('class', 'ax-wires');
+  wires.setAttribute('aria-hidden', 'true');
+  ax.append(wires);
+
+  ax.append(archEl('p', 'ax-label', 'Ты'));
+  const devices = archEl('div', 'ax-row ax-devices');
+  devices.dataset.axNode = 'owner';
+  [['ax-i-laptop', 'MacBook', 'интерфейс'], ['ax-i-phone', 'Телефон', 'Telegram и сайт'], ['ax-i-screen', 'Командный центр', 'этот сайт']].forEach(([icon, title, sub]) => {
+    const card = archCard('owner', 'ax-device', icon, title, sub);
+    devices.append(card);
+  });
+  ax.append(devices);
+
+  const hubRow = archEl('div', 'ax-row');
+  const hub = archEl('button', 'ax-card ax-hub');
+  hub.type = 'button';
+  hub.dataset.ccInfo = 'arch-main-manager';
+  hub.dataset.axNode = 'main-manager';
+  ccInfoSources['arch-main-manager'] = () => archNodeInfo('main-manager');
+  hub.setAttribute('aria-label', 'MAIN MANAGER: подробнее');
+  const hubText = archEl('span');
+  hubText.append(archEl('span', 'ax-kicker', 'Mac mini · координатор'), archEl('b', '', 'MAIN MANAGER'));
+  const tags = archEl('span', 'ax-tags');
+  ['Приоритеты', 'Распределение', 'Проверка работы'].forEach(t => tags.append(archEl('span', '', t)));
+  hubText.append(tags, archEl('small', 'ax-live', bridge.available ? `последнее событие Bridge: ${archTime(bridge.last_event_at)}` : 'Bridge не ответил'));
+  const pulse = archEl('span', `ax-pulse${bridgeFresh ? '' : ' is-off'}`);
+  pulse.title = bridgeFresh ? 'свежее событие' : 'нет свежего события';
+  hub.append(archIcon('cc-mascot-hub'), hubText, pulse);
+  hubRow.append(hub);
+  ax.append(hubRow);
+
+  const ctl = archEl('div', 'ax-row ax-ctls');
+  const registry = archCard('registry', 'ax-ctl t-registry', 'ax-i-stack', 'Реестр агентов', `${c.registered || 0} агентов · ${(data.departments || []).length} отделов`);
+  const queue = archCard('queue', 'ax-ctl t-queue', 'ax-i-queue', 'Общая очередь',
+    q.available ? [q.owner_gates ? `ждёт тебя: ${q.owner_gates}` : `открыто: ${q.open}`, q.last_collected_at ? `сбор ${archTime(q.last_collected_at)}` : 'сбора ещё не было'].join(' · ') : 'очередь не прочитана');
+  if (q.owner_gates) { const badge = archEl('span', 'ax-badge', String(q.owner_gates)); badge.title = 'ждёт тебя'; queue.append(badge); }
+  const onboarding = archCard('onboarding', 'ax-ctl t-onboarding', 'ax-i-userplus', 'Подключение агента',
+    on.recovery_pending ? 'прервано, ждёт сверки' : (on.new_agents_registered ? `новых агентов: ${on.new_agents_registered}` : 'новый агент целиком не проверен'));
+  ctl.append(registry, queue, onboarding);
+  ax.append(ctl);
+
+  const districts = archEl('div', 'ax-districts');
+  const chats = archEl('section', 'ax-district');
+  chats.dataset.axNode = 'chats';
+  const chatsHead = archEl('div', 'ax-dhead');
+  const chatsText = archEl('div');
+  chatsText.append(archEl('h3', '', 'Проектные чаты Codex / Claude'), archEl('p', '', 'MAIN MANAGER пишет задание в закреплённый чат проекта. Один агент на репозиторий.'));
+  const chatsInfo = archEl('button', 'cc-i', 'i'); chatsInfo.type = 'button'; chatsInfo.dataset.ccInfo = 'arch-chats'; chatsInfo.setAttribute('aria-label', 'Как работают проектные чаты');
+  ccInfoSources['arch-chats'] = () => archNodeInfo('chats');
+  chatsHead.append(archIcon('ax-i-chat'), chatsText, chatsInfo);
+  const grid = archEl('div', 'ax-agents');
+  const order = { needs_mark: 0, working: 1, waiting: 2, blocked: 3, idle: 4, done: 5, unknown: 6, disabled: 7 };
+  (data.agents || []).slice().sort((a, b) => (order[a.state] ?? 9) - (order[b.state] ?? 9) || a.name.localeCompare(b.name)).forEach(agent => {
+    const tile = archEl('button', `ax-agent s-${agent.state}`);
+    tile.type = 'button';
+    tile.dataset.ccInfo = `arch-agent-${agent.id}`;
+    ccInfoSources[`arch-agent-${agent.id}`] = () => archAgentInfo(agent);
+    tile.setAttribute('aria-label', `${agent.name}: ${agent.state_label}`);
+    const text = archEl('span');
+    text.append(archEl('b', '', agent.name), archEl('small', '', `${agent.department_label} · ${agent.role}`),
+      archStatus(agent.state, agent.state === 'unknown' ? 'нет события' : agent.state_label));
+    tile.append(archIcon(ARCH_AGENT_MASCOTS[agent.id] || 'cc-growth-agents'), text);
+    grid.append(tile);
+  });
+  chats.append(chatsHead, grid);
+
+  const svc = archEl('section', 'ax-district is-svc');
+  svc.dataset.axNode = 'services';
+  const svcHead = archEl('div', 'ax-dhead');
+  const svcText = archEl('div');
+  svcText.append(archEl('h3', '', 'Фоновые службы и workers'), archEl('p', '', 'Их запускает macOS постоянно или по расписанию. Процесс жив ≠ работа сделана.'));
+  const svcInfo = archEl('button', 'cc-i', 'i'); svcInfo.type = 'button'; svcInfo.dataset.ccInfo = 'arch-services'; svcInfo.setAttribute('aria-label', 'Как работают фоновые службы');
+  ccInfoSources['arch-services'] = () => archNodeInfo('services');
+  svcHead.append(archIcon('ax-i-gear'), svcText, svcInfo);
+  svc.append(svcHead);
+  (data.service_groups || []).forEach(g => {
+    const list = (data.services || []).filter(s => s.group === g.id);
+    if (!list.length) return;
+    const group = archEl('div', 'ax-sgroup');
+    group.append(archEl('span', '', g.label));
+    const box = archEl('div', 'ax-services');
+    list.forEach(s => {
+      const item = archEl('button', `ax-svc s-${s.state}`);
+      item.type = 'button';
+      item.dataset.ccInfo = `arch-svc-${s.id}`;
+      ccInfoSources[`arch-svc-${s.id}`] = () => archServiceInfo(s);
+      item.setAttribute('aria-label', `${s.name}: ${s.state_label}`);
+      const text = archEl('span');
+      text.append(archEl('b', '', s.name), archStatus(s.state, s.state_label));
+      item.append(archIcon(ARCH_SERVICE_ICONS[s.id] || 'ax-i-gear'), text);
+      box.append(item);
+    });
+    group.append(box);
+    svc.append(group);
+  });
+  districts.append(chats, svc);
+  ax.append(districts);
+
+  ax.append(archEl('p', 'ax-label', 'Результат'));
+  const pipe = archEl('div', 'ax-pipe');
+  pipe.dataset.axNode = 'pipe';
+  [['results', 'ax-i-proof', 'Результат', 'PR, тесты, проверка на Mini'], ['check', 'ax-i-shield', 'Проверка', 'MAIN MANAGER принимает по доказательствам'],
+   ['log', 'ax-i-book', 'Журнал', 'Obsidian, сайт, Telegram'], ['next', 'ax-i-loop', 'Следующий шаг', 'если он разрешён']].forEach(([id, icon, title, sub]) => {
+    const stage = archEl('button', 'ax-stage');
+    stage.type = 'button';
+    stage.dataset.ccInfo = `arch-${id}`;
+    stage.dataset.axNode = id;
+    ccInfoSources[`arch-${id}`] = () => archNodeInfo(id);
+    stage.setAttribute('aria-label', `${ARCH_NODES[id].name}: подробнее`);
+    stage.append(archIcon(icon), archEl('b', '', title), archEl('small', '', sub));
+    pipe.append(stage);
+  });
+  ax.append(pipe, archEl('p', 'ax-loop', '↺ разрешённый шаг возвращается в общую очередь'));
+
+  // Wires: [from, to, label, mode]. «live» moves only with a fresh event; «wait» means it waits on Mark.
+  const anyWorking = (c.working || 0) > 0;
+  ax._wires = [
+    [devices, hub, 'запрос и цель', ''],
+    [hub, registry, 'кому поручить', ''],
+    [hub, queue, 'что дальше', bridgeFresh ? 'live' : ''],
+    [hub, onboarding, 'новый агент', ''],
+    [queue, chats, 'задание в чат', q.owner_gates ? 'wait' : (anyWorking ? 'live' : '')],
+    [queue, svc, 'задание в Bridge', bridgeFresh ? 'live' : ''],
+    [chats, pipe, 'PR и отчёт', anyWorking ? 'live' : ''],
+    [svc, pipe, 'итог задания', bridgeFresh && (bridge.running || 0) > 0 ? 'live' : ''],
+  ];
+  ax._spine = [[devices, hub], [hub, ctl], [ctl, chats], [chats, svc], [svc, pipe]];
+  root.append(ax);
+  archWire(ax);
+  if (archWireObserver) archWireObserver.disconnect();
+  if (typeof ResizeObserver === 'function') {
+    archWireObserver = new ResizeObserver(() => archWire(ax));
+    archWireObserver.observe(ax);
+  }
 }
 
-function archChip(name, state, stateLabel, when, infoKey, infoSource) {
-  const chip = archEl('button', 'arch-chip');
-  chip.type = 'button';
-  chip.dataset.ccInfo = infoKey;
-  ccInfoSources[infoKey] = infoSource;
-  chip.append(archEl('span', `arch-dot s-${state}`), archEl('span', '', name));
-  if (when) chip.append(archEl('span', 'arch-when', when));
-  chip.setAttribute('aria-label', `${name}: ${stateLabel}`);
-  return chip;
+function archWire(ax) {
+  const svg = ax.querySelector('.ax-wires');
+  if (!svg || !ax._wires) return;
+  const box = ax.getBoundingClientRect();
+  if (!box.width) return;
+  svg.replaceChildren();
+  svg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
+  const narrow = box.width < 860;
+  const links = narrow ? ax._spine.map(([a, b]) => [a, b, '', '']) : ax._wires;
+  const ns = 'http://www.w3.org/2000/svg';
+  for (const [from, to, label, mode] of links) {
+    const a = from.getBoundingClientRect();
+    const b = to.getBoundingClientRect();
+    const path = document.createElementNS(ns, 'path');
+    let x1, y1, x2, y2, mid;
+    if (!narrow && b.top < a.bottom - 8) {
+      // Side by side: leave from the facing edge.
+      const right = b.left >= a.right - 8;
+      const ya = a.top + a.height / 2;
+      x1 = (right ? a.right : a.left) - box.left; y1 = ya - box.top;
+      x2 = (right ? b.left : b.right) - box.left; y2 = Math.min(Math.max(ya, b.top + 40), b.bottom - 40) - box.top;
+      const cx = (x1 + x2) / 2;
+      mid = (y1 + y2) / 2 - 6;
+      path.setAttribute('d', `M${x1} ${y1} C${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`);
+    } else {
+      x1 = narrow ? box.width / 2 : a.left + a.width / 2 - box.left;
+      y1 = a.bottom - box.top;
+      x2 = narrow ? box.width / 2 : b.left + b.width / 2 - box.left;
+      y2 = b.top - box.top;
+      if (y2 <= y1) continue;
+      mid = (y1 + y2) / 2;
+      path.setAttribute('d', `M${x1} ${y1} C${x1} ${mid}, ${x2} ${mid}, ${x2} ${y2}`);
+    }
+    if (mode === 'live') path.setAttribute('class', 'is-live');
+    if (mode === 'wait') path.setAttribute('class', 'is-wait');
+    svg.append(path);
+    if (label && !narrow) {
+      const text = document.createElementNS(ns, 'text');
+      text.setAttribute('x', String((x1 + x2) / 2));
+      text.setAttribute('y', String(mid + 4));
+      text.setAttribute('class', 'ax-wlabel');
+      text.textContent = label;
+      svg.append(text);
+    }
+  }
 }
 
-function archStep(child) { const step = archEl('div', 'arch-step'); step.append(child); return step; }
 
 function renderArchitecture(data) {
   archData = data;
@@ -11170,72 +11484,14 @@ function renderArchitecture(data) {
 
   const flow = document.getElementById('arch-flow');
   flow.replaceChildren();
-  flow.append(archStep(archNodeButton('owner')), archArrow('запрос и цель'));
-  const bridge = data.bridge || {};
-  flow.append(archStep(archNodeButton('main-manager', 'is-core', bridge.available ? `последнее событие Bridge: ${archTime(bridge.last_event_at)}` : 'Bridge не ответил')));
-  flow.append(archArrow(''));
-  const trio = archEl('div', 'arch-pair three');
-  const on = data.onboarding || {};
-  trio.append(
-    archNodeButton('registry', '', `${c.registered || 0} агентов · ${(data.departments || []).length} отделов`),
-    archNodeButton('queue', '', q.available ? [q.owner_gates ? `ждут тебя: ${q.owner_gates}` : `открыто: ${q.open}`, q.last_collected_at ? `сбор ${archTime(q.last_collected_at)}` : 'сбора ещё не было'].join(' · ') : 'очередь не прочитана'),
-    archNodeButton('onboarding', '', on.recovery_pending ? 'прервано, ждёт сверки' : (on.new_agents_registered ? `новых агентов: ${on.new_agents_registered}` : 'новый агент целиком не проверен')),
-  );
-  flow.append(trio, archArrow('задания'));
-
-  const lanes = archEl('div', 'arch-lanes');
-  const chats = archEl('section', 'arch-lane');
-  const chatsHead = archEl('div', 'arch-lane-head');
-  const chatsTitle = archEl('div');
-  chatsTitle.append(archEl('h3', '', 'Проектные чаты Codex / Claude'), archEl('p', '', 'MAIN MANAGER пишет задание в закреплённый чат проекта. Один агент на репозиторий.'));
-  const chatsInfo = archEl('button', 'cc-i', 'i'); chatsInfo.type = 'button'; chatsInfo.dataset.ccInfo = 'arch-chats'; chatsInfo.setAttribute('aria-label', 'Как работают проектные чаты');
-  ccInfoSources['arch-chats'] = () => archNodeInfo('chats');
-  chatsHead.append(chatsTitle, chatsInfo);
-  chats.append(chatsHead);
-  (data.departments || []).forEach(dep => {
-    const agents = (data.agents || []).filter(a => a.department === dep.id);
-    if (!agents.length) return;
-    const group = archEl('div', 'arch-group');
-    group.append(archEl('span', 'arch-tag', dep.label));
-    const chips = archEl('div', 'arch-chips');
-    agents.forEach(agent => chips.append(archChip(agent.name, agent.state, agent.state_label,
-      agent.state_at && agent.state !== 'unknown' ? archTime(agent.state_at) : '', `arch-agent-${agent.id}`, () => archAgentInfo(agent))));
-    group.append(chips);
-    chats.append(group);
-  });
-  const svc = archEl('section', 'arch-lane is-services');
-  const svcHead = archEl('div', 'arch-lane-head');
-  const svcTitle = archEl('div');
-  svcTitle.append(archEl('h3', '', 'Фоновые службы и workers'), archEl('p', '', 'Их запускает macOS постоянно или по расписанию. Процесс жив ≠ работа сделана.'));
-  const svcInfo = archEl('button', 'cc-i', 'i'); svcInfo.type = 'button'; svcInfo.dataset.ccInfo = 'arch-services'; svcInfo.setAttribute('aria-label', 'Как работают фоновые службы');
-  ccInfoSources['arch-services'] = () => archNodeInfo('services');
-  svcHead.append(svcTitle, svcInfo);
-  svc.append(svcHead);
-  (data.service_groups || []).forEach(g => {
-    const list = (data.services || []).filter(s => s.group === g.id);
-    if (!list.length) return;
-    const group = archEl('div', 'arch-group');
-    group.append(archEl('span', 'arch-tag', g.label));
-    const chips = archEl('div', 'arch-chips');
-    list.forEach(s => chips.append(archChip(s.name, s.state, s.state_label, '', `arch-svc-${s.id}`, () => archServiceInfo(s))));
-    group.append(chips);
-    svc.append(group);
-  });
-  lanes.append(chats, svc);
-  flow.append(lanes, archArrow(''));
-  flow.append(archStep(archNodeButton('results')), archArrow('доказательства'));
-  flow.append(archStep(archNodeButton('check')), archArrow('итог'));
-  flow.append(archStep(archNodeButton('log')), archArrow('если разрешено'));
-  const next = archNodeButton('next');
-  next.querySelector('span').append(archEl('span', 'arch-loop', '↺ возвращается в общую очередь'));
-  flow.append(archStep(next));
+  archDraw(flow, data);
 
   const legend = archEl('div', 'arch-legend is-live');
   [['working', 'работает (свежее событие)'], ['running', 'процесс запущен'], ['scheduled', 'запускается по расписанию'], ['needs_mark', 'ждёт тебя'],
    ['unknown', 'нет свежего события'], ['failed', 'ошибка или не загружена']].forEach(([s, t]) => {
     const item = archEl('span'); item.append(archEl('span', `arch-dot s-${s}`), document.createTextNode(t)); legend.append(item);
   });
-  const mapLegend = archEl('div', 'arch-legend is-map', 'Стрелки показывают, кто кому передаёт задания и результаты. Состояния скрыты: переключись на «Сейчас».');
+  const mapLegend = archEl('div', 'arch-legend is-map', 'Линии показывают, кто кому передаёт задания и результаты. Состояния скрыты: переключись на «Сейчас».');
   flow.append(legend, mapLegend);
 }
 
