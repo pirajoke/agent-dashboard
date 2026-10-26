@@ -4119,6 +4119,37 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-links a { min-height:44px; margin:0; padding:10px 0; overflow-wrap:anywhere; }
 .context-links[hidden] { display:none; }
 @media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
+/* Mark 2026-10-26: a record reads like a short note — «Коротко», decisions, then topics folded to one line. */
+.context-reader-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.context-reader .cc-i { width:32px; height:32px; min-height:0; padding:0; border-radius:50%; background:transparent; color:var(--mm-muted); font:italic 600 15px/1 Georgia,'Times New Roman',serif; cursor:pointer; }
+.context-reader .cc-i:hover { color:var(--mm-accent); border-color:var(--mm-accent); }
+.context-reader h3 { font-size:22px; line-height:1.3; font-weight:700; letter-spacing:-.01em; margin:18px 0 18px; }
+.context-body { font-size:15.5px; }
+.context-lead { margin:0 0 16px; padding:16px 18px; border-radius:14px; background:var(--mm-info-soft); font-size:16.5px; line-height:1.65; }
+.context-lead > p:last-child { margin-bottom:0; }
+.context-body .context-lead-label,.context-body .context-group-label { margin:0 0 4px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--mm-muted); white-space:normal; }
+.context-body .context-group-label { margin:26px 0 8px; }
+.context-key { margin:12px 0; padding:12px 16px; border:1px solid var(--mm-line); border-left:3px solid var(--mm-accent); border-radius:12px; }
+.context-key.is-plain { border-left-color:var(--mm-line); }
+.context-body .context-key > h4 { margin:2px 0 4px; font-size:16px; }
+.context-key > p:last-child,.context-key > ul:last-child,.context-key > ol:last-child { margin-bottom:2px; }
+.context-body details.context-topic { margin:8px 0; padding:0 16px; border:1px solid var(--mm-line); border-radius:12px; background:var(--mm-surface); }
+.context-body details.context-topic > summary { position:relative; display:block; list-style:none; padding:13px 28px 13px 0; font-weight:400; }
+.context-topic > summary::-webkit-details-marker { display:none; }
+.context-topic > summary::after { content:'›'; position:absolute; right:2px; top:12px; font-size:22px; line-height:1; color:var(--mm-muted); transition:transform .15s ease-out; }
+.context-topic[open] > summary::after { transform:rotate(90deg); }
+.context-body .context-topic h4 { margin:0; font-size:15.5px; line-height:1.4; }
+.context-topic-preview { display:block; margin-top:3px; color:var(--mm-muted); font-size:14px; line-height:1.5; }
+.context-topic[open] .context-topic-preview { display:none; }
+.context-topic-body { padding:0 0 10px; }
+.context-topic-body > p:first-child { margin-top:0; }
+.context-body .context-empty { color:var(--mm-muted); }
+.context-body details.context-full { margin-top:22px; }
+.context-reader .context-actions { margin:22px 0 0; padding:12px 0 0; border-top:1px solid var(--mm-line); border-bottom:0; }
+.context-reader .context-actions a { font-size:13.5px; font-weight:500; color:var(--mm-muted); }
+.context-reader .context-actions a:hover { color:var(--mm-info); }
+@media (prefers-reduced-motion: reduce) { .context-topic > summary::after { transition:none; } }
+@media (max-width:600px) { .context-reader h3 { font-size:19px; margin:14px 0; } .context-lead { padding:14px; font-size:16px; } .context-body details.context-topic,.context-key { padding-left:14px; padding-right:14px; } }
 /* DOCXX: a readable route, with motion tied only to the processor lock. */
 #section-documents { max-width:1480px; }
 .docxx-head { align-items:center; gap:20px; }
@@ -4913,14 +4944,16 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <p id="context-sources" class="context-sources" hidden></p>
     <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
       <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Просмотр записи">
-        <button type="button" id="context-close">← Все записи</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p>
+        <!-- Mark 2026-10-26: «много метаданных» — source and date live behind «i», the original link at the bottom. -->
+        <div class="context-reader-top"><button type="button" id="context-close">← Все записи</button><button type="button" class="cc-i" id="context-info" data-cc-info="context-record" aria-label="О записи: откуда и когда">i</button></div>
+        <h3 id="context-reader-title"></h3>
+        <div id="context-body" class="context-body"></div>
+        <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
         <nav class="context-actions" aria-label="Перейти из записи">
-          <a id="context-obsidian">Оригинал в Obsidian</a>
+          <a id="context-obsidian">Открыть оригинал в Obsidian</a>
           <a id="context-work" href="?tab=work&amp;view=todo" hidden>Дела и результаты</a>
           <a id="context-agents" href="?tab=agents" hidden>Агенты</a>
         </nav>
-        <div id="context-body" class="context-body"></div>
-        <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
       </article>
     </div>
   </section>
@@ -7842,9 +7875,31 @@ function ccContextClear(message = 'Записи доступны после пр
 }
 function ccContextClose() {
   document.getElementById('context-reader').hidden = true;
-  for (const id of ['context-reader-title','context-reader-meta','context-body','context-links']) document.getElementById(id).textContent = '';
+  for (const id of ['context-reader-title','context-body','context-links']) document.getElementById(id).textContent = '';
+  ccContextInfo = null;
   document.getElementById('context-links').hidden = true;
   document.getElementById('context-obsidian').removeAttribute('href');
+}
+// Source, date and project of the open record, shown only in the «i» window.
+let ccContextInfo = null;
+if (typeof ccInfoSources === 'object') ccInfoSources['context-record'] = () => ccContextInfo
+  ? {title: 'О записи', rows: [['Откуда', ccContextInfo.source], ['Когда', ccContextInfo.day], ['Проект', ccContextInfo.project]]}
+  : {title: 'О записи', lines: ['Запись закрыта.']};
+// «10-26 Комплексное тестирование…» — the date is already in «i», the title keeps only words.
+function ccContextTitle(value) {
+  const text = String(value || '').trim();
+  return text.replace(/^(?:\d{4}-)?\d{1,2}-\d{1,2}(?:\s+\d{1,2}[:.]\d{2})?[\s·:—–-]+(?=\S)/, '') || text;
+}
+// Recorder leftovers that mean nothing on the site: image cards (`[](plaud://…)`), separators, heading emoji.
+function ccContextClean(text) {
+  return text
+    .replace(/!?\[[^\]\n]*\]\((?:plaud|file|data|blob|attachment):[^)\n]*\)/gi, '')
+    .replace(/!?\[\s*\]\([^)\n]*\)/g, '')
+    .split('\n').filter(line => !/^\s{0,3}(?:-\s*){3,}$|^\s{0,3}(?:\*\s*){3,}$|^\s{0,3}(?:_\s*){3,}$/.test(line)).join('\n')
+    .replace(/\n{3,}/g, '\n\n');
+}
+function ccContextBareHeading(value) {
+  return String(value || '').replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '').replace(/[:：]\s*$/, '').trim();
 }
 function ccContextShort(value) {
   const parsed = new Date(value || '');
@@ -7923,7 +7978,7 @@ function ccContextParagraphs(container, text, links, depth = 0) {
     const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
     const bullet = line.match(/^\s*(?:[-*+] |\d+[.)] )(.+)$/);
     if (!line.trim()) { flush(); list = null; }
-    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, heading[2], links); container.append(h); }
+    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, ccContextBareHeading(heading[2]) || heading[2], links); container.append(h); }
     else if (bullet) {
       flush(); const tag = /^\s*\d/.test(line) ? 'ol' : 'ul';
       const check = bullet[1].match(/^\[([ x])\]\s*/i), checklist = !!check && tag === 'ul';
@@ -7939,7 +7994,7 @@ function ccContextParagraphs(container, text, links, depth = 0) {
 function ccContextRenderLinks(links) {
   const area = document.getElementById('context-links'); area.replaceChildren(); area.hidden = !links.size;
   if (!links.size) return;
-  const title = document.createElement('h4'); title.textContent = '🔗 Ссылки из записи';
+  const title = document.createElement('h4'); title.textContent = 'Ссылки из записи';
   const hint = document.createElement('p'); hint.textContent = 'Статусы задач и исполнители — по ссылке в исходном сервисе.';
   const list = document.createElement('ul');
   for (const link of [...links.values()].slice(0, 20)) {
@@ -7977,11 +8032,76 @@ function ccContextRenderUpdate(container, text, record, links) {
   ccContextParagraphs(details, rest.map(s => (s.heading && !isTitle(s.heading) ? `#### ${s.heading}\n` : '') + s.lines.join('\n')).join('\n\n'), links);
   container.append(details);
 }
+// Mark 2026-10-26: «очень непонятно, много информации». A meeting reads as: «Коротко» (the opening
+// paragraph), then decisions and next steps open, then each other topic folded to one line, then the
+// full transcript. Nothing is rewritten; only the order and the folding change.
+const ccContextKeyHeading = /решени|договор|следующ|дальше|задач|поручен|итог|вывод|риск|next\s*step|action|decision|to-?do/i;
+function ccContextSplit(text) {
+  const lines = text.split('\n');
+  // Headings inside ``` examples are example text, not section borders.
+  let fenced = false; const inCode = lines.map(line => { if (/^\s*```/.test(line)) { fenced = !fenced; return true; } return fenced; });
+  const levels = lines.map((line, i) => !inCode[i] && (line.match(/^\s{0,3}(#{1,6})\s+\S/) || [])[1]?.length).filter(Boolean);
+  const top = levels.length ? Math.min(...levels) : 0;
+  const lead = [], sections = []; let current = null;
+  lines.forEach((line, i) => {
+    const md = !inCode[i] && line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
+    // A bold line ending a sentence («**Запуск переносится на пятницу.**») is a statement, not a heading.
+    const bold = !top && !inCode[i] && line.match(/^\s*(?:\*\*|__)([^*_\n]{2,120}?)(?:\*\*|__)\s*:?\s*$/);
+    const heading = md && md[1].length === top ? md[2] : bold && !/[.!?…]$/.test(bold[1].trim()) ? bold[1] : null;
+    if (heading !== null) { current = {heading: ccContextBareHeading(heading) || heading.trim(), raw: line, lines: []}; sections.push(current); return; }
+    (current ? current.lines : lead).push(line);
+  });
+  // A heading with nothing under it stays as text in the block before it, so nothing is dropped.
+  const kept = [];
+  for (const s of sections) {
+    if (s.lines.join('').trim()) { kept.push(s); continue; }
+    (kept.length ? kept[kept.length - 1].lines : lead).push('', s.raw);
+  }
+  return {lead: lead.join('\n').trim(), sections: kept.map(s => ({heading: s.heading, text: s.lines.join('\n').trim()}))};
+}
+function ccContextPreview(text) {
+  const plain = text.replace(/^\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?)/gm, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\*\*|__|[*`]/g, '').replace(/\s+/g, ' ').trim();
+  const sentence = (plain.match(/^.+?[.!?…](?=\s|$)/) || [plain])[0];
+  return sentence.length > 150 ? sentence.slice(0, 147).replace(/\s+\S*$/, '') + '…' : sentence;
+}
+function ccContextRenderMeeting(container, summary, links) {
+  const {lead, sections} = ccContextSplit(summary);
+  if (lead) {
+    const card = document.createElement('div'); card.className = 'context-lead';
+    const label = document.createElement('p'); label.className = 'context-lead-label'; label.textContent = 'Коротко';
+    card.append(label); ccContextParagraphs(card, lead, links); container.append(card);
+  }
+  const key = sections.filter(s => ccContextKeyHeading.test(s.heading));
+  const topics = sections.filter(s => !key.includes(s));
+  // Without an opening paragraph the first topic stays open, so the record never starts folded.
+  const openFirst = !lead && !key.length;
+  for (const s of key) {
+    const block = document.createElement('section'); block.className = 'context-key';
+    const h = document.createElement('h4'); h.textContent = s.heading; block.append(h);
+    ccContextParagraphs(block, s.text, links); container.append(block);
+  }
+  if (!topics.length) return;
+  if (lead || key.length) { const label = document.createElement('p'); label.className = 'context-group-label'; label.textContent = topics.length === 1 ? 'Подробнее' : 'По темам'; container.append(label); }
+  topics.forEach((s, index) => {
+    if (openFirst && index === 0) {
+      const block = document.createElement('section'); block.className = 'context-key is-plain';
+      const h = document.createElement('h4'); h.textContent = s.heading; block.append(h);
+      ccContextParagraphs(block, s.text, links); container.append(block); return;
+    }
+    const details = document.createElement('details'); details.className = 'context-topic';
+    const toggle = document.createElement('summary');
+    const h = document.createElement('h4'); h.textContent = s.heading;
+    const preview = document.createElement('span'); preview.className = 'context-topic-preview'; preview.textContent = ccContextPreview(s.text);
+    toggle.append(h, preview); details.append(toggle);
+    const inner = document.createElement('div'); inner.className = 'context-topic-body'; ccContextParagraphs(inner, s.text, links); details.append(inner);
+    container.append(details);
+  });
+}
 function ccContextRenderBody(record) {
   const container = document.getElementById('context-body'); container.replaceChildren();
   const links = new Map();
-  const text = record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
-    .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, '');
+  const text = ccContextClean(record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
+    .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, ''));
   if (record.kind !== 'transcript') { ccContextRenderUpdate(container, text, record, links); ccContextRenderLinks(links); return; }
   const parts = {summary: [], transcript: []}; let section = 'transcript', firstContent = true;
   for (const line of text.split('\n')) {
@@ -7989,19 +8109,18 @@ function ccContextRenderBody(record) {
     if (/^>\s*Сырой импорт PLAUD\..*IMPORT LOGIC/.test(line)) continue;
     if (firstContent && !line.trim()) continue;
     const heading = line.match(/^#{1,6}\s+(.+?)\s*#*$/);
-    const label = heading ? heading[1].trim().toLowerCase() : '';
+    const label = heading ? ccContextBareHeading(heading[1]).toLowerCase() : '';
     if (/^(?:plaud\s+)?summary$|^(?:резюме|краткое содержание|краткое резюме|саммари)$/.test(label)) { section = 'summary'; firstContent = false; continue; }
-    if (/^(?:full\s+)?transcript$|^(?:транскрипт|транскрипция|расшифровка|полная расшифровка)$/.test(label)) { section = 'transcript'; firstContent = false; continue; }
+    if (/^(?:full\s+)?transcript$|^(?:транскрипт|транскрипция|расшифровка|полная расшифровка|полный транскрипт)$/.test(label)) { section = 'transcript'; firstContent = false; continue; }
     if (firstContent && heading && /^#\s+/.test(line) && heading[1].trim() === record.title) { firstContent = false; continue; }
     firstContent = false;
     parts[section].push(line);
   }
   const summary = parts.summary.join('\n').trim(), transcript = parts.transcript.join('\n').trim();
-  const title = document.createElement('h4'); title.textContent = '📝 Краткое резюме'; container.append(title);
-  if (summary) ccContextParagraphs(container, summary, links);
-  else { const p = document.createElement('p'); p.textContent = transcript ? 'Резюме пока нет. Можно раскрыть полный транскрипт ниже или открыть оригинал в Obsidian.' : 'Резюме и транскрипт пока недоступны. Оригинал можно открыть в Obsidian.'; container.append(p); }
+  if (summary) ccContextRenderMeeting(container, summary, links);
+  else { const p = document.createElement('p'); p.className = 'context-empty'; p.textContent = transcript ? 'Резюме пока нет. Можно раскрыть полную расшифровку ниже.' : 'Резюме и расшифровка пока недоступны. Оригинал можно открыть по ссылке внизу.'; container.append(p); }
   if (transcript) {
-    const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = '🎙️ Полный транскрипт'; details.append(toggle);
+    const details = document.createElement('details'); details.className = 'context-full'; const toggle = document.createElement('summary'); toggle.textContent = 'Полная расшифровка'; details.append(toggle);
     ccContextParagraphs(details, transcript, links); container.append(details);
   }
   ccContextRenderLinks(links);
@@ -8029,8 +8148,8 @@ async function ccLoadContext(recordId = null) {
     if (recordId) {
       const r = data.record;
       if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
-      document.getElementById('context-reader-title').textContent = r.plain?.title || r.title;
-      document.getElementById('context-reader-meta').textContent = [ccContextNames[r.source] || 'Запись', ccContextDay(r.date)].filter(Boolean).join(' · ');
+      document.getElementById('context-reader-title').textContent = ccContextTitle(r.plain?.title || r.title);
+      ccContextInfo = {source: ccContextNames[r.source] || 'Запись', day: ccContextDay(r.date), project: typeof r.project === 'string' ? r.project : ''};
       ccContextRenderBody(r);
       const uri = ccContextURI(r.obsidian_url); const link = document.getElementById('context-obsidian');
       if (uri) link.href = uri; link.hidden = !uri;
@@ -8051,7 +8170,7 @@ async function ccLoadContext(recordId = null) {
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
       const text=document.createElement('span'); text.className='context-row-text';
-      const title=document.createElement('strong');title.textContent=r.plain?.title || r.title;
+      const title=document.createElement('strong');title.textContent=ccContextTitle(r.plain?.title || r.title);
       const meta=document.createElement('small'); meta.textContent=[ccContextNames[r.source] || 'Запись', ccContextDay(r.date), r.project].filter(Boolean).join(' · ');
       const go=document.createElement('span'); go.className='context-row-go'; go.setAttribute('aria-hidden','true'); go.textContent='›';
       text.append(title,meta); button.append(icon,text,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
