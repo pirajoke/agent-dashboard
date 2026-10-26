@@ -46,6 +46,12 @@ class MachineHealthWordsTests(unittest.TestCase):
                          [["Память", "перегружена", "bad"], ["Диск", "заполняется", "warn"],
                           ["Процессор", "перегружен", "bad"]])
 
+    def test_memory_is_judged_by_pressure_when_the_computer_reports_it(self):
+        # The real MacBook Pro on 2026-10-26: 46 of 48 GB physically in use, but 71% pressure-free.
+        base = {"cpu_percent": 28, "memory_used_gb": 13.9, "memory_total_gb": 48, "disk_used_gb": 495, "disk_total_gb": 1858}
+        self.assertEqual(self.words({**base, "memory_pressure_free_percent": 71})[0], ["Память", "ок", "ok"])
+        self.assertEqual(self.words({**base, "memory_pressure_free_percent": 8})[0], ["Память", "перегружена", "bad"])
+
     def test_missing_numbers_say_so(self):
         self.assertEqual([w[1] for w in self.words({})], ["нет данных"] * 3)
 

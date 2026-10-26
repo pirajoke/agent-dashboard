@@ -9742,7 +9742,9 @@ for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro'
     const text = id => { const t = document.getElementById(`${key}-${id}`)?.textContent?.trim(); return t && t !== '—' ? t : ''; };
     const sys = machineSystem[key] || {};
     const free = sys.disk_total_gb ? `${Math.max(0, Math.round(sys.disk_total_gb - sys.disk_used_gb))} GB` : '';
-    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+    const pressure = typeof sys.memory_pressure_free_percent === 'number' ? `${100 - sys.memory_pressure_free_percent}%` : '';
+    const swap = typeof sys.swap_used_gb === 'number' && sys.swap_used_gb > 0 ? `${sys.swap_used_gb} GB` : '';
+    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Нагрузка на память', pressure], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
   };
 }
 
@@ -9751,7 +9753,10 @@ function machinePercent(used, total) {
 }
 
 function machineHealthItems(sys) {
-  const ram = machinePercent(sys.memory_used_gb, sys.memory_total_gb);
+  // macOS fills free memory with cache, so «used» says little; memory pressure is what the system itself
+  // calls overload. Health APIs that report it (the MacBook Pro does) are judged by it.
+  const pressure = typeof sys.memory_pressure_free_percent === 'number' ? 100 - sys.memory_pressure_free_percent : null;
+  const ram = pressure ?? machinePercent(sys.memory_used_gb, sys.memory_total_gb);
   const disk = machinePercent(sys.disk_used_gb, sys.disk_total_gb);
   const cpu = typeof sys.cpu_percent === 'number' ? Math.round(sys.cpu_percent) : null;
   const level = (pct, warn, bad) => pct === null ? 'unknown' : pct >= bad ? 'bad' : pct >= warn ? 'warn' : 'ok';
