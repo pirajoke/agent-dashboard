@@ -3345,6 +3345,11 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .cc-main-nav .pill-badge { margin-left: auto; padding: 1px 8px; color: var(--mm-muted); background: var(--mm-surface-hover); border-radius: 999px; font-size: 11.5px; font-weight: 650; }
 .cc-main-nav .pill-badge:empty { display: none; }
 .cc-main-nav .nav-pill.active .pill-badge { color: var(--mm-accent); background: var(--mm-surface); }
+/* Mark 2026-10-26: menu items move by dragging (a long press first on a phone). */
+.cc-main-nav .nav-pill { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cc-main-nav.is-reordering, .cc-main-nav.is-reordering .nav-pill { cursor: grabbing; }
+.cc-main-nav .nav-pill.is-dragging { position: relative; z-index: 2; color: var(--mm-ink); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
+.tab-order-note { margin: 14px 0 0; color: var(--text2); font-size: 12px; line-height: 1.5; }
 .cc-side-foot { display: grid; gap: 2px; margin-top: auto; padding: 14px 0 0; border-top: 1px solid var(--mm-line); }
 .cc-side-button,
 .cc-side .tab-name-customizer > button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 12px; color: var(--mm-muted); font: inherit; font-size: 13px; font-weight: 500; text-align: left; background: none; border: 0; border-radius: 10px; cursor: pointer; }
@@ -4797,10 +4802,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <button type="submit">Сохранить</button>
         <button type="button" id="cancel-tab-names">Отмена</button>
         <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
+        <button type="button" id="reset-tab-order" hidden>Вернуть порядок</button>
       </div>
+      <p class="tab-order-note">Порядок меняется перетаскиванием, на телефоне сначала долгое нажатие. С клавиатуры: Alt и стрелка.</p>
       <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </form>
   </dialog>
+  <p class="cc-visually-hidden" id="tab-order-status" role="status" aria-live="polite"></p>
 
   <!-- Mark 2026-10-24: one shared window for every «i». -->
   <dialog class="tab-name-dialog cc-info-dialog" id="cc-info-dialog" aria-labelledby="cc-info-title">
@@ -6731,6 +6739,215 @@ tabNameDialog.addEventListener('click', event => {
   tabNamePressedOutside = false;
 });
 document.getElementById('reset-tab-names').addEventListener('click', resetTabNames);
+
+// Mark 2026-10-26: menu items can be dragged into any order; on a phone a long press picks one up.
+// The order is a browser-local preference like the names. Routes and onclick handlers never change.
+const TAB_ORDER_STORAGE_KEY = 'command-center.tab-order.v1';
+const TAB_ORDER_LONG_PRESS_MS = 380;
+const TAB_ORDER_MOVE_SLOP = 8;
+const tabOrderNav = document.querySelector('.cc-main-nav');
+const tabOrderReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let tabDrag = null;
+let tabDragSwallowClick = false;
+
+function tabOrderButtons() {
+  return Array.from(tabOrderNav.querySelectorAll(':scope > .nav-pill'));
+}
+
+function tabOrderRoute(button) {
+  return button.querySelector('[data-tab-label]')?.dataset.tabLabel || '';
+}
+
+function currentTabOrder() {
+  return tabOrderButtons().map(tabOrderRoute);
+}
+
+function tabOrderIsDefault(order) {
+  return TAB_NAME_ROUTES.every((route, index) => order[index] === route);
+}
+
+function readTabOrder() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TAB_ORDER_STORAGE_KEY) || 'null');
+    if (!Array.isArray(saved)) return TAB_NAME_ROUTES.slice();
+    const order = saved.filter((route, index) => TAB_NAME_ROUTES.includes(route) && saved.indexOf(route) === index);
+    // A tab added to the site later keeps its default place at the end.
+    TAB_NAME_ROUTES.forEach(route => { if (!order.includes(route)) order.push(route); });
+    return order;
+  } catch (error) {
+    return TAB_NAME_ROUTES.slice();
+  }
+}
+
+function applyTabOrder(order) {
+  const byRoute = new Map(tabOrderButtons().map(button => [tabOrderRoute(button), button]));
+  order.forEach(route => { if (byRoute.has(route)) tabOrderNav.append(byRoute.get(route)); });
+  syncTabOrderReset();
+}
+
+function saveTabOrder() {
+  const order = currentTabOrder();
+  try {
+    if (tabOrderIsDefault(order)) localStorage.removeItem(TAB_ORDER_STORAGE_KEY);
+    else localStorage.setItem(TAB_ORDER_STORAGE_KEY, JSON.stringify(order));
+  } catch (error) {
+    // Private mode: the new order still holds until the page reloads.
+  }
+  syncTabOrderReset();
+}
+
+function syncTabOrderReset() {
+  document.getElementById('reset-tab-order').hidden = tabOrderIsDefault(currentTabOrder());
+}
+
+function resetTabOrder() {
+  applyTabOrder(TAB_NAME_ROUTES);
+  saveTabOrder();
+  setTabNameStatus('Порядок вкладок вернулся к обычному.');
+}
+
+function announceTabOrder(button) {
+  const order = tabOrderButtons();
+  const label = button.querySelector('[data-tab-label]')?.textContent.trim() || '';
+  document.getElementById('tab-order-status').textContent = `${label}: место ${order.indexOf(button) + 1} из ${order.length}`;
+}
+
+function tabOrderVertical() {
+  return getComputedStyle(tabOrderNav).flexDirection.startsWith('column');
+}
+
+// offsetLeft/offsetTop ignore transforms, so they give each item's place in the list while it slides.
+function tabOrderCenter(button, vertical) {
+  return vertical ? button.offsetTop + button.offsetHeight / 2 : button.offsetLeft + button.offsetWidth / 2;
+}
+
+// Puts the item at a new place by moving its neighbours: taking the item itself out of the page
+// would drop the pointer that holds it. Neighbours glide instead of jumping (not with reduced motion).
+function moveTabButton(button, index) {
+  const order = tabOrderButtons();
+  const from = order.indexOf(button);
+  if (index === from || index < 0 || index >= order.length) return;
+  const others = order.filter(item => item !== button);
+  const before = new Map(others.map(item => [item, [item.offsetLeft, item.offsetTop]]));
+  if (index > from) button.before(...order.slice(from + 1, index + 1));
+  else button.after(...order.slice(index, from));
+  if (tabOrderReducedMotion.matches) return;
+  others.forEach(item => {
+    const [left, top] = before.get(item);
+    const dx = left - item.offsetLeft;
+    const dy = top - item.offsetTop;
+    if (!dx && !dy) return;
+    item.style.transition = 'none';
+    item.style.transform = `translate(${dx}px, ${dy}px)`;
+    item.getBoundingClientRect();
+    item.style.transition = 'transform .16s ease';
+    item.style.transform = '';
+    item.addEventListener('transitionend', () => { item.style.transition = ''; }, { once: true });
+  });
+}
+
+function startTabDrag() {
+  if (!tabDrag || tabDrag.active) return;
+  clearTimeout(tabDrag.timer);
+  tabDrag.active = true;
+  tabDrag.vertical = tabOrderVertical();
+  tabDrag.startOffset = tabDrag.vertical ? tabDrag.button.offsetTop : tabDrag.button.offsetLeft;
+  tabOrderNav.classList.add('is-reordering');
+  tabDrag.button.classList.add('is-dragging');
+  try { tabDrag.button.setPointerCapture(tabDrag.pointerId); } catch (error) { /* the nav still gets the moves */ }
+  if (tabDrag.touch && navigator.vibrate) navigator.vibrate(12);
+}
+
+function dragTabTo(x, y) {
+  const { button, vertical } = tabDrag;
+  const pointerShift = vertical ? y - tabDrag.y : x - tabDrag.x;
+  const others = tabOrderButtons().filter(item => item !== button);
+  const size = vertical ? button.offsetHeight : button.offsetWidth;
+  const center = tabDrag.startOffset + size / 2 + pointerShift;
+  const index = others.filter(item => tabOrderCenter(item, vertical) < center).length;
+  moveTabButton(button, index);
+  const placeShift = (vertical ? button.offsetTop : button.offsetLeft) - tabDrag.startOffset;
+  const shift = pointerShift - placeShift;
+  const lift = tabOrderReducedMotion.matches ? '' : ' scale(1.03)';
+  button.style.transform = vertical ? `translateY(${shift}px)${lift}` : `translateX(${shift}px)${lift}`;
+}
+
+function endTabDrag() {
+  if (!tabDrag) return;
+  clearTimeout(tabDrag.timer);
+  const { button, active } = tabDrag;
+  tabDrag = null;
+  if (!active) return;
+  tabDragSwallowClick = true;
+  setTimeout(() => { tabDragSwallowClick = false; }, 400);
+  tabOrderNav.classList.remove('is-reordering');
+  button.classList.remove('is-dragging');
+  button.style.transition = tabOrderReducedMotion.matches ? '' : 'transform .16s ease';
+  button.style.transform = '';
+  setTimeout(() => { button.style.transition = ''; }, 200);
+  saveTabOrder();
+  announceTabOrder(button);
+}
+
+tabOrderNav.addEventListener('pointerdown', event => {
+  if (tabDrag || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  const button = event.target.closest('.nav-pill');
+  if (!button || button.parentElement !== tabOrderNav) return;
+  const touch = event.pointerType !== 'mouse';
+  tabDrag = { button, touch, pointerId: event.pointerId, x: event.clientX, y: event.clientY, active: false, timer: 0 };
+  if (touch) tabDrag.timer = setTimeout(startTabDrag, TAB_ORDER_LONG_PRESS_MS);
+});
+
+tabOrderNav.addEventListener('pointermove', event => {
+  if (!tabDrag || event.pointerId !== tabDrag.pointerId) return;
+  // The mouse was let go outside the menu before the drag began: forget the press.
+  if (!tabDrag.touch && event.buttons === 0) { endTabDrag(); return; }
+  if (!tabDrag.active) {
+    if (Math.hypot(event.clientX - tabDrag.x, event.clientY - tabDrag.y) < TAB_ORDER_MOVE_SLOP) return;
+    // A finger that moves before the long press is scrolling or tapping, not dragging.
+    if (tabDrag.touch) { endTabDrag(); return; }
+    startTabDrag();
+  }
+  event.preventDefault();
+  dragTabTo(event.clientX, event.clientY);
+});
+
+tabOrderNav.addEventListener('pointerup', endTabDrag);
+tabOrderNav.addEventListener('pointercancel', endTabDrag);
+tabOrderNav.addEventListener('lostpointercapture', event => {
+  if (tabDrag?.active && event.pointerId === tabDrag.pointerId) endTabDrag();
+});
+
+// While a finger holds or drags an item the page must not scroll under it.
+tabOrderNav.addEventListener('touchmove', event => {
+  if (tabDrag?.active) event.preventDefault();
+}, { passive: false });
+
+// A long press on a phone would otherwise open the system menu, and a drop would open the tab.
+tabOrderNav.addEventListener('contextmenu', event => {
+  if (tabDrag) event.preventDefault();
+});
+tabOrderNav.addEventListener('click', event => {
+  if (!tabDragSwallowClick) return;
+  tabDragSwallowClick = false;
+  event.preventDefault();
+  event.stopPropagation();
+}, true);
+
+// Keyboard: Alt + arrow moves the focused item one place.
+tabOrderNav.addEventListener('keydown', event => {
+  if (!event.altKey || event.ctrlKey || event.metaKey) return;
+  const step = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[event.key];
+  const button = event.target.closest('.nav-pill');
+  if (!step || !button || button.parentElement !== tabOrderNav) return;
+  event.preventDefault();
+  moveTabButton(button, tabOrderButtons().indexOf(button) + step);
+  saveTabOrder();
+  announceTabOrder(button);
+});
+
+document.getElementById('reset-tab-order').addEventListener('click', resetTabOrder);
+applyTabOrder(readTabOrder());
 
 // Platform order is local-only. Restore known IDs once and append any newly shipped cards.
 const PLATFORM_ORDER_STORAGE_KEY = 'command-center.platform-order.v1';
