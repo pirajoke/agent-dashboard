@@ -755,10 +755,13 @@ class ProjectionTest(unittest.TestCase):
         self.assertNotEqual(product_for("ChatGPT · Любовь", None)["id"], product_for("ChatGPT · без проекта", None)["id"])
         self.assertEqual(product_for("ChatGPT · SHOPIFY", None)["name"], "ChatGPT · SHOPIFY")
         self.assertIsNone(other["description"])
-        self.assertEqual(product_for(None, "pirajoke/ai-singularity-news-bot")["id"], "context-news")
+        self.assertEqual(product_for(None, "pirajoke/ai-singularity-news-bot")["id"], "ai-singularity")
+        self.assertEqual(product_for("context-news-france", None)["id"], "context-news")
         self.assertEqual(product_for("ai-singularity", None)["id"], "ai-singularity")
         self.assertEqual(product_for("urssaf-helper", None)["id"], "accountable")
         self.assertTrue(product_for("lexi", None)["description"])
+        self.assertTrue(product_for("lexi", None)["about"])
+        self.assertIsNone(other["about"])
 
     def test_public_projection_hides_projects(self):
         payload = work_projection(self.root, now=self.now, owner=False, project="jarvis")
