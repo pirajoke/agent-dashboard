@@ -100,7 +100,7 @@ class SortingTests(unittest.TestCase):
         for folder in ('../outside', '/tmp', '.hidden', REVIEW, 'Nope'):
             with self.assertRaises(ValueError):
                 apply(self.state, self.decisions, {'action': 'move', 'keys': [key], 'folder': folder})
-        for body in ({'action': 'delete', 'keys': [key]}, {'action': 'remove', 'keys': [key]}, {'action': 'keep', 'keys': []},
+        for body in ({'action': 'delete', 'keys': [key]}, {'action': 'erase', 'keys': [key]}, {'action': 'keep', 'keys': []},
                      {'action': 'keep', 'keys': ['../x']}, {'action': 'keep', 'keys': [key] * 51}):
             with self.assertRaises(ValueError):
                 apply(self.state, self.decisions, body)
@@ -157,8 +157,7 @@ class SortingTests(unittest.TestCase):
         result = apply(self.state, self.decisions, {'action': 'trash', 'keys': [key]})
         self.assertEqual(result['results'][0]['destination'], '10 — 📥 To review/Корзина/scan.pdf')
         self.assertFalse((self.library / 'Корзина').exists())  # Never at the library root.
-        row = next(r for r in self.view()['records'] if r['key'] == key)
-        self.assertEqual((row['status'], row['label']), ('sorted', 'В корзине'))
+        self.assertNotIn(key, [r['key'] for r in self.view()['records']])  # Gone from the page.
         view = folders_view(self.state, self.decisions)
         self.assertEqual(view['trash'], '10 — 📥 To review/Корзина')
         self.assertNotIn(view['trash'], view['folders'])
@@ -229,6 +228,21 @@ class SortingTests(unittest.TestCase):
         for row in drive:
             self.assertEqual(apply(self.state, self.decisions, {'action': 'trash', 'keys': [row['key']]})['results'][0]['error'], 'not_found')
         self.assertTrue((self.library / REVIEW / 'Документ без названия.gdoc').exists())
+    def test_remove_trashes_any_document_and_hides_what_it_cannot_reach(self):
+        keys = self.keys()
+        moved = apply(self.state, self.decisions, {'action': 'move', 'keys': [keys['ticket.pdf']], 'folder': 'France/Médiathèque'})
+        self.assertTrue(moved['results'][0]['ok'])
+        (self.library / REVIEW / 'scan.pdf').unlink()  # Gone from disk: only the entry can go.
+        result = apply(self.state, self.decisions, {'action': 'remove', 'keys': list(keys.values())})
+        by_key = {r['key']: r for r in result['results']}
+        self.assertEqual(by_key[keys['ticket.pdf']]['destination'], '10 — 📥 To review/Корзина/ticket.pdf')
+        self.assertTrue(by_key[keys['scan.pdf']]['hidden'])
+        self.assertEqual(self.view()['records'], [])
+        apply(self.state, self.decisions, {'action': 'undo', 'keys': list(keys.values())})
+        self.assertTrue((self.library / 'France/Médiathèque/ticket.pdf').exists())  # Back where Mark had put it.
+        rows = {r['original_name']: r for r in self.view()['records']}
+        self.assertEqual(rows['ticket.pdf']['label'], 'Разобрано')
+        self.assertEqual(rows['scan.pdf']['status'], 'needs_review')
 
 
 if __name__ == '__main__':

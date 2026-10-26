@@ -425,16 +425,18 @@ def _apply_decisions(rows, decisions):
     settled = 0
     for row in rows.values():
         decision = decisions.get(row['key']) if isinstance(decisions, dict) else None
-        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep', 'trash'):
+        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep', 'trash', 'hide'):
+            continue
+        if decision['action'] in ('trash', 'hide'):
+            # «Удалить» (2026-10-26): gone from the page; undo through the sorting API brings it back.
+            row.update(status='sorted', label='Удалён', historical=False, decision=decision['action'], hidden=True)
+            settled += 1
             continue
         if row['status'] != 'needs_review':
             continue
         moved = decision['action'] != 'keep'
-        trashed = decision['action'] == 'trash'
-        row.update(status='sorted', label='В корзине' if trashed else 'Разобрано', historical=False,
-                   decision=decision['action'],
-                   reason='Ты убрал документ в корзину. «Вернуть как было» достанет его обратно.' if trashed
-                   else 'Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
+        row.update(status='sorted', label='Разобрано', historical=False, decision=decision['action'],
+                   reason='Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
         if moved and isinstance(decision.get('to'), str):
             row['destination'] = _text(decision['to'], 600)
         settled += 1
@@ -571,6 +573,8 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
             if link: links[key] = link
     except (OSError, ValueError, TypeError): pass
     records = sorted(rows.values(), key=lambda r:(not r['historical'], r['at'] or ''), reverse=True)
+    if not include_paths:
+        records = [row for row in records if not row.pop('hidden', False)]
     for row in records:
         path, sha = row.pop('_path', None), row.pop('_sha', None)
         if include_paths and path:

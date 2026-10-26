@@ -291,7 +291,7 @@ def apply(directory, decisions_file, body: dict, suggestions_file=None) -> dict:
     if not isinstance(body, dict):
         raise ValueError('invalid_request')
     action, keys = body.get('action'), body.get('keys')
-    if action not in ('move', 'archive', 'trash', 'auto', 'keep', 'undo'):
+    if action not in ('move', 'archive', 'trash', 'auto', 'keep', 'undo', 'remove'):
         raise ValueError('invalid_action')
     if (not isinstance(keys, list) or not 1 <= len(keys) <= MAX_KEYS
             or not all(isinstance(k, str) and KEY.fullmatch(k) for k in keys)):
@@ -303,6 +303,11 @@ def apply(directory, decisions_file, body: dict, suggestions_file=None) -> dict:
         decisions = load_decisions(decisions_file)
         rows, root = _sortable(directory, decisions)
         folder_rel, allowed = None, set()
+        if action == 'remove' and root is not None:
+            try:
+                folder_rel = _trash_folder(root, folders_view(directory, decisions_file))
+            except ValueError:
+                folder_rel = None  # No place for a trash: «Удалить» only hides the entries.
         if action in ('move', 'archive', 'trash', 'auto'):
             if root is None:
                 raise ValueError('library_unavailable')
@@ -341,6 +346,13 @@ def _one(key, action, folder_rel, rows, root, decisions, now, commit) -> dict:
         decision = decisions.get(key)
         if not decision:
             return {'key': key, 'ok': False, 'error': 'nothing_to_undo'}
+        prev = decision.get('prev') if isinstance(decision.get('prev'), dict) else None
+
+        def back():  # «Удалить» on a document Mark had already sorted: undo returns to that decision.
+            if prev:
+                decisions[key] = prev
+            else:
+                decisions.pop(key, None)
         if decision.get('action') in ('move', 'archive', 'trash'):
             back_root = Path(decision.get('root') or '')
             moved, original = back_root / str(decision.get('to', '')), back_root / str(decision.get('from', ''))
@@ -349,7 +361,7 @@ def _one(key, action, folder_rel, rows, root, decisions, now, commit) -> dict:
                 return {'key': key, 'ok': False, 'error': 'not_found'}
             if os.path.lexists(original) or not os.path.isdir(original.parent):
                 return {'key': key, 'ok': False, 'error': 'occupied'}
-            del decisions[key]
+            back()
             try:
                 commit()
             except OSError:
@@ -362,23 +374,50 @@ def _one(key, action, folder_rel, rows, root, decisions, now, commit) -> dict:
                 commit()
                 return {'key': key, 'ok': False, 'error': 'occupied' if isinstance(error, FileExistsError) else 'move_failed'}
             return {'key': key, 'ok': True}
-        del decisions[key]
+        back()
         return {'key': key, 'ok': True}
-    if row.get('status') != 'needs_review':
+    prev = None
+    source = None
+    if action == 'remove':
+        # 2026-10-26 «добавь возможность всё это удалять»: any row. The file goes to the trash when
+        # the Mac mini can reach it; otherwise only the list entry is hidden. Both can be undone.
+        current = decisions.get(key)
+        if isinstance(current, dict) and current.get('action') in ('trash', 'hide'):
+            return {'key': key, 'ok': False, 'error': 'already_sorted'}
+        prev = current if isinstance(current, dict) else None
+        if prev and prev.get('action') in ('move', 'archive') and prev.get('root') == str(root):
+            source = root / str(prev.get('to', ''))
+        elif row.get('_path'):
+            source = Path(row['_path'])
+        reachable = (source is not None and root is not None and folder_rel is not None
+                     and _inside(root, source) and not os.path.islink(source) and os.path.lexists(source))
+        if not reachable:
+            decisions[key] = {'action': 'hide', 'at': now, **({'prev': prev} if prev else {})}
+            return {'key': key, 'ok': True, 'hidden': True}
+        action = 'trash'
+    elif row.get('status') != 'needs_review':
         return {'key': key, 'ok': False, 'error': 'already_sorted'}
     if action == 'keep':
         decisions[key] = {'action': 'keep', 'at': now}
         return {'key': key, 'ok': True}
-    path = row.get('_path')
-    source = Path(path) if path else None
-    if (source is None or root is None or _root_of(path) != root or not _inside(root, source)
-            or os.path.islink(source) or not os.path.lexists(source)):
-        return {'key': key, 'ok': False, 'error': 'not_found'}
+
+    def restore():
+        if prev:
+            decisions[key] = prev
+        else:
+            decisions.pop(key, None)
+    if source is None:
+        path = row.get('_path')
+        source = Path(path) if path else None
+        if (source is None or root is None or _root_of(path) != root or not _inside(root, source)
+                or os.path.islink(source) or not os.path.lexists(source)):
+            return {'key': key, 'ok': False, 'error': 'not_found'}
     folder = root / folder_rel
     if not _inside(root, folder) or os.path.islink(folder) or not os.path.isdir(folder):
         return {'key': key, 'ok': False, 'error': 'invalid_folder'}
     if os.path.realpath(source.parent) == os.path.realpath(folder):
-        decisions[key] = {'action': 'keep', 'at': now}
+        decisions[key] = {'action': 'keep', 'at': now} if action != 'trash' else {
+            'action': 'hide', 'at': now, **({'prev': prev} if prev else {})}
         return {'key': key, 'ok': True}
     try:
         mode = os.lstat(source).st_mode
@@ -390,21 +429,22 @@ def _one(key, action, folder_rel, rows, root, decisions, now, commit) -> dict:
     for _ in range(20):
         target = _free_name(folder, source.name)
         decisions[key] = {'action': action, 'folder': folder_rel, 'from': original,
-                          'to': _relative(root, target), 'root': str(root), 'at': now}
+                          'to': _relative(root, target), 'root': str(root), 'at': now,
+                          **({'prev': prev} if prev else {})}
         try:
             commit()
         except OSError:
-            del decisions[key]
+            restore()
             raise
         try:
             _rename_noreplace(source, target)  # Same library, same disk: never a copy that could leave two.
         except FileExistsError:
             continue  # Drive put a file there just now: take the next free name.
         except OSError:
-            del decisions[key]
+            restore()
             commit()
             return {'key': key, 'ok': False, 'error': 'move_failed'}
         return {'key': key, 'ok': True, 'destination': decisions[key]['to']}
-    del decisions[key]
+    restore()
     commit()
     return {'key': key, 'ok': False, 'error': 'occupied'}
