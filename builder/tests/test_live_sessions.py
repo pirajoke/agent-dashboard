@@ -171,6 +171,11 @@ class CodexStateTests(unittest.TestCase):
                               {"type": "event_msg", "timestamp": ts(1), "payload": {"type": "task_started"}},
                               {"type": "response_item", "timestamp": ts(0.5), "payload": {"type": "function_call", "call_id": "c1"}}])
         self.assertEqual(running["state"], "working")
+        # A scheduled run's long command is not a permission question: Codex logs those as events.
+        long = self.parse([self.meta(),
+                           {"type": "event_msg", "timestamp": ts(6), "payload": {"type": "task_started"}},
+                           {"type": "response_item", "timestamp": ts(5), "payload": {"type": "function_call", "call_id": "c1"}}])
+        self.assertEqual(long["state"], "working")
 
     def test_app_title_wins_and_helpers_and_exec_runs_are_skipped(self):
         session = self.parse([self.meta(), {"type": "event_msg", "timestamp": ts(1), "payload": {"type": "user_message", "message": "x"}}],
@@ -228,6 +233,8 @@ class ProjectionTests(unittest.TestCase):
         self.assertEqual(ask_of("Всё готово к выкату. Нужно твоё подтверждение, чтобы слить PR."),
                          "Нужно твоё подтверждение, чтобы слить PR.")
         self.assertIsNone(ask_of("Тесты прошли. PR слит."))
+        self.assertIsNone(ask_of("Сейчас этим занимаются: MAIN MANAGER на Mac mini отвечает за продолжение: "
+                                 "проверяет результаты и запускает следующие разрешённые шаги."))
 
     def test_missing_folder_is_empty(self):
         self.assertEqual(projection(self.dir / "nope", NOW)["sessions"], [])

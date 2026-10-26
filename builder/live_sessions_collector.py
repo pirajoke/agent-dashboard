@@ -281,7 +281,7 @@ def parse_codex(path: Path, now: datetime, names: dict[str, str]) -> dict[str, A
                 if item == "apply_patch_approval_request":
                     approval_ask = "Разрешить правку файлов"
                 elif item == "exec_approval_request":
-                    approval_ask = tool_ask("exec", payload)
+                    approval_ask = tool_ask("exec", payload) or redact_topic(payload.get("reason"), REPLY_LIMIT)
                 else:
                     approval_ask = redact_topic(payload.get("question") or payload.get("prompt"), REPLY_LIMIT)
             elif item == "user_message":
@@ -317,7 +317,9 @@ def parse_codex(path: Path, now: datetime, names: dict[str, str]) -> dict[str, A
         last_at = moment
     if last_at is None:
         return None
-    state = "approve" if approval and last_kind != "reply" else _state(last_kind, last_at, now, bool(pending))
+    # Codex logs every permission question as its own event, so a call that is just out long is a long
+    # command (scheduled runs such as Job Radar), not a question for Mark.
+    state = "approve" if approval and last_kind != "reply" else _state(last_kind, last_at, now, False)
     return _session("codex", session_id, names.get(session_id) or topic, cwd, branch, app, started, last_at,
                     state, reply, None, ask, approval_ask if state == "approve" else None)
 
