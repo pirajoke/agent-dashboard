@@ -4220,17 +4220,26 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-sort-bar[hidden], .docxx-sort-bar [hidden] { display:none !important; }
 .docxx-sort-bar > strong { margin-right:auto; font-weight:650; }
 .docxx-sort-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.docxx-act { min-height:40px; padding:8px 14px; border:1px solid var(--mm-control-line); border-radius:10px; background:var(--mm-surface); color:var(--mm-ink); font:650 13px/1.2 'Inter', -apple-system, sans-serif; cursor:pointer; }
+.docxx-act { min-height:46px; padding:10px 18px; border:1px solid var(--mm-control-line); border-radius:12px; background:var(--mm-surface); color:var(--mm-ink); font:650 15px/1.25 'Inter', -apple-system, sans-serif; cursor:pointer; text-align:center; overflow-wrap:anywhere; }
 .docxx-act:hover { border-color:var(--mm-accent); }
 .docxx-act:disabled { opacity:.55; cursor:wait; }
 .docxx-act.is-main { background:var(--mm-accent); border-color:var(--mm-accent); color:var(--mm-background); }
+.docxx-act.is-trash { color:var(--mm-danger); }
+.docxx-act.is-trash.is-main { background:var(--mm-danger); border-color:var(--mm-danger); color:var(--mm-background); }
 .docxx-act:focus-visible, .docxx-pick:focus-visible { outline:2px solid var(--mm-accent); outline-offset:2px; }
 .docxx-sort-note { flex-basis:100%; margin:0; color:var(--mm-muted); font-size:12.5px; }
 .docxx-sort-note:empty { display:none; }
 .docxx-pick { grid-area:icon; display:grid; place-items:center; width:26px; height:26px; margin-top:2px; padding:0; border:1.5px solid var(--mm-control-line); border-radius:7px; background:var(--mm-surface); color:transparent; font:700 14px/1 'Inter', sans-serif; cursor:pointer; }
 .docxx-pick[aria-checked="true"] { background:var(--mm-accent); border-color:var(--mm-accent); color:var(--mm-background); }
-.docxx-record-todo { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; }
+.docxx-record-todo { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 16px; }
 .docxx-record-todo > span { width:100%; color:var(--mm-muted); font-size:12.5px; }
+/* Mark 2026-10-26: the buttons sit on the card itself, big enough to tap, with the Mac mini's folder guess first. */
+.docxx-record-name .docxx-record-todo { margin:14px 0 0; cursor:default; }
+.docxx-suggest { width:100%; margin:0; padding:10px 12px; border-radius:10px; background:var(--mm-selection); color:var(--mm-ink); font-size:14px; line-height:1.5; }
+.docxx-suggest[data-tone="junk"] { background:var(--mm-warning-soft); }
+.docxx-suggest[data-tone="none"] { background:transparent; padding:0; color:var(--mm-muted); }
+.docxx-suggest b { font-weight:650; }
+@media(max-width:700px) { .docxx-record-name .docxx-record-todo .docxx-act { flex:1 1 100%; } .docxx-sort-actions { width:100%; } .docxx-sort-actions .docxx-act { flex:1 1 auto; } }
 .docxx-move-list { list-style:none; margin:0; padding:0; display:grid; gap:4px; }
 .docxx-move-list button { width:100%; min-height:44px; padding:10px 12px; text-align:left; border:0; border-radius:10px; background:transparent; color:var(--mm-ink); font:500 14.5px/1.35 'Inter', -apple-system, sans-serif; cursor:pointer; overflow-wrap:anywhere; }
 .docxx-move-list button:hover, .docxx-move-list button:focus-visible { background:var(--mm-selection); outline:none; }
@@ -4850,9 +4859,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="docxx-sort-bar" id="docxx-sort-bar" hidden>
       <strong id="docxx-sort-count"></strong>
       <div class="docxx-sort-actions">
+        <button type="button" class="docxx-act is-main" id="docxx-sort-auto" hidden>Разложить по подсказкам</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-junk" hidden>Мусор в корзину</button>
         <button type="button" class="docxx-act" id="docxx-sort-all">Выбрать все</button>
         <button type="button" class="docxx-act is-main" id="docxx-sort-move" hidden>Переложить в папку…</button>
         <button type="button" class="docxx-act" id="docxx-sort-archive" hidden>В архив</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-trash" hidden>В корзину</button>
         <button type="button" class="docxx-act" id="docxx-sort-keep" hidden>Оставить как есть</button>
       </div>
       <p class="docxx-sort-note" id="docxx-sort-note" role="status" aria-live="polite"></p>
@@ -12551,14 +12563,15 @@ function ccDocxxRenderRecords() {
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
     name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',source+' · '+date));
     if(row.description) name.append(ccDocxxEl('span',row.description,'docxx-record-description'));
-    else if(row.status==='needs_review') name.append(ccDocxxEl('span','Содержимое ещё не определено.','docxx-record-description'));
+    else if(row.status==='needs_review' && !row.suggest) name.append(ccDocxxEl('span','Содержимое ещё не определено.','docxx-record-description'));
     if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Срок действия'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
+    if(row.status==='needs_review') { const todo=ccDocxxRecordActions(row); if(todo) name.append(todo); }
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(row.status==='needs_review'?ccDocxxPick(row.key,row.name):icon,name);
     const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку ↗':'Открыть документ ↗',row.url) || ccDocxxSourceLink('Открыть в Gmail ↗',row.source_url);
     if(openLink) { openLink.className='docxx-record-source'; summary.append(openLink); }
     summary.append(badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
-    const todo=ccDocxxRecordActions(row); if(todo) body.append(todo);
+    if(row.status==='sorted') body.append(ccDocxxRecordActions(row));
     const dl=ccDocxxEl('dl');
     for(const [label,value] of [['Было',row.original_name],['Теперь',row.destination],['Пояснение',row.reason]]) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
     body.append(dl);
@@ -12572,7 +12585,10 @@ function ccDocxxRenderRecords() {
 // ─── Sorting «Нужен разбор» from the site (Mark 2026-10-25) ───
 const ccDocxxSelected=new Set();
 let ccDocxxSortVisible=[], ccDocxxFolders=null, ccDocxxBusy=false, ccDocxxMoveKeys=[];
-const CC_DOCXX_ERRORS={not_found:'файл уже не на месте',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена'};
+const CC_DOCXX_ERRORS={not_found:'файл уже не на месте',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена',no_suggestion:'нет подходящей папки'};
+function ccDocxxFolderName(folder) { return folder.split('/').pop(); }
+// A guessed folder counts only while it is still one of the library's folders.
+function ccDocxxSuggested(row) { const f=row.suggest?.folder; return f && (!ccDocxxFolders || ccDocxxFolders.folders.includes(f)) ? f : null; }
 function ccDocxxPick(key,title) {
   const b=ccDocxxEl('button','✓','docxx-pick'); b.type='button'; b.setAttribute('role','checkbox');
   b.setAttribute('aria-checked',String(ccDocxxSelected.has(key))); b.setAttribute('aria-label','Выбрать: '+title);
@@ -12580,22 +12596,44 @@ function ccDocxxPick(key,title) {
   b.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); if(ccDocxxSelected.has(key)) ccDocxxSelected.delete(key); else ccDocxxSelected.add(key); b.setAttribute('aria-checked',String(ccDocxxSelected.has(key))); ccDocxxSortBar(); });
   return b;
 }
+function ccDocxxAct(label,cls,run) {
+  // These buttons live inside <summary>: a tap does the action without opening or closing the card.
+  const b=ccDocxxEl('button',label,'docxx-act'+(cls?' '+cls:'')); b.type='button'; b.disabled=ccDocxxBusy;
+  b.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); run(); });
+  return b;
+}
 function ccDocxxRecordActions(row) {
   if(row.status==='sorted') {
     const box=ccDocxxEl('div',undefined,'docxx-record-todo');
-    const back=ccDocxxEl('button',row.decision==='keep'?'Снова на разбор':'Вернуть как было','docxx-act'); back.type='button'; back.disabled=ccDocxxBusy;
-    back.addEventListener('click',()=>ccDocxxDecide('undo',[row.key]));
-    box.append(back); return box;
+    box.append(ccDocxxAct(row.decision==='keep'?'Снова на разбор':'Вернуть как было','',()=>ccDocxxDecide('undo',[row.key])));
+    return box;
   }
   if(row.status!=='needs_review') return null;
-  const box=ccDocxxEl('div',undefined,'docxx-record-todo'); box.append(ccDocxxEl('span','Что сделать с документом'));
-  const move=ccDocxxEl('button','Переложить в папку…','docxx-act is-main'); move.type='button'; move.addEventListener('click',()=>ccDocxxOpenMove([row.key]));
-  const keep=ccDocxxEl('button','Оставить как есть','docxx-act'); keep.type='button'; keep.addEventListener('click',()=>ccDocxxDecide('keep',[row.key]));
-  box.append(move);
-  if(ccDocxxFolders?.archive) { const arch=ccDocxxEl('button','В архив','docxx-act'); arch.type='button'; arch.addEventListener('click',()=>ccDocxxDecide('archive',[row.key])); box.append(arch); }
-  box.append(keep);
-  for(const b of box.querySelectorAll('button')) b.disabled=ccDocxxBusy;
+  const box=ccDocxxEl('div',undefined,'docxx-record-todo');
+  const folder=ccDocxxSuggested(row), junk=row.suggest?.junk===true, canTrash=ccDocxxFolders?.can_trash===true;
+  const why=row.suggest?.why ? ' — '+row.suggest.why : '';
+  if(folder) {
+    const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='folder';
+    hint.append('Подходит папка ',ccDocxxEl('b','«'+ccDocxxFolderName(folder)+'»'),why);
+    box.append(hint,ccDocxxAct('Положить в «'+ccDocxxFolderName(folder)+'»','is-main',()=>ccDocxxDecide('move',[row.key],folder)));
+  } else if(junk) {
+    const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='junk';
+    hint.append(ccDocxxEl('b','Похоже на мусор'),why);
+    box.append(hint);
+    if(canTrash) box.append(ccDocxxAct('В корзину','is-trash is-main',()=>ccDocxxDecide('trash',[row.key])));
+  } else if(row.suggest) {
+    const hint=ccDocxxEl('p','Подходящей папки не нашлось'+why,'docxx-suggest'); hint.dataset.tone='none'; box.append(hint);
+  }
+  box.append(ccDocxxAct(folder?'Другая папка…':'Выбрать папку…',folder||junk?'':'is-main',()=>ccDocxxOpenMove([row.key])));
+  if(ccDocxxFolders?.archive) box.append(ccDocxxAct('В архив','',()=>ccDocxxDecide('archive',[row.key])));
+  box.append(ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
+  if(canTrash && !junk) box.append(ccDocxxAct('В корзину','is-trash',()=>ccDocxxDecide('trash',[row.key])));
   return box;
+}
+function ccDocxxGuessed(kind) {
+  const keys=ccDocxxSelected.size?[...ccDocxxSelected]:ccDocxxSortVisible;
+  const rows=new Map((ccDocxxData?.records||[]).map(r=>[r.key,r]));
+  return keys.filter(k=>rows.has(k) && (kind==='junk'?rows.get(k).suggest?.junk===true:!!ccDocxxSuggested(rows.get(k))));
 }
 function ccDocxxSortBar() {
   const bar=document.getElementById('docxx-sort-bar'); const total=ccDocxxSortVisible.length, picked=ccDocxxSelected.size;
@@ -12605,6 +12643,10 @@ function ccDocxxSortBar() {
   document.getElementById('docxx-sort-move').hidden=!picked;
   document.getElementById('docxx-sort-keep').hidden=!picked;
   document.getElementById('docxx-sort-archive').hidden=!picked || !ccDocxxFolders?.archive;
+  document.getElementById('docxx-sort-trash').hidden=!picked || ccDocxxFolders?.can_trash!==true;
+  const auto=ccDocxxGuessed('folder'), junk=ccDocxxFolders?.can_trash===true?ccDocxxGuessed('junk'):[];
+  const autoButton=document.getElementById('docxx-sort-auto'); autoButton.hidden=!auto.length; autoButton.textContent='Разложить по подсказкам ('+auto.length+')';
+  const junkButton=document.getElementById('docxx-sort-junk'); junkButton.hidden=!junk.length; junkButton.textContent='Мусор в корзину ('+junk.length+')';
   for(const b of bar.querySelectorAll('button')) b.disabled=ccDocxxBusy;
 }
 async function ccDocxxLoadFolders() {
@@ -12647,7 +12689,7 @@ async function ccDocxxOpenMove(keys) {
 async function ccDocxxDecide(action,keys,folder) {
   if(ccDocxxBusy || !keys.length) return;
   ccDocxxBusy=true; ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
-  ccDocxxText('docxx-sort-note',action==='keep'?'Отмечаем…':action==='undo'?'Возвращаем…':'Перекладываем…'); ccDocxxSortBar();
+  ccDocxxText('docxx-sort-note',{keep:'Отмечаем…',undo:'Возвращаем…',trash:'Убираем в корзину…',auto:'Раскладываем по подсказкам…'}[action]||'Перекладываем…'); ccDocxxSortBar();
   let note;
   try {
     // The server takes at most 50 documents per request: send a long selection in parts.
@@ -12660,12 +12702,12 @@ async function ccDocxxDecide(action,keys,folder) {
     if(!response.ok && !data.results.length) note=response.status===401?'Нужен вход владельца.':'Не получилось. Обнови страницу и попробуй ещё раз.';
     else {
       const ok=data.results.filter(r=>r.ok), bad=data.results.filter(r=>!r.ok);
-      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было'}[action];
+      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было',trash:'В корзине',auto:'Разложено по папкам'}[action];
       note=ok.length?(keys.length===1?done+(action==='move'&&folder?': '+folder.split('/').join(' / '):'')+'.':done+': '+ok.length+'.'):'';
       if(bad.length) note+=(note?' ':'')+'Не получилось: '+bad.length+' ('+[...new Set(bad.map(r=>CC_DOCXX_ERRORS[r.error]||'ошибка'))].join(', ')+').';
       if(!response.ok) note+=(note?' ':'')+'Остальные не успели: обнови страницу и повтори.';
       for(const r of ok) ccDocxxSelected.delete(r.key);
-      if(action==='move') ccDocxxFolders=null;
+      if(['move','trash','auto'].includes(action)) ccDocxxFolders=null;
     }
   } catch { note='Нет связи с Mac mini. Попробуй ещё раз.'; }
   ccDocxxBusy=false; ccDocxxText('docxx-sort-note',note||'');
@@ -12678,6 +12720,9 @@ document.getElementById('docxx-sort-all').addEventListener('click',()=>{
 document.getElementById('docxx-sort-move').addEventListener('click',()=>ccDocxxOpenMove([...ccDocxxSelected]));
 document.getElementById('docxx-sort-archive').addEventListener('click',()=>ccDocxxDecide('archive',[...ccDocxxSelected]));
 document.getElementById('docxx-sort-keep').addEventListener('click',()=>ccDocxxDecide('keep',[...ccDocxxSelected]));
+document.getElementById('docxx-sort-trash').addEventListener('click',()=>ccDocxxDecide('trash',[...ccDocxxSelected]));
+document.getElementById('docxx-sort-auto').addEventListener('click',()=>ccDocxxDecide('auto',ccDocxxGuessed('folder')));
+document.getElementById('docxx-sort-junk').addEventListener('click',()=>ccDocxxDecide('trash',ccDocxxGuessed('junk')));
 document.getElementById('docxx-move-close').addEventListener('click',()=>document.getElementById('docxx-move-dialog').close());
 document.getElementById('docxx-move-dialog').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.close(); });
 document.getElementById('docxx-move-search').addEventListener('input',ccDocxxRenderFolders);

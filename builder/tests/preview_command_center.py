@@ -346,6 +346,18 @@ def prepare_docxx_sorting():
         "checked_at": now.isoformat(), "phase": "needs_review", "model_calls": 0,
         "catalog": {"status": "ready", "documents": 42}, "results": [],
         "drive_ingress": {"status": "idle", "pending": 0, "results": []}, "review_pending": []}))
+    # What docxx_suggest.py would answer for these three documents on the Mac mini.
+    from dashboard_builder.docxx import docxx_projection
+    from dashboard_builder.docxx_actions import suggestions_path
+    guesses = {"ticketa4_a4_24102026-115416.pdf": {"folder": "20 — France/Médiathèque", "junk": False,
+                                                   "why": "билет Médiathèque Ormesson"},
+               "scan_0042.pdf": {"folder": None, "junk": True, "why": "пустой скан без текста"},
+               "IMG_2291.jpeg": {"folder": None, "junk": False, "why": "фото без понятного содержания"}}
+    items = {row["key"]: {"name": row["name"], **guesses[row["original_name"]]}
+             for row in docxx_projection(state, owner=True)["records"] if row.get("original_name") in guesses}
+    out = suggestions_path(SERVER.HOME)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({"schema_version": 1, "items": items}, ensure_ascii=False))
 
 
 def job_mail_fixture():
