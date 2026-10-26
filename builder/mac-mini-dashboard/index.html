@@ -4383,6 +4383,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .live-pills { display: flex; flex-wrap: wrap; gap: 8px; }
 .live-pill { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; cursor: pointer; }
 .live-pill small { color: var(--mm-muted); }
+.live-pill > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
 .live-list { display: grid; border-top: 1px solid var(--mm-line); }
 .live-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 2px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--mm-line); cursor: pointer; }
 .live-row > span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
