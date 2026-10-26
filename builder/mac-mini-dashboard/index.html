@@ -3729,51 +3729,66 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .growth-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .growth-summary .mm-stat { flex: 1 1 160px; padding: 10px 12px; background: var(--mm-background); border: 0; border-radius: 10px; }
 .growth-summary .mm-stat strong { font-size: 22px; }
-.growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-.growth-card { --growth-tint: var(--mm-selection); display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
-.growth-card[data-picture="pe"] { --growth-tint: #FEF3C7; }
-.growth-card[data-picture="digital"] { --growth-tint: #DCFCE7; }
-.growth-card[data-picture="research"] { --growth-tint: #EDE9FE; }
-.growth-card[data-picture="podcast"] { --growth-tint: #FCE7F3; }
-.growth-card[data-picture="design"] { --growth-tint: #E0F2FE; }
-.growth-card[data-picture="coworking"] { --growth-tint: #FFEDD5; }
-.growth-card[data-picture="trading"] { --growth-tint: #CCFBF1; }
-.growth-card[data-picture="pmp"] { --growth-tint: #E0E7FF; }
-.growth-card[data-picture="robots"] { --growth-tint: #FEE2E2; }
-.growth-card[data-picture="agents"] { --growth-tint: #ECFCCB; }
-:root[data-theme="dark"] .growth-card { --growth-tint: rgba(255,255,255,.06) !important; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .growth-card { --growth-tint: rgba(255,255,255,.06) !important; } }
-.growth-art { position: relative; display: grid; place-items: center; height: 150px; background: var(--growth-tint); }
-.growth-art svg { width: 116px; height: 116px; color: var(--mm-ink); } /* outlines follow the theme: dark on light, light on dark */
+.growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; gap: 12px; }
+/* Mark 2026-10-26: compact cards like Платформы; the whole card opens a window with the steps. */
+.growth-card { --growth-tint: var(--mm-selection); display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: start; width: 100%; min-width: 0; padding: 14px 16px 14px 14px;
+  color: var(--mm-ink); font: inherit; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--shadow); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.growth-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--mm-control-line); }
+.growth-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.growth-card[data-picture="pe"], .growth-window[data-picture="pe"] { --growth-tint: #FEF3C7; }
+.growth-card[data-picture="digital"], .growth-window[data-picture="digital"] { --growth-tint: #DCFCE7; }
+.growth-card[data-picture="research"], .growth-window[data-picture="research"] { --growth-tint: #EDE9FE; }
+.growth-card[data-picture="podcast"], .growth-window[data-picture="podcast"] { --growth-tint: #FCE7F3; }
+.growth-card[data-picture="design"], .growth-window[data-picture="design"] { --growth-tint: #E0F2FE; }
+.growth-card[data-picture="coworking"], .growth-window[data-picture="coworking"] { --growth-tint: #FFEDD5; }
+.growth-card[data-picture="trading"], .growth-window[data-picture="trading"] { --growth-tint: #CCFBF1; }
+.growth-card[data-picture="pmp"], .growth-window[data-picture="pmp"] { --growth-tint: #E0E7FF; }
+.growth-card[data-picture="robots"], .growth-window[data-picture="robots"] { --growth-tint: #FEE2E2; }
+.growth-card[data-picture="agents"], .growth-window[data-picture="agents"] { --growth-tint: #ECFCCB; }
+:root[data-theme="dark"] :is(.growth-card, .growth-window) { --growth-tint: rgba(255,255,255,.06) !important; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(.growth-card, .growth-window) { --growth-tint: rgba(255,255,255,.06) !important; } }
+.growth-icon { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 12px; background: var(--growth-tint); }
+.growth-icon svg { width: 52px; height: 52px; color: var(--mm-ink); transition: transform .25s ease; } /* outlines follow the theme: dark on light, light on dark */
+.growth-card:hover .growth-icon svg { transform: translateY(-3px) rotate(-3deg); }
+.growth-card-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.growth-tag { color: var(--mm-muted); font-size: 10px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; }
+.growth-card.is-done .growth-tag { color: var(--mm-success); }
+.growth-title { margin: 0; color: var(--mm-ink); font-size: 16px; font-weight: 750; line-height: 1.3; }
+.growth-card .growth-why { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 13px; }
+.growth-bar { display: block; height: 4px; margin-top: 6px; border-radius: 999px; background: var(--mm-line); overflow: hidden; }
+.growth-bar span { display: block; height: 100%; width: calc(var(--p) * 1%); border-radius: inherit; background: var(--mm-accent); }
+.growth-card.is-done .growth-bar span { background: var(--mm-success); }
+.growth-why { margin: 0; color: var(--mm-muted); font-size: 13.5px; line-height: 1.5; }
+/* The window: picture band, why, the step list with ticks, ✕ and «+ Шаг». */
+.platform-archive-dialog.growth-window { width: min(560px, calc(100vw - 32px)); }
+.growth-window .platform-archive-close { margin-left: auto; }
+.growth-window-art { position: relative; display: grid; place-items: center; height: 132px; margin: -16px -16px 16px; background: var(--growth-tint); }
+.growth-window-art svg { width: 104px; height: 104px; color: var(--mm-ink); }
 .growth-ring { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%;
   background: conic-gradient(var(--mm-accent) calc(var(--p) * 1%), var(--mm-line) 0); }
 .growth-ring span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--mm-surface); color: var(--mm-ink); font-size: 12.5px; font-weight: 700; }
-.growth-body { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px 18px; }
-.growth-title { margin: 0; color: var(--mm-ink); font-size: 17px; font-weight: 700; line-height: 1.3; }
-.growth-why { margin: 0; color: var(--mm-muted); font-size: 13.5px; line-height: 1.5; }
-.growth-meta { display: flex; flex-wrap: wrap; gap: 6px; }
-.growth-chip { padding: 3px 9px; border-radius: 999px; background: var(--mm-selection); color: var(--mm-ink); font-size: 12px; font-weight: 600; }
-.growth-chip.is-muted { color: var(--mm-muted); font-weight: 500; }
-.growth-steps { display: grid; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
-.growth-steps li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; }
-.growth-steps li::before { content: ""; width: 14px; height: 14px; margin-top: 2px; border: 1.6px solid var(--mm-control-line); border-radius: 4px; }
+.growth-steps { display: grid; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+.growth-steps li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; color: var(--mm-ink); font-size: 14px; line-height: 1.45; }
+.growth-steps li::before { content: ""; width: 14px; height: 14px; margin-top: 3px; border: 1.6px solid var(--mm-control-line); border-radius: 4px; }
 .growth-steps li.is-done { color: var(--mm-muted); text-decoration: line-through; }
 .growth-steps li.is-done::before { background: var(--mm-success); border-color: var(--mm-success); }
-/* Editable steps for the owner (Mark 2026-10-22): the whole row ticks, × removes. */
+/* Owner view: the box is a button that ticks the step in the Obsidian note; ✕ removes it. */
 .growth-steps li.is-editable { display: flex; align-items: flex-start; gap: 4px; }
 .growth-steps li.is-editable::before { content: none; }
-.growth-step-toggle { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; flex: 1; min-width: 0; padding: 2px 0; color: inherit; font: inherit; text-align: left; text-decoration: inherit; background: none; border: 0; cursor: pointer; }
-.growth-step-toggle::before { content: ""; width: 14px; height: 14px; margin-top: 2px; border: 1.6px solid var(--mm-control-line); border-radius: 4px; }
+.growth-step-toggle { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; flex: 1; min-width: 0; padding: 6px 0; color: inherit; font: inherit; text-align: left; text-decoration: inherit; background: none; border: 0; cursor: pointer; }
+.growth-step-toggle::before { content: ""; width: 14px; height: 14px; margin-top: 3px; border: 1.6px solid var(--mm-control-line); border-radius: 4px; }
 .growth-steps li.is-done .growth-step-toggle::before { background: var(--mm-success); border-color: var(--mm-success); }
 .growth-step-toggle:hover::before { border-color: var(--mm-success); }
-.growth-step-delete { flex: none; width: 26px; height: 26px; padding: 0; color: var(--mm-muted); font-size: 14px; background: none; border: 0; border-radius: 8px; cursor: pointer; opacity: .35; }
+.growth-step-delete { flex: none; width: 32px; height: 32px; padding: 0; color: var(--mm-muted); font-size: 14px; background: none; border: 0; border-radius: 8px; cursor: pointer; opacity: .45; }
 .growth-steps li:hover .growth-step-delete, .growth-step-delete:focus-visible { opacity: 1; }
+@media (hover: none) { .growth-step-delete { opacity: .7; } }
 .growth-step-delete:hover { color: var(--mm-danger); background: var(--mm-danger-soft); }
 .growth-step-toggle:focus-visible, .growth-step-delete:focus-visible, .growth-add-step:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.growth-add-step { align-self: flex-start; margin-top: 8px; padding: 4px 0; color: var(--mm-accent); font: inherit; font-size: 13px; font-weight: 650; background: none; border: 0; cursor: pointer; }
+.growth-add-step { align-self: flex-start; margin-top: 10px; padding: 8px 0; color: var(--mm-accent); font: inherit; font-size: 14px; font-weight: 650; background: none; border: 0; cursor: pointer; }
 .growth-steps li.is-busy { opacity: .5; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .growth-card, .growth-icon svg { transition: none; } .growth-card:hover { transform: none; } .growth-card:hover .growth-icon svg { transform: none; } }
 .growth-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-line); border-radius: 14px; }
-@media (max-width: 760px) { .growth-grid { grid-template-columns: 1fr; } .growth-art { height: 120px; } .growth-art svg { width: 92px; height: 92px; } }
+@media (max-width: 600px) { .platform-archive-dialog.growth-window { width: 100vw; } .growth-window-art { height: 112px; margin: -12px -12px 14px; } .growth-window-art svg { width: 88px; height: 88px; } }
 
 /* Materials have natural height; other cards and rows are not forced to match. */
 .platform-resources { grid-column: 1 / -1; min-width: 0; padding: 0 16px; border-top: 1px solid var(--mm-line); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
@@ -5308,6 +5323,15 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           <button type="button" id="growth-edit-cancel">Отмена</button>
         </div>
       </form>
+    </dialog>
+    <!-- Mark 2026-10-26: «сделай просто также как платформы чтобы я мог развернуть и увидеть список дел». -->
+    <dialog class="platform-archive-dialog growth-window" id="growth-area-dialog" aria-labelledby="growth-area-title">
+      <header class="platform-archive-head">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-growth"/></svg>
+        <h3 id="growth-area-title">Точка роста</h3>
+        <button class="platform-archive-close" id="growth-area-close" type="button" aria-label="Закрыть">✕</button>
+      </header>
+      <div class="platform-archive-body" id="growth-area-body"></div>
     </dialog>
     <p class="mm-notice" id="growth-state" role="status" aria-live="polite">Загружаю точки роста…</p>
     <div class="growth-summary" id="growth-summary"></div>
@@ -10594,6 +10618,7 @@ let growthLoading = false;
 let growthData = null;
 let growthCanEdit = false;
 let growthEditTarget = null;  // {kind: 'step', area} or {kind: 'area'}
+let growthOpenArea = null;  // id of the area shown in the window
 
 function growthErrorText(error) {
   if (error === 'note_changed') return 'Заметку только что поменяли в Obsidian. Обновил список, попробуйте ещё раз.';
@@ -10643,13 +10668,73 @@ function closeGrowthEdit() {
   else dialog.removeAttribute('open');
 }
 
+function growthPicture(area) {
+  return GROWTH_PICTURES.includes(area.picture) ? area.picture : 'growth';
+}
+
+function growthPercent(area) {
+  return area.progress.total ? Math.round(area.progress.done / area.progress.total * 100) : 0;
+}
+
+function renderGrowthWindow() {
+  const dialog = document.getElementById('growth-area-dialog');
+  const area = growthData?.areas?.find(item => item.id === growthOpenArea);
+  if (!area) { if (dialog.open) dialog.close(); return; }
+  const picture = growthPicture(area);
+  const total = area.progress.total;
+  dialog.dataset.picture = picture;
+  dialog.dataset.growthArea = area.id;
+  document.getElementById('growth-area-title').textContent = area.title;
+  // No steps, no denominator: no ring and no «0%», just the state.
+  const ring = total
+    ? `<div class="growth-ring" style="--p:${growthPercent(area)}" role="img" aria-label="Сделано ${area.progress.done} из ${total} шагов"><span>${growthPercent(area)}%</span></div>`
+    : '';
+  const steps = area.steps.length
+    ? `<ul class="growth-steps">${area.steps.map((step, index) => growthCanEdit
+      ? `<li class="is-editable${step.done ? ' is-done' : ''}"><button type="button" class="growth-step-toggle" data-growth-toggle="${index}" aria-pressed="${step.done}">${mmEsc(step.text)}</button><button type="button" class="growth-step-delete" data-growth-delete="${index}" aria-label="Удалить шаг: ${mmEsc(step.text)}">✕</button></li>`
+      : `<li class="${step.done ? 'is-done' : ''}">${mmEsc(step.text)}</li>`).join('')}</ul>`
+    : `<p class="growth-why">${growthCanEdit ? 'Шагов пока нет. Добавьте первый, чтобы видеть прогресс.' : 'Добавьте шаги в заметку, чтобы видеть прогресс.'}</p>`;
+  document.getElementById('growth-area-body').innerHTML = `
+    <div class="growth-window-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-growth-${picture}"/></svg>${ring}</div>
+    ${area.why ? `<p class="growth-why">${mmEsc(area.why)}</p>` : ''}
+    ${steps}
+    ${growthCanEdit ? '<button type="button" class="growth-add-step" data-growth-add-step>+ Шаг</button>' : ''}`;
+}
+
+function openGrowthWindow(id) {
+  const dialog = document.getElementById('growth-area-dialog');
+  growthOpenArea = id;
+  renderGrowthWindow();
+  if (!dialog.open) {
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  }
+}
+
+function closeGrowthWindow() {
+  const dialog = document.getElementById('growth-area-dialog');
+  if (dialog.open) dialog.close();
+  else dialog.removeAttribute('open');
+}
+
 function initGrowthEditing() {
   const grid = document.getElementById('growth-grid');
   const state = document.getElementById('growth-state');
-  grid.addEventListener('click', async event => {
+  const areaDialog = document.getElementById('growth-area-dialog');
+  grid.addEventListener('click', event => {
+    const card = event.target.closest('[data-growth-open]');
+    if (card) openGrowthWindow(card.dataset.growthOpen);
+  });
+  areaDialog.addEventListener('close', () => {
+    const card = [...grid.querySelectorAll('[data-growth-open]')].find(item => item.dataset.growthOpen === growthOpenArea);
+    growthOpenArea = null;
+    card?.focus();
+  });
+  areaDialog.addEventListener('click', event => { if (event.target === areaDialog) closeGrowthWindow(); });
+  document.getElementById('growth-area-close').addEventListener('click', closeGrowthWindow);
+  document.getElementById('growth-area-body').addEventListener('click', async event => {
     if (!growthCanEdit) return;
-    const card = event.target.closest('[data-growth-area]');
-    const area = card && growthData?.areas?.find(item => item.id === card.dataset.growthArea);
+    const area = growthData?.areas?.find(item => item.id === growthOpenArea);
     if (!area) return;
     if (event.target.closest('[data-growth-add-step]')) return openGrowthEdit({kind: 'step', area: area.id});
     const toggle = event.target.closest('[data-growth-toggle]');
@@ -10770,28 +10855,22 @@ function renderGrowth(data) {
     return;
   }
   grid.innerHTML = areas.map(area => {
-    const picture = GROWTH_PICTURES.includes(area.picture) ? area.picture : 'growth';
-    const total = area.progress.total;
-    // No steps, no denominator: no ring and no «0%», just the state.
-    const ring = total
-      ? `<div class="growth-ring" style="--p:${Math.round(area.progress.done / total * 100)}" role="img" aria-label="Сделано ${area.progress.done} из ${total} шагов"><span>${Math.round(area.progress.done / total * 100)}%</span></div>`
-      : '';
-    const steps = area.steps.length
-      ? `<ul class="growth-steps">${area.steps.map((step, index) => growthCanEdit
-        ? `<li class="is-editable${step.done ? ' is-done' : ''}"><button type="button" class="growth-step-toggle" data-growth-toggle="${index}" aria-pressed="${step.done}">${mmEsc(step.text)}</button><button type="button" class="growth-step-delete" data-growth-delete="${index}" aria-label="Удалить шаг: ${mmEsc(step.text)}">✕</button></li>`
-        : `<li class="${step.done ? 'is-done' : ''}">${mmEsc(step.text)}</li>`).join('')}</ul>`
-      : `<p class="growth-why">${growthCanEdit ? 'Шагов пока нет. Добавьте первый, чтобы видеть прогресс.' : 'Добавьте шаги в заметку, чтобы видеть прогресс.'}</p>`;
-    return `<article class="growth-card" data-picture="${picture}" data-growth-area="${mmEsc(area.id)}">
-      <div class="growth-art"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-growth-${picture}"/></svg>
-        ${ring}</div>
-      <div class="growth-body">
-        <h3 class="growth-title">${mmEsc(area.title)}</h3>
-        ${area.why ? `<p class="growth-why">${mmEsc(area.why)}</p>` : ''}
-        ${steps}
-        ${growthCanEdit ? '<button type="button" class="growth-add-step" data-growth-add-step>+ Шаг</button>' : ''}
-      </div>
-    </article>`;
+    const picture = growthPicture(area);
+    const {done, total} = area.progress;
+    const tag = !total ? 'Шагов пока нет' : done === total ? 'Готово' : `${done} из ${total} шагов`;
+    const bar = total ? `<span class="growth-bar" aria-hidden="true"><span style="--p:${growthPercent(area)}"></span></span>` : '';
+    return `<button type="button" class="growth-card${total && done === total ? ' is-done' : ''}" data-picture="${picture}" data-growth-open="${mmEsc(area.id)}" aria-haspopup="dialog" aria-controls="growth-area-dialog">
+      <span class="growth-icon" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-growth-${picture}"/></svg></span>
+      <span class="growth-card-text">
+        <span class="growth-tag">${tag}</span>
+        <span class="growth-title">${mmEsc(area.title)}</span>
+        ${area.why ? `<span class="growth-why">${mmEsc(area.why)}</span>` : ''}
+        ${bar}
+      </span>
+    </button>`;
   }).join('');
+  // An edit re-renders the open window too, so ticks and new steps show at once.
+  if (growthOpenArea) renderGrowthWindow();
 }
 
 // ── MAIN MANAGER ──
