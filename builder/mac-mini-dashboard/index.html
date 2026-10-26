@@ -11328,12 +11328,15 @@ function renderMap(data) {
   mmRenderToday(data.owner_view ? series[series.length - 1] : null, prsToMerge);
   mmRenderWeek(data);
   mmRenderSummary(data);
+  mmOthers = [];
   if (!data.owner_view) {
     host.innerHTML = '<p class="mm-empty mm-wide">Карточки проектов видны только владельцу.</p>';
+    mmSyncOthers();
     return;
   }
   if (!projects.length) {
     host.innerHTML = `<p class="mm-empty mm-wide">${data.state === 'empty' ? 'Сборщик работы ещё не присылал данные с компьютеров.' : 'За 30 дней работы по проектам не было.'}</p>`;
+    mmSyncOthers();
     return;
   }
   const today = series[series.length - 1]?.date;
@@ -11343,6 +11346,19 @@ function renderMap(data) {
     ? `<button type="button" class="mm-tile mm-more-tile" data-mm-others aria-haspopup="dialog" aria-controls="mm-others-dialog">+ ещё ${others.length} ${mmPlural(others.length, 'папка', 'папки', 'папок')}</button>` : '';
   host.innerHTML = active.map(p => mmMapCard(p, todoById[p.id], today)).join('')
     + paused.map(p => mmMapCard(p, null, today, true)).join('') + more;
+  mmSyncOthers();
+}
+
+// An open folders window follows each refresh; with no rows (owner access lost) it closes and empties.
+function mmSyncOthers() {
+  const dialog = document.getElementById('mm-others-dialog');
+  const body = document.getElementById('mm-others-body');
+  if (dialog?.open && mmOthers.length) {
+    body.innerHTML = mmOthers.join('');
+    return;
+  }
+  body?.replaceChildren();
+  if (dialog?.open) dialog.close();
 }
 
 // ─── «Сводка» (Mark 2026-10-23) ───
