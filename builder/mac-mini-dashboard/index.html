@@ -4405,79 +4405,73 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .live-note { color: var(--mm-muted); font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { .live-card { transition: none; } .live-card:hover { transform: none; } .live-card[data-state="working"] .live-dot { animation: none; } }
 
-/* ═══ MAIN MANAGER home (Mark 2026-10-26: «пересобери полностью, красивый дизайн с нуля») ═══
-   One grid of tiles: the week and «Ждёт тебя» are the two big ones, then a tile per project. */
-.mm-os .mm-home { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 16px; }
+/* ═══ MAIN MANAGER home (Mark 2026-10-26: «пересобери полностью»; he picked variant A «Сегодня») ═══
+   One calm column: «Ждёт тебя», three numbers for the week, then the projects as rows in one card. */
+.mm-os .mm-home { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; max-width: 1040px; }
 .mm-os .mm-home [hidden], .mm-os .mm-home[hidden] { display: none !important; }
-.mm-os .mm-home > .mm-view, .mm-os .mm-home #mm-map, .mm-os .mm-home #mm-owner-projects { display: contents; }
-.mm-os .mm-home .mm-wide { grid-column: 1 / -1; }
 .mm-os[data-mm-view="project"] .mm-home { display: none; }
-.mm-os .mm-tile, .mm-os .mm-home a.mm-map-card, .mm-os .mm-todo-slot {
-  display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 168px; margin: 0; padding: 20px;
-  color: var(--mm-ink); font: inherit; text-align: left; text-decoration: none;
-  background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 22px; box-shadow: var(--mm-shadow-soft);
-  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
-.mm-os .mm-home a.mm-map-card:hover, .mm-os button.mm-tile:hover { text-decoration: none; border-color: var(--mm-control-line); box-shadow: var(--mm-shadow); transform: translateY(-2px); }
-.mm-os .mm-home a.mm-map-card:focus-visible, .mm-os button.mm-tile:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 3px; }
-/* The week: big number, two small ones, seven bars. */
-.mm-os .mm-home button.mm-tile { align-items: stretch; justify-content: flex-start; }
-.mm-os .mm-home button.mm-tile > .mm-project-art { align-self: flex-start; }
-.mm-os button.mm-week { grid-column: span 2; grid-row: span 2; min-height: 340px; cursor: pointer; color: #fff; background: var(--mm-accent); border-color: transparent; }
-.mm-os button.mm-week * { color: inherit; }
-.mm-os button.mm-week:hover { border-color: transparent; }
-.mm-week-label { font-size: 15px; font-weight: 600; opacity: .85; }
-.mm-week-big { font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -.035em; }
-.mm-week-nums { display: flex; flex-wrap: wrap; gap: 8px 32px; font-size: 14.5px; opacity: .95; }
-.mm-week-nums b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
-.mm-week-bars { display: grid; grid-template-columns: repeat(7, 1fr); align-items: end; gap: 8px; height: 104px; margin-top: auto; }
-.mm-week-bars span { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; gap: 6px; height: 100%; font-size: 11.5px; font-weight: 650; text-align: center; opacity: .9; }
-.mm-week-bars i { display: block; width: 100%; min-height: 4px; background: rgb(255 255 255 / .38); border-radius: 7px 7px 3px 3px; }
-.mm-week-bars span.is-today i { background: #fff; }
-.mm-week-more { align-self: flex-start; font-size: 14px; font-weight: 650; opacity: .9; }
+.mm-home-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+.mm-os .mm-home-label { display: flex; align-items: baseline; gap: 8px; margin: 0; color: var(--mm-muted); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.mm-home-label span { color: var(--mm-accent); }
+.mm-home-label.mm-home-head { justify-content: flex-start; }
+.mm-os .mm-home-link { min-height: 32px; padding: 4px 2px; color: var(--mm-accent); font: inherit; font-size: 14px; font-weight: 650; background: none !important; border: 0 !important; cursor: pointer; }
+.mm-os .mm-home-link:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; border-radius: 6px; }
+.mm-home-card { overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); }
 /* «Ждёт тебя». */
-.mm-os .mm-todo-slot { grid-column: span 2; grid-row: span 2; min-height: 340px; }
-.mm-todo-slot .mm-todo-card { display: flex; flex-direction: column; flex: 1; gap: 6px; margin: 0; padding: 0; background: none; border: 0; box-shadow: none; }
-.mm-todo-tile-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 4px; font-size: 24px; font-weight: 800; letter-spacing: -.02em; }
-.mm-todo-tile-head span { color: var(--mm-muted); font-weight: 700; }
+.mm-todo-slot .mm-todo-card { margin: 0; padding: 6px 20px 14px; border-radius: 20px; box-shadow: var(--mm-shadow-soft); }
 .mm-todo-slot .mm-todo-items { margin: 0; }
-.mm-todo-slot .mm-todo-foot { margin-top: auto; padding-top: 8px; }
-/* Project tiles. */
-.mm-os .mm-home a.mm-map-card { gap: 8px; }
-.mm-home :is(.mm-map-card, .mm-owner-tile) .mm-project-art { width: 56px; height: 56px; border-radius: 16px; }
-.mm-home :is(.mm-map-card, .mm-owner-tile) .mm-project-art svg { width: 50px; height: 50px; }
-.mm-home :is(.mm-map-card, .mm-owner-tile) .mm-art-initials { width: 40px; height: 40px; border-radius: 12px; font-size: 14px; }
-.mm-tile-name { margin-top: 6px; font-size: 17px; font-weight: 750; line-height: 1.25; letter-spacing: -.01em; }
-.mm-tile-text { display: -webkit-box; overflow: hidden; color: var(--mm-muted); font-size: 14.5px; line-height: 1.45; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-.mm-tile-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: auto; padding-top: 4px; color: var(--mm-muted); font-size: 13px; }
-.mm-tile-foot i { flex: none; width: 8px; height: 8px; background: var(--mm-control-line); border-radius: 50%; }
-.mm-tile-foot i.is-today { background: var(--mm-success); box-shadow: 0 0 0 3px var(--mm-success-soft); }
-.mm-tile-foot i.is-week { background: var(--mm-accent); }
-.mm-os .mm-home a.mm-map-card.is-paused { background: transparent; box-shadow: none; }
-.mm-os .mm-home a.mm-map-card.is-paused .mm-project-art { opacity: .7; }
-.mm-os .mm-home button.mm-tile.mm-more-tile { align-items: center; justify-content: center; cursor: pointer; color: var(--mm-muted); font-size: 15px; font-weight: 650; background: transparent; border-style: dashed; box-shadow: none; }
-.mm-os .mm-home button.mm-tile.mm-owner-tile { cursor: pointer; }
-.mm-owner-tile .mm-tile-kicker { color: var(--mm-violet); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.mm-home .mm-empty { grid-column: 1 / -1; }
-/* «Сводка» now lives in its window. */
+.mm-todo-slot .mm-todo-foot { padding-top: 10px; }
+/* The week: one thin line of three numbers; a click opens «Сводка». */
+.mm-week-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-height: 52px; padding: 8px 18px; color: var(--mm-muted); font-size: 14.5px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; cursor: pointer; }
+.mm-week-strip:hover { border-color: var(--mm-control-line); }
+.mm-week-strip b { color: var(--mm-ink); font-size: 17px; font-weight: 800; }
+.mm-os .mm-week-strip .mm-home-link { margin-left: auto; }
+/* Long notes and agent answers in «Ждёт тебя» stay one line until clicked. */
+.mm-todo-slot .mm-todo-body small, .mm-todo-slot .mm-todo-agent-note:not(.is-open) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mm-todo-slot .mm-todo-agent-note { cursor: pointer; }
+.mm-todo-slot .mm-todo-item, .mm-todo-slot .mm-todo-main, .mm-todo-slot .mm-todo-body { min-width: 0; }
+.mm-todo-slot .mm-todo-main { flex: 1; overflow: hidden; }
+.mm-todo-slot .mm-todo-body { max-width: 100%; }
+/* Projects and «Личное»: one row each, the whole row opens it. */
+.mm-os a.mm-map-card, .mm-os button.mm-row { display: flex; flex-direction: row; align-items: center; gap: 16px; width: 100%; min-height: 76px; margin: 0; padding: 14px 20px; color: var(--mm-ink); font: inherit; text-align: left; text-decoration: none; background: none !important; border: 0 !important; border-top: 1px solid var(--mm-line) !important; border-radius: 0; box-shadow: none; cursor: pointer; }
+.mm-home-card > :first-child { border-top: 0 !important; }
+.mm-os a.mm-map-card:hover, .mm-os button.mm-row:hover { text-decoration: none; background: var(--mm-surface-hover) !important; box-shadow: none; transform: none; }
+.mm-os a.mm-map-card:focus-visible, .mm-os button.mm-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -2px; }
+.mm-home .mm-project-art { flex: none; width: 48px; height: 48px; border-radius: 14px; }
+.mm-home .mm-project-art svg { width: 44px; height: 44px; }
+.mm-home .mm-art-initials { width: 34px; height: 34px; border-radius: 10px; font-size: 12px; }
+.mm-row-text { display: grid; flex: 1; gap: 3px; min-width: 0; }
+.mm-row-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 17px; font-weight: 700; line-height: 1.3; }
+.mm-row-name .mm-chip { font-size: 12.5px; }
+.mm-row-desc { overflow: hidden; color: var(--mm-muted); font-size: 15px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+.mm-row-when { display: inline-flex; flex: none; align-items: center; gap: 7px; color: var(--mm-muted); font-size: 13px; white-space: nowrap; }
+.mm-row-when i { width: 8px; height: 8px; background: var(--mm-control-line); border-radius: 50%; }
+.mm-row-when i.is-today { background: var(--mm-success); }
+.mm-row-when i.is-week { background: var(--mm-accent); }
+.mm-row-go { flex: none; color: var(--mm-control-line); font-size: 22px; line-height: 1; }
+.mm-os a.mm-map-card.is-paused .mm-project-art, .mm-os a.mm-map-card.is-paused .mm-row-name { opacity: .6; }
+.mm-os button.mm-more-row { min-height: 56px; color: var(--mm-muted); font-size: 15px; font-weight: 650; }
+.mm-os button.mm-more-row .mm-row-text { color: inherit; }
+/* «Сводка» and the small folders live in windows. */
 .mm-summary-dialog { width: min(760px, calc(100vw - 32px)); }
 .mm-summary-dialog .mm-summary { margin: 0; padding: 0; background: none; border: 0; }
 #mm-others-dialog { width: min(720px, calc(100vw - 32px)); }
-@media (max-width: 1100px) {
-  .mm-os .mm-home { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mm-os button.mm-week, .mm-os .mm-todo-slot { grid-row: auto; min-height: 0; }
-}
 @media (max-width: 600px) {
-  .mm-os .mm-home { gap: 12px; }
-  .mm-os .mm-tile, .mm-os .mm-home a.mm-map-card, .mm-os .mm-todo-slot { min-height: 0; padding: 16px; border-radius: 20px; }
-  .mm-week-big { font-size: 52px; }
-  .mm-week-bars { height: 84px; }
-  .mm-tile-name { font-size: 16px; }
-  .mm-tile-text { font-size: 14px; -webkit-line-clamp: 4; }
-  .mm-home :is(.mm-map-card, .mm-owner-tile) .mm-project-art { width: 48px; height: 48px; border-radius: 14px; }
-  .mm-home :is(.mm-map-card, .mm-owner-tile) .mm-project-art svg { width: 42px; height: 42px; }
+  .mm-os .mm-home { gap: 28px; }
+  .mm-todo-slot .mm-todo-card { padding: 4px 16px 12px; }
+  .mm-week-strip { gap: 4px 14px; padding: 8px 14px; font-size: 13.5px; }
+  .mm-week-strip b { font-size: 15.5px; }
+  .mm-week-strip { gap: 4px 12px; }
+  .mm-week-more-word { display: none; }
+  .mm-os .mm-week-strip .mm-home-link { font-size: 22px; }
+  .mm-week-strip .mm-home-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .mm-os a.mm-map-card, .mm-os button.mm-row { gap: 12px; padding: 14px 16px; }
+  .mm-row-name { font-size: 16px; }
+  .mm-row-desc { font-size: 14px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .mm-row-when { display: none; }
+  .mm-home .mm-project-art { width: 42px; height: 42px; border-radius: 12px; }
+  .mm-home .mm-project-art svg { width: 38px; height: 38px; }
 }
-@media (max-width: 360px) { .mm-os .mm-home { grid-template-columns: minmax(0, 1fr); } .mm-os button.mm-week, .mm-os .mm-todo-slot { grid-column: auto; } }
-@media (prefers-reduced-motion: reduce) { .mm-os .mm-tile, .mm-os .mm-home a.mm-map-card { transition: none; } .mm-os .mm-home a.mm-map-card:hover, .mm-os button.mm-tile:hover { transform: none; } }
 </style>
 </head>
 <body>
@@ -5337,8 +5331,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
            big tiles, then a tile per project; «Личное» and the small folders are tiles too.
            The week tile opens «Сводка» in a window. -->
       <div class="mm-home" id="mm-home">
-        <button type="button" class="mm-tile mm-week" id="mm-week" aria-haspopup="dialog" aria-controls="mm-summary-dialog" hidden></button>
         <div class="mm-todo-slot" id="mm-owner-todo" hidden></div>
+        <section class="mm-week" id="mm-week" aria-labelledby="mm-week-title" hidden></section>
         <div class="mm-view" data-mm-panel="map">
           <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
         </div>
@@ -11261,7 +11255,7 @@ function mmInit() {
   const closeDialog = dialog => { if (typeof dialog.close === 'function') dialog.close(); else dialog.removeAttribute('open'); };
   const summary = document.getElementById('mm-summary-dialog');
   const others = document.getElementById('mm-others-dialog');
-  document.getElementById('mm-week').addEventListener('click', () => openDialog(summary));
+  document.getElementById('mm-week').addEventListener('click', event => { if (event.target.closest('[data-mm-summary]')) openDialog(summary); });
   document.getElementById('mm-summary-close').addEventListener('click', () => closeDialog(summary));
   document.getElementById('mm-others-close').addEventListener('click', () => closeDialog(others));
   [summary, others].forEach(dialog => dialog.addEventListener('click', event => { if (event.target === dialog) closeDialog(dialog); }));
@@ -11508,9 +11502,9 @@ function mmMapCard(p, todo, today, paused = false) {
   const text = p.last_summary?.bullets?.[0] || p.description || '';
   const attention = paused ? '' : mmAttention(todo, today);
   return `<a class="mm-map-card${paused ? ' is-paused' : ''}" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${paused ? 'на паузе' : when}`)}">
-    ${mmArt(p)}<span class="mm-tile-name">${mmEsc(p.name)}</span>
-    ${text ? `<span class="mm-tile-text">${mmEsc(text)}</span>` : ''}
-    <span class="mm-tile-foot">${paused ? 'на паузе' : `<i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}`}${attention}</span>
+    ${mmArt(p)}<span class="mm-row-text"><span class="mm-row-name">${mmEsc(p.name)}${attention}</span>
+    ${text ? `<span class="mm-row-desc">${mmEsc(text)}</span>` : ''}</span>
+    <span class="mm-row-when">${paused ? 'на паузе' : `<i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}`}</span><span class="mm-row-go" aria-hidden="true">›</span>
   </a>`;
 }
 
@@ -11534,14 +11528,11 @@ function mmRenderWeek(data) {
   const minutes = mmSum(last7.map(day => day.total_minutes));
   const prs = mmSum(last7.map(day => day.prs_merged));
   const projects = (data.projects || []).filter(p => p.main && mmWeekMinutes(p) > 0).length;
-  const peak = Math.max(1, ...last7.map(day => day.total_minutes || 0));
-  const today = series[series.length - 1]?.date;
-  tile.innerHTML = `<span class="mm-week-label">Эта неделя</span>
-    <span class="mm-week-big">${mmEsc(minutes >= 60 ? `${Math.round(minutes / 60)} ч` : workMinutes(minutes))}</span>
-    <span class="mm-week-nums"><span><b>${prs}</b>${mmEsc(mmPlural(prs, 'изменение готово', 'изменения готово', 'изменений готово'))}</span><span><b>${projects}</b>${mmEsc(mmPlural(projects, 'проект в работе', 'проекта в работе', 'проектов в работе'))}</span></span>
-    <span class="mm-week-bars" aria-hidden="true">${last7.map(day => `<span class="${day.date === today ? 'is-today' : ''}"><i style="height:${Math.max(4, Math.round((day.total_minutes || 0) / peak * 100))}%"></i>${mmEsc(MM_WEEKDAYS[mmDate(day.date).getDay()])}</span>`).join('')}</span>
-    <span class="mm-week-more">Сводка ›</span>`;
-  tile.setAttribute('aria-label', `Эта неделя: ${workMinutes(minutes)} работы, ${prs} ${mmPlural(prs, 'изменение', 'изменения', 'изменений')} готово. Открыть сводку`);
+  const hours = minutes >= 60 ? `${Math.round(minutes / 60)} ч` : workMinutes(minutes);
+  // Mark 2026-10-26: «гигантская балда, уменьши раза в три», so the week is one thin line.
+  tile.innerHTML = `<div class="mm-week-strip" data-mm-summary><h3 class="mm-home-label" id="mm-week-title">Неделя</h3>
+    <span><b>${mmEsc(hours)}</b> работы</span><span><b>${prs}</b> ${mmEsc(mmPlural(prs, 'изменение', 'изменения', 'изменений'))}</span><span><b>${projects}</b> ${mmEsc(mmPlural(projects, 'проект', 'проекта', 'проектов'))}</span>
+    <button type="button" class="mm-home-link" data-mm-summary aria-haspopup="dialog" aria-controls="mm-summary-dialog" aria-label="Сводка"><span class="mm-week-more-word">Сводка </span>›</button></div>`;
   tile.hidden = false;
 }
 
@@ -11565,12 +11556,12 @@ function renderMap(data) {
   mmRenderSummary(data);
   mmOthers = [];
   if (!data.owner_view) {
-    host.innerHTML = '<p class="mm-empty mm-wide">Карточки проектов видны только владельцу.</p>';
+    host.innerHTML = '<p class="mm-empty">Карточки проектов видны только владельцу.</p>';
     mmSyncOthers();
     return;
   }
   if (!projects.length) {
-    host.innerHTML = `<p class="mm-empty mm-wide">${data.state === 'empty' ? 'Сборщик работы ещё не присылал данные с компьютеров.' : 'За 30 дней работы по проектам не было.'}</p>`;
+    host.innerHTML = `<p class="mm-empty">${data.state === 'empty' ? 'Сборщик работы ещё не присылал данные с компьютеров.' : 'За 30 дней работы по проектам не было.'}</p>`;
     mmSyncOthers();
     return;
   }
@@ -11578,9 +11569,9 @@ function renderMap(data) {
   const todoById = Object.fromEntries(todo.map(item => [item.id, item]));
   mmOthers = others.sort((a, b) => mmWeekMinutes(b) - mmWeekMinutes(a)).map(p => mmMapRow(p, todoById[p.id], today));
   const more = others.length
-    ? `<button type="button" class="mm-tile mm-more-tile" data-mm-others aria-haspopup="dialog" aria-controls="mm-others-dialog">+ ещё ${others.length} ${mmPlural(others.length, 'папка', 'папки', 'папок')}</button>` : '';
-  host.innerHTML = active.map(p => mmMapCard(p, todoById[p.id], today)).join('')
-    + paused.map(p => mmMapCard(p, null, today, true)).join('') + more;
+    ? `<button type="button" class="mm-row mm-more-row" data-mm-others aria-haspopup="dialog" aria-controls="mm-others-dialog"><span class="mm-row-text">+ ещё ${others.length} ${mmPlural(others.length, 'папка', 'папки', 'папок')}</span><span class="mm-row-go" aria-hidden="true">›</span></button>` : '';
+  host.innerHTML = `<h3 class="mm-home-label mm-home-head">Проекты</h3><div class="mm-home-card">${active.map(p => mmMapCard(p, todoById[p.id], today)).join('')
+    + paused.map(p => mmMapCard(p, null, today, true)).join('') + more}</div>`;
   mmSyncOthers();
 }
 
@@ -11811,18 +11802,23 @@ function mmRenderOwnerProjects(payload) {
     if (dialog?.open) dialog.close();
     return;
   }
-  // Mark 2026-10-26: each personal card is a tile on the board; the whole card opens in a window.
+  // Mark 2026-10-26: one row per personal card, like the projects; the whole card opens in a window.
+  host.appendChild(mmEl('h3', 'mm-home-label mm-home-head', 'Личное'));
+  const list = mmEl('div', 'mm-home-card');
   cards.forEach(card => {
-    const tile = mmEl('button', 'mm-tile mm-owner-tile');
-    tile.type = 'button';
-    tile.dataset.ownerOpen = card.id;
-    tile.insertAdjacentHTML('beforeend', mmArt({ id: 'other', name: card.name }));
-    tile.appendChild(mmEl('span', 'mm-tile-kicker', 'Личное'));
-    tile.appendChild(mmEl('span', 'mm-tile-name', card.name));
-    tile.appendChild(mmEl('span', 'mm-tile-text', card.status));
-    tile.setAttribute('aria-label', `Личное: ${card.name}. Открыть`);
-    host.appendChild(tile);
+    const row = mmEl('button', 'mm-row');
+    row.type = 'button';
+    row.dataset.ownerOpen = card.id;
+    row.insertAdjacentHTML('beforeend', mmArt({ id: 'other', name: card.name }));
+    const text = mmEl('span', 'mm-row-text');
+    text.appendChild(mmEl('span', 'mm-row-name', card.name));
+    text.appendChild(mmEl('span', 'mm-row-desc', card.status));
+    row.appendChild(text);
+    row.insertAdjacentHTML('beforeend', '<span class="mm-row-go" aria-hidden="true">›</span>');
+    row.setAttribute('aria-label', `Личное: ${card.name}. Открыть`);
+    list.appendChild(row);
   });
+  host.appendChild(list);
 }
 
 let mmOwnerProjectCards = [];
@@ -11939,10 +11935,10 @@ function mmRenderOwnerTodo(payload) {
   const done = mmOwnerTodoItems.filter(item => item.done);
   const card = mmEl('section', 'mm-todo-card');
   card.setAttribute('aria-labelledby', 'mm-todo-card-title');
-  const title = mmEl('h3', 'mm-todo-tile-head', 'Ждёт тебя');
+  const title = mmEl('h3', 'mm-home-label mm-home-head', 'Ждёт тебя');
   title.id = 'mm-todo-card-title';
   if (open.length) title.appendChild(mmEl('span', '', String(open.length)));
-  card.appendChild(title);
+  host.appendChild(title);
   const foldBody = card;
   const list = mmEl('ul', 'mm-todo-items');
   // Three at a time; the rest behind «Ещё N».
@@ -12119,6 +12115,8 @@ function mmAgentNote(item) {
   const agent = item.agent;
   if (!agent) return null;
   const note = mmEl('span', 'mm-todo-agent-note');
+  // On the home the answer is one line; a click shows all of it (a link inside still opens).
+  note.addEventListener('click', event => { if (!event.target.closest('a')) note.classList.toggle('is-open'); });
   if (agent.state === 'queued') {
     const runner = mmOwnerTodoRunner;
     if (runner?.state === 'error' && runner.reason === 'claude_auth_failed') note.textContent = 'Агент не может войти в Claude на Mac mini.';
