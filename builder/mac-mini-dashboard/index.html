@@ -4400,39 +4400,38 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .watch-card { transition: none; } .watch-card:hover { transform: none; } }
 /* Mark 2026-10-25: «все сессии, которые бегут, в одном месте»: Claude Code and Codex on his Macs. */
 #agents-sessions[hidden] { display: none; }
-/* Mark 2026-10-26, variant B «Решения»: a session that asks something gets a card with its question and
-   an «Открыть» button; working ones are a strip of pills, finished ones a quiet list. */
-.live-h { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 10px; font-size: 16px; font-weight: 700; }
+/* Mark 2026-10-26: «сделай так как в платформах»: every session is a card in the Платформы grid style
+   (picture tile, small status label, name, one line, a link chip); the whole card opens its window. */
+.live-h { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 12px; font-size: 16px; font-weight: 700; }
 .live-h span { color: var(--mm-muted); font-size: 14px; font-weight: 600; }
-.live-ava { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; color: #fff; font-size: 15px; font-weight: 800; border-radius: 10px; background: #d97757; }
-.live-ava[data-tool="codex"] { background: #1f1f1f; }
-.live-dot { --live-tone: #8a8172; flex: none; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--live-tone); }
-.live-dot[data-state="working"] { --live-tone: #2f9361; animation: live-pulse 1.6s ease-in-out infinite; }
-.live-dot[data-state="stopped"] { --live-tone: #b0574a; }
-@keyframes live-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live-tone) 50%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
-.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
-.live-card { --live-tone: #2f7fd1; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
-.live-card[data-state="approve"] { --live-tone: #c7801a; }
-.live-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.live-top > span { min-width: 0; }
-.live-top strong { display: block; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
-.live-top small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
-.live-ask { margin: 0; padding: 12px 14px; font-size: 15px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, var(--live-tone) 11%, var(--mm-surface)); border-radius: 4px 14px 14px 14px; }
-.live-ask em { display: block; margin-bottom: 4px; color: var(--live-tone); font-size: 12px; font-style: normal; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.live-card .live-open { margin: 0; }
-.live-pills { display: flex; flex-wrap: wrap; gap: 8px; }
-.live-pill { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; cursor: pointer; }
-.live-pill small { color: var(--mm-muted); }
-.live-pill > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
-.live-list { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--mm-line); }
-.live-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 2px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--mm-line); cursor: pointer; }
-.live-row > span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.live-row small { color: var(--mm-muted); font-size: 13px; white-space: nowrap; }
-.live-pill:hover, .live-row:hover { color: var(--mm-accent); }
-.live-pill:focus-visible, .live-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.live-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); align-items: start; gap: 12px; }
+.live-card { --live-tone: var(--mm-muted); position: relative; display: grid; grid-template-columns: 80px minmax(0, 1fr); min-width: 0; color: var(--mm-ink); text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.live-card:hover { border-color: var(--mm-control-line); box-shadow: var(--mm-shadow-soft); transform: translateY(-2px); }
+.live-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.live-card[data-state="approve"] { --live-tone: #c7801a; border-color: color-mix(in srgb, #c7801a 45%, var(--mm-line)); }
+.live-card[data-state="waiting"] { --live-tone: #2f7fd1; border-color: color-mix(in srgb, #2f7fd1 45%, var(--mm-line)); }
+.live-card[data-state="working"] { --live-tone: #2f9361; }
+.live-card[data-state="stopped"] { --live-tone: #b0574a; }
+.live-art { display: grid; place-items: center; align-self: start; height: 64px; margin: 16px 0 0 12px; color: #fff; font-size: 24px; font-weight: 800; border-radius: 12px; background: var(--mm-tint-other); }
+.live-art svg { width: 56px; height: 56px; }
+.live-art[data-tool="claude"] { color: #c4643f; background: color-mix(in srgb, #d97757 18%, var(--mm-surface)); }
+.live-art[data-tool="codex"] { color: var(--mm-ink); background: var(--mm-tint-jarvis); }
+.live-body { display: flex; flex-direction: column; min-width: 0; padding: 16px 16px 14px 12px; }
+.live-tag { display: inline-flex; align-items: center; gap: 6px; width: fit-content; margin-bottom: 6px; color: var(--live-tone); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.live-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--live-tone); }
+.live-card[data-state="working"] .live-dot { animation: live-pulse 1.6s ease-in-out infinite; }
+@keyframes live-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live-tone) 50%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
+.live-name { margin: 0; font-size: 16px; font-weight: 750; line-height: 1.3; overflow-wrap: anywhere; }
+.live-line { margin: 4px 0 0; color: var(--mm-muted); font-size: 12.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.live-card[data-state="approve"] .live-line, .live-card[data-state="waiting"] .live-line { color: var(--mm-ink); font-size: 13.5px; font-weight: 600; }
+.live-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.live-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 12px; color: var(--mm-ink); font-size: 12px; font-weight: 700; text-decoration: none; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; }
+.live-chip::after { content: '\2197'; color: var(--mm-muted); }
+.live-chip:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
 .live-empty { margin: 14px 0 0; color: var(--mm-muted); font-size: 14px; }
 .live-quiet summary.live-h { display: list-item; cursor: pointer; }
 .live-quiet summary.live-h span { margin-left: 8px; }
+@media (max-width: 520px) { .live-card { grid-template-columns: 64px minmax(0, 1fr); } .live-art { height: 48px; margin-left: 8px; font-size: 20px; } .live-art svg { width: 44px; height: 44px; } }
 .live-need-box { margin: 0 0 12px; padding: 10px 12px; font-size: 14.5px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, #c7801a 10%, var(--mm-surface)); border-radius: 12px; }
 .live-elsewhere { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
 .live-elsewhere a { color: var(--mm-accent); font-weight: 600; text-decoration: none; }
@@ -4444,8 +4443,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .live-reply { margin: 0; padding: 10px 12px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 12px; font-size: 14px; line-height: 1.5; }
 .live-command { display: block; margin-top: 4px; padding: 8px 10px; overflow-x: auto; font-size: 12.5px; white-space: nowrap; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
 .live-note { color: var(--mm-muted); font-size: 13px; }
-@media (max-width: 700px) { .live-cards { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .live-dot[data-state="working"] { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .live-card { transition: none; } .live-card:hover { transform: none; } .live-card[data-state="working"] .live-dot { animation: none; } }
 </style>
 </head>
 <body>
@@ -5616,9 +5614,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </div>
     <!-- Mark 2026-10-25: every Claude Code and Codex session open on his Macs, in one place. -->
     <section id="agents-sessions" aria-label="Сессии">
-      <p class="watch-lede">Все сессии Claude и Codex, открытые сейчас на твоих Mac. Нажми на сессию — увидишь её последний ответ и откроешь её.</p>
       <div id="live-sessions"><p class="live-empty">Загружаю сессии…</p></div>
-      <p class="live-elsewhere">Отсюда не видно чаты на сайтах и в телефоне: <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude в облаке ↗</a><a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT ↗</a><button type="button" class="cc-i" data-cc-info="live-help" aria-label="Как отвечать сессиям с телефона">i</button></p>
+      <p class="live-elsewhere"><a href="https://claude.ai/code" target="_blank" rel="noopener">Claude в облаке ↗</a><a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT ↗</a><button type="button" class="cc-i" data-cc-info="live-help" aria-label="Что здесь видно и как отвечать сессиям">i</button></p>
     </section>
     <!-- Mark 2026-10-24: «кто зачем следит, какие агенты существуют» — the same kind of 3D map as Документы. -->
     <section id="agents-watchers" aria-label="Кто за чем следит" hidden>
@@ -5987,59 +5984,61 @@ function liveAgo(value) {
   return `${hours} ч назад`;
 }
 
-function liveDot(session) {
-  const dot = mmEl('span', 'live-dot');
-  dot.dataset.state = session.state;
-  dot.setAttribute('aria-hidden', 'true');
-  return dot;
+// Projects that have a picture on Платформы show it; other sessions show the Claude or Codex mark.
+var LIVE_MASCOTS = [[/jarvis/i, 'jarvis'], [/lexi|dictionary/i, 'dictionary'], [/job/i, 'jobradar'], [/property/i, 'property'],
+  [/accountable/i, 'accountable'], [/pixel/i, 'pixel'], [/news/i, 'news'], [/health/i, 'health'], [/singularity/i, 'singularity'],
+  [/sushi/i, 'sushi'], [/agent-dashboard|command/i, 'hub']];
+var LIVE_TAGS = { approve: 'Ждёт разрешения', waiting: 'Спрашивает', working: 'Работает', done: 'Готово', stopped: 'Остановилась' };
+
+function liveArt(session) {
+  const art = mmEl('span', 'live-art');
+  art.setAttribute('aria-hidden', 'true');
+  const mascot = LIVE_MASCOTS.find(([pattern]) => pattern.test(`${session.project || ''} ${session.title || ''}`));
+  if (mascot) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 120 120');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', `#cc-mascot-${mascot[1]}`);
+    svg.appendChild(use);
+    art.appendChild(svg);
+  } else {
+    art.dataset.tool = session.tool;
+    art.textContent = session.tool === 'codex' ? '⌘' : 'C';
+  }
+  return art;
 }
 
-function liveOpenLink(session) {
-  if (!session.link) return null;
-  const link = mmEl('a', '', session.link.startsWith('https://') ? 'Открыть ↗' : 'Открыть в Codex');
-  link.href = session.link;
-  if (session.link.startsWith('https://')) { link.target = '_blank'; link.rel = 'noopener'; }
-  return link;
-}
-
-// A session that asks Mark something: its question, «Открыть» and «Подробнее».
+// One session as a Платформы-style card; the whole card opens its window, the chip opens the session.
 function liveCard(session, index) {
   const card = mmEl('article', 'live-card');
   card.dataset.state = session.state;
-  const top = mmEl('div', 'live-top');
-  const avatar = mmEl('span', 'live-ava', session.tool === 'codex' ? '⌘' : 'C');
-  avatar.dataset.tool = session.tool;
-  avatar.setAttribute('aria-hidden', 'true');
-  top.appendChild(avatar);
-  const text = mmEl('span');
-  text.appendChild(mmEl('strong', '', session.title || 'Без названия'));
-  text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine, liveAgo(session.last_at)].filter(Boolean).join(' · ')));
-  top.appendChild(text);
-  card.appendChild(top);
-  const ask = mmEl('p', 'live-ask');
-  ask.appendChild(mmEl('em', '', session.state === 'approve' ? 'Просит разрешения' : 'Спрашивает'));
-  ask.appendChild(document.createTextNode(session.need || 'Похоже, ждёт разрешения в своём окне'));
-  card.appendChild(ask);
-  const actions = mmEl('div', 'live-open');
-  const link = liveOpenLink(session);
-  if (link) actions.appendChild(link);
-  const more = mmEl('button', '', 'Подробнее');
-  more.type = 'button';
-  more.dataset.ccInfo = `live-${index}`;
-  actions.appendChild(more);
-  card.appendChild(actions);
+  card.dataset.ccInfo = `live-${index}`;
+  card.tabIndex = 0;
+  card.setAttribute('role', 'button');
+  card.addEventListener('keydown', event => {
+    if (event.target === card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); card.click(); }
+  });
+  card.appendChild(liveArt(session));
+  const body = mmEl('div', 'live-body');
+  const tag = mmEl('span', 'live-tag');
+  tag.appendChild(mmEl('span', 'live-dot'));
+  const quietAgo = session.state === 'working' ? '' : ` · ${liveAgo(session.last_at)}`;
+  tag.appendChild(document.createTextNode((session.quiet && session.state === 'waiting' ? 'Затихла' : LIVE_TAGS[session.state] || '') + quietAgo));
+  body.appendChild(tag);
+  body.appendChild(mmEl('h4', 'live-name', session.title || 'Без названия'));
+  const line = session.need || (session.state === 'approve' ? 'Похоже, ждёт разрешения в своём окне' : [session.project, session.machine].filter(Boolean).join(' · '));
+  body.appendChild(mmEl('p', 'live-line', line));
+  if (session.link) {
+    const chips = mmEl('div', 'live-chips');
+    const link = mmEl('a', 'live-chip', session.link.startsWith('https://') ? 'Открыть в Claude' : 'Открыть в Codex');
+    link.href = session.link;
+    if (session.link.startsWith('https://')) { link.target = '_blank'; link.rel = 'noopener'; }
+    link.addEventListener('click', event => event.stopPropagation());
+    chips.appendChild(link);
+    body.appendChild(chips);
+  }
+  card.appendChild(body);
   return card;
-}
-
-// A working or finished session: one line that opens its window.
-function liveLine(session, index, cls) {
-  const line = mmEl('button', cls);
-  line.type = 'button';
-  line.dataset.ccInfo = `live-${index}`;
-  line.appendChild(liveDot(session));
-  line.appendChild(mmEl('span', '', session.title || 'Без названия'));
-  line.appendChild(mmEl('small', '', cls === 'live-pill' ? session.machine || '' : liveStateText(session)));
-  return line;
 }
 
 function liveStateText(session) {
@@ -6116,31 +6115,23 @@ function liveSessionsRender(payload) {
     node.appendChild(mmEl('span', '', String(count)));
     return node;
   };
+  const grid = list => {
+    const node = mmEl('div', 'live-grid');
+    list.forEach(session => node.appendChild(liveCard(session, sessions.indexOf(session))));
+    return node;
+  };
   const waiting = sessions.filter(s => !s.quiet && (s.state === 'approve' || s.state === 'waiting'));
   const working = sessions.filter(s => s.state === 'working');
   const quiet = sessions.filter(s => s.quiet && s.state !== 'working');
-  if (waiting.length) {
-    host.appendChild(heading('Ждут тебя', waiting.length));
-    const cards = mmEl('div', 'live-cards');
-    waiting.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
-    host.appendChild(cards);
-  }
-  if (working.length) {
-    host.appendChild(heading('Работают сейчас', working.length));
-    const pills = mmEl('div', 'live-pills');
-    working.forEach(session => pills.appendChild(liveLine(session, sessions.indexOf(session), 'live-pill')));
-    host.appendChild(pills);
-  }
+  if (waiting.length) { host.appendChild(heading('Ждут тебя', waiting.length)); host.appendChild(grid(waiting)); }
+  if (working.length) { host.appendChild(heading('Работают', working.length)); host.appendChild(grid(working)); }
   if (quiet.length) {
     const fold = mmEl('details', 'live-quiet');
     fold.appendChild(heading('Готово и затихли', quiet.length, 'summary'));
-    const list = mmEl('div', 'live-list');
-    quiet.forEach(session => list.appendChild(liveLine(session, sessions.indexOf(session), 'live-row')));
-    fold.appendChild(list);
+    fold.appendChild(grid(quiet));
     host.appendChild(fold);
   }
   if (!sessions.length) host.appendChild(mmEl('p', 'live-empty', 'Сейчас ни одна сессия не открыта.'));
-  else if (!sessions.some(s => !s.quiet && s.state !== 'working')) host.prepend(mmEl('p', 'live-empty', 'Сейчас никто не ждёт тебя.'));
   const lost = (payload.machines || []).filter(machine => !machine.fresh).map(machine => machine.label);
   if (lost.length) host.appendChild(mmEl('p', 'live-empty', `Нет связи с ${lost.join(', ')}: его сессий здесь нет.`));
 }
