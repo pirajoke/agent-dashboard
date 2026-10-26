@@ -23,10 +23,11 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # changed 2026-10-20 on Mark's word (grouped list, archive), the gauges did not. Re-baselined
         # 2026-10-24 on Mark's «го» to the rebuild plan: no metadata, gauges moved behind «i», Russian labels.
         # 2026-10-26 on Mark's ask to watch memory and disk: a plain «ок / перегружена» row under each header.
+        # 2026-10-26 on Mark's «дочистить Технику»: «MacBook Pro» instead of the host name, Russian labels.
         expected = {
-            "section-mac-mini": "b15950fae61ce6d7916440de2efb111c1cac074f0fc8ec24421b63eb0f910d0a",
-            "section-air": "5a559c820d6144f67008ba67874358f3b4a8ec27379f373cf549084580b6d274",
-            "section-pro": "3b110d68de46f65d40beec30267351c1b86faa6877ecf693850d1be78ada6450",
+            "section-mac-mini": "e31627372ecea7f14d30eda0fe67f194a95cb2a0bb5e4a4b46824cea16ed9303",
+            "section-air": "22061e3e7422088d1cd99449b610e31718c8a1d824ba2313adf886d1ee90eeb8",
+            "section-pro": "789db4bfd092a4eb74263bcbbc3ea251b4c150b7fcc17b0a9e5508dd71be3897",
         }
         source = HTML.read_text()
         for identity, digest in expected.items():
@@ -37,12 +38,13 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # Re-baselined 2026-10-20 with Mark's word for the grouped service list, and 2026-10-24 on his
         # «го» to the rebuild plan (list only, no counters, Russian status words), and 2026-10-26 on his
         # ask to watch memory and disk (longer laptop timeout, «мало памяти» status, memory/disk/load words,
-        # grace period so a slow laptop does not flash «Нет связи»), and the values on those tiles.
+        # grace period so a slow laptop does not flash «Нет связи»), and the values on those tiles, and on
+        # «дочистить Технику»: plain machine names, words instead of counters, services switched off on purpose.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "609bd3707cba0f6065d8fc00ce57a67ab827c94cbdb9a3872c0f7364465be19d")
+                         "f264041c41a5cd81ceb4698c21486934e259147b1302d3c031fcb0750b4782eb")
 
 
 if __name__ == "__main__":
