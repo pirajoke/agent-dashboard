@@ -4068,6 +4068,40 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-links a { min-height:44px; margin:0; padding:10px 0; overflow-wrap:anywhere; }
 .context-links[hidden] { display:none; }
 @media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
+/* Mark 2026-10-26: the record list is one quiet table — record, type, project, date. */
+.context-list { display:block; gap:0; background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:14px; box-shadow:var(--mm-shadow-soft); overflow:hidden; }
+.context-list:empty { display:none; }
+.context-list:has(.cc-owner-gate) { background:none; border:0; box-shadow:none; overflow:visible; }
+.context-head,.context-list .context-row { display:grid; grid-template-columns:30px minmax(0,1fr) 112px minmax(90px,160px) 72px 16px; align-items:center; column-gap:14px; }
+.context-head { padding:10px 16px; font-size:12px; font-weight:650; letter-spacing:.04em; text-transform:uppercase; color:var(--mm-muted); border-bottom:1px solid var(--mm-line); }
+.context-head span:first-child { grid-column:2; }
+.context-list .context-row { width:100%; min-height:52px; padding:10px 16px; margin:0; text-align:left; background:transparent; border:0; border-bottom:1px solid var(--mm-line); border-radius:0; box-shadow:none; color:var(--mm-ink); font:inherit; cursor:pointer; }
+.context-list li:last-child .context-row { border-bottom:0; }
+.context-list .context-row:hover { background:var(--mm-info-soft); border-color:var(--mm-line); }
+.context-list .context-row:focus-visible { outline:3px solid var(--mm-info); outline-offset:-3px; }
+.context-list .context-row-icon { width:30px; height:30px; border-radius:9px; }
+.context-list .context-row-icon svg { width:17px; height:17px; }
+.context-cell-title { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14.5px; font-weight:600; }
+.context-cell-kind { justify-self:start; padding:3px 9px; border-radius:999px; font-size:12.5px; font-weight:600; color:#7a5bc7; background:#efeafb; white-space:nowrap; }
+.context-cell-kind.is-update { color:var(--mm-accent); background:var(--mm-selection); }
+.context-cell-project,.context-cell-date { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13.5px; color:var(--mm-muted); }
+.context-cell-date { font-variant-numeric:tabular-nums; }
+.context-cell-meta { display:contents; }
+.context-list .context-row-go { font-size:18px; }
+:root[data-theme="dark"] .context-cell-kind:not(.is-update),:root[data-theme="dark"] .context-row-icon:not(.is-update) { color:#c4b2f2; background:rgba(150,120,230,.18); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .context-cell-kind:not(.is-update),:root:not([data-theme="light"]) .context-row-icon:not(.is-update) { color:#c4b2f2; background:rgba(150,120,230,.18); } }
+@media (max-width:760px) {
+  .context-head { display:none; }
+  .context-list .context-row { grid-template-columns:30px minmax(0,1fr) 14px; column-gap:12px; row-gap:6px; padding:12px 14px; }
+  .context-list .context-row-icon { grid-column:1; grid-row:1 / 3; align-self:start; }
+  .context-cell-title { grid-column:2; grid-row:1; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .context-list .context-row-go { grid-column:3; grid-row:1 / 3; }
+  .context-cell-meta { grid-column:2; grid-row:2; display:flex; align-items:center; gap:8px; min-width:0; }
+  .context-cell-kind { flex:none; font-size:12px; padding:2px 8px; }
+  .context-cell-project { flex:0 1 auto; font-size:12.5px; }
+  .context-cell-date { flex:none; font-size:12.5px; }
+  .context-cell-date::before { content:'· '; }
+}
 /* Mark 2026-10-26: a record reads like a short note — «Коротко», decisions, then topics folded to one line. */
 .context-reader-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .context-reader .cc-i { width:32px; height:32px; min-height:0; padding:0; border-radius:50%; background:transparent; color:var(--mm-muted); font:italic 600 15px/1 Georgia,'Times New Roman',serif; cursor:pointer; }
@@ -7860,6 +7894,10 @@ function ccContextDay(value) {
   const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? new Date(`${value}T12:00:00`) : null;
   return parsed && !Number.isNaN(parsed.valueOf()) ? parsed.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long'}) : 'дата не указана';
 }
+function ccContextShortDay(value) {
+  const parsed = /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? new Date(`${value}T12:00:00`) : null;
+  return parsed && !Number.isNaN(parsed.valueOf()) ? parsed.toLocaleDateString('ru-RU', {day: 'numeric', month: 'short'}).replace('.', '') : '—';
+}
 function ccContextTime(value) {
   if (!value) return 'не указана';
   const parsed = new Date(value);
@@ -8111,7 +8149,13 @@ async function ccLoadContext(recordId = null) {
     // Mark 2026-10-23: one card per record — what it is, when, which project; the source note stays as a tooltip.
     document.getElementById('context-sources').textContent = (data.sources || []).map(s => `${ccContextNames[s.source] || 'Источник'}: ${s.state === 'observed' ? 'записи найдены' : 'записи не найдены'}`).join(' · ') + ' Наличие записей не подтверждает активное подключение сервиса.';
     document.getElementById('context-status').title = document.getElementById('context-sources').textContent;
+    // Mark 2026-10-26: «сделай красивую табличку» — one table: record, type, project, date; the whole row opens it.
     const list=document.getElementById('context-list');
+    if (data.records.length) {
+      const head=document.createElement('li'); head.className='context-head'; head.setAttribute('aria-hidden','true');
+      for (const label of ['Запись','Тип','Проект','Дата']) { const cell=document.createElement('span'); cell.textContent=label; head.append(cell); }
+      list.append(head);
+    }
     for (const r of data.records) {
       if (!/^[a-f0-9]{32}$/.test(r.id)) continue;
       const li=document.createElement('li'); const button=document.createElement('button'); button.type='button';button.className='context-row';
@@ -8120,11 +8164,20 @@ async function ccLoadContext(recordId = null) {
       icon.innerHTML = isUpdate
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
-      const text=document.createElement('span'); text.className='context-row-text';
-      const title=document.createElement('strong');title.textContent=ccContextTitle(r.plain?.title || r.title);
-      const meta=document.createElement('small'); meta.textContent=[ccContextNames[r.source] || 'Запись', ccContextDay(r.date), r.project].filter(Boolean).join(' · ');
+      const project = typeof r.project === 'string' ? r.project.trim() : '';
+      // «JARVIS - Telegram …» in the JARVIS row: the project already has its own column.
+      let name = ccContextTitle(r.plain?.title || r.title);
+      if (project && name.toLowerCase().startsWith(project.toLowerCase())) name = name.slice(project.length).replace(/^\s*[-–—:·]\s*/, '') || name;
+      name = name.charAt(0).toUpperCase() + name.slice(1);
+      const title=document.createElement('strong'); title.className='context-cell-title'; title.textContent=name;
+      const kind=document.createElement('span'); kind.className=`context-cell-kind${isUpdate ? ' is-update' : ''}`; kind.textContent=isUpdate ? 'Обновление' : 'Встреча';
+      kind.title = ccContextNames[r.source] || 'Запись';
+      const where=document.createElement('span'); where.className='context-cell-project'; where.textContent=project || '—';
+      const when=document.createElement('span'); when.className='context-cell-date'; when.textContent=ccContextShortDay(r.date);
       const go=document.createElement('span'); go.className='context-row-go'; go.setAttribute('aria-hidden','true'); go.textContent='›';
-      text.append(title,meta); button.append(icon,text,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
+      button.setAttribute('aria-label', [name, kind.textContent, project, when.textContent].filter(Boolean).join(', '));
+      const meta=document.createElement('span'); meta.className='context-cell-meta'; meta.append(kind,where,when);
+      button.append(icon,title,meta,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
     }
     if (!data.records.length) document.getElementById('context-status').textContent = (warning + 'По выбранным условиям записей нет.').trim();
   } catch (error) {
