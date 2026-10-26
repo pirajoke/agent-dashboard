@@ -362,5 +362,27 @@ process.stdout.write(JSON.stringify({before,title,topicCount:topics.length,after
         self.assertIn("Тема без текста", out["visible"], "A heading with nothing under it is not dropped")
         self.assertIn("Следующие шаги", out["headings"])
 
+    def test_record_list_is_a_table_of_record_type_project_and_date(self):
+        """Mark 2026-10-26: «сделай красивую табличку» for the list of records."""
+        out = self.run_js("""
+const records=[{id:'b'.repeat(32),source:'project-update',kind:'update',title:'Synthetic - release recheck',date:'2026-10-26',project:'Synthetic'},
+  {id:'c'.repeat(32),source:'plaud',kind:'transcript',title:'10-25 Встреча по плану',date:'2026-10-25',project:''},
+  {id:'d'.repeat(32),source:'project-update',kind:'update',title:'Airtable integration',date:'2026-10-25',project:'AI'}];
+context.fetch=async()=>({ok:true,status:200,json:async()=>({state:'ready',records,sources:[]})});
+await context.ccLoadContext();
+const list=document.getElementById('context-list');
+process.stdout.write(JSON.stringify({head:list.querySelector('.context-head')?.textContent,head_hidden:list.querySelector('.context-head')?.getAttribute('aria-hidden'),
+  rows:list.querySelectorAll('.context-row').map(b=>({title:b.querySelector('.context-cell-title').textContent,kind:b.querySelector('.context-cell-kind').textContent,project:b.querySelector('.context-cell-project').textContent,label:b.getAttribute('aria-label')}))}));
+""")
+        self.assertEqual(out["head"], "ЗаписьТипПроектДата")
+        self.assertEqual(out["head_hidden"], "true")
+        self.assertEqual(out["rows"][0]["title"], "Release recheck", "The project name is its own column, not a title prefix")
+        self.assertEqual(out["rows"][0]["kind"], "Обновление")
+        self.assertEqual(out["rows"][0]["project"], "Synthetic")
+        self.assertEqual(out["rows"][1]["title"], "Встреча по плану")
+        self.assertEqual(out["rows"][1]["kind"], "Встреча")
+        self.assertIn("Встреча по плану", out["rows"][1]["label"])
+        self.assertEqual(out["rows"][2]["title"], "Airtable integration", "Only a whole project name followed by a separator is stripped")
+
 if __name__ == "__main__":
     unittest.main()

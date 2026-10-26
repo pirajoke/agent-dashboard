@@ -260,7 +260,20 @@ class PreviewHandler(SERVER.Handler):
 """
                 payload["record"] = record
             else:
-                payload["records"] = [record]
+                # A few synthetic project updates so the list shows as a table, like the real catalog.
+                updates = [
+                    ("Демо-проект - Telegram receipt prepared; change still waiting on checks", "Демо-проект"),
+                    ("Демо-проект - release gate recheck", "Демо-проект"),
+                    ("Новости установлены, но запуск пока не завершён", "Демо-проект"),
+                    ("Аудит записей за неделю", "Пример студии"),
+                    ("Проверка цепочки перед выпуском", "Пример студии"),
+                ]
+                payload["records"] = [record] + [
+                    {"id": f"{index:x}" * 32 if index < 10 else "b" * 32, "source": "project-update", "kind": "update",
+                     "title": title, "date": (STARTED - timedelta(days=index // 2)).date().isoformat(),
+                     "modified_at": STARTED.isoformat(), "project": project}
+                    for index, (title, project) in enumerate(updates, start=1)
+                ]
             self._json_response(200, payload)
             return
         if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth"}:
