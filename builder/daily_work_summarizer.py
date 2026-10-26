@@ -138,7 +138,7 @@ def day_inputs(root: Path, days: list[str]) -> dict[str, list[dict[str, Any]]]:
             products.append({
                 "id": item["id"],
                 "name": item["name"],
-                "about": item.get("description"),
+                "about": item.get("about") or item.get("description"),
                 "minutes": _union_minutes(p for r in records for p in _session_intervals(r)),
                 "sessions": [
                     {key: value for key, value in (

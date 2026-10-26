@@ -3243,6 +3243,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-due b { color: var(--mm-warning); font-weight: 650; }
 .mm-block { margin-bottom: 28px; }
 .mm-project-desc { margin-top: 2px; color: var(--mm-ink); font-size: 13.5px; line-height: 1.45; }
+.mm-project-hero .mm-project-about { max-width: 64ch; margin: 0 0 4px; color: var(--mm-muted); font-size: 14px; line-height: 1.5; }
 .mm-project-hero .mm-project-desc { max-width: 64ch; margin: 2px 0 4px; font-size: 15px; }
 .mm-bullets { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .mm-bullets li { position: relative; padding-left: 16px; font-size: 14px; line-height: 1.5; }
@@ -3455,6 +3456,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-map-when i { flex: none; width: 8px; height: 8px; background: var(--mm-control-line); border-radius: 50%; }
 .mm-map-when i.is-today { background: var(--mm-success); box-shadow: 0 0 0 3px var(--mm-success-soft); }
 .mm-map-when i.is-week { background: var(--mm-accent); }
+/* Mark 2026-10-26: every card says in one line what the project is. */
+.mm-map-desc { margin-top: -4px; color: var(--mm-ink); font-size: 14px; font-weight: 500; line-height: 1.4; }
 .mm-map-go { flex: none; color: var(--mm-muted); font-size: 22px; line-height: 1; }
 .mm-map-foot { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
 .mm-chip.is-warn { color: var(--mm-warning); background: var(--mm-warning-soft); border-color: transparent; }
@@ -4970,7 +4973,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <div class="platform-content">
           <span class="platform-tag">Работает</span>
           <h3 class="platform-name">AI Singularity</h3>
-          <p class="platform-description">Закрытое приложение на Mac mini.</p>
+          <p class="platform-description">Канал про ИИ: бот собирает новости и готовит посты.</p>
           <div class="platform-links">
             <a class="platform-link" href="https://singularity.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
@@ -11218,6 +11221,7 @@ function mmMapCard(p, todo, today) {
   return `<a class="mm-map-card" href="?tab=work&amp;project=${encodeURIComponent(p.id)}" data-project="${mmEsc(p.id)}" aria-label="${mmEsc(`${p.name}: ${when}`)}">
     <span class="mm-map-top">${mmArt(p)}<span class="mm-map-head"><span class="mm-map-name">${mmEsc(p.name)}</span>
       <span class="mm-map-when"><i class="${mmPulse(p)}" aria-hidden="true"></i>${mmEsc(when)}</span></span><span class="mm-map-go" aria-hidden="true">›</span></span>
+    ${p.description ? `<span class="mm-map-desc">${mmEsc(p.description)}</span>` : ''}
     ${mmMapResult(p)}
     ${attention ? `<span class="mm-map-foot">${attention}</span>` : ''}
   </a>`;
@@ -12211,6 +12215,7 @@ function renderProjectPage() {
         <span class="mm-project-kicker">${mmEsc(p.last_activity ? `последняя работа: ${mmRelDay(p.last_activity)}` : 'без активности')}</span>
         <h3 class="mm-project-title">${mmEsc(p.name)}</h3>
         ${p.description ? `<p class="mm-project-desc">${mmEsc(p.description)}</p>` : ''}
+        ${p.about ? `<p class="mm-project-about">${mmEsc(p.about)}</p>` : ''}
       </div>
     </section>
     ${mmProjectBrief(p, today)}

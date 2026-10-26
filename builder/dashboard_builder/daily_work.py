@@ -38,23 +38,32 @@ PROJECT_DAY_LIMIT = 30
 # Platforms SVG symbol (cc-mascot-<mascot>). Sessions and PRs are matched by
 # the checkout folder or repo name.
 PRODUCTS = (
+    # «description» is the one line on the board card; «about» is the fuller line on the project page.
     {"id": "command-center", "name": "Command Center", "mascot": "hub", "match": ("agentdashboard", "commandcenter"),
-     "description": "Командный центр: продукты, серверы и работа агентов на одном экране."},
+     "description": "Командный центр всех проектов и агентов.",
+     "about": "Сайт, где видно все проекты, что по ним сделали Claude Code и Codex, что ждёт твоего решения и как работают Mac mini и сервисы."},
     {"id": "financial", "name": "JobRadar / Financial OS", "mascot": "jobradar", "match": ("financial", "jobradar", "jobsradar", "propertyos"),
-     "description": "Поиск работы и личные финансы: JobRadar, Financial OS и Property OS для недвижимости."},
+     "description": "Поиск работы и личные финансы.",
+     "about": "JobRadar находит вакансии и следит за откликами, Financial OS ведёт личные деньги, Property OS отвечает за аренду, платежи и ремонт квартир в Ницце."},
     {"id": "mydictionary", "name": "Lexi", "mascot": "dictionary", "match": ("lexi", "dictionary"),
-     "description": "Telegram-бот для изучения языков с личным словарём и админкой."},
+     "description": "Telegram-бот для изучения языков.",
+     "about": "Помогает учить слова через личный словарь прямо в Telegram; у бота есть своя админка на сайте."},
     {"id": "health", "name": "Health OS", "mascot": "health", "match": ("health",),
-     "description": "Личное пространство для здоровья."},
-    # The news bot repo is ai-singularity-news-bot, so Context News is matched before AI Singularity.
-    {"id": "context-news", "name": "Context News France", "mascot": "news", "match": ("contextnews", "singularitynews"),
-     "description": "Telegram-бот с персональными подборками новостей."},
+     "description": "Личное пространство для здоровья.",
+     "about": "Отдельный личный сайт, где собрано всё о здоровье."},
+    # Mark 2026-10-26: the ai-singularity-news-bot repo is his AI Singularity project, not Context News.
+    {"id": "context-news", "name": "Context News France", "mascot": "news", "match": ("contextnews",),
+     "description": "Telegram-бот с подборками новостей.",
+     "about": "Бот присылает персональные подборки новостей Франции по интересам; у него есть сайт с админкой и рассылка дайджестов."},
     {"id": "ai-singularity", "name": "AI Singularity", "mascot": "singularity", "match": ("singularity",),
-     "description": "Закрытое приложение на Mac mini."},
+     "description": "Канал про ИИ: бот собирает новости и готовит посты.",
+     "about": "Бот находит новости об искусственном интеллекте и готовит запас материалов для канала AI Singularity; публикациями управляет отдельный рабочий сайт."},
     {"id": "accountable", "name": "Accountable OS", "mascot": "accountable", "match": ("accountable", "urssaf"),
-     "description": "Учёт и налоги своей компании во Франции: URSSAF и отчётность EURL."},
+     "description": "Учёт и налоги своей компании во Франции.",
+     "about": "URSSAF, декларации и отчётность EURL в одном месте, чтобы не пропустить платёж или срок."},
     {"id": "jarvis", "name": "JARVIS", "mascot": "jarvis", "match": ("jarvis",),
-     "description": "Личный ассистент в Telegram, который управляет остальными системами."},
+     "description": "Личный ассистент в Telegram.",
+     "about": "Бот, который принимает задачи обычным языком, присылает «Резюме дня» и управляет остальными системами."},
 )
 
 MAIN_IDS = frozenset(product["id"] for product in PRODUCTS)
@@ -338,11 +347,11 @@ def product_for(project: object, repo: object) -> dict[str, Any]:
     keys = [key for key in (_norm(project), _norm(str(repo or "").rsplit("/", 1)[-1])) if key]
     for product in PRODUCTS:
         if any(match in key for key in keys for match in product["match"]):
-            return {key: product[key] for key in ("id", "name", "mascot", "description")}
+            return {key: product[key] for key in ("id", "name", "mascot", "description", "about")}
     name = str(project or (str(repo).rsplit("/", 1)[-1] if repo else "") or "без проекта")
     # Cyrillic letters are kept, so «ChatGPT · Любовь» and «ChatGPT · без проекта» stay apart.
     slug = re.sub(r"[^0-9a-zа-яё]", "", name.lower())
-    return {"id": "p-" + (slug or "other"), "name": name, "mascot": None, "description": None}
+    return {"id": "p-" + (slug or "other"), "name": name, "mascot": None, "description": None, "about": None}
 
 
 def _project_portfolio(series_days: list[str], by_day: dict[str, list[dict]], github: dict | None,
@@ -454,7 +463,7 @@ def _portfolio_summary(item: dict[str, Any], series_days: list[str],
         "id": item["id"], "name": item["name"], "mascot": item["mascot"],
         # A product from PRODUCTS is a main project; any other folder or repo is secondary on the board.
         "main": item["id"] in MAIN_IDS,
-        "description": item.get("description"), "last_summary": last_summary,
+        "description": item.get("description"), "about": item.get("about"), "last_summary": last_summary,
         "repos": sorted(item["repos"]), "projects": sorted(p for p in item["projects"] if p),
         "total_minutes": sum(daily), "claude_minutes": sum(claude), "codex_minutes": sum(codex),
         "last_7_minutes": sum(complete[-7:]), "previous_7_minutes": sum(complete[-14:-7]),
