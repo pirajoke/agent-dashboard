@@ -3904,6 +3904,11 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-resources summary,
 .platform-resources details[open] { pointer-events: auto; }
 .platform-resources summary { display: inline-block; min-height: 0; padding: 2px 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 600; }
+/* Mark 2026-10-26: the cards jumped down and back up on every visit. The waiting text, the
+   «Материалы проекта» line and an empty card now take one and the same one-line height. */
+.platform-resources { min-height: 30px; line-height: 1.55; }
+.platform-resources > span { display: block; min-height: 0; padding: 2px 0; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.platform-resources > .platform-resources-empty { display: block; visibility: hidden; }
 .platform-archive-toggle,
 .platform-edit-toggle { z-index: 3; }
 /* Edit (Mark 2026-10-20): a pencil next to the archive box opens a small window for name, status and priority. */
@@ -3993,7 +3998,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   .platform-entry.priority .platform-content { padding: 11px 12px 8px 10px; }
   .platform-entry.priority .platform-name { font-size: 15px; }
   .platform-links .platform-link { overflow-wrap: normal; white-space: nowrap; }
-  .platform-resources summary { padding: 6px 0; }
+  .platform-resources summary,
+  .platform-resources > span { padding: 6px 0; }
+  .platform-resources { min-height: 38px; }
   .platform-links .platform-link:not(:first-child),
   .platform-links .platform-link:not(:first-child) .platform-access { min-height: 36px; }
 }
@@ -7727,6 +7734,9 @@ function renderJarvisHumanSummary(data) {
 
 // ── Platform resources ──
 let ccResourceGeneration = 0;
+// After the first answer a refresh keeps what is shown until the new answer arrives,
+// so opening the tab or returning to the window does not flash the waiting line.
+let ccResourceShown = false;
 function ccResourceUrl(value) {
   if (typeof value !== 'string' || !value || value.length > 2048 || value !== value.trim() || /[\s\u0000-\u001f\u007f?#\\]/u.test(value)) return null;
   try {
@@ -7750,6 +7760,7 @@ function ccRenderPlatformResources(payload) {
     loading: 'Проверяем доступ к материалам…',
     unavailable: 'Материалы временно недоступны. Откройте раздел ещё раз.',
   };
+  if (payload?.state !== 'loading') ccResourceShown = true;
   const kinds = {documents: 'Документы', notes: 'Заметки', code: 'Код', tasks: 'Задачи'};
   const scopes = {current: '', archive: 'Архив', upstream: 'Исходный проект', reference: 'Справочные материалы'};
   document.querySelectorAll('[data-platform-resources]').forEach(area => {
@@ -7795,7 +7806,7 @@ function ccRenderPlatformResources(payload) {
 }
 async function ccLoadPlatformResources() {
   const generation = ++ccResourceGeneration;
-  ccRenderPlatformResources({state: 'loading', platforms: {}});
+  if (!ccResourceShown) ccRenderPlatformResources({state: 'loading', platforms: {}});
   if (IS_FILE_DASHBOARD) {
     ccRenderPlatformResources({state: 'unavailable', platforms: {}});
     return;
