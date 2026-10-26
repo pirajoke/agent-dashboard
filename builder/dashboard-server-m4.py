@@ -39,6 +39,7 @@ from dashboard_builder.live_sessions import projection as live_sessions_projecti
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.infra_changes import infra_projection
+from dashboard_builder.architecture import collect_architecture
 from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list, parse_launchctl_running
 from dashboard_builder.department_campus import (
@@ -1708,6 +1709,22 @@ def _runtime_asset_block(filename: str, start_marker: str, end_marker: str) -> s
     return source[start:end].strip()
 
 
+def _architecture_payload() -> dict:
+    now = datetime.now(timezone.utc)
+    try:
+        tasks = _bridge_request("GET", "/api/tasks?limit=24&include_messages=1")
+        campus = _department_campus_payload(tasks)
+    except Exception:
+        tasks, campus = None, None
+    return collect_architecture(
+        home=HOME,
+        campus=campus,
+        bridge_tasks=tasks,
+        launchctl_raw=_run_text(["launchctl", "list"], timeout=5) or None,
+        now=now,
+    )
+
+
 def _department_campus_document() -> str:
     campus_css = _runtime_asset_block(
         "style.css",
@@ -2936,6 +2953,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(401, {'state': 'owner_required', 'tasks': []})
                 return
             self._json_response(200, shared_task_board_projection())
+            return
+        if parsed.path == '/api/architecture':
+            # «Архитектура» (Mark 2026-10-26): how the agent system on the Mac mini is wired and what
+            # is confirmed live. Read-only and the same for every viewer: no paths, chat ids or task text.
+            self._json_response(200, _architecture_payload())
             return
         if parsed.path == '/api/owner-projects':
             # Private project cards (status + document links) for MAIN MANAGER; owner only, same registry.

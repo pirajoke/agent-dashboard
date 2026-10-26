@@ -4475,6 +4475,66 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   .mm-home .mm-project-art { width: 42px; height: 42px; border-radius: 12px; }
   .mm-home .mm-project-art svg { width: 38px; height: 38px; }
 }
+
+/* ─── «Архитектура» (Mark 2026-10-26) ─── one flow from Mark to the next step; details open in the «i» window. */
+#section-architecture { max-width: 1180px; }
+.arch-modes { display: inline-flex; padding: 3px; gap: 2px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; }
+.arch-modes button { min-height: 34px; padding: 4px 12px; border: 0; border-radius: 9px; background: transparent; color: var(--mm-muted); font: 600 13px/1.2 var(--cc-font); cursor: pointer; }
+.arch-modes button[aria-pressed="true"] { background: var(--mm-selection); color: var(--mm-ink); }
+.arch-kpis { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.arch-kpi { display: inline-flex; align-items: baseline; gap: 7px; padding: 7px 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; color: var(--mm-muted); font-size: 13px; }
+.arch-kpi b { color: var(--mm-ink); font-size: 18px; font-weight: 750; }
+.arch-blockers { margin: 0 0 18px; padding: 10px 14px; background: var(--mm-warning-soft); border-radius: 12px; color: var(--mm-ink); font-size: 13.5px; line-height: 1.5; }
+.arch-blockers strong { display: block; margin-bottom: 2px; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--mm-warning); }
+.arch-blockers ul { margin: 0; padding-left: 18px; }
+.arch-flow { display: flex; flex-direction: column; align-items: center; }
+.arch-step { width: min(600px, 100%); }
+.arch-node { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); color: var(--mm-ink); font: inherit; cursor: pointer; }
+.arch-node:hover { background: var(--mm-surface-hover); }
+.arch-node:focus-visible, .arch-chip:focus-visible, .arch-modes button:focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 3px; }
+.arch-node small, .arch-tag { display: block; color: var(--mm-muted); font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; }
+.arch-node b { display: block; font-size: 15.5px; font-weight: 700; }
+.arch-node em { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; font-style: normal; }
+.arch-node .cc-i { pointer-events: none; }
+.arch-node.is-core { border: 2px solid var(--mm-accent); background: var(--mm-selection); }
+.arch-node.is-core b { font-size: 18px; }
+.arch-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.arch-pair.three { grid-template-columns: repeat(3, 1fr); width: min(900px, 100%); }
+.arch-arrow { position: relative; width: 2px; height: 30px; margin: 0 auto; background: var(--mm-control-line); }
+.arch-arrow::after { content: ""; position: absolute; bottom: -2px; left: -5px; border: 6px solid transparent; border-top-color: var(--mm-control-line); }
+.arch-arrow span { position: absolute; left: 12px; top: 7px; color: var(--mm-muted); font-size: 11.5px; white-space: nowrap; }
+.arch-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; }
+.arch-lane { padding: 14px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-top: 4px solid var(--mm-codex); border-radius: 14px; box-shadow: var(--mm-shadow-soft); }
+.arch-lane.is-services { border-top-color: var(--mm-violet); }
+.arch-lane-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.arch-lane h3 { font-size: 15px; font-weight: 750; }
+.arch-lane p { margin: 2px 0 6px; color: var(--mm-muted); font-size: 12.5px; line-height: 1.45; }
+.arch-group { margin-top: 9px; }
+.arch-group .arch-tag { margin-bottom: 5px; }
+.arch-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.arch-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 32px; padding: 4px 11px 4px 9px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 999px; color: var(--mm-ink); font: 500 13px/1.2 var(--cc-font); cursor: pointer; }
+.arch-chip:hover { border-color: var(--mm-control-line); background: var(--mm-surface-hover); }
+.arch-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--mm-pr); }
+.arch-dot.s-working, .arch-dot.s-running { background: var(--mm-success); }
+.arch-dot.s-scheduled { background: var(--mm-success); box-shadow: inset 0 0 0 2px var(--mm-background); outline: 1.5px solid var(--mm-success); width: 8px; height: 8px; }
+.arch-dot.s-needs_mark, .arch-dot.s-waiting { background: var(--mm-warning); }
+.arch-dot.s-blocked, .arch-dot.s-failed, .arch-dot.s-stopped { background: var(--mm-danger); border-radius: 2px; }
+.arch-dot.s-unknown { background: transparent; border: 1.5px dashed var(--mm-muted); }
+.arch-chip .arch-when { color: var(--mm-muted); font-size: 11.5px; }
+.arch-loop { margin-top: 4px; color: var(--mm-accent); font-size: 12.5px; }
+.arch-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 18px; color: var(--mm-muted); font-size: 12.5px; }
+.arch-legend span { display: inline-flex; align-items: center; gap: 6px; }
+/* «Устройство»: only who is wired to whom, no live states. */
+#section-architecture.is-map .arch-dot, #section-architecture.is-map .arch-when, #section-architecture.is-map .arch-kpis, #section-architecture.is-map .arch-blockers, #section-architecture.is-map .arch-legend.is-live, #section-architecture.is-map .arch-node em.is-live { display: none; }
+#section-architecture:not(.is-map) .arch-arrow span.is-map, #section-architecture:not(.is-map) .arch-legend.is-map { display: none; }
+.cc-info-body .arch-steps { margin: 4px 0 8px; padding-left: 20px; }
+.cc-info-body .arch-steps li { margin: 3px 0; }
+@media (max-width: 760px) {
+  .arch-lanes, .arch-pair.three { grid-template-columns: 1fr; }
+  .arch-pair { grid-template-columns: 1fr; }
+  .arch-arrow span { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { #section-architecture * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
@@ -4671,6 +4731,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="cc-icon-today" viewBox="0 0 24 24"><path d="M5 5h11v14H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Zm11 4h3a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h5M8 12.5h5M8 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="cc-icon-architecture" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="15" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4M6 16v-2h12v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-growth" viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4 3-7 8-7 0 4-3 7-8 7zM12 15c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <!-- «Точки роста» pictures -->
   <symbol id="cc-growth-pe" viewBox="0 0 120 120">
@@ -4794,6 +4855,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
+    <button class="nav-pill" type="button" aria-controls="section-architecture" aria-pressed="false" onclick="showSection('architecture')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-architecture"/></svg></span><span class="cc-tab-label" data-tab-label="architecture">Архитектура</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
     <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
@@ -5403,6 +5465,25 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <p class="mm-notice" id="growth-state" role="status" aria-live="polite">Загружаю точки роста…</p>
     <div class="growth-summary" id="growth-summary"></div>
     <div class="growth-grid" id="growth-grid"></div>
+  </section>
+
+  <!-- Mark 2026-10-26: «Архитектура» — where agents run, who manages them, how work arrives, where results go
+       and what blocks autonomy. «Устройство» shows the wiring only; «Сейчас» adds what is confirmed live. -->
+  <section id="section-architecture" class="section" aria-labelledby="arch-title">
+    <header class="cc-page-head">
+      <div>
+        <h2 class="cc-page-title" id="arch-title">Архитектура</h2>
+        <p class="cc-page-lede">Где работают агенты, кто ими управляет и куда уходит результат. Нажми на любой узел. <button type="button" class="cc-i" data-cc-info="arch-about" aria-label="Откуда данные на этой странице">i</button></p>
+      </div>
+      <div class="arch-modes" role="group" aria-label="Что показать">
+        <button type="button" id="arch-mode-live" aria-pressed="true">Сейчас</button>
+        <button type="button" id="arch-mode-map" aria-pressed="false">Устройство</button>
+      </div>
+    </header>
+    <p class="mm-notice" id="arch-state" role="status" aria-live="polite">Загружаю устройство системы…</p>
+    <div class="arch-kpis" id="arch-kpis"></div>
+    <div class="arch-blockers" id="arch-blockers" hidden></div>
+    <div class="arch-flow" id="arch-flow"></div>
   </section>
 
   <section id="section-machines" class="section" aria-labelledby="machines-title">
@@ -6578,7 +6659,7 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'platforms', 'documents', 'context', 'machines']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'architecture', 'platforms', 'documents', 'context', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -7580,6 +7661,7 @@ function showSection(name) {
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
+  if (name === 'architecture') setTimeout(archLoad, 0);
   if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') setTimeout(ccLoadPlatformResources, 0);
   if (name === 'documents') setTimeout(ccLoadDocxx, 0);
@@ -7592,7 +7674,7 @@ function showSection(name) {
 // what it said), so its old links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
   const agentsView = new URLSearchParams(window.location.search).get('view');
   if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
@@ -10883,6 +10965,322 @@ document.addEventListener('click', event => {
   document.getElementById('cc-info-close').addEventListener('click', close);
   dialog.addEventListener('click', event => { if (event.target === dialog) close(); });
 })();
+
+// ─── «Архитектура» ─── Mark 2026-10-26: one map of the agent system on the Mac mini. The wiring is fixed in
+// dashboard_builder/architecture.py; states come only from fresh events, and a live process is not shown as work.
+const ARCH_API = (!IS_FILE_DASHBOARD) ? `${DASHBOARD_API}/api/architecture` : 'https://command.meshly.fr/api/architecture';
+let archData = null;
+let archLoading = false;
+const ARCH_NODES = {
+  owner: { name: 'Ты', where: 'MacBook · телефон · командный центр', does: 'Ставишь цель обычным языком: в закреплённом чате MAIN MANAGER, в Telegram или здесь, на сайте. MacBook и телефон только интерфейс: работа идёт на Mac mini.' },
+  'main-manager': { name: 'MAIN MANAGER', where: 'Mac mini · координатор', does: 'Закреплённый чат «MAIN MANAGER — MAC MINI 24/7» и его фоновые службы. Расставляет приоритеты, распределяет работу по агентам и проверяет доказательства, прежде чем принять результат.' },
+  registry: { name: 'Реестр агентов и проектов', where: 'Mac mini', does: 'Список зарегистрированных проектных чатов: проект, отдел, роль, хост и рабочая папка. Только из него MAIN MANAGER выбирает, кому поручить работу; угадывать адресата нельзя.' },
+  queue: { name: 'Общая очередь заданий', where: 'Mac mini', does: 'Одна очередь MAIN MANAGER. Задание в ней занимают (claim), отправляют, сверяют и подтверждают. При неизвестном результате сначала сверка, затем повтор.' },
+  onboarding: { name: 'Подключение нового агента', where: 'Mac mini', does: 'Новый агент появляется только по явному запросу «создай агента для…». Обычный новый чат автоматически не регистрируется.' },
+  chats: { name: 'Проектные чаты Codex / Claude', where: 'Mac mini', does: 'Закреплённые чаты проектов. MAIN MANAGER пишет в чат задание из очереди; чат работает в своей папке и возвращает PR, тесты и отчёт. В один репозиторий одновременно пишет только один агент.' },
+  services: { name: 'Фоновые службы и workers', where: 'Mac mini · launchd', does: 'Программы, которые macOS запускает постоянно или по расписанию. Они не чаты: у них нет памяти разговора, их состояние видно по процессу и журналу. Запущенный процесс не доказывает, что работа сделана.' },
+  results: { name: 'Результат + доказательства', where: 'GitHub и Mac mini', does: 'PR, прошедшие тесты, проверка на работающем Mac mini. Отчёт агента без доказательства не принимается.' },
+  check: { name: 'Проверка MAIN MANAGER', where: 'Mac mini', does: 'MAIN MANAGER сверяет доказательства, решает, что принято, что ждёт тебя и какой шаг разрешён дальше.' },
+  log: { name: 'Журнал → командный центр', where: 'Obsidian · сайт · Telegram', does: 'Итог записывается в журнал проектов через webhook, статус появляется здесь, решения и блокеры приходят в Telegram.' },
+  next: { name: 'Следующий разрешённый шаг', where: 'обратно в очередь', does: 'Если шаг разрешён, он снова попадает в очередь. Если нужен ты, MAIN MANAGER спрашивает один раз и продолжает другие линии.' },
+};
+
+function archTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const diff = (Date.now() - date.getTime()) / 60000;
+  if (diff < 1) return 'только что';
+  if (diff < 60) return `${Math.round(diff)} мин назад`;
+  if (diff < 24 * 60 && date.getDate() === new Date().getDate()) return `сегодня ${date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}`;
+  return date.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function archEl(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+}
+
+function archLinks(id) {
+  const links = (archData && archData.links) || [];
+  const name = key => (ARCH_NODES[key] && ARCH_NODES[key].name) || ((archData.services || []).find(s => s.id === key) || {}).name || key;
+  const from = links.filter(l => l.to === id).map(l => `${name(l.from)}: ${l.label}`);
+  const to = links.filter(l => l.from === id).map(l => `${name(l.to)}: ${l.label}`);
+  return { from, to };
+}
+
+function archNodeInfo(id) {
+  const node = ARCH_NODES[id];
+  const data = archData || {};
+  const q = data.queue || {};
+  const on = data.onboarding || {};
+  const rows = [];
+  let blocker = '';
+  let next = '';
+  let source = '';
+  let current = '';
+  let result = '';
+  if (id === 'registry') {
+    source = 'реестр маршрутов, установленный на Mac mini';
+    current = `${(data.agent_counts || {}).registered || 0} проектных чатов в ${(data.departments || []).length} отделах`;
+    result = on.registry_matches_canonical ? 'совпадает с каноническим реестром MAIN MANAGER' : 'не совпадает с каноническим реестром';
+    if (!on.registry_matches_canonical) blocker = 'Установленный реестр расходится с каноническим: нужна сверка.';
+  } else if (id === 'queue') {
+    source = 'очередь планировщика продолжения на Mac mini';
+    current = q.available ? `открыто: ${q.open}, из них ждут тебя: ${q.owner_gates}, готовы к выполнению: ${q.executable}` : 'очередь не прочитана';
+    result = q.last_collected_at ? `последний сбор ${archTime(q.last_collected_at)}` : '';
+    if (q.owner_gates) blocker = `Ждёт твоего решения: ${(q.gate_projects || []).join(', ')}.`;
+    if (q.cooldown_until) next = `Пауза до ${archTime(q.cooldown_until)}.`;
+  } else if (id === 'onboarding') {
+    source = 'квитанции регистрации и установленная реализация подключения';
+    current = on.last ? `последняя регистрация: ${on.last.route}, ${archTime(on.last.at)}${on.last.new_agent ? ' (новый агент)' : ' (агент уже был в реестре)'}` : 'регистраций пока нет';
+    result = `реализация ${on.helper_matches_canonical ? 'совпадает с канонической' : 'не совпадает с канонической'}; новых агентов создано и зарегистрировано: ${on.new_agents_registered || 0}`;
+    if (on.recovery_pending) blocker = 'Подключение прервалось и ждёт сверки.';
+    else if (!on.new_agents_registered) blocker = 'Создание нового агента целиком ещё не проверено.';
+  } else if (id === 'services') {
+    const c = data.service_counts || {};
+    source = 'launchd на Mac mini и журналы самих служб';
+    current = `в порядке ${c.ok || 0} из ${c.total || 0}`;
+    const bad = (data.services || []).filter(s => ['failed', 'stopped'].includes(s.state)).map(s => `${s.name}: ${s.state_label}`);
+    if (bad.length) blocker = bad.join('; ');
+  } else if (id === 'chats') {
+    const c = data.agent_counts || {};
+    source = 'активность чатов на Mac mini и очередь MAIN MANAGER';
+    current = `работают: ${c.working || 0}, ждут тебя: ${c.needs_mark || 0}, без свежего события: ${c.unknown || 0}`;
+    if (c.registered && c.unknown === c.registered) blocker = 'Ни один чат не оставил свежего подтверждённого события.';
+  } else if (id === 'main-manager') {
+    source = 'очередь, Bridge и службы MAIN MANAGER';
+    const b = data.bridge || {};
+    current = b.available ? `последнее событие Bridge ${archTime(b.last_event_at)}` : 'Bridge не ответил';
+    blocker = (data.blockers || [])[0] || '';
+  }
+  if (source) rows.push(['Источник данных', source]);
+  if (data.generated_at && source) rows.push(['Проверено', archTime(data.generated_at)]);
+  if (current) rows.push(['Сейчас', current]);
+  if (result) rows.push(['Результат', result]);
+  if (source) rows.push(['Блокер', blocker || 'нет']);
+  if (next) rows.push(['Следующий шаг', next]);
+  const links = archLinks(id);
+  const extra = document.createElement('div');
+  if (id === 'onboarding') {
+    extra.append(archEl('p', '', 'Порядок подключения:'));
+    const ol = archEl('ol', 'arch-steps');
+    ['Явный запрос «создай агента для…».', 'MAIN MANAGER проверяет проект на Mac mini.', 'Берёт подходящего существующего агента или создаёт нового.', 'Проверяет хост, чат и рабочую папку.', 'Регистрирует в реестре (сначала пробный прогон, затем запись).', 'Выдаёт работу через существующую очередь.'].forEach(t => ol.append(archEl('li', '', t)));
+    extra.append(ol);
+    extra.append(archEl('p', '', 'При неизвестном результате сначала сверка, потом повтор. Регистрация не означает, что работа сделана.'));
+  }
+  if (links.from.length) { extra.append(archEl('p', '', 'Получает:')); const ul = archEl('ul'); links.from.forEach(t => ul.append(archEl('li', '', t))); extra.append(ul); }
+  if (links.to.length) { extra.append(archEl('p', '', 'Передаёт:')); const ul = archEl('ul'); links.to.forEach(t => ul.append(archEl('li', '', t))); extra.append(ul); }
+  return { title: node.name, lines: [node.where, node.does], rows, node: extra };
+}
+
+function archAgentInfo(agent) {
+  const rows = [
+    ['Отдел', agent.department_label], ['Роль', agent.role], ['Хост', agent.host],
+    ['Чат', agent.chat_registered ? 'зарегистрирован в реестре' : 'не зарегистрирован'],
+    ['Состояние', agent.state_label], ['Последнее подтверждённое событие', agent.state_at ? archTime(agent.state_at) : 'нет'],
+    ['Источник данных', agent.source], ['Проверено', archTime(archData.generated_at)],
+    ['Текущая задача', agent.state === 'working' ? 'идёт работа в чате проекта' : (agent.state === 'needs_mark' ? 'остановлена до твоего решения' : 'нет подтверждённой задачи')],
+    ['Блокер', agent.state === 'needs_mark' ? 'нужно твоё решение' : (agent.state === 'unknown' ? 'нет свежего события: состояние неизвестно' : 'нет')],
+    ['Следующий шаг', agent.next_step || (agent.state === 'unknown' ? 'ждать задания из очереди MAIN MANAGER' : '')],
+  ];
+  return { title: agent.name, lines: ['Проектный чат Codex / Claude.'], rows };
+}
+
+function archServiceInfo(service) {
+  const rows = [
+    ['Как запускается', service.runs], ['Состояние', service.state_label],
+    ['Задач launchd', `${service.jobs} из ${service.jobs_expected}${service.processes ? `, процессов: ${service.processes}` : ''}`],
+    ['Последняя запись в журнал службы', service.last_log_at ? archTime(service.last_log_at) : 'нет'],
+    ['Источник данных', 'launchd на Mac mini'], ['Проверено', archTime(archData.generated_at)],
+    ['Блокер', service.state === 'failed' ? `последний запуск завершился ошибкой (${service.failed_jobs})` : (service.state === 'stopped' ? 'служба не загружена в launchd' : 'нет')],
+  ];
+  const links = archLinks(service.id);
+  const extra = document.createElement('div');
+  if (links.from.length) { extra.append(archEl('p', '', 'Получает:')); const ul = archEl('ul'); links.from.forEach(t => ul.append(archEl('li', '', t))); extra.append(ul); }
+  if (links.to.length) { extra.append(archEl('p', '', 'Передаёт:')); const ul = archEl('ul'); links.to.forEach(t => ul.append(archEl('li', '', t))); extra.append(ul); }
+  extra.append(archEl('p', '', 'Запущенный процесс не доказывает, что работа сделана.'));
+  return { title: service.name, lines: [service.does], rows, node: extra };
+}
+
+function archNodeButton(id, extraClass, liveText) {
+  const node = ARCH_NODES[id];
+  const button = archEl('button', `arch-node${extraClass ? ' ' + extraClass : ''}`);
+  button.type = 'button';
+  button.dataset.ccInfo = `arch-${id}`;
+  ccInfoSources[`arch-${id}`] = () => archNodeInfo(id);
+  const text = archEl('span');
+  text.append(archEl('small', '', node.where), archEl('b', '', node.name));
+  if (liveText) text.append(archEl('em', 'is-live', liveText));
+  const i = archEl('span', 'cc-i', 'i');
+  i.setAttribute('aria-hidden', 'true');
+  button.append(text, i);
+  button.setAttribute('aria-label', `${node.name}: подробнее`);
+  return button;
+}
+
+function archArrow(label) {
+  const arrow = archEl('div', 'arch-arrow');
+  arrow.setAttribute('aria-hidden', 'true');
+  if (label) arrow.append(archEl('span', 'is-map', label));
+  return arrow;
+}
+
+function archChip(name, state, stateLabel, when, infoKey, infoSource) {
+  const chip = archEl('button', 'arch-chip');
+  chip.type = 'button';
+  chip.dataset.ccInfo = infoKey;
+  ccInfoSources[infoKey] = infoSource;
+  chip.append(archEl('span', `arch-dot s-${state}`), archEl('span', '', name));
+  if (when) chip.append(archEl('span', 'arch-when', when));
+  chip.setAttribute('aria-label', `${name}: ${stateLabel}`);
+  return chip;
+}
+
+function archStep(child) { const step = archEl('div', 'arch-step'); step.append(child); return step; }
+
+function renderArchitecture(data) {
+  archData = data;
+  const state = document.getElementById('arch-state');
+  state.hidden = true;
+  const c = data.agent_counts || {};
+  const sc = data.service_counts || {};
+  const q = data.queue || {};
+  const kpis = document.getElementById('arch-kpis');
+  kpis.replaceChildren();
+  [[c.registered, 'агентов в реестре', ''], [c.working, 'работают сейчас', 'working'], [c.needs_mark, 'ждут тебя', 'needs_mark'],
+   [c.unknown, 'без свежего события', 'unknown'], [`${sc.ok}/${sc.total}`, 'служб в порядке', sc.problem ? 'failed' : 'running']].forEach(([value, label, s]) => {
+    const kpi = archEl('div', 'arch-kpi');
+    if (s) kpi.append(archEl('span', `arch-dot s-${s}`));
+    kpi.append(archEl('b', '', String(value ?? '—')), document.createTextNode(label));
+    kpis.append(kpi);
+  });
+  const blockers = document.getElementById('arch-blockers');
+  blockers.replaceChildren();
+  if ((data.blockers || []).length) {
+    blockers.append(archEl('strong', '', 'Что мешает автономной работе'));
+    const ul = archEl('ul');
+    data.blockers.forEach(b => ul.append(archEl('li', '', b)));
+    blockers.append(ul);
+    blockers.hidden = false;
+  } else blockers.hidden = true;
+
+  const flow = document.getElementById('arch-flow');
+  flow.replaceChildren();
+  flow.append(archStep(archNodeButton('owner')), archArrow('запрос и цель'));
+  const bridge = data.bridge || {};
+  flow.append(archStep(archNodeButton('main-manager', 'is-core', bridge.available ? `последнее событие Bridge: ${archTime(bridge.last_event_at)}` : 'Bridge не ответил')));
+  flow.append(archArrow(''));
+  const trio = archEl('div', 'arch-pair three');
+  const on = data.onboarding || {};
+  trio.append(
+    archNodeButton('registry', '', `${c.registered || 0} агентов · ${(data.departments || []).length} отделов`),
+    archNodeButton('queue', '', q.available ? (q.owner_gates ? `ждут тебя: ${q.owner_gates} · сбор ${archTime(q.last_collected_at)}` : `открыто: ${q.open} · сбор ${archTime(q.last_collected_at)}`) : 'очередь не прочитана'),
+    archNodeButton('onboarding', '', on.recovery_pending ? 'прервано, ждёт сверки' : (on.new_agents_registered ? `новых агентов: ${on.new_agents_registered}` : 'новый агент целиком не проверен')),
+  );
+  flow.append(trio, archArrow('задания'));
+
+  const lanes = archEl('div', 'arch-lanes');
+  const chats = archEl('section', 'arch-lane');
+  const chatsHead = archEl('div', 'arch-lane-head');
+  const chatsTitle = archEl('div');
+  chatsTitle.append(archEl('h3', '', 'Проектные чаты Codex / Claude'), archEl('p', '', 'MAIN MANAGER пишет задание в закреплённый чат проекта. Один агент на репозиторий.'));
+  const chatsInfo = archEl('button', 'cc-i', 'i'); chatsInfo.type = 'button'; chatsInfo.dataset.ccInfo = 'arch-chats'; chatsInfo.setAttribute('aria-label', 'Как работают проектные чаты');
+  ccInfoSources['arch-chats'] = () => archNodeInfo('chats');
+  chatsHead.append(chatsTitle, chatsInfo);
+  chats.append(chatsHead);
+  (data.departments || []).forEach(dep => {
+    const agents = (data.agents || []).filter(a => a.department === dep.id);
+    if (!agents.length) return;
+    const group = archEl('div', 'arch-group');
+    group.append(archEl('span', 'arch-tag', dep.label));
+    const chips = archEl('div', 'arch-chips');
+    agents.forEach(agent => chips.append(archChip(agent.name, agent.state, agent.state_label,
+      agent.state_at && agent.state !== 'unknown' ? archTime(agent.state_at) : '', `arch-agent-${agent.id}`, () => archAgentInfo(agent))));
+    group.append(chips);
+    chats.append(group);
+  });
+  const svc = archEl('section', 'arch-lane is-services');
+  const svcHead = archEl('div', 'arch-lane-head');
+  const svcTitle = archEl('div');
+  svcTitle.append(archEl('h3', '', 'Фоновые службы и workers'), archEl('p', '', 'Их запускает macOS постоянно или по расписанию. Процесс жив ≠ работа сделана.'));
+  const svcInfo = archEl('button', 'cc-i', 'i'); svcInfo.type = 'button'; svcInfo.dataset.ccInfo = 'arch-services'; svcInfo.setAttribute('aria-label', 'Как работают фоновые службы');
+  ccInfoSources['arch-services'] = () => archNodeInfo('services');
+  svcHead.append(svcTitle, svcInfo);
+  svc.append(svcHead);
+  (data.service_groups || []).forEach(g => {
+    const list = (data.services || []).filter(s => s.group === g.id);
+    if (!list.length) return;
+    const group = archEl('div', 'arch-group');
+    group.append(archEl('span', 'arch-tag', g.label));
+    const chips = archEl('div', 'arch-chips');
+    list.forEach(s => chips.append(archChip(s.name, s.state, s.state_label, '', `arch-svc-${s.id}`, () => archServiceInfo(s))));
+    group.append(chips);
+    svc.append(group);
+  });
+  lanes.append(chats, svc);
+  flow.append(lanes, archArrow(''));
+  flow.append(archStep(archNodeButton('results')), archArrow('доказательства'));
+  flow.append(archStep(archNodeButton('check')), archArrow('итог'));
+  flow.append(archStep(archNodeButton('log')), archArrow('если разрешено'));
+  const next = archNodeButton('next');
+  next.querySelector('span').append(archEl('span', 'arch-loop', '↺ возвращается в общую очередь'));
+  flow.append(archStep(next));
+
+  const legend = archEl('div', 'arch-legend is-live');
+  [['working', 'работает (свежее событие)'], ['running', 'процесс запущен'], ['scheduled', 'запускается по расписанию'], ['needs_mark', 'ждёт тебя'],
+   ['unknown', 'нет свежего события'], ['failed', 'ошибка или не загружена']].forEach(([s, t]) => {
+    const item = archEl('span'); item.append(archEl('span', `arch-dot s-${s}`), document.createTextNode(t)); legend.append(item);
+  });
+  const mapLegend = archEl('div', 'arch-legend is-map', 'Стрелки показывают, кто кому передаёт задания и результаты. Состояния скрыты: переключись на «Сейчас».');
+  flow.append(legend, mapLegend);
+}
+
+ccInfoSources['arch-about'] = () => ({
+  title: 'Откуда эта страница',
+  lines: [
+    'Связи нарисованы по коду и службам на Mac mini. Состояния берутся только из свежих событий: активности чатов, очереди MAIN MANAGER, Bridge и launchd.',
+    'Без свежего события агент показан как «нет свежего события», а не как работающий. Запущенный процесс тоже не доказывает работу.',
+    'Страница только читает: ничего не запускает и не меняет. Пути к папкам, идентификаторы чатов и тексты задач сюда не попадают.',
+  ],
+  rows: archData ? [['Проверено', archTime(archData.generated_at)]] : [],
+});
+
+function archSetMode(mode) {
+  const section = document.getElementById('section-architecture');
+  section.classList.toggle('is-map', mode === 'map');
+  document.getElementById('arch-mode-live').setAttribute('aria-pressed', String(mode !== 'map'));
+  document.getElementById('arch-mode-map').setAttribute('aria-pressed', String(mode === 'map'));
+}
+document.getElementById('arch-mode-live').addEventListener('click', () => archSetMode('live'));
+document.getElementById('arch-mode-map').addEventListener('click', () => archSetMode('map'));
+
+async function archLoad() {
+  if (archLoading) return;
+  archLoading = true;
+  const state = document.getElementById('arch-state');
+  try {
+    const response = await fetch(ARCH_API, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || data.schema !== 'command_center_architecture_v1') throw new Error(`HTTP ${response.status}`);
+    renderArchitecture(data);
+  } catch (error) {
+    state.hidden = false;
+    state.className = 'mm-notice error';
+    state.textContent = 'Не удалось получить устройство системы с Mac mini. Ничего не показываю, чтобы не гадать.';
+    document.getElementById('arch-kpis').replaceChildren();
+    document.getElementById('arch-blockers').hidden = true;
+    document.getElementById('arch-flow').replaceChildren();
+  } finally {
+    archLoading = false;
+  }
+}
+setInterval(() => {
+  const section = document.getElementById('section-architecture');
+  if (!document.hidden && section && section.classList.contains('active')) archLoad();
+}, 60000);
 
 // ─── Init ───
 function refreshAll() {

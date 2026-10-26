@@ -208,3 +208,22 @@ Fixtures must be synthetic. Local live collection, private Drive sharing, schedu
 configuration and deployment are separate operator stages.
 
 Manual Krisp/Granola exports can be ingested with `context_library_run.py --config /private/config.json` (or `--dry-run`). The private JSON specifies `vault`, `output`, `state_dir`, and `intake`; all directories must already exist. Only `intake/krisp` and `intake/granola` UTF-8 TXT/MD are read, and canonical notes go to the corresponding `00-Inbox` service folder. Existing source IDs and import hashes prevent repeated notes. Conflicting content is preserved for review. Source exports are never removed. State and locks stay outside data roots. Run only one scheduled writer. This is automatic processing of manually exported files, not an authenticated cloud integration with either service.
+
+## «Архитектура»: how the agent system is wired
+
+Mark (2026-10-26): one map of where agents run, who manages them, how work arrives, where results go
+and what blocks autonomy. `?tab=architecture` draws Mark's devices → MAIN MANAGER on the Mac mini →
+registry, queue and agent onboarding → two separate kinds of executors (project chats Codex/Claude and
+background launchd services) → result → MAIN MANAGER check → log → next allowed step. Every node opens
+the «i» window with its data source, check time, current state, result, blocker and next step.
+«Устройство» shows only the wiring; «Сейчас» adds what is confirmed live.
+
+`GET /api/architecture` (`dashboard_builder/architecture.py`) only reads: the installed route registry
+and onboarding receipts in `MainManagerPortfolioContinuation`, the continuation queue, the canonical
+`config/departments.json`, `launchctl list`, the job logs' modification times and the department-campus
+agent activity. The wiring (`SERVICES`, `LINKS`) is fixed in code from the launchd jobs and scripts.
+A project chat shows a state only from a fresh native event or an open owner gate in the queue; otherwise
+«нет свежего события». A running process is «процесс запущен», never work done. The answer is the same
+for every viewer and has no paths, chat ids, host ids or task text.
+
+Validation: `PYTHONPATH=builder python3 -m unittest builder.tests.test_architecture -v`.
