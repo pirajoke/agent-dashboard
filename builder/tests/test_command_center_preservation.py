@@ -37,12 +37,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # Re-baselined 2026-10-20 with Mark's word for the grouped service list, and 2026-10-24 on his
         # «го» to the rebuild plan (list only, no counters, Russian status words), and 2026-10-26 on his
         # ask to watch memory and disk (longer laptop timeout, «мало памяти» status, memory/disk/load words,
-        # grace period so a slow laptop does not flash «Нет связи»).
+        # grace period so a slow laptop does not flash «Нет связи»), and the values on those tiles.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "47f3a5daac8ce5f4cdde96a5c5d7c7b5dc71a9769f6bc1cd2c7d850a207cedb2")
+                         "609bd3707cba0f6065d8fc00ce57a67ab827c94cbdb9a3872c0f7364465be19d")
 
 
 if __name__ == "__main__":

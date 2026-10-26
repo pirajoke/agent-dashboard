@@ -52,6 +52,17 @@ class MachineHealthWordsTests(unittest.TestCase):
         self.assertEqual(self.words({**base, "memory_pressure_free_percent": 71})[0], ["Память", "ок", "ok"])
         self.assertEqual(self.words({**base, "memory_pressure_free_percent": 8})[0], ["Память", "перегружена", "bad"])
 
+    def test_tiles_show_the_numbers_next_to_the_word(self):
+        source = HTML.read_text()
+        script = "\n".join([
+            js_function(source, "machinePercent"),
+            js_function(source, "machineHealthItems"),
+            "console.log(JSON.stringify(machineHealthItems({cpu_percent: 18.4, memory_used_gb: 6.2, memory_total_gb: 16,"
+            " disk_used_gb: 495.4, disk_total_gb: 1858.1}).map(i => i.value)));",
+        ])
+        out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout
+        self.assertEqual(json.loads(out), ["6,2 из 16 ГБ", "495 из 1\u00a0858 ГБ", "18%"])
+
     def test_missing_numbers_say_so(self):
         self.assertEqual([w[1] for w in self.words({})], ["нет данных"] * 3)
 

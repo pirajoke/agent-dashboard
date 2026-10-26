@@ -198,7 +198,9 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-health-item { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card, transparent); color: var(--text); font: inherit; cursor: pointer; }
 .machine-health-item:hover { border-color: var(--text2); }
 .machine-health-label { font-size: 12px; color: var(--text2); }
+.machine-health-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .machine-health-word { font-size: 16px; font-weight: 600; }
+.machine-health-value { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .machine-health-bar { display: block; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
 .machine-health-bar > span { display: block; height: 100%; background: var(--green); }
 .machine-health-item.is-ok .machine-health-word { color: var(--green); }
@@ -208,7 +210,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-health-item.is-bad .machine-health-word { color: var(--red); }
 .machine-health-item.is-bad .machine-health-bar > span { background: var(--red); }
 .machine-health-item.is-unknown .machine-health-word { color: var(--text2); }
-@media (max-width: 640px) { .machine-health { gap: 6px; } .machine-health-item { padding: 10px; } .machine-health-word { font-size: 14px; } }
+@media (max-width: 640px) { .machine-health { gap: 6px; } .machine-health-item { padding: 10px; } .machine-health-word { font-size: 14px; } .machine-health-value { font-size: 12px; } }
 
 /* Grid layouts */
 .grid { display: grid; gap: 20px; }
@@ -9918,10 +9920,13 @@ function machineHealthItems(sys) {
     disk: { ok: 'ок', warn: 'заполняется', bad: 'почти полон', unknown: 'нет данных' },
     cpu: { ok: 'спокойно', warn: 'нагружен', bad: 'перегружен', unknown: 'нет данных' },
   };
+  // Mark 2026-10-26 «показывай тут значения»: the numbers sit on the tile next to the word.
+  const gb = value => Number(value).toLocaleString('ru-RU', { maximumFractionDigits: value < 100 ? 1 : 0 });
+  const amount = (used, total) => typeof used === 'number' && total ? `${gb(used)} из ${gb(total)} ГБ` : '';
   return [
-    { id: 'ram', label: 'Память', pct: ram, level: level(ram, 80, 90) },
-    { id: 'disk', label: 'Диск', pct: disk, level: level(disk, 80, 90) },
-    { id: 'cpu', label: 'Процессор', pct: cpu, level: level(cpu, 60, 85) },
+    { id: 'ram', label: 'Память', pct: ram, level: level(ram, 80, 90), value: amount(sys.memory_used_gb, sys.memory_total_gb) },
+    { id: 'disk', label: 'Диск', pct: disk, level: level(disk, 80, 90), value: amount(sys.disk_used_gb, sys.disk_total_gb) },
+    { id: 'cpu', label: 'Процессор', pct: cpu, level: level(cpu, 60, 85), value: cpu === null ? '' : `${cpu}%` },
   ].map(item => ({ ...item, word: words[item.id][item.level] }));
 }
 
@@ -9939,15 +9944,19 @@ function renderMachineHealth(key, sys) {
       button.dataset.health = item.id;
       button.dataset.ccInfo = `machine-${key}`;
       const label = document.createElement('span'); label.className = 'machine-health-label'; label.textContent = item.label;
+      const row = document.createElement('span'); row.className = 'machine-health-row';
       const word = document.createElement('span'); word.className = 'machine-health-word';
+      const value = document.createElement('span'); value.className = 'machine-health-value';
+      row.append(word, value);
       const bar = document.createElement('span'); bar.className = 'machine-health-bar';
       bar.append(document.createElement('span'));
-      button.append(label, word, bar);
+      button.append(label, row, bar);
       host.append(button);
     }
     button.className = `machine-health-item is-${item.level}`;
-    button.setAttribute('aria-label', `${item.label}: ${item.word}. Нажми, чтобы увидеть цифры`);
+    button.setAttribute('aria-label', `${item.label}: ${item.word}${item.value ? `, ${item.value}` : ''}. Нажми, чтобы увидеть подробности`);
     button.querySelector('.machine-health-word').textContent = item.word;
+    button.querySelector('.machine-health-value').textContent = item.value;
     button.querySelector('.machine-health-bar > span').style.width = `${Math.min(100, item.pct || 0)}%`;
   }
 }
