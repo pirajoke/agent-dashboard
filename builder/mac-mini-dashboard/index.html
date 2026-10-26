@@ -6067,7 +6067,7 @@ function liveSessionsRender(payload) {
   if (working.length) { host.appendChild(heading('Работают', working.length)); host.appendChild(grid(working)); }
   if (quiet.length) {
     const fold = mmEl('details', 'live-quiet');
-    fold.appendChild(heading('Готово', quiet.length, 'summary'));
+    fold.appendChild(heading('Готово и затихли', quiet.length, 'summary'));
     fold.appendChild(grid(quiet));
     host.appendChild(fold);
   }
