@@ -5,6 +5,8 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -130,21 +132,62 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         projects = PAGE[PAGE.index("function mmRenderOwnerProjects("):PAGE.index("let mmOwnerProjectCards")]
         self.assertIn("getElementById('owner-project-body')?.replaceChildren()", projects)
 
-    def test_projects_first_then_folded_blocks(self):
-        # Mark 2026-10-23: main projects on top; the summary, his tasks and «Личное» are one line each
-        # until opened (remembered per browser). Mark 2026-10-26: no history block below them.
-        self.assertLess(PAGE.index('data-mm-panel="map"'), PAGE.index('id="mm-folds"'))
+    def test_home_is_one_grid_of_tiles(self):
+        # Mark 2026-10-26: «пересобери его полностью». The week, his tasks, the projects and «Личное»
+        # sit in one grid; the summary and the small folders open in windows. No history block.
+        home = PAGE[PAGE.index('id="mm-home"'):PAGE.index('data-mm-panel="project"')]
+        for host in ('id="mm-week"', 'id="mm-owner-todo"', 'id="mm-map"', 'id="mm-owner-projects"'):
+            self.assertIn(host, home)
+        for window in ('id="mm-summary-dialog"', 'id="mm-others-dialog"'):
+            self.assertNotIn(window, home)
+            self.assertIn(window, PAGE)
         self.assertNotIn('id="mm-history"', PAGE)
-        folds = PAGE[PAGE.index('id="mm-folds"'):PAGE.index('</div>', PAGE.index('id="mm-owner-projects"'))]
-        for host in ('id="mm-summary"', 'id="mm-owner-todo"', 'id="mm-owner-projects"'):
-            self.assertIn(host, folds)
-        for key in ("'summary'", "'todo'", "'personal'"):
-            self.assertIn(f"mmFoldHead({key}", PAGE)
-        self.assertIn("safeStorageSet(`${MM_FOLD_KEY}.${head.dataset.fold}`", PAGE)
-        self.assertIn('.mm-fold:not(.is-open) > .mm-fold-body { display: none; }', PAGE)
         # «Личное» shows the card's status only: no task counter, no «Видно только тебе».
         self.assertNotIn('открытых задач:', PAGE)
         self.assertNotIn('Видно только тебе', PAGE)
+
+    def test_board_tiles_and_folders_window_follow_owner_access(self):
+        # Run the real board render on a small DOM: busiest main project first, paused ones after,
+        # other recent folders behind one tile; losing owner access closes and empties that window.
+        def source(name):
+            start = PAGE.index(f"function {name}(")
+            return PAGE[start:PAGE.index("\n}\n", start) + 3]
+        script = r"""
+class El { constructor(id){ this.id=id; this.innerHTML=''; this.open=false; }
+  showModal(){ this.open=true; } close(){ this.open=false; } replaceChildren(){ this.innerHTML=''; } }
+const els={}; const document={ getElementById:id=>els[id]||(els[id]=new El(id)) };
+let mmOthers=[];
+const mmDayOffset=d=>d, mmWeekMinutes=p=>p.min, mmSum=a=>a.reduce((x,y)=>x+(y||0),0);
+const mmRenderToday=()=>{}, mmRenderWeek=()=>{}, mmRenderSummary=()=>{}, mmPlural=(n,a,b,c)=>c;
+const mmMapCard=(p,t,today,paused)=>`<a data-project="${p.id}"${paused?' class="is-paused"':''}></a>`;
+const mmMapRow=p=>`<a data-project="${p.id}"></a>`;
+""" + source("renderMap") + source("mmSyncOthers") + r"""
+const $=id=>document.getElementById(id);
+const fail=m=>{ throw new Error(m); };
+const owner={ owner_view:true, series:[{date:'2026-10-26'}], todo:[], projects:[
+  {id:'quiet', main:true, min:10, last_activity:1}, {id:'busy', main:true, min:50, last_activity:0},
+  {id:'paused', main:true, min:0, last_activity:20}, {id:'side-a', min:5, last_activity:2},
+  {id:'side-b', min:9, last_activity:3}, {id:'old', min:1, last_activity:25}] };
+renderMap(owner);
+const order=[...$('mm-map').innerHTML.matchAll(/data-project="([^"]+)"/g)].map(m=>m[1]).join(',');
+if(order!=='busy,quiet,paused') fail('tile order '+order);
+if(!$('mm-map').innerHTML.includes('class="is-paused"')) fail('paused tile not dimmed');
+if(!$('mm-map').innerHTML.includes('data-mm-others') || !$('mm-map').innerHTML.includes('+ ещё 2')) fail('no folders tile');
+if(mmOthers.length!==2) fail('folders '+mmOthers.length);
+$('mm-others-dialog').showModal();
+owner.projects.push({id:'side-c', min:1, last_activity:0});
+renderMap(owner);
+if(!$('mm-others-body').innerHTML.includes('side-c')) fail('open window not refreshed');
+renderMap({ owner_view:false, series:[], projects:owner.projects });
+if($('mm-others-dialog').open) fail('window stayed open without owner access');
+if($('mm-others-body').innerHTML!=='' || mmOthers.length) fail('private rows kept');
+if($('mm-map').innerHTML.includes('data-project')) fail('project tiles shown to a visitor');
+"""
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node runtime is required")
+        run = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(run.returncode, 0, run.stderr)
 
     def test_summary_is_owner_only_and_has_three_periods(self):
         render = PAGE[PAGE.index("function mmRenderSummary("):PAGE.index("function mmInitSummary(")]
