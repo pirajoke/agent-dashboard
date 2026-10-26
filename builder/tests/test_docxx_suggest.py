@@ -12,6 +12,8 @@ from unittest.mock import patch
 BUILDER = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BUILDER))
 
+import hashlib  # noqa: E402
+
 import docxx_suggest as SUGGEST  # noqa: E402
 from dashboard_builder.docxx import docxx_projection  # noqa: E402
 from dashboard_builder.docxx_actions import load_suggestions  # noqa: E402
@@ -102,6 +104,27 @@ class SuggestTests(unittest.TestCase):
 
         self.run_main()
         self.assertEqual(len(self.calls()), 1)  # Documents already guessed are not asked again.
+
+    def test_credential_values_on_their_own_line_are_dropped_too(self):
+        cleaned = SUGGEST.clean_text('Bibliothèque\nMot de passe\nprivate-secret\nIdentifiant :\nmark42\nValable 1h')
+        self.assertEqual(cleaned, 'Bibliothèque\nValable 1h')
+
+    def test_documents_without_a_journal_hash_use_the_file_itself(self):
+        db = sqlite3.connect(self.state / 'operations.sqlite3')
+        db.execute('INSERT INTO extractions VALUES (?,?,?,?)', (hashlib.sha256(b'%PDF synthetic').hexdigest(), 'pdf',
+                   '2026-10-24T10:00:00Z', 'Avis d impôt sur le revenu 2026'))
+        db.commit()
+        db.close()
+        self.run_main()
+        self.assertIn('Avis d impôt sur le revenu', self.calls()[0]['prompt'])
+
+    def test_a_guess_whose_folder_disappeared_is_asked_again(self):
+        self.run_main()
+        (self.library / 'France/Médiathèque').rename(self.library / 'France/Bibliothèque')
+        self.run_main()
+        self.assertEqual(len(self.calls()), 2)
+        self.assertIn('ticket.pdf', self.calls()[1]['prompt'])
+        self.assertNotIn('scan.pdf', self.calls()[1]['prompt'])
 
     def test_public_projection_never_carries_suggestions(self):
         self.run_main()

@@ -14,6 +14,7 @@ documents whose folder fits. Nothing moves here and nothing is sent anywhere els
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -36,6 +37,8 @@ DEFAULT_MODEL = os.environ.get("DOCXX_SUGGEST_MODEL", "claude-sonnet-5-5")
 BATCH = 6
 MAX_BATCHES = 3
 TEXT_LIMIT = 1500
+HASH_LIMIT = 50 * 1024 * 1024
+MAX_CANDIDATES = 60
 WHY_LIMIT = 160
 WORKDIR_NAME = "docxx-suggest-workdir"
 
@@ -56,28 +59,57 @@ _SECRET = re.compile(r"mot de passe|password|passwort|пароль|identifiant|l
 
 
 def clean_text(text: str) -> str:
+    """Text without credential labels and the value that follows them, on the same line or the next."""
     lines = [" ".join(line.split()) for line in str(text or "").splitlines()]
-    kept = [line for line in lines if line and not _SECRET.search(line)]
+    kept, skip_next = [], False
+    for line in lines:
+        if not line:
+            continue
+        if _SECRET.search(line):
+            # «Mot de passe : x» or «Mot de passe» then «x» on its own line: drop both forms.
+            skip_next = True
+            continue
+        if skip_next:
+            skip_next = False
+            continue
+        kept.append(line)
     return "\n".join(kept)[:TEXT_LIMIT]
 
 
-def extraction_texts(directory: Path, identities: list[tuple[str, int]]) -> dict[tuple[str, int], str]:
-    """The newest extracted text for each (sha256, size), read-only; empty when the database is missing."""
+def content_sha(row: dict[str, Any]) -> str | None:
+    """The document's sha256: from its journal row, else from the local file (Drive, iCloud, review)."""
+    if row.get("_sha"):
+        return row["_sha"][0]
+    path = row.get("_path")
+    try:
+        if not path or os.path.islink(path) or not os.path.isfile(path) or os.path.getsize(path) > HASH_LIMIT:
+            return None
+        digest = hashlib.sha256()
+        with open(path, "rb") as stream:
+            for chunk in iter(lambda: stream.read(1 << 20), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+    except OSError:
+        return None
+
+
+def extraction_texts(directory: Path, shas: list[str]) -> dict[str, str]:
+    """The newest extracted text for each sha256, read-only; empty when the database is missing."""
     database = Path(directory) / "operations.sqlite3"
-    if not identities or not database.is_file() or database.is_symlink():
+    if not shas or not database.is_file() or database.is_symlink():
         return {}
-    texts: dict[tuple[str, int], str] = {}
+    texts: dict[str, str] = {}
     try:
         connection = sqlite3.connect(database.as_uri() + "?mode=ro", uri=True, timeout=1)
     except sqlite3.Error:
         return {}
     try:
-        for sha, size in identities:
+        for sha in dict.fromkeys(shas):
             row = connection.execute(
                 "SELECT substr(e.text,1,?) FROM extractions e WHERE e.sha256=? "
                 "ORDER BY e.created_at DESC,e.extractor_id LIMIT 1", (TEXT_LIMIT * 4, sha)).fetchone()
             if row and row[0]:
-                texts[(sha, size)] = clean_text(row[0])
+                texts[sha] = clean_text(row[0])
     except sqlite3.Error:
         return texts
     finally:
@@ -85,25 +117,28 @@ def extraction_texts(directory: Path, identities: list[tuple[str, int]]) -> dict
     return texts
 
 
-def due_rows(directory: Path, decisions: dict, known: dict) -> list[dict[str, Any]]:
+def due_rows(directory: Path, decisions: dict, known: dict, folders: set[str]) -> list[dict[str, Any]]:
+    """Open review rows with no usable guess, each with its cleaned text under ``_text``."""
     rows, _ = _sortable(directory, decisions)
+    candidates = [row for row in rows.values() if row.get("status") == "needs_review"][:MAX_CANDIDATES]
+    shas = {row["key"]: content_sha(row) for row in candidates}
+    texts = extraction_texts(directory, [sha for sha in shas.values() if sha])
     due = []
-    for row in rows.values():
-        if row.get("status") != "needs_review":
-            continue
+    for row in candidates:
+        row["_text"] = texts.get(shas[row["key"]], "") if shas[row["key"]] else ""
         guess = known.get(row["key"])
         if isinstance(guess, dict) and guess.get("name") == row.get("name"):
-            continue
+            gone = guess.get("folder") is not None and guess.get("folder") not in folders
+            text_arrived = guess.get("had_text") is False and bool(row["_text"])
+            if not gone and not text_arrived:
+                continue
         due.append(row)
     return due
 
 
-def user_prompt(batch: list[dict[str, Any]], texts: dict, folders: list[str]) -> str:
-    items = []
-    for row in batch:
-        sha = row.get("_sha")
-        items.append({"id": row["key"], "name": row.get("original_name") or row.get("name"),
-                      "text": texts.get(tuple(sha), "") if sha else ""})
+def user_prompt(batch: list[dict[str, Any]], folders: list[str]) -> str:
+    items = [{"id": row["key"], "name": row.get("original_name") or row.get("name"), "text": row.get("_text", "")}
+             for row in batch]
     return json.dumps({"folders": folders, "documents": items}, ensure_ascii=False, indent=1)
 
 
@@ -157,20 +192,18 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(status, ensure_ascii=False))
         return 1
     folders = list(view["folders"])
-    due = due_rows(args.state, load_decisions(decisions_file), saved["items"])
+    due = due_rows(args.state, load_decisions(decisions_file), saved["items"], set(folders))
     batches = [due[i:i + BATCH] for i in range(0, len(due), BATCH)][: max(1, args.batches)]
-    identities = [tuple(row["_sha"]) for batch in batches for row in batch if row.get("_sha")]
-    texts = extraction_texts(args.state, identities)
     if args.dry_run:
         for batch in batches:
-            print(user_prompt(batch, texts, folders) + "\n")
+            print(user_prompt(batch, folders) + "\n")
         return 0
     cli = find_cli(args.claude) if batches else None
     if batches and not cli:
         status.update(ok=False, reason="claude_not_found")
     for batch in batches if cli else []:
         try:
-            reply = call_claude(cli, args.model, SYSTEM_PROMPT, user_prompt(batch, texts, folders),
+            reply = call_claude(cli, args.model, SYSTEM_PROMPT, user_prompt(batch, folders),
                                 out.parent / WORKDIR_NAME)
             answers = parse_reply(reply, {row["key"] for row in batch}, set(folders))
         except (RuntimeError, ValueError) as error:
@@ -179,7 +212,8 @@ def main(argv: list[str] | None = None) -> int:
         now = iso_z(datetime.now(timezone.utc))
         for row in batch:
             if row["key"] in answers:
-                saved["items"][row["key"]] = {"name": row.get("name"), "at": now, **answers[row["key"]]}
+                saved["items"][row["key"]] = {"name": row.get("name"), "at": now, "had_text": bool(row["_text"]),
+                                              **answers[row["key"]]}
                 status["written"] += 1
         write_json(out, saved)
     status["pending"] = max(0, len(due) - status["written"])
