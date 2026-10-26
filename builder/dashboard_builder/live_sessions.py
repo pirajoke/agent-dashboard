@@ -25,8 +25,11 @@ MACHINE_LABELS = {"mac-mini": "Mac mini", "macbook-pro": "MacBook Pro", "macbook
 STATES = ("approve", "waiting", "working", "done", "stopped")
 NEED_LIMIT = 220
 # Words of a reply that ask Mark for something, besides a question mark.
-ASK_WORDS = ("подтверд", "разреш", "нужно твоё", "нужно твое", "нужен твой", "нужна твоя", "нужно от тебя",
-             "выбери", "реши,", "решай", "ответь", "дай знать", "сливать?", "approve", "permission", "confirm",
+# Stems alone («разреш», «подтверд») would also catch reports such as «запускает разрешённые шаги».
+ASK_WORDS = ("подтверди", "подтвердишь", "твоё подтверждение", "твое подтверждение", "нужно подтверждение",
+             "разреши ", "разреши,", "разрешишь", "твоё разрешение", "твое разрешение", "нужно разрешение",
+             "нужно твоё", "нужно твое", "нужен твой", "нужна твоя", "нужно от тебя", "выбери", "решай",
+             "ответь", "дай знать", "please approve", "your approval", "your permission", "please confirm",
              "let me know", "please choose", "need your", "waiting for you")
 # The start of an optional offer, which does not need an answer.
 OFFER_STARTS = ("если ", "если,", "хочешь,", "могу ", "могу,", "if you", "want me to", "would you like",
