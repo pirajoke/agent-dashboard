@@ -465,6 +465,22 @@ process.stdout.write(JSON.stringify({requests:pending.length,denied,after:areas[
         self.assertNotIn('https://github.com/example/navigation-fixture', out['after'])
         self.assertEqual(out['after'], out['denied'])
 
+    def test_refresh_keeps_shown_materials_until_the_answer_so_cards_do_not_jump(self):
+        # Mark 2026-10-26: the cards jumped down and back up whenever the tab was opened.
+        out = self.run_js(r'''
+(async()=>{const pending=[];
+const first=areas[0].innerHTML;
+context.fetch=(url,options)=>new Promise(resolve=>pending.push(resolve));
+const initial=context.ccLoadPlatformResources();const waiting=areas[0].innerHTML;
+pending[0]({ok:true,status:200,json:async()=>good});await initial;const shown=areas[0].innerHTML;
+const again=context.ccLoadPlatformResources();const during=areas[0].innerHTML;
+pending[1]({ok:false,status:401,json:async()=>({state:'owner_required',verified_at:null,platforms:{}})});await again;
+process.stdout.write(JSON.stringify({first,waiting,shown,during,after:areas[0].innerHTML}));})().catch(e=>{console.error(e);process.exit(1)});''')
+        self.assertIn('Проверяем доступ', out['waiting'], 'First visit still says it is checking')
+        self.assertIn('https://github.com/example/navigation-fixture', out['shown'])
+        self.assertEqual(out['during'], out['shown'], 'A refresh must not swap materials for the waiting line')
+        self.assertNotIn('https://github.com/example/navigation-fixture', out['after'], 'Access loss still clears links')
+
     def test_ec_2_client_rejects_unsafe_hrefs_independently_of_server(self):
         out = self.run_js(r'''
 const unsafe=['javascript:alert(1)','file:///fixture','http://github.com/example/repo','https://127.0.0.1/',
