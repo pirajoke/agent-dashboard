@@ -318,7 +318,7 @@ def shoot(chrome: Chrome, url: str, name: str, width: int, height: int, mobile: 
                 session=session)
     if mobile:
         chrome.send("Emulation.setTouchEmulationEnabled", {"enabled": True, "maxTouchPoints": 5}, session=session)
-    chrome.send("Page.navigate", {"url": url}, session=session)
+    navigation = chrome.send("Page.navigate", {"url": url}, session=session)
     deadline = time.monotonic() + 30
     loaded = False
     while not loaded and time.monotonic() < deadline:
@@ -330,14 +330,16 @@ def shoot(chrome: Chrome, url: str, name: str, width: int, height: int, mobile: 
     chrome.pump(settle)
     probe = chrome.send("Runtime.evaluate", {
         "expression": "JSON.stringify({w: innerWidth, h: innerHeight,"
-                      " scroll: document.documentElement.scrollWidth, title: document.title})",
+                      " scroll: document.documentElement.scrollWidth, title: document.title,"
+                      " status: (performance.getEntriesByType('navigation')[0] || {}).responseStatus || 0})",
         "returnByValue": True}, session=session)
     metrics = json.loads(probe["result"]["value"])
     shot = chrome.send("Page.captureScreenshot", {"format": "png"}, session=session)
     path = out_dir / f"{name}.png"
     path.write_bytes(base64.b64decode(shot["data"]))
     chrome.send("Target.closeTarget", {"targetId": target})
-    return {"name": name, "path": str(path), "loaded": loaded, "viewport": [metrics["w"], metrics["h"]],
+    return {"name": name, "path": str(path), "loaded": loaded, "nav_error": navigation.get("errorText", ""),
+            "http_status": metrics["status"], "viewport": [metrics["w"], metrics["h"]],
             "scroll_width": metrics["scroll"], "errors": page_errors(chrome.events, session)}
 
 
@@ -345,6 +347,10 @@ def judge_shots(shots: list[dict], expected: dict[str, tuple[int, int]]) -> dict
     problems = []
     for shot in shots:
         width, height = expected[shot["name"]]
+        if shot["nav_error"]:
+            problems.append(f"{shot['name']}: page did not open ({shot['nav_error']})")
+        elif shot["http_status"] != 200:
+            problems.append(f"{shot['name']}: page answered {shot['http_status'] or 'nothing'}, not 200")
         if not shot["loaded"]:
             problems.append(f"{shot['name']}: page did not finish loading")
         if shot["viewport"] != [width, height]:

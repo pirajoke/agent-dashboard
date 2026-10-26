@@ -104,7 +104,8 @@ class ScreensTest(unittest.TestCase):
     EXPECTED = {"phone": (390, 844)}
 
     def shot(self, **overrides):
-        return {"name": "phone", "path": "/tmp/phone.png", "loaded": True, "viewport": [390, 844],
+        return {"name": "phone", "path": "/tmp/phone.png", "loaded": True, "nav_error": "",
+                "http_status": 200, "viewport": [390, 844],
                 "scroll_width": 390, "errors": [], **overrides}
 
     def test_clean_shot_passes(self):
@@ -114,6 +115,16 @@ class ScreensTest(unittest.TestCase):
         result = VERIFY.judge_shots([self.shot(scroll_width=512)], self.EXPECTED)
         self.assertEqual(result["status"], "fail")
         self.assertIn("512px", result["summary"])
+
+    def test_error_page_fails(self):
+        result = VERIFY.judge_shots([self.shot(http_status=404)], self.EXPECTED)
+        self.assertEqual(result["status"], "fail")
+        self.assertIn("404", result["summary"])
+
+    def test_failed_navigation_fails(self):
+        result = VERIFY.judge_shots([self.shot(nav_error="net::ERR_CONNECTION_REFUSED", http_status=0)],
+                                    self.EXPECTED)
+        self.assertIn("ERR_CONNECTION_REFUSED", result["summary"])
 
     def test_wrong_viewport_fails(self):
         self.assertEqual(VERIFY.judge_shots([self.shot(viewport=[500, 844])], self.EXPECTED)["status"], "fail")
