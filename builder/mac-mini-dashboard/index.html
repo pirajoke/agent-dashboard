@@ -4421,12 +4421,17 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .mm-todo-slot .mm-todo-card { margin: 0; padding: 6px 20px 14px; border-radius: 20px; box-shadow: var(--mm-shadow-soft); }
 .mm-todo-slot .mm-todo-items { margin: 0; }
 .mm-todo-slot .mm-todo-foot { padding-top: 10px; }
-/* The week: three numbers; a click opens «Сводка». */
-.mm-week-nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; cursor: pointer; }
-.mm-week-nums > span { display: block; padding: 16px 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; transition: border-color .15s ease; }
-.mm-week-nums > span:hover { border-color: var(--mm-control-line); }
-.mm-week-nums small { color: var(--mm-muted); font-size: 13.5px; }
-.mm-week-nums b { display: block; margin-top: 4px; color: var(--mm-ink); font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+/* The week: one thin line of three numbers; a click opens «Сводка». */
+.mm-week-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 22px; min-height: 52px; padding: 8px 18px; color: var(--mm-muted); font-size: 14.5px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; cursor: pointer; }
+.mm-week-strip:hover { border-color: var(--mm-control-line); }
+.mm-week-strip b { color: var(--mm-ink); font-size: 17px; font-weight: 800; }
+.mm-os .mm-week-strip .mm-home-link { margin-left: auto; }
+/* Long notes and agent answers in «Ждёт тебя» stay one line until clicked. */
+.mm-todo-slot .mm-todo-body small, .mm-todo-slot .mm-todo-agent-note:not(.is-open) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mm-todo-slot .mm-todo-agent-note { cursor: pointer; }
+.mm-todo-slot .mm-todo-item, .mm-todo-slot .mm-todo-main, .mm-todo-slot .mm-todo-body { min-width: 0; }
+.mm-todo-slot .mm-todo-main { flex: 1; overflow: hidden; }
+.mm-todo-slot .mm-todo-body { max-width: 100%; }
 /* Projects and «Личное»: one row each, the whole row opens it. */
 .mm-os a.mm-map-card, .mm-os button.mm-row { display: flex; flex-direction: row; align-items: center; gap: 16px; width: 100%; min-height: 76px; margin: 0; padding: 14px 20px; color: var(--mm-ink); font: inherit; text-align: left; text-decoration: none; background: none !important; border: 0 !important; border-top: 1px solid var(--mm-line) !important; border-radius: 0; box-shadow: none; cursor: pointer; }
 .mm-home-card > :first-child { border-top: 0 !important; }
@@ -4454,10 +4459,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media (max-width: 600px) {
   .mm-os .mm-home { gap: 28px; }
   .mm-todo-slot .mm-todo-card { padding: 4px 16px 12px; }
-  .mm-week-nums { gap: 8px; }
-  .mm-week-nums > span { padding: 12px; }
-  .mm-week-nums small { font-size: 12.5px; }
-  .mm-week-nums b { font-size: 20px; }
+  .mm-week-strip { gap: 4px 14px; padding: 8px 14px; font-size: 13.5px; }
+  .mm-week-strip b { font-size: 15.5px; }
+  .mm-week-strip { gap: 4px 12px; }
+  .mm-week-more-word { display: none; }
+  .mm-os .mm-week-strip .mm-home-link { font-size: 22px; }
+  .mm-week-strip .mm-home-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
   .mm-os a.mm-map-card, .mm-os button.mm-row { gap: 12px; padding: 14px 16px; }
   .mm-row-name { font-size: 16px; }
   .mm-row-desc { font-size: 14px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
@@ -4465,7 +4472,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   .mm-home .mm-project-art { width: 42px; height: 42px; border-radius: 12px; }
   .mm-home .mm-project-art svg { width: 38px; height: 38px; }
 }
-@media (prefers-reduced-motion: reduce) { .mm-week-nums > span { transition: none; } }
 </style>
 </head>
 <body>
@@ -11523,9 +11529,10 @@ function mmRenderWeek(data) {
   const prs = mmSum(last7.map(day => day.prs_merged));
   const projects = (data.projects || []).filter(p => p.main && mmWeekMinutes(p) > 0).length;
   const hours = minutes >= 60 ? `${Math.round(minutes / 60)} ч` : workMinutes(minutes);
-  tile.innerHTML = `<div class="mm-home-head"><h3 class="mm-home-label" id="mm-week-title">Эта неделя</h3>
-      <button type="button" class="mm-home-link" data-mm-summary aria-haspopup="dialog" aria-controls="mm-summary-dialog">Сводка ›</button></div>
-    <div class="mm-week-nums" data-mm-summary><span><small>Работа</small><b>${mmEsc(hours)}</b></span><span><small>Готово изменений</small><b>${prs}</b></span><span><small>Проектов в работе</small><b>${projects}</b></span></div>`;
+  // Mark 2026-10-26: «гигантская балда, уменьши раза в три», so the week is one thin line.
+  tile.innerHTML = `<div class="mm-week-strip" data-mm-summary><h3 class="mm-home-label" id="mm-week-title">Неделя</h3>
+    <span><b>${mmEsc(hours)}</b> работы</span><span><b>${prs}</b> ${mmEsc(mmPlural(prs, 'изменение', 'изменения', 'изменений'))}</span><span><b>${projects}</b> ${mmEsc(mmPlural(projects, 'проект', 'проекта', 'проектов'))}</span>
+    <button type="button" class="mm-home-link" data-mm-summary aria-haspopup="dialog" aria-controls="mm-summary-dialog" aria-label="Сводка"><span class="mm-week-more-word">Сводка </span>›</button></div>`;
   tile.hidden = false;
 }
 
@@ -12108,6 +12115,8 @@ function mmAgentNote(item) {
   const agent = item.agent;
   if (!agent) return null;
   const note = mmEl('span', 'mm-todo-agent-note');
+  // On the home the answer is one line; a click shows all of it (a link inside still opens).
+  note.addEventListener('click', event => { if (!event.target.closest('a')) note.classList.toggle('is-open'); });
   if (agent.state === 'queued') {
     const runner = mmOwnerTodoRunner;
     if (runner?.state === 'error' && runner.reason === 'claude_auth_failed') note.textContent = 'Агент не может войти в Claude на Mac mini.';
