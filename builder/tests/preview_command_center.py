@@ -312,11 +312,15 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
             payload = {
                 # The Pro is the busy one, so «перегружена» and «заполняется» can be seen next to a calm Mac mini.
-                "system": {"hostname": "Preview computer", "cpu_percent": 72, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
+                # A raw macOS host name: the page must still say «MacBook Pro».
+                "system": {"hostname": "MacBook-Pro-de-Example.local", "cpu_percent": 72, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
                 if parsed.path == "/api/pro/all" else
                 {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
                 "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
             }
+            if parsed.path == "/api/pro/all":
+                # Switched off on purpose: shown as «Выключен» in the archive, never as «Нужно внимание».
+                payload["services"].append({"name": "Agent Supervisor", "label": "fixture.agent-supervisor", "desc": "Agent supervisor", "status": "stopped", "runtime": "Python", "pid": None, "cat": "core"})
             if parsed.path == "/api/all" and self._decision_owner_authorized():
                 # A running job the health registry does not list is added by the product rule.
                 payload = SERVER.normalize_payload(payload, loaded={"com.example.fixture-extra": 0}, disabled=set(),

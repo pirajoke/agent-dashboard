@@ -276,11 +276,12 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .svc-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; }
 .svc-dot.ok { background: var(--mm-success); }
 .svc-dot.bad { background: var(--mm-danger); }
+.svc-dot.off { background: var(--mm-muted); opacity: .5; }
 .svc-text { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 10px; }
 .svc-text .svc-name { font-weight: 600; font-size: 14px; white-space: nowrap; }
 .svc-text .svc-desc { font-size: 12.5px; color: var(--mm-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .svc-state { flex: none; font-size: 12px; font-weight: 600; }
-.svc-state.ok { color: var(--mm-muted); font-weight: 500; }
+.svc-state.ok, .svc-state.off { color: var(--mm-muted); font-weight: 500; }
 .svc-state.bad { color: var(--mm-danger); padding: 2px 8px; border-radius: 999px; background: var(--mm-danger-soft); }
 .svc-archive-toggle { flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--mm-muted); cursor: pointer; opacity: .35; }
 .svc-archive-toggle svg { width: 16px; height: 16px; }
@@ -5413,16 +5414,16 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     </header>
     <nav class="nav-pills cc-machine-nav" aria-label="Компьютеры">
     <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
-      Mac Mini
-      <span class="pill-badge" id="mini-badge">offline</span>
+      Mac mini
+      <span class="pill-badge" id="mini-badge">…</span>
     </button>
     <button class="nav-pill" type="button" aria-controls="section-air" aria-pressed="false" onclick="showSection('air')">
-      Air
-      <span class="pill-badge" id="air-badge">-</span>
+      MacBook Air
+      <span class="pill-badge" id="air-badge">…</span>
     </button>
     <button class="nav-pill" type="button" aria-controls="section-pro" aria-pressed="false" onclick="showSection('pro')">
-      Pro
-      <span class="pill-badge" id="pro-badge">-</span>
+      MacBook Pro
+      <span class="pill-badge" id="pro-badge">…</span>
     </button>
     </nav>
   <!-- ═══════════════ MAC MINI ═══════════════ -->
@@ -5430,7 +5431,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="machine-header">
       <div class="machine-icon mini">🖥</div>
       <div class="machine-info">
-        <div class="machine-name">Mac Mini M4</div>
+        <div class="machine-name">Mac mini</div>
         <div class="machine-status" id="mini-status">Проверяю связь…</div>
       </div>
       <button type="button" class="cc-i" data-cc-info="machine-mini" aria-label="Mac mini: нагрузка и диск">i</button>
@@ -5470,9 +5471,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </div>
       <div id="mini-services-table" style="padding:8px 8px 0;">
         <table class="svc-table">
-          <thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th></tr></thead>
+          <thead><tr><th></th><th>Сервис</th><th>Состояние</th><th>Как запущен</th><th>Порт</th><th></th></tr></thead>
           <tbody id="mini-svc-tbody">
-            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Loading services...</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Загружаю сервисы…</td></tr>
           </tbody>
         </table>
       </div>
@@ -5520,13 +5521,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="air-svc-count"></span></div>
-        <button class="svc-btn" onclick="refreshAir()" style="border:none;">↻ Refresh</button>
+        <button class="svc-btn" onclick="refreshAir()" style="border:none;">↻ Обновить</button>
       </div>
       <div style="padding:8px 8px 0;">
         <table class="svc-table">
-          <thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th></tr></thead>
+          <thead><tr><th></th><th>Сервис</th><th>Состояние</th><th>Как запущен</th><th>Порт</th><th></th></tr></thead>
           <tbody id="air-svc-tbody">
-            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Loading services...</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Загружаю сервисы…</td></tr>
           </tbody>
         </table>
       </div>
@@ -5574,13 +5575,13 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="pro-svc-count"></span></div>
-        <button class="svc-btn" onclick="refreshPro()" style="border:none;">↻ Refresh</button>
+        <button class="svc-btn" onclick="refreshPro()" style="border:none;">↻ Обновить</button>
       </div>
       <div style="padding:8px 8px 0;">
         <table class="svc-table">
-          <thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th></tr></thead>
+          <thead><tr><th></th><th>Сервис</th><th>Состояние</th><th>Как запущен</th><th>Порт</th><th></th></tr></thead>
           <tbody id="pro-svc-tbody">
-            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Loading services...</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Загружаю сервисы…</td></tr>
           </tbody>
         </table>
       </div>
@@ -9842,7 +9843,14 @@ function visibleRuntimeServices(services) {
 
 const SVC_ARCHIVE_STORAGE_KEY = 'command-center.service-archive.v1';
 // Old jobs replaced by the 03:30 backups, JARVIS-bot alerts and the health API (checked 2026-10-20).
-const SVC_ARCHIVED_BY_DEFAULT = Object.freeze(['krisp-import', 'database-backup', 'alert-monitor', 'm4-healthcheck']);
+const SVC_ARCHIVED_BY_DEFAULT = Object.freeze(['krisp-import', 'database-backup', 'alert-monitor', 'm4-healthcheck', 'agent-supervisor']);
+// Services Mark switched off on purpose: stopped is their normal state, so they read «Выключен», not a problem.
+// Agent Supervisor on the MacBook Pro: stopped and not needed (Mark 2026-10-26).
+const SVC_OFF_ON_PURPOSE = Object.freeze(['agent-supervisor']);
+
+function svcOffOnPurpose(s) {
+  return s.status !== 'running' && SVC_OFF_ON_PURPOSE.includes(svcSlug(s.name).replace(/\./g, '-'));
+}
 const SVC_GROUPS = [
   ['problem', 'Нужно внимание'],
   ['web', 'Сайты и приложения'],
@@ -9865,6 +9873,7 @@ const SVC_PLAIN_DESC = {
   'Database Backup': 'Старый ночной бэкап баз',
   'Alert Monitor': 'Старые оповещения',
   'M4 Healthcheck': 'Старая проверка здоровья Mac mini',
+  'Agent Supervisor': 'Старый надзор за агентами, больше не нужен',
 };
 const SVC_ARCHIVE_MEMORY = {};
 const SVC_NOTES = [/\s*·\s*не загружена в launchd\s*$/, /\s*·\s*последний запуск с ошибкой \(код -?\d+\)\s*$/];
@@ -9888,6 +9897,7 @@ function svcUid(tbodyId, s) {
 }
 
 function svcProblem(s) {
+  if (svcOffOnPurpose(s)) return null;
   const desc = String(s.desc || '');
   if (s.status !== 'running') {
     if (/не загружена в launchd/.test(desc)) return {label: 'Не запущена', why: 'macOS не загрузила задачу, она не выполняется'};
@@ -9967,7 +9977,7 @@ function renderSvcTable(tbodyId, services, actionFn) {
     `<button type="button" aria-pressed="${style === key}" onclick="setSvcStyle('${key}')">${label}</button>`).join('')}</span>`;
   let html = summary;
   if (style === 'table') {
-    html += '<table class="svc-table"><thead><tr><th></th><th>Name</th><th>Status</th><th>Runtime</th><th>Port</th><th></th><th></th></tr></thead><tbody>';
+    html += '<table class="svc-table"><thead><tr><th></th><th>Сервис</th><th>Состояние</th><th>Как запущен</th><th>Порт</th><th></th><th></th></tr></thead><tbody>';
     for (const [key, label] of SVC_GROUPS) {
       const list = grouped[key] || [];
       if (!list.length) continue;
@@ -9990,14 +10000,13 @@ function renderSvcTable(tbodyId, services, actionFn) {
     html += `<div class="svc-archive-bar"><button class="platform-archive-open" type="button" aria-haspopup="dialog" onclick="openSvcArchive('${tbodyId}')"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив</span>${archivedProblems ? `<span class="svc-archive-problem">· есть проблема</span>` : ''}</button></div>`;
   }
   host.innerHTML = html;
-  const working = active.filter(s => !svcProblem(s)).length;
   const count = document.getElementById(tbodyId.replace('-svc-tbody', '-svc-count'));
   if (count) count.textContent = '';
   const badge = document.getElementById(tbodyId.replace('-svc-tbody', '-badge'));
-  if (badge) badge.textContent = `${working}/${active.length}`;
+  if (badge) badge.textContent = problems ? 'есть проблема' : 'ок';
   const dialog = document.getElementById('svc-archive-dialog');
   if (dialog && dialog.open && dialog.dataset.host === tbodyId) fillSvcArchive(tbodyId);
-  return {working, total: active.length};
+  return {working: active.filter(s => !svcProblem(s)).length, total: active.length};
 }
 
 const SVC_STYLE_STORAGE_KEY = 'command-center.service-style.v1';
@@ -10066,8 +10075,9 @@ function renderSvcRow(s, tbodyId, actionFn, archived) {
   const problem = svcProblem(s);
   const uid = svcUid(tbodyId, s);
   const name = escapeHtml(s.name || s.label || '—');
-  const state = problem ? 'bad' : 'ok';
-  const stateLabel = problem ? problem.label : 'Работает';
+  const off = svcOffOnPurpose(s);
+  const state = problem ? 'bad' : off ? 'off' : 'ok';
+  const stateLabel = problem ? problem.label : off ? 'Выключен' : 'Работает';
   const desc = escapeHtml(svcPlainDesc(s));
   const control = IS_PUBLIC_DASHBOARD || !s.label ? '' : (s.status === 'running'
     ? `<button class="svc-btn stop" type="button" onclick="${actionFn}('${s.label}','stop')">Остановить</button>`
@@ -10084,8 +10094,8 @@ function renderSvcRow(s, tbodyId, actionFn, archived) {
     s.project ? ['Проект', s.project] : null,
     s.plist ? ['Plist', s.plist] : null,
     s.log ? ['Лог', s.log] : null,
-    s.config ? ['Config', s.config] : null,
-    s.env_file ? ['Env File', s.env_file] : null,
+    s.config ? ['Настройки', s.config] : null,
+    s.env_file ? ['Файл переменных', s.env_file] : null,
   ].filter(Boolean).map(([k, v]) => `<div class="svc-detail-item"><div class="svc-detail-label">${k}</div><div class="svc-detail-value">${escapeHtml(String(v))}</div></div>`).join('');
   const archiveLabel = archived ? `${name}: вернуть из архива` : `${name}: в архив`;
   return `<div class="svc-item ${state}${archived ? ' archived' : ''}">
@@ -10107,7 +10117,7 @@ function renderSvcRow(s, tbodyId, actionFn, archived) {
 
 function renderEnvVars(vars) {
   if (!vars || !Object.keys(vars).length) return '';
-  let html = '<div style="margin-top:12px;"><div class="svc-detail-label" style="margin-bottom:6px;">Environment Variables</div><table class="svc-env-table">';
+  let html = '<div style="margin-top:12px;"><div class="svc-detail-label" style="margin-bottom:6px;">Переменные окружения</div><table class="svc-env-table">';
   for (const [k, v] of Object.entries(vars)) {
     html += `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(String(v))}</td></tr>`;
   }
@@ -10296,7 +10306,6 @@ function renderGauges(prefix, sys) {
   const uptimeVal = document.getElementById(prefix + '-uptime-val');
   if (uptimeVal) uptimeVal.textContent = sys.uptime || '—';
   const uptimeSub = document.getElementById(prefix + '-uptime-sub');
-  if (uptimeSub) uptimeSub.textContent = sys.hostname || '';
   renderMachineHealth(prefix, sys);
   renderHeaderDate();
 }
@@ -10307,7 +10316,7 @@ async function refreshMini() {
     document.getElementById('mini-status').textContent = 'Нет связи';
     document.getElementById('mini-online-badge').textContent = 'не в сети';
     document.getElementById('mini-online-badge').className = 'machine-badge offline';
-    document.getElementById('mini-badge').textContent = 'offline';
+    document.getElementById('mini-badge').textContent = 'нет связи';
     document.getElementById('mini-cpu').textContent = '—';
     document.getElementById('mini-ram').textContent = '— / 16 GB';
     document.getElementById('mini-disk').textContent = '—';
@@ -10330,7 +10339,7 @@ async function refreshMini() {
     renderMachineHealth('mini', null);
     document.getElementById('mini-online-badge').textContent = 'не в сети';
     document.getElementById('mini-online-badge').className = 'machine-badge offline';
-    document.getElementById('mini-badge').textContent = 'offline';
+    document.getElementById('mini-badge').textContent = 'нет связи';
     return;
   }
   machineLastSeen.mini = Date.now();
@@ -10340,8 +10349,6 @@ async function refreshMini() {
   document.getElementById('mini-status').textContent = machineStatusText('mini', sys);
   machineUptime.mini = sys.uptime || '';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
-  const running = svcs.filter(s => s.status === 'running').length;
-  document.getElementById('mini-badge').textContent = `${running}/${svcs.length}`;
   document.getElementById('mini-svc-count').textContent = '';
   renderSvcTable('mini-svc-tbody', svcs, 'miniAction');
   renderGauges('mini', sys);
@@ -10364,19 +10371,16 @@ async function refreshAir() {
     document.getElementById('air-status').textContent = 'Нет связи';
     document.getElementById('air-online-badge').textContent = 'не в сети';
     document.getElementById('air-online-badge').className = 'machine-badge offline';
-    document.getElementById('air-badge').textContent = 'off';
+    document.getElementById('air-badge').textContent = 'нет связи';
     return;
   }
   const sys = data.system;
-  document.getElementById('air-hostname').textContent = sys.hostname || 'MacBook Air';
   document.getElementById('air-status').textContent = machineStatusText('air', sys);
   machineLastSeen.air = Date.now();
   machineUptime.air = sys.uptime || '';
   document.getElementById('air-online-badge').textContent = 'в сети';
   document.getElementById('air-online-badge').className = 'machine-badge online';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
-  const running = svcs.filter(s => s.status === 'running').length;
-  document.getElementById('air-badge').textContent = `${running}/${svcs.length}`;
   document.getElementById('air-svc-count').textContent = '';
   const shown = renderSvcTable('air-svc-tbody', svcs, 'airAction');
   renderGauges('air', sys);
@@ -10398,7 +10402,7 @@ async function refreshPro() {
     document.getElementById('pro-status').textContent = 'Нет связи';
     document.getElementById('pro-online-badge').textContent = 'не в сети';
     document.getElementById('pro-online-badge').className = 'machine-badge offline';
-    document.getElementById('pro-badge').textContent = 'off';
+    document.getElementById('pro-badge').textContent = 'нет связи';
     document.getElementById('pro-cpu').textContent = '—';
     document.getElementById('pro-ram').textContent = '—';
     document.getElementById('pro-disk').textContent = '—';
@@ -10407,15 +10411,12 @@ async function refreshPro() {
     return;
   }
   const sys = data.system;
-  document.getElementById('pro-hostname').textContent = sys.hostname || 'MacBook Pro';
   document.getElementById('pro-status').textContent = machineStatusText('pro', sys);
   machineLastSeen.pro = Date.now();
   machineUptime.pro = sys.uptime || '';
   document.getElementById('pro-online-badge').textContent = 'в сети';
   document.getElementById('pro-online-badge').className = 'machine-badge online';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
-  const running = svcs.filter(s => s.status === 'running').length;
-  document.getElementById('pro-badge').textContent = `${running}/${svcs.length}`;
   document.getElementById('pro-svc-count').textContent = '';
   renderSvcTable('pro-svc-tbody', svcs, 'proAction');
   renderGauges('pro', sys);

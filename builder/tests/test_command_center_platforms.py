@@ -117,7 +117,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
         # Mark 2026-10-14: one design for every tab, in Russian.
         self.assertIn("Привет, Максим", self.html)
         for target, label in (
-            ("mac-mini", "Mac Mini"),
+            ("mac-mini", "Mac mini"),
             ("air", "Air"),
             ("pro", "Pro"),
             ("agents", "Агенты"),
