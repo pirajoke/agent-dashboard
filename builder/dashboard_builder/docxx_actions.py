@@ -136,12 +136,36 @@ def _sortable(directory, decisions: dict):
     roots = [_root_of(row['_path']) for row in rows.values() if row.get('_path')]
     roots = [root for root in roots if root is not None]
     root = max(set(roots), key=roots.count) if roots else None
+    if root is not None:
+        _find_in_review(rows, root)
     return rows, root
+
+
+# Google Docs made in Drive appear on this Mac as small .gdoc/.gsheet/.gslides link files.
+_DRIVE_LINKS = ('', '.gdoc', '.gsheet', '.gslides', '.gdraw', '.gform')
+
+
+def _find_in_review(rows: dict, root: Path) -> None:
+    """Drive rows whose journal carries no local path: find the file by name in the review folder."""
+    lost = [row for row in rows.values() if row.get('status') == 'needs_review' and not row.get('_path')
+            and row.get('name')]
+    if not lost:
+        return
+    review = [f for f in list_folders(root) if REVIEW.search(f.split('/')[0])]
+    for row in lost:
+        found = []
+        for folder in review:
+            for suffix in _DRIVE_LINKS:
+                candidate = root / folder / (row['name'] + suffix)
+                if os.path.isfile(candidate) and not os.path.islink(candidate) and _inside(root, candidate):
+                    found.append(candidate)
+        if len(found) == 1:  # Two files with this name: leave it to Mark rather than guess.
+            row['_path'] = str(found[0])
 
 
 def folders_view(directory, decisions_file) -> dict:
     decisions = load_decisions(decisions_file)
-    _, root = _sortable(directory, decisions)
+    rows, root = _sortable(directory, decisions)
     if root is None or not os.path.isdir(root):
         return {'state': 'unavailable', 'folders': [], 'archive': None, 'trash': None, 'recent': []}
     folders = list_folders(root)
@@ -158,8 +182,11 @@ def folders_view(directory, decisions_file) -> dict:
             break
     # Without a trash folder the first «В корзину» makes one inside the review folder, never at the root.
     can_trash = bool(trash or review_top)
+    # Rows the Mac mini can actually move; the page offers only «Оставить» for the others.
+    movable = [key for key, row in rows.items() if row.get('status') == 'needs_review' and row.get('_path')
+               and _inside(root, Path(row['_path']))]
     return {'state': 'ready', 'folders': choices, 'archive': archive, 'trash': trash or None,
-            'can_trash': can_trash, 'recent': recent}
+            'can_trash': can_trash, 'recent': recent, 'movable': movable}
 
 
 def _trash_folder(root: Path, view: dict) -> str:

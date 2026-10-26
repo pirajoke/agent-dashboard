@@ -201,6 +201,20 @@ class SortingTests(unittest.TestCase):
         row = next(r for r in docxx_projection(self.state, owner=True, suggestions=load_suggestions(suggestions))['records']
                    if r['key'] == key)
         self.assertEqual(row['suggest'], {'junk': True, 'why': 'Мусор'})
+    def test_drive_document_without_a_path_is_found_by_name_in_the_review_folder(self):
+        status = json.loads((self.state / 'status.json').read_text())
+        status['drive_ingress']['results'] = [{'status': 'needs_review', 'id': 'drive-doc-1'},
+                                              {'status': 'needs_review', 'id': 'drive-doc-2', 'target_name': 'Lost.pdf'}]
+        self.write('status.json', status)
+        (self.library / REVIEW / 'Документ без названия.gdoc').write_text('{"doc_id": "x"}')
+        rows = {r['name']: r['key'] for r in self.view()['records'] if r['source'] == 'drive'}
+        folders = folders_view(self.state, self.decisions)
+        self.assertIn(rows['Документ без названия'], folders['movable'])
+        self.assertNotIn(rows['Lost.pdf'], folders['movable'])
+        result = apply(self.state, self.decisions, {'action': 'trash', 'keys': [rows['Документ без названия']]})
+        self.assertEqual(result['results'][0]['destination'], '10 — 📥 To review/Корзина/Документ без названия.gdoc')
+        lost = apply(self.state, self.decisions, {'action': 'trash', 'keys': [rows['Lost.pdf']]})
+        self.assertEqual(lost['results'][0]['error'], 'not_found')
 
 
 if __name__ == '__main__':
