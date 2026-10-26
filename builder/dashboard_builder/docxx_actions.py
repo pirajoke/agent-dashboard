@@ -145,22 +145,61 @@ def _sortable(directory, decisions: dict):
 _DRIVE_LINKS = ('', '.gdoc', '.gsheet', '.gslides', '.gdraw', '.gform')
 
 
+def _drive_id(row: dict) -> str | None:
+    url = str(row.get('url') or '')
+    marker = 'https://drive.google.com/file/d/'
+    return url[len(marker):].split('/', 1)[0] if url.startswith(marker) else None
+
+
+def _gdoc_id(path: Path) -> str | None:
+    """The Drive id written inside a .gdoc/.gsheet link file, when it has one."""
+    if path.suffix not in _DRIVE_LINKS[1:]:
+        return None
+    try:
+        with open(path, 'rb') as stream:
+            data = json.loads(stream.read(65536).decode('utf-8'))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    value = data.get('doc_id') or str(data.get('resource_id') or '').rpartition(':')[2]
+    return value if isinstance(value, str) and value else None
+
+
 def _find_in_review(rows: dict, root: Path) -> None:
-    """Drive rows whose journal carries no local path: find the file by name in the review folder."""
+    """Drive rows whose journal carries no local path: find the file by name in the review folder.
+
+    Only an unambiguous pair counts: one row, one file, no other row on that file, and a Google
+    Docs link file whose id matches the row's Drive id when both are known.
+    """
     lost = [row for row in rows.values() if row.get('status') == 'needs_review' and not row.get('_path')
             and row.get('name')]
     if not lost:
         return
+    taken = {os.path.realpath(row['_path']) for row in rows.values() if row.get('_path')}
     review = [f for f in list_folders(root) if REVIEW.search(f.split('/')[0])]
+    matches: dict[str, list[Path]] = {}
     for row in lost:
         found = []
         for folder in review:
             for suffix in _DRIVE_LINKS:
                 candidate = root / folder / (row['name'] + suffix)
-                if os.path.isfile(candidate) and not os.path.islink(candidate) and _inside(root, candidate):
+                if (os.path.isfile(candidate) and not os.path.islink(candidate) and _inside(root, candidate)
+                        and os.path.realpath(candidate) not in taken):
                     found.append(candidate)
-        if len(found) == 1:  # Two files with this name: leave it to Mark rather than guess.
-            row['_path'] = str(found[0])
+        matches[row['key']] = found
+    claims: dict[str, int] = {}
+    for found in matches.values():
+        for candidate in found:
+            claims[os.path.realpath(candidate)] = claims.get(os.path.realpath(candidate), 0) + 1
+    for row in lost:
+        found = matches[row['key']]
+        if len(found) != 1 or claims[os.path.realpath(found[0])] != 1:
+            continue  # Two files, or two rows on one file: leave it to Mark rather than guess.
+        inside, expected = _gdoc_id(found[0]), _drive_id(row)
+        if inside and expected and inside != expected:
+            continue
+        row['_path'] = str(found[0])
 
 
 def folders_view(directory, decisions_file) -> dict:

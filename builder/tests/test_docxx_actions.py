@@ -206,7 +206,7 @@ class SortingTests(unittest.TestCase):
         status['drive_ingress']['results'] = [{'status': 'needs_review', 'id': 'drive-doc-1'},
                                               {'status': 'needs_review', 'id': 'drive-doc-2', 'target_name': 'Lost.pdf'}]
         self.write('status.json', status)
-        (self.library / REVIEW / 'Документ без названия.gdoc').write_text('{"doc_id": "x"}')
+        (self.library / REVIEW / 'Документ без названия.gdoc').write_text('{"doc_id": "drive-doc-1"}')
         rows = {r['name']: r['key'] for r in self.view()['records'] if r['source'] == 'drive'}
         folders = folders_view(self.state, self.decisions)
         self.assertIn(rows['Документ без названия'], folders['movable'])
@@ -215,6 +215,20 @@ class SortingTests(unittest.TestCase):
         self.assertEqual(result['results'][0]['destination'], '10 — 📥 To review/Корзина/Документ без названия.gdoc')
         lost = apply(self.state, self.decisions, {'action': 'trash', 'keys': [rows['Lost.pdf']]})
         self.assertEqual(lost['results'][0]['error'], 'not_found')
+    def test_two_rows_on_one_file_or_a_wrong_doc_id_move_nothing(self):
+        status = json.loads((self.state / 'status.json').read_text())
+        status['drive_ingress']['results'] = [{'status': 'needs_review', 'id': 'drive-doc-aa'},
+                                              {'status': 'needs_review', 'id': 'drive-doc-bb'},
+                                              {'status': 'needs_review', 'id': 'drive-doc-cc', 'target_name': 'Plan'}]
+        self.write('status.json', status)
+        (self.library / REVIEW / 'Документ без названия.gdoc').write_text('{"doc_id": "drive-doc-aa"}')
+        (self.library / REVIEW / 'Plan.gdoc').write_text('{"doc_id": "someOtherDoc"}')
+        drive = [r for r in self.view()['records'] if r['source'] == 'drive']
+        movable = folders_view(self.state, self.decisions)['movable']
+        self.assertFalse(any(r['key'] in movable for r in drive))
+        for row in drive:
+            self.assertEqual(apply(self.state, self.decisions, {'action': 'trash', 'keys': [row['key']]})['results'][0]['error'], 'not_found')
+        self.assertTrue((self.library / REVIEW / 'Документ без названия.gdoc').exists())
 
 
 if __name__ == '__main__':
