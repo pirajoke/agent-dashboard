@@ -32,6 +32,7 @@ HEALTH_URL = os.environ.get("AUTO_DEPLOY_HEALTH_URL", "http://127.0.0.1:7777/")
 MESSAGES = {
     "live": "На сайте: Mac mini поставил эту версию, сайт отвечает.",
     "live_unhealthy": "Версия стоит, но сайт сейчас не отвечает.",
+    "rollback_failed": "Сбой: Mac mini не смог ни поставить, ни откатить, что сейчас на сайте, неизвестно.",
     "failed": "Не встало: Mac mini попробовал поставить и откатил назад.",
     "ci_red": "Не встало: проверки на main красные, Mac mini не ставил.",
     "waiting_ci": "Ждёт: Mac mini поставит, как только пройдут проверки.",
@@ -79,6 +80,8 @@ def health_code(url: str = HEALTH_URL) -> int:
 
 def verdict(sha: str, state: dict, log: list[dict], contains, health: int) -> str:
     """contains(ancestor, descendant) -> bool says whether one commit includes the other."""
+    if str(state.get("last_result", "")).endswith("_rollback_failed"):
+        return "rollback_failed"  # files on disk may be half-updated; nothing is confirmed
     deployed = state.get("deployed_sha")
     if deployed and contains(sha, deployed):
         return "live" if health == 200 else "live_unhealthy"
@@ -123,7 +126,7 @@ def main(argv: list[str]) -> int:
     print(MESSAGES[status])
     if status == "live":
         return 0
-    return 1 if status in {"failed", "ci_red", "live_unhealthy"} else 2
+    return 1 if status in {"failed", "rollback_failed", "ci_red", "live_unhealthy"} else 2
 
 
 if __name__ == "__main__":

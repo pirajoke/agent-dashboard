@@ -34,6 +34,15 @@ class VerdictTest(unittest.TestCase):
         log = [{"sha": "c", "result": "health_failed", "rollback": "ok"}]
         self.assertEqual(VERIFY.verdict("c", state, log, contains, 200), "failed")
 
+    def test_failed_rollback_confirms_nothing(self):
+        state = {"deployed_sha": "b", "failed_sha": "c", "last_result": "deploy_failed_rollback_failed"}
+        self.assertEqual(VERIFY.verdict("a", state, [], contains, 200), "rollback_failed")
+        self.assertEqual(VERIFY.verdict("c", state, [], contains, 200), "rollback_failed")
+
+    def test_later_good_deploy_clears_a_failed_rollback(self):
+        state = {"deployed_sha": "c", "failed_sha": "b", "last_result": "deployed"}
+        self.assertEqual(VERIFY.verdict("c", state, [], contains, 200), "live")
+
     def test_red_ci_is_told_apart_from_a_failed_deploy(self):
         state = {"deployed_sha": "a", "failed_sha": "c"}
         log = [{"sha": "c", "result": "ci_red"}]
@@ -47,7 +56,7 @@ class VerdictTest(unittest.TestCase):
         self.assertEqual(VERIFY.verdict("a", {}, [], contains, 200), "pending")
 
     def test_every_status_has_a_message(self):
-        for status in ("live", "live_unhealthy", "failed", "ci_red", "waiting_ci", "pending", "unknown_commit"):
+        for status in ("live", "live_unhealthy", "rollback_failed", "failed", "ci_red", "waiting_ci", "pending", "unknown_commit"):
             self.assertIn(status, VERIFY.MESSAGES)
 
 
