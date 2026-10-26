@@ -13,7 +13,7 @@ library with one rename, never overwrites (a free name gets ` (2)`), never delet
 creates anything at the library root. Decisions are kept in `~/.agent-bridge/docxx-decisions.json`
 (mode 600) and settle the row as «Разобрано»; «Вернуть как было» undoes a move. The worker's own
 state and journal files stay untouched. Endpoints: owner-only `GET /api/docxx/folders` and
-`POST /api/docxx/decide` (`{action: move|archive|trash|auto|keep|undo, keys: [...], folder}`, at most 50 keys),
+`POST /api/docxx/decide` (`{action: move|archive|trash|auto|remove|keep|undo, keys: [...], folder}`, at most 50 keys),
 with the same Origin-checked owner guard as the Platforms writes. Local paths are never served.
 
 Since 2026-10-26 the buttons sit on the closed card and are larger. **В корзину** is a move like
@@ -28,6 +28,13 @@ nothing moves there. The card then offers **Положить в «…»** with t
 with **В корзину**. **Разложить по подсказкам (N)** (`action: auto`) moves only documents whose
 suggested folder still exists; the rest stay. **Мусор в корзину (N)** sends the junk guesses to the
 trash. Install skips with `DASHBOARD_INSTALL_DOCXX_SUGGEST=0`.
+
+Since 2026-10-26 the status line says only «Всё работает» or, when the Mac mini is stale or
+its health is blocked, «Система остановилась» with the reason behind «i»; per-document questions
+stay on their cards. Every card, also a finished one, has **Удалить** (`action: remove`): the
+file moves into the trash folder when the Mac mini can reach it, otherwise only the entry is
+hidden. Removed rows leave the page; «Вернуть» right after brings them back (undo restores the
+earlier decision, for example a folder Mark had chosen).
 
 ## Data and privacy
 

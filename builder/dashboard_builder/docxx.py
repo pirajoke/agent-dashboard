@@ -425,16 +425,18 @@ def _apply_decisions(rows, decisions):
     settled = 0
     for row in rows.values():
         decision = decisions.get(row['key']) if isinstance(decisions, dict) else None
-        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep', 'trash'):
+        if not isinstance(decision, dict) or decision.get('action') not in ('move', 'archive', 'keep', 'trash', 'hide'):
+            continue
+        if decision['action'] in ('trash', 'hide'):
+            # «Удалить» (2026-10-26): gone from the page; undo through the sorting API brings it back.
+            row.update(status='sorted', label='Удалён', historical=False, decision=decision['action'], hidden=True)
+            settled += 1
             continue
         if row['status'] != 'needs_review':
             continue
         moved = decision['action'] != 'keep'
-        trashed = decision['action'] == 'trash'
-        row.update(status='sorted', label='В корзине' if trashed else 'Разобрано', historical=False,
-                   decision=decision['action'],
-                   reason='Ты убрал документ в корзину. «Вернуть как было» достанет его обратно.' if trashed
-                   else 'Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
+        row.update(status='sorted', label='Разобрано', historical=False, decision=decision['action'],
+                   reason='Ты переложил документ сюда.' if moved else 'Ты решил оставить документ как есть.')
         if moved and isinstance(decision.get('to'), str):
             row['destination'] = _text(decision['to'], 600)
         settled += 1
@@ -571,7 +573,13 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
             if link: links[key] = link
     except (OSError, ValueError, TypeError): pass
     records = sorted(rows.values(), key=lambda r:(not r['historical'], r['at'] or ''), reverse=True)
+    # Deleted rows never take a place among the 100 shown; actions and «Вернуть» still see them.
+    shown = [row for row in records if not row.get('hidden')]
+    total = len(shown)
+    records = shown[:100] + ([row for row in records if row.get('hidden')] if include_paths else [])
     for row in records:
+        if not include_paths:
+            row.pop('hidden', None)
         path, sha = row.pop('_path', None), row.pop('_sha', None)
         if include_paths and path:
             row['_path'] = path
@@ -582,6 +590,6 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
             'stale_after_seconds': STALE_AFTER, 'scan_interval_seconds': 300,
             'model_calls': _count(status.get('model_calls')), 'catalog_count': _count(catalog.get('documents')),
             'catalog_state': catalog.get('status') if catalog.get('status') in ('ready','error','refreshing') else 'unknown',
-            'pending': pending, 'review_count': review, 'records': records[:100],
-            'records_total': len(records), 'warnings': warnings, 'links': links,
+            'pending': pending, 'review_count': review, 'records': records,
+            'records_total': total, 'warnings': warnings, 'links': links,
             'gmail': gmail, 'operations': operations, 'health': health}

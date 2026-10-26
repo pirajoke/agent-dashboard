@@ -100,7 +100,7 @@ class SortingTests(unittest.TestCase):
         for folder in ('../outside', '/tmp', '.hidden', REVIEW, 'Nope'):
             with self.assertRaises(ValueError):
                 apply(self.state, self.decisions, {'action': 'move', 'keys': [key], 'folder': folder})
-        for body in ({'action': 'delete', 'keys': [key]}, {'action': 'remove', 'keys': [key]}, {'action': 'keep', 'keys': []},
+        for body in ({'action': 'delete', 'keys': [key]}, {'action': 'erase', 'keys': [key]}, {'action': 'keep', 'keys': []},
                      {'action': 'keep', 'keys': ['../x']}, {'action': 'keep', 'keys': [key] * 51}):
             with self.assertRaises(ValueError):
                 apply(self.state, self.decisions, body)
@@ -157,8 +157,7 @@ class SortingTests(unittest.TestCase):
         result = apply(self.state, self.decisions, {'action': 'trash', 'keys': [key]})
         self.assertEqual(result['results'][0]['destination'], '10 — 📥 To review/Корзина/scan.pdf')
         self.assertFalse((self.library / 'Корзина').exists())  # Never at the library root.
-        row = next(r for r in self.view()['records'] if r['key'] == key)
-        self.assertEqual((row['status'], row['label']), ('sorted', 'В корзине'))
+        self.assertNotIn(key, [r['key'] for r in self.view()['records']])  # Gone from the page.
         view = folders_view(self.state, self.decisions)
         self.assertEqual(view['trash'], '10 — 📥 To review/Корзина')
         self.assertNotIn(view['trash'], view['folders'])
@@ -229,7 +228,39 @@ class SortingTests(unittest.TestCase):
         for row in drive:
             self.assertEqual(apply(self.state, self.decisions, {'action': 'trash', 'keys': [row['key']]})['results'][0]['error'], 'not_found')
         self.assertTrue((self.library / REVIEW / 'Документ без названия.gdoc').exists())
+    def test_remove_trashes_any_document_and_hides_what_it_cannot_reach(self):
+        keys = self.keys()
+        moved = apply(self.state, self.decisions, {'action': 'move', 'keys': [keys['ticket.pdf']], 'folder': 'France/Médiathèque'})
+        self.assertTrue(moved['results'][0]['ok'])
+        (self.library / REVIEW / 'scan.pdf').unlink()  # Gone from disk: only the entry can go.
+        result = apply(self.state, self.decisions, {'action': 'remove', 'keys': list(keys.values())})
+        by_key = {r['key']: r for r in result['results']}
+        self.assertEqual(by_key[keys['ticket.pdf']]['destination'], '10 — 📥 To review/Корзина/ticket.pdf')
+        self.assertTrue(by_key[keys['scan.pdf']]['hidden'])
+        self.assertEqual(self.view()['records'], [])
+        apply(self.state, self.decisions, {'action': 'undo', 'keys': list(keys.values())})
+        self.assertTrue((self.library / 'France/Médiathèque/ticket.pdf').exists())  # Back where Mark had put it.
+        rows = {r['original_name']: r for r in self.view()['records']}
+        self.assertEqual(rows['ticket.pdf']['label'], 'Разобрано')
+        self.assertEqual(rows['scan.pdf']['status'], 'needs_review')
 
+
+    def test_deleted_rows_do_not_push_later_documents_out_of_reach(self):
+        attachments = {}
+        for i in range(105):
+            name = f'doc{i:03}.pdf'
+            path = self.library / REVIEW / name
+            path.write_bytes(b'%PDF synthetic')
+            attachments[name] = {'state': 'delivered', 'needs_review': True, 'name': name,
+                                 'destination': str(path), 'delivered_at': time.time() - 1000 + i}
+        self.write('gmail-journal.json', {'schema_version': 1, 'attachments': attachments})
+        first = [row['key'] for row in self.view()['records'][:50]]
+        self.assertTrue(all(r['ok'] for r in apply(self.state, self.decisions, {'action': 'remove', 'keys': first})['results']))
+        view = self.view()
+        self.assertEqual((len(view['records']), view['records_total']), (55, 55))
+        last = view['records'][-1]['key']
+        self.assertTrue(apply(self.state, self.decisions, {'action': 'remove', 'keys': [last]})['results'][0]['ok'])
+        self.assertTrue(apply(self.state, self.decisions, {'action': 'undo', 'keys': first[:1]})['results'][0]['ok'])
 
 if __name__ == '__main__':
     unittest.main()
