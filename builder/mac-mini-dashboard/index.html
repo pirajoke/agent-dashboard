@@ -12647,7 +12647,8 @@ function ccDocxxRenderRecords() {
 // ─── Sorting «Нужен разбор» from the site (Mark 2026-10-25) ───
 const ccDocxxSelected=new Set();
 let ccDocxxSortVisible=[], ccDocxxFolders=null, ccDocxxBusy=false, ccDocxxMoveKeys=[];
-const CC_DOCXX_ERRORS={not_found:'файл уже не на месте',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена',no_suggestion:'нет подходящей папки'};
+const CC_DOCXX_ERRORS={not_found:'Mac mini не нашёл файл у себя на диске',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена',no_suggestion:'нет подходящей папки'};
+function ccDocxxMovable(key) { return !Array.isArray(ccDocxxFolders?.movable) || ccDocxxFolders.movable.includes(key); }
 function ccDocxxFolderName(folder) { return folder.split('/').pop(); }
 // A guessed folder counts only while it is still one of the library's folders.
 function ccDocxxSuggested(row) { const f=row.suggest?.folder; return f && (!ccDocxxFolders || ccDocxxFolders.folders.includes(f)) ? f : null; }
@@ -12672,6 +12673,12 @@ function ccDocxxRecordActions(row) {
   }
   if(row.status!=='needs_review') return null;
   const box=ccDocxxEl('div',undefined,'docxx-record-todo');
+  if(!ccDocxxMovable(row.key)) {
+    // 2026-10-26: a Drive document the journal gives no place for; moving it would only fail.
+    const hint=ccDocxxEl('p','Mac mini не нашёл этот файл у себя на диске, поэтому переложить или убрать его отсюда нельзя. Удали или перенеси его в Google Drive, а здесь нажми «Оставить», чтобы он не висел в разборе.','docxx-suggest'); hint.dataset.tone='none';
+    box.append(hint,ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
+    return box;
+  }
   const folder=ccDocxxSuggested(row), junk=row.suggest?.junk===true, canTrash=ccDocxxFolders?.can_trash===true;
   const why=row.suggest?.why ? ' — '+row.suggest.why : '';
   if(folder) {
@@ -12695,7 +12702,7 @@ function ccDocxxRecordActions(row) {
 function ccDocxxGuessed(kind) {
   const keys=ccDocxxSelected.size?[...ccDocxxSelected]:ccDocxxSortVisible;
   const rows=new Map((ccDocxxData?.records||[]).map(r=>[r.key,r]));
-  return keys.filter(k=>rows.has(k) && (kind==='junk'?rows.get(k).suggest?.junk===true:!!ccDocxxSuggested(rows.get(k))));
+  return keys.filter(k=>rows.has(k) && ccDocxxMovable(k) && (kind==='junk'?rows.get(k).suggest?.junk===true:!!ccDocxxSuggested(rows.get(k))));
 }
 function ccDocxxSortBar() {
   const bar=document.getElementById('docxx-sort-bar'); const total=ccDocxxSortVisible.length, picked=ccDocxxSelected.size;
@@ -12769,7 +12776,7 @@ async function ccDocxxDecide(action,keys,folder) {
       if(bad.length) note+=(note?' ':'')+'Не получилось: '+bad.length+' ('+[...new Set(bad.map(r=>CC_DOCXX_ERRORS[r.error]||'ошибка'))].join(', ')+').';
       if(!response.ok) note+=(note?' ':'')+'Остальные не успели: обнови страницу и повтори.';
       for(const r of ok) ccDocxxSelected.delete(r.key);
-      if(['move','trash','auto'].includes(action)) ccDocxxFolders=null;
+      if(['move','trash','auto','undo'].includes(action)) ccDocxxFolders=null;
     }
   } catch { note='Нет связи с Mac mini. Попробуй ещё раз.'; }
   ccDocxxBusy=false; ccDocxxText('docxx-sort-note',note||'');
@@ -12811,8 +12818,12 @@ function ccDocxxRender(data) {
   ccDocxxText('docxx-results-note',`Показано до 100 операций. В доступном журнале: ${Number.isInteger(data.records_total)?data.records_total:'—'}. Обновление панели каждые 5 секунд, пока она открыта.`);
   ccDocxxRenderGmail(); ccDocxxExplain(); ccDocxxRenderRecords(); ccDocxxRenderOperations();
   if(!ccDocxxFolders && data.review_count>0 && !ccDocxxFoldersAsked) { ccDocxxFoldersAsked=true; ccDocxxLoadFolders(); }
+  // A new document on the open page needs a fresh «movable» list, or it would show only «Оставить».
+  const reviewKeys=(data.records||[]).filter(r=>r.status==='needs_review').map(r=>r.key).join();
+  if(ccDocxxFolders && reviewKeys!==ccDocxxReviewKeys && !ccDocxxBusy) ccDocxxLoadFolders();
+  ccDocxxReviewKeys=reviewKeys;
 }
-let ccDocxxFoldersAsked=false;
+let ccDocxxFoldersAsked=false, ccDocxxReviewKeys='';
 async function ccLoadDocxx() {
   if(!ccDocxxVisible()) return;
   const generation=++ccDocxxGeneration;

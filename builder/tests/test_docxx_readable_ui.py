@@ -24,7 +24,7 @@ class ReadableRecordUITests(unittest.TestCase):
         functions = '\n'.join(function(source, name) for name in (
             'ccDocxxEl', 'ccDocxxSafeLink', 'ccDocxxLink', 'ccDocxxSourceLink',
             'ccDocxxShortDate', 'ccDocxxRecordDate', 'ccDocxxDate', 'ccDocxxRenderRecords',
-            'ccDocxxText', 'ccDocxxCount', 'ccDocxxPick', 'ccDocxxAct', 'ccDocxxSuggested', 'ccDocxxFolderName',
+            'ccDocxxText', 'ccDocxxCount', 'ccDocxxPick', 'ccDocxxAct', 'ccDocxxMovable', 'ccDocxxSuggested', 'ccDocxxFolderName',
             'ccDocxxRecordActions', 'ccDocxxGuessed', 'ccDocxxSortBar'))
         script = '''const assert=require('node:assert/strict');
 class E { constructor(tag){this.tag=tag;this.children=[];this.dataset={};this.value='';this.textContent='';}
@@ -58,6 +58,11 @@ assert.match(ticket,/Положить в «Médiathèque»/); assert.match(ticke
 assert.match(junk,/Похоже на мусор/); assert.doesNotMatch(junk,/Положить в/);
 assert.doesNotMatch(gone,/Положить в/);
 assert.deepEqual(ccDocxxGuessed('folder'),['three']); assert.deepEqual(ccDocxxGuessed('junk'),['four']);
+ccDocxxFolders={...ccDocxxFolders,movable:['three']};
+ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
+const lostCard=flatten(list.children[1].children[0]);
+assert.match(lostCard,/не нашёл этот файл/); assert.doesNotMatch(lostCard,/В корзину/); assert.match(lostCard,/Оставить/);
+assert.deepEqual(ccDocxxGuessed('junk'),[]);
 '''
         result = subprocess.run(['node', '-e', script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)

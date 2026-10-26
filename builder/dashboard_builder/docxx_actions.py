@@ -136,12 +136,75 @@ def _sortable(directory, decisions: dict):
     roots = [_root_of(row['_path']) for row in rows.values() if row.get('_path')]
     roots = [root for root in roots if root is not None]
     root = max(set(roots), key=roots.count) if roots else None
+    if root is not None:
+        _find_in_review(rows, root)
     return rows, root
+
+
+# Google Docs made in Drive appear on this Mac as small .gdoc/.gsheet/.gslides link files.
+_DRIVE_LINKS = ('', '.gdoc', '.gsheet', '.gslides', '.gdraw', '.gform')
+
+
+def _drive_id(row: dict) -> str | None:
+    url = str(row.get('url') or '')
+    marker = 'https://drive.google.com/file/d/'
+    return url[len(marker):].split('/', 1)[0] if url.startswith(marker) else None
+
+
+def _gdoc_id(path: Path) -> str | None:
+    """The Drive id written inside a .gdoc/.gsheet link file, when it has one."""
+    if path.suffix not in _DRIVE_LINKS[1:]:
+        return None
+    try:
+        with open(path, 'rb') as stream:
+            data = json.loads(stream.read(65536).decode('utf-8'))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    value = data.get('doc_id') or str(data.get('resource_id') or '').rpartition(':')[2]
+    return value if isinstance(value, str) and value else None
+
+
+def _find_in_review(rows: dict, root: Path) -> None:
+    """Drive rows whose journal carries no local path: find the file by name in the review folder.
+
+    Only an unambiguous pair counts: one row, one file, no other row on that file, and a Google
+    Docs link file whose id matches the row's Drive id when both are known.
+    """
+    lost = [row for row in rows.values() if row.get('status') == 'needs_review' and not row.get('_path')
+            and row.get('name')]
+    if not lost:
+        return
+    taken = {os.path.realpath(row['_path']) for row in rows.values() if row.get('_path')}
+    review = [f for f in list_folders(root) if REVIEW.search(f.split('/')[0])]
+    matches: dict[str, list[Path]] = {}
+    for row in lost:
+        found = []
+        for folder in review:
+            for suffix in _DRIVE_LINKS:
+                candidate = root / folder / (row['name'] + suffix)
+                if (os.path.isfile(candidate) and not os.path.islink(candidate) and _inside(root, candidate)
+                        and os.path.realpath(candidate) not in taken):
+                    found.append(candidate)
+        matches[row['key']] = found
+    claims: dict[str, int] = {}
+    for found in matches.values():
+        for candidate in found:
+            claims[os.path.realpath(candidate)] = claims.get(os.path.realpath(candidate), 0) + 1
+    for row in lost:
+        found = matches[row['key']]
+        if len(found) != 1 or claims[os.path.realpath(found[0])] != 1:
+            continue  # Two files, or two rows on one file: leave it to Mark rather than guess.
+        inside, expected = _gdoc_id(found[0]), _drive_id(row)
+        if inside and expected and inside != expected:
+            continue
+        row['_path'] = str(found[0])
 
 
 def folders_view(directory, decisions_file) -> dict:
     decisions = load_decisions(decisions_file)
-    _, root = _sortable(directory, decisions)
+    rows, root = _sortable(directory, decisions)
     if root is None or not os.path.isdir(root):
         return {'state': 'unavailable', 'folders': [], 'archive': None, 'trash': None, 'recent': []}
     folders = list_folders(root)
@@ -158,8 +221,11 @@ def folders_view(directory, decisions_file) -> dict:
             break
     # Without a trash folder the first «В корзину» makes one inside the review folder, never at the root.
     can_trash = bool(trash or review_top)
+    # Rows the Mac mini can actually move; the page offers only «Оставить» for the others.
+    movable = [key for key, row in rows.items() if row.get('status') == 'needs_review' and row.get('_path')
+               and _inside(root, Path(row['_path']))]
     return {'state': 'ready', 'folders': choices, 'archive': archive, 'trash': trash or None,
-            'can_trash': can_trash, 'recent': recent}
+            'can_trash': can_trash, 'recent': recent, 'movable': movable}
 
 
 def _trash_folder(root: Path, view: dict) -> str:
