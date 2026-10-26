@@ -16,7 +16,10 @@ State, read from the last steps of the log:
 - ``working``: the agent is in the middle of a turn;
 - ``approve``: a tool call has been waiting for its result for a while, most often a permission
   question in the terminal (a long command looks the same, so the page says «наверное»);
-- ``waiting``: the turn is over: the agent answered and waits for Mark.
+- ``waiting``: the turn is over: the agent answered and waits for Mark;
+- ``stopped``: a turn with no step for ``STALLED_AFTER`` (crashed, closed or interrupted).
+Whether a finished turn really needs Mark is decided by the dashboard from ``ask``, the end of the
+last reply (where an agent puts its question); ``approval`` says what a tool call waits for.
 Sessions without a step for ``--hours`` hours are left out: nothing says when a terminal is closed.
 """
 from __future__ import annotations
@@ -34,7 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from daily_work_collector import (  # noqa: E402
     CLAUDE_DIRS, CODEX_DIRS, DEFAULT_OUT, HOME, SUMMARIZER_DIRNAME, iso_z, machine_name, normalize_cwd,
-    parse_ts, project_name, redact_topic, repo_for_cwd, write_json)
+    parse_ts, project_name, redact_command, redact_topic, repo_for_cwd, write_json)
 
 SCHEMA = 1
 DEFAULT_LIVE_OUT = HOME / ".agent-bridge" / "live-sessions"
@@ -46,8 +49,15 @@ STALLED_AFTER = timedelta(minutes=15)
 HEAD_BYTES = 256 * 1024
 TAIL_BYTES = 768 * 1024
 REPLY_LIMIT = 280
+# The end of the last reply, where an agent puts the question it asks.
+ASK_CHARS = 400
 MAX_SESSIONS = 60
 CLAUDE_LINK_RE = re.compile(r"https://claude\.ai/code/session_[A-Za-z0-9_-]{8,80}")
+# Messages the harness wraps around a session, not something Mark asked.
+WRAPPER_PREFIXES = ("[", "<", "Caveat:", "This session is being continued")
+TOOL_ACTIONS = {"Edit": "Разрешить правку файла", "MultiEdit": "Разрешить правку файла",
+                "Write": "Разрешить запись файла", "NotebookEdit": "Разрешить правку файла",
+                "WebFetch": "Разрешить открыть адрес", "exec": "Разрешить команду"}
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_.-]{6,80}$")
 CLAUDE_APPS = {"cli": "Терминал", "claude-desktop": "Приложение Claude", "claude-vscode": "VS Code",
                "remote": "Claude в облаке"}
@@ -99,7 +109,34 @@ def _state(last_kind: str | None, last_at: datetime, now: datetime, pending: boo
         return "waiting"
     if pending and last_kind == "tool":
         return "approve" if now - last_at >= APPROVE_AFTER else "working"
-    return "waiting" if now - last_at >= STALLED_AFTER else "working"
+    return "stopped" if now - last_at >= STALLED_AFTER else "working"
+
+
+def ask_tail(text: object) -> str | None:
+    """The redacted end of a reply, cut at a sentence start."""
+    if not isinstance(text, str):
+        return None
+    line = " ".join(text.split())
+    if len(line) > ASK_CHARS:
+        line = line[-ASK_CHARS:]
+        cut = re.search(r"[.!?…]\s+", line)
+        line = line[cut.end():] if cut else line
+    return redact_topic(line, ASK_CHARS + 1)
+
+
+def tool_ask(name: object, data: object) -> str | None:
+    """What a tool call that waits for permission is about to do, in a few words."""
+    data = data if isinstance(data, dict) else {}
+    command = data.get("command") or data.get("cmd")
+    if isinstance(command, list):
+        command = " ".join(str(part) for part in command)
+    if isinstance(command, str) and command.strip():
+        return "Разрешить команду: " + redact_command(command)
+    action = TOOL_ACTIONS.get(str(name), f"Разрешить {name}" if isinstance(name, str) and name else None)
+    target = data.get("file_path") or data.get("path") or data.get("url")
+    if action and isinstance(target, str) and target:
+        return f"{action}: " + redact_command(Path(target).name if "://" not in target else target)
+    return action
 
 
 def find_claude_link(path: Path) -> str | None:
@@ -111,13 +148,18 @@ def find_claude_link(path: Path) -> str | None:
 def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None = None) -> dict[str, Any] | None:
     head, tail = read_lines(path)
     records = head + tail
-    title = topic = cwd = branch = entry = link = reply = None
+    title = custom = topic = cwd = branch = entry = link = reply = ask = None
     started = last_at = None
     last_kind: str | None = None
     pending: set[str] = set()
+    asks: dict[str, str | None] = {}
     session_id = path.stem
     for record in records:
         kind = record.get("type")
+        if kind == "custom-title":
+            # A name Mark gave with /rename wins over Claude's own title.
+            custom = redact_topic(record.get("customTitle")) or custom
+            continue
         if kind == "ai-title":
             title = redact_topic(record.get("aiTitle")) or title
             continue
@@ -143,9 +185,13 @@ def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None 
         if kind == "assistant":
             uses = [part.get("id") for part in content or [] if isinstance(part, dict) and part.get("type") == "tool_use"]
             pending.update(str(use) for use in uses if use)
-            text = redact_topic(_claude_text(content), REPLY_LIMIT)
+            for part in content or []:
+                if isinstance(part, dict) and part.get("type") == "tool_use" and part.get("id"):
+                    asks[str(part["id"])] = tool_ask(part.get("name"), part.get("input"))
+            raw = _claude_text(content)
+            text = redact_topic(raw, REPLY_LIMIT)
             if text:
-                reply = text
+                reply, ask = text, ask_tail(raw)
             if uses:
                 last_kind = "tool"
             elif message.get("stop_reason") in {"end_turn", "stop_sequence", "max_tokens"} or (text and not uses):
@@ -162,7 +208,7 @@ def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None 
             if "[Request interrupted by user" in text:
                 last_kind = "reply"
                 continue
-            if not results:
+            if not results and not text.lstrip().startswith(WRAPPER_PREFIXES):
                 topic = topic or redact_topic(text)
             last_kind = "step"
     if last_at is None or (entry or "").startswith("sdk"):
@@ -180,19 +226,22 @@ def parse_claude(path: Path, now: datetime, links: dict[str, str | None] | None 
                 link = find_claude_link(path)
                 links[session_id] = link or {"size": size}
     app = "Claude в облаке" if (entry or "").startswith("remote") else CLAUDE_APPS.get(entry or "", "Терминал")
-    return _session("claude", session_id, title or topic, cwd, branch, app,
-                    started, last_at, _state(last_kind, last_at, now, bool(pending)), reply, link)
+    state = _state(last_kind, last_at, now, bool(pending))
+    approval = next((asks[use] for use in pending if asks.get(use)), None) if state == "approve" else None
+    return _session("claude", session_id, custom or title or topic, cwd, branch, app,
+                    started, last_at, state, reply, link, ask, approval)
 
 
 def parse_codex(path: Path, now: datetime, names: dict[str, str]) -> dict[str, Any] | None:
     head, tail = read_lines(path)
     session_id = "-".join(path.stem.split("-")[-5:])  # rollout-<time>-<uuid>
-    topic = cwd = branch = reply = None
+    topic = cwd = branch = reply = ask = None
     app = "Терминал"
     started = last_at = None
     last_kind: str | None = None
     pending: set[str] = set()
     approval = False
+    approval_ask: str | None = None
     for record in head + tail:
         payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
         kind = record.get("type")
@@ -225,14 +274,21 @@ def parse_codex(path: Path, now: datetime, names: dict[str, str]) -> dict[str, A
                 last_kind, approval = "reply", False
                 pending.clear()
                 text = redact_topic(payload.get("last_agent_message"), REPLY_LIMIT)
-                reply = text or reply
+                if text:
+                    reply, ask = text, ask_tail(payload.get("last_agent_message"))
             elif item in {"exec_approval_request", "apply_patch_approval_request", "request_user_input"}:
                 approval = True
+                if item == "apply_patch_approval_request":
+                    approval_ask = "Разрешить правку файлов"
+                elif item == "exec_approval_request":
+                    approval_ask = tool_ask("exec", payload) or redact_topic(payload.get("reason"), REPLY_LIMIT)
+                else:
+                    approval_ask = redact_topic(payload.get("question") or payload.get("prompt"), REPLY_LIMIT)
             elif item == "user_message":
                 topic = topic or redact_topic(payload.get("message"))
                 last_kind, approval = "step", False
-            elif item == "agent_message":
-                reply = redact_topic(payload.get("message"), REPLY_LIMIT) or reply
+            elif item == "agent_message" and redact_topic(payload.get("message"), REPLY_LIMIT):
+                reply, ask = redact_topic(payload.get("message"), REPLY_LIMIT), ask_tail(payload.get("message"))
             elif item == "task_started":
                 last_kind = "step"
         elif kind == "response_item":
@@ -249,7 +305,8 @@ def parse_codex(path: Path, now: datetime, names: dict[str, str]) -> dict[str, A
             elif item == "message" and payload.get("role") == "assistant":
                 text = " ".join(part.get("text", "") for part in payload.get("content") or []
                                 if isinstance(part, dict) and isinstance(part.get("text"), str))
-                reply = redact_topic(text, REPLY_LIMIT) or reply
+                if redact_topic(text, REPLY_LIMIT):
+                    reply, ask = redact_topic(text, REPLY_LIMIT), ask_tail(text)
                 # Rollouts with response items only mark the answer that ends the turn as final.
                 if payload.get("channel") == "final" or payload.get("phase") in {"final", "final_answer"}:
                     last_kind = "reply"
@@ -260,14 +317,16 @@ def parse_codex(path: Path, now: datetime, names: dict[str, str]) -> dict[str, A
         last_at = moment
     if last_at is None:
         return None
-    state = "approve" if approval and last_kind != "reply" else _state(last_kind, last_at, now, bool(pending))
+    # Codex logs every permission question as its own event, so a call that is just out long is a long
+    # command (scheduled runs such as Job Radar), not a question for Mark.
+    state = "approve" if approval and last_kind != "reply" else _state(last_kind, last_at, now, False)
     return _session("codex", session_id, names.get(session_id) or topic, cwd, branch, app, started, last_at,
-                    state, reply, None)
+                    state, reply, None, ask, approval_ask if state == "approve" else None)
 
 
 def _session(tool: str, session_id: str, title: str | None, cwd: str | None, branch: object, app: str,
              started: datetime | None, last_at: datetime, state: str, reply: str | None,
-             link: str | None) -> dict[str, Any] | None:
+             link: str | None, ask: str | None = None, approval: str | None = None) -> dict[str, Any] | None:
     if not SAFE_ID_RE.match(session_id):
         return None
     repo = repo_for_cwd(cwd)
@@ -282,13 +341,15 @@ def _session(tool: str, session_id: str, title: str | None, cwd: str | None, bra
         "id": session_id,
         "tool": tool,
         "app": app,
-        "title": title or "Без названия",
+        "title": title or f"Сессия в {project_name(cwd, repo)}",
         "project": project_name(cwd, repo),
         "branch": branch if isinstance(branch, str) and branch and branch not in {"main", "master", "HEAD"} else None,
         "state": state,
         "started_at": iso_z(started or last_at),
         "last_at": iso_z(last_at),
         "reply": reply,
+        "ask": ask,
+        "approval": approval,
         "link": link,
         "resume": resume,
     }

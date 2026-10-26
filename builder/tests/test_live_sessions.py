@@ -15,7 +15,7 @@ BUILDER = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BUILDER))
 
 import live_sessions_collector as collector  # noqa: E402
-from dashboard_builder.live_sessions import projection  # noqa: E402
+from dashboard_builder.live_sessions import ask_of, projection  # noqa: E402
 
 spec = importlib.util.spec_from_file_location("dashboard_live_sessions_test", BUILDER / "dashboard-server-m4.py")
 SERVER = importlib.util.module_from_spec(spec)
@@ -69,10 +69,19 @@ class ClaudeStateTests(unittest.TestCase):
         self.assertEqual(session["project"], "agent-dashboard")
         self.assertIn("Готово, PR открыт", session["reply"])
         self.assertNotIn("abcdefghijk", session["reply"])
+        self.assertIsNone(session["approval"])
+
+    def test_ask_keeps_the_end_of_a_long_reply(self):
+        long = "Сделал. " + "Проверил всё по шагам. " * 40 + "Сливать PR #154?"
+        session = self.parse([claude_user(30, "go"), claude_assistant(5, [{"type": "text", "text": long}])])
+        self.assertTrue(session["ask"].endswith("Сливать PR #154?"))
+        self.assertTrue(session["ask"].startswith("Проверил"))
+        self.assertEqual(ask_of(session["ask"]), "Сливать PR #154?")
         self.assertEqual(session["resume"], "cd /tmp/agent-dashboard && claude --resume c1a2b3c4-0000")
 
     def test_tool_call_left_waiting_reads_as_a_permission_question(self):
-        self.assertEqual(self.parse([claude_user(10, "go"), claude_assistant(5, TOOL_USE, "tool_use")])["state"], "approve")
+        waiting = self.parse([claude_user(10, "go"), claude_assistant(5, TOOL_USE, "tool_use")])
+        self.assertEqual((waiting["state"], waiting["approval"]), ("approve", "Разрешить команду: ls"))
         self.assertEqual(self.parse([claude_user(1, "go"), claude_assistant(0.5, TOOL_USE, "tool_use")])["state"], "working")
 
     def test_tool_result_means_working_until_it_stalls(self):
@@ -82,7 +91,7 @@ class ClaudeStateTests(unittest.TestCase):
         self.assertEqual(fresh["state"], "working")
         stalled = self.parse([claude_user(40, "go"), claude_assistant(35, TOOL_USE, "tool_use"),
                               {**claude_user(30, ""), "message": result}])
-        self.assertEqual(stalled["state"], "waiting")
+        self.assertEqual(stalled["state"], "stopped")
 
     def test_interrupted_turn_waits(self):
         self.assertEqual(self.parse([claude_user(3, "go"), claude_user(1, "[Request interrupted by user]")])["state"], "waiting")
@@ -105,6 +114,13 @@ class ClaudeStateTests(unittest.TestCase):
         with patch.object(collector, "repo_for_cwd", return_value=None):
             later = collector.parse_claude(self.path, NOW, links)
         self.assertEqual(later["link"], "https://claude.ai/code/session_01LaterOnABC")
+
+    def test_title_skips_wrappers_and_falls_back_to_the_project(self):
+        wrapped = self.parse([claude_user(3, "[MESSAGE FROM NON-USER SOURCE] wake"), claude_assistant(1, [{"type": "text", "text": "ok"}])])
+        self.assertEqual(wrapped["title"], "Сессия в agent-dashboard")
+        renamed = self.parse([claude_user(3, "go"), {"type": "ai-title", "aiTitle": "Авто"},
+                              {"type": "custom-title", "customTitle": "Моё имя"}, claude_assistant(1, [{"type": "text", "text": "ok"}])])
+        self.assertEqual(renamed["title"], "Моё имя")
 
     def test_headless_runs_are_left_out(self):
         record = {**claude_user(1, "summarise"), "entrypoint": "sdk-cli"}
@@ -148,12 +164,18 @@ class CodexStateTests(unittest.TestCase):
         approval = self.parse([self.meta(),
                                {"type": "event_msg", "timestamp": ts(3), "payload": {"type": "task_started"}},
                                {"type": "response_item", "timestamp": ts(2), "payload": {"type": "function_call", "call_id": "c1"}},
-                               {"type": "event_msg", "timestamp": ts(2), "payload": {"type": "exec_approval_request"}}])
-        self.assertEqual(approval["state"], "approve")
+                               {"type": "event_msg", "timestamp": ts(2), "payload": {"type": "exec_approval_request",
+                                                                                     "command": ["npm", "install"]}}])
+        self.assertEqual((approval["state"], approval["approval"]), ("approve", "Разрешить команду: npm install"))
         running = self.parse([self.meta(),
                               {"type": "event_msg", "timestamp": ts(1), "payload": {"type": "task_started"}},
                               {"type": "response_item", "timestamp": ts(0.5), "payload": {"type": "function_call", "call_id": "c1"}}])
         self.assertEqual(running["state"], "working")
+        # A scheduled run's long command is not a permission question: Codex logs those as events.
+        long = self.parse([self.meta(),
+                           {"type": "event_msg", "timestamp": ts(6), "payload": {"type": "task_started"}},
+                           {"type": "response_item", "timestamp": ts(5), "payload": {"type": "function_call", "call_id": "c1"}}])
+        self.assertEqual(long["state"], "working")
 
     def test_app_title_wins_and_helpers_and_exec_runs_are_skipped(self):
         session = self.parse([self.meta(), {"type": "event_msg", "timestamp": ts(1), "payload": {"type": "user_message", "message": "x"}}],
@@ -173,9 +195,10 @@ class ProjectionTests(unittest.TestCase):
         (self.dir / f"{machine}.json").write_text(json.dumps(
             {"schema": 1, "machine": machine, "collected_at": ts(collected_minutes_ago), "sessions": sessions}))
 
-    def session(self, sid, state, minutes_ago, link=None):
+    def session(self, sid, state, minutes_ago, link=None, **extra):
         return {"id": sid, "tool": "claude", "app": "Терминал", "title": sid, "project": "p", "state": state,
-                "started_at": ts(minutes_ago + 10), "last_at": ts(minutes_ago), "link": link, "resume": f"claude --resume {sid}"}
+                "started_at": ts(minutes_ago + 10), "last_at": ts(minutes_ago), "link": link,
+                "resume": f"claude --resume {sid}", "reply": "Сливать #154?", **extra}
 
     def test_order_quiet_and_stale_machines(self):
         self.write("mac-mini", 1, [self.session("work", "working", 0), self.session("old", "waiting", 300),
@@ -187,6 +210,31 @@ class ProjectionTests(unittest.TestCase):
         self.assertIsNone(result["sessions"][1]["link"])
         self.assertEqual(result["sessions"][0]["machine"], "Mac mini")
         self.assertEqual({m["label"]: m["fresh"] for m in result["machines"]}, {"Mac mini": True, "MacBook Pro": False})
+
+    def test_only_a_question_or_permission_waits_for_mark(self):
+        # Mark 2026-10-26: a scheduled check that reported its result and a turn that only laid out a
+        # plan wanted nothing from him, yet showed «Ждёт тебя».
+        self.write("mac-mini", 1, [
+            self.session("doctolib", "waiting", 5, reply="Vérification Doctolib terminée : aucun créneau disponible."),
+            self.session("plan", "waiting", 5, reply="I'll check the parser first, then set up the scheduled run."),
+            self.session("offer", "waiting", 5, reply="Готово, PR #12 слит. Если хочешь, могу добавить тесты?"),
+            self.session("question", "waiting", 5, reply="Сделал два варианта.", ask="Сделал два варианта. Какой оставить?"),
+            self.session("perm", "approve", 5, approval="Разрешить команду: git push -u origin x"),
+            self.session("stuck", "stopped", 40)])
+        sessions = {s["id"]: s for s in projection(self.dir, NOW)["sessions"]}
+        self.assertEqual({k: (s["state"], s["quiet"]) for k, s in sessions.items()}, {
+            "doctolib": ("done", True), "plan": ("done", True), "offer": ("done", True),
+            "question": ("waiting", False), "perm": ("approve", False), "stuck": ("stopped", True)})
+        self.assertEqual(sessions["question"]["need"], "Какой оставить?")
+        self.assertEqual(sessions["perm"]["need"], "Разрешить команду: git push -u origin x")
+        self.assertIsNone(sessions["doctolib"]["need"])
+
+    def test_ask_words_without_a_question_mark(self):
+        self.assertEqual(ask_of("Всё готово к выкату. Нужно твоё подтверждение, чтобы слить PR."),
+                         "Нужно твоё подтверждение, чтобы слить PR.")
+        self.assertIsNone(ask_of("Тесты прошли. PR слит."))
+        self.assertIsNone(ask_of("Сейчас этим занимаются: MAIN MANAGER на Mac mini отвечает за продолжение: "
+                                 "проверяет результаты и запускает следующие разрешённые шаги."))
 
     def test_missing_folder_is_empty(self):
         self.assertEqual(projection(self.dir / "nope", NOW)["sessions"], [])

@@ -4236,17 +4236,26 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-sort-bar[hidden], .docxx-sort-bar [hidden] { display:none !important; }
 .docxx-sort-bar > strong { margin-right:auto; font-weight:650; }
 .docxx-sort-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.docxx-act { min-height:40px; padding:8px 14px; border:1px solid var(--mm-control-line); border-radius:10px; background:var(--mm-surface); color:var(--mm-ink); font:650 13px/1.2 'Inter', -apple-system, sans-serif; cursor:pointer; }
+.docxx-act { min-height:46px; padding:10px 18px; border:1px solid var(--mm-control-line); border-radius:12px; background:var(--mm-surface); color:var(--mm-ink); font:650 15px/1.25 'Inter', -apple-system, sans-serif; cursor:pointer; text-align:center; overflow-wrap:anywhere; }
 .docxx-act:hover { border-color:var(--mm-accent); }
 .docxx-act:disabled { opacity:.55; cursor:wait; }
 .docxx-act.is-main { background:var(--mm-accent); border-color:var(--mm-accent); color:var(--mm-background); }
+.docxx-act.is-trash { color:var(--mm-danger); }
+.docxx-act.is-trash.is-main { background:var(--mm-danger); border-color:var(--mm-danger); color:var(--mm-background); }
 .docxx-act:focus-visible, .docxx-pick:focus-visible { outline:2px solid var(--mm-accent); outline-offset:2px; }
 .docxx-sort-note { flex-basis:100%; margin:0; color:var(--mm-muted); font-size:12.5px; }
 .docxx-sort-note:empty { display:none; }
 .docxx-pick { grid-area:icon; display:grid; place-items:center; width:26px; height:26px; margin-top:2px; padding:0; border:1.5px solid var(--mm-control-line); border-radius:7px; background:var(--mm-surface); color:transparent; font:700 14px/1 'Inter', sans-serif; cursor:pointer; }
 .docxx-pick[aria-checked="true"] { background:var(--mm-accent); border-color:var(--mm-accent); color:var(--mm-background); }
-.docxx-record-todo { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; }
+.docxx-record-todo { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 16px; }
 .docxx-record-todo > span { width:100%; color:var(--mm-muted); font-size:12.5px; }
+/* Mark 2026-10-26: the buttons sit on the card itself, big enough to tap, with the Mac mini's folder guess first. */
+.docxx-record-name .docxx-record-todo { margin:14px 0 0; cursor:default; }
+.docxx-suggest { width:100%; margin:0; padding:10px 12px; border-radius:10px; background:var(--mm-selection); color:var(--mm-ink); font-size:14px; line-height:1.5; }
+.docxx-suggest[data-tone="junk"] { background:var(--mm-warning-soft); }
+.docxx-suggest[data-tone="none"] { background:transparent; padding:0; color:var(--mm-muted); }
+.docxx-suggest b { font-weight:650; }
+@media(max-width:700px) { .docxx-record-name .docxx-record-todo .docxx-act { flex:1 1 100%; } .docxx-sort-actions { width:100%; } .docxx-sort-actions .docxx-act { flex:1 1 auto; } }
 .docxx-move-list { list-style:none; margin:0; padding:0; display:grid; gap:4px; }
 .docxx-move-list button { width:100%; min-height:44px; padding:10px 12px; text-align:left; border:0; border-radius:10px; background:transparent; color:var(--mm-ink); font:500 14.5px/1.35 'Inter', -apple-system, sans-serif; cursor:pointer; overflow-wrap:anywhere; }
 .docxx-move-list button:hover, .docxx-move-list button:focus-visible { background:var(--mm-selection); outline:none; }
@@ -4376,22 +4385,40 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .watch-card { transition: none; } .watch-card:hover { transform: none; } }
 /* Mark 2026-10-25: «все сессии, которые бегут, в одном месте»: Claude Code and Codex on his Macs. */
 #agents-sessions[hidden] { display: none; }
-.live-group { margin-top: 18px; }
-.live-group h3 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
-.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-.live-card { --live-tone: #2f9361; display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; color: var(--mm-ink); font: inherit; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-left: 4px solid var(--live-tone); border-radius: 14px; box-shadow: var(--mm-shadow-soft); cursor: pointer; transition: border-color .15s, transform .15s; }
-.live-card[data-state="waiting"] { --live-tone: #2f7fd1; }
+/* Mark 2026-10-26, variant B «Решения»: a session that asks something gets a card with its question and
+   an «Открыть» button; working ones are a strip of pills, finished ones a quiet list. */
+.live-h { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 10px; font-size: 16px; font-weight: 700; }
+.live-h span { color: var(--mm-muted); font-size: 14px; font-weight: 600; }
+.live-ava { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; color: #fff; font-size: 15px; font-weight: 800; border-radius: 10px; background: #d97757; }
+.live-ava[data-tool="codex"] { background: #1f1f1f; }
+.live-dot { --live-tone: #8a8172; flex: none; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--live-tone); }
+.live-dot[data-state="working"] { --live-tone: #2f9361; animation: live-pulse 1.6s ease-in-out infinite; }
+.live-dot[data-state="stopped"] { --live-tone: #b0574a; }
+@keyframes live-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live-tone) 50%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.live-card { --live-tone: #2f7fd1; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
 .live-card[data-state="approve"] { --live-tone: #c7801a; }
-.live-card.is-quiet { --live-tone: var(--mm-line); box-shadow: none; }
-.live-card:hover { border-color: var(--live-tone); transform: translateY(-1px); }
-.live-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.live-card > span { min-width: 0; }
-.live-card strong { display: block; font-size: 14.5px; line-height: 1.3; overflow-wrap: anywhere; }
-.live-card small { display: block; margin-top: 3px; color: var(--mm-muted); font-size: 13px; line-height: 1.4; }
-.live-state { display: inline-block; margin-top: 7px; padding: 2px 9px; font-size: 12px; font-weight: 600; border-radius: 999px; color: var(--live-tone); background: color-mix(in srgb, var(--live-tone) 13%, var(--mm-surface)); }
-.live-card.is-quiet .live-state { color: var(--mm-muted); }
+.live-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.live-top > span { min-width: 0; }
+.live-top strong { display: block; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.live-top small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
+.live-ask { margin: 0; padding: 12px 14px; font-size: 15px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, var(--live-tone) 11%, var(--mm-surface)); border-radius: 4px 14px 14px 14px; }
+.live-ask em { display: block; margin-bottom: 4px; color: var(--live-tone); font-size: 12px; font-style: normal; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.live-card .live-open { margin: 0; }
+.live-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.live-pill { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; cursor: pointer; }
+.live-pill small { color: var(--mm-muted); }
+.live-pill > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+.live-list { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--mm-line); }
+.live-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 2px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--mm-line); cursor: pointer; }
+.live-row > span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-row small { color: var(--mm-muted); font-size: 13px; white-space: nowrap; }
+.live-pill:hover, .live-row:hover { color: var(--mm-accent); }
+.live-pill:focus-visible, .live-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .live-empty { margin: 14px 0 0; color: var(--mm-muted); font-size: 14px; }
-.live-quiet summary { margin-top: 18px; color: var(--mm-muted); font-size: 14px; font-weight: 600; cursor: pointer; }
+.live-quiet summary.live-h { display: list-item; cursor: pointer; }
+.live-quiet summary.live-h span { margin-left: 8px; }
+.live-need-box { margin: 0 0 12px; padding: 10px 12px; font-size: 14.5px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, #c7801a 10%, var(--mm-surface)); border-radius: 12px; }
 .live-elsewhere { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
 .live-elsewhere a { color: var(--mm-accent); font-weight: 600; text-decoration: none; }
 .live-open { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
@@ -4403,7 +4430,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .live-command { display: block; margin-top: 4px; padding: 8px 10px; overflow-x: auto; font-size: 12.5px; white-space: nowrap; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
 .live-note { color: var(--mm-muted); font-size: 13px; }
 @media (max-width: 700px) { .live-cards { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .live-card { transition: none; } .live-card:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .live-dot[data-state="working"] { animation: none; } }
 </style>
 </head>
 <body>
@@ -4864,9 +4891,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="docxx-sort-bar" id="docxx-sort-bar" hidden>
       <strong id="docxx-sort-count"></strong>
       <div class="docxx-sort-actions">
+        <button type="button" class="docxx-act is-main" id="docxx-sort-auto" hidden>Разложить по подсказкам</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-junk" hidden>Мусор в корзину</button>
         <button type="button" class="docxx-act" id="docxx-sort-all">Выбрать все</button>
         <button type="button" class="docxx-act is-main" id="docxx-sort-move" hidden>Переложить в папку…</button>
         <button type="button" class="docxx-act" id="docxx-sort-archive" hidden>В архив</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-trash" hidden>В корзину</button>
         <button type="button" class="docxx-act" id="docxx-sort-keep" hidden>Оставить как есть</button>
       </div>
       <p class="docxx-sort-note" id="docxx-sort-note" role="status" aria-live="polite"></p>
@@ -5899,7 +5929,8 @@ const ccInfoSources = {};
 // state and a way into it. live_sessions_collector.py writes them every minute; owner only.
 var liveSessionsData = null;
 var liveSessionsBusy = false;
-var LIVE_STATE_TEXT = { working: 'Работает', waiting: 'Ждёт тебя', approve: 'Наверное, ждёт подтверждения' };
+// Mark 2026-10-26: only sessions that really need him wait for him, and the card says what for.
+var LIVE_STATE_TEXT = { working: 'Работает', waiting: 'Ждёт ответа', approve: 'Ждёт разрешения', done: 'Готово', stopped: 'Остановилась' };
 var LIVE_TOOL_TEXT = { claude: 'Claude', codex: 'Codex' };
 
 function liveSessionsVisible() {
@@ -5931,23 +5962,75 @@ function liveAgo(value) {
   return `${hours} ч назад`;
 }
 
+function liveDot(session) {
+  const dot = mmEl('span', 'live-dot');
+  dot.dataset.state = session.state;
+  dot.setAttribute('aria-hidden', 'true');
+  return dot;
+}
+
+function liveOpenLink(session) {
+  if (!session.link) return null;
+  const link = mmEl('a', '', session.link.startsWith('https://') ? 'Открыть ↗' : 'Открыть в Codex');
+  link.href = session.link;
+  if (session.link.startsWith('https://')) { link.target = '_blank'; link.rel = 'noopener'; }
+  return link;
+}
+
+// A session that asks Mark something: its question, «Открыть» and «Подробнее».
 function liveCard(session, index) {
-  const card = mmEl('button', 'live-card');
-  card.type = 'button';
+  const card = mmEl('article', 'live-card');
   card.dataset.state = session.state;
-  card.dataset.ccInfo = `live-${index}`;
-  card.classList.toggle('is-quiet', Boolean(session.quiet));
+  const top = mmEl('div', 'live-top');
+  const avatar = mmEl('span', 'live-ava', session.tool === 'codex' ? '⌘' : 'C');
+  avatar.dataset.tool = session.tool;
+  avatar.setAttribute('aria-hidden', 'true');
+  top.appendChild(avatar);
   const text = mmEl('span');
   text.appendChild(mmEl('strong', '', session.title || 'Без названия'));
-  text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine].filter(Boolean).join(' · ')));
-  const state = session.quiet ? `Затихла · ${liveAgo(session.last_at)}` : session.state === 'working' ? LIVE_STATE_TEXT.working : `${LIVE_STATE_TEXT[session.state]} · ${liveAgo(session.last_at)}`;
-  text.appendChild(mmEl('span', 'live-state', state));
-  card.appendChild(text);
+  text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine, liveAgo(session.last_at)].filter(Boolean).join(' · ')));
+  top.appendChild(text);
+  card.appendChild(top);
+  const ask = mmEl('p', 'live-ask');
+  ask.appendChild(mmEl('em', '', session.state === 'approve' ? 'Просит разрешения' : 'Спрашивает'));
+  ask.appendChild(document.createTextNode(session.need || 'Похоже, ждёт разрешения в своём окне'));
+  card.appendChild(ask);
+  const actions = mmEl('div', 'live-open');
+  const link = liveOpenLink(session);
+  if (link) actions.appendChild(link);
+  const more = mmEl('button', '', 'Подробнее');
+  more.type = 'button';
+  more.dataset.ccInfo = `live-${index}`;
+  actions.appendChild(more);
+  card.appendChild(actions);
   return card;
+}
+
+// A working or finished session: one line that opens its window.
+function liveLine(session, index, cls) {
+  const line = mmEl('button', cls);
+  line.type = 'button';
+  line.dataset.ccInfo = `live-${index}`;
+  line.appendChild(liveDot(session));
+  line.appendChild(mmEl('span', '', session.title || 'Без названия'));
+  line.appendChild(mmEl('small', '', cls === 'live-pill' ? session.machine || '' : liveStateText(session)));
+  return line;
+}
+
+function liveStateText(session) {
+  if (session.state === 'working') return LIVE_STATE_TEXT.working;
+  const word = session.quiet && session.state === 'waiting' ? 'Затихла' : LIVE_STATE_TEXT[session.state] || '';
+  return `${word} · ${liveAgo(session.last_at)}`;
 }
 
 function liveInfo(session) {
   const node = mmEl('div', 'live-info');
+  if (session.need) {
+    node.appendChild(mmEl('p', 'live-note', session.state === 'approve' ? 'Что ждёт разрешения' : 'Что нужно от тебя'));
+    node.appendChild(mmEl('p', 'live-need-box', session.need));
+  } else if (session.state === 'approve') {
+    node.appendChild(mmEl('p', 'live-note', 'Похоже, сессия ждёт разрешения в своём окне. Если там идёт долгая команда, это пройдёт само.'));
+  }
   if (session.reply) {
     node.appendChild(mmEl('p', 'live-note', 'Последний ответ'));
     node.appendChild(mmEl('p', 'live-reply', session.reply));
@@ -5999,33 +6082,40 @@ function liveSessionsRender(payload) {
   sessions.forEach((session, index) => {
     ccInfoSources[`live-${index}`] = () => ({
       title: session.title || 'Сессия',
-      rows: [['Где', `${LIVE_TOOL_TEXT[session.tool] || ''} · ${session.app || ''} · ${session.machine || ''}`], ['Проект', session.project], ['Ветка', session.branch], ['Сейчас', session.quiet ? `затихла, последний шаг ${liveAgo(session.last_at)}` : LIVE_STATE_TEXT[session.state]]],
+      rows: [['Где', `${LIVE_TOOL_TEXT[session.tool] || ''} · ${session.app || ''} · ${session.machine || ''}`], ['Проект', session.project], ['Ветка', session.branch], ['Сейчас', liveStateText(session)]],
       node: liveInfo(session),
     });
   });
-  const groups = [
-    ['Ждут тебя', sessions.filter(s => !s.quiet && s.state !== 'working')],
-    ['Работают', sessions.filter(s => s.state === 'working')],
-  ];
-  for (const [title, list] of groups) {
-    if (!list.length) continue;
-    const block = mmEl('section', 'live-group');
-    block.appendChild(mmEl('h3', '', title));
+  const heading = (title, count, tag = 'h3') => {
+    const node = mmEl(tag, 'live-h', title);
+    node.appendChild(mmEl('span', '', String(count)));
+    return node;
+  };
+  const waiting = sessions.filter(s => !s.quiet && (s.state === 'approve' || s.state === 'waiting'));
+  const working = sessions.filter(s => s.state === 'working');
+  const quiet = sessions.filter(s => s.quiet && s.state !== 'working');
+  if (waiting.length) {
+    host.appendChild(heading('Ждут тебя', waiting.length));
     const cards = mmEl('div', 'live-cards');
-    list.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
-    block.appendChild(cards);
-    host.appendChild(block);
+    waiting.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
+    host.appendChild(cards);
   }
-  const quiet = sessions.filter(s => s.quiet);
+  if (working.length) {
+    host.appendChild(heading('Работают сейчас', working.length));
+    const pills = mmEl('div', 'live-pills');
+    working.forEach(session => pills.appendChild(liveLine(session, sessions.indexOf(session), 'live-pill')));
+    host.appendChild(pills);
+  }
   if (quiet.length) {
     const fold = mmEl('details', 'live-quiet');
-    fold.appendChild(mmEl('summary', '', `Затихли · ${quiet.length}`));
-    const cards = mmEl('div', 'live-cards');
-    quiet.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
-    fold.appendChild(cards);
+    fold.appendChild(heading('Готово и затихли', quiet.length, 'summary'));
+    const list = mmEl('div', 'live-list');
+    quiet.forEach(session => list.appendChild(liveLine(session, sessions.indexOf(session), 'live-row')));
+    fold.appendChild(list);
     host.appendChild(fold);
   }
   if (!sessions.length) host.appendChild(mmEl('p', 'live-empty', 'Сейчас ни одна сессия не открыта.'));
+  else if (!sessions.some(s => !s.quiet && s.state !== 'working')) host.prepend(mmEl('p', 'live-empty', 'Сейчас никто не ждёт тебя.'));
   const lost = (payload.machines || []).filter(machine => !machine.fresh).map(machine => machine.label);
   if (lost.length) host.appendChild(mmEl('p', 'live-empty', `Нет связи с ${lost.join(', ')}: его сессий здесь нет.`));
 }
@@ -7492,9 +7582,9 @@ function initPixelAgentsPin() {
 
 async function fetchJSON(base, path) {
   try {
-    const slowMachineRead = (base === MAC_MINI_API && (path === '/api/all' || path === '/api/services/detailed'))
-      || ((base === AIR_API || base === PRO_API) && path.endsWith('/all'));
-    const timeoutMs = slowMachineRead ? 15000 : 3000;
+    // The laptops' health APIs take ~3.5 s through the Tailscale proxy, so they get more than 3 s.
+    const slowBase = base === MAC_MINI_API || base === AIR_API || base === PRO_API;
+    const timeoutMs = slowBase && (path.endsWith('/all') || path === '/api/services/detailed') ? 15000 : 3000;
     const r = await fetch(base + path, { signal: AbortSignal.timeout(timeoutMs) });
     return await r.json();
   } catch { return null; }
@@ -9737,14 +9827,26 @@ function renderHeaderDate() {
 // the numbers stay in the «i» window, which each word also opens.
 const machineUptime = {};
 const machineSystem = {};
+const machineMemoryFree = {};
+
+// macOS reports pressure as free percent; when it is missing, fall back to used/total.
+function machineMemoryLow(sys) {
+  if (!sys) return false;
+  if (typeof sys.memory_pressure_free_percent === 'number') return sys.memory_pressure_free_percent < 20;
+  return sys.memory_total_gb ? sys.memory_used_gb / sys.memory_total_gb >= 0.9 : false;
+}
+
+function machineStatusText(key, sys) {
+  machineMemoryFree[key] = typeof sys?.memory_pressure_free_percent === 'number' ? `${sys.memory_pressure_free_percent}%` : '';
+  return machineMemoryLow(sys) ? 'Работает · мало памяти' : 'Работает';
+}
 for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro', 'MacBook Pro']]) {
   ccInfoSources[`machine-${key}`] = () => {
     const text = id => { const t = document.getElementById(`${key}-${id}`)?.textContent?.trim(); return t && t !== '—' ? t : ''; };
     const sys = machineSystem[key] || {};
     const free = sys.disk_total_gb ? `${Math.max(0, Math.round(sys.disk_total_gb - sys.disk_used_gb))} GB` : '';
-    const pressure = typeof sys.memory_pressure_free_percent === 'number' ? `${100 - sys.memory_pressure_free_percent}%` : '';
     const swap = typeof sys.swap_used_gb === 'number' && sys.swap_used_gb > 0 ? `${sys.swap_used_gb} GB` : '';
-    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Нагрузка на память', pressure], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
   };
 }
 
@@ -9862,7 +9964,7 @@ async function refreshMini() {
   document.getElementById('mini-online-badge').textContent = 'в сети';
   document.getElementById('mini-online-badge').className = 'machine-badge online';
   const sys = data.system || {};
-  document.getElementById('mini-status').textContent = 'Работает';
+  document.getElementById('mini-status').textContent = machineStatusText('mini', sys);
   machineUptime.mini = sys.uptime || '';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
@@ -9894,7 +9996,7 @@ async function refreshAir() {
   }
   const sys = data.system;
   document.getElementById('air-hostname').textContent = sys.hostname || 'MacBook Air';
-  document.getElementById('air-status').textContent = 'Работает';
+  document.getElementById('air-status').textContent = machineStatusText('air', sys);
   machineLastSeen.air = Date.now();
   machineUptime.air = sys.uptime || '';
   document.getElementById('air-online-badge').textContent = 'в сети';
@@ -9933,7 +10035,7 @@ async function refreshPro() {
   }
   const sys = data.system;
   document.getElementById('pro-hostname').textContent = sys.hostname || 'MacBook Pro';
-  document.getElementById('pro-status').textContent = 'Работает';
+  document.getElementById('pro-status').textContent = machineStatusText('pro', sys);
   machineLastSeen.pro = Date.now();
   machineUptime.pro = sys.uptime || '';
   document.getElementById('pro-online-badge').textContent = 'в сети';
@@ -12638,14 +12740,15 @@ function ccDocxxRenderRecords() {
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
     name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',source+' · '+date));
     if(row.description) name.append(ccDocxxEl('span',row.description,'docxx-record-description'));
-    else if(row.status==='needs_review') name.append(ccDocxxEl('span','Содержимое ещё не определено.','docxx-record-description'));
+    else if(row.status==='needs_review' && !row.suggest) name.append(ccDocxxEl('span','Содержимое ещё не определено.','docxx-record-description'));
     if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Срок действия'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
+    if(row.status==='needs_review') { const todo=ccDocxxRecordActions(row); if(todo) name.append(todo); }
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(row.status==='needs_review'?ccDocxxPick(row.key,row.name):icon,name);
     const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку ↗':'Открыть документ ↗',row.url) || ccDocxxSourceLink('Открыть в Gmail ↗',row.source_url);
     if(openLink) { openLink.className='docxx-record-source'; summary.append(openLink); }
     summary.append(badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
-    const todo=ccDocxxRecordActions(row); if(todo) body.append(todo);
+    if(row.status==='sorted') body.append(ccDocxxRecordActions(row));
     const dl=ccDocxxEl('dl');
     for(const [label,value] of [['Было',row.original_name],['Теперь',row.destination],['Пояснение',row.reason]]) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
     body.append(dl);
@@ -12659,7 +12762,11 @@ function ccDocxxRenderRecords() {
 // ─── Sorting «Нужен разбор» from the site (Mark 2026-10-25) ───
 const ccDocxxSelected=new Set();
 let ccDocxxSortVisible=[], ccDocxxFolders=null, ccDocxxBusy=false, ccDocxxMoveKeys=[];
-const CC_DOCXX_ERRORS={not_found:'файл уже не на месте',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена'};
+const CC_DOCXX_ERRORS={not_found:'Mac mini не нашёл файл у себя на диске',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена',no_suggestion:'нет подходящей папки'};
+function ccDocxxMovable(key) { return !Array.isArray(ccDocxxFolders?.movable) || ccDocxxFolders.movable.includes(key); }
+function ccDocxxFolderName(folder) { return folder.split('/').pop(); }
+// A guessed folder counts only while it is still one of the library's folders.
+function ccDocxxSuggested(row) { const f=row.suggest?.folder; return f && (!ccDocxxFolders || ccDocxxFolders.folders.includes(f)) ? f : null; }
 function ccDocxxPick(key,title) {
   const b=ccDocxxEl('button','✓','docxx-pick'); b.type='button'; b.setAttribute('role','checkbox');
   b.setAttribute('aria-checked',String(ccDocxxSelected.has(key))); b.setAttribute('aria-label','Выбрать: '+title);
@@ -12667,22 +12774,50 @@ function ccDocxxPick(key,title) {
   b.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); if(ccDocxxSelected.has(key)) ccDocxxSelected.delete(key); else ccDocxxSelected.add(key); b.setAttribute('aria-checked',String(ccDocxxSelected.has(key))); ccDocxxSortBar(); });
   return b;
 }
+function ccDocxxAct(label,cls,run) {
+  // These buttons live inside <summary>: a tap does the action without opening or closing the card.
+  const b=ccDocxxEl('button',label,'docxx-act'+(cls?' '+cls:'')); b.type='button'; b.disabled=ccDocxxBusy;
+  b.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); run(); });
+  return b;
+}
 function ccDocxxRecordActions(row) {
   if(row.status==='sorted') {
     const box=ccDocxxEl('div',undefined,'docxx-record-todo');
-    const back=ccDocxxEl('button',row.decision==='keep'?'Снова на разбор':'Вернуть как было','docxx-act'); back.type='button'; back.disabled=ccDocxxBusy;
-    back.addEventListener('click',()=>ccDocxxDecide('undo',[row.key]));
-    box.append(back); return box;
+    box.append(ccDocxxAct(row.decision==='keep'?'Снова на разбор':'Вернуть как было','',()=>ccDocxxDecide('undo',[row.key])));
+    return box;
   }
   if(row.status!=='needs_review') return null;
-  const box=ccDocxxEl('div',undefined,'docxx-record-todo'); box.append(ccDocxxEl('span','Что сделать с документом'));
-  const move=ccDocxxEl('button','Переложить в папку…','docxx-act is-main'); move.type='button'; move.addEventListener('click',()=>ccDocxxOpenMove([row.key]));
-  const keep=ccDocxxEl('button','Оставить как есть','docxx-act'); keep.type='button'; keep.addEventListener('click',()=>ccDocxxDecide('keep',[row.key]));
-  box.append(move);
-  if(ccDocxxFolders?.archive) { const arch=ccDocxxEl('button','В архив','docxx-act'); arch.type='button'; arch.addEventListener('click',()=>ccDocxxDecide('archive',[row.key])); box.append(arch); }
-  box.append(keep);
-  for(const b of box.querySelectorAll('button')) b.disabled=ccDocxxBusy;
+  const box=ccDocxxEl('div',undefined,'docxx-record-todo');
+  if(!ccDocxxMovable(row.key)) {
+    // 2026-10-26: a Drive document the journal gives no place for; moving it would only fail.
+    const hint=ccDocxxEl('p','Mac mini не нашёл этот файл у себя на диске, поэтому переложить или убрать его отсюда нельзя. Удали или перенеси его в Google Drive, а здесь нажми «Оставить», чтобы он не висел в разборе.','docxx-suggest'); hint.dataset.tone='none';
+    box.append(hint,ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
+    return box;
+  }
+  const folder=ccDocxxSuggested(row), junk=row.suggest?.junk===true, canTrash=ccDocxxFolders?.can_trash===true;
+  const why=row.suggest?.why ? ' — '+row.suggest.why : '';
+  if(folder) {
+    const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='folder';
+    hint.append('Подходит папка ',ccDocxxEl('b','«'+ccDocxxFolderName(folder)+'»'),why);
+    box.append(hint,ccDocxxAct('Положить в «'+ccDocxxFolderName(folder)+'»','is-main',()=>ccDocxxDecide('move',[row.key],folder)));
+  } else if(junk) {
+    const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='junk';
+    hint.append(ccDocxxEl('b','Похоже на мусор'),why);
+    box.append(hint);
+    if(canTrash) box.append(ccDocxxAct('В корзину','is-trash is-main',()=>ccDocxxDecide('trash',[row.key])));
+  } else if(row.suggest) {
+    const hint=ccDocxxEl('p','Подходящей папки не нашлось'+why,'docxx-suggest'); hint.dataset.tone='none'; box.append(hint);
+  }
+  box.append(ccDocxxAct(folder?'Другая папка…':'Выбрать папку…',folder||junk?'':'is-main',()=>ccDocxxOpenMove([row.key])));
+  if(ccDocxxFolders?.archive) box.append(ccDocxxAct('В архив','',()=>ccDocxxDecide('archive',[row.key])));
+  box.append(ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
+  if(canTrash && !junk) box.append(ccDocxxAct('В корзину','is-trash',()=>ccDocxxDecide('trash',[row.key])));
   return box;
+}
+function ccDocxxGuessed(kind) {
+  const keys=ccDocxxSelected.size?[...ccDocxxSelected]:ccDocxxSortVisible;
+  const rows=new Map((ccDocxxData?.records||[]).map(r=>[r.key,r]));
+  return keys.filter(k=>rows.has(k) && ccDocxxMovable(k) && (kind==='junk'?rows.get(k).suggest?.junk===true:!!ccDocxxSuggested(rows.get(k))));
 }
 function ccDocxxSortBar() {
   const bar=document.getElementById('docxx-sort-bar'); const total=ccDocxxSortVisible.length, picked=ccDocxxSelected.size;
@@ -12692,6 +12827,10 @@ function ccDocxxSortBar() {
   document.getElementById('docxx-sort-move').hidden=!picked;
   document.getElementById('docxx-sort-keep').hidden=!picked;
   document.getElementById('docxx-sort-archive').hidden=!picked || !ccDocxxFolders?.archive;
+  document.getElementById('docxx-sort-trash').hidden=!picked || ccDocxxFolders?.can_trash!==true;
+  const auto=ccDocxxGuessed('folder'), junk=ccDocxxFolders?.can_trash===true?ccDocxxGuessed('junk'):[];
+  const autoButton=document.getElementById('docxx-sort-auto'); autoButton.hidden=!auto.length; autoButton.textContent='Разложить по подсказкам ('+auto.length+')';
+  const junkButton=document.getElementById('docxx-sort-junk'); junkButton.hidden=!junk.length; junkButton.textContent='Мусор в корзину ('+junk.length+')';
   for(const b of bar.querySelectorAll('button')) b.disabled=ccDocxxBusy;
 }
 async function ccDocxxLoadFolders() {
@@ -12734,7 +12873,7 @@ async function ccDocxxOpenMove(keys) {
 async function ccDocxxDecide(action,keys,folder) {
   if(ccDocxxBusy || !keys.length) return;
   ccDocxxBusy=true; ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
-  ccDocxxText('docxx-sort-note',action==='keep'?'Отмечаем…':action==='undo'?'Возвращаем…':'Перекладываем…'); ccDocxxSortBar();
+  ccDocxxText('docxx-sort-note',{keep:'Отмечаем…',undo:'Возвращаем…',trash:'Убираем в корзину…',auto:'Раскладываем по подсказкам…'}[action]||'Перекладываем…'); ccDocxxSortBar();
   let note;
   try {
     // The server takes at most 50 documents per request: send a long selection in parts.
@@ -12747,12 +12886,12 @@ async function ccDocxxDecide(action,keys,folder) {
     if(!response.ok && !data.results.length) note=response.status===401?'Нужен вход владельца.':'Не получилось. Обнови страницу и попробуй ещё раз.';
     else {
       const ok=data.results.filter(r=>r.ok), bad=data.results.filter(r=>!r.ok);
-      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было'}[action];
+      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было',trash:'В корзине',auto:'Разложено по папкам'}[action];
       note=ok.length?(keys.length===1?done+(action==='move'&&folder?': '+folder.split('/').join(' / '):'')+'.':done+': '+ok.length+'.'):'';
       if(bad.length) note+=(note?' ':'')+'Не получилось: '+bad.length+' ('+[...new Set(bad.map(r=>CC_DOCXX_ERRORS[r.error]||'ошибка'))].join(', ')+').';
       if(!response.ok) note+=(note?' ':'')+'Остальные не успели: обнови страницу и повтори.';
       for(const r of ok) ccDocxxSelected.delete(r.key);
-      if(action==='move') ccDocxxFolders=null;
+      if(['move','trash','auto','undo'].includes(action)) ccDocxxFolders=null;
     }
   } catch { note='Нет связи с Mac mini. Попробуй ещё раз.'; }
   ccDocxxBusy=false; ccDocxxText('docxx-sort-note',note||'');
@@ -12765,6 +12904,9 @@ document.getElementById('docxx-sort-all').addEventListener('click',()=>{
 document.getElementById('docxx-sort-move').addEventListener('click',()=>ccDocxxOpenMove([...ccDocxxSelected]));
 document.getElementById('docxx-sort-archive').addEventListener('click',()=>ccDocxxDecide('archive',[...ccDocxxSelected]));
 document.getElementById('docxx-sort-keep').addEventListener('click',()=>ccDocxxDecide('keep',[...ccDocxxSelected]));
+document.getElementById('docxx-sort-trash').addEventListener('click',()=>ccDocxxDecide('trash',[...ccDocxxSelected]));
+document.getElementById('docxx-sort-auto').addEventListener('click',()=>ccDocxxDecide('auto',ccDocxxGuessed('folder')));
+document.getElementById('docxx-sort-junk').addEventListener('click',()=>ccDocxxDecide('trash',ccDocxxGuessed('junk')));
 document.getElementById('docxx-move-close').addEventListener('click',()=>document.getElementById('docxx-move-dialog').close());
 document.getElementById('docxx-move-dialog').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.close(); });
 document.getElementById('docxx-move-search').addEventListener('input',ccDocxxRenderFolders);
@@ -12791,8 +12933,12 @@ function ccDocxxRender(data) {
   ccDocxxText('docxx-results-note',`Показано до 100 операций. В доступном журнале: ${Number.isInteger(data.records_total)?data.records_total:'—'}. Обновление панели каждые 5 секунд, пока она открыта.`);
   ccDocxxRenderGmail(); ccDocxxExplain(); ccDocxxRenderRecords(); ccDocxxRenderOperations();
   if(!ccDocxxFolders && data.review_count>0 && !ccDocxxFoldersAsked) { ccDocxxFoldersAsked=true; ccDocxxLoadFolders(); }
+  // A new document on the open page needs a fresh «movable» list, or it would show only «Оставить».
+  const reviewKeys=(data.records||[]).filter(r=>r.status==='needs_review').map(r=>r.key).join();
+  if(ccDocxxFolders && reviewKeys!==ccDocxxReviewKeys && !ccDocxxBusy) ccDocxxLoadFolders();
+  ccDocxxReviewKeys=reviewKeys;
 }
-let ccDocxxFoldersAsked=false;
+let ccDocxxFoldersAsked=false, ccDocxxReviewKeys='';
 async function ccLoadDocxx() {
   if(!ccDocxxVisible()) return;
   const generation=++ccDocxxGeneration;

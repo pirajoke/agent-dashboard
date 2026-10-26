@@ -105,8 +105,8 @@ class MachineRefreshBehaviourTests(unittest.TestCase):
         source = HTML.read_text()
         consts = re.search(r"const MACHINE_GRACE_MS = .*?;\nconst machineLastSeen = \{\};\nconst machineInFlight = \{\};", source, re.S).group(0)
         script = "\n".join([
-            FAKE_DOM, "const machineUptime = {}; const machineSystem = {};", consts,
-            *(js_function(source, name) for name in ("machinePercent", "machineHealthItems", "renderMachineHealth",
+            FAKE_DOM, "const machineUptime = {}; const machineSystem = {}; const machineMemoryFree = {};", consts,
+            *(js_function(source, name) for name in ("machineMemoryLow", "machineStatusText", "machinePercent", "machineHealthItems", "renderMachineHealth",
                                                       "machineRecentlySeen", "renderGauges", "refreshPro")),
             "const sys = {hostname: 'MBP', cpu_percent: 10, memory_used_gb: 15, memory_total_gb: 16, disk_used_gb: 50, disk_total_gb: 500};",
             "const words = () => document.getElementById('pro-health').children.map(b => b.querySelector('.machine-health-word').textContent);",
@@ -123,7 +123,7 @@ class MachineRefreshBehaviourTests(unittest.TestCase):
           now += 60 * 1000; await refreshPro(); snap();
           now += 3 * 60 * 1000; await refreshPro(); snap();
         """)
-        self.assertEqual(log[0], ["Работает", ["перегружена", "ок", "спокойно"]])
+        self.assertEqual(log[0], ["Работает · мало памяти", ["перегружена", "ок", "спокойно"]])
         self.assertEqual(log[1], log[0])
         self.assertEqual(log[2], ["Нет связи", []])
 
@@ -135,7 +135,7 @@ class MachineRefreshBehaviourTests(unittest.TestCase):
           pending({system: sys, services: []}); await first; snap();
         """)
         self.assertEqual(log[0][0], "")  # the second call waited instead of reporting «Нет связи»
-        self.assertEqual(log[1][0], "Работает")
+        self.assertTrue(log[1][0].startswith("Работает"))
 
     def test_tiles_are_updated_in_place_so_focus_survives(self):
         log = self.run_page("""

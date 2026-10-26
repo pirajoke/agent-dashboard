@@ -35,13 +35,14 @@ class ExistingMachinePreservationTests(unittest.TestCase):
 
     def test_existing_machine_renderers_refresh_and_service_controls_are_unchanged(self):
         # Re-baselined 2026-10-20 with Mark's word for the grouped service list, and 2026-10-24 on his
-        # «го» to the rebuild plan (list only, no counters, Russian status words), and 2026-10-26 for the
-        # memory/disk/load words and the grace period that stops a slow laptop from flashing «Нет связи».
+        # «го» to the rebuild plan (list only, no counters, Russian status words), and 2026-10-26 on his
+        # ask to watch memory and disk (longer laptop timeout, «мало памяти» status, memory/disk/load words,
+        # grace period so a slow laptop does not flash «Нет связи»).
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "39514f25a5b1286204c5edb005fe44700477528777c61f36d0f8cd26197751d5")
+                         "47f3a5daac8ce5f4cdde96a5c5d7c7b5dc71a9769f6bc1cd2c7d850a207cedb2")
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ from dashboard_builder.owner_decisions import (
 from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
 from dashboard_builder.docxx_search import docxx_search
-from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions
+from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions, load_suggestions as docxx_load_suggestions, suggestions_path as docxx_suggestions_path
 from dashboard_builder.docxx_public_pages import PAGES as DOCXX_INFO_PAGES, CONTENT_SECURITY_POLICY as DOCXX_INFO_CSP
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
@@ -2609,10 +2609,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if body is None:
             return
         try:
-            self._json_response(200, docxx_apply(docxx_state_path(HOME), docxx_decisions_path(HOME), body))
+            self._json_response(200, docxx_apply(docxx_state_path(HOME), docxx_decisions_path(HOME), body, docxx_suggestions_path(HOME)))
         except ValueError as error:
             self._json_response(400, {'error': str(error) if str(error) in {
-                'invalid_action', 'invalid_keys', 'invalid_folder', 'library_unavailable'} else 'invalid_request'})
+                'invalid_action', 'invalid_keys', 'invalid_folder', 'library_unavailable', 'no_trash'} else 'invalid_request'})
         except OSError:
             self._json_response(503, {'error': 'docxx_decisions_unavailable'})
 
@@ -2882,7 +2882,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/docxx':
             owner = self._decision_owner_authorized()
             decisions = docxx_load_decisions(docxx_decisions_path(HOME)) if owner else None
-            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner, decisions=decisions))
+            suggestions = docxx_load_suggestions(docxx_suggestions_path(HOME)) if owner else None
+            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner, decisions=decisions,
+                                                      suggestions=suggestions))
             return
         if parsed.path == '/api/docxx/folders':
             if not self._decision_owner_authorized():
