@@ -157,6 +157,7 @@ STATE_LABELS = {
     "scheduled": "по расписанию",
     "failed": "последний запуск с ошибкой",
     "stopped": "не загружена",
+    "disabled": "выключен в реестре",
 }
 
 
@@ -209,8 +210,11 @@ def _agent_state(native: dict | None, gate: dict | None) -> tuple[str, str | Non
     return "unknown", None, "активность чата на Mac mini"
 
 
-def project_agents(routes: Any, campus: dict | None) -> list[dict]:
-    """Registered project chats with their department, role and last confirmed state."""
+def project_agents(routes: Any, campus: dict | None, queue_gates: dict[str, dict] | None = None) -> list[dict]:
+    """Registered project chats with their department, role and last confirmed state.
+
+    An open owner gate counts whether it comes from the campus events or straight from the queue,
+    so «ждёт тебя» does not vanish when Bridge is unreachable."""
     entries = routes.get("routes") if isinstance(routes, dict) else None
     if not isinstance(entries, dict):
         return []
@@ -220,6 +224,8 @@ def project_agents(routes: Any, campus: dict | None) -> list[dict]:
     for event in campus.get("owner_gates") or []:
         if isinstance(event, dict) and event.get("project"):
             gates.setdefault(_key(event["project"]), event)
+    for key, gate in (queue_gates or {}).items():
+        gates.setdefault(key, gate)
     agents = []
     for route_id, route in sorted(entries.items()):
         if not isinstance(route, dict):
@@ -228,7 +234,7 @@ def project_agents(routes: Any, campus: dict | None) -> list[dict]:
         gate = gates.get(_key(route.get("project"))) or gates.get(_key(AGENT_NAMES.get(route_id)))
         state, state_at, source = _agent_state(native.get(route_id), gate)
         if not route.get("enabled", False):
-            state, state_at = "stopped", None
+            state, state_at = "disabled", None
         host = str(route.get("hostId") or "")
         agents.append({
             "id": route_id,
@@ -243,7 +249,7 @@ def project_agents(routes: Any, campus: dict | None) -> list[dict]:
             "state_label": STATE_LABELS[state],
             "state_at": state_at,
             "source": source,
-            "next_step": "Нужно твоё решение" if gate else None,
+            "next_step": "Нужно твоё решение" if state == "needs_mark" else None,
         })
     return agents
 
@@ -256,7 +262,8 @@ def departments(definitions: Any, agents: list[dict]) -> list[dict]:
             for d in ids]
 
 
-def queue_summary(queue: Any, scheduler_state: Any) -> dict:
+def queue_summary(queue: Any, scheduler_state: Any, names: dict[str, str] | None = None) -> dict:
+    """``names`` maps project keys of registered agents to their display name; other projects stay unnamed."""
     items = queue.get("items") if isinstance(queue, dict) else None
     if not isinstance(items, list):
         return {"available": False}
@@ -273,11 +280,23 @@ def queue_summary(queue: Any, scheduler_state: Any) -> dict:
         "open": len(open_items),
         "owner_gates": len(gates),
         "executable": len(open_items) - len(gates),
-        "gate_projects": sorted({str(i.get("project") or "") for i in gates} - {""}),
+        "gate_projects": sorted({(names or {}).get(_key(i.get("project")), "незарегистрированный проект") for i in gates}),
         "last_change_at": _iso(max((t for t in times if t), default=None)),
         "last_collected_at": _iso(collected),
         "cooldown_until": _iso(cooldown),
     }
+
+
+def _queue_gates(queue: Any) -> dict[str, dict]:
+    """Open owner gates by project key: only the kind and time, never the task text."""
+    items = queue.get("items") if isinstance(queue, dict) else None
+    gates = {}
+    for item in items if isinstance(items, list) else []:
+        if (isinstance(item, dict) and str(item.get("status")) in OPEN_QUEUE_STATUSES
+                and str(item.get("owner_gate") or "none") not in {"", "none"}):
+            gates.setdefault(_key(item.get("project")), {"updated_at": _iso(_parse(item.get("completed_at"))),
+                                                         "kind": str(item["owner_gate"])})
+    return gates
 
 
 def _gate_kinds(queue: Any) -> dict[str, str]:
@@ -306,7 +325,7 @@ def onboarding_summary(state_dir: Path, *, installed_helper: Path, canonical_hel
             continue
         identity = receipt.get("identity") if isinstance(receipt.get("identity"), dict) else {}
         route_id = str(identity.get("route_id") or "")
-        receipts.append({"route": AGENT_NAMES.get(route_id, route_id or "?"),
+        receipts.append({"route": AGENT_NAMES.get(route_id, "новый агент"),
                          "at": _iso(_parse(receipt.get("registered_at"))),
                          "new_agent": bool(route_id) and route_id not in original})
     receipts.sort(key=lambda r: r["at"] or "", reverse=True)
@@ -316,11 +335,18 @@ def onboarding_summary(state_dir: Path, *, installed_helper: Path, canonical_hel
         "receipts": len(receipts),
         "last": receipts[0] if receipts else None,
         "new_agents_registered": sum(r["new_agent"] for r in receipts),
-        "recovery_pending": (state_dir / "pending.json").exists(),
+        "recovery_pending": _exists(state_dir / "pending.json"),
         "helper_installed": helper is not None,
         "helper_matches_canonical": helper is not None and helper == file_digest(canonical_helper),
         "registry_matches_canonical": routes is not None and routes == file_digest(canonical_routes),
     }
+
+
+def _exists(path: Path) -> bool:
+    try:
+        return path.exists()
+    except OSError:
+        return False
 
 
 def _job_matches(label: str, patterns: tuple[str, ...]) -> bool:
@@ -350,7 +376,9 @@ def service_log_times(agents_dir: Path, labels: list[str]) -> dict[str, datetime
         try:
             with (agents_dir / f"{label}.plist").open("rb") as handle:
                 plist = plistlib.load(handle)
-        except (OSError, plistlib.InvalidFileException, ValueError):
+        except Exception:  # a broken or odd plist only loses its time
+            continue
+        if not isinstance(plist, dict):
             continue
         stamps = []
         for key in ("StandardOutPath", "StandardErrorPath"):
@@ -425,7 +453,7 @@ def bridge_activity(bridge_tasks: Any) -> dict:
 def architecture_projection(*, routes: Any, department_defs: Any, campus: dict | None, queue: Any,
                             scheduler_state: Any, onboarding: dict, jobs: dict[str, dict] | None,
                             log_times: dict[str, datetime], bridge_tasks: Any, now: datetime) -> dict:
-    agents = project_agents(routes, campus)
+    agents = project_agents(routes, campus, _queue_gates(queue))
     for kind_project, kind in _gate_kinds(queue).items():
         for agent in agents:
             if agent["state"] == "needs_mark" and kind_project in {_key(agent["name"]), _key(agent["id"])}:
@@ -457,6 +485,7 @@ def architecture_projection(*, routes: Any, department_defs: Any, campus: dict |
             "needs_mark": counts["needs_mark"],
             "idle": counts["idle"],
             "unknown": counts["unknown"],
+            "disabled": counts["disabled"],
         },
         "services": service_list,
         "service_groups": [{"id": g, "label": label} for g, label in SERVICE_GROUPS],
@@ -465,7 +494,7 @@ def architecture_projection(*, routes: Any, department_defs: Any, campus: dict |
             "ok": sum(s["state"] in {"running", "scheduled"} for s in service_list),
             "problem": sum(s["state"] in {"failed", "stopped"} for s in service_list),
         },
-        "queue": queue_summary(queue, scheduler_state),
+        "queue": queue_summary(queue, scheduler_state, {k: a["name"] for a in agents for k in (_key(a["name"]), _key(a["id"]))}),
         "onboarding": onboarding,
         "bridge": bridge_activity(bridge_tasks),
         "links": [{"from": a, "to": b, "label": label} for a, b, label in LINKS],

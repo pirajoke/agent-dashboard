@@ -77,19 +77,28 @@ class AgentStateTests(unittest.TestCase):
         # A stale «running» is not shown as work.
         self.assertEqual(agents["my-dictionary"]["state"], "unknown")
         self.assertIsNone(agents["my-dictionary"]["state_at"])
-        self.assertEqual(agents["health-os"]["state"], "stopped")
+        self.assertEqual(agents["health-os"]["state"], "disabled")
         self.assertEqual(agents["jarvis"]["host"], "Mac mini")
 
     def test_counts_and_blockers(self):
         data = project()
-        self.assertEqual(data["agent_counts"], {"registered": 4, "working": 1, "needs_mark": 1, "idle": 0, "unknown": 1})
+        self.assertEqual(data["agent_counts"], {"registered": 4, "working": 1, "needs_mark": 1, "idle": 0, "unknown": 1, "disabled": 1})
         self.assertIn("Ждёт твоего решения: JARVIS.", data["blockers"])
         self.assertTrue(any("нового агента целиком" in b for b in data["blockers"]))
 
-    def test_no_activity_at_all_is_a_blocker(self):
+    def test_queue_gate_still_counts_without_bridge(self):
         data = project(campus=None)
         self.assertFalse(any(a["state"] == "working" for a in data["agents"]))
-        self.assertEqual(data["agent_counts"]["needs_mark"], 0)
+        jarvis = next(a for a in data["agents"] if a["id"] == "jarvis")
+        self.assertEqual((jarvis["state"], jarvis["state_at"]), ("needs_mark", "2026-10-26T09:15:39Z"))
+        self.assertIn("Ждёт твоего решения: JARVIS.", data["blockers"])
+
+    def test_unregistered_gated_project_is_not_named(self):
+        q = queue()
+        q["items"].append({"project": "CLIENT SECRET", "status": "queued", "owner_gate": "merge"})
+        data = project(queue=q)
+        self.assertEqual(data["queue"]["gate_projects"], ["JARVIS", "незарегистрированный проект"])
+        self.assertNotIn("CLIENT SECRET", json.dumps(data, ensure_ascii=False))
 
     def test_missing_registry_is_empty_not_invented(self):
         data = project(routes=None)
@@ -111,6 +120,13 @@ class ServiceTests(unittest.TestCase):
     def test_unreadable_launchd_is_unknown(self):
         services = project(jobs=None)["services"]
         self.assertTrue(all(s["state"] == "unknown" for s in services))
+
+    def test_broken_plists_are_skipped(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "com.pirajoke.a.plist").write_text("<plist><dict><key>x")
+            with (Path(tmp) / "com.pirajoke.b.plist").open("wb") as handle:
+                plistlib.dump(["not", "a", "dict"], handle)
+            self.assertEqual(arch.service_log_times(Path(tmp), ["com.pirajoke.a", "com.pirajoke.b"]), {})
 
     def test_log_time_comes_from_the_plist_logs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -149,11 +165,12 @@ class QueueAndOnboardingTests(unittest.TestCase):
             self.assertFalse(summary["registry_matches_canonical"])
             self.assertFalse(summary["recovery_pending"])
             (state / "b.receipt.json").write_text(json.dumps(
-                {"registered_at": "2026-10-27T08:00:00Z", "identity": {"route_id": "new-project"}}))
+                {"registered_at": "2026-10-27T08:00:00Z", "identity": {"route_id": "client-secret"}}))
             (state / "pending.json").write_text("{}")
             summary = arch.onboarding_summary(state, installed_helper=root / "helper", canonical_helper=root / "x",
                                               installed_routes=root / "routes", canonical_routes=root / "routes")
             self.assertEqual(summary["new_agents_registered"], 1)
+            self.assertEqual(summary["last"]["route"], "новый агент")
             self.assertTrue(summary["recovery_pending"])
             self.assertFalse(summary["helper_matches_canonical"])
             self.assertNotIn(PRIVATE_PATH, json.dumps(summary))

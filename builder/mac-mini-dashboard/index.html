@@ -4520,6 +4520,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .arch-dot.s-needs_mark, .arch-dot.s-waiting { background: var(--mm-warning); }
 .arch-dot.s-blocked, .arch-dot.s-failed, .arch-dot.s-stopped { background: var(--mm-danger); border-radius: 2px; }
 .arch-dot.s-unknown { background: transparent; border: 1.5px dashed var(--mm-muted); }
+.arch-dot.s-disabled { background: var(--mm-pr); border-radius: 2px; }
 .arch-chip .arch-when { color: var(--mm-muted); font-size: 11.5px; }
 .arch-loop { margin-top: 4px; color: var(--mm-accent); font-size: 12.5px; }
 .arch-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 18px; color: var(--mm-muted); font-size: 12.5px; }
@@ -11177,7 +11178,7 @@ function renderArchitecture(data) {
   const on = data.onboarding || {};
   trio.append(
     archNodeButton('registry', '', `${c.registered || 0} агентов · ${(data.departments || []).length} отделов`),
-    archNodeButton('queue', '', q.available ? (q.owner_gates ? `ждут тебя: ${q.owner_gates} · сбор ${archTime(q.last_collected_at)}` : `открыто: ${q.open} · сбор ${archTime(q.last_collected_at)}`) : 'очередь не прочитана'),
+    archNodeButton('queue', '', q.available ? [q.owner_gates ? `ждут тебя: ${q.owner_gates}` : `открыто: ${q.open}`, q.last_collected_at ? `сбор ${archTime(q.last_collected_at)}` : 'сбора ещё не было'].join(' · ') : 'очередь не прочитана'),
     archNodeButton('onboarding', '', on.recovery_pending ? 'прервано, ждёт сверки' : (on.new_agents_registered ? `новых агентов: ${on.new_agents_registered}` : 'новый агент целиком не проверен')),
   );
   flow.append(trio, archArrow('задания'));
@@ -11264,7 +11265,7 @@ async function archLoad() {
   try {
     const response = await fetch(ARCH_API, { headers: mmHeaders(), cache: 'no-store' });
     const data = await response.json();
-    if (!response.ok || data.schema !== 'command_center_architecture_v1') throw new Error(`HTTP ${response.status}`);
+    if (!response.ok || data.schema !== 'command_center_architecture_v1' || data.available === false) throw new Error(`HTTP ${response.status}`);
     renderArchitecture(data);
   } catch (error) {
     state.hidden = false;

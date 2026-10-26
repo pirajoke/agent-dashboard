@@ -1709,7 +1709,25 @@ def _runtime_asset_block(filename: str, start_marker: str, end_marker: str) -> s
     return source[start:end].strip()
 
 
+_ARCHITECTURE_CACHE: dict = {}
+_ARCHITECTURE_LOCK = threading.Lock()
+
+
 def _architecture_payload() -> dict:
+    # Anonymous visitors may open the tab too: one projection per 20 seconds is enough.
+    with _ARCHITECTURE_LOCK:
+        cached = _ARCHITECTURE_CACHE.get("payload")
+        if cached and time.monotonic() - _ARCHITECTURE_CACHE["at"] < 20:
+            return cached
+        try:
+            payload = _architecture_build()
+        except Exception:
+            payload = {"schema": "command_center_architecture_v1", "available": False}
+        _ARCHITECTURE_CACHE.update(payload=payload, at=time.monotonic())
+        return payload
+
+
+def _architecture_build() -> dict:
     now = datetime.now(timezone.utc)
     try:
         tasks = _bridge_request("GET", "/api/tasks?limit=24&include_messages=1")
