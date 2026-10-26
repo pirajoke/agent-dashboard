@@ -349,5 +349,18 @@ process.stdout.write(JSON.stringify({before,title,topicCount:topics.length,after
         self.assertEqual(out["info"], "context-record", "Source and date stay one tap away behind «i»")
         self.assertIn("Следующие шаги", out["before"]["headings"])
 
+    def test_bold_statements_and_code_examples_are_not_split_into_sections(self):
+        body = BODY.replace("## Plaud summary\n", "## Plaud summary\n\nВступление.\n\n**Запуск переносится на пятницу.**\n\n```markdown\n# Пример\nhttps://github.com/example/context-fixture/issues/26\n```\n\n")
+        out = self.run_js("await context.ccLoadContext(good.record.id);process.stdout.write(JSON.stringify({...snapshot(),relatedHidden:document.getElementById('context-links').hidden}));", body)
+        self.assertIn("Запуск переносится на пятницу.", out["visible"])
+        self.assertIn("<pre>", out["html"])
+        self.assertNotIn("Пример", out["headings"])
+        self.assertTrue(out["relatedHidden"], "A URL inside a code example is not a work link")
+        bold_only = "# Synthetic planning call\n## Plaud summary\n\nВступление.\n\n**Тема без текста**\n\n**Тема**\n\nТекст темы.\n\n**Запуск переносится на пятницу.**\n\n**Следующие шаги**\n\n- Сделать план.\n"
+        out = self.run_js("await context.ccLoadContext(good.record.id);const d=reader().querySelectorAll('details');d.forEach(x=>x.querySelector('summary').click());process.stdout.write(JSON.stringify(snapshot()));", bold_only)
+        self.assertIn("Запуск переносится на пятницу.", out["visible"], "A bold statement stays in the record")
+        self.assertIn("Тема без текста", out["visible"], "A heading with nothing under it is not dropped")
+        self.assertIn("Следующие шаги", out["headings"])
+
 if __name__ == "__main__":
     unittest.main()

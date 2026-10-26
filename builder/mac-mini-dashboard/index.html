@@ -8038,17 +8038,26 @@ function ccContextRenderUpdate(container, text, record, links) {
 const ccContextKeyHeading = /решени|договор|следующ|дальше|задач|поручен|итог|вывод|риск|next\s*step|action|decision|to-?do/i;
 function ccContextSplit(text) {
   const lines = text.split('\n');
-  const levels = lines.map(line => (line.match(/^\s{0,3}(#{1,6})\s+\S/) || [])[1]?.length).filter(Boolean);
+  // Headings inside ``` examples are example text, not section borders.
+  let fenced = false; const inCode = lines.map(line => { if (/^\s*```/.test(line)) { fenced = !fenced; return true; } return fenced; });
+  const levels = lines.map((line, i) => !inCode[i] && (line.match(/^\s{0,3}(#{1,6})\s+\S/) || [])[1]?.length).filter(Boolean);
   const top = levels.length ? Math.min(...levels) : 0;
   const lead = [], sections = []; let current = null;
-  for (const line of lines) {
-    const md = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
-    const bold = !top && line.match(/^\s*(?:\*\*|__)([^*_\n]{2,120})(?:\*\*|__)\s*:?\s*$/);
-    const heading = md && md[1].length === top ? md[2] : bold ? bold[1] : null;
-    if (heading !== null) { current = {heading: ccContextBareHeading(heading) || heading.trim(), lines: []}; sections.push(current); continue; }
+  lines.forEach((line, i) => {
+    const md = !inCode[i] && line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
+    // A bold line ending a sentence («**Запуск переносится на пятницу.**») is a statement, not a heading.
+    const bold = !top && !inCode[i] && line.match(/^\s*(?:\*\*|__)([^*_\n]{2,120}?)(?:\*\*|__)\s*:?\s*$/);
+    const heading = md && md[1].length === top ? md[2] : bold && !/[.!?…]$/.test(bold[1].trim()) ? bold[1] : null;
+    if (heading !== null) { current = {heading: ccContextBareHeading(heading) || heading.trim(), raw: line, lines: []}; sections.push(current); return; }
     (current ? current.lines : lead).push(line);
+  });
+  // A heading with nothing under it stays as text in the block before it, so nothing is dropped.
+  const kept = [];
+  for (const s of sections) {
+    if (s.lines.join('').trim()) { kept.push(s); continue; }
+    (kept.length ? kept[kept.length - 1].lines : lead).push('', s.raw);
   }
-  return {lead: lead.join('\n').trim(), sections: sections.map(s => ({heading: s.heading, text: s.lines.join('\n').trim()})).filter(s => s.text)};
+  return {lead: lead.join('\n').trim(), sections: kept.map(s => ({heading: s.heading, text: s.lines.join('\n').trim()}))};
 }
 function ccContextPreview(text) {
   const plain = text.replace(/^\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?)/gm, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\*\*|__|[*`]/g, '').replace(/\s+/g, ' ').trim();
