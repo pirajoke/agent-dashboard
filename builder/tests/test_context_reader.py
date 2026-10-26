@@ -292,5 +292,62 @@ https://github.com/example/context-fixture/issues/26
                 self.assertTrue(out["relatedHidden"])
 
 
+    def test_long_meeting_leads_with_short_summary_and_folds_topics(self):
+        """Mark 2026-10-26: «много информации, много метаданных» on a long PLAUD summary."""
+        body = """---
+source: plaud
+---
+# 10-26 Synthetic platform audit
+
+## 📝 Краткое резюме
+
+[](plaud://image?type=summaryCard&id=oc_su_fixture_i1)
+
+LEAD_PARAGRAPH: проверили продукт целиком. Нашли несколько ошибок.
+
+---
+
+**Онбординг и профиль**
+
+TOPIC_ONE_FIRST: регистрация прошла заново. TOPIC_ONE_DETAIL: подсказки непонятные.
+
+---
+
+**Подбор вакансий**
+
+TOPIC_TWO_FIRST: подбор работает. TOPIC_TWO_DETAIL: фильтр по городу сбоит.
+
+**🎯 Следующие шаги**
+
+- NEXT_STEP_ITEM: исправить подсказки.
+
+## Transcript
+
+FULL_TRANSCRIPT_ONLY
+"""
+        out = self.run_js("""
+good.record.title='10-26 Synthetic platform audit';
+await context.ccLoadContext(good.record.id);const before=snapshot();
+const title=document.getElementById('context-reader-title').textContent;
+const topics=reader().querySelectorAll('details').filter(d=>d.classList.contains('context-topic'));
+topics.forEach(d=>d.querySelector('summary').click());
+process.stdout.write(JSON.stringify({before,title,topicCount:topics.length,after:snapshot(),info:document.getElementById('context-info').dataset.ccInfo}));
+""", body)
+        visible = out["before"]["visible"]
+        self.assertIn("Коротко", visible)
+        self.assertIn("LEAD_PARAGRAPH", visible)
+        self.assertLess(visible.index("LEAD_PARAGRAPH"), visible.index("NEXT_STEP_ITEM"), "The short summary comes first")
+        self.assertLess(visible.index("NEXT_STEP_ITEM"), visible.index("Онбординг и профиль"), "Next steps stay open above the folded topics")
+        self.assertEqual(out["topicCount"], 2)
+        self.assertIn("TOPIC_ONE_FIRST", visible, "A folded topic shows its first sentence")
+        self.assertNotIn("TOPIC_ONE_DETAIL", visible)
+        self.assertIn("TOPIC_TWO_DETAIL", out["after"]["visible"])
+        for noise in ("plaud://", "oc_su_fixture", "---", "📝", "🎯", "**", "PLAUD ·", "26 октября", "FULL_TRANSCRIPT_ONLY"):
+            self.assertNotIn(noise, visible)
+        self.assertNotIn("plaud://", out["before"]["html"])
+        self.assertEqual(out["title"], "Synthetic platform audit", "The date prefix moves out of the title")
+        self.assertEqual(out["info"], "context-record", "Source and date stay one tap away behind «i»")
+        self.assertIn("Следующие шаги", out["before"]["headings"])
+
 if __name__ == "__main__":
     unittest.main()
