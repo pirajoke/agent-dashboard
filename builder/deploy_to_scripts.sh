@@ -9,6 +9,7 @@ PUBLIC_ASSETS_DIR="${DASHBOARD_PUBLIC_ASSETS_DIR:-$HOME/dashboard-assets}"
 MAC_MINI_DASHBOARD_DIR="${MAC_MINI_DASHBOARD_DIR:-$HOME/mac-mini-dashboard}"
 LOCAL_BIN_DIR="${DASHBOARD_LOCAL_BIN_DIR:-$HOME/.local/bin}"
 SERVER_LABEL="${DASHBOARD_SERVER_LABEL:-com.pirajoke.dashboard-server-m4}"
+SERVER_PLIST="$HOME/Library/LaunchAgents/$SERVER_LABEL.plist"
 
 mkdir -p "$SCRIPTS_DIR/dashboard_builder" "$SCRIPTS_DIR/dashboard-assets" "$PUBLIC_ASSETS_DIR" "$MAC_MINI_DASHBOARD_DIR" "$LOCAL_BIN_DIR"
 
@@ -60,8 +61,12 @@ python3 -m py_compile job_mail_watcher.py
 python3 -m py_compile live_sessions_collector.py
 python3 build-agent-dashboard.py
 
-if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]] && launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then
-  launchctl kickstart -k "gui/$(id -u)/$SERVER_LABEL"
+if [[ "${DASHBOARD_RESTART_SERVER:-1}" == "1" ]]; then
+  if launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then
+    launchctl kickstart -k "gui/$(id -u)/$SERVER_LABEL"
+  elif [[ -f "$SERVER_PLIST" ]]; then
+    launchctl bootstrap "gui/$(id -u)" "$SERVER_PLIST"
+  fi
 fi
 
 PUBLISHER_LABEL="com.pirajoke.main-manager-status-publisher"

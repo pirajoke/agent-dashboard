@@ -47,6 +47,92 @@ class AutoDeployRunTest(unittest.TestCase):
         self.assertEqual(self._run("aaa"), "up_to_date")
         self.assertEqual(self.deploys, [])
 
+    def test_up_to_date_but_unhealthy_redeploys_current_main(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.health = [False, True]
+
+        outcome = self._run("aaa")
+
+        self.assertNotEqual(outcome, "up_to_date")
+        self.assertEqual(self.deploys, ["aaa"])
+
+    def test_failed_same_sha_repair_is_not_rolled_back_or_retried(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.health = [False]
+        self.deploy_ok["aaa"] = False
+
+        first_outcome = self._run("aaa")
+        first_deploys = list(self.deploys)
+        first_state = self._state()
+        first_log = (self.state_dir / "deploys.jsonl").read_text().splitlines()
+
+        self.health = [False]
+        second_outcome = self._run("aaa")
+        second_log = (self.state_dir / "deploys.jsonl").read_text().splitlines()
+
+        self.assertTrue(first_outcome.startswith("deploy_failed"))
+        self.assertEqual(first_state["failed_sha"], "aaa")
+        self.assertTrue(first_state["last_result"].startswith("deploy_failed"))
+        self.assertEqual(
+            {
+                "first_deploys": first_deploys,
+                "first_log_count": len(first_log),
+                "second_outcome": second_outcome,
+                "all_deploys": self.deploys,
+                "second_log_count": len(second_log),
+            },
+            {
+                "first_deploys": ["aaa"],
+                "first_log_count": 1,
+                "second_outcome": "skipped_failed",
+                "all_deploys": ["aaa"],
+                "second_log_count": 1,
+            },
+        )
+
+    def test_successful_same_sha_repair_clears_stale_failure_state(self):
+        AUTO.save_state(
+            {
+                "deployed_sha": "aaa",
+                "failed_sha": "older-sha",
+                "failed_at": "2026-10-12T00:00:00Z",
+                "last_result": "deploy_failed_rollback_failed",
+            },
+            self.state_dir,
+        )
+        self.health = [False, True]
+
+        self.assertEqual(self._run("aaa"), "deployed")
+
+        state = self._state()
+        self.assertEqual(self.deploys, ["aaa"])
+        self.assertEqual(state["last_result"], "deployed")
+        self.assertNotIn("failed_sha", state)
+        self.assertNotIn("failed_at", state)
+
+    def test_independent_recovery_clears_failure_and_allows_a_later_repair(self):
+        AUTO.save_state(
+            {
+                "deployed_sha": "aaa",
+                "failed_sha": "aaa",
+                "failed_at": "2026-10-12T00:00:00Z",
+                "last_result": "deploy_failed_rollback_none",
+            },
+            self.state_dir,
+        )
+        self.health = [True]
+
+        self.assertEqual(self._run("aaa"), "up_to_date")
+
+        state = self._state()
+        self.assertEqual(state["last_result"], "healthy")
+        self.assertNotIn("failed_sha", state)
+        self.assertNotIn("failed_at", state)
+
+        self.health = [False, True]
+        self.assertEqual(self._run("aaa"), "deployed")
+        self.assertEqual(self.deploys, ["aaa"])
+
     def test_generated_files_only_move_the_marker(self):
         AUTO.record_deployed("aaa", self.state_dir)
         self.assertEqual(self._run("bbb", changed=("index.html", "live-feed.json")), "no_builder_changes")
@@ -110,6 +196,43 @@ class CiStateTest(unittest.TestCase):
         )
 
 
+class PublishSafetyTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.state_dir = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _check(self, remote_sha, changed=()):
+        return AUTO.publish_safety(
+            remote_sha,
+            changed_between=lambda old, new: list(changed),
+            state_dir=self.state_dir,
+        )
+
+    def test_publish_is_blocked_without_a_recorded_runtime(self):
+        self.assertEqual(self._check("bbb"), (False, "runtime_sha_missing"))
+
+    def test_publish_is_allowed_when_runtime_matches_remote_main(self):
+        AUTO.record_deployed("bbb", self.state_dir)
+        self.assertEqual(self._check("bbb"), (True, "runtime_matches_main"))
+
+    def test_publish_is_blocked_while_runtime_lags_builder_changes(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.assertEqual(
+            self._check("bbb", changed=("builder/dashboard_builder/html_builder.py", "index.html")),
+            (False, "runtime_behind_builder"),
+        )
+
+    def test_publish_is_allowed_when_only_generated_files_are_newer(self):
+        AUTO.record_deployed("aaa", self.state_dir)
+        self.assertEqual(
+            self._check("bbb", changed=("index.html", "live-feed.json")),
+            (True, "runtime_matches_builder"),
+        )
+
+
 class DeployScriptWiringTest(unittest.TestCase):
     def test_deploy_script_installs_and_records(self):
         script = (BUILDER_DIR / "deploy_to_scripts.sh").read_text()
@@ -120,6 +243,37 @@ class DeployScriptWiringTest(unittest.TestCase):
         install = 'install_launchd_agent "$AUTO_DEPLOY_PLIST.tmp" "$AUTO_DEPLOY_PLIST" "$AUTO_DEPLOY_LABEL"'
         self.assertLess(script.index("--record"), script.index(install))
         self.assertTrue((BUILDER_DIR / "launchd" / "com.pirajoke.dashboard-auto-deploy.plist.template").exists())
+
+    def test_deploy_script_restarts_or_bootstraps_dashboard_server(self):
+        script = (BUILDER_DIR / "deploy_to_scripts.sh").read_text()
+        fragments = (
+            'SERVER_PLIST="$HOME/Library/LaunchAgents/$SERVER_LABEL.plist"',
+            'if launchctl print "gui/$(id -u)/$SERVER_LABEL" >/dev/null 2>&1; then',
+            'launchctl kickstart -k "gui/$(id -u)/$SERVER_LABEL"',
+            'elif [[ -f "$SERVER_PLIST" ]]; then',
+            'launchctl bootstrap "gui/$(id -u)" "$SERVER_PLIST"',
+        )
+        for fragment in fragments:
+            self.assertIn(fragment, script)
+        self.assertEqual(sorted(map(script.index, fragments)), list(map(script.index, fragments)))
+
+    def test_rebuild_checks_runtime_freshness_before_copying_or_pushing(self):
+        script = (BUILDER_DIR / "dashboard-rebuild.sh").read_text()
+        guard = 'auto_deploy.py" --can-publish "$REMOTE_SHA"'
+        rebuild = "python3 build-agent-dashboard.py"
+        copy = 'cp "$HTML_OUT" "$PUBLISH_WT/index.html"'
+        push = "git push origin HEAD:main"
+        for fragment in (guard, copy, push):
+            self.assertIn(fragment, script)
+        publish = script[script.index("# 3. Copy to GitHub Pages repo and push"):]
+        self.assertEqual(publish.count(guard), 2)
+        first_guard = publish.index(guard)
+        rebuild_after_guard = publish.index(rebuild, first_guard)
+        second_guard = publish.index(guard, first_guard + len(guard))
+        self.assertLess(first_guard, rebuild_after_guard)
+        self.assertLess(rebuild_after_guard, second_guard)
+        self.assertLess(second_guard, publish.index(copy))
+        self.assertLess(second_guard, publish.index(push))
 
 
 if __name__ == "__main__":
