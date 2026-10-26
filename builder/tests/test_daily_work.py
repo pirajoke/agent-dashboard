@@ -1058,8 +1058,8 @@ let mmProjectData;
             self.assertRegex(html, rf'<h2 class="cc-page-title[^"]*" id="{title_id}">')
         self.assertIn('id="cc-theme-toggle"', html)
         self.assertNotIn('id="mm-theme-toggle"', html)
-        # The board (Mark 2026-10-26: «пересобери его полностью»): one grid of tiles. Main projects are
-        # tiles, other folders open in a window, and the Claude Code / Codex split lives in «Сводка».
+        # The board (Mark 2026-10-26: «пересобери его полностью», variant A): main projects are rows,
+        # other folders open in a window, and the Claude Code / Codex split lives in «Сводка».
         self.assertIn("function renderMap(data)", html)
         self.assertIn("const main = projects.filter(p => p.main);", html)
         self.assertIn('id="mm-others-dialog"', html)

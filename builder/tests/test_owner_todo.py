@@ -132,9 +132,9 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         projects = PAGE[PAGE.index("function mmRenderOwnerProjects("):PAGE.index("let mmOwnerProjectCards")]
         self.assertIn("getElementById('owner-project-body')?.replaceChildren()", projects)
 
-    def test_home_is_one_grid_of_tiles(self):
-        # Mark 2026-10-26: «пересобери его полностью». The week, his tasks, the projects and «Личное»
-        # sit in one grid; the summary and the small folders open in windows. No history block.
+    def test_home_is_one_calm_column(self):
+        # Mark 2026-10-26: «пересобери его полностью», then variant A: his tasks, the week, the projects and «Личное»
+        # in one column; the summary and the small folders open in windows. No history block.
         home = PAGE[PAGE.index('id="mm-home"'):PAGE.index('data-mm-panel="project"')]
         for host in ('id="mm-week"', 'id="mm-owner-todo"', 'id="mm-map"', 'id="mm-owner-projects"'):
             self.assertIn(host, home)
@@ -147,7 +147,7 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         self.assertNotIn('Видно только тебе', PAGE)
 
     def test_board_tiles_and_folders_window_follow_owner_access(self):
-        # Run the real board render on a small DOM: busiest main project first, paused ones after,
+        # Run the real board render on a small DOM: busiest main project first, paused rows after,
         # other recent folders behind one tile; losing owner access closes and empties that window.
         def source(name):
             start = PAGE.index(f"function {name}(")
