@@ -7563,7 +7563,9 @@ function initPixelAgentsPin() {
 
 async function fetchJSON(base, path) {
   try {
-    const timeoutMs = base === MAC_MINI_API && (path === '/api/all' || path === '/api/services/detailed') ? 15000 : 3000;
+    // The laptops' health APIs take ~3.5 s through the Tailscale proxy, so they get more than 3 s.
+    const slowBase = base === MAC_MINI_API || base === AIR_API || base === PRO_API;
+    const timeoutMs = slowBase && (path.endsWith('/all') || path === '/api/services/detailed') ? 15000 : 3000;
     const r = await fetch(base + path, { signal: AbortSignal.timeout(timeoutMs) });
     return await r.json();
   } catch { return null; }
@@ -9803,10 +9805,23 @@ function renderHeaderDate() {
 
 // Mark 2026-10-24: load, memory, disk and uptime moved from the page into each computer's «i».
 const machineUptime = {};
+const machineMemoryFree = {};
+
+// macOS reports pressure as free percent; when it is missing, fall back to used/total.
+function machineMemoryLow(sys) {
+  if (!sys) return false;
+  if (typeof sys.memory_pressure_free_percent === 'number') return sys.memory_pressure_free_percent < 20;
+  return sys.memory_total_gb ? sys.memory_used_gb / sys.memory_total_gb >= 0.9 : false;
+}
+
+function machineStatusText(key, sys) {
+  machineMemoryFree[key] = typeof sys?.memory_pressure_free_percent === 'number' ? `${sys.memory_pressure_free_percent}%` : '';
+  return machineMemoryLow(sys) ? 'Работает · мало памяти' : 'Работает';
+}
 for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro', 'MacBook Pro']]) {
   ccInfoSources[`machine-${key}`] = () => {
     const text = id => { const t = document.getElementById(`${key}-${id}`)?.textContent?.trim(); return t && t !== '—' ? t : ''; };
-    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Диск', text('disk')], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Диск', text('disk')], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
   };
 }
 
@@ -9859,7 +9874,7 @@ async function refreshMini() {
   document.getElementById('mini-online-badge').textContent = 'в сети';
   document.getElementById('mini-online-badge').className = 'machine-badge online';
   const sys = data.system || {};
-  document.getElementById('mini-status').textContent = 'Работает';
+  document.getElementById('mini-status').textContent = machineStatusText('mini', sys);
   machineUptime.mini = sys.uptime || '';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
@@ -9878,7 +9893,8 @@ async function miniAction(label, action) {
 // ─── Air (local) ───
 async function refreshAir() {
   const data = await fetchJSON(AIR_API, `${AIR_API_PATH_PREFIX}/all`);
-  if (!data) {
+  // The proxy answers 502 {error} while the laptop is unreachable.
+  if (!data?.system) {
     document.getElementById('air-status').textContent = 'Нет связи';
     document.getElementById('air-online-badge').textContent = 'не в сети';
     document.getElementById('air-online-badge').className = 'machine-badge offline';
@@ -9887,7 +9903,7 @@ async function refreshAir() {
   }
   const sys = data.system;
   document.getElementById('air-hostname').textContent = sys.hostname || 'MacBook Air';
-  document.getElementById('air-status').textContent = 'Работает';
+  document.getElementById('air-status').textContent = machineStatusText('air', sys);
   machineUptime.air = sys.uptime || '';
   document.getElementById('air-online-badge').textContent = 'в сети';
   document.getElementById('air-online-badge').className = 'machine-badge online';
@@ -9907,7 +9923,8 @@ async function airAction(label, action) {
 // ─── MacBook Pro ───
 async function refreshPro() {
   const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`);
-  if (!data) {
+  // The proxy answers 502 {error} while the laptop is unreachable.
+  if (!data?.system) {
     document.getElementById('pro-status').textContent = 'Нет связи';
     document.getElementById('pro-online-badge').textContent = 'не в сети';
     document.getElementById('pro-online-badge').className = 'machine-badge offline';
@@ -9921,7 +9938,7 @@ async function refreshPro() {
   }
   const sys = data.system;
   document.getElementById('pro-hostname').textContent = sys.hostname || 'MacBook Pro';
-  document.getElementById('pro-status').textContent = 'Работает';
+  document.getElementById('pro-status').textContent = machineStatusText('pro', sys);
   machineUptime.pro = sys.uptime || '';
   document.getElementById('pro-online-badge').textContent = 'в сети';
   document.getElementById('pro-online-badge').className = 'machine-badge online';
