@@ -130,18 +130,19 @@ class OwnerTodoEndpointTests(unittest.TestCase):
         projects = PAGE[PAGE.index("function mmRenderOwnerProjects("):PAGE.index("let mmOwnerProjectCards")]
         self.assertIn("getElementById('owner-project-body')?.replaceChildren()", projects)
 
-    def test_projects_first_then_folded_blocks(self):
-        # Mark 2026-10-23: main projects on top; the summary, his tasks and «Личное» are one line each
-        # until opened (remembered per browser). Mark 2026-10-26: no history block below them.
-        self.assertLess(PAGE.index('data-mm-panel="map"'), PAGE.index('id="mm-folds"'))
+    def test_home_is_one_grid_of_tiles(self):
+        # Mark 2026-10-26: «пересобери его полностью». The week, his tasks, the projects and «Личное»
+        # are tiles in one grid; the summary opens in a window from the week tile. No history block.
+        home = PAGE[PAGE.index('id="mm-home"'):PAGE.index('data-mm-panel="project"')]
+        for host in ('id="mm-week"', 'id="mm-owner-todo"', 'data-mm-panel="map"', 'id="mm-owner-projects"'):
+            self.assertIn(host, home)
+        self.assertNotIn('id="mm-summary"', home)
+        self.assertIn('id="mm-summary"', PAGE[PAGE.index('id="mm-summary-dialog"'):])
         self.assertNotIn('id="mm-history"', PAGE)
-        folds = PAGE[PAGE.index('id="mm-folds"'):PAGE.index('</div>', PAGE.index('id="mm-owner-projects"'))]
-        for host in ('id="mm-summary"', 'id="mm-owner-todo"', 'id="mm-owner-projects"'):
-            self.assertIn(host, folds)
-        for key in ("'summary'", "'todo'", "'personal'"):
-            self.assertIn(f"mmFoldHead({key}", PAGE)
-        self.assertIn("safeStorageSet(`${MM_FOLD_KEY}.${head.dataset.fold}`", PAGE)
-        self.assertIn('.mm-fold:not(.is-open) > .mm-fold-body { display: none; }', PAGE)
+        self.assertNotIn('mm-fold', PAGE)
+        # His own «Ждёт тебя» list loads with the page again.
+        opener = PAGE[PAGE.index("function openMainManager("):]
+        self.assertIn("mmLoadOwnerTodo();", opener[:opener.index("\n}\n")])
         # «Личное» shows the card's status only: no task counter, no «Видно только тебе».
         self.assertNotIn('открытых задач:', PAGE)
         self.assertNotIn('Видно только тебе', PAGE)

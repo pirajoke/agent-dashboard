@@ -1058,13 +1058,12 @@ let mmProjectData;
             self.assertRegex(html, rf'<h2 class="cc-page-title[^"]*" id="{title_id}">')
         self.assertIn('id="cc-theme-toggle"', html)
         self.assertNotIn('id="mm-theme-toggle"', html)
-        # The board (Mark 2026-10-21: «нужны основные и дополнительные, с разделением на Claude Code и Codex»):
-        # main projects as compact cards with the agents' split, other folders folded, an agent filter on top.
+        # The board (Mark 2026-10-26: «пересобери его полностью»): one grid of tiles. Main projects are
+        # tiles, other folders open in a window, and the Claude Code / Codex split lives in «Сводка».
         self.assertIn("function renderMap(data)", html)
         self.assertIn("const main = projects.filter(p => p.main);", html)
-        self.assertIn('<details class="mm-map-others">', html)
-        self.assertIn("const MM_MAP_AGENT_KEY = 'command-center.board-agent';", html)
-        self.assertIn("['all', 'Все агенты'], ['claude', 'Claude Code'], ['codex', 'Codex']", html)
+        self.assertIn('id="mm-others-dialog"', html)
+        self.assertNotIn("MM_MAP_AGENT_KEY", html)
         self.assertNotIn("mmSpark", html)
         self.assertIn("Карточки проектов видны только владельцу.", html)
         # A link with ?day= opens that day in the project's history, details unfolded.
