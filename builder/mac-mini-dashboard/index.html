@@ -3118,7 +3118,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-os :where(a):hover { text-decoration: underline; }
 .mm-os :focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
 
-.mm-nav { margin: 0 0 18px; }
 .mm-notice { margin: 0 0 20px; padding: 10px 14px; color: var(--mm-muted); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; font-size: 13px; }
 /* Mark 2026-10-23: one style on every tab. Fresh data is a quiet grey line, not a coloured banner. */
 .mm-notice.live { padding: 0; color: var(--mm-muted); background: none; border-color: transparent; font-size: 12.5px; }
@@ -3188,9 +3187,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-data-table .num { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; overflow-wrap: normal; }
 .mm-data-table .cell-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .mm-data-table td small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
-.mm-infra-table { table-layout: fixed; }
-.mm-infra-table .mm-col-time { width: 76px; }
-.mm-infra-table .mm-col-where { width: 160px; }
 .mm-data-table code { font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--mm-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
 .mm-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: var(--mm-muted); border: 1px solid var(--mm-line); border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 
@@ -3230,11 +3226,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 #mm-todo .mm-outcomes { margin-bottom: 20px; }
 /* «Дела»: one row per project with what waits on Mark, in the «По дням» project look. */
 .mm-todo-list { max-width: 880px; }
-.mm-shared-tasks { max-width: 880px; margin-bottom: 28px; }
-.mm-shared-tasks ul { list-style: none; margin: 0; padding: 0; }
-.mm-shared-tasks li { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--mm-line); }
-.mm-shared-tasks li a { color: var(--mm-ink); font-weight: 650; }
-.mm-shared-tasks li small { color: var(--mm-muted); }
 .mm-todo-item .dp-project-name a { color: var(--mm-ink); }
 .mm-todo-item .dp-project-name a:hover { color: var(--mm-accent); }
 .mm-todo-item .mm-todo-group h4 { margin-bottom: 6px; }
@@ -3287,8 +3278,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
   .mm-filter-tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 20px; padding: 0 16px; scrollbar-width: none; }
   .mm-filter-tabs::-webkit-scrollbar { display: none; }
   .mm-filter-tabs button { flex: none; white-space: nowrap; }
-  .mm-nav { display: flex; width: 100%; }
-  .mm-nav button { flex: 1 1 0; justify-content: center; padding: 8px 6px; }
   .mm-panel { padding: 16px; }
   .mm-section-heading { flex-direction: column; gap: 8px; }
   .mm-stat { padding: 14px; }
@@ -3507,6 +3496,10 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 /* «Личное»: owner-only project cards from the private registry, a short status plus document buttons. */
 /* «Всё ли живо» and «Ждёт тебя» (Mark 2026-10-22). */
 .mm-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.mm-head-side { display: flex; flex: none; align-items: flex-start; gap: 10px; max-width: 60%; }
+.mm-head-side .mm-health { max-width: none; }
+.mm-head-side .cc-i { margin-top: 6px; }
+#mm-about-dialog .platform-archive-close { margin-left: auto; }
 .mm-health { display: inline-flex; flex: none; align-items: center; gap: 8px; max-width: 46%; margin-top: 4px; padding: 6px 12px; color: var(--mm-success); font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: var(--mm-success-soft); border: 0; border-radius: 999px; cursor: pointer; }
 .mm-health[hidden] { display: none; }
 .mm-health::before { content: ""; flex: none; width: 9px; height: 9px; background: currentColor; border-radius: 50%; }
@@ -3583,11 +3576,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-fold-note { margin: 10px 0 0; color: var(--mm-muted); font-size: 12.5px; }
 .mm-map-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 14px; }
 .mm-map-top .mm-map-group-head, .mm-map-top .mm-map-group-head h3, .mm-map-top .mm-filter-tabs { margin: 0; }
-.mm-history { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--mm-line); }
-.mm-history-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.mm-history-head h3 { margin: 0; font-size: 20px; font-weight: 750; letter-spacing: -.01em; }
-.mm-history-head .mm-nav { margin: 0; }
-.mm-os[data-mm-view="project"] .mm-folds, .mm-os[data-mm-view="project"] .mm-history { display: none; }
+.mm-os[data-mm-view="project"] .mm-folds { display: none; }
 @media (prefers-reduced-motion: reduce) { .mm-fold-chev { transition: none; } }
 @media (max-width: 600px) { .mm-fold-head { padding: 12px 14px; gap: 10px; } .mm-fold-body { padding: 4px 14px 16px; } }
 /* Mark 2026-10-23: the Agents screen in the same light style as the rest of the site. */
@@ -3605,15 +3594,14 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 @media (max-width: 760px) { #section-agents .pixel-agents-gamebar { flex-direction: column; align-items: stretch; } #section-agents .pixel-agents-viewport { min-height: 480px; } }
 .mm-more { margin-top: 28px; }
 .mm-more > summary { color: var(--mm-muted); font-size: 12.5px; cursor: pointer; }
-.mm-more .mm-sources { margin-top: 8px; }
+#mm-about-dialog .mm-sources { margin-top: 0; }
 @media (max-width: 600px) { .mm-summary-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mm-summary-list li { grid-template-columns: minmax(0, 1fr) auto; } .mm-summary-bar { grid-column: 1 / -1; grid-row: 2; } }
 .mm-todo-done-list { margin: 0; }
 .mm-todo-done-list .mm-todo-body { color: var(--mm-muted); cursor: default; }
 .mm-todo-back { flex: none; min-height: 34px; padding: 4px 14px; color: var(--mm-accent); font: inherit; font-size: 13px; font-weight: 650; background: none; border: 1px solid var(--mm-accent); border-radius: 999px; cursor: pointer; }
 .mm-todo-back:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .mm-os[data-mm-view="project"] #mm-owner-todo, .mm-os[data-mm-view="project"] #mm-owner-projects { display: none; }
-.mm-nav b { display: none; }
-@media (max-width: 600px) { .mm-head { flex-wrap: wrap; } .mm-health { max-width: 100%; } }
+@media (max-width: 600px) { .mm-head { flex-wrap: wrap; } .mm-health { max-width: 100%; } .mm-head-side { max-width: 100%; } }
 .mm-week { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0 0 16px; color: var(--mm-muted); font-size: 14px; }
 .mm-week b { color: var(--mm-ink); font-weight: 650; }
 .mm-week i { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; }
@@ -3717,8 +3705,6 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
   .cc-main .cc-subnav, .cc-main .nav-pills.cc-machine-nav { display: flex; width: 100%; }
   .cc-main .cc-subnav button, .cc-main .cc-machine-nav .nav-pill { flex: 1 1 auto; justify-content: center; padding: 8px 10px; }
   .mm-map-grid { grid-template-columns: 1fr; }
-  .cc-tabs.mm-nav { display: flex; width: 100%; }
-  .cc-tabs.mm-nav button { flex: 1 1 auto; justify-content: center; gap: 6px; padding: 8px 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mm-os a.mm-map-card { transition: none; }
@@ -4304,7 +4290,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-status:empty { display: none; }
 .docxx-facts[hidden], .machine-gauges[hidden], .growth-summary[hidden], .mm-filter-tabs[hidden], .mm-section-heading[hidden], .svc-count:empty { display: none !important; }
 .docxx-statusbar > .cc-i { flex: 0 0 auto !important; width: 24px !important; margin: 0 auto 0 0 !important; }
-#mm-todo-count, #mm-infra-count, #mm-todo-total { display: none !important; }
+#mm-todo-count, #mm-todo-total { display: none !important; }
 .docxx-warnings { display: flex; align-items: center; gap: 12px; }
 .docxx-warnings p { margin: 0; }
 
@@ -5172,11 +5158,40 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <header class="cc-page-head mm-head">
         <div>
           <h2 class="cc-page-title" id="mm-title">MAIN MANAGER</h2>
-          <p class="cc-page-lede" id="mm-today">Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.</p>
+          <p class="cc-page-lede" id="mm-today">Ваши проекты: где идёт работа и что ждёт вас.</p>
         </div>
         <!-- Mark 2026-10-22: whether everything on the Mac mini is alive; since 2026-10-23 a small badge, not a banner. -->
-        <button type="button" class="mm-health" id="mm-health" hidden></button>
+        <div class="mm-head-side">
+          <button type="button" class="mm-health" id="mm-health" hidden></button>
+          <!-- Mark 2026-10-26 «это все мусор»: data sources and «открыть на телефоне» live behind this «i». -->
+          <button type="button" class="cc-i" id="mm-about-open" aria-haspopup="dialog" aria-controls="mm-about-dialog" aria-label="Откуда данные и как открыть на телефоне">i</button>
+        </div>
       </header>
+      <dialog class="platform-archive-dialog" id="mm-about-dialog" aria-labelledby="mm-about-title">
+        <header class="platform-archive-head">
+          <h3 id="mm-about-title">Откуда данные</h3>
+          <button class="platform-archive-close" id="mm-about-close" type="button" aria-label="Закрыть">✕</button>
+        </header>
+        <div class="platform-archive-body">
+          <p class="mm-sources" id="mm-sources">Источники загружаются…</p>
+          <section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>
+            <div class="np-device-row">
+              <div>
+                <h3 id="np-device-title">Открыть на телефоне</h3>
+                <p>Наведите камеру телефона на QR-код, и телефон тоже будет видеть проекты.</p>
+              </div>
+              <button type="button" id="np-device-show">Показать QR-код</button>
+            </div>
+            <div class="np-device-qr" id="np-device-qr" hidden>
+              <div class="np-qr" id="np-qr" role="img" aria-label="QR-код со ссылкой входа владельца"></div>
+              <div>
+                <p>В коде ваш ключ владельца, не показывайте его другим. Код скроется сам через 2 минуты.</p>
+                <button type="button" id="np-device-hide">Скрыть</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </dialog>
       <dialog class="platform-archive-dialog platform-edit-dialog" id="todo-edit-dialog" aria-labelledby="todo-edit-title">
         <header class="platform-archive-head">
           <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-edit"/></svg>
@@ -5211,7 +5226,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <dialog class="platform-archive-dialog" id="owner-project-dialog" aria-label="Личное">
         <header class="platform-archive-head">
           <h3>Личное</h3>
-          <p>Видно только тебе. Полные данные — в документах по кнопкам.</p>
+          <p>Полные данные — в документах по кнопкам.</p>
           <button class="platform-archive-close" id="owner-project-close" type="button" aria-label="Закрыть">✕</button>
         </header>
         <div class="platform-archive-body" id="owner-project-body"></div>
@@ -5236,46 +5251,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <div id="mm-owner-todo" hidden></div>
         <div id="mm-owner-projects" hidden></div>
       </div>
-      <section class="mm-history" id="mm-history" aria-labelledby="mm-history-title">
-        <div class="mm-history-head">
-          <h3 id="mm-history-title">История</h3>
-          <nav class="cc-tabs mm-nav" aria-label="История">
-            <button type="button" data-mm-view="todo" aria-pressed="true">Общие задачи</button>
-            <button type="button" data-mm-view="infra" aria-pressed="false">Изменения <b id="mm-infra-count">0</b></button>
-          </nav>
-        </div>
-        <div class="mm-view" data-mm-panel="todo">
-          <div class="mm-section-heading">
-            <div><h3>Общие задачи</h3><p class="mm-section-note">Актуальная очередь из Notion; та же доска в JARVIS.</p></div>
-          </div>
-          <div class="mm-shared-tasks" id="mm-shared-tasks"><p class="mm-empty">Загружаю задачи…</p></div>
-        </div>
-
-        <div class="mm-view" data-mm-panel="infra" hidden>
-          <div class="mm-filter-tabs" id="mm-infra-filter" role="group" aria-label="Тип изменения"></div>
-          <div class="mm-group-rows" id="mm-infra"></div>
-        </div>
-      </section>
-      <details class="mm-more">
-        <summary>Откуда данные · открыть на телефоне</summary>
-      <p class="mm-sources" id="mm-sources">Источники загружаются…</p>
-      <section class="np-device" id="np-device" aria-labelledby="np-device-title" hidden>
-        <div class="np-device-row">
-          <div>
-            <h3 id="np-device-title">Открыть на телефоне</h3>
-            <p>Наведите камеру телефона на QR-код, и телефон тоже будет видеть проекты.</p>
-          </div>
-          <button type="button" id="np-device-show">Показать QR-код</button>
-        </div>
-        <div class="np-device-qr" id="np-device-qr" hidden>
-          <div class="np-qr" id="np-qr" role="img" aria-label="QR-код со ссылкой входа владельца"></div>
-          <div>
-            <p>В коде ваш ключ владельца, не показывайте его другим. Код скроется сам через 2 минуты.</p>
-            <button type="button" id="np-device-hide">Скрыть</button>
-          </div>
-        </div>
-      </section>
-      </details>
     </div>
   </section>
 
@@ -10798,25 +10773,18 @@ function renderGrowth(data) {
 const DAILY_WORK_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/work/daily`
   : 'https://command.meshly.fr/api/work/daily';
-const INFRA_CHANGES_API = (!IS_FILE_DASHBOARD)
-  ? `${DASHBOARD_API}/api/infra/changes`
-  : 'https://command.meshly.fr/api/infra/changes';
 const MM_WEEKDAYS = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const MM_MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
-const MM_VIEW_TITLES = { map: 'Проекты', todo: 'Общие задачи', project: 'Проект', infra: 'Изменения в инфраструктуре' };
+const MM_VIEW_TITLES = { map: 'Проекты', project: 'Проект' };
 // Platforms products that have their own mascot tint; anything else uses the neutral tint.
 const MM_TINTS = new Set(['command-center', 'financial', 'mydictionary', 'health', 'ai-singularity', 'context-news', 'accountable', 'jarvis']);
 const MM_REFRESH_MS = 5 * 60 * 1000;
 let dailyWorkData = null;
 let dailyWorkDate = null;
 let dailyWorkLoading = false;
-let infraData = null;
 let mmView = 'map';
-let mmReturnView = 'map';
-let mmHistoryView = 'todo'; // which history tab is open under the board // the view a project page was opened from; its back button returns there
 let mmProjectId = null;
 let mmProjectData = null;
-let mmInfraFilter = 'all';
 let mmInitialised = false;
 
 function mmEsc(value) {
@@ -10887,15 +10855,14 @@ function mmHeaders() {
 function mmInit() {
   if (mmInitialised) return;
   mmInitialised = true;
-  document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
-    button.addEventListener('click', () => mmShowView(button.dataset.mmView));
+  const about = document.getElementById('mm-about-dialog');
+  document.getElementById('mm-about-open').addEventListener('click', () => {
+    if (typeof about.showModal === 'function') { if (!about.open) about.showModal(); } else about.setAttribute('open', '');
   });
-  document.getElementById('mm-infra-filter').addEventListener('click', event => {
-    const button = event.target.closest('[data-filter]');
-    if (!button) return;
-    mmInfraFilter = button.dataset.filter;
-    renderInfra(infraData);
+  document.getElementById('mm-about-close').addEventListener('click', () => {
+    if (typeof about.close === 'function') about.close(); else about.removeAttribute('open');
   });
+  about.addEventListener('close', npHideQr);
   // A card on the project board opens its page; a modified click opens a new tab.
   document.getElementById('mm-map').addEventListener('click', event => {
     const button = event.target.closest('[data-map-agent]');
@@ -10914,13 +10881,11 @@ function mmInit() {
   mmInitOwnerProjects();
   mmInitSummary();
   mmInitFolds();
-  // The board, «Дела» and «Изменения» refresh while MAIN MANAGER is on screen.
+  // The board refreshes while MAIN MANAGER is on screen.
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
     loadDailyWork();
-    loadInfraChanges();
     mmLoadOwnerProjects();
-    mmLoadSharedTasks();
     mmLoadHealth();
   }, MM_REFRESH_MS);
 }
@@ -10928,16 +10893,9 @@ function mmInit() {
 function mmShowView(view) {
   if (!MM_VIEW_TITLES[view]) return;
   mmView = view;
-  if (view === 'map' || view === 'todo') mmReturnView = view;
-  // Mark 2026-10-23: the board stays on top; «Дела» and «Изменения» are tabs of the history below it.
-  if (view === 'todo' || view === 'infra') mmHistoryView = view;
-  document.querySelectorAll('.mm-nav [data-mm-view]').forEach(button => {
-    button.setAttribute('aria-pressed', button.dataset.mmView === mmHistoryView ? 'true' : 'false');
-  });
+  // Mark 2026-10-26: no history under the board; the page shows either the board or one project.
   document.querySelectorAll('[data-mm-panel]').forEach(panel => {
-    const name = panel.dataset.mmPanel;
-    panel.hidden = view === 'project' ? name !== 'project'
-      : name === 'project' || (name !== 'map' && name !== mmHistoryView);
+    panel.hidden = panel.dataset.mmPanel !== (view === 'project' ? 'project' : 'map');
   });
   document.getElementById('mm-os')?.setAttribute('data-mm-view', view === 'project' ? 'project' : 'map');
   document.getElementById('mm-view-title').textContent = view === 'project' && mmProjectData ? mmProjectData.name : MM_VIEW_TITLES[view];
@@ -10961,14 +10919,11 @@ function openMainManager() {
   const firstOpen = !mmInitialised;
   mmInit();
   loadDailyWork(dailyWorkDate);
-  loadInfraChanges();
   mmLoadOwnerProjects();
-  mmLoadSharedTasks();
   mmLoadHealth();
   const query = new URLSearchParams(window.location.search);
   const wanted = firstOpen ? query.get('project') : null;
   if (wanted) openProject(wanted, query.get('day'));
-  else if (firstOpen && query.get('view') === 'todo') mmShowView('todo');
 }
 
 async function loadDailyWork(date) {
@@ -10990,20 +10945,6 @@ async function loadDailyWork(date) {
   } finally {
     dailyWorkLoading = false;
   }
-}
-
-async function loadInfraChanges() {
-  try {
-    const response = await fetch(`${INFRA_CHANGES_API}?days=14`, { headers: mmHeaders(), cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
-    infraData = data;
-  } catch (error) {
-    infraData = { ok: false };
-  }
-  renderInfra(infraData);
-  mmRenderNotice();
-  mmRenderSources();
 }
 
 function mmRenderNotice(errorText) {
@@ -11035,7 +10976,7 @@ function mmRenderNotice(errorText) {
     text = `Обновлено: ${mmAgo(source.collected_at)}. ${source.time_estimate_note}`;
   }
   if (!source.owner_view) {
-    text += ' Подробности видны только на устройстве владельца. Телефон подключается с Mac, где проекты уже видны: «Открыть на телефоне» внизу MAIN MANAGER.';
+    text += ' Подробности видны только на устройстве владельца. Телефон подключается с Mac, где проекты уже видны: кнопка «i» рядом с заголовком MAIN MANAGER.';
   }
   notice.textContent = text;
 }
@@ -11071,68 +11012,6 @@ function mmNiceStep(maxHours) {
   if (maxHours <= 5) return 1;
   if (maxHours <= 10) return 2;
   return 4;
-}
-
-function mmInfraRow(event) {
-  const time = mmTime(event.at);
-  if (event.category === 'pr') {
-    const url = mmGithubUrl(event.url);
-    const what = url ? `<a href="${mmEsc(url)}" target="_blank" rel="noopener noreferrer">${mmEsc(event.subject)}</a>` : mmEsc(event.subject);
-    return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-pr" aria-hidden="true"></span> <b>Merge</b> ${what}<small>${mmEsc(event.detail || '')}</small></td><td data-label="Где">GitHub</td></tr>`;
-  }
-  if (event.category === 'agent') {
-    return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-agent" aria-hidden="true"></span> <b>${mmEsc(event.subject)}</b><small><code>${mmEsc(event.detail || '')}</code></small>${event.topic ? `<small>${mmEsc(compactText(event.topic, 100))}</small>` : ''}</td><td data-label="Где">${mmEsc(event.host || event.machine)}</td></tr>`;
-  }
-  const label = (infraData.categories || []).find(c => c.id === event.category)?.label || event.category;
-  const files = Array.isArray(event.files) && event.files.length ? `<small>${mmEsc(event.files.slice(0, 8).join(', '))}${event.files.length > 8 ? '…' : ''}</small>` : '';
-  const commits = event.category === 'repo' && event.to_head ? `<small>${mmEsc(`${event.branch || ''} · ${event.from_head} → ${event.to_head}${event.commits ? ` · коммитов: ${event.commits}` : ''}`)}</small>` : '';
-  return `<tr><td class="cell-date" data-label="Время">${mmEsc(time)}</td><td data-label="Что"><span class="mm-dot cat-${mmEsc(event.category)}" aria-hidden="true"></span> <b>${mmEsc(label)}: ${mmEsc(event.subject)}</b><small>${mmEsc(event.detail || '')}</small>${commits}${files}</td><td data-label="Где">${mmEsc(event.machine)}</td></tr>`;
-}
-
-function renderInfra(data) {
-  const filterHost = document.getElementById('mm-infra-filter');
-  const host = document.getElementById('mm-infra');
-  if (!data || !data.ok) {
-    filterHost.innerHTML = '';
-    host.innerHTML = '<p class="mm-empty">Журнал изменений недоступен.</p>';
-    return;
-  }
-  document.getElementById('mm-infra-count').textContent = data.total;
-  const categories = (data.categories || []).filter(c => c.count > 0);
-  if (mmInfraFilter !== 'all' && !categories.some(c => c.id === mmInfraFilter)) mmInfraFilter = 'all';
-  filterHost.innerHTML = [`<button type="button" data-filter="all" aria-pressed="${mmInfraFilter === 'all'}">Все <span>${data.total}</span></button>`,
-    ...categories.map(c => `<button type="button" data-filter="${mmEsc(c.id)}" aria-pressed="${mmInfraFilter === c.id}">${mmEsc(c.label)} <span>${c.count}</span></button>`)].join('');
-  if (!data.owner_view) {
-    host.innerHTML = `<p class="mm-empty">Изменений за ${data.days} дней: ${data.total}. Сам журнал виден только владельцу.</p>`;
-    return;
-  }
-  const days = (data.timeline || []).map(day => ({
-    date: day.date,
-    events: day.events.filter(event => mmInfraFilter === 'all' || event.category === mmInfraFilter),
-  })).filter(day => day.events.length);
-  if (!days.length) {
-    host.innerHTML = `<p class="mm-empty">${data.state === 'empty' ? 'Журнал ещё пуст: сборщик изменений не запускался.' : `За ${data.days} дней таких изменений не было.`}</p>`;
-    return;
-  }
-  const todayIso = new Date().toLocaleDateString('sv-SE');
-  host.innerHTML = days.map((day, index) => {
-    const counts = {};
-    day.events.forEach(event => { counts[event.category] = (counts[event.category] || 0) + 1; });
-    const note = Object.entries(counts).map(([id, count]) => `${(data.categories.find(c => c.id === id) || {}).label || id} ${count}`).join(' · ');
-    const title = day.date === todayIso ? 'Сегодня' : `${mmDayShort(day.date)}, ${MM_WEEKDAYS[mmDate(day.date).getDay()]}`;
-    return `<details class="mm-group-row"${index === 0 ? ' open' : ''}>
-      <summary>
-        <span class="mm-group-main"><span class="mm-group-title">${mmEsc(title)}</span><span class="mm-group-note">${mmEsc(note)}</span></span>
-        <span class="mm-group-count">${day.events.length}</span>
-        <span class="mm-chevron" aria-hidden="true">›</span>
-      </summary>
-      <div class="mm-group-body"><div class="mm-table-scroll"><table class="mm-data-table mm-infra-table">
-        <colgroup><col class="mm-col-time"><col><col class="mm-col-where"></colgroup>
-        <thead><tr><th>Время</th><th>Что изменилось</th><th>Где</th></tr></thead>
-        <tbody>${day.events.map(mmInfraRow).join('')}</tbody>
-      </table></div></div>
-    </details>`;
-  }).join('') + (data.truncated ? '<p class="mm-section-note">Показаны последние 600 изменений.</p>' : '');
 }
 
 function mmInitials(name) {
@@ -11450,7 +11329,7 @@ function mmRenderToday(day, prsToMerge) {
   if (!line) return;
   if (!day) {
     line.hidden = false;
-    line.textContent = 'Ваши проекты: где идёт работа, что ждёт вас и что менялось в системе.';
+    line.textContent = 'Ваши проекты: где идёт работа и что ждёт вас.';
     return;
   }
   // Today's hours are in «Сводка» right below; the title line keeps only what waits for a merge.
@@ -11559,14 +11438,12 @@ function mmRenderOwnerProjects(payload) {
     row.dataset.ownerOpen = card.id;
     const text = mmEl('span', 'mm-owner-row-text');
     text.appendChild(mmEl('strong', '', card.name));
-    const tasks = Array.isArray(card.tasks) ? card.tasks.length : 0;
-    text.appendChild(mmEl('small', '', tasks ? `${card.status} · открытых задач: ${tasks}` : card.status));
+    text.appendChild(mmEl('small', '', card.status));
     row.appendChild(text);
     row.appendChild(mmEl('span', 'mm-owner-row-go', '›'));
     row.setAttribute('aria-label', `Открыть: ${card.name}`);
     rows.appendChild(row);
   });
-  rows.appendChild(mmEl('p', 'mm-fold-note', 'Видно только тебе.'));
   group.appendChild(rows);
   host.appendChild(group);
 }
@@ -11662,74 +11539,6 @@ async function mmLoadHealth() {
 
 // ─── «Ждёт тебя» (Mark 2026-10-22) ───
 // Things only Mark can do, added and closed by him on the site. Owner-only, stored on the Mac mini.
-// Owner-only read projection. Notion remains the task owner.
-const SHARED_TASKS_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/shared-tasks`;
-let mmSharedTaskGeneration = 0;
-
-function mmNotionLink(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === 'https:' && ['notion.so', 'www.notion.so', 'app.notion.com'].includes(url.hostname) ? url.href : '';
-  } catch (_) { return ''; }
-}
-
-function mmRenderSharedTasks(payload) {
-  const host = document.getElementById('mm-shared-tasks');
-  if (!host) return;
-  host.replaceChildren();
-  if (payload?.state === 'owner_required') {
-    host.appendChild(mmEl('p', 'mm-empty', 'Задачи видны только владельцу.'));
-    return;
-  }
-  if (payload?.state !== 'ready' || !Array.isArray(payload.tasks)) {
-    host.appendChild(mmEl('p', 'mm-empty', 'Не удалось обновить общую доску. Данные сейчас недоступны.'));
-    return;
-  }
-  const tasks = payload.tasks.filter(task => task && typeof task.title === 'string');
-  if (!tasks.length) {
-    host.appendChild(mmEl('p', 'mm-empty', 'Новых задач пока нет. Старый архив здесь не показывается.'));
-    return;
-  }
-  const grouped = [['doing', '▶️ В работе'], ['todo', '📌 В очереди'], ['done', '✅ Сделано']];
-  for (const [status, heading] of grouped) {
-    const items = tasks.filter(task => task.status === status);
-    if (!items.length) continue;
-    const section = mmEl('section', 'mm-todo-group');
-    section.appendChild(mmEl('h4', '', `${heading} · ${items.length}`));
-    const list = mmEl('ul', '');
-    for (const task of items.slice(0, 30)) {
-      const row = mmEl('li', '');
-      const href = mmNotionLink(task.url);
-      const title = mmEl(href ? 'a' : 'span', '', task.title.slice(0, 240));
-      if (href) { title.href = href; title.target = '_blank'; title.rel = 'noopener noreferrer'; }
-      row.appendChild(title);
-      const meta = [task.project, task.due_date].filter(Boolean).join(' · ');
-      if (meta) row.appendChild(mmEl('small', '', meta.slice(0, 140)));
-      list.appendChild(row);
-    }
-    section.appendChild(list);
-    host.appendChild(section);
-  }
-  const board = mmNotionLink(payload.board_url);
-  if (board) {
-    const link = mmEl('a', '', 'Открыть доску в Notion ↗');
-    link.href = board; link.target = '_blank'; link.rel = 'noopener noreferrer';
-    host.appendChild(link);
-  }
-}
-
-async function mmLoadSharedTasks() {
-  const generation = ++mmSharedTaskGeneration;
-  if (!SHARED_TASKS_API) { mmRenderSharedTasks(null); return; }
-  try {
-    const response = await fetch(SHARED_TASKS_API, {headers: mmHeaders(), cache: 'no-store'});
-    const payload = await response.json();
-    if (generation === mmSharedTaskGeneration) mmRenderSharedTasks(response.ok ? payload : {state: 'owner_required'});
-  } catch (_) {
-    if (generation === mmSharedTaskGeneration) mmRenderSharedTasks(null);
-  }
-}
-
 const OWNER_TODO_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/owner-todo`;
 let mmOwnerTodoItems = [];
 let mmOwnerTodoEditing = null;
@@ -12204,7 +12013,7 @@ function renderProjectPage() {
   const older = done.slice(MM_RESULT_DAYS_SHOWN);
   const pending = p.timeline.length && p.timeline[0].date === today && !(p.timeline[0].summary || []).length;
   page.innerHTML = `
-    <button type="button" class="mm-back" id="mm-project-back"><span aria-hidden="true">‹</span> ${mmReturnView === 'todo' ? 'К делам' : 'К проектам'}</button>
+    <button type="button" class="mm-back" id="mm-project-back"><span aria-hidden="true">‹</span> К проектам</button>
     <section class="mm-project-hero">
       ${mmArt(p, 'is-hero')}
       <div class="mm-project-hero-body">
@@ -12220,7 +12029,7 @@ function renderProjectPage() {
       ${shown.length ? shown.map(mmResultDay).join('') : '<p class="mm-summary-empty">Итогов за 30 дней пока нет.</p>'}
       ${older.length ? `<details class="mm-results-older" id="mm-project-history"><summary>Раньше <span>${older.length} ${mmPlural(older.length, 'день', 'дня', 'дней')}</span></summary>${older.map(mmResultDay).join('')}</details>` : ''}
     </section>`;
-  document.getElementById('mm-project-back').addEventListener('click', () => mmShowView(mmReturnView));
+  document.getElementById('mm-project-back').addEventListener('click', () => mmShowView('map'));
 }
 
 // Opens one day in the project's results (links with ?day=).
@@ -12248,8 +12057,6 @@ function mmRenderSources() {
   machines.forEach(m => parts.push(mmSourceDescription(m, m.machine === 'chatgpt' ? 'Выгрузка ChatGPT' : m.machine)));
   const github = dailyWorkData?.sources?.github;
   if (github) parts.push(mmSourceDescription(github, 'GitHub'));
-  const infraMachines = infraData?.machines || [];
-  infraMachines.forEach(m => parts.push(mmSourceDescription(m, `Снимок ${m.machine}`)));
   parts.push('время по Парижу', 'облачные сессии claude.ai/code не учитываются');
   document.getElementById('mm-sources').textContent = parts.join(' · ');
 }

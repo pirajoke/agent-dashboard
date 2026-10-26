@@ -995,20 +995,18 @@ let mmProjectData;
         self.assertIn("/api/work/daily", html)
         self.assertRegex(html, r"'work'[^\]]*\]\.includes\(INITIAL_SECTION\)")
         # MAIN MANAGER (Mark, 2026-10-14: «чтобы была визуализация проекта, который я делаю»):
-        # the project board first. Since 2026-10-23 («первые — основные проекты, снизу история»)
-        # «Дела» and «Изменения» are tabs of the history below the board, not views that replace it.
-        self.assertLess(html.index('data-mm-panel="map"'), html.index('id="mm-history"'))
-        history = html[html.index('id="mm-history"'):html.index('class="mm-more"')]
-        self.assertIn('<button type="button" data-mm-view="todo" aria-pressed="true">', history)
-        self.assertIn('data-mm-view="infra"', history)
+        # the project board. Since 2026-10-26 («это все мусор») there is no history under it: no Notion
+        # task list, no change log, no «Откуда данные» footer; sources and the phone QR sit behind «i».
         self.assertIn("renderMap(data);", html)
-        # The shared Notion board is the sole overview queue. Project notes stay on each project page.
         self.assertNotIn("renderTodo(data);", html)
         self.assertNotIn('data-mm-view="loose"', html)
-        todo_panel = html[html.index('data-mm-panel="todo"'):html.index('data-mm-panel="infra"')]
-        self.assertIn('id="mm-shared-tasks"', todo_panel)
-        self.assertNotIn('Контекст проектов', todo_panel)
-        self.assertNotIn('id="mm-loose"', todo_panel)
+        for gone in ('id="mm-history"', 'id="mm-shared-tasks"', 'data-mm-panel="todo"', 'data-mm-panel="infra"',
+                     'Открыть доску в Notion', 'class="mm-more"', 'Откуда данные · открыть на телефоне'):
+            self.assertNotIn(gone, html)
+        about = html[html.index('id="mm-about-dialog"'):html.index('</dialog>', html.index('id="mm-about-dialog"'))]
+        self.assertIn('id="mm-sources"', about)
+        self.assertIn('id="np-device"', about)
+        self.assertIn('aria-controls="mm-about-dialog"', html)
         self.assertNotIn('Хвосты', html)
         self.assertNotIn('Готовы к слиянию', html)
         # Projects reuse the Platforms mascots and open a per-project page.

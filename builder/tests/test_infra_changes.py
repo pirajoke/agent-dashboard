@@ -251,7 +251,9 @@ class CommandCenterMainManagerTest(unittest.TestCase):
     def test_section_is_scoped_and_wired(self):
         html = (BUILDER_DIR / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
         self.assertIn('class="mm-os" id="mm-os"', html)
-        self.assertIn("/api/infra/changes", html)
+        # Mark 2026-10-26 («это все мусор»): the change log is no longer listed under the board.
+        self.assertNotIn("/api/infra/changes", html)
+        self.assertNotIn('id="mm-history"', html)
         self.assertIn("if (name === 'work') setTimeout(openMainManager, 0);", html)
         # Mark 2026-10-14 («унифицированный дизайн для каждого момента»): the Property OS tokens of
         # MAIN MANAGER are the tokens of the whole page now, on :root with one light/dark switch.
