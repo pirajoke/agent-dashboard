@@ -13,8 +13,21 @@ library with one rename, never overwrites (a free name gets ` (2)`), never delet
 creates anything at the library root. Decisions are kept in `~/.agent-bridge/docxx-decisions.json`
 (mode 600) and settle the row as «Разобрано»; «Вернуть как было» undoes a move. The worker's own
 state and journal files stay untouched. Endpoints: owner-only `GET /api/docxx/folders` and
-`POST /api/docxx/decide` (`{action: move|archive|keep|undo, keys: [...], folder}`, at most 50 keys),
+`POST /api/docxx/decide` (`{action: move|archive|trash|auto|keep|undo, keys: [...], folder}`, at most 50 keys),
 with the same Origin-checked owner guard as the Platforms writes. Local paths are never served.
+
+Since 2026-10-26 the buttons sit on the closed card and are larger. **В корзину** is a move like
+the others: into an existing folder named Корзина/Trash/Corbeille, or into a «Корзина» created
+inside the review folder (never at the root); «Вернуть как было» brings the file back and nothing
+is deleted. `builder/docxx_suggest.py` (launchd `com.pirajoke.docxx-suggest`, every 10 minutes,
+Mac mini) sends each new review document's name, the start of its extracted text from
+`operations.sqlite3` (read-only, lines with passwords, logins and codes removed) and the list of
+existing library folders to the signed-in Claude Code CLI with no tools. It stores one folder from
+that list, «junk» or nothing per document in `~/.agent-bridge/docxx-suggestions.json` (mode 600);
+nothing moves there. The card then offers **Положить в «…»** with the reason, or «Похоже на мусор»
+with **В корзину**. **Разложить по подсказкам (N)** (`action: auto`) moves only documents whose
+suggested folder still exists; the rest stay. **Мусор в корзину (N)** sends the junk guesses to the
+trash. Install skips with `DASHBOARD_INSTALL_DOCXX_SUGGEST=0`.
 
 ## Data and privacy
 

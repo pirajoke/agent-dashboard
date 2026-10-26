@@ -6,6 +6,10 @@ Mac (Google Drive for desktop syncs it), into a folder that already exists there
 where it is. Every decision is kept in ``~/.agent-bridge/docxx-decisions.json`` so the page can
 show it as settled and «Вернуть» can put the file back. Nothing is deleted, nothing is created at
 the library root (the worker treats new root items as incoming), and a file is never overwritten.
+
+«В корзину» (2026-10-26, «есть мусор») is a move too: into an existing Корзина/Trash folder, or a
+«Корзина» made inside the review folder. «Разложить по подсказкам» moves each document into the
+folder the Mac mini suggested from its content (docxx_suggest.py) and leaves the rest alone.
 """
 from __future__ import annotations
 
@@ -30,11 +34,28 @@ MAX_DECISIONS = 5000
 KEY = re.compile(r'^[0-9a-f]{20}$')
 ARCHIVE = re.compile(r'archiv|архив', re.IGNORECASE)
 REVIEW = re.compile(r'to review|разобрать|на разбор', re.IGNORECASE)
+TRASH = re.compile(r'корзин|trash|corbeille', re.IGNORECASE)
+TRASH_NAME = 'Корзина'
 LIBRARY = 'DOCXXx'
 
 
 def decisions_path(home) -> Path:
     return Path(home) / '.agent-bridge' / 'docxx-decisions.json'
+
+
+def suggestions_path(home) -> Path:
+    return Path(home) / '.agent-bridge' / 'docxx-suggestions.json'
+
+
+def load_suggestions(path) -> dict:
+    try:
+        data = json.loads(Path(path).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return {}
+    items = data.get('items') if isinstance(data, dict) else None
+    if not isinstance(items, dict):
+        return {}
+    return {k: v for k, v in items.items() if isinstance(k, str) and KEY.fullmatch(k) and isinstance(v, dict)}
 
 
 def load_decisions(path) -> dict:
@@ -122,10 +143,12 @@ def folders_view(directory, decisions_file) -> dict:
     decisions = load_decisions(decisions_file)
     _, root = _sortable(directory, decisions)
     if root is None or not os.path.isdir(root):
-        return {'state': 'unavailable', 'folders': [], 'archive': None, 'recent': []}
+        return {'state': 'unavailable', 'folders': [], 'archive': None, 'trash': None, 'recent': []}
     folders = list_folders(root)
     archive = next((f for f in folders if ARCHIVE.search(f.split('/')[-1])), None)
-    choices = [f for f in folders if not REVIEW.search(f.split('/')[0])]
+    trash = next((f for f in folders if TRASH.search(f.split('/')[-1])), None)
+    review_top = next((f for f in folders if '/' not in f and REVIEW.search(f)), None)
+    choices = [f for f in folders if not REVIEW.search(f.split('/')[0]) and f != trash]
     recent = []
     for decision in sorted(decisions.values(), key=lambda d: str(d.get('at', '')), reverse=True):
         folder = decision.get('folder')
@@ -133,7 +156,24 @@ def folders_view(directory, decisions_file) -> dict:
             recent.append(folder)
         if len(recent) >= 5:
             break
-    return {'state': 'ready', 'folders': choices, 'archive': archive, 'recent': recent}
+    # Without a trash folder the first «В корзину» makes one inside the review folder, never at the root.
+    can_trash = bool(trash or review_top)
+    return {'state': 'ready', 'folders': choices, 'archive': archive, 'trash': trash or None,
+            'can_trash': can_trash, 'recent': recent}
+
+
+def _trash_folder(root: Path, view: dict) -> str:
+    if view.get('trash'):
+        return view['trash']
+    top = next((f for f in list_folders(root) if '/' not in f and REVIEW.search(f)), None)
+    if not top:
+        raise ValueError('no_trash')
+    folder = root / top / TRASH_NAME
+    if not _inside(root, root / top) or os.path.islink(root / top):
+        raise ValueError('no_trash')
+    if not os.path.isdir(folder):
+        os.mkdir(folder, 0o755)
+    return top + '/' + TRASH_NAME
 
 
 def _free_name(folder: Path, name: str) -> Path:
@@ -180,12 +220,12 @@ def _rename_noreplace(source: Path, target: Path) -> None:
     os.rename(source, target)
 
 
-def apply(directory, decisions_file, body: dict) -> dict:
+def apply(directory, decisions_file, body: dict, suggestions_file=None) -> dict:
     """Apply one decision to up to MAX_KEYS rows. Answers per row; never raises for one bad row."""
     if not isinstance(body, dict):
         raise ValueError('invalid_request')
     action, keys = body.get('action'), body.get('keys')
-    if action not in ('move', 'archive', 'keep', 'undo'):
+    if action not in ('move', 'archive', 'trash', 'auto', 'keep', 'undo'):
         raise ValueError('invalid_action')
     if (not isinstance(keys, list) or not 1 <= len(keys) <= MAX_KEYS
             or not all(isinstance(k, str) and KEY.fullmatch(k) for k in keys)):
@@ -196,19 +236,31 @@ def apply(directory, decisions_file, body: dict) -> dict:
         fcntl.flock(lock, fcntl.LOCK_EX)
         decisions = load_decisions(decisions_file)
         rows, root = _sortable(directory, decisions)
-        folder_rel = None
-        if action in ('move', 'archive'):
+        folder_rel, allowed = None, set()
+        if action in ('move', 'archive', 'trash', 'auto'):
             if root is None:
                 raise ValueError('library_unavailable')
             view = folders_view(directory, decisions_file)
-            folder_rel = view['archive'] if action == 'archive' else body.get('folder')
             allowed = set(view['folders']) | ({view['archive']} if view['archive'] else set())
-            if not isinstance(folder_rel, str) or folder_rel not in allowed:
-                raise ValueError('invalid_folder')
+            if action == 'trash':
+                folder_rel = _trash_folder(root, view)
+            elif action != 'auto':
+                folder_rel = view['archive'] if action == 'archive' else body.get('folder')
+                if not isinstance(folder_rel, str) or folder_rel not in allowed:
+                    raise ValueError('invalid_folder')
+        guesses = load_suggestions(suggestions_file) if action == 'auto' and suggestions_file else {}
         results = []
         now = datetime.now(timezone.utc).isoformat()
         commit = lambda: _save_decisions(decisions_file, decisions)  # noqa: E731
         for key in dict.fromkeys(keys):
+            if action == 'auto':
+                guess, row = guesses.get(key) or {}, rows.get(key) or {}
+                folder = guess.get('folder')
+                if guess.get('junk') is True or guess.get('name') != row.get('name') or folder not in allowed:
+                    results.append({'key': key, 'ok': False, 'error': 'no_suggestion'})
+                    continue
+                results.append(_one(key, 'move', folder, rows, root, decisions, now, commit))
+                continue
             results.append(_one(key, action, folder_rel, rows, root, decisions, now, commit))
         commit()
     return {'state': 'ready', 'results': results}
@@ -223,7 +275,7 @@ def _one(key, action, folder_rel, rows, root, decisions, now, commit) -> dict:
         decision = decisions.get(key)
         if not decision:
             return {'key': key, 'ok': False, 'error': 'nothing_to_undo'}
-        if decision.get('action') in ('move', 'archive'):
+        if decision.get('action') in ('move', 'archive', 'trash'):
             back_root = Path(decision.get('root') or '')
             moved, original = back_root / str(decision.get('to', '')), back_root / str(decision.get('from', ''))
             if (not back_root.is_absolute() or not _inside(back_root, moved) or not _inside(back_root, original)

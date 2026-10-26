@@ -29,6 +29,7 @@ cp "$SRC_DIR/weekly_digest.py" "$SCRIPTS_DIR/weekly_digest.py"
 cp "$SRC_DIR/daily_digest.py" "$SCRIPTS_DIR/daily_digest.py"
 cp "$SRC_DIR/agent_task_runner.py" "$SCRIPTS_DIR/agent_task_runner.py"
 cp "$SRC_DIR/context_retell.py" "$SCRIPTS_DIR/context_retell.py"
+cp "$SRC_DIR/docxx_suggest.py" "$SCRIPTS_DIR/docxx_suggest.py"
 cp "$SRC_DIR/job_mail_watcher.py" "$SCRIPTS_DIR/job_mail_watcher.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
@@ -56,6 +57,7 @@ python3 -m py_compile build-agent-dashboard.py dashboard-server-m4.py main_manag
 python3 -m py_compile weekly_digest.py daily_digest.py
 python3 -m py_compile agent_task_runner.py
 python3 -m py_compile context_retell.py
+python3 -m py_compile docxx_suggest.py
 python3 -m py_compile job_mail_watcher.py
 python3 -m py_compile live_sessions_collector.py
 python3 build-agent-dashboard.py
@@ -124,6 +126,18 @@ if [[ "${DASHBOARD_INSTALL_CONTEXT_RETELL:-1}" == "1" ]]; then
     "$SRC_DIR/launchd/$RETELL_LABEL.plist.template" > "$RETELL_PLIST.tmp"
   plutil -lint "$RETELL_PLIST.tmp" >/dev/null
   install_launchd_agent "$RETELL_PLIST.tmp" "$RETELL_PLIST" "$RETELL_LABEL"
+fi
+
+# Folder suggestions for «Нужен разбор» documents (Mark 2026-10-26: «смотреть по контексту»).
+# Every 10 minutes new review documents get one folder from the library, «мусор» or nothing.
+SUGGEST_LABEL="com.pirajoke.docxx-suggest"
+SUGGEST_PLIST="$HOME/Library/LaunchAgents/$SUGGEST_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_DOCXX_SUGGEST:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$SUGGEST_LABEL"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$SUGGEST_LABEL.plist.template" > "$SUGGEST_PLIST.tmp"
+  plutil -lint "$SUGGEST_PLIST.tmp" >/dev/null
+  install_launchd_agent "$SUGGEST_PLIST.tmp" "$SUGGEST_PLIST" "$SUGGEST_LABEL"
 fi
 
 # Employer replies in Mark's job mailbox (Mark 2026-10-24: «не пропускать положительные ответы»).
