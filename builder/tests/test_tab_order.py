@@ -59,8 +59,12 @@ CODE
 const out = {loaded: order(), resetHidden: resetButton.hidden};
 // Mouse: press on Техника, drag it up two places, let go.
 let t = find('machines');
+// A press let go outside the menu before the drag began must not turn into a drag on the way back.
 fire('pointerdown', {target: t, pointerType: 'mouse', button: 0, pointerId: 1, clientX: 50, clientY: 300});
-fire('pointermove', {target: t, pointerId: 1, clientX: 50, clientY: 300 - 2 * SLOT});
+fire('pointermove', {target: t, pointerId: 1, buttons: 0, clientX: 50, clientY: 300 - 2 * SLOT});
+out.releasedOutside = order();
+fire('pointerdown', {target: t, pointerType: 'mouse', button: 0, pointerId: 1, clientX: 50, clientY: 300});
+fire('pointermove', {target: t, pointerId: 1, buttons: 1, clientX: 50, clientY: 300 - 2 * SLOT});
 fire('pointerup', {target: t, pointerId: 1});
 const swallowed = fire('click', {target: t});
 out.mouse = order();
@@ -70,7 +74,7 @@ out.status = orderStatus.textContent;
 // Touch: a finger that moves before the long press is a scroll, nothing moves.
 t = find('growth');
 fire('pointerdown', {target: t, pointerType: 'touch', pointerId: 2, clientX: 50, clientY: 50});
-fire('pointermove', {target: t, pointerId: 2, clientX: 50, clientY: 50 + 3 * SLOT});
+fire('pointermove', {target: t, pointerId: 2, buttons: 1, clientX: 50, clientY: 50 + 3 * SLOT});
 fire('pointerup', {target: t, pointerId: 2});
 runTimers();
 out.swipe = order();
@@ -78,7 +82,7 @@ out.swipe = order();
 fire('pointerdown', {target: t, pointerType: 'touch', pointerId: 3, clientX: 50, clientY: 50});
 timers.shift()();
 const held = fire('touchmove', {});
-fire('pointermove', {target: t, pointerId: 3, clientX: 50, clientY: 50 + 3 * SLOT + 10});
+fire('pointermove', {target: t, pointerId: 3, buttons: 1, clientX: 50, clientY: 50 + 3 * SLOT + 10});
 fire('pointerup', {target: t, pointerId: 3});
 out.longPress = order();
 out.scrollBlocked = Boolean(held.prevented);
@@ -112,6 +116,7 @@ class TabOrderTest(unittest.TestCase):
         data = run({})
         self.assertEqual(data["loaded"], "work,growth,agents,platforms,documents,context,machines")
         self.assertTrue(data["resetHidden"])
+        self.assertEqual(data["releasedOutside"], data["loaded"])
         self.assertEqual(data["mouse"], "work,growth,agents,platforms,machines,documents,context")
         self.assertEqual(json.loads(data["saved"]), data["mouse"].split(","))
         self.assertTrue(data["clickAfterDragSwallowed"], "dropping an item must not open its tab")

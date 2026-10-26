@@ -6893,6 +6893,8 @@ tabOrderNav.addEventListener('pointerdown', event => {
 
 tabOrderNav.addEventListener('pointermove', event => {
   if (!tabDrag || event.pointerId !== tabDrag.pointerId) return;
+  // The mouse was let go outside the menu before the drag began: forget the press.
+  if (!tabDrag.touch && event.buttons === 0) { endTabDrag(); return; }
   if (!tabDrag.active) {
     if (Math.hypot(event.clientX - tabDrag.x, event.clientY - tabDrag.y) < TAB_ORDER_MOVE_SLOP) return;
     // A finger that moves before the long press is scrolling or tapping, not dragging.
