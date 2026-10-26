@@ -5679,6 +5679,33 @@ html, body { background: #fffcf6; color: #24292b; }
 .campus-3d-dept strong, .campus-3d-dept li button { padding: 0; color: #24292b; font: inherit; font-size: 13.5px; font-weight: 650; text-align: left; background: none; border: 0; cursor: pointer; }
 .campus-3d-dept small { color: #6c6a63; font-size: 12px; }
 
+.campus-3d-dept li { position: relative; }
+.campus-3d-dept li:has(.campus-3d-dept-archive) { padding-right: 86px; }
+.campus-project-folder[data-campus-project-archived="true"][data-campus-project-status="idle"] { display: none; }
+.campus-3d-dept li .campus-3d-dept-archive { position: absolute; top: 7px; right: 8px; padding: 2px 8px; color: #6c6a63; font-size: 12px; font-weight: 500; border: 1px solid #e2d6c3; border-radius: 8px; background: #fffcf6; }
+.campus-3d-dept li .campus-3d-dept-archive:hover { color: #0a7f93; border-color: #0a7f93; }
+
+/* Mark 2026-10-25: archive of projects he is not working on now (kept, can be put back). */
+.department-campus { position: relative; }
+.campus-archive-toggle { margin-left: auto; min-height: 44px; padding: 0 14px; border: 1px solid #d4c6b1; border-radius: 10px; background: #fffcf6; color: #0a7f93; font: 600 0.8rem Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; }
+.campus-archive-toggle:hover, .campus-archive-toggle[aria-expanded="true"] { background: #f1eadf; }
+.campus-archive-toggle[hidden] { display: none; }
+.campus-archive-toggle:not([hidden]) + .campus-refresh { margin-left: 0; }
+.campus-archive { position: absolute; z-index: 300000; top: 64px; right: 14px; width: min(340px, calc(100% - 28px)); max-height: min(520px, calc(100% - 80px)); overflow: auto; padding: 14px 16px 16px; color: #24292b; background: rgba(255, 252, 246, 0.98); border: 1px solid #e6dccc; border-radius: 16px; box-shadow: 0 10px 30px rgba(60, 45, 20, 0.16); font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+.campus-archive[hidden] { display: none; }
+.campus-archive header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.campus-archive h3 { margin: 0; font-size: 16px; }
+.campus-archive header button { width: 32px; height: 32px; color: #6c6a63; font-size: 20px; background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.campus-archive p { margin: 6px 0 12px; color: #6c6a63; font-size: 13px; line-height: 1.4; }
+.campus-archive ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.campus-archive li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; background: #f8f3ea; border-radius: 10px; }
+.campus-archive li strong { font-size: 13.5px; font-weight: 650; overflow-wrap: anywhere; }
+.campus-archive li button, .campus-details [data-campus-detail-archive] { flex: none; min-height: 32px; padding: 0 12px; color: #0a7f93; font: 600 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fffcf6; border: 1px solid #d4c6b1; border-radius: 9px; cursor: pointer; }
+.campus-archive li button:disabled, .campus-details [data-campus-detail-archive]:disabled { opacity: 0.55; cursor: default; }
+.campus-archive .campus-archive-error { margin: 10px 0 0; color: #a8650f; }
+.campus-details > footer { padding: 0 0.8rem 0.8rem; }
+.campus-details > footer[hidden] { display: none; }
+
 /* ── Agent Theater v2: AI Town-inspired town map ── */
 .theater-layout {
     grid-template-columns: minmax(0, 1.7fr) minmax(330px, 0.58fr);

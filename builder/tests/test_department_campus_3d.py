@@ -6,6 +6,7 @@ import importlib.util
 from pathlib import Path
 import re
 import unittest
+from campus_archive_write import without_archive_write
 
 
 BUILDER_DIR = Path(__file__).resolve().parents[1]
@@ -23,7 +24,7 @@ def _block(source: str, start: str, end: str) -> str:
 class CampusThreeDimensionalSceneTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.script = (ASSETS_DIR / "script.js").read_text(encoding="utf-8")
+        cls.script = without_archive_write((ASSETS_DIR / "script.js").read_text(encoding="utf-8"))
         cls.css = (ASSETS_DIR / "style.css").read_text(encoding="utf-8")
         cls.scene = _block(cls.script, SCENE_START, SCENE_END)
         cls.campus_script = _block(

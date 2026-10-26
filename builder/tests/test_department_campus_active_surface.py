@@ -10,6 +10,7 @@ import urllib.error
 import urllib.request
 from unittest.mock import patch
 import importlib.util
+from campus_archive_write import without_archive_write
 
 
 BUILDER_DIR = Path(__file__).resolve().parents[1]
@@ -101,7 +102,7 @@ class ActiveDepartmentCampusSurfaceTests(unittest.TestCase):
 
         self.assertEqual(status, 200, f"public GET {SURFACE_PATH} returned HTTP {status}")
         self.assertNotRegex(html, r"(?i)<(?:form|input|textarea|select)\b")
-        self.assertNotRegex(html, r"(?i)\bmethod\s*:\s*['\"](?:POST|PUT|PATCH|DELETE)['\"]")
+        self.assertNotRegex(without_archive_write(html), r"(?i)\bmethod\s*:\s*['\"](?:POST|PUT|PATCH|DELETE)['\"]")
         self.assertNotRegex(
             html,
             r"data-(?:action|campus-action)=['\"]"

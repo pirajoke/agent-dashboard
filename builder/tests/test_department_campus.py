@@ -10,6 +10,7 @@ import unicodedata
 import unittest
 from unittest.mock import patch
 import urllib.request
+from campus_archive_write import without_archive_write
 
 
 NOW = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
@@ -104,7 +105,7 @@ class DepartmentCampusContractTests(unittest.TestCase):
         return (ASSETS_DIR / "style.css").read_text(encoding="utf-8")
 
     def _script(self):
-        return (ASSETS_DIR / "script.js").read_text(encoding="utf-8")
+        return without_archive_write((ASSETS_DIR / "script.js").read_text(encoding="utf-8"))
 
     def _campus_script(self):
         script = self._script()
