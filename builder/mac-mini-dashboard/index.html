@@ -193,6 +193,22 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-badge { font-size: 11px; padding: 4px 12px; border-radius: 6px; font-weight: 600; }
 .machine-badge.online { background: var(--green-bg); color: var(--green); }
 .machine-badge.offline { background: var(--red-bg); color: var(--red); }
+.machine-health { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: -4px 0 20px; }
+.machine-health:empty { display: none; }
+.machine-health-item { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card, transparent); color: var(--text); font: inherit; cursor: pointer; }
+.machine-health-item:hover { border-color: var(--text2); }
+.machine-health-label { font-size: 12px; color: var(--text2); }
+.machine-health-word { font-size: 16px; font-weight: 600; }
+.machine-health-bar { display: block; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.machine-health-bar > span { display: block; height: 100%; background: var(--green); }
+.machine-health-item.is-ok .machine-health-word { color: var(--green); }
+.machine-health-item.is-warn .machine-health-word { color: var(--orange, #d97706); }
+.machine-health-item.is-warn .machine-health-bar > span { background: var(--orange, #d97706); }
+.machine-health-item.is-bad { border-color: var(--red); background: var(--red-bg); }
+.machine-health-item.is-bad .machine-health-word { color: var(--red); }
+.machine-health-item.is-bad .machine-health-bar > span { background: var(--red); }
+.machine-health-item.is-unknown .machine-health-word { color: var(--text2); }
+@media (max-width: 640px) { .machine-health { gap: 6px; } .machine-health-item { padding: 10px; } .machine-health-word { font-size: 14px; } }
 
 /* Grid layouts */
 .grid { display: grid; gap: 20px; }
@@ -4119,6 +4135,37 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-links a { min-height:44px; margin:0; padding:10px 0; overflow-wrap:anywhere; }
 .context-links[hidden] { display:none; }
 @media(max-width:760px) { .context-layout { grid-template-columns:1fr; gap:16px; } .context-controls label { flex:1 1 130px; } .context-reader { padding:16px; } }
+/* Mark 2026-10-26: a record reads like a short note — «Коротко», decisions, then topics folded to one line. */
+.context-reader-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.context-reader .cc-i { width:32px; height:32px; min-height:0; padding:0; border-radius:50%; background:transparent; color:var(--mm-muted); font:italic 600 15px/1 Georgia,'Times New Roman',serif; cursor:pointer; }
+.context-reader .cc-i:hover { color:var(--mm-accent); border-color:var(--mm-accent); }
+.context-reader h3 { font-size:22px; line-height:1.3; font-weight:700; letter-spacing:-.01em; margin:18px 0 18px; }
+.context-body { font-size:15.5px; }
+.context-lead { margin:0 0 16px; padding:16px 18px; border-radius:14px; background:var(--mm-info-soft); font-size:16.5px; line-height:1.65; }
+.context-lead > p:last-child { margin-bottom:0; }
+.context-body .context-lead-label,.context-body .context-group-label { margin:0 0 4px; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--mm-muted); white-space:normal; }
+.context-body .context-group-label { margin:26px 0 8px; }
+.context-key { margin:12px 0; padding:12px 16px; border:1px solid var(--mm-line); border-left:3px solid var(--mm-accent); border-radius:12px; }
+.context-key.is-plain { border-left-color:var(--mm-line); }
+.context-body .context-key > h4 { margin:2px 0 4px; font-size:16px; }
+.context-key > p:last-child,.context-key > ul:last-child,.context-key > ol:last-child { margin-bottom:2px; }
+.context-body details.context-topic { margin:8px 0; padding:0 16px; border:1px solid var(--mm-line); border-radius:12px; background:var(--mm-surface); }
+.context-body details.context-topic > summary { position:relative; display:block; list-style:none; padding:13px 28px 13px 0; font-weight:400; }
+.context-topic > summary::-webkit-details-marker { display:none; }
+.context-topic > summary::after { content:'›'; position:absolute; right:2px; top:12px; font-size:22px; line-height:1; color:var(--mm-muted); transition:transform .15s ease-out; }
+.context-topic[open] > summary::after { transform:rotate(90deg); }
+.context-body .context-topic h4 { margin:0; font-size:15.5px; line-height:1.4; }
+.context-topic-preview { display:block; margin-top:3px; color:var(--mm-muted); font-size:14px; line-height:1.5; }
+.context-topic[open] .context-topic-preview { display:none; }
+.context-topic-body { padding:0 0 10px; }
+.context-topic-body > p:first-child { margin-top:0; }
+.context-body .context-empty { color:var(--mm-muted); }
+.context-body details.context-full { margin-top:22px; }
+.context-reader .context-actions { margin:22px 0 0; padding:12px 0 0; border-top:1px solid var(--mm-line); border-bottom:0; }
+.context-reader .context-actions a { font-size:13.5px; font-weight:500; color:var(--mm-muted); }
+.context-reader .context-actions a:hover { color:var(--mm-info); }
+@media (prefers-reduced-motion: reduce) { .context-topic > summary::after { transition:none; } }
+@media (max-width:600px) { .context-reader h3 { font-size:19px; margin:14px 0; } .context-lead { padding:14px; font-size:16px; } .context-body details.context-topic,.context-key { padding-left:14px; padding-right:14px; } }
 /* DOCXX: a readable route, with motion tied only to the processor lock. */
 #section-documents { max-width:1480px; }
 .docxx-head { align-items:center; gap:20px; }
@@ -4220,17 +4267,26 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-sort-bar[hidden], .docxx-sort-bar [hidden] { display:none !important; }
 .docxx-sort-bar > strong { margin-right:auto; font-weight:650; }
 .docxx-sort-actions { display:flex; flex-wrap:wrap; gap:8px; }
-.docxx-act { min-height:40px; padding:8px 14px; border:1px solid var(--mm-control-line); border-radius:10px; background:var(--mm-surface); color:var(--mm-ink); font:650 13px/1.2 'Inter', -apple-system, sans-serif; cursor:pointer; }
+.docxx-act { min-height:46px; padding:10px 18px; border:1px solid var(--mm-control-line); border-radius:12px; background:var(--mm-surface); color:var(--mm-ink); font:650 15px/1.25 'Inter', -apple-system, sans-serif; cursor:pointer; text-align:center; overflow-wrap:anywhere; }
 .docxx-act:hover { border-color:var(--mm-accent); }
 .docxx-act:disabled { opacity:.55; cursor:wait; }
 .docxx-act.is-main { background:var(--mm-accent); border-color:var(--mm-accent); color:var(--mm-background); }
+.docxx-act.is-trash { color:var(--mm-danger); }
+.docxx-act.is-trash.is-main { background:var(--mm-danger); border-color:var(--mm-danger); color:var(--mm-background); }
 .docxx-act:focus-visible, .docxx-pick:focus-visible { outline:2px solid var(--mm-accent); outline-offset:2px; }
 .docxx-sort-note { flex-basis:100%; margin:0; color:var(--mm-muted); font-size:12.5px; }
 .docxx-sort-note:empty { display:none; }
 .docxx-pick { grid-area:icon; display:grid; place-items:center; width:26px; height:26px; margin-top:2px; padding:0; border:1.5px solid var(--mm-control-line); border-radius:7px; background:var(--mm-surface); color:transparent; font:700 14px/1 'Inter', sans-serif; cursor:pointer; }
 .docxx-pick[aria-checked="true"] { background:var(--mm-accent); border-color:var(--mm-accent); color:var(--mm-background); }
-.docxx-record-todo { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 16px; }
+.docxx-record-todo { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 16px; }
 .docxx-record-todo > span { width:100%; color:var(--mm-muted); font-size:12.5px; }
+/* Mark 2026-10-26: the buttons sit on the card itself, big enough to tap, with the Mac mini's folder guess first. */
+.docxx-record-name .docxx-record-todo { margin:14px 0 0; cursor:default; }
+.docxx-suggest { width:100%; margin:0; padding:10px 12px; border-radius:10px; background:var(--mm-selection); color:var(--mm-ink); font-size:14px; line-height:1.5; }
+.docxx-suggest[data-tone="junk"] { background:var(--mm-warning-soft); }
+.docxx-suggest[data-tone="none"] { background:transparent; padding:0; color:var(--mm-muted); }
+.docxx-suggest b { font-weight:650; }
+@media(max-width:700px) { .docxx-record-name .docxx-record-todo .docxx-act { flex:1 1 100%; } .docxx-sort-actions { width:100%; } .docxx-sort-actions .docxx-act { flex:1 1 auto; } }
 .docxx-move-list { list-style:none; margin:0; padding:0; display:grid; gap:4px; }
 .docxx-move-list button { width:100%; min-height:44px; padding:10px 12px; text-align:left; border:0; border-radius:10px; background:transparent; color:var(--mm-ink); font:500 14.5px/1.35 'Inter', -apple-system, sans-serif; cursor:pointer; overflow-wrap:anywhere; }
 .docxx-move-list button:hover, .docxx-move-list button:focus-visible { background:var(--mm-selection); outline:none; }
@@ -4358,6 +4414,54 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .watch-off { margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
 @media (max-width: 700px) { .watch-stage { height: 380px; border-radius: 16px; } .watch-stage-label { font-size: 12px; padding: 5px 9px; } .watch-stage-label small { display: none; } .watch-cards { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .watch-card { transition: none; } .watch-card:hover { transform: none; } }
+/* Mark 2026-10-25: «все сессии, которые бегут, в одном месте»: Claude Code and Codex on his Macs. */
+#agents-sessions[hidden] { display: none; }
+/* Mark 2026-10-26, variant B «Решения»: a session that asks something gets a card with its question and
+   an «Открыть» button; working ones are a strip of pills, finished ones a quiet list. */
+.live-h { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 10px; font-size: 16px; font-weight: 700; }
+.live-h span { color: var(--mm-muted); font-size: 14px; font-weight: 600; }
+.live-ava { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; color: #fff; font-size: 15px; font-weight: 800; border-radius: 10px; background: #d97757; }
+.live-ava[data-tool="codex"] { background: #1f1f1f; }
+.live-dot { --live-tone: #8a8172; flex: none; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--live-tone); }
+.live-dot[data-state="working"] { --live-tone: #2f9361; animation: live-pulse 1.6s ease-in-out infinite; }
+.live-dot[data-state="stopped"] { --live-tone: #b0574a; }
+@keyframes live-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live-tone) 50%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.live-card { --live-tone: #2f7fd1; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
+.live-card[data-state="approve"] { --live-tone: #c7801a; }
+.live-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.live-top > span { min-width: 0; }
+.live-top strong { display: block; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.live-top small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
+.live-ask { margin: 0; padding: 12px 14px; font-size: 15px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, var(--live-tone) 11%, var(--mm-surface)); border-radius: 4px 14px 14px 14px; }
+.live-ask em { display: block; margin-bottom: 4px; color: var(--live-tone); font-size: 12px; font-style: normal; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.live-card .live-open { margin: 0; }
+.live-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.live-pill { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; cursor: pointer; }
+.live-pill small { color: var(--mm-muted); }
+.live-pill > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+.live-list { display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--mm-line); }
+.live-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 2px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--mm-line); cursor: pointer; }
+.live-row > span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-row small { color: var(--mm-muted); font-size: 13px; white-space: nowrap; }
+.live-pill:hover, .live-row:hover { color: var(--mm-accent); }
+.live-pill:focus-visible, .live-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.live-empty { margin: 14px 0 0; color: var(--mm-muted); font-size: 14px; }
+.live-quiet summary.live-h { display: list-item; cursor: pointer; }
+.live-quiet summary.live-h span { margin-left: 8px; }
+.live-need-box { margin: 0 0 12px; padding: 10px 12px; font-size: 14.5px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, #c7801a 10%, var(--mm-surface)); border-radius: 12px; }
+.live-elsewhere { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
+.live-elsewhere a { color: var(--mm-accent); font-weight: 600; text-decoration: none; }
+.live-open { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.live-open a, .live-open button { display: inline-flex; align-items: center; min-height: 36px; padding: 6px 14px; color: #fff; font: inherit; font-size: 14px; font-weight: 650; text-decoration: none; background: var(--mm-accent); border: 0; border-radius: 10px; cursor: pointer; }
+.live-open button { color: var(--mm-accent); background: var(--mm-surface); border: 1px solid var(--mm-control-line); }
+.cc-info-body .live-info { min-width: 0; max-width: 100%; }
+.live-reply, .live-command { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
+.live-reply { margin: 0; padding: 10px 12px; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 12px; font-size: 14px; line-height: 1.5; }
+.live-command { display: block; margin-top: 4px; padding: 8px 10px; overflow-x: auto; font-size: 12.5px; white-space: nowrap; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
+.live-note { color: var(--mm-muted); font-size: 13px; }
+@media (max-width: 700px) { .live-cards { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .live-dot[data-state="working"] { animation: none; } }
 </style>
 </head>
 <body>
@@ -4818,9 +4922,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="docxx-sort-bar" id="docxx-sort-bar" hidden>
       <strong id="docxx-sort-count"></strong>
       <div class="docxx-sort-actions">
+        <button type="button" class="docxx-act is-main" id="docxx-sort-auto" hidden>Разложить по подсказкам</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-junk" hidden>Мусор в корзину</button>
         <button type="button" class="docxx-act" id="docxx-sort-all">Выбрать все</button>
         <button type="button" class="docxx-act is-main" id="docxx-sort-move" hidden>Переложить в папку…</button>
         <button type="button" class="docxx-act" id="docxx-sort-archive" hidden>В архив</button>
+        <button type="button" class="docxx-act is-trash" id="docxx-sort-trash" hidden>В корзину</button>
         <button type="button" class="docxx-act" id="docxx-sort-keep" hidden>Оставить как есть</button>
       </div>
       <p class="docxx-sort-note" id="docxx-sort-note" role="status" aria-live="polite"></p>
@@ -4853,14 +4960,16 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <p id="context-sources" class="context-sources" hidden></p>
     <div class="context-layout"><ol id="context-list" class="context-list" aria-label="Последние записи"></ol>
       <article id="context-reader" class="context-reader" hidden tabindex="-1" aria-label="Просмотр записи">
-        <button type="button" id="context-close">← Все записи</button><h3 id="context-reader-title"></h3><p id="context-reader-meta" class="context-status"></p>
+        <!-- Mark 2026-10-26: «много метаданных» — source and date live behind «i», the original link at the bottom. -->
+        <div class="context-reader-top"><button type="button" id="context-close">← Все записи</button><button type="button" class="cc-i" id="context-info" data-cc-info="context-record" aria-label="О записи: откуда и когда">i</button></div>
+        <h3 id="context-reader-title"></h3>
+        <div id="context-body" class="context-body"></div>
+        <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
         <nav class="context-actions" aria-label="Перейти из записи">
-          <a id="context-obsidian">Оригинал в Obsidian</a>
+          <a id="context-obsidian">Открыть оригинал в Obsidian</a>
           <a id="context-work" href="?tab=work&amp;view=todo" hidden>Дела и результаты</a>
           <a id="context-agents" href="?tab=agents" hidden>Агенты</a>
         </nav>
-        <div id="context-body" class="context-body"></div>
-        <aside id="context-links" class="context-links" aria-label="Ссылки из записи" hidden></aside>
       </article>
     </div>
   </section>
@@ -5305,6 +5414,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" class="cc-i" data-cc-info="machine-mini" aria-label="Mac mini: нагрузка и диск">i</button>
       <span class="machine-badge" id="mini-online-badge">проверка</span>
     </div>
+    <div class="machine-health" id="mini-health" aria-live="polite"></div>
 
     <!-- System gauges row -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -5358,6 +5468,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" class="cc-i" data-cc-info="machine-air" aria-label="MacBook Air: нагрузка и диск">i</button>
       <span class="machine-badge online" id="air-online-badge">в сети</span>
     </div>
+    <div class="machine-health" id="air-health" aria-live="polite"></div>
 
     <!-- System gauges row — same layout as Mac Mini -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -5411,6 +5522,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" class="cc-i" data-cc-info="machine-pro" aria-label="MacBook Pro: нагрузка и диск">i</button>
       <span class="machine-badge offline" id="pro-online-badge">проверка</span>
     </div>
+    <div class="machine-health" id="pro-health" aria-live="polite"></div>
 
     <!-- System gauges row — same layout as Mac Mini/Air -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -5505,10 +5617,17 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       </div>
     </header>
     <div class="cc-subnav cc-tabs" aria-label="Виды агентов">
-      <button type="button" aria-controls="agents-campus" aria-pressed="true" onclick="showAgentsView('campus')">Кампус отделов</button>
+      <button type="button" aria-controls="agents-sessions" aria-pressed="true" onclick="showAgentsView('sessions')">Сессии</button>
+      <button type="button" aria-controls="agents-campus" aria-pressed="false" onclick="showAgentsView('campus')">Кампус отделов</button>
       <button type="button" aria-controls="agents-watchers" aria-pressed="false" onclick="showAgentsView('watchers')">Кто за чем следит</button>
       <button type="button" aria-controls="agents-decisions" aria-pressed="false" onclick="showAgentsView('decisions')">Решения <span id="decision-count"></span></button>
     </div>
+    <!-- Mark 2026-10-25: every Claude Code and Codex session open on his Macs, in one place. -->
+    <section id="agents-sessions" aria-label="Сессии">
+      <p class="watch-lede">Все сессии Claude и Codex, открытые сейчас на твоих Mac. Нажми на сессию — увидишь её последний ответ и откроешь её.</p>
+      <div id="live-sessions"><p class="live-empty">Загружаю сессии…</p></div>
+      <p class="live-elsewhere">Отсюда не видно чаты на сайтах и в телефоне: <a href="https://claude.ai/code" target="_blank" rel="noopener">Claude в облаке ↗</a><a href="https://chatgpt.com" target="_blank" rel="noopener">ChatGPT ↗</a><button type="button" class="cc-i" data-cc-info="live-help" aria-label="Как отвечать сессиям с телефона">i</button></p>
+    </section>
     <!-- Mark 2026-10-24: «кто зачем следит, какие агенты существуют» — the same kind of 3D map as Документы. -->
     <section id="agents-watchers" aria-label="Кто за чем следит" hidden>
       <p class="watch-lede">Эти помощники работают сами, днём и ночью, на Mac mini. Нажми на любого — расскажу, за чем он следит, что делает и зачем это тебе.</p>
@@ -5544,7 +5663,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <div class="decision-activity" id="decision-activity"></div>
     </section>
 
-    <div id="agents-campus">
+    <div id="agents-campus" hidden>
       <div class="pixel-agents-shell">
       <div class="pixel-agents-gamebar">
         <div class="pixel-agents-gamebar-title">
@@ -5838,6 +5957,215 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 <script>
 // «i» window sources (Mark 2026-10-24), filled by each tab below; the window itself is set up further down.
 const ccInfoSources = {};
+
+// ─── Агенты → Сессии ─── Mark 2026-10-25: every Claude Code and Codex session open on his Macs, with its
+// state and a way into it. live_sessions_collector.py writes them every minute; owner only.
+var liveSessionsData = null;
+var liveSessionsBusy = false;
+// Mark 2026-10-26: only sessions that really need him wait for him, and the card says what for.
+var LIVE_STATE_TEXT = { working: 'Работает', waiting: 'Ждёт ответа', approve: 'Ждёт разрешения', done: 'Готово', stopped: 'Остановилась' };
+var LIVE_TOOL_TEXT = { claude: 'Claude', codex: 'Codex' };
+
+function liveSessionsVisible() {
+  const section = document.getElementById('section-agents');
+  const view = document.getElementById('agents-sessions');
+  return !document.hidden && section && section.classList.contains('active') && view && !view.hidden;
+}
+
+async function liveSessionsLoad() {
+  if (liveSessionsBusy || IS_FILE_DASHBOARD || !liveSessionsVisible()) return;
+  liveSessionsBusy = true;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/live-sessions`, { headers: mmHeaders(), cache: 'no-store' });
+    liveSessionsData = response.ok ? await response.json() : { state: response.status === 401 ? 'owner_required' : 'unavailable' };
+  } catch (_) {
+    liveSessionsData = { state: 'unavailable' };
+  } finally {
+    liveSessionsBusy = false;
+  }
+  liveSessionsRender(liveSessionsData);
+}
+
+function liveAgo(value) {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 60000));
+  if (!Number.isFinite(minutes)) return '';
+  if (minutes < 1) return 'только что';
+  if (minutes < 60) return `${minutes} мин назад`;
+  const hours = Math.round(minutes / 60);
+  return `${hours} ч назад`;
+}
+
+function liveDot(session) {
+  const dot = mmEl('span', 'live-dot');
+  dot.dataset.state = session.state;
+  dot.setAttribute('aria-hidden', 'true');
+  return dot;
+}
+
+function liveOpenLink(session) {
+  if (!session.link) return null;
+  const link = mmEl('a', '', session.link.startsWith('https://') ? 'Открыть ↗' : 'Открыть в Codex');
+  link.href = session.link;
+  if (session.link.startsWith('https://')) { link.target = '_blank'; link.rel = 'noopener'; }
+  return link;
+}
+
+// A session that asks Mark something: its question, «Открыть» and «Подробнее».
+function liveCard(session, index) {
+  const card = mmEl('article', 'live-card');
+  card.dataset.state = session.state;
+  const top = mmEl('div', 'live-top');
+  const avatar = mmEl('span', 'live-ava', session.tool === 'codex' ? '⌘' : 'C');
+  avatar.dataset.tool = session.tool;
+  avatar.setAttribute('aria-hidden', 'true');
+  top.appendChild(avatar);
+  const text = mmEl('span');
+  text.appendChild(mmEl('strong', '', session.title || 'Без названия'));
+  text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine, liveAgo(session.last_at)].filter(Boolean).join(' · ')));
+  top.appendChild(text);
+  card.appendChild(top);
+  const ask = mmEl('p', 'live-ask');
+  ask.appendChild(mmEl('em', '', session.state === 'approve' ? 'Просит разрешения' : 'Спрашивает'));
+  ask.appendChild(document.createTextNode(session.need || 'Похоже, ждёт разрешения в своём окне'));
+  card.appendChild(ask);
+  const actions = mmEl('div', 'live-open');
+  const link = liveOpenLink(session);
+  if (link) actions.appendChild(link);
+  const more = mmEl('button', '', 'Подробнее');
+  more.type = 'button';
+  more.dataset.ccInfo = `live-${index}`;
+  actions.appendChild(more);
+  card.appendChild(actions);
+  return card;
+}
+
+// A working or finished session: one line that opens its window.
+function liveLine(session, index, cls) {
+  const line = mmEl('button', cls);
+  line.type = 'button';
+  line.dataset.ccInfo = `live-${index}`;
+  line.appendChild(liveDot(session));
+  line.appendChild(mmEl('span', '', session.title || 'Без названия'));
+  line.appendChild(mmEl('small', '', cls === 'live-pill' ? session.machine || '' : liveStateText(session)));
+  return line;
+}
+
+function liveStateText(session) {
+  if (session.state === 'working') return LIVE_STATE_TEXT.working;
+  const word = session.quiet && session.state === 'waiting' ? 'Затихла' : LIVE_STATE_TEXT[session.state] || '';
+  return `${word} · ${liveAgo(session.last_at)}`;
+}
+
+function liveInfo(session) {
+  const node = mmEl('div', 'live-info');
+  if (session.need) {
+    node.appendChild(mmEl('p', 'live-note', session.state === 'approve' ? 'Что ждёт разрешения' : 'Что нужно от тебя'));
+    node.appendChild(mmEl('p', 'live-need-box', session.need));
+  } else if (session.state === 'approve') {
+    node.appendChild(mmEl('p', 'live-note', 'Похоже, сессия ждёт разрешения в своём окне. Если там идёт долгая команда, это пройдёт само.'));
+  }
+  if (session.reply) {
+    node.appendChild(mmEl('p', 'live-note', 'Последний ответ'));
+    node.appendChild(mmEl('p', 'live-reply', session.reply));
+  }
+  const open = mmEl('div', 'live-open');
+  if (session.link && session.link.startsWith('https://')) {
+    const link = mmEl('a', '', 'Открыть в Claude ↗');
+    link.href = session.link; link.target = '_blank'; link.rel = 'noopener';
+    open.appendChild(link);
+  } else if (session.link && session.link.startsWith('codex://')) {
+    const link = mmEl('a', '', 'Открыть в приложении Codex');
+    link.href = session.link;
+    open.appendChild(link);
+  }
+  if (session.resume) {
+    const copy = mmEl('button', '', 'Скопировать команду');
+    copy.type = 'button';
+    copy.addEventListener('click', () => {
+      navigator.clipboard?.writeText(session.resume).then(() => { copy.textContent = 'Скопировано'; }, () => {});
+    });
+    open.appendChild(copy);
+  }
+  if (open.childNodes.length) node.appendChild(open);
+  if (session.link && session.link.startsWith('codex://')) {
+    node.appendChild(mmEl('p', 'live-note', `Откроется только на ${session.machine}, где идёт эта сессия.`));
+  } else if (session.tool === 'claude' && !session.link) {
+    node.appendChild(mmEl('p', 'live-note', `Эта сессия идёт в терминале на ${session.machine}. Чтобы отвечать ей с телефона, включи в Claude Code Remote Control (подробнее под «i» внизу).`));
+  }
+  if (session.resume) {
+    node.appendChild(mmEl('p', 'live-note', 'Продолжить в терминале:'));
+    node.appendChild(mmEl('code', 'live-command', session.resume));
+  }
+  return node;
+}
+
+function liveSessionsRender(payload) {
+  const host = document.getElementById('live-sessions');
+  if (!host) return;
+  host.replaceChildren();
+  if (payload?.state === 'owner_required') {
+    host.appendChild(mmEl('p', 'live-empty', 'Сессии видны только тебе, когда ты вошёл на сайт.'));
+    return;
+  }
+  if (payload?.state !== 'ready' || !Array.isArray(payload.sessions)) {
+    host.appendChild(mmEl('p', 'live-empty', 'Mac mini сейчас не отвечает. Попробую ещё раз через минуту.'));
+    return;
+  }
+  const sessions = payload.sessions;
+  sessions.forEach((session, index) => {
+    ccInfoSources[`live-${index}`] = () => ({
+      title: session.title || 'Сессия',
+      rows: [['Где', `${LIVE_TOOL_TEXT[session.tool] || ''} · ${session.app || ''} · ${session.machine || ''}`], ['Проект', session.project], ['Ветка', session.branch], ['Сейчас', liveStateText(session)]],
+      node: liveInfo(session),
+    });
+  });
+  const heading = (title, count, tag = 'h3') => {
+    const node = mmEl(tag, 'live-h', title);
+    node.appendChild(mmEl('span', '', String(count)));
+    return node;
+  };
+  const waiting = sessions.filter(s => !s.quiet && (s.state === 'approve' || s.state === 'waiting'));
+  const working = sessions.filter(s => s.state === 'working');
+  const quiet = sessions.filter(s => s.quiet && s.state !== 'working');
+  if (waiting.length) {
+    host.appendChild(heading('Ждут тебя', waiting.length));
+    const cards = mmEl('div', 'live-cards');
+    waiting.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
+    host.appendChild(cards);
+  }
+  if (working.length) {
+    host.appendChild(heading('Работают сейчас', working.length));
+    const pills = mmEl('div', 'live-pills');
+    working.forEach(session => pills.appendChild(liveLine(session, sessions.indexOf(session), 'live-pill')));
+    host.appendChild(pills);
+  }
+  if (quiet.length) {
+    const fold = mmEl('details', 'live-quiet');
+    fold.appendChild(heading('Готово и затихли', quiet.length, 'summary'));
+    const list = mmEl('div', 'live-list');
+    quiet.forEach(session => list.appendChild(liveLine(session, sessions.indexOf(session), 'live-row')));
+    fold.appendChild(list);
+    host.appendChild(fold);
+  }
+  if (!sessions.length) host.appendChild(mmEl('p', 'live-empty', 'Сейчас ни одна сессия не открыта.'));
+  else if (!sessions.some(s => !s.quiet && s.state !== 'working')) host.prepend(mmEl('p', 'live-empty', 'Сейчас никто не ждёт тебя.'));
+  const lost = (payload.machines || []).filter(machine => !machine.fresh).map(machine => machine.label);
+  if (lost.length) host.appendChild(mmEl('p', 'live-empty', `Нет связи с ${lost.join(', ')}: его сессий здесь нет.`));
+}
+
+ccInfoSources['live-help'] = () => ({
+  title: 'Как отвечать сессиям с телефона',
+  lines: [
+    'Здесь видны сессии Claude Code и Codex на Mac mini и MacBook: в терминале, в приложениях Claude, Codex и ChatGPT.',
+    'Claude Code: включи Remote Control для всех сессий. В терминале: /config → «Enable Remote Control for all sessions» = true. В приложении Claude: Настройки → Claude Code → «Connect new sessions to Remote Control». Тогда у каждой сессии здесь будет ссылка «Открыть в Claude»: с телефона можно отвечать и подтверждать.',
+    'Чтобы телефон сам звал тебя, когда сессия ждёт подтверждения: там же в /config включи «Push when actions required».',
+    'Codex: ссылка открывает чат в приложении Codex на том Mac, где он идёт.',
+    'Чаты на chatgpt.com, в телефоне и облачные сессии Claude сюда не попадают: у них нет следа на твоих Mac.',
+  ],
+});
+window.addEventListener('DOMContentLoaded', () => { liveSessionsLoad(); });
+setInterval(liveSessionsLoad, 30 * 1000);
+document.addEventListener('visibilitychange', liveSessionsLoad);
 // Keep machine telemetry separate. Remote dashboards proxy Air via Tailscale so
 // public HTTPS pages do not depend on browser access to http://localhost:8880.
 const IS_FILE_DASHBOARD = window.location.protocol === 'file:';
@@ -5961,7 +6289,8 @@ let ownerDecisionSubmitting = false;
 const ownerDecisionDrafts = new Map();
 
 function showAgentsView(view) {
-  if (!['decisions', 'campus', 'watchers'].includes(view)) return;
+  if (!['sessions', 'decisions', 'campus', 'watchers'].includes(view)) return;
+  document.getElementById('agents-sessions').hidden = view !== 'sessions';
   document.getElementById('agents-decisions').hidden = view !== 'decisions';
   document.getElementById('agents-campus').hidden = view !== 'campus';
   document.getElementById('agents-watchers').hidden = view !== 'watchers';
@@ -5970,6 +6299,7 @@ function showAgentsView(view) {
   });
   if (view === 'decisions' && ownerDecisionsReady) refreshOwnerDecisions(true);
   if (view === 'campus') window.dispatchEvent(new Event('resize'));
+  if (view === 'sessions') liveSessionsLoad();
 }
 
 function decisionNode(tag, className = '', text = '') {
@@ -7025,6 +7355,7 @@ function showSection(name) {
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
+  if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') setTimeout(ccLoadPlatformResources, 0);
   if (name === 'documents') setTimeout(ccLoadDocxx, 0);
   else window.dispatchEvent(new Event('docxx-lock'));
@@ -7038,7 +7369,8 @@ const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
 if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'platforms', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
-  if (INITIAL_SECTION === 'agents' && new URLSearchParams(window.location.search).get('view') === 'watchers') showAgentsView('watchers');
+  const agentsView = new URLSearchParams(window.location.search).get('view');
+  if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
 } else {
   showSection('work');
 }
@@ -7283,7 +7615,9 @@ function initPixelAgentsPin() {
 
 async function fetchJSON(base, path) {
   try {
-    const timeoutMs = base === MAC_MINI_API && (path === '/api/all' || path === '/api/services/detailed') ? 15000 : 3000;
+    // The laptops' health APIs take ~3.5 s through the Tailscale proxy, so they get more than 3 s.
+    const slowBase = base === MAC_MINI_API || base === AIR_API || base === PRO_API;
+    const timeoutMs = slowBase && (path.endsWith('/all') || path === '/api/services/detailed') ? 15000 : 3000;
     const r = await fetch(base + path, { signal: AbortSignal.timeout(timeoutMs) });
     return await r.json();
   } catch { return null; }
@@ -7560,9 +7894,31 @@ function ccContextClear(message = 'Записи доступны после пр
 }
 function ccContextClose() {
   document.getElementById('context-reader').hidden = true;
-  for (const id of ['context-reader-title','context-reader-meta','context-body','context-links']) document.getElementById(id).textContent = '';
+  for (const id of ['context-reader-title','context-body','context-links']) document.getElementById(id).textContent = '';
+  ccContextInfo = null;
   document.getElementById('context-links').hidden = true;
   document.getElementById('context-obsidian').removeAttribute('href');
+}
+// Source, date and project of the open record, shown only in the «i» window.
+let ccContextInfo = null;
+if (typeof ccInfoSources === 'object') ccInfoSources['context-record'] = () => ccContextInfo
+  ? {title: 'О записи', rows: [['Откуда', ccContextInfo.source], ['Когда', ccContextInfo.day], ['Проект', ccContextInfo.project]]}
+  : {title: 'О записи', lines: ['Запись закрыта.']};
+// «10-26 Комплексное тестирование…» — the date is already in «i», the title keeps only words.
+function ccContextTitle(value) {
+  const text = String(value || '').trim();
+  return text.replace(/^(?:\d{4}-)?\d{1,2}-\d{1,2}(?:\s+\d{1,2}[:.]\d{2})?[\s·:—–-]+(?=\S)/, '') || text;
+}
+// Recorder leftovers that mean nothing on the site: image cards (`[](plaud://…)`), separators, heading emoji.
+function ccContextClean(text) {
+  return text
+    .replace(/!?\[[^\]\n]*\]\((?:plaud|file|data|blob|attachment):[^)\n]*\)/gi, '')
+    .replace(/!?\[\s*\]\([^)\n]*\)/g, '')
+    .split('\n').filter(line => !/^\s{0,3}(?:-\s*){3,}$|^\s{0,3}(?:\*\s*){3,}$|^\s{0,3}(?:_\s*){3,}$/.test(line)).join('\n')
+    .replace(/\n{3,}/g, '\n\n');
+}
+function ccContextBareHeading(value) {
+  return String(value || '').replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '').replace(/[:：]\s*$/, '').trim();
 }
 function ccContextShort(value) {
   const parsed = new Date(value || '');
@@ -7641,7 +7997,7 @@ function ccContextParagraphs(container, text, links, depth = 0) {
     const heading = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
     const bullet = line.match(/^\s*(?:[-*+] |\d+[.)] )(.+)$/);
     if (!line.trim()) { flush(); list = null; }
-    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, heading[2], links); container.append(h); }
+    else if (heading) { flush(); list = null; const h = document.createElement('h' + Math.min(6, 4 + Math.floor(heading[1].length / 3))); ccContextInline(h, ccContextBareHeading(heading[2]) || heading[2], links); container.append(h); }
     else if (bullet) {
       flush(); const tag = /^\s*\d/.test(line) ? 'ol' : 'ul';
       const check = bullet[1].match(/^\[([ x])\]\s*/i), checklist = !!check && tag === 'ul';
@@ -7657,7 +8013,7 @@ function ccContextParagraphs(container, text, links, depth = 0) {
 function ccContextRenderLinks(links) {
   const area = document.getElementById('context-links'); area.replaceChildren(); area.hidden = !links.size;
   if (!links.size) return;
-  const title = document.createElement('h4'); title.textContent = '🔗 Ссылки из записи';
+  const title = document.createElement('h4'); title.textContent = 'Ссылки из записи';
   const hint = document.createElement('p'); hint.textContent = 'Статусы задач и исполнители — по ссылке в исходном сервисе.';
   const list = document.createElement('ul');
   for (const link of [...links.values()].slice(0, 20)) {
@@ -7695,11 +8051,76 @@ function ccContextRenderUpdate(container, text, record, links) {
   ccContextParagraphs(details, rest.map(s => (s.heading && !isTitle(s.heading) ? `#### ${s.heading}\n` : '') + s.lines.join('\n')).join('\n\n'), links);
   container.append(details);
 }
+// Mark 2026-10-26: «очень непонятно, много информации». A meeting reads as: «Коротко» (the opening
+// paragraph), then decisions and next steps open, then each other topic folded to one line, then the
+// full transcript. Nothing is rewritten; only the order and the folding change.
+const ccContextKeyHeading = /решени|договор|следующ|дальше|задач|поручен|итог|вывод|риск|next\s*step|action|decision|to-?do/i;
+function ccContextSplit(text) {
+  const lines = text.split('\n');
+  // Headings inside ``` examples are example text, not section borders.
+  let fenced = false; const inCode = lines.map(line => { if (/^\s*```/.test(line)) { fenced = !fenced; return true; } return fenced; });
+  const levels = lines.map((line, i) => !inCode[i] && (line.match(/^\s{0,3}(#{1,6})\s+\S/) || [])[1]?.length).filter(Boolean);
+  const top = levels.length ? Math.min(...levels) : 0;
+  const lead = [], sections = []; let current = null;
+  lines.forEach((line, i) => {
+    const md = !inCode[i] && line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*$/);
+    // A bold line ending a sentence («**Запуск переносится на пятницу.**») is a statement, not a heading.
+    const bold = !top && !inCode[i] && line.match(/^\s*(?:\*\*|__)([^*_\n]{2,120}?)(?:\*\*|__)\s*:?\s*$/);
+    const heading = md && md[1].length === top ? md[2] : bold && !/[.!?…]$/.test(bold[1].trim()) ? bold[1] : null;
+    if (heading !== null) { current = {heading: ccContextBareHeading(heading) || heading.trim(), raw: line, lines: []}; sections.push(current); return; }
+    (current ? current.lines : lead).push(line);
+  });
+  // A heading with nothing under it stays as text in the block before it, so nothing is dropped.
+  const kept = [];
+  for (const s of sections) {
+    if (s.lines.join('').trim()) { kept.push(s); continue; }
+    (kept.length ? kept[kept.length - 1].lines : lead).push('', s.raw);
+  }
+  return {lead: lead.join('\n').trim(), sections: kept.map(s => ({heading: s.heading, text: s.lines.join('\n').trim()}))};
+}
+function ccContextPreview(text) {
+  const plain = text.replace(/^\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s?)/gm, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\*\*|__|[*`]/g, '').replace(/\s+/g, ' ').trim();
+  const sentence = (plain.match(/^.+?[.!?…](?=\s|$)/) || [plain])[0];
+  return sentence.length > 150 ? sentence.slice(0, 147).replace(/\s+\S*$/, '') + '…' : sentence;
+}
+function ccContextRenderMeeting(container, summary, links) {
+  const {lead, sections} = ccContextSplit(summary);
+  if (lead) {
+    const card = document.createElement('div'); card.className = 'context-lead';
+    const label = document.createElement('p'); label.className = 'context-lead-label'; label.textContent = 'Коротко';
+    card.append(label); ccContextParagraphs(card, lead, links); container.append(card);
+  }
+  const key = sections.filter(s => ccContextKeyHeading.test(s.heading));
+  const topics = sections.filter(s => !key.includes(s));
+  // Without an opening paragraph the first topic stays open, so the record never starts folded.
+  const openFirst = !lead && !key.length;
+  for (const s of key) {
+    const block = document.createElement('section'); block.className = 'context-key';
+    const h = document.createElement('h4'); h.textContent = s.heading; block.append(h);
+    ccContextParagraphs(block, s.text, links); container.append(block);
+  }
+  if (!topics.length) return;
+  if (lead || key.length) { const label = document.createElement('p'); label.className = 'context-group-label'; label.textContent = topics.length === 1 ? 'Подробнее' : 'По темам'; container.append(label); }
+  topics.forEach((s, index) => {
+    if (openFirst && index === 0) {
+      const block = document.createElement('section'); block.className = 'context-key is-plain';
+      const h = document.createElement('h4'); h.textContent = s.heading; block.append(h);
+      ccContextParagraphs(block, s.text, links); container.append(block); return;
+    }
+    const details = document.createElement('details'); details.className = 'context-topic';
+    const toggle = document.createElement('summary');
+    const h = document.createElement('h4'); h.textContent = s.heading;
+    const preview = document.createElement('span'); preview.className = 'context-topic-preview'; preview.textContent = ccContextPreview(s.text);
+    toggle.append(h, preview); details.append(toggle);
+    const inner = document.createElement('div'); inner.className = 'context-topic-body'; ccContextParagraphs(inner, s.text, links); details.append(inner);
+    container.append(details);
+  });
+}
 function ccContextRenderBody(record) {
   const container = document.getElementById('context-body'); container.replaceChildren();
   const links = new Map();
-  const text = record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
-    .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, '');
+  const text = ccContextClean(record.body.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n')
+    .replace(/^---\n[\s\S]*?\n(?:---|\.\.\.)[ \t]*(?:\n|$)/, ''));
   if (record.kind !== 'transcript') { ccContextRenderUpdate(container, text, record, links); ccContextRenderLinks(links); return; }
   const parts = {summary: [], transcript: []}; let section = 'transcript', firstContent = true;
   for (const line of text.split('\n')) {
@@ -7707,19 +8128,18 @@ function ccContextRenderBody(record) {
     if (/^>\s*Сырой импорт PLAUD\..*IMPORT LOGIC/.test(line)) continue;
     if (firstContent && !line.trim()) continue;
     const heading = line.match(/^#{1,6}\s+(.+?)\s*#*$/);
-    const label = heading ? heading[1].trim().toLowerCase() : '';
+    const label = heading ? ccContextBareHeading(heading[1]).toLowerCase() : '';
     if (/^(?:plaud\s+)?summary$|^(?:резюме|краткое содержание|краткое резюме|саммари)$/.test(label)) { section = 'summary'; firstContent = false; continue; }
-    if (/^(?:full\s+)?transcript$|^(?:транскрипт|транскрипция|расшифровка|полная расшифровка)$/.test(label)) { section = 'transcript'; firstContent = false; continue; }
+    if (/^(?:full\s+)?transcript$|^(?:транскрипт|транскрипция|расшифровка|полная расшифровка|полный транскрипт)$/.test(label)) { section = 'transcript'; firstContent = false; continue; }
     if (firstContent && heading && /^#\s+/.test(line) && heading[1].trim() === record.title) { firstContent = false; continue; }
     firstContent = false;
     parts[section].push(line);
   }
   const summary = parts.summary.join('\n').trim(), transcript = parts.transcript.join('\n').trim();
-  const title = document.createElement('h4'); title.textContent = '📝 Краткое резюме'; container.append(title);
-  if (summary) ccContextParagraphs(container, summary, links);
-  else { const p = document.createElement('p'); p.textContent = transcript ? 'Резюме пока нет. Можно раскрыть полный транскрипт ниже или открыть оригинал в Obsidian.' : 'Резюме и транскрипт пока недоступны. Оригинал можно открыть в Obsidian.'; container.append(p); }
+  if (summary) ccContextRenderMeeting(container, summary, links);
+  else { const p = document.createElement('p'); p.className = 'context-empty'; p.textContent = transcript ? 'Резюме пока нет. Можно раскрыть полную расшифровку ниже.' : 'Резюме и расшифровка пока недоступны. Оригинал можно открыть по ссылке внизу.'; container.append(p); }
   if (transcript) {
-    const details = document.createElement('details'); const toggle = document.createElement('summary'); toggle.textContent = '🎙️ Полный транскрипт'; details.append(toggle);
+    const details = document.createElement('details'); details.className = 'context-full'; const toggle = document.createElement('summary'); toggle.textContent = 'Полная расшифровка'; details.append(toggle);
     ccContextParagraphs(details, transcript, links); container.append(details);
   }
   ccContextRenderLinks(links);
@@ -7747,8 +8167,8 @@ async function ccLoadContext(recordId = null) {
     if (recordId) {
       const r = data.record;
       if (!r || r.id !== recordId || typeof r.body !== 'string') throw new Error('unavailable');
-      document.getElementById('context-reader-title').textContent = r.plain?.title || r.title;
-      document.getElementById('context-reader-meta').textContent = [ccContextNames[r.source] || 'Запись', ccContextDay(r.date)].filter(Boolean).join(' · ');
+      document.getElementById('context-reader-title').textContent = ccContextTitle(r.plain?.title || r.title);
+      ccContextInfo = {source: ccContextNames[r.source] || 'Запись', day: ccContextDay(r.date), project: typeof r.project === 'string' ? r.project : ''};
       ccContextRenderBody(r);
       const uri = ccContextURI(r.obsidian_url); const link = document.getElementById('context-obsidian');
       if (uri) link.href = uri; link.hidden = !uri;
@@ -7769,7 +8189,7 @@ async function ccLoadContext(recordId = null) {
         ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'
         : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
       const text=document.createElement('span'); text.className='context-row-text';
-      const title=document.createElement('strong');title.textContent=r.plain?.title || r.title;
+      const title=document.createElement('strong');title.textContent=ccContextTitle(r.plain?.title || r.title);
       const meta=document.createElement('small'); meta.textContent=[ccContextNames[r.source] || 'Запись', ccContextDay(r.date), r.project].filter(Boolean).join(' · ');
       const go=document.createElement('span'); go.className='context-row-go'; go.setAttribute('aria-hidden','true'); go.textContent='›';
       text.append(title,meta); button.append(icon,text,go);button.addEventListener('click',()=>ccLoadContext(r.id));li.append(button);list.append(li);
@@ -9522,12 +9942,90 @@ function renderHeaderDate() {
 }
 
 // Mark 2026-10-24: load, memory, disk and uptime moved from the page into each computer's «i».
+// Mark 2026-10-26: memory, disk and load are back on the page as plain words (ок / много / перегружена);
+// the numbers stay in the «i» window, which each word also opens.
 const machineUptime = {};
+const machineSystem = {};
+const machineMemoryFree = {};
+
+// macOS reports pressure as free percent; when it is missing, fall back to used/total.
+function machineMemoryLow(sys) {
+  if (!sys) return false;
+  if (typeof sys.memory_pressure_free_percent === 'number') return sys.memory_pressure_free_percent < 20;
+  return sys.memory_total_gb ? sys.memory_used_gb / sys.memory_total_gb >= 0.9 : false;
+}
+
+function machineStatusText(key, sys) {
+  machineMemoryFree[key] = typeof sys?.memory_pressure_free_percent === 'number' ? `${sys.memory_pressure_free_percent}%` : '';
+  return machineMemoryLow(sys) ? 'Работает · мало памяти' : 'Работает';
+}
 for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro', 'MacBook Pro']]) {
   ccInfoSources[`machine-${key}`] = () => {
     const text = id => { const t = document.getElementById(`${key}-${id}`)?.textContent?.trim(); return t && t !== '—' ? t : ''; };
-    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Диск', text('disk')], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+    const sys = machineSystem[key] || {};
+    const free = sys.disk_total_gb ? `${Math.max(0, Math.round(sys.disk_total_gb - sys.disk_used_gb))} GB` : '';
+    const swap = typeof sys.swap_used_gb === 'number' && sys.swap_used_gb > 0 ? `${sys.swap_used_gb} GB` : '';
+    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
   };
+}
+
+function machinePercent(used, total) {
+  return total ? Math.round(used / total * 100) : null;
+}
+
+function machineHealthItems(sys) {
+  // macOS fills free memory with cache, so «used» says little; memory pressure is what the system itself
+  // calls overload. Health APIs that report it (the MacBook Pro does) are judged by it.
+  const pressure = typeof sys.memory_pressure_free_percent === 'number' ? 100 - sys.memory_pressure_free_percent : null;
+  const ram = pressure ?? machinePercent(sys.memory_used_gb, sys.memory_total_gb);
+  const disk = machinePercent(sys.disk_used_gb, sys.disk_total_gb);
+  const cpu = typeof sys.cpu_percent === 'number' ? Math.round(sys.cpu_percent) : null;
+  const level = (pct, warn, bad) => pct === null ? 'unknown' : pct >= bad ? 'bad' : pct >= warn ? 'warn' : 'ok';
+  const words = {
+    ram: { ok: 'ок', warn: 'занята почти вся', bad: 'перегружена', unknown: 'нет данных' },
+    disk: { ok: 'ок', warn: 'заполняется', bad: 'почти полон', unknown: 'нет данных' },
+    cpu: { ok: 'спокойно', warn: 'нагружен', bad: 'перегружен', unknown: 'нет данных' },
+  };
+  return [
+    { id: 'ram', label: 'Память', pct: ram, level: level(ram, 80, 90) },
+    { id: 'disk', label: 'Диск', pct: disk, level: level(disk, 80, 90) },
+    { id: 'cpu', label: 'Процессор', pct: cpu, level: level(cpu, 60, 85) },
+  ].map(item => ({ ...item, word: words[item.id][item.level] }));
+}
+
+function renderMachineHealth(key, sys) {
+  const host = document.getElementById(`${key}-health`);
+  if (!host) return;
+  if (!sys) { host.replaceChildren(); return; }
+  machineSystem[key] = sys;
+  // Tiles are built once and then updated in place, so a refresh every 5 s keeps keyboard focus.
+  for (const item of machineHealthItems(sys)) {
+    let button = host.querySelector(`[data-health="${item.id}"]`);
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.health = item.id;
+      button.dataset.ccInfo = `machine-${key}`;
+      const label = document.createElement('span'); label.className = 'machine-health-label'; label.textContent = item.label;
+      const word = document.createElement('span'); word.className = 'machine-health-word';
+      const bar = document.createElement('span'); bar.className = 'machine-health-bar';
+      bar.append(document.createElement('span'));
+      button.append(label, word, bar);
+      host.append(button);
+    }
+    button.className = `machine-health-item is-${item.level}`;
+    button.setAttribute('aria-label', `${item.label}: ${item.word}. Нажми, чтобы увидеть цифры`);
+    button.querySelector('.machine-health-word').textContent = item.word;
+    button.querySelector('.machine-health-bar > span').style.width = `${Math.min(100, item.pct || 0)}%`;
+  }
+}
+
+// A laptop that misses one refresh keeps its last picture for a while instead of flashing «Нет связи».
+const MACHINE_GRACE_MS = 3 * 60 * 1000;
+const machineLastSeen = {};
+const machineInFlight = {};
+function machineRecentlySeen(key) {
+  return machineLastSeen[key] && Date.now() - machineLastSeen[key] < MACHINE_GRACE_MS;
 }
 
 function renderGauges(prefix, sys) {
@@ -9545,6 +10043,7 @@ function renderGauges(prefix, sys) {
   if (uptimeVal) uptimeVal.textContent = sys.uptime || '—';
   const uptimeSub = document.getElementById(prefix + '-uptime-sub');
   if (uptimeSub) uptimeSub.textContent = sys.hostname || '';
+  renderMachineHealth(prefix, sys);
   renderHeaderDate();
 }
 
@@ -9569,17 +10068,22 @@ async function refreshMini() {
     }
     return;
   }
-  const data = await fetchJSON(MAC_MINI_API, '/api/all');
-  if (!data) {
+  if (machineInFlight.mini) return;
+  machineInFlight.mini = true;
+  const data = await fetchJSON(MAC_MINI_API, '/api/all').finally(() => { machineInFlight.mini = false; });
+  if (!data || !data.system) {
+    if (machineRecentlySeen('mini')) return;
+    renderMachineHealth('mini', null);
     document.getElementById('mini-online-badge').textContent = 'не в сети';
     document.getElementById('mini-online-badge').className = 'machine-badge offline';
     document.getElementById('mini-badge').textContent = 'offline';
     return;
   }
+  machineLastSeen.mini = Date.now();
   document.getElementById('mini-online-badge').textContent = 'в сети';
   document.getElementById('mini-online-badge').className = 'machine-badge online';
   const sys = data.system || {};
-  document.getElementById('mini-status').textContent = 'Работает';
+  document.getElementById('mini-status').textContent = machineStatusText('mini', sys);
   machineUptime.mini = sys.uptime || '';
   const svcs = visibleRuntimeServices(data.services_detailed || data.services || []);
   const running = svcs.filter(s => s.status === 'running').length;
@@ -9597,8 +10101,12 @@ async function miniAction(label, action) {
 
 // ─── Air (local) ───
 async function refreshAir() {
-  const data = await fetchJSON(AIR_API, `${AIR_API_PATH_PREFIX}/all`);
-  if (!data) {
+  if (machineInFlight.air) return;
+  machineInFlight.air = true;
+  const data = await fetchJSON(AIR_API, `${AIR_API_PATH_PREFIX}/all`).finally(() => { machineInFlight.air = false; });
+  if (!data || !data.system) {
+    if (machineRecentlySeen('air')) return;
+    renderMachineHealth('air', null);
     document.getElementById('air-status').textContent = 'Нет связи';
     document.getElementById('air-online-badge').textContent = 'не в сети';
     document.getElementById('air-online-badge').className = 'machine-badge offline';
@@ -9607,7 +10115,8 @@ async function refreshAir() {
   }
   const sys = data.system;
   document.getElementById('air-hostname').textContent = sys.hostname || 'MacBook Air';
-  document.getElementById('air-status').textContent = 'Работает';
+  document.getElementById('air-status').textContent = machineStatusText('air', sys);
+  machineLastSeen.air = Date.now();
   machineUptime.air = sys.uptime || '';
   document.getElementById('air-online-badge').textContent = 'в сети';
   document.getElementById('air-online-badge').className = 'machine-badge online';
@@ -9626,8 +10135,12 @@ async function airAction(label, action) {
 
 // ─── MacBook Pro ───
 async function refreshPro() {
-  const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`);
-  if (!data) {
+  if (machineInFlight.pro) return;
+  machineInFlight.pro = true;
+  const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`).finally(() => { machineInFlight.pro = false; });
+  if (!data || !data.system) {
+    if (machineRecentlySeen('pro')) return;
+    renderMachineHealth('pro', null);
     document.getElementById('pro-status').textContent = 'Нет связи';
     document.getElementById('pro-online-badge').textContent = 'не в сети';
     document.getElementById('pro-online-badge').className = 'machine-badge offline';
@@ -9641,7 +10154,8 @@ async function refreshPro() {
   }
   const sys = data.system;
   document.getElementById('pro-hostname').textContent = sys.hostname || 'MacBook Pro';
-  document.getElementById('pro-status').textContent = 'Работает';
+  document.getElementById('pro-status').textContent = machineStatusText('pro', sys);
+  machineLastSeen.pro = Date.now();
   machineUptime.pro = sys.uptime || '';
   document.getElementById('pro-online-badge').textContent = 'в сети';
   document.getElementById('pro-online-badge').className = 'machine-badge online';
@@ -12345,14 +12859,15 @@ function ccDocxxRenderRecords() {
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
     name.append(ccDocxxEl('strong',row.name),ccDocxxEl('small',source+' · '+date));
     if(row.description) name.append(ccDocxxEl('span',row.description,'docxx-record-description'));
-    else if(row.status==='needs_review') name.append(ccDocxxEl('span','Содержимое ещё не определено.','docxx-record-description'));
+    else if(row.status==='needs_review' && !row.suggest) name.append(ccDocxxEl('span','Содержимое ещё не определено.','docxx-record-description'));
     if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Срок действия'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
+    if(row.status==='needs_review') { const todo=ccDocxxRecordActions(row); if(todo) name.append(todo); }
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(row.status==='needs_review'?ccDocxxPick(row.key,row.name):icon,name);
     const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку ↗':'Открыть документ ↗',row.url) || ccDocxxSourceLink('Открыть в Gmail ↗',row.source_url);
     if(openLink) { openLink.className='docxx-record-source'; summary.append(openLink); }
     summary.append(badge); const body=ccDocxxEl('div',undefined,'docxx-record-body');
-    const todo=ccDocxxRecordActions(row); if(todo) body.append(todo);
+    if(row.status==='sorted') body.append(ccDocxxRecordActions(row));
     const dl=ccDocxxEl('dl');
     for(const [label,value] of [['Было',row.original_name],['Теперь',row.destination],['Пояснение',row.reason]]) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
     body.append(dl);
@@ -12366,7 +12881,11 @@ function ccDocxxRenderRecords() {
 // ─── Sorting «Нужен разбор» from the site (Mark 2026-10-25) ───
 const ccDocxxSelected=new Set();
 let ccDocxxSortVisible=[], ccDocxxFolders=null, ccDocxxBusy=false, ccDocxxMoveKeys=[];
-const CC_DOCXX_ERRORS={not_found:'файл уже не на месте',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена'};
+const CC_DOCXX_ERRORS={not_found:'Mac mini не нашёл файл у себя на диске',already_sorted:'уже разобран',occupied:'на старом месте уже лежит другой файл',move_failed:'Mac mini не смог переложить',nothing_to_undo:'нечего возвращать',invalid_folder:'папка не найдена',no_suggestion:'нет подходящей папки'};
+function ccDocxxMovable(key) { return !Array.isArray(ccDocxxFolders?.movable) || ccDocxxFolders.movable.includes(key); }
+function ccDocxxFolderName(folder) { return folder.split('/').pop(); }
+// A guessed folder counts only while it is still one of the library's folders.
+function ccDocxxSuggested(row) { const f=row.suggest?.folder; return f && (!ccDocxxFolders || ccDocxxFolders.folders.includes(f)) ? f : null; }
 function ccDocxxPick(key,title) {
   const b=ccDocxxEl('button','✓','docxx-pick'); b.type='button'; b.setAttribute('role','checkbox');
   b.setAttribute('aria-checked',String(ccDocxxSelected.has(key))); b.setAttribute('aria-label','Выбрать: '+title);
@@ -12374,22 +12893,50 @@ function ccDocxxPick(key,title) {
   b.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); if(ccDocxxSelected.has(key)) ccDocxxSelected.delete(key); else ccDocxxSelected.add(key); b.setAttribute('aria-checked',String(ccDocxxSelected.has(key))); ccDocxxSortBar(); });
   return b;
 }
+function ccDocxxAct(label,cls,run) {
+  // These buttons live inside <summary>: a tap does the action without opening or closing the card.
+  const b=ccDocxxEl('button',label,'docxx-act'+(cls?' '+cls:'')); b.type='button'; b.disabled=ccDocxxBusy;
+  b.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); run(); });
+  return b;
+}
 function ccDocxxRecordActions(row) {
   if(row.status==='sorted') {
     const box=ccDocxxEl('div',undefined,'docxx-record-todo');
-    const back=ccDocxxEl('button',row.decision==='keep'?'Снова на разбор':'Вернуть как было','docxx-act'); back.type='button'; back.disabled=ccDocxxBusy;
-    back.addEventListener('click',()=>ccDocxxDecide('undo',[row.key]));
-    box.append(back); return box;
+    box.append(ccDocxxAct(row.decision==='keep'?'Снова на разбор':'Вернуть как было','',()=>ccDocxxDecide('undo',[row.key])));
+    return box;
   }
   if(row.status!=='needs_review') return null;
-  const box=ccDocxxEl('div',undefined,'docxx-record-todo'); box.append(ccDocxxEl('span','Что сделать с документом'));
-  const move=ccDocxxEl('button','Переложить в папку…','docxx-act is-main'); move.type='button'; move.addEventListener('click',()=>ccDocxxOpenMove([row.key]));
-  const keep=ccDocxxEl('button','Оставить как есть','docxx-act'); keep.type='button'; keep.addEventListener('click',()=>ccDocxxDecide('keep',[row.key]));
-  box.append(move);
-  if(ccDocxxFolders?.archive) { const arch=ccDocxxEl('button','В архив','docxx-act'); arch.type='button'; arch.addEventListener('click',()=>ccDocxxDecide('archive',[row.key])); box.append(arch); }
-  box.append(keep);
-  for(const b of box.querySelectorAll('button')) b.disabled=ccDocxxBusy;
+  const box=ccDocxxEl('div',undefined,'docxx-record-todo');
+  if(!ccDocxxMovable(row.key)) {
+    // 2026-10-26: a Drive document the journal gives no place for; moving it would only fail.
+    const hint=ccDocxxEl('p','Mac mini не нашёл этот файл у себя на диске, поэтому переложить или убрать его отсюда нельзя. Удали или перенеси его в Google Drive, а здесь нажми «Оставить», чтобы он не висел в разборе.','docxx-suggest'); hint.dataset.tone='none';
+    box.append(hint,ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
+    return box;
+  }
+  const folder=ccDocxxSuggested(row), junk=row.suggest?.junk===true, canTrash=ccDocxxFolders?.can_trash===true;
+  const why=row.suggest?.why ? ' — '+row.suggest.why : '';
+  if(folder) {
+    const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='folder';
+    hint.append('Подходит папка ',ccDocxxEl('b','«'+ccDocxxFolderName(folder)+'»'),why);
+    box.append(hint,ccDocxxAct('Положить в «'+ccDocxxFolderName(folder)+'»','is-main',()=>ccDocxxDecide('move',[row.key],folder)));
+  } else if(junk) {
+    const hint=ccDocxxEl('p',undefined,'docxx-suggest'); hint.dataset.tone='junk';
+    hint.append(ccDocxxEl('b','Похоже на мусор'),why);
+    box.append(hint);
+    if(canTrash) box.append(ccDocxxAct('В корзину','is-trash is-main',()=>ccDocxxDecide('trash',[row.key])));
+  } else if(row.suggest) {
+    const hint=ccDocxxEl('p','Подходящей папки не нашлось'+why,'docxx-suggest'); hint.dataset.tone='none'; box.append(hint);
+  }
+  box.append(ccDocxxAct(folder?'Другая папка…':'Выбрать папку…',folder||junk?'':'is-main',()=>ccDocxxOpenMove([row.key])));
+  if(ccDocxxFolders?.archive) box.append(ccDocxxAct('В архив','',()=>ccDocxxDecide('archive',[row.key])));
+  box.append(ccDocxxAct('Оставить','',()=>ccDocxxDecide('keep',[row.key])));
+  if(canTrash && !junk) box.append(ccDocxxAct('В корзину','is-trash',()=>ccDocxxDecide('trash',[row.key])));
   return box;
+}
+function ccDocxxGuessed(kind) {
+  const keys=ccDocxxSelected.size?[...ccDocxxSelected]:ccDocxxSortVisible;
+  const rows=new Map((ccDocxxData?.records||[]).map(r=>[r.key,r]));
+  return keys.filter(k=>rows.has(k) && ccDocxxMovable(k) && (kind==='junk'?rows.get(k).suggest?.junk===true:!!ccDocxxSuggested(rows.get(k))));
 }
 function ccDocxxSortBar() {
   const bar=document.getElementById('docxx-sort-bar'); const total=ccDocxxSortVisible.length, picked=ccDocxxSelected.size;
@@ -12399,6 +12946,10 @@ function ccDocxxSortBar() {
   document.getElementById('docxx-sort-move').hidden=!picked;
   document.getElementById('docxx-sort-keep').hidden=!picked;
   document.getElementById('docxx-sort-archive').hidden=!picked || !ccDocxxFolders?.archive;
+  document.getElementById('docxx-sort-trash').hidden=!picked || ccDocxxFolders?.can_trash!==true;
+  const auto=ccDocxxGuessed('folder'), junk=ccDocxxFolders?.can_trash===true?ccDocxxGuessed('junk'):[];
+  const autoButton=document.getElementById('docxx-sort-auto'); autoButton.hidden=!auto.length; autoButton.textContent='Разложить по подсказкам ('+auto.length+')';
+  const junkButton=document.getElementById('docxx-sort-junk'); junkButton.hidden=!junk.length; junkButton.textContent='Мусор в корзину ('+junk.length+')';
   for(const b of bar.querySelectorAll('button')) b.disabled=ccDocxxBusy;
 }
 async function ccDocxxLoadFolders() {
@@ -12441,7 +12992,7 @@ async function ccDocxxOpenMove(keys) {
 async function ccDocxxDecide(action,keys,folder) {
   if(ccDocxxBusy || !keys.length) return;
   ccDocxxBusy=true; ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
-  ccDocxxText('docxx-sort-note',action==='keep'?'Отмечаем…':action==='undo'?'Возвращаем…':'Перекладываем…'); ccDocxxSortBar();
+  ccDocxxText('docxx-sort-note',{keep:'Отмечаем…',undo:'Возвращаем…',trash:'Убираем в корзину…',auto:'Раскладываем по подсказкам…'}[action]||'Перекладываем…'); ccDocxxSortBar();
   let note;
   try {
     // The server takes at most 50 documents per request: send a long selection in parts.
@@ -12454,12 +13005,12 @@ async function ccDocxxDecide(action,keys,folder) {
     if(!response.ok && !data.results.length) note=response.status===401?'Нужен вход владельца.':'Не получилось. Обнови страницу и попробуй ещё раз.';
     else {
       const ok=data.results.filter(r=>r.ok), bad=data.results.filter(r=>!r.ok);
-      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было'}[action];
+      const done={move:'Переложено',archive:'В архиве',keep:'Оставлено как есть',undo:'Вернул как было',trash:'В корзине',auto:'Разложено по папкам'}[action];
       note=ok.length?(keys.length===1?done+(action==='move'&&folder?': '+folder.split('/').join(' / '):'')+'.':done+': '+ok.length+'.'):'';
       if(bad.length) note+=(note?' ':'')+'Не получилось: '+bad.length+' ('+[...new Set(bad.map(r=>CC_DOCXX_ERRORS[r.error]||'ошибка'))].join(', ')+').';
       if(!response.ok) note+=(note?' ':'')+'Остальные не успели: обнови страницу и повтори.';
       for(const r of ok) ccDocxxSelected.delete(r.key);
-      if(action==='move') ccDocxxFolders=null;
+      if(['move','trash','auto','undo'].includes(action)) ccDocxxFolders=null;
     }
   } catch { note='Нет связи с Mac mini. Попробуй ещё раз.'; }
   ccDocxxBusy=false; ccDocxxText('docxx-sort-note',note||'');
@@ -12472,6 +13023,9 @@ document.getElementById('docxx-sort-all').addEventListener('click',()=>{
 document.getElementById('docxx-sort-move').addEventListener('click',()=>ccDocxxOpenMove([...ccDocxxSelected]));
 document.getElementById('docxx-sort-archive').addEventListener('click',()=>ccDocxxDecide('archive',[...ccDocxxSelected]));
 document.getElementById('docxx-sort-keep').addEventListener('click',()=>ccDocxxDecide('keep',[...ccDocxxSelected]));
+document.getElementById('docxx-sort-trash').addEventListener('click',()=>ccDocxxDecide('trash',[...ccDocxxSelected]));
+document.getElementById('docxx-sort-auto').addEventListener('click',()=>ccDocxxDecide('auto',ccDocxxGuessed('folder')));
+document.getElementById('docxx-sort-junk').addEventListener('click',()=>ccDocxxDecide('trash',ccDocxxGuessed('junk')));
 document.getElementById('docxx-move-close').addEventListener('click',()=>document.getElementById('docxx-move-dialog').close());
 document.getElementById('docxx-move-dialog').addEventListener('click',e=>{ if(e.target===e.currentTarget) e.currentTarget.close(); });
 document.getElementById('docxx-move-search').addEventListener('input',ccDocxxRenderFolders);
@@ -12498,8 +13052,12 @@ function ccDocxxRender(data) {
   ccDocxxText('docxx-results-note',`Показано до 100 операций. В доступном журнале: ${Number.isInteger(data.records_total)?data.records_total:'—'}. Обновление панели каждые 5 секунд, пока она открыта.`);
   ccDocxxRenderGmail(); ccDocxxExplain(); ccDocxxRenderRecords(); ccDocxxRenderOperations();
   if(!ccDocxxFolders && data.review_count>0 && !ccDocxxFoldersAsked) { ccDocxxFoldersAsked=true; ccDocxxLoadFolders(); }
+  // A new document on the open page needs a fresh «movable» list, or it would show only «Оставить».
+  const reviewKeys=(data.records||[]).filter(r=>r.status==='needs_review').map(r=>r.key).join();
+  if(ccDocxxFolders && reviewKeys!==ccDocxxReviewKeys && !ccDocxxBusy) ccDocxxLoadFolders();
+  ccDocxxReviewKeys=reviewKeys;
 }
-let ccDocxxFoldersAsked=false;
+let ccDocxxFoldersAsked=false, ccDocxxReviewKeys='';
 async function ccLoadDocxx() {
   if(!ccDocxxVisible()) return;
   const generation=++ccDocxxGeneration;

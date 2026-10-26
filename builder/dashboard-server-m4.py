@@ -29,12 +29,13 @@ from dashboard_builder.owner_decisions import (
 from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
 from dashboard_builder.docxx_search import docxx_search
-from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions
+from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions, load_suggestions as docxx_load_suggestions, suggestions_path as docxx_suggestions_path
 from dashboard_builder.docxx_public_pages import PAGES as DOCXX_INFO_PAGES, CONTENT_SECURITY_POLICY as DOCXX_INFO_CSP
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
+from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.infra_changes import infra_projection
@@ -70,6 +71,7 @@ PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 CAMPUS_ARCHIVE_FILE = HOME / ".agent-bridge" / "campus-archive.json"
+LIVE_SESSIONS_DIR = HOME / ".agent-bridge" / "live-sessions"
 AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
 JOB_MAIL_LABEL = "com.pirajoke.job-mail-watcher"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
@@ -1071,7 +1073,10 @@ def _health_request(method: str, path: str, payload: dict | None = None) -> dict
 
 # After a laptop fails to answer, GET reads fail fast for a while instead of
 # holding a server thread for the full timeout on every dashboard refresh.
-REMOTE_HEALTH_COOLDOWN_SECONDS = 60
+REMOTE_HEALTH_COOLDOWN_SECONDS = 20
+# A laptop's /api/all lists every launchd job and can take several seconds,
+# so one slow answer must not count as "offline" (Mark 2026-10-26, «Нет связи» on the MacBook Pro).
+REMOTE_HEALTH_TIMEOUT_SECONDS = 12
 _remote_health_down_until: dict[str, float] = {}
 
 
@@ -1084,7 +1089,7 @@ def _remote_health_request(base_url: str, method: str, path: str, payload: dict 
         data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(f"{base_url}{path}", data=data, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=5) as resp:
+        with urllib.request.urlopen(req, timeout=REMOTE_HEALTH_TIMEOUT_SECONDS) as resp:
             raw = resp.read().decode("utf-8")
     except urllib.error.HTTPError:
         _remote_health_down_until.pop(base_url, None)
@@ -2609,10 +2614,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if body is None:
             return
         try:
-            self._json_response(200, docxx_apply(docxx_state_path(HOME), docxx_decisions_path(HOME), body))
+            self._json_response(200, docxx_apply(docxx_state_path(HOME), docxx_decisions_path(HOME), body, docxx_suggestions_path(HOME)))
         except ValueError as error:
             self._json_response(400, {'error': str(error) if str(error) in {
-                'invalid_action', 'invalid_keys', 'invalid_folder', 'library_unavailable'} else 'invalid_request'})
+                'invalid_action', 'invalid_keys', 'invalid_folder', 'library_unavailable', 'no_trash'} else 'invalid_request'})
         except OSError:
             self._json_response(503, {'error': 'docxx_decisions_unavailable'})
 
@@ -2896,7 +2901,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/docxx':
             owner = self._decision_owner_authorized()
             decisions = docxx_load_decisions(docxx_decisions_path(HOME)) if owner else None
-            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner, decisions=decisions))
+            suggestions = docxx_load_suggestions(docxx_suggestions_path(HOME)) if owner else None
+            self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner, decisions=decisions,
+                                                      suggestions=suggestions))
             return
         if parsed.path == '/api/docxx/folders':
             if not self._decision_owner_authorized():
@@ -2953,6 +2960,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
+            return
+        if parsed.path == '/api/live-sessions':
+            # Claude Code and Codex sessions open on Mark's Macs (Mark 2026-10-25). Owner only.
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'sessions': []})
+                return
+            self._json_response(200, live_sessions_projection(LIVE_SESSIONS_DIR))
             return
         if parsed.path == '/api/shared-tasks':
             if not self._decision_owner_authorized():

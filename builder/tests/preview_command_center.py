@@ -213,30 +213,50 @@ class PreviewHandler(SERVER.Handler):
                 return
             record = {
                 "id": "a" * 32, "source": "plaud", "kind": "transcript",
-                "title": "Пример: план запуска проекта", "date": STARTED.date().isoformat(),
+                "title": "10-26 Пример: проверка продукта перед запуском", "date": STARTED.date().isoformat(),
                 "modified_at": STARTED.isoformat(), "project": "Демонстрация интерфейса",
                 "obsidian_url": "obsidian://open?vault=Synthetic&file=preview",
             }
             payload = {"state": "ready", "generated_at": STARTED.isoformat(),
                        "sources": [{"source": "plaud", "state": "observed"}], "total": 1}
             if query.get("id"):
-                record["body"] = """# Пример: план запуска проекта
-## Резюме
-### Что решили
-- **Начать с пилота:** проверить один сценарий перед большим запуском.
-- Оставить оригинальную запись в Obsidian.
+                # Shaped like a real PLAUD export: image card link, «---» separators, emoji and bold headings.
+                record["body"] = """# 10-26 Пример: проверка продукта перед запуском
+## 📝 Краткое резюме
 
-### Следующие шаги
-- [ ] Подготовить план и обсудить результат.
-- [ ] Открыть [задачу-пример](https://github.com/example/context-fixture/issues/23).
+[](plaud://image?type=summaryCard&id=preview_fixture_i1)
 
-> **Рекомендация:** сначала проверить результат с *участниками пилота*.
+На встрече прошли весь путь нового пользователя: регистрацию, заполнение профиля и первые результаты. Основной сценарий работает, но нашли две ошибки в интерфейсе и договорились исправить их до запуска.
 
-Это демонстрационные данные; ссылки показывают формат, а не реальную работу.
+---
+
+**Регистрация и профиль**
+
+Регистрацию прошли заново, как новый пользователь. Профиль заполняется текстом, файлом и голосом; голосовой ввод сам отбрасывает лишние слова. Подсказки в форме пока непонятные, их стоит переписать простыми словами.
+
+---
+
+**Подбор результатов**
+
+Подбор работает и показывает подходящие варианты. Фильтр по городу иногда сбрасывается после обновления страницы.
+
+---
+
+**Рассылка и уведомления**
+
+Письма уходят, но в части из них не подставляется имя. Уведомления в Telegram приходят вовремя.
+
+---
+
+**🎯 Следующие шаги**
+
+- **Переписать подсказки** в профиле простыми словами.
+- Починить фильтр по городу.
+- Открыть [задачу-пример](https://github.com/example/context-fixture/issues/23).
 
 ## Транскрипт
-**[00:03] Участник:** Давайте начнём с одного сценария.
-**[00:41] Участник:** Затем обсудим результат и выберем следующий шаг.
+**[00:03] Участник:** Давайте пройдём всё как новый пользователь.
+**[00:41] Участник:** Затем обсудим, что исправить до запуска.
 """
                 payload["record"] = record
             else:
@@ -285,7 +305,10 @@ class PreviewHandler(SERVER.Handler):
             return
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
             payload = {
-                "system": {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
+                # The Pro is the busy one, so «перегружена» and «заполняется» can be seen next to a calm Mac mini.
+                "system": {"hostname": "Preview computer", "cpu_percent": 72, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
+                if parsed.path == "/api/pro/all" else
+                {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
                 "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
             }
             if parsed.path == "/api/all" and self._decision_owner_authorized():
@@ -293,6 +316,9 @@ class PreviewHandler(SERVER.Handler):
                 payload = SERVER.normalize_payload(payload, loaded={"com.example.fixture-extra": 0}, disabled=set(),
                                                    running={"com.example.fixture-extra"}, plist_exists=lambda path: True)
             self._json_response(200, payload)
+            return
+        if parsed.path == "/api/live-sessions":
+            super().do_GET()
             return
         if parsed.path.startswith("/api/"):
             self._json_response(200, {"status": "ok", "tasks": [], "services": [], "history": [], "counts": {}})
@@ -346,6 +372,18 @@ def prepare_docxx_sorting():
         "checked_at": now.isoformat(), "phase": "needs_review", "model_calls": 0,
         "catalog": {"status": "ready", "documents": 42}, "results": [],
         "drive_ingress": {"status": "idle", "pending": 0, "results": []}, "review_pending": []}))
+    # What docxx_suggest.py would answer for these three documents on the Mac mini.
+    from dashboard_builder.docxx import docxx_projection
+    from dashboard_builder.docxx_actions import suggestions_path
+    guesses = {"ticketa4_a4_24102026-115416.pdf": {"folder": "20 — France/Médiathèque", "junk": False,
+                                                   "why": "билет Médiathèque Ormesson"},
+               "scan_0042.pdf": {"folder": None, "junk": True, "why": "пустой скан без текста"},
+               "IMG_2291.jpeg": {"folder": None, "junk": False, "why": "фото без понятного содержания"}}
+    items = {row["key"]: {"name": row["name"], **guesses[row["original_name"]]}
+             for row in docxx_projection(state, owner=True)["records"] if row.get("original_name") in guesses}
+    out = suggestions_path(SERVER.HOME)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({"schema_version": 1, "items": items}, ensure_ascii=False))
 
 
 def job_mail_fixture():
@@ -369,6 +407,36 @@ def job_mail_fixture():
             "recent": replies, "stats": job_mail.stats(replies, today=now)}
 
 
+def prepare_live_sessions():
+    """Synthetic sessions for Агенты → Сессии: one Mac answering, one silent."""
+    now = datetime.now(timezone.utc)
+    at = lambda minutes: (now - timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rows = [
+        ("claude", "Терминал", "Дашборд сессий в командном центре", "agent-dashboard", "approve", 4,
+         "Запускаю проверки сайта.", "https://claude.ai/code/session_01PreviewAAAA"),
+        ("codex", "Приложение Codex", "Починить корзину в магазине", "shop", "waiting", 12,
+         "Готово: корзина снова считает доставку, PR открыт.", "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0000"),
+        ("claude", "Приложение Claude", "Документы для натурализации", "naturalisation", "waiting", 35,
+         "Собрал список справок, двух не хватает. Скажи, искать дальше?", None),
+        ("claude", "Терминал", "Выкладка Lexi", "lexi", "working", 0, None, "https://claude.ai/code/session_01PreviewBBBB"),
+        ("codex", "ChatGPT", "Разбор писем работодателей", "ChatGPT · Работа", "working", 1, None, "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0001"),
+        ("claude", "Терминал", "Резервные копии на Mac mini", "scripts", "waiting", 190, "Копия за ночь на месте.", None),
+        ("codex", "Приложение Codex", "Проверка Doctolib", "doctolib", "waiting", 20,
+         "Проверка Doctolib закончена: свободных окон нет.", "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0006"),
+        ("codex", "Приложение Codex", "Добавить парсер Doctolib", "doctolib", "stopped", 50,
+         "Сначала проверю страницу записи, потом настрою парсер.", "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0007"),
+    ]
+    sessions = [{"id": f"0199aaaa-bbbb-cccc-dddd-eeeeffff00{index:02d}", "tool": tool, "app": app, "title": title,
+                 "project": project, "branch": None, "state": state, "started_at": at(minutes + 30), "last_at": at(minutes),
+                 "reply": reply, "link": link, "approval": "Разрешить команду: npm run check" if state == "approve" else None, "resume": f"cd ~/{project} && {'claude --resume' if tool == 'claude' else 'codex resume'} 0199aaaa-bbbb-cccc-dddd-eeeeffff00{index:02d}"}
+                for index, (tool, app, title, project, state, minutes, reply, link) in enumerate(rows)]
+    SERVER.LIVE_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
+    (SERVER.LIVE_SESSIONS_DIR / "mac-mini.json").write_text(json.dumps(
+        {"schema": 1, "machine": "mac-mini", "collected_at": at(0), "sessions": sessions[:4] + sessions[5:]}))
+    (SERVER.LIVE_SESSIONS_DIR / "macbook-pro.json").write_text(json.dumps(
+        {"schema": 1, "machine": "macbook-pro", "collected_at": at(0), "sessions": sessions[4:5]}))
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="command-center-preview-") as state:
         FIXTURE_STATE = Path(state)
@@ -377,6 +445,7 @@ if __name__ == "__main__":
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.CAMPUS_ARCHIVE_FILE = FIXTURE_STATE / "campus-archive.json"
+        SERVER.LIVE_SESSIONS_DIR = FIXTURE_STATE / "live-sessions"
         SERVER.HOME = FIXTURE_STATE / "home"  # Synthetic DOCXX state and library for ?fixture=sorting.
         SERVER.JARVIS_VAULT_ROOT = FIXTURE_STATE / "fixture-vault"
         SERVER.DAILY_WORK_DIR = FIXTURE_STATE / "daily-work"
@@ -386,6 +455,7 @@ if __name__ == "__main__":
         SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
         SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": (STARTED - timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}))
         prepare_navigation_fixture()
+        prepare_live_sessions()
         with http.server.ThreadingHTTPServer(("127.0.0.1", 0), PreviewHandler) as server:
             print(f"http://127.0.0.1:{server.server_port}/", flush=True)
             try:
