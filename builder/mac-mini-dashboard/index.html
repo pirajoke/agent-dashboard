@@ -4374,6 +4374,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .live-card small { display: block; margin-top: 3px; color: var(--mm-muted); font-size: 13px; line-height: 1.4; }
 .live-state { display: inline-block; margin-top: 7px; padding: 2px 9px; font-size: 12px; font-weight: 600; border-radius: 999px; color: var(--live-tone); background: color-mix(in srgb, var(--live-tone) 13%, var(--mm-surface)); }
 .live-card.is-quiet .live-state { color: var(--mm-muted); }
+.live-need { display: -webkit-box; margin-top: 7px !important; color: var(--mm-ink) !important; font-size: 13.5px !important; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.live-need-box { margin: 0 0 12px; padding: 10px 12px; font-size: 14.5px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, #c7801a 10%, var(--mm-surface)); border-radius: 12px; }
 .live-empty { margin: 14px 0 0; color: var(--mm-muted); font-size: 14px; }
 .live-quiet summary { margin-top: 18px; color: var(--mm-muted); font-size: 14px; font-weight: 600; cursor: pointer; }
 .live-elsewhere { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
@@ -5880,7 +5882,8 @@ const ccInfoSources = {};
 // state and a way into it. live_sessions_collector.py writes them every minute; owner only.
 var liveSessionsData = null;
 var liveSessionsBusy = false;
-var LIVE_STATE_TEXT = { working: 'Работает', waiting: 'Ждёт тебя', approve: 'Наверное, ждёт подтверждения' };
+// Mark 2026-10-26: only sessions that really need him wait for him, and the card says what for.
+var LIVE_STATE_TEXT = { working: 'Работает', waiting: 'Ждёт ответа', approve: 'Ждёт разрешения', done: 'Готово', stopped: 'Остановилась' };
 var LIVE_TOOL_TEXT = { claude: 'Claude', codex: 'Codex' };
 
 function liveSessionsVisible() {
@@ -5921,14 +5924,26 @@ function liveCard(session, index) {
   const text = mmEl('span');
   text.appendChild(mmEl('strong', '', session.title || 'Без названия'));
   text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine].filter(Boolean).join(' · ')));
-  const state = session.quiet ? `Затихла · ${liveAgo(session.last_at)}` : session.state === 'working' ? LIVE_STATE_TEXT.working : `${LIVE_STATE_TEXT[session.state]} · ${liveAgo(session.last_at)}`;
-  text.appendChild(mmEl('span', 'live-state', state));
+  if (session.need) text.appendChild(mmEl('small', 'live-need', session.need));
+  text.appendChild(mmEl('span', 'live-state', liveStateText(session)));
   card.appendChild(text);
   return card;
 }
 
+function liveStateText(session) {
+  if (session.state === 'working') return LIVE_STATE_TEXT.working;
+  const word = session.quiet && session.state === 'waiting' ? 'Затихла' : LIVE_STATE_TEXT[session.state] || '';
+  return `${word} · ${liveAgo(session.last_at)}`;
+}
+
 function liveInfo(session) {
   const node = mmEl('div', 'live-info');
+  if (session.need) {
+    node.appendChild(mmEl('p', 'live-note', session.state === 'approve' ? 'Что ждёт разрешения' : 'Что нужно от тебя'));
+    node.appendChild(mmEl('p', 'live-need-box', session.need));
+  } else if (session.state === 'approve') {
+    node.appendChild(mmEl('p', 'live-note', 'Похоже, сессия ждёт разрешения в своём окне. Если там идёт долгая команда, это пройдёт само.'));
+  }
   if (session.reply) {
     node.appendChild(mmEl('p', 'live-note', 'Последний ответ'));
     node.appendChild(mmEl('p', 'live-reply', session.reply));
@@ -5980,12 +5995,12 @@ function liveSessionsRender(payload) {
   sessions.forEach((session, index) => {
     ccInfoSources[`live-${index}`] = () => ({
       title: session.title || 'Сессия',
-      rows: [['Где', `${LIVE_TOOL_TEXT[session.tool] || ''} · ${session.app || ''} · ${session.machine || ''}`], ['Проект', session.project], ['Ветка', session.branch], ['Сейчас', session.quiet ? `затихла, последний шаг ${liveAgo(session.last_at)}` : LIVE_STATE_TEXT[session.state]]],
+      rows: [['Где', `${LIVE_TOOL_TEXT[session.tool] || ''} · ${session.app || ''} · ${session.machine || ''}`], ['Проект', session.project], ['Ветка', session.branch], ['Сейчас', liveStateText(session)]],
       node: liveInfo(session),
     });
   });
   const groups = [
-    ['Ждут тебя', sessions.filter(s => !s.quiet && s.state !== 'working')],
+    ['Ждут тебя', sessions.filter(s => !s.quiet && (s.state === 'approve' || s.state === 'waiting'))],
     ['Работают', sessions.filter(s => s.state === 'working')],
   ];
   for (const [title, list] of groups) {
@@ -5997,16 +6012,17 @@ function liveSessionsRender(payload) {
     block.appendChild(cards);
     host.appendChild(block);
   }
-  const quiet = sessions.filter(s => s.quiet);
+  const quiet = sessions.filter(s => s.quiet && s.state !== 'working');
   if (quiet.length) {
     const fold = mmEl('details', 'live-quiet');
-    fold.appendChild(mmEl('summary', '', `Затихли · ${quiet.length}`));
+    fold.appendChild(mmEl('summary', '', `Готово и затихли · ${quiet.length}`));
     const cards = mmEl('div', 'live-cards');
     quiet.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
     fold.appendChild(cards);
     host.appendChild(fold);
   }
   if (!sessions.length) host.appendChild(mmEl('p', 'live-empty', 'Сейчас ни одна сессия не открыта.'));
+  else if (!sessions.some(s => !s.quiet && s.state !== 'working')) host.prepend(mmEl('p', 'live-empty', 'Сейчас никто не ждёт тебя.'));
   const lost = (payload.machines || []).filter(machine => !machine.fresh).map(machine => machine.label);
   if (lost.length) host.appendChild(mmEl('p', 'live-empty', `Нет связи с ${lost.join(', ')}: его сессий здесь нет.`));
 }

@@ -375,7 +375,7 @@ def prepare_live_sessions():
     at = lambda minutes: (now - timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
     rows = [
         ("claude", "Терминал", "Дашборд сессий в командном центре", "agent-dashboard", "approve", 4,
-         "Хочу запустить проверки сайта, нужно твоё «да» в терминале.", "https://claude.ai/code/session_01PreviewAAAA"),
+         "Запускаю проверки сайта.", "https://claude.ai/code/session_01PreviewAAAA"),
         ("codex", "Приложение Codex", "Починить корзину в магазине", "shop", "waiting", 12,
          "Готово: корзина снова считает доставку, PR открыт.", "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0000"),
         ("claude", "Приложение Claude", "Документы для натурализации", "naturalisation", "waiting", 35,
@@ -383,10 +383,14 @@ def prepare_live_sessions():
         ("claude", "Терминал", "Выкладка Lexi", "lexi", "working", 0, None, "https://claude.ai/code/session_01PreviewBBBB"),
         ("codex", "ChatGPT", "Разбор писем работодателей", "ChatGPT · Работа", "working", 1, None, "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0001"),
         ("claude", "Терминал", "Резервные копии на Mac mini", "scripts", "waiting", 190, "Копия за ночь на месте.", None),
+        ("codex", "Приложение Codex", "Проверка Doctolib", "doctolib", "waiting", 20,
+         "Проверка Doctolib закончена: свободных окон нет.", "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0006"),
+        ("codex", "Приложение Codex", "Добавить парсер Doctolib", "doctolib", "stopped", 50,
+         "Сначала проверю страницу записи, потом настрою парсер.", "codex://threads/0199aaaa-bbbb-cccc-dddd-eeeeffff0007"),
     ]
     sessions = [{"id": f"0199aaaa-bbbb-cccc-dddd-eeeeffff00{index:02d}", "tool": tool, "app": app, "title": title,
                  "project": project, "branch": None, "state": state, "started_at": at(minutes + 30), "last_at": at(minutes),
-                 "reply": reply, "link": link, "resume": f"cd ~/{project} && {'claude --resume' if tool == 'claude' else 'codex resume'} 0199aaaa-bbbb-cccc-dddd-eeeeffff00{index:02d}"}
+                 "reply": reply, "link": link, "approval": "Разрешить команду: npm run check" if state == "approve" else None, "resume": f"cd ~/{project} && {'claude --resume' if tool == 'claude' else 'codex resume'} 0199aaaa-bbbb-cccc-dddd-eeeeffff00{index:02d}"}
                 for index, (tool, app, title, project, state, minutes, reply, link) in enumerate(rows)]
     SERVER.LIVE_SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
     (SERVER.LIVE_SESSIONS_DIR / "mac-mini.json").write_text(json.dumps(
