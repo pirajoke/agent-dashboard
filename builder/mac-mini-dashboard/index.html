@@ -4090,7 +4090,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .context-list .context-row-go { font-size:18px; }
 :root[data-theme="dark"] .context-cell-kind:not(.is-update),:root[data-theme="dark"] .context-row-icon:not(.is-update) { color:#c4b2f2; background:rgba(150,120,230,.18); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .context-cell-kind:not(.is-update),:root:not([data-theme="light"]) .context-row-icon:not(.is-update) { color:#c4b2f2; background:rgba(150,120,230,.18); } }
-@media (max-width:760px) {
+/* Compact rows by the list's own width: the sidebar leaves a tablet too little room for columns. */
+.context-layout { container-type:inline-size; }
+@container (max-width:720px) {
   .context-head { display:none; }
   .context-list .context-row { grid-template-columns:30px minmax(0,1fr) 14px; column-gap:12px; row-gap:6px; padding:12px 14px; }
   .context-list .context-row-icon { grid-column:1; grid-row:1 / 3; align-self:start; }
@@ -8167,7 +8169,7 @@ async function ccLoadContext(recordId = null) {
       const project = typeof r.project === 'string' ? r.project.trim() : '';
       // «JARVIS - Telegram …» in the JARVIS row: the project already has its own column.
       let name = ccContextTitle(r.plain?.title || r.title);
-      if (project && name.toLowerCase().startsWith(project.toLowerCase())) name = name.slice(project.length).replace(/^\s*[-–—:·]\s*/, '') || name;
+      if (project && name.toLowerCase().startsWith(project.toLowerCase()) && /^\s*[-–—:·]\s*\S/.test(name.slice(project.length))) name = name.slice(project.length).replace(/^\s*[-–—:·]\s*/, '');
       name = name.charAt(0).toUpperCase() + name.slice(1);
       const title=document.createElement('strong'); title.className='context-cell-title'; title.textContent=name;
       const kind=document.createElement('span'); kind.className=`context-cell-kind${isUpdate ? ' is-update' : ''}`; kind.textContent=isUpdate ? 'Обновление' : 'Встреча';

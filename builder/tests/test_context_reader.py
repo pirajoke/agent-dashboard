@@ -366,7 +366,8 @@ process.stdout.write(JSON.stringify({before,title,topicCount:topics.length,after
         """Mark 2026-10-26: «сделай красивую табличку» for the list of records."""
         out = self.run_js("""
 const records=[{id:'b'.repeat(32),source:'project-update',kind:'update',title:'Synthetic - release recheck',date:'2026-10-26',project:'Synthetic'},
-  {id:'c'.repeat(32),source:'plaud',kind:'transcript',title:'10-25 Встреча по плану',date:'2026-10-25',project:''}];
+  {id:'c'.repeat(32),source:'plaud',kind:'transcript',title:'10-25 Встреча по плану',date:'2026-10-25',project:''},
+  {id:'d'.repeat(32),source:'project-update',kind:'update',title:'Airtable integration',date:'2026-10-25',project:'AI'}];
 context.fetch=async()=>({ok:true,status:200,json:async()=>({state:'ready',records,sources:[]})});
 await context.ccLoadContext();
 const list=document.getElementById('context-list');
@@ -381,6 +382,7 @@ process.stdout.write(JSON.stringify({head:list.querySelector('.context-head')?.t
         self.assertEqual(out["rows"][1]["title"], "Встреча по плану")
         self.assertEqual(out["rows"][1]["kind"], "Встреча")
         self.assertIn("Встреча по плану", out["rows"][1]["label"])
+        self.assertEqual(out["rows"][2]["title"], "Airtable integration", "Only a whole project name followed by a separator is stripped")
 
 if __name__ == "__main__":
     unittest.main()
