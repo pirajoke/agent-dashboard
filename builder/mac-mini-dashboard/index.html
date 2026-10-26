@@ -4360,24 +4360,39 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .watch-card { transition: none; } .watch-card:hover { transform: none; } }
 /* Mark 2026-10-25: «все сессии, которые бегут, в одном месте»: Claude Code and Codex on his Macs. */
 #agents-sessions[hidden] { display: none; }
-.live-group { margin-top: 18px; }
-.live-group h3 { margin: 0 0 10px; font-size: 16px; font-weight: 700; }
-.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
-.live-card { --live-tone: #2f9361; display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; color: var(--mm-ink); font: inherit; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-left: 4px solid var(--live-tone); border-radius: 14px; box-shadow: var(--mm-shadow-soft); cursor: pointer; transition: border-color .15s, transform .15s; }
-.live-card[data-state="waiting"] { --live-tone: #2f7fd1; }
+/* Mark 2026-10-26, variant B «Решения»: a session that asks something gets a card with its question and
+   an «Открыть» button; working ones are a strip of pills, finished ones a quiet list. */
+.live-h { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 10px; font-size: 16px; font-weight: 700; }
+.live-h span { color: var(--mm-muted); font-size: 14px; font-weight: 600; }
+.live-ava { flex: none; display: inline-grid; place-items: center; width: 34px; height: 34px; color: #fff; font-size: 15px; font-weight: 800; border-radius: 10px; background: #d97757; }
+.live-ava[data-tool="codex"] { background: #1f1f1f; }
+.live-dot { --live-tone: #8a8172; flex: none; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--live-tone); }
+.live-dot[data-state="working"] { --live-tone: #2f9361; animation: live-pulse 1.6s ease-in-out infinite; }
+.live-dot[data-state="stopped"] { --live-tone: #b0574a; }
+@keyframes live-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--live-tone) 50%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.live-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.live-card { --live-tone: #2f7fd1; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
 .live-card[data-state="approve"] { --live-tone: #c7801a; }
-.live-card.is-quiet { --live-tone: var(--mm-line); box-shadow: none; }
-.live-card:hover { border-color: var(--live-tone); transform: translateY(-1px); }
-.live-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.live-card > span { min-width: 0; }
-.live-card strong { display: block; font-size: 14.5px; line-height: 1.3; overflow-wrap: anywhere; }
-.live-card small { display: block; margin-top: 3px; color: var(--mm-muted); font-size: 13px; line-height: 1.4; }
-.live-state { display: inline-block; margin-top: 7px; padding: 2px 9px; font-size: 12px; font-weight: 600; border-radius: 999px; color: var(--live-tone); background: color-mix(in srgb, var(--live-tone) 13%, var(--mm-surface)); }
-.live-card.is-quiet .live-state { color: var(--mm-muted); }
-.live-need { display: -webkit-box; margin-top: 7px !important; color: var(--mm-ink) !important; font-size: 13.5px !important; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.live-need-box { margin: 0 0 12px; padding: 10px 12px; font-size: 14.5px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, #c7801a 10%, var(--mm-surface)); border-radius: 12px; }
+.live-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.live-top > span { min-width: 0; }
+.live-top strong { display: block; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.live-top small { display: block; margin-top: 2px; color: var(--mm-muted); font-size: 12.5px; }
+.live-ask { margin: 0; padding: 12px 14px; font-size: 15px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, var(--live-tone) 11%, var(--mm-surface)); border-radius: 4px 14px 14px 14px; }
+.live-ask em { display: block; margin-bottom: 4px; color: var(--live-tone); font-size: 12px; font-style: normal; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.live-card .live-open { margin: 0; }
+.live-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.live-pill { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 12px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 999px; cursor: pointer; }
+.live-pill small { color: var(--mm-muted); }
+.live-list { display: grid; border-top: 1px solid var(--mm-line); }
+.live-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 2px; color: var(--mm-ink); font: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--mm-line); cursor: pointer; }
+.live-row > span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-row small { color: var(--mm-muted); font-size: 13px; white-space: nowrap; }
+.live-pill:hover, .live-row:hover { color: var(--mm-accent); }
+.live-pill:focus-visible, .live-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .live-empty { margin: 14px 0 0; color: var(--mm-muted); font-size: 14px; }
-.live-quiet summary { margin-top: 18px; color: var(--mm-muted); font-size: 14px; font-weight: 600; cursor: pointer; }
+.live-quiet summary.live-h { display: list-item; cursor: pointer; }
+.live-quiet summary.live-h span { margin-left: 8px; }
+.live-need-box { margin: 0 0 12px; padding: 10px 12px; font-size: 14.5px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; background: color-mix(in srgb, #c7801a 10%, var(--mm-surface)); border-radius: 12px; }
 .live-elsewhere { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 22px 0 0; color: var(--mm-muted); font-size: 13.5px; }
 .live-elsewhere a { color: var(--mm-accent); font-weight: 600; text-decoration: none; }
 .live-open { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
@@ -4389,7 +4404,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .live-command { display: block; margin-top: 4px; padding: 8px 10px; overflow-x: auto; font-size: 12.5px; white-space: nowrap; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
 .live-note { color: var(--mm-muted); font-size: 13px; }
 @media (max-width: 700px) { .live-cards { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .live-card { transition: none; } .live-card:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .live-dot[data-state="working"] { animation: none; } }
 </style>
 </head>
 <body>
@@ -5915,19 +5930,59 @@ function liveAgo(value) {
   return `${hours} ч назад`;
 }
 
+function liveDot(session) {
+  const dot = mmEl('span', 'live-dot');
+  dot.dataset.state = session.state;
+  dot.setAttribute('aria-hidden', 'true');
+  return dot;
+}
+
+function liveOpenLink(session) {
+  if (!session.link) return null;
+  const link = mmEl('a', '', session.link.startsWith('https://') ? 'Открыть ↗' : 'Открыть в Codex');
+  link.href = session.link;
+  if (session.link.startsWith('https://')) { link.target = '_blank'; link.rel = 'noopener'; }
+  return link;
+}
+
+// A session that asks Mark something: its question, «Открыть» and «Подробнее».
 function liveCard(session, index) {
-  const card = mmEl('button', 'live-card');
-  card.type = 'button';
+  const card = mmEl('article', 'live-card');
   card.dataset.state = session.state;
-  card.dataset.ccInfo = `live-${index}`;
-  card.classList.toggle('is-quiet', Boolean(session.quiet));
+  const top = mmEl('div', 'live-top');
+  const avatar = mmEl('span', 'live-ava', session.tool === 'codex' ? '⌘' : 'C');
+  avatar.dataset.tool = session.tool;
+  avatar.setAttribute('aria-hidden', 'true');
+  top.appendChild(avatar);
   const text = mmEl('span');
   text.appendChild(mmEl('strong', '', session.title || 'Без названия'));
-  text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine].filter(Boolean).join(' · ')));
-  if (session.need) text.appendChild(mmEl('small', 'live-need', session.need));
-  text.appendChild(mmEl('span', 'live-state', liveStateText(session)));
-  card.appendChild(text);
+  text.appendChild(mmEl('small', '', [session.project, LIVE_TOOL_TEXT[session.tool], session.machine, liveAgo(session.last_at)].filter(Boolean).join(' · ')));
+  top.appendChild(text);
+  card.appendChild(top);
+  const ask = mmEl('p', 'live-ask');
+  ask.appendChild(mmEl('em', '', session.state === 'approve' ? 'Просит разрешения' : 'Спрашивает'));
+  ask.appendChild(document.createTextNode(session.need || 'Похоже, ждёт разрешения в своём окне'));
+  card.appendChild(ask);
+  const actions = mmEl('div', 'live-open');
+  const link = liveOpenLink(session);
+  if (link) actions.appendChild(link);
+  const more = mmEl('button', '', 'Подробнее');
+  more.type = 'button';
+  more.dataset.ccInfo = `live-${index}`;
+  actions.appendChild(more);
+  card.appendChild(actions);
   return card;
+}
+
+// A working or finished session: one line that opens its window.
+function liveLine(session, index, cls) {
+  const line = mmEl('button', cls);
+  line.type = 'button';
+  line.dataset.ccInfo = `live-${index}`;
+  line.appendChild(liveDot(session));
+  line.appendChild(mmEl('span', '', session.title || 'Без названия'));
+  line.appendChild(mmEl('small', '', cls === 'live-pill' ? session.machine || '' : liveStateText(session)));
+  return line;
 }
 
 function liveStateText(session) {
@@ -5999,26 +6054,32 @@ function liveSessionsRender(payload) {
       node: liveInfo(session),
     });
   });
-  const groups = [
-    ['Ждут тебя', sessions.filter(s => !s.quiet && (s.state === 'approve' || s.state === 'waiting'))],
-    ['Работают', sessions.filter(s => s.state === 'working')],
-  ];
-  for (const [title, list] of groups) {
-    if (!list.length) continue;
-    const block = mmEl('section', 'live-group');
-    block.appendChild(mmEl('h3', '', title));
-    const cards = mmEl('div', 'live-cards');
-    list.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
-    block.appendChild(cards);
-    host.appendChild(block);
-  }
+  const heading = (title, count, tag = 'h3') => {
+    const node = mmEl(tag, 'live-h', title);
+    node.appendChild(mmEl('span', '', String(count)));
+    return node;
+  };
+  const waiting = sessions.filter(s => !s.quiet && (s.state === 'approve' || s.state === 'waiting'));
+  const working = sessions.filter(s => s.state === 'working');
   const quiet = sessions.filter(s => s.quiet && s.state !== 'working');
+  if (waiting.length) {
+    host.appendChild(heading('Ждут тебя', waiting.length));
+    const cards = mmEl('div', 'live-cards');
+    waiting.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
+    host.appendChild(cards);
+  }
+  if (working.length) {
+    host.appendChild(heading('Работают сейчас', working.length));
+    const pills = mmEl('div', 'live-pills');
+    working.forEach(session => pills.appendChild(liveLine(session, sessions.indexOf(session), 'live-pill')));
+    host.appendChild(pills);
+  }
   if (quiet.length) {
     const fold = mmEl('details', 'live-quiet');
-    fold.appendChild(mmEl('summary', '', `Готово и затихли · ${quiet.length}`));
-    const cards = mmEl('div', 'live-cards');
-    quiet.forEach(session => cards.appendChild(liveCard(session, sessions.indexOf(session))));
-    fold.appendChild(cards);
+    fold.appendChild(heading('Готово и затихли', quiet.length, 'summary'));
+    const list = mmEl('div', 'live-list');
+    quiet.forEach(session => list.appendChild(liveLine(session, sessions.indexOf(session), 'live-row')));
+    fold.appendChild(list);
     host.appendChild(fold);
   }
   if (!sessions.length) host.appendChild(mmEl('p', 'live-empty', 'Сейчас ни одна сессия не открыта.'));
