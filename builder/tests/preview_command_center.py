@@ -304,7 +304,10 @@ class PreviewHandler(SERVER.Handler):
             return
         if parsed.path in {"/api/all", "/api/air/all", "/api/pro/all"}:
             payload = {
-                "system": {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
+                # The Pro is the busy one, so «перегружена» and «заполняется» can be seen next to a calm Mac mini.
+                "system": {"hostname": "Preview computer", "cpu_percent": 72, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
+                if parsed.path == "/api/pro/all" else
+                {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
                 "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
             }
             if parsed.path == "/api/all" and self._decision_owner_authorized():

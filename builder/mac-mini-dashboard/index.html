@@ -193,6 +193,22 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-badge { font-size: 11px; padding: 4px 12px; border-radius: 6px; font-weight: 600; }
 .machine-badge.online { background: var(--green-bg); color: var(--green); }
 .machine-badge.offline { background: var(--red-bg); color: var(--red); }
+.machine-health { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: -4px 0 20px; }
+.machine-health:empty { display: none; }
+.machine-health-item { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card, transparent); color: var(--text); font: inherit; cursor: pointer; }
+.machine-health-item:hover { border-color: var(--text2); }
+.machine-health-label { font-size: 12px; color: var(--text2); }
+.machine-health-word { font-size: 16px; font-weight: 600; }
+.machine-health-bar { display: block; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.machine-health-bar > span { display: block; height: 100%; background: var(--green); }
+.machine-health-item.is-ok .machine-health-word { color: var(--green); }
+.machine-health-item.is-warn .machine-health-word { color: var(--orange, #d97706); }
+.machine-health-item.is-warn .machine-health-bar > span { background: var(--orange, #d97706); }
+.machine-health-item.is-bad { border-color: var(--red); background: var(--red-bg); }
+.machine-health-item.is-bad .machine-health-word { color: var(--red); }
+.machine-health-item.is-bad .machine-health-bar > span { background: var(--red); }
+.machine-health-item.is-unknown .machine-health-word { color: var(--text2); }
+@media (max-width: 640px) { .machine-health { gap: 6px; } .machine-health-item { padding: 10px; } .machine-health-word { font-size: 14px; } }
 
 /* Grid layouts */
 .grid { display: grid; gap: 20px; }
@@ -5398,6 +5414,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" class="cc-i" data-cc-info="machine-mini" aria-label="Mac mini: нагрузка и диск">i</button>
       <span class="machine-badge" id="mini-online-badge">проверка</span>
     </div>
+    <div class="machine-health" id="mini-health" aria-live="polite"></div>
 
     <!-- System gauges row -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -5451,6 +5468,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" class="cc-i" data-cc-info="machine-air" aria-label="MacBook Air: нагрузка и диск">i</button>
       <span class="machine-badge online" id="air-online-badge">в сети</span>
     </div>
+    <div class="machine-health" id="air-health" aria-live="polite"></div>
 
     <!-- System gauges row — same layout as Mac Mini -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -5504,6 +5522,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
       <button type="button" class="cc-i" data-cc-info="machine-pro" aria-label="MacBook Pro: нагрузка и диск">i</button>
       <span class="machine-badge offline" id="pro-online-badge">проверка</span>
     </div>
+    <div class="machine-health" id="pro-health" aria-live="polite"></div>
 
     <!-- System gauges row — same layout as Mac Mini/Air -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -9923,7 +9942,10 @@ function renderHeaderDate() {
 }
 
 // Mark 2026-10-24: load, memory, disk and uptime moved from the page into each computer's «i».
+// Mark 2026-10-26: memory, disk and load are back on the page as plain words (ок / много / перегружена);
+// the numbers stay in the «i» window, which each word also opens.
 const machineUptime = {};
+const machineSystem = {};
 const machineMemoryFree = {};
 
 // macOS reports pressure as free percent; when it is missing, fall back to used/total.
@@ -9940,8 +9962,70 @@ function machineStatusText(key, sys) {
 for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro', 'MacBook Pro']]) {
   ccInfoSources[`machine-${key}`] = () => {
     const text = id => { const t = document.getElementById(`${key}-${id}`)?.textContent?.trim(); return t && t !== '—' ? t : ''; };
-    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Диск', text('disk')], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+    const sys = machineSystem[key] || {};
+    const free = sys.disk_total_gb ? `${Math.max(0, Math.round(sys.disk_total_gb - sys.disk_used_gb))} GB` : '';
+    const swap = typeof sys.swap_used_gb === 'number' && sys.swap_used_gb > 0 ? `${sys.swap_used_gb} GB` : '';
+    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
   };
+}
+
+function machinePercent(used, total) {
+  return total ? Math.round(used / total * 100) : null;
+}
+
+function machineHealthItems(sys) {
+  // macOS fills free memory with cache, so «used» says little; memory pressure is what the system itself
+  // calls overload. Health APIs that report it (the MacBook Pro does) are judged by it.
+  const pressure = typeof sys.memory_pressure_free_percent === 'number' ? 100 - sys.memory_pressure_free_percent : null;
+  const ram = pressure ?? machinePercent(sys.memory_used_gb, sys.memory_total_gb);
+  const disk = machinePercent(sys.disk_used_gb, sys.disk_total_gb);
+  const cpu = typeof sys.cpu_percent === 'number' ? Math.round(sys.cpu_percent) : null;
+  const level = (pct, warn, bad) => pct === null ? 'unknown' : pct >= bad ? 'bad' : pct >= warn ? 'warn' : 'ok';
+  const words = {
+    ram: { ok: 'ок', warn: 'занята почти вся', bad: 'перегружена', unknown: 'нет данных' },
+    disk: { ok: 'ок', warn: 'заполняется', bad: 'почти полон', unknown: 'нет данных' },
+    cpu: { ok: 'спокойно', warn: 'нагружен', bad: 'перегружен', unknown: 'нет данных' },
+  };
+  return [
+    { id: 'ram', label: 'Память', pct: ram, level: level(ram, 80, 90) },
+    { id: 'disk', label: 'Диск', pct: disk, level: level(disk, 80, 90) },
+    { id: 'cpu', label: 'Процессор', pct: cpu, level: level(cpu, 60, 85) },
+  ].map(item => ({ ...item, word: words[item.id][item.level] }));
+}
+
+function renderMachineHealth(key, sys) {
+  const host = document.getElementById(`${key}-health`);
+  if (!host) return;
+  if (!sys) { host.replaceChildren(); return; }
+  machineSystem[key] = sys;
+  // Tiles are built once and then updated in place, so a refresh every 5 s keeps keyboard focus.
+  for (const item of machineHealthItems(sys)) {
+    let button = host.querySelector(`[data-health="${item.id}"]`);
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.health = item.id;
+      button.dataset.ccInfo = `machine-${key}`;
+      const label = document.createElement('span'); label.className = 'machine-health-label'; label.textContent = item.label;
+      const word = document.createElement('span'); word.className = 'machine-health-word';
+      const bar = document.createElement('span'); bar.className = 'machine-health-bar';
+      bar.append(document.createElement('span'));
+      button.append(label, word, bar);
+      host.append(button);
+    }
+    button.className = `machine-health-item is-${item.level}`;
+    button.setAttribute('aria-label', `${item.label}: ${item.word}. Нажми, чтобы увидеть цифры`);
+    button.querySelector('.machine-health-word').textContent = item.word;
+    button.querySelector('.machine-health-bar > span').style.width = `${Math.min(100, item.pct || 0)}%`;
+  }
+}
+
+// A laptop that misses one refresh keeps its last picture for a while instead of flashing «Нет связи».
+const MACHINE_GRACE_MS = 3 * 60 * 1000;
+const machineLastSeen = {};
+const machineInFlight = {};
+function machineRecentlySeen(key) {
+  return machineLastSeen[key] && Date.now() - machineLastSeen[key] < MACHINE_GRACE_MS;
 }
 
 function renderGauges(prefix, sys) {
@@ -9959,6 +10043,7 @@ function renderGauges(prefix, sys) {
   if (uptimeVal) uptimeVal.textContent = sys.uptime || '—';
   const uptimeSub = document.getElementById(prefix + '-uptime-sub');
   if (uptimeSub) uptimeSub.textContent = sys.hostname || '';
+  renderMachineHealth(prefix, sys);
   renderHeaderDate();
 }
 
@@ -9983,13 +10068,18 @@ async function refreshMini() {
     }
     return;
   }
-  const data = await fetchJSON(MAC_MINI_API, '/api/all');
-  if (!data) {
+  if (machineInFlight.mini) return;
+  machineInFlight.mini = true;
+  const data = await fetchJSON(MAC_MINI_API, '/api/all').finally(() => { machineInFlight.mini = false; });
+  if (!data || !data.system) {
+    if (machineRecentlySeen('mini')) return;
+    renderMachineHealth('mini', null);
     document.getElementById('mini-online-badge').textContent = 'не в сети';
     document.getElementById('mini-online-badge').className = 'machine-badge offline';
     document.getElementById('mini-badge').textContent = 'offline';
     return;
   }
+  machineLastSeen.mini = Date.now();
   document.getElementById('mini-online-badge').textContent = 'в сети';
   document.getElementById('mini-online-badge').className = 'machine-badge online';
   const sys = data.system || {};
@@ -10011,9 +10101,12 @@ async function miniAction(label, action) {
 
 // ─── Air (local) ───
 async function refreshAir() {
-  const data = await fetchJSON(AIR_API, `${AIR_API_PATH_PREFIX}/all`);
-  // The proxy answers 502 {error} while the laptop is unreachable.
-  if (!data?.system) {
+  if (machineInFlight.air) return;
+  machineInFlight.air = true;
+  const data = await fetchJSON(AIR_API, `${AIR_API_PATH_PREFIX}/all`).finally(() => { machineInFlight.air = false; });
+  if (!data || !data.system) {
+    if (machineRecentlySeen('air')) return;
+    renderMachineHealth('air', null);
     document.getElementById('air-status').textContent = 'Нет связи';
     document.getElementById('air-online-badge').textContent = 'не в сети';
     document.getElementById('air-online-badge').className = 'machine-badge offline';
@@ -10023,6 +10116,7 @@ async function refreshAir() {
   const sys = data.system;
   document.getElementById('air-hostname').textContent = sys.hostname || 'MacBook Air';
   document.getElementById('air-status').textContent = machineStatusText('air', sys);
+  machineLastSeen.air = Date.now();
   machineUptime.air = sys.uptime || '';
   document.getElementById('air-online-badge').textContent = 'в сети';
   document.getElementById('air-online-badge').className = 'machine-badge online';
@@ -10041,9 +10135,12 @@ async function airAction(label, action) {
 
 // ─── MacBook Pro ───
 async function refreshPro() {
-  const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`);
-  // The proxy answers 502 {error} while the laptop is unreachable.
-  if (!data?.system) {
+  if (machineInFlight.pro) return;
+  machineInFlight.pro = true;
+  const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`).finally(() => { machineInFlight.pro = false; });
+  if (!data || !data.system) {
+    if (machineRecentlySeen('pro')) return;
+    renderMachineHealth('pro', null);
     document.getElementById('pro-status').textContent = 'Нет связи';
     document.getElementById('pro-online-badge').textContent = 'не в сети';
     document.getElementById('pro-online-badge').className = 'machine-badge offline';
@@ -10058,6 +10155,7 @@ async function refreshPro() {
   const sys = data.system;
   document.getElementById('pro-hostname').textContent = sys.hostname || 'MacBook Pro';
   document.getElementById('pro-status').textContent = machineStatusText('pro', sys);
+  machineLastSeen.pro = Date.now();
   machineUptime.pro = sys.uptime || '';
   document.getElementById('pro-online-badge').textContent = 'в сети';
   document.getElementById('pro-online-badge').className = 'machine-badge online';
