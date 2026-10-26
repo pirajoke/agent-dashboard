@@ -573,9 +573,13 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
             if link: links[key] = link
     except (OSError, ValueError, TypeError): pass
     records = sorted(rows.values(), key=lambda r:(not r['historical'], r['at'] or ''), reverse=True)
-    if not include_paths:
-        records = [row for row in records if not row.pop('hidden', False)]
+    # Deleted rows never take a place among the 100 shown; actions and «Вернуть» still see them.
+    shown = [row for row in records if not row.get('hidden')]
+    total = len(shown)
+    records = shown[:100] + ([row for row in records if row.get('hidden')] if include_paths else [])
     for row in records:
+        if not include_paths:
+            row.pop('hidden', None)
         path, sha = row.pop('_path', None), row.pop('_sha', None)
         if include_paths and path:
             row['_path'] = path
@@ -586,6 +590,6 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
             'stale_after_seconds': STALE_AFTER, 'scan_interval_seconds': 300,
             'model_calls': _count(status.get('model_calls')), 'catalog_count': _count(catalog.get('documents')),
             'catalog_state': catalog.get('status') if catalog.get('status') in ('ready','error','refreshing') else 'unknown',
-            'pending': pending, 'review_count': review, 'records': records[:100],
-            'records_total': len(records), 'warnings': warnings, 'links': links,
+            'pending': pending, 'review_count': review, 'records': records,
+            'records_total': total, 'warnings': warnings, 'links': links,
             'gmail': gmail, 'operations': operations, 'health': health}

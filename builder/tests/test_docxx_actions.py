@@ -245,5 +245,22 @@ class SortingTests(unittest.TestCase):
         self.assertEqual(rows['scan.pdf']['status'], 'needs_review')
 
 
+    def test_deleted_rows_do_not_push_later_documents_out_of_reach(self):
+        attachments = {}
+        for i in range(105):
+            name = f'doc{i:03}.pdf'
+            path = self.library / REVIEW / name
+            path.write_bytes(b'%PDF synthetic')
+            attachments[name] = {'state': 'delivered', 'needs_review': True, 'name': name,
+                                 'destination': str(path), 'delivered_at': time.time() - 1000 + i}
+        self.write('gmail-journal.json', {'schema_version': 1, 'attachments': attachments})
+        first = [row['key'] for row in self.view()['records'][:50]]
+        self.assertTrue(all(r['ok'] for r in apply(self.state, self.decisions, {'action': 'remove', 'keys': first})['results']))
+        view = self.view()
+        self.assertEqual((len(view['records']), view['records_total']), (55, 55))
+        last = view['records'][-1]['key']
+        self.assertTrue(apply(self.state, self.decisions, {'action': 'remove', 'keys': [last]})['results'][0]['ok'])
+        self.assertTrue(apply(self.state, self.decisions, {'action': 'undo', 'keys': first[:1]})['results'][0]['ok'])
+
 if __name__ == '__main__':
     unittest.main()
