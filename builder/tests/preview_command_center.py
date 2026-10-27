@@ -1,7 +1,7 @@
 """Isolated browser fixtures. Binds loopback, never contacts live services.
 
 Run: PYTHONPATH=builder python3 builder/tests/preview_command_center.py
-The printed local URL accepts ?fixture=ready|google-owner|empty|stale|unavailable|anonymous|changed|long-label|unknown|failure.
+The printed local URL accepts ?fixture=ready|google-owner|empty|stale|unavailable|anonymous|changed|long-label|unknown|failure|signin|offline.
 Navigation uses the real strict owner endpoint and synthetic registry only.
 Default navigation has a fresh Mini and stale Pro. No private source is read.
 The default waiting scenario provides one choice and one active task.
@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 import http.server
 import json
 import mimetypes
+import socket
 from pathlib import Path
 import tempfile
 from urllib.parse import parse_qs, urlsplit
@@ -168,11 +169,23 @@ class PreviewHandler(SERVER.Handler):
             return
         if parsed.path.startswith('/fixture/'):
             mode = parsed.path.removeprefix('/fixture/')
-            if mode in {'sorting', 'waiting', 'ready', 'google-owner', 'changed', 'empty', 'stale', 'unavailable', 'anonymous', 'long-label', 'unknown', 'failure'}:
+            if mode in {'sorting', 'waiting', 'ready', 'google-owner', 'changed', 'empty', 'stale', 'unavailable', 'anonymous', 'long-label', 'unknown', 'failure', 'signin', 'offline'}:
                 MODE = mode
                 self._json_response(200, {'fixture': MODE})
             else:
                 self.send_error(404)
+            return
+        if MODE in {"signin", "offline"} and parsed.path in {"/api/work/daily", "/api/services/detailed"}:
+            if MODE == "signin":
+                # Like Cloudflare Access after the sign-in expired: a redirect to another origin's login page.
+                self.send_response(302)
+                self.send_header("Location", "http://127.0.0.2:9/cdn-cgi/access/login")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+            else:
+                # Dropped like a lost connection.
+                self.close_connection = True
+                self.connection.shutdown(socket.SHUT_RDWR)
             return
         if parsed.path == "/":
             MODE = query.get("fixture", ["waiting"])[0]

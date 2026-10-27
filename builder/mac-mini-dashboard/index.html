@@ -3178,6 +3178,26 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .mm-group-row-static .mm-group-main { flex-basis: 220px; }
 .mm-tip-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 3px; vertical-align: 0; }
 .mm-group-foot { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 12px; }
+/* Mark 2026-10-27 («делай новый дизайн»): one calm card when the sign-in expired or the data did not come,
+   instead of two orange banners and «Mac mini не отвечает». */
+.mm-notice.mm-conn { display: flex; align-items: center; gap: 14px; padding: 16px 18px; color: var(--mm-ink); background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; box-shadow: var(--mm-shadow-soft); font-size: 14px; }
+.mm-conn-icon { display: grid; flex: none; place-items: center; width: 40px; height: 40px; color: var(--mm-accent); background: var(--mm-selection); border-radius: 50%; }
+.mm-conn-icon svg { width: 20px; height: 20px; }
+.mm-conn-body { flex: 1; min-width: 0; }
+.mm-conn-title { display: block; margin: 0 0 3px; font-size: 15px; font-weight: 650; }
+.mm-conn-text { margin: 0; color: var(--mm-muted); line-height: 1.45; }
+.mm-conn-button { flex: none; padding: 9px 18px; color: var(--mm-background); font: inherit; font-size: 14px; font-weight: 650; background: var(--mm-accent); border: 0; border-radius: 999px; cursor: pointer; }
+.mm-conn-button:hover { filter: brightness(1.08); }
+.mm-conn-button:disabled { cursor: default; opacity: .6; }
+.mm-conn-button:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
+/* Nothing loaded yet: the card is the whole page. */
+.mm-os[data-mm-empty] .mm-notice.mm-conn { flex-direction: column; gap: 12px; margin-top: 12px; padding: 48px 24px; text-align: center; }
+.mm-os[data-mm-empty] .mm-conn-icon { width: 56px; height: 56px; }
+.mm-os[data-mm-empty] .mm-conn-icon svg { width: 26px; height: 26px; }
+.mm-os[data-mm-empty] .mm-conn-body { flex: none; max-width: 420px; }
+.mm-os[data-mm-empty] .mm-conn-title { font-size: 18px; }
+.mm-os[data-mm-empty] #mm-home, .mm-os[data-mm-empty] [data-mm-panel=project] { display: none; }
+@media (max-width: 600px) { .mm-notice.mm-conn { flex-wrap: wrap; } .mm-conn-button { width: 100%; } }
 .mm-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-control-line); border-radius: 12px; font-size: 14px; }
 
 .mm-table-scroll { overflow-x: auto; }
@@ -5496,7 +5516,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <div class="platform-archive-body" id="owner-project-body"></div>
       </dialog>
       <h3 class="cc-visually-hidden" id="mm-view-title">Проекты</h3>
-      <p class="mm-notice" id="mm-state" role="status">Загружаю данные…</p>
+      <div class="mm-notice" id="mm-state" role="status">Загружаю данные…</div>
       <!-- Mark 2026-10-26 («пересобери полностью»): one board of tiles. The week and his tasks are the two
            big tiles, then a tile per project; «Личное» and the small folders are tiles too.
            The week tile opens «Сводка» in a window. -->
@@ -11844,6 +11864,11 @@ let dailyWorkDate = null;
 let dailyWorkLoading = false;
 let mmView = 'map';
 let mmProjectId = null;
+// Mark 2026-10-27 («какая то фигня»): an expired Cloudflare sign-in showed «Mac mini не отвечает»
+// although the Mac mini was fine. The page now tells a sign-in, the connection and a server error apart.
+let mmConn = null; // null or { kind: 'signin' | 'offline' | 'server', since }
+let mmLastLoadedAt = null;
+let mmHealthLast = null;
 let mmProjectData = null;
 let mmInitialised = false;
 
@@ -11955,6 +11980,10 @@ function mmInit() {
     mmLoadOwnerTodo();
     mmLoadHealth();
   }, MM_REFRESH_MS);
+  window.addEventListener('online', () => { if (mmConn) mmRetry(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && mmConn && mmConn.kind !== 'signin' && document.getElementById('section-work').classList.contains('active')) mmRetry();
+  });
 }
 
 // Mark 2026-10-26: data sources and «открыть на телефоне» open from the «i» in the header;
@@ -12013,29 +12042,112 @@ async function loadDailyWork(date) {
   const params = new URLSearchParams({ days: '30' });
   if (date) params.set('date', date);
   try {
-    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    const data = await mmFetchJSON(`${DAILY_WORK_API}?${params}`);
     dailyWorkData = data;
     dailyWorkDate = data.selected_date;
+    mmLastLoadedAt = new Date();
+    if (mmConn) mmSetConn(null);
     renderDailyWork();
   } catch (error) {
-    dailyWorkData = null;
-    npDeviceSetup(false);
-    mmRenderNotice('Не удалось получить проекты с сервера Command Center. Цифры не показываю, чтобы не гадать.');
+    // The last board stays on screen under the card, with its time; nothing new is guessed.
+    if (!dailyWorkData) npDeviceSetup(false);
+    mmSetConn(error.kind || 'offline');
   } finally {
     dailyWorkLoading = false;
   }
 }
 
-function mmRenderNotice(errorText) {
-  const notice = document.getElementById('mm-state');
-  if (errorText) {
-    notice.className = 'mm-notice error';
-    notice.hidden = false;
-    notice.textContent = errorText;
-    return;
+class MmFetchError extends Error {
+  constructor(kind) { super(kind); this.kind = kind; }
+}
+
+// Cloudflare Access answers an expired sign-in with a redirect to its login page. A fetch that follows it
+// fails like a lost connection, so the redirect is not followed and is read as «вход истёк».
+async function mmFetchJSON(url, { headers = mmHeaders(), timeoutMs = 15000 } = {}) {
+  let response;
+  try {
+    response = await fetch(url, { headers, cache: 'no-store', redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
+  } catch (error) {
+    throw new MmFetchError('offline');
   }
+  const json = (response.headers.get('content-type') || '').includes('json');
+  if (response.type === 'opaqueredirect' || ([401, 403].includes(response.status) && !json)) throw new MmFetchError('signin');
+  let data;
+  try { data = await response.json(); } catch (error) { throw new MmFetchError('server'); }
+  if (!response.ok || data?.ok === false) throw new MmFetchError('server');
+  return data;
+}
+
+const MM_CONN_ICONS = {
+  signin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  offline: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5 12.6a10 10 0 0 1 14 0"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><circle cx="12" cy="20" r="1"/><path d="M3 3l18 18"/></svg>',
+  server: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>',
+};
+
+function mmConnCopy(kind) {
+  const at = mmLastLoadedAt ? ` Ниже то, что было в ${mmLastLoadedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}.` : '';
+  if (kind === 'signin') {
+    return {
+      title: 'Вход истёк',
+      text: `Это не поломка: Cloudflare просит войти в Command Center заново.${at}`,
+      button: IS_FILE_DASHBOARD ? 'Войти' : 'Обновить страницу',
+    };
+  }
+  if (kind === 'server') {
+    return { title: 'Command Center не отдал данные', text: `Сервер ответил ошибкой. Попробую ещё раз сам.${at}`, button: 'Повторить' };
+  }
+  return { title: 'Нет связи с Command Center', text: `Запрос из этого окна не дошёл. Попробую ещё раз, когда связь вернётся.${at}`, button: 'Повторить' };
+}
+
+function mmSetConn(kind) {
+  mmConn = kind ? { kind, since: mmConn?.kind === kind ? mmConn.since : new Date() } : null;
+  const os = document.getElementById('mm-os');
+  os?.toggleAttribute('data-mm-conn', Boolean(mmConn));
+  os?.toggleAttribute('data-mm-empty', Boolean(mmConn) && !dailyWorkData);
+  if (!mmConn) {
+    const notice = document.getElementById('mm-state');
+    notice.replaceChildren();
+    notice.className = 'mm-notice';
+    notice.hidden = true;
+  }
+  mmRenderNotice();
+  mmRenderHealth(mmHealthLast);
+}
+
+function mmRenderConn(notice) {
+  const copy = mmConnCopy(mmConn.kind);
+  notice.className = 'mm-notice mm-conn';
+  notice.hidden = false;
+  const icon = mmEl('span', 'mm-conn-icon');
+  icon.innerHTML = MM_CONN_ICONS[mmConn.kind] || MM_CONN_ICONS.offline;
+  const body = mmEl('div', 'mm-conn-body');
+  body.append(mmEl('strong', 'mm-conn-title', copy.title), mmEl('p', 'mm-conn-text', copy.text));
+  const button = mmEl('button', 'mm-conn-button', copy.button);
+  button.type = 'button';
+  button.addEventListener('click', async () => {
+    if (mmConn?.kind === 'signin') {
+      // A full page load goes through the Cloudflare sign-in and comes back here.
+      if (IS_FILE_DASHBOARD) window.open('https://command.meshly.fr/?tab=work', '_blank', 'noopener');
+      else window.location.reload();
+      return;
+    }
+    button.disabled = true;
+    button.textContent = 'Проверяю…';
+    await mmRetry();
+    if (button.isConnected) { button.disabled = false; button.textContent = copy.button; }
+  });
+  notice.replaceChildren(icon, body, button);
+}
+
+async function mmRetry() {
+  const loads = [loadDailyWork(dailyWorkDate), mmLoadOwnerProjects(), mmLoadOwnerTodo(), mmLoadHealth()];
+  if (mmView === 'project' && mmProjectId) loads.push(openProject(mmProjectId));
+  await Promise.allSettled(loads);
+}
+
+function mmRenderNotice() {
+  const notice = document.getElementById('mm-state');
+  if (mmConn) return mmRenderConn(notice);
   // The line sits above the board, so it speaks about the board's data.
   const source = dailyWorkData;
   if (!source) return;
@@ -12548,6 +12660,11 @@ function mmRenderHealth(data) {
   if (!line) return;
   line.replaceChildren();
   line.classList.remove('is-problem', 'is-unknown');
+  if (!data && mmConn) {
+    // The card above already says why nothing came; «Mac mini не отвечает» would blame the wrong thing.
+    line.hidden = true;
+    return;
+  }
   if (!data || !Array.isArray(data.services_detailed || data.services)) {
     line.classList.add('is-unknown');
     line.appendChild(mmEl('span', '', 'Mac mini не отвечает'));
@@ -12573,8 +12690,17 @@ function mmRenderHealth(data) {
 
 async function mmLoadHealth() {
   const generation = ++mmHealthGeneration;
-  const data = await fetchJSON(MAC_MINI_API, '/api/services/detailed');
-  if (generation === mmHealthGeneration) mmRenderHealth(data);
+  let data = null;
+  let signin = false;
+  try {
+    data = await mmFetchJSON(`${MAC_MINI_API}/api/services/detailed`, { headers: {} });
+  } catch (error) {
+    signin = error.kind === 'signin';
+  }
+  if (generation !== mmHealthGeneration) return;
+  mmHealthLast = data;
+  if (signin && !mmConn) return mmSetConn('signin');
+  mmRenderHealth(data);
 }
 
 // ─── «Ждёт тебя» (Mark 2026-10-22) ───
@@ -12983,9 +13109,7 @@ async function openProject(id, day = null) {
   if (os.getBoundingClientRect().top < 0) os.scrollIntoView({ block: 'start' });
   try {
     const params = new URLSearchParams({ days: '30', project: id });
-    const response = await fetch(`${DAILY_WORK_API}?${params}`, { headers: mmHeaders(), cache: 'no-store' });
-    const data = await response.json();
-    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    const data = await mmFetchJSON(`${DAILY_WORK_API}?${params}`);
     if (mmProjectId !== id) return;
     if (!data.owner_view) {
       page.innerHTML = '<p class="mm-empty">Работа по проектам видна только владельцу.</p>';
@@ -12995,11 +13119,14 @@ async function openProject(id, day = null) {
       page.innerHTML = '<p class="mm-empty">За 30 дней по этому проекту ничего не найдено.</p>';
       return;
     }
+    if (mmConn) mmSetConn(null);
     mmProjectData = { ...data.project, dates: data.series.map(day => day.date) };
     renderProjectPage();
     if (day) mmOpenHistoryDay(day);
   } catch (error) {
-    if (mmProjectId === id) page.innerHTML = '<p class="mm-empty">Не удалось получить проект с сервера Command Center.</p>';
+    if (mmProjectId !== id) return;
+    page.replaceChildren();
+    mmSetConn(error.kind || 'offline');
   }
 }
 
