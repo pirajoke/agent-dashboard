@@ -1771,9 +1771,14 @@ try {{ if (localStorage.getItem('command-center.theme.v3') === 'dark') document.
 window.addEventListener('storage', event => {{
   if (event.key === 'command-center.theme.v3') document.documentElement.dataset.theme = event.newValue === 'dark' ? 'dark' : 'light';
 }});
+// Command Center tells the campus its theme directly when they are on different origins.
+window.addEventListener('message', event => {{
+  if (event.source !== window.parent || event.data?.type !== 'cc-theme') return;
+  if (event.data.theme === 'dark' || event.data.theme === 'light') document.documentElement.dataset.theme = event.data.theme;
+}});
 </script>
 <style>
-:root {{ color-scheme: dark; }}
+:root {{ color-scheme: light; }}
 * {{ box-sizing: border-box; }}
 html, body {{ margin: 0; min-height: 100%; background: #09090b; color: #f2f0ea; }}
 body {{ font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}

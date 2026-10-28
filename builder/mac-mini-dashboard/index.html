@@ -3880,7 +3880,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   grid-column: 2; position: relative; z-index: 2; padding: 0 12px 8px 10px; border-top: 0;
   font-size: 12px; pointer-events: none;
 }
-.platform-resources > .platform-resources-empty { display: none; }
 .platform-resources summary,
 .platform-resources details[open] { pointer-events: auto; }
 .platform-resources summary { display: inline-block; min-height: 0; padding: 2px 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 600; }
@@ -3888,7 +3887,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
    «Материалы проекта» line and an empty card now take one and the same one-line height. */
 .platform-resources { min-height: 30px; line-height: 1.55; }
 .platform-resources > span { display: block; min-height: 0; padding: 2px 0; font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.platform-resources > .platform-resources-empty { display: block; visibility: hidden; }
 .platform-archive-toggle,
 .platform-edit-toggle { z-index: 3; }
 /* Edit (Mark 2026-10-20): a pencil next to the archive box opens a small window for name, status and priority. */
@@ -4664,7 +4662,7 @@ button.cc-refresh, .cc-main button.cc-refresh {
 button.cc-refresh:hover { background: var(--mm-selection); }
 /* Platform cards: the «sign in» line once above the grid, not on every card. */
 .platform-sign-in-note { margin: -6px 0 14px; color: var(--mm-muted); font-size: 13px; }
-.platform-sign-in-note[hidden], .platform-resources:empty { display: none; }
+.platform-sign-in-note[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -7853,6 +7851,13 @@ function initPixelAgentsFrame() {
     });
   }
   if (fullScreen) fullScreen.href = PIXEL_AGENTS_URL;
+  // The campus may come from another origin (file or :8880 pages), where it cannot read this page's
+  // theme choice: tell it directly on load and on every switch.
+  if (frame) {
+    const sendTheme = () => frame.contentWindow?.postMessage({ type: 'cc-theme', theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light' }, PIXEL_AGENTS_ORIGIN);
+    frame.addEventListener('load', sendTheme);
+    new MutationObserver(sendTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
 }
 
 function clampNumber(value, min, max, fallback = min) {
@@ -7934,7 +7939,8 @@ function resetPixelAgentsView() {
 
 function initPixelAgentsView() {
   const viewport = document.getElementById('pixel-agents-viewport');
-  loadPixelAgentsView();
+  // The move/zoom bar is gone (Mark 2026-10-28: one campus header), so an old saved zoom or drag
+  // must not come back with no way to undo it: the campus always opens at the default view.
   applyPixelAgentsView(false);
   setPixelAgentsMove(false);
   if (!viewport) return;
@@ -8067,7 +8073,8 @@ function togglePixelAgentsPin() {
 }
 
 function initPixelAgentsPin() {
-  const isPinned = safeStorageGet(PIXEL_AGENTS_PIN_KEY, '0') === '1';
+  // No pin button any more (see initPixelAgentsView): never restore an old pinned height.
+  const isPinned = false;
   const frame = document.querySelector('.pixel-agents-frame');
   if (frame) {
     frame.addEventListener('load', () => notifyPixelAgentsPin(isPinned));
@@ -11241,7 +11248,7 @@ function archNodeInfo(id) {
   } else if (id === 'main-manager') {
     source = 'очередь, Bridge и службы MAIN MANAGER';
     const b = data.bridge || {};
-    current = b.available ? `последнее событие очереди ${archTime(b.last_event_at)}` : 'Очередь не ответила';
+    current = b.available ? `последнее событие рабочих Codex ${archTime(b.last_event_at)}` : 'Рабочие Codex не ответили';
     blocker = (data.blockers || [])[0] || '';
   }
   if (source) rows.push(['Источник данных', source]);
@@ -11266,7 +11273,7 @@ function archNodeInfo(id) {
 
 function archAgentInfo(agent) {
   const rows = [
-    ['Отдел', CC_DEPARTMENT_NAMES[agent.department_label] || agent.department_label], ['Роль', agent.role], ['Хост', agent.host],
+    ['Отдел', agent.department_label], ['Роль', agent.role], ['Хост', agent.host],
     ['Чат', agent.chat_registered ? 'зарегистрирован в реестре' : 'не зарегистрирован'],
     ['Состояние', agent.state_label], ['Последнее подтверждённое событие', agent.state_at ? archTime(agent.state_at) : 'нет'],
     ['Источник данных', agent.source], ['Проверено', archTime(archData.generated_at)],
@@ -11380,7 +11387,7 @@ function archDraw(root, data) {
   hubText.append(archEl('span', 'ax-kicker', 'Mac mini · координатор'), archEl('b', '', 'MAIN MANAGER'));
   const tags = archEl('span', 'ax-tags');
   ['Приоритеты', 'Распределение', 'Проверка работы'].forEach(t => tags.append(archEl('span', '', t)));
-  hubText.append(tags, archEl('small', 'ax-live', bridge.available ? `последнее событие очереди: ${archTime(bridge.last_event_at)}` : 'очередь не ответила'));
+  hubText.append(tags, archEl('small', 'ax-live', bridge.available ? `последнее событие рабочих Codex: ${archTime(bridge.last_event_at)}` : 'рабочие Codex не ответили'));
   const pulse = archEl('span', `ax-pulse${bridgeFresh ? '' : ' is-off'}`);
   pulse.title = bridgeFresh ? 'свежее событие' : 'нет свежего события';
   hub.append(archIcon('cc-mascot-hub'), hubText, pulse);

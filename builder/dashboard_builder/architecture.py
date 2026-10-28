@@ -37,7 +37,7 @@ DEPARTMENT_LABELS = {
     "infrastructure": "Инфраструктура",
     "development": "Разработка",
     "finance": "Финансы",
-    "internal": "Внутреннее",
+    "internal": "Знания",
 }
 DEPARTMENT_ORDER = ("hq", "infrastructure", "development", "finance", "internal")
 ROLE_LABELS = {
