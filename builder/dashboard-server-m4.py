@@ -1764,7 +1764,14 @@ def _department_campus_document() -> str:
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pixel Verse · Department Campus</title>
+<title>Кампус отделов</title>
+<script>
+// The same light or dark choice as the rest of Command Center (one key, per browser).
+try {{ if (localStorage.getItem('command-center.theme.v3') === 'dark') document.documentElement.dataset.theme = 'dark'; }} catch (error) {{}}
+window.addEventListener('storage', event => {{
+  if (event.key === 'command-center.theme.v3') document.documentElement.dataset.theme = event.newValue === 'dark' ? 'dark' : 'light';
+}});
+</script>
 <style>
 :root {{ color-scheme: dark; }}
 * {{ box-sizing: border-box; }}

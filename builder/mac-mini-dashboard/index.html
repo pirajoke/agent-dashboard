@@ -4345,12 +4345,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 /* Mark 2026-10-24 «я ничего не понимаю, кто зачем следит»: every helper that runs by itself, on one map. */
 #agents-watchers[hidden] { display: none; }
 .watch-lede { max-width: 70ch; margin: 0 0 4px; color: var(--mm-muted); font-size: 15px; line-height: 1.55; }
-.watch-stage { position: relative; height: 500px; margin: 16px 0 8px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, #fffdf8 0%, #f3ece0 70%, #ece3d4 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
+.watch-stage { position: relative; height: 500px; margin: 16px 0 8px; overflow: hidden; background: radial-gradient(120% 90% at 50% 20%, var(--mm-surface) 0%, var(--mm-background) 70%, var(--mm-surface-hover) 100%); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); touch-action: none; cursor: grab; }
 .watch-stage.is-dragging { cursor: grabbing; }
 .watch-stage[hidden] { display: none; }
 .watch-stage canvas { display: block; width: 100%; height: 100%; }
 .watch-stage-labels { position: absolute; inset: 0; pointer-events: none; }
-.watch-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: rgba(255, 252, 246, .95); border: 1px solid var(--mm-line); border-left: 4px solid var(--watch-tone, var(--mm-accent)); border-radius: 12px; box-shadow: 0 2px 8px rgba(60, 45, 20, .1); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
+.watch-stage-label { position: absolute; left: 0; top: 0; display: grid; gap: 1px; padding: 6px 11px; color: var(--mm-ink); font: inherit; font-size: 13px; font-weight: 650; line-height: 1.25; text-align: center; white-space: nowrap; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-left: 4px solid var(--watch-tone, var(--mm-accent)); border-radius: 12px; box-shadow: var(--mm-shadow-soft); cursor: pointer; pointer-events: auto; transform: translate(-50%, -100%); }
 .watch-stage-label small { color: var(--mm-muted); font-size: 11.5px; font-weight: 500; }
 .watch-stage-label:hover { border-color: var(--watch-tone, var(--mm-accent)); }
 .watch-stage-label:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
@@ -4640,6 +4640,31 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 #section-architecture.is-map .ax-wires path { animation: none; stroke: var(--mm-control-line); stroke-dasharray: none; }
 #section-architecture.is-map .ax-agent, #section-architecture.is-map .ax-svc { border-color: var(--mm-line); background: var(--mm-background); }
 #section-architecture.is-map .ax-agent .ax-ico svg { opacity: 1; filter: none; }
+/* Mark 2026-10-28: one design pass for the whole site («адекватный, унифицированный, понятный»). */
+/* Phone: eight tabs no longer fit five slots. The bar scrolls sideways and words never break mid-word. */
+@media (max-width: 760px) {
+  .cc-side .cc-main-nav { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x proximity; }
+  .cc-side .cc-main-nav::-webkit-scrollbar { display: none; }
+  .cc-side .cc-main-nav .nav-pill { flex: 0 0 76px; scroll-snap-align: start; }
+  .cc-main-nav .cc-tab-label { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+  /* Four views of Агенты in a 2 × 2 grid: every one stays on screen. */
+  .cc-main .cc-subnav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  .cc-main .cc-subnav button { min-width: 0; white-space: normal; text-align: center; }
+}
+/* Campus: one header. The 3D campus has its own camera, so the old move/zoom/pin bar is gone;
+   «На весь экран» lives in the campus header itself. */
+#agents-campus .pixel-agents-gamebar { display: none; }
+#section-agents #agents-campus .pixel-agents-shell { border: 0; box-shadow: none; background: none; }
+/* Refresh buttons: one look everywhere — the outlined button of Платформы. */
+button.cc-refresh, .cc-main button.cc-refresh {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; margin: 0; padding: 6px 14px;
+  color: var(--mm-accent); font: inherit; font-size: 13px; font-weight: 650; background: var(--mm-surface);
+  border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer;
+}
+button.cc-refresh:hover { background: var(--mm-selection); }
+/* Platform cards: the «sign in» line once above the grid, not on every card. */
+.platform-sign-in-note { margin: -6px 0 14px; color: var(--mm-muted); font-size: 13px; }
+.platform-sign-in-note[hidden], .platform-resources:empty { display: none; }
 </style>
 </head>
 <body>
@@ -5185,6 +5210,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
         <p class="cc-page-lede">Все продукты, админки и боты в одном месте.</p>
       </div>
     </header>
+    <p class="platform-sign-in-note" id="platform-sign-in-note" aria-live="polite" hidden></p>
     <ul class="platforms-legend" aria-label="Как открывается каждая ссылка">
       <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg><strong>Telegram</strong><small>бот открывается сразу</small></li>
       <li class="public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg><strong>Сайт</strong><small>в любом браузере</small></li>
@@ -5205,7 +5231,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://t.me/JobsRadarS_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="financial" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="financial" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
@@ -5219,7 +5245,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://t.me/my_dictionnary_tg_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="mydictionary" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="mydictionary" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
@@ -5232,7 +5258,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://health.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="health" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="health" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
@@ -5245,7 +5271,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://singularity.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="ai-singularity" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="ai-singularity" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
@@ -5258,7 +5284,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://t.me/contextnews_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="context-news" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="context-news" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
@@ -5271,7 +5297,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://accountable.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="accountable" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="accountable" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
@@ -5284,7 +5310,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://t.me/max_jarvis_hoian_bot" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-telegram"/></svg>Telegram</span> Открыть бота</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="jarvis" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="jarvis" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-property"/></svg></div>
@@ -5297,7 +5323,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://properties.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="property-os" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="property-os" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-pixel"/></svg></div>
@@ -5310,7 +5336,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://pixel-agents.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="pixel-agents" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="pixel-agents" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-mirror"/></svg></div>
@@ -5323,7 +5349,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="http://127.0.0.1:3051" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Открыть</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="closeness-mirror" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="closeness-mirror" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-sushi"/></svg></div>
@@ -5336,7 +5362,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="https://sushi-parisien.meshly.fr/" target="_blank" rel="noopener noreferrer"><span class="platform-access public"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-web"/></svg>Сайт</span> Открыть сайт</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="sushi-parisien" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="sushi-parisien" aria-live="polite"></div>
       </article>
       <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-n8n"/></svg></div>
@@ -5349,7 +5375,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
             <a class="platform-link" href="http://127.0.0.1:5678" target="_blank" rel="noopener noreferrer"><span class="platform-access private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg>Закрыто · SSH</span> Редактор</a>
           </div>
         </div>
-        <div class="platform-resources" data-platform-resources="n8n" aria-live="polite">Материалы — после проверки доступа.</div>
+        <div class="platform-resources" data-platform-resources="n8n" aria-live="polite"></div>
       </article>
 
     </div>
@@ -5673,7 +5699,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="mini-svc-count"></span></div>
-        <button class="svc-btn" onclick="refreshMini()" style="border:none;">↻ Обновить</button>
+        <button class="cc-refresh" type="button" onclick="refreshMini()">Обновить</button>
       </div>
       <div id="mini-services-table" style="padding:8px 8px 0;">
         <table class="svc-table">
@@ -5727,7 +5753,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="air-svc-count"></span></div>
-        <button class="svc-btn" onclick="refreshAir()" style="border:none;">↻ Обновить</button>
+        <button class="cc-refresh" type="button" onclick="refreshAir()">Обновить</button>
       </div>
       <div style="padding:8px 8px 0;">
         <table class="svc-table">
@@ -5781,7 +5807,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="pro-svc-count"></span></div>
-        <button class="svc-btn" onclick="refreshPro()" style="border:none;">↻ Обновить</button>
+        <button class="cc-refresh" type="button" onclick="refreshPro()">Обновить</button>
       </div>
       <div style="padding:8px 8px 0;">
         <table class="svc-table">
@@ -5877,7 +5903,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
           <h2 id="decisions-title">Что требует твоего решения</h2>
           <p>Сначала выборы, которые блокируют следующий шаг.</p>
         </div>
-        <button class="decision-button" type="button" onclick="refreshOwnerDecisions(true)">↻ Обновить решения</button>
+        <button class="cc-refresh" type="button" onclick="refreshOwnerDecisions(true)">Обновить</button>
       </div>
       <div class="decision-notice" id="decision-notice" role="status" aria-live="polite"></div>
       <div class="decision-state" id="decision-state" role="status">Загрузка решений…</div>
@@ -6742,7 +6768,7 @@ function renderOwnerDecisions(payload) {
     const statuses = { queued: 'в очереди', active: 'работает', testing: 'проверяет', waiting: 'ждёт решения', done: 'готово', failed: 'ошибка' };
     events.forEach(event => {
       const item = decisionNode('div', 'decision-activity-item');
-      item.append(decisionNode('strong', '', `${event.department_label} · ${event.project} · ${statuses[event.status] || '—'}`));
+      item.append(decisionNode('strong', '', `${CC_DEPARTMENT_NAMES[event.department_label] || event.department_label} · ${event.project} · ${statuses[event.status] || '—'}`));
       if (event.work_summary) item.append(decisionNode('p', '', event.work_summary));
       item.append(decisionNode('p', '', `Дальше: ${event.next_step}`));
       activity.append(item);
@@ -7758,6 +7784,8 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ccS
 ccSyncThemeButton();
 
 // Navigation
+// Department names in plain Russian on every screen (the data keeps the English labels).
+const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разработка', Design: 'Дизайн', Infrastructure: 'Инфраструктура', Internal: 'Знания', Finance: 'Финансы' };
 function showSection(name) {
   const isMachine = ['mac-mini', 'air', 'pro'].includes(name);
   if (isMachine) selectedMachine = name;
@@ -7774,6 +7802,8 @@ function showSection(name) {
   if (trigger) {
     trigger.classList.add('active');
     trigger.setAttribute('aria-pressed', 'true');
+    // Phone: the tab bar scrolls sideways; keep the open tab in view.
+    if (window.matchMedia('(max-width: 760px)').matches) trigger.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
   if (parent === 'machines') {
     document.getElementById('section-' + selectedMachine).classList.add('active');
@@ -8225,6 +8255,13 @@ function ccRenderPlatformResources(payload) {
     unavailable: 'Материалы временно недоступны. Откройте раздел ещё раз.',
   };
   if (payload?.state !== 'loading') ccResourceShown = true;
+  // Mark 2026-10-28: one line above the cards instead of the same cut line on every card.
+  const signInNote = document.getElementById('platform-sign-in-note');
+  if (signInNote) {
+    const noteText = ready || payload?.state === 'loading' ? '' : (states[payload?.state] || states.unavailable);
+    signInNote.textContent = noteText;
+    signInNote.hidden = !noteText;
+  }
   const kinds = {documents: 'Документы', notes: 'Заметки', code: 'Код', tasks: 'Задачи'};
   const scopes = {current: '', archive: 'Архив', upstream: 'Исходный проект', reference: 'Справочные материалы'};
   document.querySelectorAll('[data-platform-resources]').forEach(area => {
@@ -8250,13 +8287,17 @@ function ccRenderPlatformResources(payload) {
     }
     // Native disclosure keeps links keyboard-accessible without filling every card.
     // Replacing the area on access loss also removes any expanded private content.
+    // Cards without materials stay quiet; the access state is the one line above the grid.
+    const hasNote = ready && typeof entry?.note === 'string' && entry.note.length <= 400 && !/[\p{Cc}\p{Cf}]/u.test(entry.note);
+    if (!count && !hasNote) return;
     const details = count ? document.createElement('details') : null;
-    const status = document.createElement(count ? 'summary' : 'span');
-    if (ready && !count) status.className = 'platform-resources-empty';
-    status.textContent = ready ? (count ? 'Материалы проекта' : 'Материалы пока не подключены.') : (states[payload?.state] || states.unavailable);
     const container = details || area;
-    container.appendChild(status);
-    if (ready && typeof entry?.note === 'string' && entry.note.length <= 400 && !/[\p{Cc}\p{Cf}]/u.test(entry.note)) {
+    if (count) {
+      const status = document.createElement('summary');
+      status.textContent = 'Материалы проекта';
+      container.appendChild(status);
+    }
+    if (hasNote) {
       const note = document.createElement('p');
       note.className = 'platform-resource-note';
       note.textContent = entry.note;
@@ -10067,6 +10108,28 @@ const SVC_GROUPS = [
   ['other', 'Остальное'],
 ];
 const SVC_PLAIN_DESC = {
+  // Mark 2026-10-28: every service in Russian; the registry on the Mac mini keeps its English notes.
+  'Bridge API': 'Очередь задач для агентов',
+  'Bridge Worker': 'Выполняет задачи Claude из очереди',
+  'JARVIS Bot': 'Помощник в Telegram',
+  'Health API': 'Следит за здоровьем Mac mini',
+  'Command Center Server': 'Сервер этого сайта',
+  'M4 Cloudflare Tunnel': 'Открывает сайты Mac mini в интернете',
+  'PostgreSQL 16': 'Общая база данных',
+  'Ollama': 'Локальные модели ИИ',
+  'Meshly API': 'Сервер Meshly',
+  'Tag Website': 'Старая копия сайта Tag',
+  'Obsidian Telegram Bot': 'Бот заметок в Obsidian',
+  'Stock Content Bot': 'Сохраняет ссылки и статьи в таблицу',
+  'JobRadar': 'Поиск работы и бот Job Radar',
+  'Lexi Bot': 'Бот словаря Lexi в Telegram',
+  'Krisp Auto Import': 'Забирает записи встреч из Krisp',
+  'Linear Done Notifier': 'Пишет в Telegram о закрытых задачах Linear',
+  'Dashboard Data Sync': 'Подвозит данные для сайта',
+  'Live Feed Generator': 'Собирает живую ленту событий',
+  'Daily Hygiene': 'Ежедневная уборка',
+  'Obsidian Linear Sync': 'Сверяет задачи Obsidian и Linear',
+  'Docker Guardian': 'Поднимает упавшие контейнеры',
   'Lexi Admin': 'Админка словаря Lexi',
   'Lexi PostgreSQL': 'База словаря Lexi',
   'Context News Web': 'Сайт и админка Context News',
@@ -11103,7 +11166,7 @@ const ARCH_NODES = {
   queue: { name: 'Общая очередь заданий', where: 'Mac mini', does: 'Одна очередь MAIN MANAGER. Задание в ней занимают (claim), отправляют, сверяют и подтверждают. При неизвестном результате сначала сверка, затем повтор.' },
   onboarding: { name: 'Подключение нового агента', where: 'Mac mini', does: 'Новый агент появляется только по явному запросу «создай агента для…». Обычный новый чат автоматически не регистрируется.' },
   chats: { name: 'Проектные чаты Codex / Claude', where: 'Mac mini', does: 'Закреплённые чаты проектов. MAIN MANAGER пишет в чат задание из очереди; чат работает в своей папке и возвращает PR, тесты и отчёт. В один репозиторий одновременно пишет только один агент.' },
-  services: { name: 'Фоновые службы и workers', where: 'Mac mini · launchd', does: 'Программы, которые macOS запускает постоянно или по расписанию. Они не чаты: у них нет памяти разговора, их состояние видно по процессу и журналу. Запущенный процесс не доказывает, что работа сделана.' },
+  services: { name: 'Фоновые службы', where: 'Mac mini', does: 'Программы, которые macOS запускает постоянно или по расписанию. Они не чаты: у них нет памяти разговора, их состояние видно по процессу и журналу. Запущенный процесс не доказывает, что работа сделана.' },
   results: { name: 'Результат + доказательства', where: 'GitHub и Mac mini', does: 'PR, прошедшие тесты, проверка на работающем Mac mini. Отчёт агента без доказательства не принимается.' },
   check: { name: 'Проверка MAIN MANAGER', where: 'Mac mini', does: 'MAIN MANAGER сверяет доказательства, решает, что принято, что ждёт тебя и какой шаг разрешён дальше.' },
   log: { name: 'Журнал → командный центр', where: 'Obsidian · сайт · Telegram', does: 'Итог записывается в журнал проектов через webhook, статус появляется здесь, решения и блокеры приходят в Telegram.' },
@@ -11178,7 +11241,7 @@ function archNodeInfo(id) {
   } else if (id === 'main-manager') {
     source = 'очередь, Bridge и службы MAIN MANAGER';
     const b = data.bridge || {};
-    current = b.available ? `последнее событие Bridge ${archTime(b.last_event_at)}` : 'Bridge не ответил';
+    current = b.available ? `последнее событие очереди ${archTime(b.last_event_at)}` : 'Очередь не ответила';
     blocker = (data.blockers || [])[0] || '';
   }
   if (source) rows.push(['Источник данных', source]);
@@ -11203,7 +11266,7 @@ function archNodeInfo(id) {
 
 function archAgentInfo(agent) {
   const rows = [
-    ['Отдел', agent.department_label], ['Роль', agent.role], ['Хост', agent.host],
+    ['Отдел', CC_DEPARTMENT_NAMES[agent.department_label] || agent.department_label], ['Роль', agent.role], ['Хост', agent.host],
     ['Чат', agent.chat_registered ? 'зарегистрирован в реестре' : 'не зарегистрирован'],
     ['Состояние', agent.state_label], ['Последнее подтверждённое событие', agent.state_at ? archTime(agent.state_at) : 'нет'],
     ['Источник данных', agent.source], ['Проверено', archTime(archData.generated_at)],
@@ -11317,7 +11380,7 @@ function archDraw(root, data) {
   hubText.append(archEl('span', 'ax-kicker', 'Mac mini · координатор'), archEl('b', '', 'MAIN MANAGER'));
   const tags = archEl('span', 'ax-tags');
   ['Приоритеты', 'Распределение', 'Проверка работы'].forEach(t => tags.append(archEl('span', '', t)));
-  hubText.append(tags, archEl('small', 'ax-live', bridge.available ? `последнее событие Bridge: ${archTime(bridge.last_event_at)}` : 'Bridge не ответил'));
+  hubText.append(tags, archEl('small', 'ax-live', bridge.available ? `последнее событие очереди: ${archTime(bridge.last_event_at)}` : 'очередь не ответила'));
   const pulse = archEl('span', `ax-pulse${bridgeFresh ? '' : ' is-off'}`);
   pulse.title = bridgeFresh ? 'свежее событие' : 'нет свежего события';
   hub.append(archIcon('cc-mascot-hub'), hubText, pulse);
@@ -11363,7 +11426,7 @@ function archDraw(root, data) {
   svc.dataset.axNode = 'services';
   const svcHead = archEl('div', 'ax-dhead');
   const svcText = archEl('div');
-  svcText.append(archEl('h3', '', 'Фоновые службы и workers'), archEl('p', '', 'Их запускает macOS постоянно или по расписанию. Процесс жив ≠ работа сделана.'));
+  svcText.append(archEl('h3', '', 'Фоновые службы'), archEl('p', '', 'Их запускает Mac mini сам, постоянно или по расписанию. Включена — ещё не значит, что работа сделана.'));
   const svcInfo = archEl('button', 'cc-i', 'i'); svcInfo.type = 'button'; svcInfo.dataset.ccInfo = 'arch-services'; svcInfo.setAttribute('aria-label', 'Как работают фоновые службы');
   ccInfoSources['arch-services'] = () => archNodeInfo('services');
   svcHead.append(archIcon('ax-i-gear'), svcText, svcInfo);

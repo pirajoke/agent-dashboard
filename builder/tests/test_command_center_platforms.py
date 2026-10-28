@@ -402,7 +402,8 @@ vm.createContext(context);
         self.assertIn('Synthetic source', out[0])
         for word in ('Архив', 'Исходный', 'Справ'):
             self.assertIn(word.lower(), out[0].lower())
-        self.assertRegex(out[1], r'(?i)не подключ|не привязан|нет ссыл')
+        # Mark 2026-10-28: a card without materials stays quiet instead of repeating «не подключены».
+        self.assertEqual(out[1], '')
         self.assertNotRegex(out[0], r'<a[^>]+onclick=')
         for anchor in re.findall(r'<a\b[^>]*>', out[0]):
             self.assertIn('target="_blank"', anchor)
@@ -433,12 +434,15 @@ process.stdout.write(JSON.stringify(areas[0].innerHTML));''')
 (async()=>{await context.ccLoadPlatformResources();const success=areas[0].innerHTML;
 responseMode='network';await context.ccLoadPlatformResources();const failed=areas[0].innerHTML;
 responseMode='good';await context.ccLoadPlatformResources();responseMode='unauthorized';await context.ccLoadPlatformResources();
-process.stdout.write(JSON.stringify({success,failed,denied:areas[0].innerHTML,calls:fetchCalls}));})().catch(e=>{console.error(e);process.exit(1)});''')
+const note=document.getElementById('platform-sign-in-note');
+process.stdout.write(JSON.stringify({success,failed,denied:areas[0].innerHTML,note:note.textContent,noteHidden:note.hidden,calls:fetchCalls}));})().catch(e=>{console.error(e);process.exit(1)});''')
         self.assertIn('https://github.com/example/navigation-fixture', out['success'])
         for state in ('failed', 'denied'):
             self.assertNotIn('https://github.com/example/navigation-fixture', out[state])
             self.assertNotIn('Synthetic source', out[state])
-            self.assertTrue(out[state].strip(), 'Readable failure/auth state required')
+            self.assertEqual(out[state], '', 'Cards stay quiet; the state is one line above the grid')
+        self.assertRegex(out['note'], r'(?i)входа владельца', 'Readable auth state required, once above the grid')
+        self.assertFalse(out['noteHidden'])
         for call in out['calls']:
             self.assertTrue(call['url'].endswith('/api/platform-resources'))
             self.assertEqual(call['options'].get('cache'), 'no-store')
@@ -447,9 +451,10 @@ process.stdout.write(JSON.stringify({success,failed,denied:areas[0].innerHTML,ca
     def test_ac_4_auth_loss_without_network_error_clears_private_links(self):
         out = self.run_js(r'''
 context.ccRenderPlatformResources(good);context.ccRenderPlatformResources({state:'owner_required',verified_at:null,platforms:{}});
-process.stdout.write(JSON.stringify(areas.map(n=>n.innerHTML)));''')
-        self.assertNotIn('https://github.com/example/navigation-fixture', ''.join(out))
-        self.assertTrue(all(s.strip() for s in out))
+process.stdout.write(JSON.stringify({areas:areas.map(n=>n.innerHTML),note:document.getElementById('platform-sign-in-note').textContent}));''')
+        self.assertNotIn('https://github.com/example/navigation-fixture', ''.join(out['areas']))
+        self.assertTrue(all(s == '' for s in out['areas']))
+        self.assertIn('входа владельца', out['note'])
 
 
     def test_ac_4_ec_4_delayed_old_success_cannot_restore_links_after_newer_denial(self):
@@ -476,7 +481,7 @@ pending[0]({ok:true,status:200,json:async()=>good});await initial;const shown=ar
 const again=context.ccLoadPlatformResources();const during=areas[0].innerHTML;
 pending[1]({ok:false,status:401,json:async()=>({state:'owner_required',verified_at:null,platforms:{}})});await again;
 process.stdout.write(JSON.stringify({first,waiting,shown,during,after:areas[0].innerHTML}));})().catch(e=>{console.error(e);process.exit(1)});''')
-        self.assertIn('Проверяем доступ', out['waiting'], 'First visit still says it is checking')
+        self.assertEqual(out['waiting'], '', 'First visit: the cards stay quiet while access is checked')
         self.assertIn('https://github.com/example/navigation-fixture', out['shown'])
         self.assertEqual(out['during'], out['shown'], 'A refresh must not swap materials for the waiting line')
         self.assertNotIn('https://github.com/example/navigation-fixture', out['after'], 'Access loss still clears links')
