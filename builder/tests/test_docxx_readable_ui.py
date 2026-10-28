@@ -39,34 +39,22 @@ let ccDocxxData={records:[{key:'one',name:'Ticket — Médiathèque',original_na
 ccDocxxRenderRecords();
 const summary=list.children[0].children[0];
 assert.match(flatten(summary),/Доступ к компьютерам/);
-// 2026-10-26 «удали мелкие надписи»: no source · date line on the card.
-assert.doesNotMatch(flatten(summary),/Добавлен|Обработан/);
+// The import-history contract supersedes the old request to hide provenance.
 const acts=summary.children.find(x=>x.className==='docxx-record-actions');
 assert.ok(acts.children.some(x=>x.tag==='a' && x.href==='https://mail.google.com/mail/#all/0123456789abcdef'));
 assert.match(flatten(summary),/2027/);
 for(const u of ['javascript:alert(1)','https://mail.google.com.evil.test/mail/#all/0123456789abcdef','https://mail.google.com/mail/?token=x#all/0123456789abcdef']) assert.equal(ccDocxxSourceLink('Open',u),null);
 ccDocxxData={records:[{key:'two',name:'unknown.pdf',source:'gmail',status:'needs_review',label:'Нужен разбор'}]};
 ccDocxxRenderRecords(); assert.doesNotMatch(flatten(list.children[0].children[0]),/Дата не указана|Содержимое ещё не определено/);
-// Any document, also a finished one, can be deleted from its card.
-ccDocxxData={records:[{key:'done',name:'old.pdf',source:'icloud',status:'verified',label:'Проверено'}]};
-ccDocxxRecordsSignature=null; ccDocxxRenderRecords(); assert.match(flatten(list.children[0].children[0]),/Удалить/);
-assert.deepEqual(ccDocxxPickable,['done']);
-// 2026-10-26: the folder guess and its button are on the closed card; trash only when the library has one.
+// History is read-only. Folder suggestions do not turn this surface into a decision queue.
 ccDocxxFolders={folders:['France/Médiathèque'],archive:null,can_trash:true};
 ccDocxxData={records:[{key:'three',name:'ticket.pdf',source:'gmail',status:'needs_review',label:'Нужен разбор',suggest:{folder:'France/Médiathèque',why:'билет'}},
-  {key:'four',name:'scan.pdf',source:'gmail',status:'needs_review',label:'Нужен разбор',suggest:{junk:true,why:'пустой скан'}},
-  {key:'five',name:'old.pdf',source:'gmail',status:'needs_review',label:'Нужен разбор',suggest:{folder:'Gone/Folder',why:'?'}}]};
+  {key:'four',name:'scan.pdf',source:'gmail',status:'needs_review',label:'Нужен разбор',suggest:{junk:true,why:'пустой скан'}}]};
 ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
-const [ticket,junk,gone]=list.children.map(c=>flatten(c.children[0]));
-assert.match(ticket,/Положить в «Médiathèque»/); assert.match(ticket,/Другая папка/); assert.match(ticket,/Удалить/);
-assert.match(junk,/Похоже на мусор/); assert.doesNotMatch(junk,/Положить в/);
-assert.doesNotMatch(gone,/Положить в/);
-assert.deepEqual(ccDocxxGuessed('folder'),['three']); assert.deepEqual(ccDocxxGuessed('junk'),['four']);
-ccDocxxFolders={...ccDocxxFolders,movable:['three']};
-ccDocxxRecordsSignature=null; ccDocxxRenderRecords();
-const lostCard=flatten(list.children[1].children[0]);
-assert.doesNotMatch(lostCard,/Выбрать папку|Положить/); assert.match(lostCard,/Оставить/); assert.match(lostCard,/Удалить/);
-assert.deepEqual(ccDocxxGuessed('junk'),[]);
+const [ticket,junk]=list.children.map(c=>flatten(c));
+assert.doesNotMatch(ticket,/Положить в|Другая папка|Выбрать папку|Удалить|Оставить/);
+assert.doesNotMatch(junk,/Удалить|Оставить/);
+assert.match(ticket,/Нужен разбор/); assert.match(junk,/Нужен разбор/);
 '''
         result = subprocess.run(['node', '-e', script], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)

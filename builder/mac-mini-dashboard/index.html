@@ -5147,7 +5147,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <p>MacBook можно закрыть. Mini должен быть включён, пользователь — в системе, iCloud и Google Drive — доступны. Эта панель читает статус и ничего не переносит.</p>
       <div class="docxx-links" id="docxx-guide-links"></div>
     </div>
-    <div class="docxx-results-head"><div><h3>Что произошло с документами</h3><p id="docxx-results-note">Последний проход и ограниченная история обработчика.</p></div><label class="docxx-search"><input id="docxx-search" type="search" placeholder="Найти в списке" aria-label="Найти в списке" autocomplete="off" maxlength="200"></label></div>
+    <div class="docxx-results-head"><div><h3>История импорта документов</h3><p id="docxx-results-note">Последний проход и ограниченная история обработчика.</p></div><label class="docxx-search"><input id="docxx-search" type="search" placeholder="Найти в списке" aria-label="Найти в списке" autocomplete="off" maxlength="200"></label></div>
     <div class="docxx-filters" role="group" aria-label="Показать операции"><button type="button" data-docxx-filter="all" aria-pressed="true">Все</button><button type="button" data-docxx-filter="attention" aria-pressed="false">Нужно внимание</button><button type="button" data-docxx-filter="complete" aria-pressed="false">Обработанные</button></div>
     <div class="docxx-sort-bar" id="docxx-sort-bar" hidden>
       <strong id="docxx-sort-count"></strong>
@@ -13619,30 +13619,29 @@ function ccDocxxRenderRecords() {
   const opened=new Set([...list.querySelectorAll('details[open]')].map(d=>d.dataset.key));
   list.replaceChildren();
   const rows=(ccDocxxData?.records || []).filter(r=>(ccDocxxFilter==='all'||(ccDocxxFilter==='attention'?ccDocxxAttention.has(r.status):['verified','copied','already_present','sorted'].includes(r.status))) && `${r.name} ${r.original_name} ${r.destination} ${r.description || ''}`.toLocaleLowerCase('ru').includes(q));
-  ccDocxxSortVisible=rows.filter(r=>r.status==='needs_review').map(r=>r.key);
-  // 2026-10-26 «добавь возможность всё это удалять»: every shown document can be picked for «Удалить».
-  ccDocxxPickable=rows.map(r=>r.key);
-  for(const key of [...ccDocxxSelected]) if(!ccDocxxPickable.includes(key)) ccDocxxSelected.delete(key);
+  // Import history reports outcomes; filing decisions belong to the processor.
+  ccDocxxSortVisible=[]; ccDocxxPickable=[]; ccDocxxSelected.clear();
   ccDocxxSortBar();
   if(!rows.length) { list.append(ccDocxxEl('p',q||ccDocxxFilter!=='all'?'По выбранному фильтру операций нет.':'В журнале пока нет операций. Добавь документ через один из входов выше.','docxx-empty')); return; }
   for(const row of rows) {
     const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
     const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
-    // Mark 2026-10-26 «удали мелкие надписи»: no source · date line under the name.
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
     name.append(ccDocxxEl('strong',row.name));
+    if(row.destination) name.append(ccDocxxEl('span',row.destination,'docxx-record-description'));
+    const source={gmail:'Gmail',icloud:'iCloud',drive:'Google Drive',manual:'Добавлен вручную'}[row.source];
+    const provenance=[ccDocxxShortDate(row.at),source].filter(Boolean).join(' · ');
+    if(provenance) name.append(ccDocxxEl('small',provenance));
     if(row.description) name.append(ccDocxxEl('span',row.description,'docxx-record-description'));
     if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Срок действия'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
-    if(row.status==='needs_review') { const todo=ccDocxxRecordActions(row); if(todo) name.append(todo); }
+    if(ccDocxxAttention.has(row.status) && row.reason) name.append(ccDocxxEl('span',row.reason,'docxx-record-description'));
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
-    summary.append(ccDocxxPick(row.key,row.name),name);
+    summary.append(icon,name);
     const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку ↗':'Открыть документ ↗',row.url) || ccDocxxSourceLink('Открыть в Gmail ↗',row.source_url);
     const acts=ccDocxxEl('span',undefined,'docxx-record-actions');
     if(openLink) { openLink.className='docxx-record-source'; acts.append(openLink); }
-    if(row.status!=='needs_review') acts.append(ccDocxxAct('Удалить','is-trash docxx-record-delete',()=>ccDocxxDecide('remove',[row.key])));
     summary.append(badge); if(acts.children.length) summary.append(acts);
     const body=ccDocxxEl('div',undefined,'docxx-record-body');
-    if(row.status==='sorted') body.append(ccDocxxRecordActions(row));
     const dl=ccDocxxEl('dl');
     for(const [label,value] of [['Было',row.original_name],['Теперь',row.destination],['Пояснение',row.reason]]) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
     body.append(dl);
@@ -13713,20 +13712,7 @@ function ccDocxxGuessed(kind) {
   return keys.filter(k=>rows.has(k) && ccDocxxMovable(k) && (kind==='junk'?rows.get(k).suggest?.junk===true:!!ccDocxxSuggested(rows.get(k))));
 }
 function ccDocxxSortBar() {
-  const bar=document.getElementById('docxx-sort-bar'); const total=ccDocxxSortVisible.length, picked=ccDocxxSelected.size, shown=ccDocxxPickable.length;
-  bar.hidden=!shown && !document.getElementById('docxx-sort-note').textContent;
-  ccDocxxText('docxx-sort-count',picked?'Выбрано: '+picked:total?ccDocxxCount(total,'документ ждёт','документа ждут','документов ждут')+' решения':'Всё разобрано');
-  const all=document.getElementById('docxx-sort-all'); all.hidden=!shown; all.textContent=picked && picked===shown?'Снять выбор':'Выбрать все';
-  // Folder choices fit only documents still waiting; «Удалить» fits any.
-  const onlyReview=picked>0 && [...ccDocxxSelected].every(k=>ccDocxxSortVisible.includes(k));
-  document.getElementById('docxx-sort-move').hidden=!onlyReview;
-  document.getElementById('docxx-sort-keep').hidden=!onlyReview;
-  document.getElementById('docxx-sort-archive').hidden=!onlyReview || !ccDocxxFolders?.archive;
-  document.getElementById('docxx-sort-trash').hidden=!picked;
-  const auto=ccDocxxGuessed('folder'), junk=ccDocxxGuessed('junk');
-  const autoButton=document.getElementById('docxx-sort-auto'); autoButton.hidden=!auto.length; autoButton.textContent='Разложить по подсказкам ('+auto.length+')';
-  const junkButton=document.getElementById('docxx-sort-junk'); junkButton.hidden=!junk.length; junkButton.textContent='Удалить мусор ('+junk.length+')';
-  for(const b of bar.querySelectorAll('button')) b.disabled=ccDocxxBusy;
+  document.getElementById('docxx-sort-bar').hidden=true;
 }
 async function ccDocxxLoadFolders() {
   try {
@@ -13832,11 +13818,6 @@ function ccDocxxRender(data) {
   for(const [label,key] of [['Инструкция в Google Drive ↗','guide'],['Библиотека DOCXXx ↗','library'],['Разобрать позже ↗','review'],['Полный каталог ↗','catalog'],['Текстовый статус ↗','status']]) { const a=ccDocxxLink(label,data.links?.[key]); if(a) links.append(a); }
   ccDocxxText('docxx-results-note',`Показано до 100 операций. В доступном журнале: ${Number.isInteger(data.records_total)?data.records_total:'—'}. Обновление панели каждые 5 секунд, пока она открыта.`);
   ccDocxxRenderGmail(); ccDocxxExplain(); ccDocxxRenderRecords(); ccDocxxRenderOperations();
-  if(!ccDocxxFolders && data.review_count>0 && !ccDocxxFoldersAsked) { ccDocxxFoldersAsked=true; ccDocxxLoadFolders(); }
-  // A new document on the open page needs a fresh «movable» list, or it would show only «Оставить».
-  const reviewKeys=(data.records||[]).filter(r=>r.status==='needs_review').map(r=>r.key).join();
-  if(ccDocxxFolders && reviewKeys!==ccDocxxReviewKeys && !ccDocxxBusy) ccDocxxLoadFolders();
-  ccDocxxReviewKeys=reviewKeys;
 }
 let ccDocxxFoldersAsked=false, ccDocxxReviewKeys='';
 async function ccLoadDocxx() {
