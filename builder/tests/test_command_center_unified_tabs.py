@@ -193,11 +193,13 @@ class CommandCenterUnifiedTabsTests(unittest.TestCase):
 
     def _assert_platform_reorder_persistence_is_local(self):
         """Execute keyboard and drag commits, proving writes stay in localStorage."""
-        names = ("platformCards", "readPlatformOrder", "renumberPlatforms", "savePlatformOrder",
+        names = ("platformCards", "platformGroupOf", "platformGroupCards", "readPlatformOrder",
+                 "renumberPlatforms", "savePlatformOrder",
                  "announcePlatformOrder", "movePlatformByKey", "commitPlatformLongPress")
         functions = "\n".join("function " + name + "(" + (
             "event, directions" if name == "movePlatformByKey" else
             "event" if name == "commitPlatformLongPress" else
+            "card" if name in ("platformGroupOf", "platformGroupCards") else
             "card, prefix = 'Перемещено:'" if name == "announcePlatformOrder" else ""
         ) + ") {" + self._js_function(name) + "\n}" for name in names)
         javascript = r'''

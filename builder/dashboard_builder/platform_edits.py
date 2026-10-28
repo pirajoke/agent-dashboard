@@ -1,4 +1,4 @@
-"""Owner edits to Platforms cards: a name, a status label, a description and a priority per card.
+"""Owner edits to Platforms cards: a name, a status label, a description, a priority and a group per card.
 
 Mark 2026-10-20: «Добавь кнопку Эдит, чтоб, если что, я мог менять название, менять статус,
 менять приоритетность». The page keeps its built-in names; this file only overrides them, so a
@@ -21,6 +21,7 @@ NAME_MAX = 60
 STATUS_MAX = 40
 DESCRIPTION_MAX = 200
 PRIORITIES = ("main", "normal")
+GROUPS = ("product", "personal")  # Mark 2026-10-28: «Продукты» first, then «Личные».
 
 _STORE_LOCK = threading.Lock()  # The server is threaded; one card change at a time.
 _ID = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
@@ -51,7 +52,7 @@ def validate_edits(payload: object) -> dict[str, dict[str, str]]:
     for card_id, entry in edits.items():
         if not isinstance(card_id, str) or not _ID.match(card_id):
             raise ValueError("invalid_card_id")
-        if not isinstance(entry, dict) or set(entry) - {"name", "status", "description", "priority"}:
+        if not isinstance(entry, dict) or set(entry) - {"name", "status", "description", "priority", "group"}:
             raise ValueError("invalid_card_entry")
         result: dict[str, str] = {}
         name = _clean_text(entry.get("name"), NAME_MAX)
@@ -68,6 +69,11 @@ def validate_edits(payload: object) -> dict[str, dict[str, str]]:
             if priority not in PRIORITIES:
                 raise ValueError("invalid_priority")
             result["priority"] = priority
+        group = entry.get("group")
+        if group is not None:
+            if group not in GROUPS:
+                raise ValueError("invalid_group")
+            result["group"] = group
         if result:
             clean[card_id] = result
     return clean

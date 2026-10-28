@@ -3844,6 +3844,10 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
    The first link stretches over the whole card, so a tap anywhere opens the service; a second way in
    (a Telegram bot) stays as a small chip. Buttons, chips and materials sit above the stretched link. */
 .platform-directory { grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 10px; }
+/* «Продукты» first, then «Личные» (Mark 2026-10-28): a heading across the whole row starts each group. */
+.platform-group-head { grid-column: 1 / -1; margin: 14px 0 2px; color: var(--mm-ink); font-size: 18px; font-weight: 700; line-height: 1.3; letter-spacing: -.01em; }
+.platform-group-head:first-child { margin-top: 0; }
+.platform-group-head[hidden] { display: none; }
 .platform-entry,
 .platform-entry.priority { grid-template-columns: 58px minmax(0, 1fr); grid-template-rows: auto; align-content: start; cursor: pointer; }
 .platform-entry:hover { transform: none; border-color: var(--mm-accent); }
@@ -5217,7 +5221,9 @@ button.cc-refresh:hover { background: var(--mm-selection); }
 
     <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true"></p>
     <div class="platform-directory" title="Удерживайте карточку и перетащите, чтобы поменять порядок">
-      <article class="platform-entry" data-platform-id="financial" data-platform-name="JobRadar" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <h3 class="platform-group-head" data-platform-group-head="product">Продукты</h3>
+      <h3 class="platform-group-head" data-platform-group-head="personal">Личные</h3>
+      <article class="platform-entry" data-platform-id="financial" data-platform-group="product" data-platform-name="JobRadar" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jobradar"/></svg></div>
         <span class="platform-index">01</span>
         <div class="platform-content">
@@ -5231,7 +5237,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="financial" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="mydictionary" data-platform-name="Lexi" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="mydictionary" data-platform-group="product" data-platform-name="Lexi" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-dictionary"/></svg></div>
         <span class="platform-index">02</span>
         <div class="platform-content">
@@ -5245,7 +5251,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="mydictionary" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="health" data-platform-name="Health OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="health" data-platform-group="product" data-platform-name="Health OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-health"/></svg></div>
         <span class="platform-index">03</span>
         <div class="platform-content">
@@ -5258,7 +5264,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="health" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-name="AI Singularity" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="ai-singularity" data-platform-group="product" data-platform-name="AI Singularity" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-singularity"/></svg></div>
         <span class="platform-index">04</span>
         <div class="platform-content">
@@ -5271,7 +5277,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="ai-singularity" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="context-news" data-platform-name="Context News France" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="context-news" data-platform-group="product" data-platform-name="Context News France" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-news"/></svg></div>
         <span class="platform-index">05</span>
         <div class="platform-content">
@@ -5284,7 +5290,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="context-news" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="accountable" data-platform-name="Accountable OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="accountable" data-platform-group="personal" data-platform-name="Accountable OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-accountable"/></svg></div>
         <span class="platform-index">06</span>
         <div class="platform-content">
@@ -5297,7 +5303,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="accountable" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="jarvis" data-platform-name="JARVIS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="jarvis" data-platform-group="personal" data-platform-name="JARVIS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-jarvis"/></svg></div>
         <span class="platform-index">07</span>
         <div class="platform-content">
@@ -5310,7 +5316,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="jarvis" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="property-os" data-platform-name="Property OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="property-os" data-platform-group="product" data-platform-name="Property OS" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-property"/></svg></div>
         <span class="platform-index">08</span>
         <div class="platform-content">
@@ -5323,7 +5329,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="property-os" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-name="Pixel Agents" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="pixel-agents" data-platform-group="personal" data-platform-name="Pixel Agents" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-pixel"/></svg></div>
         <span class="platform-index">09</span>
         <div class="platform-content">
@@ -5336,7 +5342,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="pixel-agents" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-name="Зеркало Контакта" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="closeness-mirror" data-platform-group="personal" data-platform-name="Зеркало Контакта" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-mirror"/></svg></div>
         <span class="platform-index">10</span>
         <div class="platform-content">
@@ -5349,7 +5355,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="closeness-mirror" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-name="Sushi Parisien" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="sushi-parisien" data-platform-group="product" data-platform-name="Sushi Parisien" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-sushi"/></svg></div>
         <span class="platform-index">11</span>
         <div class="platform-content">
@@ -5362,7 +5368,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
         <div class="platform-resources" data-platform-resources="sushi-parisien" aria-live="polite"></div>
       </article>
-      <article class="platform-entry" data-platform-id="n8n" data-platform-name="n8n" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
+      <article class="platform-entry" data-platform-id="n8n" data-platform-group="personal" data-platform-name="n8n" tabindex="0" aria-keyshortcuts="ArrowUp ArrowDown">
         <div class="platform-art" aria-hidden="true"><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-n8n"/></svg></div>
         <span class="platform-index">12</span>
         <div class="platform-content">
@@ -5414,6 +5420,13 @@ button.cc-refresh:hover { background: var(--mm-selection); }
             <option value="normal">Обычный</option>
           </select>
         </label>
+        <label>Группа
+          <select id="platform-edit-group" name="group">
+            <option value="product">Продукты</option>
+            <option value="personal">Личные</option>
+          </select>
+          <small>«Продукты» стоят первыми, «Личные» — под ними.</small>
+        </label>
         <fieldset class="platform-edit-custom" id="platform-edit-custom" hidden>
           <legend>Картинка</legend>
           <div class="platform-edit-image">
@@ -5432,7 +5445,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
           </div>
           <small>Первая ссылка открывается по нажатию на карточку. Пустые строки не сохраняются.</small>
         </fieldset>
-        <label id="platform-edit-place-field">Место в списке
+        <label id="platform-edit-place-field">Место в группе
           <input id="platform-edit-place" name="place" type="number" min="1" step="1" inputmode="numeric">
           <small id="platform-edit-place-hint"></small>
         </label>
@@ -7247,6 +7260,39 @@ function readPlatformOrder() {
   }
 }
 
+// Two groups (Mark 2026-10-28: «Разбей тут на личные и на продукты. Сначала у нас продукты, потом личные»).
+// A card's group comes from the page or from its edit window; cards move and drag only inside their group.
+const PLATFORM_GROUPS = Object.freeze(['product', 'personal']);
+
+function platformGroupOf(card) {
+  return card?.dataset.platformGroup === 'personal' ? 'personal' : 'product';
+}
+
+function platformGroupCards(card) {
+  const group = platformGroupOf(card);
+  return platformCards().filter(item => platformGroupOf(item) === group);
+}
+
+function arrangePlatformGroups() {
+  if (!platformDirectory) return;
+  const cards = platformCards();
+  const wanted = [];
+  PLATFORM_GROUPS.forEach(group => {
+    const head = platformDirectory.querySelector(`[data-platform-group-head="${group}"]`);
+    const members = cards.filter(card => platformGroupOf(card) === group);
+    if (head) {
+      head.hidden = members.length === 0;
+      wanted.push(head);
+    }
+    wanted.push(...members);
+  });
+  const current = Array.from(platformDirectory.children).filter(node => wanted.includes(node));
+  // Moving a node drops its focus, so leave the page alone when every card is already in its group.
+  if (current.length === wanted.length && current.every((node, index) => node === wanted[index])) return;
+  const note = platformDirectory.querySelector('.platform-note');
+  wanted.forEach(node => platformDirectory.insertBefore(node, note));
+}
+
 function renumberPlatforms() {
   platformCards().forEach((card, index) => {
     const number = card.querySelector('.platform-index');
@@ -7262,6 +7308,7 @@ function applyPlatformOrder(order) {
     const card = cardsById.get(id);
     if (card) platformDirectory.insertBefore(card, note);
   });
+  arrangePlatformGroups();
   renumberPlatforms();
 }
 
@@ -7277,7 +7324,7 @@ function savePlatformOrder() {
 }
 
 function announcePlatformOrder(card, prefix = 'Перемещено:') {
-  const cards = platformCards();
+  const cards = platformGroupCards(card);
   const position = cards.indexOf(card) + 1;
   const name = card.dataset.platformName || card.dataset.platformId;
   document.getElementById('platform-order-status').textContent =
@@ -7291,7 +7338,7 @@ function movePlatformByKey(event, directions) {
   if (!direction || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
   if (!card.classList?.contains('platform-entry') || !platformDirectory?.contains(card)) return;
   event.preventDefault();
-  const cards = platformCards();
+  const cards = platformGroupCards(card);
   const index = cards.indexOf(card);
   if (direction === 'previous' && index > 0) {
     cards[index - 1].before(card);
@@ -7364,7 +7411,7 @@ function platformCardAtPoint(x, y) {
 
 function reorderPlatformAt(state, x, y) {
   const target = platformCardAtPoint(x, y);
-  if (!target || target === state.card) return;
+  if (!target || target === state.card || platformGroupOf(target) !== platformGroupOf(state.card)) return;
   const cards = platformCards();
   const sourceIndex = cards.indexOf(state.card);
   const targetIndex = cards.indexOf(target);
@@ -7692,6 +7739,7 @@ function togglePlatformArchive(event) {
     platformArchiveOpen.focus();
   } else {
     platformDirectory.appendChild(card);
+    arrangePlatformGroups();
     renumberPlatforms();
     savePlatformOrder();
     refreshPlatformArchive();
@@ -8727,6 +8775,7 @@ const platformEditDefaults = new Map();
 let platformEdits = {};
 let platformEditCard = null;
 let platformEditMode = 'shipped'; // 'shipped' card from the page, 'custom' owner-made card, or 'new'.
+let platformEditGroupBefore = null;
 
 function platformEditAllCards() {
   return Array.from(document.querySelectorAll('#section-platforms .platform-entry'));
@@ -8738,6 +8787,7 @@ function platformEditCurrent(card) {
     status: card.querySelector('.platform-tag')?.textContent.trim() || '',
     description: card.querySelector('.platform-description')?.textContent.trim() || '',
     priority: card.classList.contains('priority') ? 'main' : 'normal',
+    group: platformGroupOf(card),
   };
 }
 
@@ -8774,6 +8824,7 @@ function applyPlatformEdits(edits) {
       status: typeof own.status === 'string' && own.status.trim() ? own.status.trim() : base.status,
       description: typeof own.description === 'string' && own.description.trim() ? own.description.trim() : base.description,
       priority: own.priority === 'main' || own.priority === 'normal' ? own.priority : base.priority,
+      group: PLATFORM_GROUPS.includes(own.group) ? own.group : base.group,
     };
     const nameNode = card.querySelector('.platform-name');
     const tagNode = card.querySelector('.platform-tag');
@@ -8782,9 +8833,12 @@ function applyPlatformEdits(edits) {
     const descriptionNode = card.querySelector('.platform-description');
     if (descriptionNode) descriptionNode.textContent = value.description;
     card.classList.toggle('priority', value.priority === 'main');
+    card.dataset.platformGroup = value.group;
     platformEditButton(card);
     platformEditLabels(card, value.name);
   });
+  arrangePlatformGroups();
+  renumberPlatforms();
 }
 
 function platformEditButton(card) {
@@ -8827,7 +8881,8 @@ function openPlatformEdit(card) {
   platformEditCard = card || null;
   const own = card ? platformCustomCards.find(item => item.id === card.dataset.platformId) : null;
   platformEditMode = !card ? 'new' : own ? 'custom' : 'shipped';
-  const value = card ? platformEditCurrent(card) : {name: '', status: 'Работает', description: '', priority: 'normal'};
+  const value = card ? platformEditCurrent(card) : {name: '', status: 'Работает', description: '', priority: 'normal', group: 'product'};
+  platformEditGroupBefore = card ? value.group : null;
   const archived = Boolean(card?.closest('.platform-archive-list'));
   document.getElementById('platform-edit-title').textContent = card ? 'Изменить карточку' : 'Новая карточка';
   document.getElementById('platform-edit-custom').hidden = platformEditMode === 'shipped';
@@ -8839,13 +8894,14 @@ function openPlatformEdit(card) {
   document.getElementById('platform-edit-status').value = value.status;
   document.getElementById('platform-edit-description').value = value.description;
   document.getElementById('platform-edit-priority').value = value.priority;
-  const cards = platformCards();
+  document.getElementById('platform-edit-group').value = value.group;
+  const cards = card ? platformGroupCards(card) : platformCards();
   const place = document.getElementById('platform-edit-place');
   document.getElementById('platform-edit-place-field').hidden = archived || !card;
   place.max = String(cards.length);
   place.value = archived || !card ? '' : String(cards.indexOf(card) + 1);
   document.getElementById('platform-edit-place-hint').textContent =
-    `От 1 до ${cards.length}. Место запоминается на этом устройстве, как при перетаскивании.`;
+    `От 1 до ${cards.length} внутри группы. Место запоминается на этом устройстве, как при перетаскивании.`;
   document.getElementById('platform-edit-note').textContent = '';
   if (typeof platformEditDialog.showModal === 'function') platformEditDialog.showModal();
   else platformEditDialog.setAttribute('open', '');
@@ -8881,6 +8937,8 @@ async function savePlatformEdit(reset = false) {
     const description = document.getElementById('platform-edit-description').value.replace(/\s+/g, ' ').trim();
     if (description && description !== base.description) entry.description = description;
     if (priority !== base.priority) entry.priority = priority;
+    const group = document.getElementById('platform-edit-group').value;
+    if (PLATFORM_GROUPS.includes(group) && group !== base.group) entry.group = group;
     if (Object.keys(entry).length) next[id] = entry; else delete next[id];
   }
   applyPlatformEdits(next);
@@ -8914,8 +8972,18 @@ async function savePlatformEdit(reset = false) {
 }
 
 function movePlatformToPlace(card) {
+  if (platformEditGroupBefore && platformGroupOf(card) !== platformEditGroupBefore) {
+    // A card moved to the other group goes to the end of it.
+    platformEditGroupBefore = platformGroupOf(card);
+    platformDirectory.appendChild(card);
+    arrangePlatformGroups();
+    renumberPlatforms();
+    savePlatformOrder();
+    announcePlatformOrder(card, platformGroupOf(card) === 'personal' ? 'Перенесено в «Личные»:' : 'Перенесено в «Продукты»:');
+    return;
+  }
   const place = Number(document.getElementById('platform-edit-place').value);
-  const cards = platformCards();
+  const cards = platformGroupCards(card);
   const from = cards.indexOf(card);
   if (from < 0 || !Number.isInteger(place) || place < 1 || place > cards.length || place === from + 1) return;
   const target = cards[place - 1];
@@ -8990,6 +9058,8 @@ function buildCustomPlatformCard(data) {
   card.dataset.platformId = data.id;
   card.dataset.platformName = data.name;
   card.dataset.platformCustom = '1';
+  // Owner-made cards saved before groups existed are personal ones (Context News · история).
+  card.dataset.platformGroup = data.group === 'product' ? 'product' : 'personal';
   card.classList.toggle('priority', data.priority === 'main');
   const art = document.createElement('div');
   art.className = 'platform-art';
@@ -9168,7 +9238,8 @@ async function saveCustomPlatformCard() {
     ? platformCustomCards.find(item => item.id === platformEditCard?.dataset.platformId) : null;
   const card = {
     name, status: clean('platform-edit-status'), description: clean('platform-edit-description'),
-    priority: document.getElementById('platform-edit-priority').value, links,
+    priority: document.getElementById('platform-edit-priority').value,
+    group: document.getElementById('platform-edit-group').value === 'personal' ? 'personal' : 'product', links,
   };
   if (existing) card.id = existing.id;
   const image = platformCustomImage === null ? existing?.image : platformCustomImage;
