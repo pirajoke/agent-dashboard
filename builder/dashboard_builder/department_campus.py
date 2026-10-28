@@ -791,6 +791,8 @@ def build_department_campus_html() -> str:
         <button class="campus-refresh" type="button" data-campus-refresh aria-label="Обновить кампус">↻</button>
         <button class="campus-view-toggle" type="button" data-campus-view-toggle
             aria-pressed="false" aria-label="Объёмный 3D-вид кампуса" hidden>3D</button>
+        <a class="campus-fullscreen" href="/department-campus.html" target="_blank" rel="noopener"
+            data-campus-fullscreen hidden>На весь экран</a>
     </div>
     <div class="campus-state" data-campus-state aria-live="polite">Загрузка кампуса…</div>
     <section class="campus-archive" id="campus-archive" data-campus-archive role="dialog"

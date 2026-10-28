@@ -24,10 +24,11 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-10-24 on Mark's «го» to the rebuild plan: no metadata, gauges moved behind «i», Russian labels.
         # 2026-10-26 on Mark's ask to watch memory and disk: a plain «ок / перегружена» row under each header.
         # 2026-10-26 on Mark's «дочистить Технику»: «MacBook Pro» instead of the host name, Russian labels.
+        # 2026-10-28 on Mark's «унифицированный дизайн»: «Обновить» is the same outlined button as elsewhere.
         expected = {
-            "section-mac-mini": "e31627372ecea7f14d30eda0fe67f194a95cb2a0bb5e4a4b46824cea16ed9303",
-            "section-air": "22061e3e7422088d1cd99449b610e31718c8a1d824ba2313adf886d1ee90eeb8",
-            "section-pro": "789db4bfd092a4eb74263bcbbc3ea251b4c150b7fcc17b0a9e5508dd71be3897",
+            "section-mac-mini": "3b2566cb374c6909c49b224804a8e7f452ef379276bb1e4f85caff89f5b3d62a",
+            "section-air": "744a4d48469d44a53f2b354be488131d4298312b8ade8e681c9861e2cb8ecef3",
+            "section-pro": "af2ebeb93d67119f82132d71cecd1262ad245eade83c83e420ec5e935c5b4640",
         }
         source = HTML.read_text()
         for identity, digest in expected.items():
@@ -40,11 +41,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # ask to watch memory and disk (longer laptop timeout, «мало памяти» status, memory/disk/load words,
         # grace period so a slow laptop does not flash «Нет связи»), and the values on those tiles, and on
         # «дочистить Технику»: plain machine names, words instead of counters, services switched off on purpose.
+        # 2026-10-28 on Mark's «унифицированный дизайн»: every service described in Russian.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "f264041c41a5cd81ceb4698c21486934e259147b1302d3c031fcb0750b4782eb")
+                         "9d1dcb9eba3af578219847ff870dd332c05eae4a2d0e87f2fb589a5adcb7ac48")
 
 
 if __name__ == "__main__":

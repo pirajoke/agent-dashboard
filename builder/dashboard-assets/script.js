@@ -76,6 +76,9 @@
     if (!campus) return;
     if (campus.dataset.campusRefreshBound === 'true') return;
     campus.dataset.campusRefreshBound = 'true';
+    // Inside Command Center the campus offers its own «На весь экран» (one header, Mark 2026-10-28).
+    const fullscreenLink = campus.querySelector('[data-campus-fullscreen]');
+    if (fullscreenLink && window.self !== window.top) fullscreenLink.hidden = false;
 
     const focusedDepartment = new URLSearchParams(window.location.search).get('view') === 'department';
     const departmentSelect = document.createElement('select');
@@ -205,13 +208,21 @@
     });
     // Mark 2026-10-24: department names in plain Russian on screen (the data keeps the English labels).
     const campusDepartmentNames = {Sales: 'Продажи', Development: 'Разработка', Design: 'Дизайн', Infrastructure: 'Инфраструктура', Internal: 'Знания', Finance: 'Финансы'};
+    // Mark 2026-10-28: agent roles in Russian too (the data keeps COORDINATOR, BUILDER…).
+    const campusRoleNames = {
+        COORDINATOR: 'Координатор', RESEARCHER: 'Исследователь', BUILDER: 'Разработчик', DESIGNER: 'Дизайнер',
+        INFRASTRUCTURE: 'Инфраструктура', VAULT: 'Знания', ANALYST: 'Аналитик',
+        'Infrastructure Engineer': 'Инженер инфраструктуры', Coordinator: 'Координатор', Builder: 'Разработчик',
+        Designer: 'Дизайнер', Researcher: 'Исследователь', Analyst: 'Аналитик',
+    };
+    const campusRoleName = (role) => campusRoleNames[String(role || '')] || String(role || '');
     const nativeDepartmentLabels = {hq: 'Центр управления', sales: 'Sales', development: 'Development', design: 'Design', infrastructure: 'Infrastructure', internal: 'Internal', finance: 'Finance'};
     const stateMessages = {
         loading: 'Загрузка кампуса…',
         empty: 'Команда на местах · ждёт задачи',
         inactive: 'Подтверждённого исполнения сейчас нет',
         stale: 'Команда на местах · свежих событий пока нет',
-        unavailable: 'Команда на местах · live-данные временно недоступны',
+        unavailable: 'Команда на местах · свежие данные пока не пришли',
         active: 'Команда работает',
     };
 
@@ -380,7 +391,7 @@
             if (nativeCountsDeclared) {
                 const unavailable = activityCounts.unavailable;
                 const running = activityCounts.running;
-                countEl.textContent = `${activityCounts.enabled} маршрутов · работают: ${running} · без подтверждения: ${unavailable}${omitted}`;
+                countEl.textContent = `агентов: ${activityCounts.enabled} · работают: ${running} · без подтверждения: ${unavailable}${omitted}`;
             } else {
                 const live = agentCount > 0
                     ? `активных агентов: ${agentCount} · задач: ${visibleTasks}`
@@ -481,7 +492,7 @@
         detailFields.task_id.textContent = event.task_id;
         detailFields.department.textContent = campusDepartmentNames[event.department_label] || event.department_label;
         detailFields.project.textContent = event.project;
-        detailFields.role.textContent = event.role;
+        detailFields.role.textContent = campusRoleName(event.role);
         detailFields.status.textContent = statusLabels[event.status] || '—';
         detailFields.updated_at.textContent = event.updated_at;
         detailFields.next_step.textContent = event.next_step;
@@ -628,7 +639,7 @@
         button.dataset.campusTaskId = String(event.task_id || '');
         button.dataset.campusStatus = String(event.status || '');
         button.dataset.campusProject = String(event.project || '');
-        button.setAttribute('aria-label', `${event.project}, ${event.role}, ${statusLabels[event.status] || event.status}`);
+        button.setAttribute('aria-label', `${event.project}, ${campusRoleName(event.role)}, ${statusLabels[event.status] || event.status}`);
         button.setAttribute('aria-controls', 'campus-agent-details');
         button.setAttribute('aria-expanded', 'false');
 
@@ -643,7 +654,7 @@
             }
         }
         const name = document.createElement('strong');
-        name.textContent = event.role;
+        name.textContent = campusRoleName(event.role);
         const status = document.createElement('span');
         status.className = 'campus-agent-status';
         status.textContent = statusLabels[event.status] || '—';

@@ -87,7 +87,7 @@ process.stdout.write(JSON.stringify({{native, legacyHidden: countEl.hidden}}));
         observed = json.loads(result.stdout)
         self.assertEqual(
             observed["native"]["text"],
-            "12 маршрутов · работают: 1 · без подтверждения: 10",
+            "агентов: 12 · работают: 1 · без подтверждения: 10",
         )
         self.assertFalse(
             observed["native"]["hidden"],
