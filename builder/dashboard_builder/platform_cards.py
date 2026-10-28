@@ -17,7 +17,7 @@ import re
 import secrets
 import threading
 
-from .platform_edits import DESCRIPTION_MAX, NAME_MAX, PRIORITIES, STATUS_MAX, _clean_text, _write_json
+from .platform_edits import DESCRIPTION_MAX, GROUPS, NAME_MAX, PRIORITIES, STATUS_MAX, _clean_text, _write_json
 
 MAX_BODY_BYTES = 512 * 1024
 MAX_CARDS = 40
@@ -67,7 +67,7 @@ def _clean_image(value: object) -> str | None:
 
 def validate_card(entry: object, card_id: str) -> dict:
     """Return a clean card, or raise ValueError for anything malformed."""
-    allowed = {"id", "name", "status", "description", "priority", "links", "image"}
+    allowed = {"id", "name", "status", "description", "priority", "group", "links", "image"}
     if not isinstance(entry, dict) or set(entry) - allowed:
         raise ValueError("invalid_card")
     name = _clean_text(entry.get("name"), NAME_MAX)
@@ -84,6 +84,12 @@ def validate_card(entry: object, card_id: str) -> dict:
     if priority not in PRIORITIES:
         raise ValueError("invalid_priority")
     card["priority"] = priority
+    # No group means a card saved before groups existed; the page shows it under «Личные».
+    group = entry.get("group")
+    if group is not None:
+        if group not in GROUPS:
+            raise ValueError("invalid_group")
+        card["group"] = group
     links = entry.get("links") or []
     if not isinstance(links, list) or len(links) > MAX_LINKS:
         raise ValueError("invalid_links")

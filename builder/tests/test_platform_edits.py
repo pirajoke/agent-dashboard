@@ -49,6 +49,14 @@ class PlatformEditsStoreTests(unittest.TestCase):
             with self.subTest(bad=str(bad)), self.assertRaises(ValueError):
                 save_card_edit(self.path, bad)
 
+    def test_group_moves_a_card_between_products_and_personal(self):
+        save_card_edit(self.path, {"card": "jarvis", "edit": {"group": "product"}, "v": 2})
+        save_card_edit(self.path, {"card": "health", "edit": {"name": "Здоровье", "group": "personal"}, "v": 2})
+        self.assertEqual(load_edits(self.path)["edits"], {
+            "jarvis": {"group": "product"}, "health": {"name": "Здоровье", "group": "personal"}})
+        with self.assertRaises(ValueError):
+            save_card_edit(self.path, {"card": "jarvis", "edit": {"group": "work"}, "v": 2})
+
     def test_missing_or_broken_store_means_no_edits(self):
         self.assertEqual(load_edits(self.path)["edits"], {})
         self.path.parent.mkdir(parents=True)
@@ -59,7 +67,7 @@ class PlatformEditsStoreTests(unittest.TestCase):
         for payload in (
             [], {"edits": []}, {"edits": {"../x": {"name": "a"}}}, {"edits": {"a": {"name": 5}}},
             {"edits": {"a": {"name": "x" * 61}}}, {"edits": {"a": {"status": "s" * 41}}},
-            {"edits": {"a": {"priority": "top"}}}, {"edits": {"a": {"description": "d" * 201}}}, {"edits": {"a": {"name": "a‮b"}}},
+            {"edits": {"a": {"priority": "top"}}}, {"edits": {"a": {"group": "work"}}}, {"edits": {"a": {"description": "d" * 201}}}, {"edits": {"a": {"name": "a‮b"}}},
             {"edits": {"a": {"url": "https://evil.invalid"}}},
             {"edits": {f"c{i}": {"name": "x"} for i in range(61)}},
         ):

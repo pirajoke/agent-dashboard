@@ -51,6 +51,9 @@ class PlatformCardsStoreTests(unittest.TestCase):
         self.assertEqual([c["name"] for c in cards], ["Переименован", "Второй"])
         self.assertNotIn("image", cards[0])  # A save replaces the whole card.
         self.assertEqual(cards[0]["priority"], "normal")
+        self.assertNotIn("group", cards[0])  # Saved without a group: the page shows it under «Личные».
+        change_cards(self.path, {"action": "save", "card": {"id": "c-0000000b", "name": "Второй", "group": "product"}})
+        self.assertEqual(load_cards(self.path)["cards"][1]["group"], "product")
 
         change_cards(self.path, {"action": "delete", "id": "c-0000000a"})
         self.assertEqual([c["id"] for c in load_cards(self.path)["cards"]], ["c-0000000b"])
@@ -63,6 +66,7 @@ class PlatformCardsStoreTests(unittest.TestCase):
         bad_cards = (
             {}, {"name": ""}, {"name": "x" * 61}, {"name": "a", "status": "s" * 41},
             {"name": "a", "description": "d" * 201}, {"name": "a", "priority": "top"},
+            {"name": "a", "group": "work"},
             {"name": "a", "html": "<b>"},
             {"name": "a", "links": [{"url": "javascript:alert(1)"}]},
             {"name": "a", "links": [{"url": "data:text/html,x"}]},
