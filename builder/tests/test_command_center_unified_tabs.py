@@ -218,13 +218,14 @@ const platformDirectory={querySelectorAll:()=>cards,contains:()=>true};
 const status={textContent:''};const document={getElementById:()=>status};
 let platformPointerState=null, platformSuppressClickUntil=0;
 function clearPlatformLongPressTimer(){}function settlePlatformCard(){}function releasePlatformPointerCapture(){}
+function arrangePlatformGroups(){}function savePlatformGroup(){network.push(['group']);}
 ''' + functions + r'''
 // Mark 2026-10-20 removed the arrow buttons: ↑ on a focused card moves it, like a drag.
 const keyboardCard=cards[1];keyboardCard.classList.contains=()=>true;keyboardCard.focus=()=>{};
 movePlatformByKey({key:'ArrowUp',target:keyboardCard,preventDefault(){}},{ArrowUp:'previous',ArrowDown:'next'});
 const keyboard=JSON.parse(stored.get(PLATFORM_ORDER_STORAGE_KEY));
 const initialOrder=cards.map(c=>c.dataset.platformId);cards=[cards[2],cards[0],cards[1]];
-platformPointerState={pointerId:9,active:true,changed:true,card:cards[0],initialOrder};
+platformPointerState={pointerId:9,active:true,changed:true,card:cards[0],initialOrder,startGroup:'product'};
 commitPlatformLongPress({pointerId:9,cancelable:true,preventDefault(){}});
 const dragged=JSON.parse(stored.get(PLATFORM_ORDER_STORAGE_KEY));
 process.stdout.write(JSON.stringify({keyboard,dragged,restored:readPlatformOrder(),writes,network}));
