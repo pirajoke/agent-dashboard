@@ -129,6 +129,18 @@ def deploy_commit(sha: str) -> tuple[bool, str]:
             shutil.rmtree(worktree, ignore_errors=True)
 
 
+def fetch_main(repo: Path = REPO_DIR) -> str:
+    """Fetch origin/main and return its commit.
+
+    Reads the remote-tracking ref, not FETCH_HEAD: other jobs (the live feed
+    runs `git pull` in the same checkout every 5 minutes) rewrite FETCH_HEAD
+    with whatever branch is checked out, and reading it then would deploy
+    that branch instead of main.
+    """
+    git("fetch", "--quiet", "origin", "+refs/heads/main:refs/remotes/origin/main", repo=repo)
+    return git("rev-parse", "refs/remotes/origin/main", repo=repo)
+
+
 def run(
     *,
     fetch_head=None,
@@ -140,9 +152,7 @@ def run(
 ) -> str:
     """One pass. Returns what happened, for logs and tests."""
     if fetch_head is None:
-        def fetch_head() -> str:
-            git("fetch", "--quiet", "origin", "main")
-            return git("rev-parse", "FETCH_HEAD")
+        fetch_head = fetch_main
     if changed_between is None:
         def changed_between(old: str, new: str) -> list[str]:
             return git("diff", "--name-only", old, new).splitlines()
