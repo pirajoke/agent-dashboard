@@ -41,6 +41,7 @@ from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES,
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.architecture import collect_architecture
+from dashboard_builder.media import media_projection
 from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
 from dashboard_builder.service_status import normalize_payload, parse_launchctl_disabled, parse_launchctl_list, parse_launchctl_running
 from dashboard_builder.department_campus import (
@@ -2984,6 +2985,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             self._json_response(200, live_sessions_projection(LIVE_SESSIONS_DIR))
             return
+        if parsed.path == '/api/media':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'state': 'owner_required'})
+                return
+            self._json_response(200, media_projection())
+            return
         if parsed.path == '/api/shared-tasks':
             if not self._decision_owner_authorized():
                 self._json_response(401, {'state': 'owner_required', 'tasks': []})
@@ -3356,3 +3363,4 @@ if __name__ == '__main__':
     server = DashboardHTTPServer(('127.0.0.1', PORT), Handler)
     print(f"Dashboard server on http://localhost:{PORT}")
     server.serve_forever()
+
