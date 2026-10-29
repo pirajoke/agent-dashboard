@@ -33,6 +33,7 @@ from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path
 from dashboard_builder.docxx_public_pages import PAGES as DOCXX_INFO_PAGES, CONTENT_SECURITY_POLICY as DOCXX_INFO_CSP
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
+from dashboard_builder.work_tools import work_tools_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.live_sessions import projection as live_sessions_projection
@@ -2939,6 +2940,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             owner = self._decision_owner_authorized()
             registry = JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json"
             self._json_response(200, platform_resources_projection(registry, owner=owner))
+            return
+        if parsed.path == '/api/work-tools':
+            # GitHub, Linear and Notion on «Платформы» (Mark 2026-10-29). Links for everyone,
+            # short live lists (titles and links only) for the owner.
+            self._json_response(200, work_tools_projection(owner=self._decision_owner_authorized()))
             return
         if parsed.path == '/api/site-version':
             self._json_response(200, _site_version())

@@ -203,6 +203,20 @@ class PreviewHandler(SERVER.Handler):
             prepare_navigation_fixture()
             super().do_GET()  # Exercise the product's strict auth and resource projection.
             return
+        if parsed.path == "/api/work-tools":
+            # Synthetic live lists; the real endpoint reads GitHub, Linear and Notion on the Mac mini.
+            def fixture_tools():
+                return {
+                    "github": lambda: [{"title": "Пример PR: новая карточка", "url": "https://github.com/example/fixture/pull/1"},
+                                       {"title": "Пример PR: исправить меню на телефоне", "url": "https://github.com/example/fixture/pull/2"}],
+                    "linear": lambda: [] if MODE == "empty" else [{"title": "Пример задачи в работе", "url": "https://linear.app/example/issue/EX-1"}],
+                    "notion": lambda: None,
+                }
+            from dashboard_builder import work_tools
+            work_tools.reset_cache()
+            owner = self._decision_owner_authorized()
+            self._json_response(200, work_tools.work_tools_projection(owner=owner, fetchers=fixture_tools()))
+            return
         if parsed.path == "/api/shared-tasks":
             if not self._decision_owner_authorized():
                 self._json_response(401, {"state": "owner_required", "tasks": []})
