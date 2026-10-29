@@ -3425,7 +3425,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .cc-main .platforms-legend li svg { width: 18px; height: 18px; }
 .cc-main .platforms-legend li strong { font-size: 12.5px; }
 .cc-main .platforms-legend li small { color: var(--mm-muted); font-size: 12px; }
-.cc-main .platform-order-status { margin: 0 0 12px; color: var(--mm-muted); }
+/* Mark 2026-10-29: no «Порядок не изменился…» line on the page; the text stays for screen readers only. */
+.cc-main .platform-order-status { position: absolute; width: 1px; height: 1px; min-height: 0; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .platform-entry { border-color: var(--mm-line); box-shadow: none; }
 .platform-entry:hover { border-color: var(--mm-control-line); box-shadow: var(--mm-shadow-soft); }
 .platform-tag { color: var(--mm-muted); letter-spacing: .05em; }
@@ -3442,6 +3443,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
   box-shadow: 0 18px 40px rgba(0, 0, 0, .18), 0 0 0 3px var(--mm-selection);
 }
 .platform-directory.is-arranging .platform-entry.is-reordering a { pointer-events: none; }
+/* Held over «Архив»: the card goes see-through so the button under it stays visible. */
+.platform-directory.is-arranging .platform-entry.is-reordering.is-over-archive { opacity: .45; }
 @keyframes platform-jiggle { from { rotate: -.8deg; } to { rotate: .8deg; } }
 @media (prefers-reduced-motion: reduce) {
   .platform-directory.is-arranging .platform-entry:not(.is-reordering) { animation: none; }
@@ -3801,6 +3804,9 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .platform-archive-open svg { width: 16px; height: 16px; }
 .platform-archive-open:hover { color: var(--mm-accent); border-color: var(--mm-control-line); }
 .platform-archive-open:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+/* While a card is held, «Архив» is a drop target (Mark 2026-10-29). */
+.platform-archive.is-drop-zone .platform-archive-open { border-style: dashed; border-color: var(--mm-control-line); color: var(--mm-ink); }
+.platform-archive.is-drop-zone .platform-archive-open.is-drop-target { border-style: solid; border-color: var(--mm-accent); color: var(--mm-accent); background: var(--mm-selection); transform: scale(1.06); }
 /* Mark 2026-10-20: the archive opens as its own window over the page. */
 .platform-archive-dialog {
   width: min(1040px, calc(100vw - 32px)); max-width: none; max-height: min(86vh, 900px); margin: auto; padding: 0;
@@ -7281,7 +7287,7 @@ function arrangePlatformGroups() {
     const head = platformDirectory.querySelector(`[data-platform-group-head="${group}"]`);
     const members = cards.filter(card => platformGroupOf(card) === group);
     if (head) {
-      head.hidden = members.length === 0;
+      head.hidden = members.length === 0 && !platformDirectory.classList.contains('is-arranging');
       wanted.push(head);
     }
     wanted.push(...members);
@@ -7409,21 +7415,82 @@ function platformCardAtPoint(x, y) {
   }) || null;
 }
 
+function platformGroupHeadAtPoint(x, y) {
+  return Array.from(platformDirectory.querySelectorAll('.platform-group-head')).find(head => {
+    if (head.hidden) return false;
+    const box = platformLayoutBox(head);
+    return x >= box.left && x <= box.left + head.offsetWidth
+      && y >= box.top - 6 && y <= box.top + head.offsetHeight + 6;
+  }) || null;
+}
+
+// Mark 2026-10-29: «перетаскивать между личными и архивом и рабочими, чтобы я сам распределил».
+// Over a card of the other group the held card joins that group; over a group heading it goes first in it.
 function reorderPlatformAt(state, x, y) {
-  const target = platformCardAtPoint(x, y);
-  if (!target || target === state.card || platformGroupOf(target) !== platformGroupOf(state.card)) return;
+  const head = platformGroupHeadAtPoint(x, y);
+  const target = head ? null : platformCardAtPoint(x, y);
+  if (!head && (!target || target === state.card)) return;
   const cards = platformCards();
-  const sourceIndex = cards.indexOf(state.card);
-  const targetIndex = cards.indexOf(target);
+  const fromGroup = platformGroupOf(state.card);
+  const toGroup = head ? head.dataset.platformGroupHead : platformGroupOf(target);
+  const lists = {};
+  PLATFORM_GROUPS.forEach(group => {
+    lists[group] = cards.filter(card => card !== state.card && platformGroupOf(card) === group);
+  });
+  const list = lists[toGroup];
+  let at = 0;
+  if (target) {
+    const after = toGroup === fromGroup
+      ? cards.indexOf(state.card) < cards.indexOf(target)
+      : PLATFORM_GROUPS.indexOf(fromGroup) > PLATFORM_GROUPS.indexOf(toGroup);
+    at = list.indexOf(target) + (after ? 1 : 0);
+  }
+  list.splice(at, 0, state.card);
+  const wanted = [];
+  PLATFORM_GROUPS.forEach(group => {
+    const groupHead = platformDirectory.querySelector(`[data-platform-group-head="${group}"]`);
+    if (groupHead) wanted.push(groupHead);
+    wanted.push(...lists[group]);
+  });
+  const current = Array.from(platformDirectory.children).filter(node => wanted.includes(node));
+  if (current.length === wanted.length && current.every((node, index) => node === wanted[index])) return;
+  state.card.dataset.platformGroup = toGroup;
+  const index = wanted.indexOf(state.card);
   // Move the neighbours, not the held card: taking the card under the finger out of
   // the page makes a phone drop the touch, start scrolling and undo the move.
   flipPlatformCards(() => {
-    if (sourceIndex < targetIndex) state.card.before(...cards.slice(sourceIndex + 1, targetIndex + 1));
-    else state.card.after(...cards.slice(targetIndex, sourceIndex));
+    state.card.before(...wanted.slice(0, index));
+    state.card.after(...wanted.slice(index + 1));
   }, state.card);
   followPlatformPointer(state, x, y);
   state.changed = true;
   renumberPlatforms();
+}
+
+// The «Архив» button takes a card dropped on it; while a card is held it is shown even when the archive is empty.
+function platformOverArchive(x, y) {
+  const button = platformArchiveOpen;
+  if (!button || !button.getClientRects().length) return false;
+  const box = button.getBoundingClientRect();
+  return x >= box.left - 8 && x <= box.right + 8 && y >= box.top - 8 && y <= box.bottom + 8;
+}
+
+function trackPlatformDrop(state, x, y) {
+  state.overArchive = platformOverArchive(x, y);
+  platformArchiveOpen?.classList.toggle('is-drop-target', state.overArchive);
+  state.card.classList.toggle('is-over-archive', state.overArchive);
+  if (!state.overArchive) reorderPlatformAt(state, x, y);
+}
+
+function showPlatformArchiveDropZone(show) {
+  const box = document.getElementById('platform-archive');
+  if (!box) return;
+  box.classList.toggle('is-drop-zone', show);
+  if (show) box.hidden = false;
+  else {
+    platformArchiveOpen?.classList.remove('is-drop-target');
+    refreshPlatformArchive();
+  }
 }
 
 function platformScrollContainer() {
@@ -7459,7 +7526,7 @@ function startPlatformAutoScroll(state) {
       else window.scrollBy(0, delta);
       if (target.scrollTop !== before) {
         followPlatformPointer(state, state.lastX, state.lastY);
-        reorderPlatformAt(state, state.lastX, state.lastY);
+        trackPlatformDrop(state, state.lastX, state.lastY);
       }
     }
     state.frame = window.requestAnimationFrame(step);
@@ -7471,6 +7538,8 @@ function settlePlatformCard(state) {
   if (state.frame) window.cancelAnimationFrame(state.frame);
   state.frame = null;
   platformDirectory.classList.remove('is-arranging');
+  showPlatformArchiveDropZone(false);
+  state.card.classList.remove('is-over-archive');
   const card = state.card;
   const from = card.style.transform;
   card.style.transform = '';
@@ -7485,9 +7554,13 @@ function beginPlatformLongPress(event) {
   if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
   if (event.target.closest('button, input, textarea, select, summary')) return;
   const card = event.target.closest('.platform-entry');
-  if (!card || !platformDirectory.contains(card)) return;
+  const fromArchive = Boolean(card && platformArchiveList?.contains(card));
+  if (!card || (!platformDirectory.contains(card) && !fromArchive)) return;
   if (platformPointerState) cancelPlatformLongPress();
   const state = {
+    fromArchive,
+    startGroup: platformGroupOf(card),
+    overArchive: false,
     pointerId: event.pointerId,
     captureTarget: platformDirectory,
     card,
@@ -7507,11 +7580,20 @@ function beginPlatformLongPress(event) {
     // Capture only once the long press fires: capturing at pointerdown would retarget a
     // short tap's click to the directory, and links would stop opening. Capture on the
     // stable directory, since reordering can briefly detach a card's descendants.
-    try { platformDirectory.setPointerCapture(state.pointerId); } catch (error) { /* optional */ }
     const rect = card.getBoundingClientRect();
-    state.grabX = state.startX - rect.left;
-    state.grabY = state.startY - rect.top;
+    if (state.fromArchive) {
+      // Pulled out of the archive window: the window closes and the card follows the finger on the page.
+      setPlatformArchiveOpen(false);
+      setPlatformArchiveButton(card, false);
+      platformDirectory.appendChild(card);
+    }
+    try { platformDirectory.setPointerCapture(state.pointerId); } catch (error) { /* optional */ }
+    state.grabX = Math.min(Math.max(state.startX - rect.left, 0), card.offsetWidth || rect.width);
+    state.grabY = Math.min(Math.max(state.startY - rect.top, 0), 40);
     platformDirectory.classList.add('is-arranging');
+    showPlatformArchiveDropZone(true);
+    arrangePlatformGroups();
+    renumberPlatforms();
     card.classList.add('is-reordering');
     card.setAttribute('aria-grabbed', 'true');
     if (navigator.vibrate) navigator.vibrate(12);
@@ -7545,7 +7627,7 @@ function movePlatformLongPress(event) {
   state.lastX = event.clientX;
   state.lastY = event.clientY;
   followPlatformPointer(state, event.clientX, event.clientY);
-  reorderPlatformAt(state, event.clientX, event.clientY);
+  trackPlatformDrop(state, event.clientX, event.clientY);
 }
 
 function commitPlatformLongPress(event) {
@@ -7562,14 +7644,37 @@ function commitPlatformLongPress(event) {
   platformPointerState = null;
   releasePlatformPointerCapture(state);
   if (!state.active) return;
-  const finalOrder = platformCards().map(card => card.dataset.platformId);
-  const orderChanged = state.changed && finalOrder.some((id, index) => id !== state.initialOrder[index]);
+  const card = state.card;
+  const name = card.dataset.platformName || card.dataset.platformId;
+  if (state.overArchive) {
+    // Dropped on «Архив»: back where it came from, then into the archive.
+    card.dataset.platformGroup = state.startGroup;
+    writePlatformArchiveChoice(card.dataset.platformId, true);
+    setPlatformArchiveButton(card, true);
+    placeArchivedPlatform(card);
+    arrangePlatformGroups();
+    renumberPlatforms();
+    savePlatformOrder();
+    refreshPlatformArchive();
+    document.getElementById('platform-order-status').textContent = `${name} в архиве.`;
+    return;
+  }
+  if (state.fromArchive) {
+    writePlatformArchiveChoice(card.dataset.platformId, false);
+    refreshPlatformArchive();
+  }
+  arrangePlatformGroups();
+  renumberPlatforms();
+  const finalOrder = platformCards().map(item => item.dataset.platformId);
+  const orderChanged = state.fromArchive
+    || (state.changed && finalOrder.some((id, index) => id !== state.initialOrder[index]));
   if (!orderChanged) {
-    announcePlatformOrder(state.card, 'Порядок не изменился:');
+    announcePlatformOrder(card, 'Порядок не изменился:');
     return;
   }
   const persisted = savePlatformOrder();
-  announcePlatformOrder(state.card, persisted ? 'Перемещено:' : 'Перемещено до перезагрузки:');
+  if (platformGroupOf(card) !== state.startGroup) savePlatformGroup(card);
+  announcePlatformOrder(card, persisted ? 'Перемещено:' : 'Перемещено до перезагрузки:');
 }
 
 function cancelPlatformLongPress(event) {
@@ -7581,6 +7686,11 @@ function cancelPlatformLongPress(event) {
   if (event?.type === 'lostpointercapture' && event.target !== state.captureTarget) return;
   clearPlatformLongPressTimer();
   try {
+    state.card.dataset.platformGroup = state.startGroup;
+    if (state.fromArchive && state.active) {
+      setPlatformArchiveButton(state.card, true);
+      placeArchivedPlatform(state.card);
+    }
     applyPlatformOrder(state.initialOrder);
   } finally {
     if (state.active) settlePlatformCard(state);
@@ -7712,6 +7822,17 @@ function applyPlatformArchive() {
   refreshPlatformArchive();
 }
 
+function writePlatformArchiveChoice(id, archived) {
+  const choices = readPlatformArchiveChoices();
+  choices[id] = archived;
+  try {
+    localStorage.setItem(PLATFORM_ARCHIVE_STORAGE_KEY, JSON.stringify(choices));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 function togglePlatformArchive(event) {
   const button = event.target.closest('.platform-archive-toggle');
   if (!button) return;
@@ -7787,6 +7908,15 @@ if (platformDirectory) {
   platformDirectory.addEventListener('pointercancel', cancelPlatformLongPress);
   platformDirectory.addEventListener('lostpointercapture', cancelPlatformLongPress);
   platformDirectory.addEventListener('pointerleave', leavePendingPlatformLongPress);
+}
+if (platformArchiveList) {
+  // A long press on a card in the archive window pulls it out onto the page.
+  platformArchiveList.addEventListener('pointerdown', beginPlatformLongPress);
+  platformArchiveList.addEventListener('pointermove', movePlatformLongPress, { passive: false });
+  platformArchiveList.addEventListener('pointerleave', leavePendingPlatformLongPress);
+  platformArchiveList.addEventListener('contextmenu', event => {
+    if (platformPointerState) event.preventDefault();
+  });
 }
 window.addEventListener('pointerup', finishPlatformPointerUp);
 window.addEventListener('pointercancel', finishPlatformPointerCancel);
@@ -8969,6 +9099,42 @@ async function savePlatformEdit(reset = false) {
   } else {
     note.textContent = 'Сохранено только на этом устройстве: Mac mini сейчас не принял правку. Попробуйте ещё раз позже.';
   }
+}
+
+// A card dragged into the other group keeps that group on every device, the same way the edit window saves it.
+async function savePlatformGroup(card) {
+  if (IS_FILE_DASHBOARD) return;
+  const id = card.dataset.platformId;
+  const group = platformGroupOf(card);
+  if (card.dataset.platformCustom) {
+    const own = platformCustomCards.find(item => item.id === id);
+    if (!own) return;
+    const result = await postPlatformCards({action: 'save', card: {...own, group}});
+    if (result && !result.error) {
+      writePlatformCardsCache(result.cards);
+      renderCustomPlatformCards(result.cards);
+    }
+    return;
+  }
+  platformEditRemember(card);
+  const base = platformEditDefaults.get(id);
+  const entry = {...(platformEdits[id] || {})};
+  if (group === base.group) delete entry.group; else entry.group = group;
+  const next = {...platformEdits};
+  if (Object.keys(entry).length) next[id] = entry; else delete next[id];
+  platformEdits = next;
+  writePlatformEditsCache(next);
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/platform-edits`, {
+      method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store',
+      body: JSON.stringify({card: id, edit: next[id] || null, v: 2}),
+    });
+    const payload = response.ok ? await response.json().catch(() => null) : null;
+    if (payload?.state === 'ready' && payload.edits && typeof payload.edits === 'object') {
+      writePlatformEditsCache(payload.edits);
+      applyPlatformEdits(payload.edits);
+    }
+  } catch (_) { /* this browser keeps its copy; the next edit tries again */ }
 }
 
 function movePlatformToPlace(card) {
