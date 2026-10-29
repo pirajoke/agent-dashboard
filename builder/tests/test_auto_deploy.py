@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 
@@ -12,6 +13,61 @@ spec = importlib.util.spec_from_file_location("auto_deploy", BUILDER_DIR / "auto
 AUTO = importlib.util.module_from_spec(spec)
 assert spec.loader is not None
 spec.loader.exec_module(AUTO)
+
+
+class FetchMainTest(unittest.TestCase):
+    """The checkout may sit on another branch and other jobs pull in it."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.origin, self.clone = root / "origin", root / "clone"
+        self._git(root, "init", "-q", "-b", "main", str(self.origin))
+        self._commit(self.origin, "main work")
+        self.main_sha = self._git(self.origin, "rev-parse", "HEAD")
+        self._git(self.origin, "checkout", "-q", "-b", "old-feature")
+        self._commit(self.origin, "old feature")
+        self.old_sha = self._git(self.origin, "rev-parse", "HEAD")
+        self._git(self.origin, "checkout", "-q", "main")
+        self._git(root, "clone", "-q", str(self.origin), str(self.clone))
+        self._git(self.clone, "checkout", "-q", "old-feature")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _git(self, repo, *args):
+        return subprocess.run(
+            ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t", *args],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+
+    def _commit(self, repo, message):
+        self._git(repo, "commit", "-q", "--allow-empty", "-m", message)
+
+    def test_returns_main_while_checkout_is_on_another_branch(self):
+        self.assertEqual(AUTO.fetch_main(self.clone), self.main_sha)
+
+    def test_a_pull_between_fetch_and_read_does_not_change_the_answer(self):
+        real_git = AUTO.git
+
+        def racing_git(*args, repo):
+            out = real_git(*args, repo=repo)
+            if args[0] == "fetch":
+                # the live-feed job pulls the checked-out branch right now
+                self._git(repo, "pull", "-q", "--ff-only")
+            return out
+
+        AUTO.git = racing_git
+        try:
+            head = AUTO.fetch_main(self.clone)
+        finally:
+            AUTO.git = real_git
+        self.assertEqual(self._git(self.clone, "rev-parse", "FETCH_HEAD"), self.old_sha)
+        self.assertEqual(head, self.main_sha)
+
+    def test_picks_up_new_main_commits(self):
+        self._commit(self.origin, "next on main")
+        self.assertEqual(AUTO.fetch_main(self.clone), self._git(self.origin, "rev-parse", "main"))
 
 
 class AutoDeployRunTest(unittest.TestCase):
