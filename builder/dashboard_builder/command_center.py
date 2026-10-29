@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 
+from .media import build_media_html
+
+
 FLOW_NODES = [
     ("USER", "You", "request"),
     ("JARVIS", "Jarvis", "intent + context"),
@@ -118,4 +121,6 @@ def build_command_center_html() -> str:
             </div>
         </aside>
     </div>
+    {build_media_html()}
 </div>"""
+

@@ -87,6 +87,7 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 
     css_text = (ASSETS_DIR / "style.css").read_text()
     js_text = (ASSETS_DIR / "script.js").read_text()
+    js_text += "\n" + (ASSETS_DIR / "media.js").read_text()
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -234,3 +235,4 @@ def build_html(projects: list[dict], timestamp: str) -> str:
 </script>
 </body>
 </html>"""
+
