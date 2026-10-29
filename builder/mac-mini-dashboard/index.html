@@ -4033,6 +4033,84 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   .platform-links .platform-link:not(:first-child),
   .platform-links .platform-link:not(:first-child) .platform-access { min-height: 36px; }
 }
+/* Mark 2026-10-29: «чтоб всё видно было, не листать вниз, чуть поменьше, карточки». Smaller cards, four in a
+   row on a laptop, one-line descriptions, so «Где лежит работа», «Продукты» and «Личные» fit on one screen. */
+#section-platforms .cc-page-head { margin-bottom: 10px; }
+.work-tools { margin: 0 0 10px; }
+.work-tools-head,
+.platform-group-head { margin: 0 0 6px; font-size: 15px; }
+.platform-group-head { margin: 8px 0 -2px; }
+.platform-group-head:first-child { margin-top: 0; }
+.work-tools-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 8px; }
+.platform-directory { grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 8px; }
+.work-tool { grid-template-columns: 56px minmax(0, 1fr); }
+.work-tool-art,
+.platform-art,
+.platform-entry.priority .platform-art { width: 36px; height: 36px; margin: 10px 0 0 10px; border-radius: 9px; }
+.work-tool-art svg { width: 20px; height: 20px; }
+.platform-art svg,
+.platform-entry.priority .platform-art svg { width: 32px; height: 32px; }
+.work-tool-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 6px; padding: 8px 10px 8px 0; }
+.work-tool-name { grid-column: 1; grid-row: 1; font-size: 14px; }
+.work-tool-links { grid-column: 2; grid-row: 1; margin-top: 0; }
+.work-tool-chip { min-height: 24px; padding: 2px 9px; font-size: 11px; }
+.work-tool-description,
+.work-tool-live { grid-column: 1 / -1; }
+.work-tool-description,
+.platform-description { margin-top: 1px; font-size: 11.5px; line-height: 1.35; -webkit-line-clamp: 1; }
+.work-tool-description { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+.work-tool-live { margin-top: 4px; font-size: 11.5px; line-height: 1.35; }
+.work-tool-live-title { margin: 0; font-size: 10.5px; }
+.work-tool-live a { padding: 1px 0; }
+.platform-entry,
+.platform-entry.priority { grid-template-columns: 56px minmax(0, 1fr); }
+.platform-content,
+.platform-entry.priority .platform-content { padding: 8px 10px 4px 0; }
+.platform-tag { max-width: calc(100% - 56px); margin: 0 0 3px; overflow: hidden; font-size: 9px; line-height: 1.4; white-space: nowrap; text-overflow: ellipsis; }
+.platform-name,
+.platform-entry.priority .platform-name { font-size: 14px; }
+.platform-links { flex-wrap: nowrap; gap: 4px; margin-top: 5px; }
+/* Two buttons in a narrow card: drop the small ↗ so «Telegram» stays inside the card. */
+.platform-links .platform-link:first-child:not(:only-child)::after { content: none; }
+.platform-links .platform-link .platform-access { padding: 2px 7px; font-size: 10px; }
+.platform-links .platform-link:not(:first-child),
+.platform-links .platform-link:not(:first-child) .platform-access { min-height: 22px; }
+.platform-links .platform-link:not(:first-child) .platform-access { padding: 2px 8px; }
+.platform-archive-toggle,
+.platform-edit-toggle { top: 3px; width: 26px; height: 26px; border-radius: 8px; }
+.platform-archive-toggle { right: 4px; }
+.platform-edit-toggle { right: 31px; }
+.platform-archive-toggle svg,
+.platform-edit-toggle svg { width: 15px; height: 15px; }
+.platform-resources { padding: 0 10px 5px 0; min-height: 22px; }
+.platform-resources summary,
+.platform-resources > span { padding: 1px 0; font-size: 11px; }
+.platform-toolbar { margin-top: 8px; }
+.platform-toolbar .platform-archive-open { min-height: 30px; padding: 4px 11px; font-size: 12px; }
+@media (max-width: 760px) {
+  /* Phone: the three work places are small square tiles in one row; tapping a tile opens it. */
+  .work-tools-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .work-tool { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .work-tool-art { margin: 8px 0 0; }
+  .work-tool-body { display: block; padding: 4px 6px 8px; }
+  .work-tool-description,
+  .work-tool-links,
+  .work-tool-live { display: none !important; }
+  .platform-directory { gap: 6px; }
+  .platform-content,
+  .platform-entry.priority .platform-content { padding: 8px 10px 4px 0; }
+  .platform-entry.priority .platform-name { font-size: 14px; }
+  .platform-resources { min-height: 30px; }
+  .platform-resources summary,
+  .platform-resources > span { padding: 5px 0; }
+  .platform-links .platform-link:not(:first-child),
+  .platform-links .platform-link:not(:first-child) .platform-access { min-height: 30px; }
+  .platform-archive-toggle,
+  .platform-edit-toggle { width: 36px; height: 36px; top: 1px; }
+  .platform-archive-toggle { right: 1px; }
+  .platform-edit-toggle { right: 37px; }
+  .platform-tag { max-width: calc(100% - 76px); }
+}
 
 
 /* Private context library: compact list, same typography and theme as the workspace. */
