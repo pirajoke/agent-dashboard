@@ -13145,20 +13145,34 @@ async function loadDailyWork(date) {
 }
 
 class MmFetchError extends Error {
-  constructor(kind) { super(kind); this.kind = kind; }
+  constructor(kind, transient = false) { super(kind); this.kind = kind; this.transient = transient; }
 }
 
 // Cloudflare Access answers an expired sign-in with a redirect to its login page. A fetch that follows it
 // fails like a lost connection, so the redirect is not followed and is read as «вход истёк».
-async function mmFetchJSON(url, { headers = mmHeaders(), timeoutMs = 15000 } = {}) {
+// While the Mac mini restarts the server after a deploy, Cloudflare answers for a few seconds with its own
+// HTML error page (502/503/504/52x) or drops the request. Such a blip is retried once quietly before the
+// page says the server failed.
+async function mmFetchJSON(url, { headers = mmHeaders(), timeoutMs = 15000, retryDelayMs = 2500 } = {}) {
+  try {
+    return await mmFetchJSONOnce(url, headers, timeoutMs);
+  } catch (error) {
+    if (!error.transient || !retryDelayMs) throw error;
+    await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+    return mmFetchJSONOnce(url, headers, timeoutMs);
+  }
+}
+
+async function mmFetchJSONOnce(url, headers, timeoutMs) {
   let response;
   try {
     response = await fetch(url, { headers, cache: 'no-store', redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
   } catch (error) {
-    throw new MmFetchError('offline');
+    throw new MmFetchError('offline', true);
   }
   const json = (response.headers.get('content-type') || '').includes('json');
   if (response.type === 'opaqueredirect' || ([401, 403].includes(response.status) && !json)) throw new MmFetchError('signin');
+  if (response.status >= 500 && !json) throw new MmFetchError('server', true);
   let data;
   try { data = await response.json(); } catch (error) { throw new MmFetchError('server'); }
   if (!response.ok || data?.ok === false) throw new MmFetchError('server');

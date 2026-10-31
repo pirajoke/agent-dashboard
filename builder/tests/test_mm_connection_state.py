@@ -13,10 +13,12 @@ HTML = Path(__file__).resolve().parents[1] / "mac-mini-dashboard/index.html"
 class MainManagerConnectionStateTest(unittest.TestCase):
     def test_fetch_classifies_each_failure(self):
         source = HTML.read_text()
-        helper = re.search(r"class MmFetchError extends Error \{.*?\n\}\n\n// Cloudflare Access.*?\n\}\n", source, re.S)
+        helper = re.search(r"class MmFetchError extends Error \{.*?\nasync function mmFetchJSONOnce\(.*?\n\}\n", source, re.S)
         self.assertIsNotNone(helper)
         javascript = helper.group(0) + """
 const mmHeaders = () => ({});
+globalThis.setTimeout = (resolve) => resolve();
+let calls = 0;
 const json = (status, body, type = 'application/json') => ({
   type: 'basic', status, ok: status >= 200 && status < 300,
   headers: { get: () => type }, json: async () => body,
@@ -29,11 +31,15 @@ const cases = {
   not_ok: async () => json(200, { ok: false }),
   html_200: async () => ({ ...json(200, null, 'text/html'), json: async () => { throw new SyntaxError(); } }),
   fine: async () => json(200, { ok: true, value: 1 }),
+  // A deploy restart: Cloudflare's HTML 502 once, then the server answers.
+  restart_blip: async () => (calls++ === 0 ? json(502, null, 'text/html') : json(200, { ok: true, value: 2 })),
+  gateway_down: async () => json(502, null, 'text/html'),
 };
 (async () => {
   const result = {};
   for (const [name, impl] of Object.entries(cases)) {
     globalThis.fetch = impl;
+    calls = 0;
     try { result[name] = (await mmFetchJSON('/api/work/daily')).value; }
     catch (error) { result[name] = error.kind; }
   }
@@ -44,6 +50,7 @@ const cases = {
         self.assertEqual(json.loads(output), {
             "redirect": "signin", "access_page": "signin", "network": "offline",
             "server": "server", "not_ok": "server", "html_200": "server", "fine": 1,
+            "restart_blip": 2, "gateway_down": "server",
         })
 
     def test_redirects_are_not_followed_and_health_does_not_blame_the_mac_mini(self):

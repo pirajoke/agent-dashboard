@@ -15,6 +15,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -2872,6 +2873,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 edition=(query.get('edition') or ['0'])[0] == '1',
             )
         except Exception:
+            # Keep the cause in the server log: the page only learns that the day data failed.
+            traceback.print_exc(file=sys.stderr)
             self._json_response(200, {"ok": False, "state": "unavailable", "reason": "daily_work_unreadable"})
             return
         self._json_response(200, payload)
