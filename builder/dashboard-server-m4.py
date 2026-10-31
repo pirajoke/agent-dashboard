@@ -22,6 +22,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlsplit
 
 from dashboard_builder.cloudflare_access import AccessGate, configured_access_app, discover_access_app
+from dashboard_builder import media_linkedin
 from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
@@ -71,6 +72,11 @@ PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
+MEDIA_LINKEDIN_ACTIONS = {
+    "/api/media/linkedin/schedule": lambda body: media_linkedin.save_schedule(body),
+    "/api/media/linkedin/preview": lambda body: media_linkedin.preview(body),
+    "/api/media/linkedin/send-batch": lambda body: media_linkedin.send_batch(body),
+}
 CAMPUS_ARCHIVE_FILE = HOME / ".agent-bridge" / "campus-archive.json"
 LIVE_SESSIONS_DIR = HOME / ".agent-bridge" / "live-sessions"
 AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
@@ -1960,6 +1966,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
             return
+        if parsed.path in MEDIA_LINKEDIN_ACTIONS:
+            self._handle_media_linkedin_action(parsed.path)
+            return
         if parsed.path == '/api/manager/campus-archive':
             self._handle_campus_archive_change()
             return
@@ -2704,6 +2713,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except OSError:
             self._json_response(503, {'error': 'platform_cards_unavailable'})
 
+    def _handle_media_linkedin_action(self, path: str):
+        # «Медиа» tab (Mark 2026-10-31): schedule, preview and batch send for LinkedIn.
+        body = self._platform_owner_body(64 * 1024)
+        if body is None:
+            return
+        try:
+            status, payload = MEDIA_LINKEDIN_ACTIONS[path](body)
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_request'})
+            return
+        except media_linkedin.MediaUnavailable as error:
+            self._json_response(503, {'error': 'media_unavailable', 'state': str(error)})
+            return
+        self._json_response(status, payload)
+
     def _handle_owner_todo_save(self):
         body = self._platform_owner_body(OWNER_TODO_MAX_BYTES)
         if body is None:
@@ -2965,6 +2989,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'platform_cards_unavailable', 'state': 'unavailable', 'cards': []})
                 return
             self._json_response(200, {'state': 'ready', **record})
+            return
+        if parsed.path == '/api/media/linkedin':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required'})
+                return
+            self._json_response(200, media_linkedin.overview())
             return
         if parsed.path == '/api/owner-todo':
             if not self._decision_owner_authorized():

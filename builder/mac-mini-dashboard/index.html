@@ -3701,6 +3701,38 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .growth-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .growth-summary .mm-stat { flex: 1 1 160px; padding: 10px 12px; background: var(--mm-background); border: 0; border-radius: 10px; }
 .growth-summary .mm-stat strong { font-size: 22px; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; align-items: start; }
+.media-card { min-width: 0; padding: 16px 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; color: var(--mm-ink); }
+.media-card.media-wide { grid-column: 1 / -1; }
+.media-card h3 { margin: 0 0 6px; font-size: 16px; }
+.media-card h4 { margin: 16px 0 6px; font-size: 13px; color: var(--mm-muted); font-weight: 600; }
+.media-note { margin: 0 0 10px; color: var(--mm-muted); font-size: 13px; }
+.media-slots { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.media-slots li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; border: 1px solid var(--mm-line); border-radius: 999px; font-variant-numeric: tabular-nums; }
+.media-slots button { min-width: 28px; min-height: 28px; border: 0; border-radius: 999px; background: transparent; color: var(--mm-muted); cursor: pointer; }
+.media-slots button:hover, .media-slots button:focus-visible { color: var(--mm-warning); outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.media-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.media-add label { font-size: 13px; color: var(--mm-muted); }
+.media-card input[type="time"] { min-height: 36px; padding: 4px 8px; border: 1px solid var(--mm-line); border-radius: 8px; background: var(--mm-background); color: var(--mm-ink); font: inherit; }
+.media-card button:not(.media-slots button) { min-height: 36px; padding: 6px 14px; border: 1px solid var(--mm-line); border-radius: 10px; background: var(--mm-background); color: var(--mm-ink); font: inherit; font-size: 14px; cursor: pointer; }
+.media-card button:disabled { opacity: .5; cursor: not-allowed; }
+.media-card button.media-primary { background: var(--mm-accent); border-color: var(--mm-accent); color: #fff; }
+.media-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.media-list, .media-news, .media-review-list { margin: 0; padding: 0; list-style: none; }
+.media-list li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--mm-line); font-size: 14px; }
+.media-list li:first-child { border-top: 0; }
+.media-list time { font-variant-numeric: tabular-nums; color: var(--mm-muted); }
+.media-tag { padding: 1px 8px; border-radius: 999px; background: var(--mm-background); border: 1px solid var(--mm-line); font-size: 12px; white-space: nowrap; }
+.media-news li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--mm-line); }
+.media-news li:first-child { border-top: 0; }
+.media-news label { flex: 1; min-width: 0; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 14px; }
+.media-news input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+.media-news small { color: var(--mm-muted); }
+.media-review-list li { margin: 12px 0; padding: 12px 14px; border: 1px solid var(--mm-line); border-radius: 10px; }
+.media-review-list li.is-removed { opacity: .45; }
+.media-review-list pre { margin: 0 0 10px; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; }
+.media-preview-text { margin: 8px 0 0; padding: 10px 12px; white-space: pre-wrap; word-break: break-word; border-left: 3px solid var(--mm-line); font-size: 14px; }
+@media (prefers-reduced-motion: reduce) { .media-card * { transition: none !important; } }
 .growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; gap: 12px; }
 /* Mark 2026-10-26: compact cards like Платформы; the whole card opens a window with the steps. */
 .growth-card { --growth-tint: var(--mm-selection); display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: start; width: 100%; min-width: 0; padding: 14px 16px 14px 14px;
@@ -5012,6 +5044,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <symbol id="ax-i-shield" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M12 3l7.5 3v5.5c0 4.5-3.2 8-7.5 9.5-4.3-1.5-7.5-5-7.5-9.5V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></g></symbol>
   <symbol id="ax-i-loop" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5M20 4v4.5h-4.5M20 12a8 8 0 0 1-13.7 5.6L4 15.5M4 20v-4.5h4.5"/></g></symbol>
   <symbol id="cc-icon-architecture" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="15" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4M6 16v-2h12v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="cc-icon-media" viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-growth" viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4 3-7 8-7 0 4-3 7-8 7zM12 15c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <!-- «Точки роста» pictures -->
   <symbol id="cc-growth-pe" viewBox="0 0 120 120">
@@ -5137,6 +5170,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-architecture" aria-pressed="false" onclick="showSection('architecture')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-architecture"/></svg></span><span class="cc-tab-label" data-tab-label="architecture">Архитектура</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-media" aria-pressed="false" onclick="showSection('media')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-media"/></svg></span><span class="cc-tab-label" data-tab-label="media">Медиа</span></button>
     <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
     <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
@@ -5788,6 +5822,59 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <p class="mm-notice" id="growth-state" role="status" aria-live="polite">Загружаю точки роста…</p>
     <div class="growth-summary" id="growth-summary"></div>
     <div class="growth-grid" id="growth-grid"></div>
+  </section>
+
+  <!-- Mark 2026-10-31: «Медиа» — LinkedIn: publication times, the scheduled queue and a manual news picker.
+       Owner only; the news service owns deduplication, limits and publishing. -->
+  <section id="section-media" class="section" aria-labelledby="media-title">
+    <header class="cc-page-head">
+      <div>
+        <h2 class="cc-page-title" id="media-title">Медиа · LinkedIn</h2>
+        <p class="cc-page-lede">Когда выходят посты, что уже в очереди и какие свежие новости можно отправить вручную.</p>
+      </div>
+      <button class="platform-archive-open" id="media-refresh" type="button"><span>Обновить</span></button>
+    </header>
+    <p class="mm-notice" id="media-state" role="status" aria-live="polite">Загружаю…</p>
+    <div class="media-grid" id="media-body" hidden>
+      <article class="media-card" aria-labelledby="media-slots-title">
+        <h3 id="media-slots-title">Расписание публикаций</h3>
+        <p class="media-note" id="media-mode-note"></p>
+        <ul class="media-slots" id="media-slots"></ul>
+        <form class="media-add" id="media-add-form">
+          <label for="media-add-time">Добавить время</label>
+          <input type="time" id="media-add-time" step="300" required>
+          <button type="submit">Добавить</button>
+        </form>
+        <div class="media-actions">
+          <button type="button" id="media-save-slots" disabled>Сохранить расписание</button>
+          <span class="media-note" id="media-slots-status" role="status" aria-live="polite"></span>
+        </div>
+        <h4>Ближайшие слоты</h4>
+        <ul class="media-list" id="media-upcoming"></ul>
+      </article>
+      <article class="media-card" aria-labelledby="media-queue-title">
+        <h3 id="media-queue-title">Очередь и последние посты</h3>
+        <p class="media-note" id="media-budget"></p>
+        <ul class="media-list" id="media-posts"></ul>
+      </article>
+      <article class="media-card media-wide" aria-labelledby="media-news-title">
+        <h3 id="media-news-title">Новости для ручной отправки</h3>
+        <p class="media-note">Отметь нужные, «Читать» покажет готовый пост. Уже отправленные сюда не попадают. Выбранные выйдут по очереди с интервалом не меньше 20 минут.</p>
+        <ul class="media-news" id="media-news"></ul>
+        <div class="media-actions">
+          <button type="button" id="media-prepare" disabled>Подготовить выбранные</button>
+          <span class="media-note" id="media-news-status" role="status" aria-live="polite"></span>
+        </div>
+        <div class="media-review" id="media-review" hidden>
+          <h4>Проверь перед отправкой</h4>
+          <ol class="media-review-list" id="media-review-list"></ol>
+          <div class="media-actions">
+            <button type="button" id="media-send" class="media-primary">Отправить в LinkedIn</button>
+            <button type="button" id="media-cancel">Отмена</button>
+          </div>
+        </div>
+      </article>
+    </div>
   </section>
 
   <!-- Mark 2026-10-26: «Архитектура» — where agents run, who manages them, how work arrives, where results go
@@ -6982,7 +7069,7 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'architecture', 'platforms', 'documents', 'context', 'machines']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -8150,6 +8237,7 @@ function showSection(name) {
   if (name === 'architecture') setTimeout(archLoad, 0);
   if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') { setTimeout(ccLoadPlatformResources, 0); setTimeout(ccLoadWorkTools, 0); }
+  if (name === 'media') setTimeout(mediaLoad, 0);
   if (name === 'documents') setTimeout(ccLoadDocxx, 0);
   else window.dispatchEvent(new Event('docxx-lock'));
   if (name === 'context') setTimeout(ccLoadContext, 0);
@@ -8160,7 +8248,7 @@ function showSection(name) {
 // what it said), so its old links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
   const agentsView = new URLSearchParams(window.location.search).get('view');
   if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
@@ -9671,6 +9759,242 @@ document.getElementById('platform-edit-image-remove')?.addEventListener('click',
   setPlatformArt(document.getElementById('platform-edit-image-preview'), '', document.getElementById('platform-edit-name').value || '+');
 });
 // ── End Platform own cards ──
+
+// ── Media · LinkedIn (Mark 2026-10-31) ──
+// Owner-only. The news service decides what may be sent; this tab only shows and forwards.
+const MEDIA_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/media/linkedin`;
+const MEDIA_STATES = { queued: 'в очереди', submitting: 'отправляется', ambiguous: 'нужна проверка', sent: 'опубликован', failed: 'ошибка' };
+let mediaSlots = [];
+let mediaSavedSlots = [];
+let mediaReview = [];
+let mediaLoading = false;
+
+function mediaEsc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+function mediaTime(iso) {
+  if (!iso) return 'по слоту Buffer';
+  const when = new Date(iso);
+  if (Number.isNaN(when.getTime())) return '';
+  const opts = { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' };
+  const sameDay = when.toLocaleDateString('ru-RU', { timeZone: 'Europe/Paris' }) === new Date().toLocaleDateString('ru-RU', { timeZone: 'Europe/Paris' });
+  return sameDay ? when.toLocaleTimeString('ru-RU', opts) : `${when.toLocaleDateString('ru-RU', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit' })} ${when.toLocaleTimeString('ru-RU', opts)}`;
+}
+
+function mediaSetState(text, kind = '') {
+  const state = document.getElementById('media-state');
+  state.hidden = !text;
+  state.className = 'mm-notice' + (kind ? ` ${kind}` : '');
+  state.textContent = text || '';
+}
+
+async function mediaPost(path, body) {
+  const response = await fetch(`${MEDIA_API}/${path}`, { method: 'POST', headers: jarvisRunHeaders(), body: JSON.stringify(body), cache: 'no-store' });
+  let data = {};
+  try { data = await response.json(); } catch (_) { /* empty body */ }
+  if (!response.ok) {
+    const error = new Error(data.detail || data.error || `HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+
+async function mediaLoad() {
+  if (!MEDIA_API || mediaLoading) return;
+  mediaLoading = true;
+  try {
+    const response = await fetch(MEDIA_API, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      document.getElementById('media-body').hidden = true;
+      mediaSetState('Эта вкладка только для владельца. Войди как владелец, чтобы управлять публикациями.', 'empty');
+      return;
+    }
+    if (data.state === 'not_configured') {
+      document.getElementById('media-body').hidden = true;
+      mediaSetState('Command Center ещё не подключён к сервису новостей: нужен общий ключ, как у Jarvis.', 'empty');
+      return;
+    }
+    if (!response.ok || data.state !== 'ready') throw new Error(data.reason || `HTTP ${response.status}`);
+    mediaSetState('');
+    document.getElementById('media-body').hidden = false;
+    mediaRender(data);
+  } catch (_) {
+    mediaSetState('Сервис новостей сейчас не отвечает. Ничего не показываю, чтобы не гадать.', 'error');
+  } finally {
+    mediaLoading = false;
+  }
+}
+
+function mediaRender(data) {
+  const schedule = data.schedule || {};
+  mediaSavedSlots = [...(schedule.slots || [])];
+  mediaSlots = [...mediaSavedSlots];
+  mediaRenderSlots();
+  document.getElementById('media-mode-note').textContent = schedule.mode === 'owner_slots'
+    ? 'Посты выходят в эти часы (Париж). К каждому времени бот за 1,5 часа берёт самую свежую новость.'
+    : 'Сейчас время берётся из расписания Buffer. Добавь своё время, и посты будут выходить по нему.';
+  const upcoming = document.getElementById('media-upcoming');
+  const slots = schedule.upcoming_slots || [];
+  upcoming.innerHTML = slots.length ? slots.slice(0, 8).map(slot => `<li><time>${mediaEsc(mediaTime(slot.at))}</time><span>${slot.filled ? 'пост уже назначен' : `новость подберётся в ${mediaEsc(mediaTime(slot.prepares_at))}`}</span><span class="media-tag">${slot.filled ? 'занят' : 'свободен'}</span></li>`).join('')
+    : '<li><span></span><span>Своих слотов нет.</span><span></span></li>';
+  const budget = schedule.budget || {};
+  document.getElementById('media-budget').textContent = `Сегодня опубликовано ${budget.published ?? '?'} из ${budget.limit ?? '?'}, в очереди ${budget.reserved ?? '?'}, можно добавить ещё ${budget.available ?? '?'}.`;
+  const posts = schedule.posts || [];
+  document.getElementById('media-posts').innerHTML = posts.length ? posts.map(post => {
+    const title = post.url ? `<a href="${mediaEsc(post.url)}" target="_blank" rel="noopener noreferrer">${mediaEsc(post.title)}</a>` : mediaEsc(post.title);
+    return `<li><time>${mediaEsc(mediaTime(post.due_at))}</time><span>${title}</span><span class="media-tag">${mediaEsc(MEDIA_STATES[post.state] || post.state)}</span></li>`;
+  }).join('') : '<li><span></span><span>Пока пусто.</span><span></span></li>';
+  const news = data.news || [];
+  document.getElementById('media-news').innerHTML = news.length ? news.map(item => `<li data-id="${mediaEsc(item.id)}">
+      <label><input type="checkbox" value="${mediaEsc(item.id)}"><span>${mediaEsc(item.title)}<br><small>${mediaEsc(item.source || '')}</small></span></label>
+      <button type="button" data-media-read="${mediaEsc(item.id)}">Читать</button></li>`).join('')
+    : '<li>Свежих новостей за сутки нет.</li>';
+  mediaUpdatePrepare();
+}
+
+function mediaRenderSlots() {
+  const list = document.getElementById('media-slots');
+  list.innerHTML = mediaSlots.map(slot => `<li><span>${mediaEsc(slot)}</span><button type="button" data-media-remove-slot="${mediaEsc(slot)}" aria-label="Убрать ${mediaEsc(slot)}">×</button></li>`).join('') || '<li>нет</li>';
+  document.getElementById('media-save-slots').disabled = JSON.stringify(mediaSlots) === JSON.stringify(mediaSavedSlots);
+}
+
+function mediaSelected() {
+  return [...document.querySelectorAll('#media-news input[type="checkbox"]:checked')].map(box => box.value).slice(0, 10);
+}
+
+function mediaUpdatePrepare() {
+  const count = mediaSelected().length;
+  const button = document.getElementById('media-prepare');
+  button.disabled = count === 0;
+  button.textContent = count ? `Подготовить выбранные (${count})` : 'Подготовить выбранные';
+}
+
+function mediaTitle(id) {
+  const row = document.querySelector(`#media-news li[data-id="${CSS.escape(id)}"] label span`);
+  return row ? row.firstChild.textContent : '';
+}
+
+async function mediaPrepare() {
+  const ids = mediaSelected();
+  if (!ids.length) return;
+  const status = document.getElementById('media-news-status');
+  const button = document.getElementById('media-prepare');
+  button.disabled = true;
+  mediaReview = [];
+  const list = document.getElementById('media-review-list');
+  list.innerHTML = '';
+  for (const [index, id] of ids.entries()) {
+    status.textContent = `Готовлю ${index + 1} из ${ids.length}… это до минуты на пост.`;
+    try {
+      const data = await mediaPost('preview', { article_id: id });
+      if (!data.text || !data.preview) {
+        status.textContent = `«${mediaTitle(id)}» уже обработан (${MEDIA_STATES[data.state] || data.state}).`;
+        continue;
+      }
+      mediaReview.push({ candidate_id: data.id, preview: data.preview, title: mediaTitle(id), removed: false });
+      const position = mediaReview.length - 1;
+      list.insertAdjacentHTML('beforeend', `<li data-review="${position}"><pre>${mediaEsc(data.text)}</pre><button type="button" data-media-toggle="${position}">Убрать</button></li>`);
+    } catch (error) {
+      list.insertAdjacentHTML('beforeend', `<li class="is-removed">Не удалось подготовить «${mediaEsc(mediaTitle(id))}»: ${mediaEsc(error.message)}</li>`);
+    }
+  }
+  status.textContent = mediaReview.length ? `Готово: ${mediaReview.length}. Прочитай и убери лишнее.` : 'Нечего отправлять.';
+  document.getElementById('media-review').hidden = mediaReview.length === 0;
+  mediaUpdatePrepare();
+}
+
+async function mediaSend() {
+  const chosen = mediaReview.filter(item => !item.removed);
+  if (!chosen.length) return;
+  const send = document.getElementById('media-send');
+  const status = document.getElementById('media-news-status');
+  send.disabled = true;
+  try {
+    const data = await mediaPost('send-batch', { items: chosen.map(({ candidate_id, preview }) => ({ candidate_id, preview })) });
+    const results = data.items || [];
+    const ok = results.filter(item => item.state === 'queued' || item.state === 'sent');
+    const times = ok.map(item => mediaTime(item.due_at)).filter(Boolean).join(', ');
+    status.textContent = `Отправлено в очередь: ${ok.length} из ${chosen.length}${times ? `. Выйдут в ${times}` : ''}.`;
+    mediaReview = [];
+    document.getElementById('media-review').hidden = true;
+    await mediaLoad();
+  } catch (error) {
+    status.textContent = `Не удалось подтвердить отправку (${error.message}). Обнови вкладку и проверь очередь, повторять вслепую не нужно.`;
+  } finally {
+    send.disabled = false;
+  }
+}
+
+function mediaInit() {
+  if (!document.getElementById('section-media')) return;
+  document.getElementById('media-refresh').addEventListener('click', mediaLoad);
+  document.getElementById('media-add-form').addEventListener('submit', event => {
+    event.preventDefault();
+    const input = document.getElementById('media-add-time');
+    const value = (input.value || '').slice(0, 5);
+    if (!/^\d{2}:\d{2}$/.test(value) || mediaSlots.includes(value) || mediaSlots.length >= 10) return;
+    mediaSlots = [...mediaSlots, value].sort();
+    input.value = '';
+    mediaRenderSlots();
+  });
+  document.getElementById('media-slots').addEventListener('click', event => {
+    const slot = event.target.closest('[data-media-remove-slot]')?.dataset.mediaRemoveSlot;
+    if (!slot) return;
+    mediaSlots = mediaSlots.filter(value => value !== slot);
+    mediaRenderSlots();
+  });
+  document.getElementById('media-save-slots').addEventListener('click', async () => {
+    const status = document.getElementById('media-slots-status');
+    try {
+      await mediaPost('schedule', { slots: mediaSlots });
+      status.textContent = 'Расписание сохранено.';
+      await mediaLoad();
+    } catch (error) {
+      status.textContent = error.status === 422 ? `Не сохранено: ${error.message}` : 'Не удалось сохранить, попробуй ещё раз.';
+    }
+  });
+  document.getElementById('media-news').addEventListener('change', mediaUpdatePrepare);
+  document.getElementById('media-news').addEventListener('click', async event => {
+    const id = event.target.closest('[data-media-read]')?.dataset.mediaRead;
+    if (!id) return;
+    const row = event.target.closest('li');
+    const button = event.target.closest('button');
+    button.disabled = true;
+    button.textContent = 'Готовлю…';
+    try {
+      const data = await mediaPost('preview', { article_id: id });
+      row.querySelector('.media-preview-text')?.remove();
+      row.insertAdjacentHTML('beforeend', `<p class="media-preview-text">${mediaEsc(data.text || MEDIA_STATES[data.state] || data.state)}</p>`);
+      row.style.flexWrap = 'wrap';
+    } catch (error) {
+      document.getElementById('media-news-status').textContent = `Не удалось подготовить пост: ${error.message}`;
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Читать';
+    }
+  });
+  document.getElementById('media-prepare').addEventListener('click', mediaPrepare);
+  document.getElementById('media-review-list').addEventListener('click', event => {
+    const index = event.target.closest('[data-media-toggle]')?.dataset.mediaToggle;
+    if (index === undefined) return;
+    const item = mediaReview[Number(index)];
+    item.removed = !item.removed;
+    event.target.textContent = item.removed ? 'Вернуть' : 'Убрать';
+    event.target.closest('li').classList.toggle('is-removed', item.removed);
+    document.getElementById('media-send').textContent = `Отправить в LinkedIn (${mediaReview.filter(entry => !entry.removed).length})`;
+  });
+  document.getElementById('media-send').addEventListener('click', mediaSend);
+  document.getElementById('media-cancel').addEventListener('click', () => {
+    mediaReview = [];
+    document.getElementById('media-review').hidden = true;
+    document.getElementById('media-news-status').textContent = '';
+  });
+}
+try { mediaInit(); } catch (error) { console.warn('media tab init failed', error); }
+// ── End Media · LinkedIn ──
 
 function jarvisRunHeaders() {
   const headers = { 'Content-Type': 'application/json' };
