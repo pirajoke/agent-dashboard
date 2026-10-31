@@ -3701,38 +3701,136 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .growth-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .growth-summary .mm-stat { flex: 1 1 160px; padding: 10px 12px; background: var(--mm-background); border: 0; border-radius: 10px; }
 .growth-summary .mm-stat strong { font-size: 22px; }
-.media-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; align-items: start; }
-.media-card { min-width: 0; padding: 16px 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; color: var(--mm-ink); }
-.media-card.media-wide { grid-column: 1 / -1; }
-.media-card h3 { margin: 0 0 6px; font-size: 16px; }
-.media-card h4 { margin: 16px 0 6px; font-size: 13px; color: var(--mm-muted); font-weight: 600; }
-.media-note { margin: 0 0 10px; color: var(--mm-muted); font-size: 13px; }
-.media-slots { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
-.media-slots li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; border: 1px solid var(--mm-line); border-radius: 999px; font-variant-numeric: tabular-nums; }
-.media-slots button { min-width: 28px; min-height: 28px; border: 0; border-radius: 999px; background: transparent; color: var(--mm-muted); cursor: pointer; }
-.media-slots button:hover, .media-slots button:focus-visible { color: var(--mm-warning); outline: 2px solid var(--mm-accent); outline-offset: 1px; }
-.media-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.media-add label { font-size: 13px; color: var(--mm-muted); }
-.media-card input[type="time"] { min-height: 36px; padding: 4px 8px; border: 1px solid var(--mm-line); border-radius: 8px; background: var(--mm-background); color: var(--mm-ink); font: inherit; }
-.media-card button:not(.media-slots button) { min-height: 36px; padding: 6px 14px; border: 1px solid var(--mm-line); border-radius: 10px; background: var(--mm-background); color: var(--mm-ink); font: inherit; font-size: 14px; cursor: pointer; }
-.media-card button:disabled { opacity: .5; cursor: not-allowed; }
-.media-card button.media-primary { background: var(--mm-accent); border-color: var(--mm-accent); color: #fff; }
-.media-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
-.media-list, .media-news, .media-review-list { margin: 0; padding: 0; list-style: none; }
-.media-list li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--mm-line); font-size: 14px; }
-.media-list li:first-child { border-top: 0; }
-.media-list time { font-variant-numeric: tabular-nums; color: var(--mm-muted); }
-.media-tag { padding: 1px 8px; border-radius: 999px; background: var(--mm-background); border: 1px solid var(--mm-line); font-size: 12px; white-space: nowrap; }
-.media-news li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--mm-line); }
-.media-news li:first-child { border-top: 0; }
-.media-news label { flex: 1; min-width: 0; display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 14px; }
-.media-news input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex: none; }
-.media-news small { color: var(--mm-muted); }
-.media-review-list li { margin: 12px 0; padding: 12px 14px; border: 1px solid var(--mm-line); border-radius: 10px; }
-.media-review-list li.is-removed { opacity: .45; }
-.media-review-list pre { margin: 0 0 10px; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; }
-.media-preview-text { margin: 8px 0 0; padding: 10px 12px; white-space: pre-wrap; word-break: break-word; border-left: 3px solid var(--mm-line); font-size: 14px; }
-@media (prefers-reduced-motion: reduce) { .media-card * { transition: none !important; } }
+/* ── Media · LinkedIn ── */
+.media-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.media-studio { display: grid; gap: 18px; color: var(--mm-ink); }
+.media-studio p { margin: 0; }
+.media-eyebrow { color: var(--mm-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.media-hero { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, 1fr)); gap: 14px; }
+.media-next, .media-stat, .media-panel { min-width: 0; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
+.media-next { display: flex; gap: 16px; align-items: center; padding: 18px 20px; background: linear-gradient(135deg, var(--mm-selection), var(--mm-surface) 70%); }
+.media-next-body { min-width: 0; }
+.media-next-time { margin-top: 2px !important; font-size: 30px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.media-next-title { margin-top: 4px !important; color: var(--mm-muted); font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.media-in { flex: none; display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: #0a66c2; color: #fff; font: 800 24px/1 system-ui, sans-serif; letter-spacing: -.04em; }
+.media-in-small { width: 20px; height: 20px; border-radius: 5px; font-size: 12px; background: #fff; color: #0a66c2; }
+.media-stat { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.media-stat-value { font-size: 30px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.media-stat-value small { margin-left: 6px; color: var(--mm-muted); font-size: 15px; font-weight: 600; letter-spacing: 0; }
+.media-stat-note { color: var(--mm-muted); font-size: 13px; }
+.media-meter { display: flex; height: 8px; margin-top: auto; border-radius: 999px; background: var(--mm-surface-hover); overflow: hidden; }
+.media-meter span { display: block; height: 100%; transition: width .3s ease; }
+#media-meter-published { background: var(--mm-accent); }
+#media-meter-reserved { background: color-mix(in srgb, var(--mm-accent) 35%, transparent); }
+.media-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 18px; align-items: start; }
+.media-side { display: grid; gap: 18px; min-width: 0; }
+.media-panel { padding: 18px 20px 20px; }
+.media-panel-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.media-panel-head > div { flex: 1; min-width: 0; }
+.media-panel-head h3 { margin: 0; font-size: 17px; font-weight: 700; }
+.media-panel-head p { margin-top: 2px !important; color: var(--mm-muted); font-size: 13px; }
+.media-tile { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; }
+.media-tile svg { width: 22px; height: 22px; }
+.media-tile-news { background: var(--mm-tint-ai-singularity); color: var(--mm-violet); }
+.media-tile-clock { background: var(--mm-selection); color: var(--mm-accent); }
+.media-tile-queue { background: var(--mm-tint-property-os); color: var(--mm-warning); }
+.media-studio button { font: inherit; cursor: pointer; }
+.media-studio button:disabled { opacity: .45; cursor: not-allowed; }
+.media-studio button:focus-visible, .media-studio input:focus-visible, .media-story:has(input:focus-visible) { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.media-primary { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 20px; border: 0; border-radius: 999px; background: var(--mm-accent); color: #fff; font-size: 14px !important; font-weight: 700 !important; box-shadow: 0 2px 8px color-mix(in srgb, var(--mm-accent) 30%, transparent); }
+.media-primary:not(:disabled):hover { filter: brightness(1.08); }
+.media-ghost { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 14px; border: 1px solid var(--mm-control-line); border-radius: 999px; background: var(--mm-surface); color: var(--mm-ink); font-size: 13px !important; font-weight: 650 !important; }
+.media-ghost:not(:disabled):hover { background: var(--mm-surface-hover); }
+.media-ghost svg { width: 16px; height: 16px; }
+.media-link { border: 0; background: none; padding: 6px 4px; color: var(--mm-accent); font-size: 13px !important; font-weight: 700 !important; }
+.media-stories { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.media-story { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 14px 16px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); transition: border-color .15s, background .15s, box-shadow .15s; }
+.media-story:hover { background: var(--mm-surface-hover); }
+.media-story.is-picked { border-color: var(--mm-accent); background: color-mix(in srgb, var(--mm-selection) 60%, var(--mm-surface)); box-shadow: 0 0 0 1px var(--mm-accent) inset; }
+.media-check { position: relative; width: 22px; height: 22px; margin-top: 2px; }
+.media-check input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.media-check span { display: grid; place-items: center; width: 22px; height: 22px; border: 2px solid var(--mm-control-line); border-radius: 7px; background: var(--mm-surface); color: transparent; pointer-events: none; transition: all .15s; }
+.media-check input:checked + span { border-color: var(--mm-accent); background: var(--mm-accent); color: #fff; }
+.media-check svg { width: 14px; height: 14px; }
+.media-story-body { min-width: 0; cursor: pointer; }
+.media-story-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; color: var(--mm-muted); font-size: 12px; }
+.media-source { padding: 2px 8px; border-radius: 999px; background: var(--mm-tint-ai-singularity); color: var(--mm-violet); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.media-story h4 { margin: 0; font-size: 15px; font-weight: 650; line-height: 1.35; }
+.media-story-summary { margin-top: 4px !important; color: var(--mm-muted); font-size: 13px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.media-story .media-post { grid-column: 1 / -1; }
+.media-empty { padding: 28px 16px; border: 1px dashed var(--mm-line); border-radius: 14px; color: var(--mm-muted); text-align: center; font-size: 14px; }
+.media-bar { position: sticky; bottom: 12px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 14px; padding: 10px 10px 10px 16px; border: 1px solid var(--mm-line); border-radius: 999px; background: color-mix(in srgb, var(--mm-surface) 92%, transparent); backdrop-filter: blur(8px); box-shadow: var(--mm-shadow-soft); }
+.media-bar-text { flex: 1; min-width: 160px; color: var(--mm-muted); font-size: 13px; }
+.media-review { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--mm-line); }
+.media-review-head h4 { margin: 0; font-size: 16px; }
+.media-review-head p { margin-top: 2px !important; color: var(--mm-muted); font-size: 13px; }
+.media-posts-preview { display: grid; gap: 14px; margin: 14px 0 0; padding: 0; list-style: none; }
+.media-post { border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); overflow: hidden; transition: opacity .2s; }
+.media-post.is-removed { opacity: .45; }
+.media-post.is-removed .media-post-text { text-decoration: line-through; text-decoration-color: var(--mm-muted); }
+.media-post-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
+.media-avatar { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--mm-tint-ai-singularity); color: var(--mm-violet); font-weight: 800; font-size: 14px; }
+.media-post-head strong { display: block; font-size: 14px; }
+.media-post-head small { color: var(--mm-muted); font-size: 12px; }
+.media-post-text { margin: 0; padding: 10px 14px 12px; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; line-height: 1.5; max-height: 16em; overflow: auto; }
+.media-post-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--mm-line); background: var(--mm-background); }
+.media-post-error { padding: 12px 14px; color: var(--mm-danger); font-size: 13px; }
+.media-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.media-slots li { position: relative; display: flex; align-items: center; justify-content: center; min-height: 52px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-background); font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.media-slots li.is-new { border-style: dashed; border-color: var(--mm-accent); color: var(--mm-accent); }
+.media-slots li.media-slots-empty { grid-column: 1 / -1; min-height: 44px; color: var(--mm-muted); font-size: 13px; font-weight: 500; }
+.media-slots button { position: absolute; top: 3px; right: 3px; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--mm-muted); font-size: 15px !important; line-height: 1; }
+.media-slots button:hover { background: var(--mm-danger-soft); color: var(--mm-danger); }
+.media-add { display: flex; gap: 8px; }
+.media-add input[type="time"] { flex: 1; min-width: 0; min-height: 36px; padding: 4px 12px; border: 1px solid var(--mm-control-line); border-radius: 999px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-variant-numeric: tabular-nums; }
+.media-save { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 8px 8px 8px 14px; border-radius: 999px; background: var(--mm-warning-soft); color: var(--mm-warning); font-size: 13px; font-weight: 600; }
+.media-save[hidden] { display: none; }
+.media-save.is-ok { background: var(--mm-success-soft); color: var(--mm-success); }
+.media-subhead { margin: 18px 0 8px; color: var(--mm-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.media-timeline { position: relative; margin: 0; padding: 0; list-style: none; }
+.media-timeline li { position: relative; display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 8px 0 8px 18px; font-size: 13px; }
+.media-timeline li::before { content: ''; position: absolute; left: 4px; top: 0; bottom: 0; width: 2px; background: var(--mm-line); }
+.media-timeline li:first-child::before { top: 14px; }
+.media-timeline li:last-child::before { bottom: calc(100% - 14px); }
+.media-timeline li:only-child::before { display: none; }
+.media-timeline li::after { content: ''; position: absolute; left: 0; top: 10px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--mm-accent); background: var(--mm-surface); box-sizing: border-box; }
+.media-timeline li.is-filled::after { background: var(--mm-accent); }
+.media-timeline li.is-sent::after { border-color: var(--mm-success); background: var(--mm-success); }
+.media-timeline li.is-warn::after { border-color: var(--mm-warning); background: var(--mm-warning); }
+.media-timeline li.is-bad::after { border-color: var(--mm-danger); background: var(--mm-danger); }
+.media-timeline time { font-weight: 700; font-variant-numeric: tabular-nums; }
+.media-timeline .media-tl-text { min-width: 0; color: var(--mm-ink); line-height: 1.4; }
+.media-timeline .media-tl-text a { color: inherit; }
+.media-timeline .media-tl-text small { display: block; color: var(--mm-muted); }
+.media-timeline li.media-tl-empty { grid-template-columns: 1fr; padding-left: 0; color: var(--mm-muted); }
+.media-timeline li.media-tl-empty::before, .media-timeline li.media-tl-empty::after { display: none; }
+.media-chip { padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; background: var(--mm-surface-hover); color: var(--mm-muted); }
+.media-chip.is-info { background: var(--mm-info-soft); color: var(--mm-info); }
+.media-chip.is-ok { background: var(--mm-success-soft); color: var(--mm-success); }
+.media-chip.is-warn { background: var(--mm-warning-soft); color: var(--mm-warning); }
+.media-chip.is-bad { background: var(--mm-danger-soft); color: var(--mm-danger); }
+.media-chip.is-accent { background: var(--mm-selection); color: var(--mm-accent); }
+@media (max-width: 980px) {
+  .media-layout { grid-template-columns: minmax(0, 1fr); }
+  .media-hero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .media-next { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .media-next-time, .media-stat-value { font-size: 24px; }
+  .media-in { width: 44px; height: 44px; font-size: 20px; }
+  .media-panel, .media-next, .media-stat { padding: 14px 14px 16px; border-radius: 16px; }
+  .media-story { grid-template-columns: auto minmax(0, 1fr); padding: 12px; gap: 6px 10px; }
+  .media-story > .media-ghost { grid-column: 2; justify-self: start; }
+  .media-panel-head { flex-wrap: wrap; }
+  .media-timeline li { grid-template-columns: 64px minmax(0, 1fr) auto; }
+  .media-bar { border-radius: 18px; }
+  .media-bar .media-primary { flex: 1; justify-content: center; }
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .media-primary { color: #0b2226; } }
+:root[data-theme="dark"] .media-primary { color: #0b2226; }
+@media (prefers-reduced-motion: reduce) {
+  .media-story, .media-meter span, .media-post, .media-check span { transition: none; }
+}
 .growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; gap: 12px; }
 /* Mark 2026-10-26: compact cards like Платформы; the whole card opens a window with the steps. */
 .growth-card { --growth-tint: var(--mm-selection); display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: start; width: 100%; min-width: 0; padding: 14px 16px 14px 14px;
@@ -5829,51 +5927,97 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <section id="section-media" class="section" aria-labelledby="media-title">
     <header class="cc-page-head">
       <div>
-        <h2 class="cc-page-title" id="media-title">Медиа · LinkedIn</h2>
-        <p class="cc-page-lede">Когда выходят посты, что уже в очереди и какие свежие новости можно отправить вручную.</p>
+        <h2 class="cc-page-title" id="media-title">Медиа</h2>
+        <p class="cc-page-lede">LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.</p>
       </div>
-      <button class="platform-archive-open" id="media-refresh" type="button"><span>Обновить</span></button>
+      <button class="media-ghost" id="media-refresh" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Обновить</span></button>
     </header>
     <p class="mm-notice" id="media-state" role="status" aria-live="polite">Загружаю…</p>
-    <div class="media-grid" id="media-body" hidden>
-      <article class="media-card" aria-labelledby="media-slots-title">
-        <h3 id="media-slots-title">Расписание публикаций</h3>
-        <p class="media-note" id="media-mode-note"></p>
-        <ul class="media-slots" id="media-slots"></ul>
-        <form class="media-add" id="media-add-form">
-          <label for="media-add-time">Добавить время</label>
-          <input type="time" id="media-add-time" step="300" required>
-          <button type="submit">Добавить</button>
-        </form>
-        <div class="media-actions">
-          <button type="button" id="media-save-slots" disabled>Сохранить расписание</button>
-          <span class="media-note" id="media-slots-status" role="status" aria-live="polite"></span>
-        </div>
-        <h4>Ближайшие слоты</h4>
-        <ul class="media-list" id="media-upcoming"></ul>
-      </article>
-      <article class="media-card" aria-labelledby="media-queue-title">
-        <h3 id="media-queue-title">Очередь и последние посты</h3>
-        <p class="media-note" id="media-budget"></p>
-        <ul class="media-list" id="media-posts"></ul>
-      </article>
-      <article class="media-card media-wide" aria-labelledby="media-news-title">
-        <h3 id="media-news-title">Новости для ручной отправки</h3>
-        <p class="media-note">Отметь нужные, «Читать» покажет готовый пост. Уже отправленные сюда не попадают. Выбранные выйдут по очереди с интервалом не меньше 20 минут.</p>
-        <ul class="media-news" id="media-news"></ul>
-        <div class="media-actions">
-          <button type="button" id="media-prepare" disabled>Подготовить выбранные</button>
-          <span class="media-note" id="media-news-status" role="status" aria-live="polite"></span>
-        </div>
-        <div class="media-review" id="media-review" hidden>
-          <h4>Проверь перед отправкой</h4>
-          <ol class="media-review-list" id="media-review-list"></ol>
-          <div class="media-actions">
-            <button type="button" id="media-send" class="media-primary">Отправить в LinkedIn</button>
-            <button type="button" id="media-cancel">Отмена</button>
+    <div class="media-studio" id="media-body" hidden>
+      <div class="media-hero" aria-label="Сводка LinkedIn">
+        <article class="media-next">
+          <span class="media-in" aria-hidden="true">in</span>
+          <div class="media-next-body">
+            <p class="media-eyebrow">Следующий пост</p>
+            <p class="media-next-time" id="media-next-time">—</p>
+            <p class="media-next-title" id="media-next-title">В очереди пока ничего нет.</p>
           </div>
+        </article>
+        <article class="media-stat">
+          <p class="media-eyebrow">Сегодня вышло</p>
+          <p class="media-stat-value"><span id="media-stat-published">0</span><small id="media-stat-limit">из 10</small></p>
+          <div class="media-meter" aria-hidden="true"><span id="media-meter-published"></span><span id="media-meter-reserved"></span></div>
+        </article>
+        <article class="media-stat">
+          <p class="media-eyebrow">В очереди</p>
+          <p class="media-stat-value" id="media-stat-queued">0</p>
+          <p class="media-stat-note" id="media-stat-available">можно добавить ещё 10</p>
+        </article>
+      </div>
+
+      <div class="media-layout">
+        <article class="media-panel media-news-panel" aria-labelledby="media-news-title">
+          <header class="media-panel-head">
+            <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
+            <div>
+              <h3 id="media-news-title">Новости для LinkedIn</h3>
+              <p>Отправленные сюда не попадают, дублей не будет.</p>
+            </div>
+            <button type="button" class="media-link" id="media-select-all">Выбрать все</button>
+          </header>
+          <ul class="media-stories" id="media-news"></ul>
+          <div class="media-bar" id="media-news-bar">
+            <span class="media-bar-text" id="media-news-status" role="status" aria-live="polite">Отметь новости, которые хочешь отправить.</span>
+            <button type="button" class="media-primary" id="media-prepare" disabled>Подготовить посты</button>
+          </div>
+          <div class="media-review" id="media-review" hidden>
+            <header class="media-review-head">
+              <h4>Проверь перед отправкой</h4>
+              <p>Посты выйдут по очереди, не чаще раза в 20 минут.</p>
+            </header>
+            <ol class="media-posts-preview" id="media-review-list"></ol>
+            <div class="media-bar">
+              <button type="button" class="media-ghost" id="media-cancel">Отмена</button>
+              <button type="button" class="media-primary" id="media-send"><span class="media-in media-in-small" aria-hidden="true">in</span>Отправить в LinkedIn</button>
+            </div>
+          </div>
+        </article>
+
+        <div class="media-side">
+          <article class="media-panel" aria-labelledby="media-slots-title">
+            <header class="media-panel-head">
+              <span class="media-tile media-tile-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+              <div>
+                <h3 id="media-slots-title">Расписание</h3>
+                <p id="media-mode-note"></p>
+              </div>
+            </header>
+            <ul class="media-slots" id="media-slots"></ul>
+            <form class="media-add" id="media-add-form">
+              <label class="media-sr" for="media-add-time">Новое время</label>
+              <input type="time" id="media-add-time" step="300" required>
+              <button type="submit" class="media-ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cc-icon-plus"/></svg><span>Добавить время</span></button>
+            </form>
+            <div class="media-save" id="media-save-row" hidden>
+              <span id="media-slots-status" role="status" aria-live="polite">Есть несохранённые изменения</span>
+              <button type="button" class="media-primary" id="media-save-slots">Сохранить</button>
+            </div>
+            <h4 class="media-subhead">Ближайшие слоты</h4>
+            <ol class="media-timeline" id="media-upcoming"></ol>
+          </article>
+
+          <article class="media-panel" aria-labelledby="media-queue-title">
+            <header class="media-panel-head">
+              <span class="media-tile media-tile-queue" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-tasks"/></svg></span>
+              <div>
+                <h3 id="media-queue-title">Очередь</h3>
+                <p>Посты, уже переданные в Buffer.</p>
+              </div>
+            </header>
+            <ol class="media-timeline" id="media-posts"></ol>
+          </article>
         </div>
-      </article>
+      </div>
     </div>
   </section>
 
@@ -9763,23 +9907,48 @@ document.getElementById('platform-edit-image-remove')?.addEventListener('click',
 // ── Media · LinkedIn (Mark 2026-10-31) ──
 // Owner-only. The news service decides what may be sent; this tab only shows and forwards.
 const MEDIA_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/media/linkedin`;
-const MEDIA_STATES = { queued: 'в очереди', submitting: 'отправляется', ambiguous: 'нужна проверка', sent: 'опубликован', failed: 'ошибка' };
+const MEDIA_STATES = {
+  queued: ['в очереди', 'is-info', 'is-filled'],
+  submitting: ['отправляется', 'is-info', 'is-filled'],
+  ambiguous: ['нужна проверка', 'is-warn', 'is-warn'],
+  sent: ['опубликован', 'is-ok', 'is-sent'],
+  failed: ['ошибка', 'is-bad', 'is-bad'],
+};
+const MEDIA_CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let mediaSlots = [];
 let mediaSavedSlots = [];
 let mediaReview = [];
+let mediaNews = [];
 let mediaLoading = false;
 
 function mediaEsc(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
+function mediaParis(date, opts) {
+  return date.toLocaleString('ru-RU', { timeZone: 'Europe/Paris', ...opts });
+}
+
 function mediaTime(iso) {
-  if (!iso) return 'по слоту Buffer';
+  if (!iso) return 'по Buffer';
   const when = new Date(iso);
   if (Number.isNaN(when.getTime())) return '';
-  const opts = { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' };
-  const sameDay = when.toLocaleDateString('ru-RU', { timeZone: 'Europe/Paris' }) === new Date().toLocaleDateString('ru-RU', { timeZone: 'Europe/Paris' });
-  return sameDay ? when.toLocaleTimeString('ru-RU', opts) : `${when.toLocaleDateString('ru-RU', { timeZone: 'Europe/Paris', day: '2-digit', month: '2-digit' })} ${when.toLocaleTimeString('ru-RU', opts)}`;
+  const time = mediaParis(when, { hour: '2-digit', minute: '2-digit' });
+  const day = mediaParis(when, { day: '2-digit', month: '2-digit' });
+  const today = mediaParis(new Date(), { day: '2-digit', month: '2-digit' });
+  const tomorrow = mediaParis(new Date(Date.now() + 864e5), { day: '2-digit', month: '2-digit' });
+  if (day === today) return time;
+  if (day === tomorrow) return `завтра ${time}`;
+  return `${day} ${time}`;
+}
+
+function mediaAgo(iso) {
+  const when = new Date(iso || '');
+  if (Number.isNaN(when.getTime())) return '';
+  const minutes = Math.max(0, Math.round((Date.now() - when.getTime()) / 60000));
+  if (minutes < 60) return `${minutes || 1} мин назад`;
+  const hours = Math.round(minutes / 60);
+  return hours < 24 ? `${hours} ч назад` : mediaTime(iso);
 }
 
 function mediaSetState(text, kind = '') {
@@ -9828,37 +9997,76 @@ async function mediaLoad() {
   }
 }
 
+function mediaRenderHero(schedule) {
+  const budget = schedule.budget || {};
+  const posts = schedule.posts || [];
+  const limit = Number(budget.limit) || 10;
+  const published = Number(budget.published) || 0;
+  const reserved = Number(budget.reserved) || 0;
+  const next = posts.filter(post => post.due_at && ['queued', 'submitting'].includes(post.state))
+    .sort((a, b) => new Date(a.due_at) - new Date(b.due_at))[0];
+  document.getElementById('media-next-time').textContent = next ? mediaTime(next.due_at) : '—';
+  document.getElementById('media-next-title').textContent = next ? next.title : (reserved ? 'Пост в очереди Buffer, время по его расписанию.' : 'В очереди пока ничего нет.');
+  document.getElementById('media-stat-published').textContent = published;
+  document.getElementById('media-stat-limit').textContent = `из ${limit}`;
+  document.getElementById('media-meter-published').style.width = `${Math.min(100, published / limit * 100)}%`;
+  document.getElementById('media-meter-reserved').style.width = `${Math.min(100, reserved / limit * 100)}%`;
+  document.getElementById('media-stat-queued').textContent = reserved;
+  document.getElementById('media-stat-available').textContent = `можно добавить ещё ${budget.available ?? '—'}`;
+}
+
 function mediaRender(data) {
   const schedule = data.schedule || {};
+  mediaRenderHero(schedule);
   mediaSavedSlots = [...(schedule.slots || [])];
   mediaSlots = [...mediaSavedSlots];
   mediaRenderSlots();
   document.getElementById('media-mode-note').textContent = schedule.mode === 'owner_slots'
-    ? 'Посты выходят в эти часы (Париж). К каждому времени бот за 1,5 часа берёт самую свежую новость.'
-    : 'Сейчас время берётся из расписания Buffer. Добавь своё время, и посты будут выходить по нему.';
-  const upcoming = document.getElementById('media-upcoming');
+    ? 'Время Парижа. К каждому слоту бот за 1,5 часа берёт самую свежую новость.'
+    : 'Сейчас время задаёт Buffer. Добавь своё, и посты пойдут по нему.';
   const slots = schedule.upcoming_slots || [];
-  upcoming.innerHTML = slots.length ? slots.slice(0, 8).map(slot => `<li><time>${mediaEsc(mediaTime(slot.at))}</time><span>${slot.filled ? 'пост уже назначен' : `новость подберётся в ${mediaEsc(mediaTime(slot.prepares_at))}`}</span><span class="media-tag">${slot.filled ? 'занят' : 'свободен'}</span></li>`).join('')
-    : '<li><span></span><span>Своих слотов нет.</span><span></span></li>';
-  const budget = schedule.budget || {};
-  document.getElementById('media-budget').textContent = `Сегодня опубликовано ${budget.published ?? '?'} из ${budget.limit ?? '?'}, в очереди ${budget.reserved ?? '?'}, можно добавить ещё ${budget.available ?? '?'}.`;
+  document.getElementById('media-upcoming').innerHTML = slots.length
+    ? slots.slice(0, 6).map(slot => `<li class="${slot.filled ? 'is-filled' : ''}"><time>${mediaEsc(mediaTime(slot.at))}</time>
+        <span class="media-tl-text">${slot.filled ? 'Пост назначен' : `Новость подберётся<small>подбор: ${mediaEsc(mediaTime(slot.prepares_at))}</small>`}</span>
+        <span class="media-chip ${slot.filled ? 'is-accent' : ''}">${slot.filled ? 'занят' : 'свободен'}</span></li>`).join('')
+    : '<li class="media-tl-empty">Своих слотов нет: посты идут по расписанию Buffer.</li>';
   const posts = schedule.posts || [];
   document.getElementById('media-posts').innerHTML = posts.length ? posts.map(post => {
+    const [label, chip, dot] = MEDIA_STATES[post.state] || [post.state, '', ''];
     const title = post.url ? `<a href="${mediaEsc(post.url)}" target="_blank" rel="noopener noreferrer">${mediaEsc(post.title)}</a>` : mediaEsc(post.title);
-    return `<li><time>${mediaEsc(mediaTime(post.due_at))}</time><span>${title}</span><span class="media-tag">${mediaEsc(MEDIA_STATES[post.state] || post.state)}</span></li>`;
-  }).join('') : '<li><span></span><span>Пока пусто.</span><span></span></li>';
-  const news = data.news || [];
-  document.getElementById('media-news').innerHTML = news.length ? news.map(item => `<li data-id="${mediaEsc(item.id)}">
-      <label><input type="checkbox" value="${mediaEsc(item.id)}"><span>${mediaEsc(item.title)}<br><small>${mediaEsc(item.source || '')}</small></span></label>
-      <button type="button" data-media-read="${mediaEsc(item.id)}">Читать</button></li>`).join('')
-    : '<li>Свежих новостей за сутки нет.</li>';
+    return `<li class="${dot}"><time>${mediaEsc(mediaTime(post.due_at))}</time><span class="media-tl-text">${title}</span><span class="media-chip ${chip}">${mediaEsc(label)}</span></li>`;
+  }).join('') : '<li class="media-tl-empty">Очередь пуста.</li>';
+  mediaNews = data.news || [];
+  document.getElementById('media-news').innerHTML = mediaNews.length ? mediaNews.map(item => {
+    const id = mediaEsc(item.id);
+    const meta = [item.source ? `<span class="media-source">${mediaEsc(item.source)}</span>` : '', item.published_at ? `<span>${mediaEsc(mediaAgo(item.published_at))}</span>` : ''].join('');
+    return `<li class="media-story" data-id="${id}">
+      <label class="media-check"><input type="checkbox" value="${id}" aria-label="Выбрать: ${mediaEsc(item.title)}"><span>${MEDIA_CHECK_SVG}</span></label>
+      <div class="media-story-body" data-media-pick="${id}">
+        ${meta ? `<div class="media-story-meta">${meta}</div>` : ''}
+        <h4>${mediaEsc(item.title)}</h4>
+        ${item.summary ? `<p class="media-story-summary">${mediaEsc(item.summary)}</p>` : ''}
+      </div>
+      <button type="button" class="media-ghost" data-media-read="${id}">Читать пост</button>
+    </li>`;
+  }).join('') : '<li class="media-empty">Свежих новостей за сутки нет. Загляни позже.</li>';
   mediaUpdatePrepare();
 }
 
 function mediaRenderSlots() {
   const list = document.getElementById('media-slots');
-  list.innerHTML = mediaSlots.map(slot => `<li><span>${mediaEsc(slot)}</span><button type="button" data-media-remove-slot="${mediaEsc(slot)}" aria-label="Убрать ${mediaEsc(slot)}">×</button></li>`).join('') || '<li>нет</li>';
-  document.getElementById('media-save-slots').disabled = JSON.stringify(mediaSlots) === JSON.stringify(mediaSavedSlots);
+  list.innerHTML = mediaSlots.map(slot => `<li class="${mediaSavedSlots.includes(slot) ? '' : 'is-new'}"><span>${mediaEsc(slot)}</span><button type="button" data-media-remove-slot="${mediaEsc(slot)}" aria-label="Убрать ${mediaEsc(slot)}">×</button></li>`).join('')
+    || '<li class="media-slots-empty">Своего времени нет</li>';
+  const dirty = JSON.stringify(mediaSlots) !== JSON.stringify(mediaSavedSlots);
+  const row = document.getElementById('media-save-row');
+  if (dirty) {
+    row.hidden = false;
+    row.classList.remove('is-ok');
+    document.getElementById('media-slots-status').textContent = 'Есть несохранённые изменения';
+    document.getElementById('media-save-slots').hidden = false;
+  } else if (!row.classList.contains('is-ok')) {
+    row.hidden = true;
+  }
 }
 
 function mediaSelected() {
@@ -9866,15 +10074,36 @@ function mediaSelected() {
 }
 
 function mediaUpdatePrepare() {
+  const boxes = [...document.querySelectorAll('#media-news input[type="checkbox"]')];
+  boxes.forEach(box => box.closest('.media-story').classList.toggle('is-picked', box.checked));
   const count = mediaSelected().length;
   const button = document.getElementById('media-prepare');
   button.disabled = count === 0;
-  button.textContent = count ? `Подготовить выбранные (${count})` : 'Подготовить выбранные';
+  button.textContent = count ? `Подготовить посты (${count})` : 'Подготовить посты';
+  const all = document.getElementById('media-select-all');
+  all.hidden = boxes.length === 0;
+  all.textContent = boxes.length && boxes.every(box => box.checked) ? 'Снять все' : 'Выбрать все';
+  const status = document.getElementById('media-news-status');
+  if (!status.dataset.busy) status.textContent = count ? `Выбрано ${count} из ${boxes.length}` : 'Отметь новости, которые хочешь отправить.';
 }
 
 function mediaTitle(id) {
-  const row = document.querySelector(`#media-news li[data-id="${CSS.escape(id)}"] label span`);
-  return row ? row.firstChild.textContent : '';
+  return (mediaNews.find(item => item.id === id) || {}).title || '';
+}
+
+function mediaPostCard(position, text, title) {
+  return `<li class="media-post" data-review="${position}">
+    <div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>${mediaEsc(title)}</small></div></div>
+    <pre class="media-post-text">${mediaEsc(text)}</pre>
+    <div class="media-post-foot"><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button></div>
+  </li>`;
+}
+
+function mediaUpdateSend() {
+  const left = mediaReview.filter(entry => !entry.removed).length;
+  const send = document.getElementById('media-send');
+  send.disabled = left === 0;
+  send.lastChild.textContent = left ? `Отправить в LinkedIn (${left})` : 'Отправить в LinkedIn';
 }
 
 async function mediaPrepare() {
@@ -9883,27 +10112,31 @@ async function mediaPrepare() {
   const status = document.getElementById('media-news-status');
   const button = document.getElementById('media-prepare');
   button.disabled = true;
+  status.dataset.busy = '1';
   mediaReview = [];
   const list = document.getElementById('media-review-list');
   list.innerHTML = '';
+  document.getElementById('media-review').hidden = false;
   for (const [index, id] of ids.entries()) {
-    status.textContent = `Готовлю ${index + 1} из ${ids.length}… это до минуты на пост.`;
+    status.textContent = `Пишу пост ${index + 1} из ${ids.length}… до минуты на каждый.`;
     try {
       const data = await mediaPost('preview', { article_id: id });
       if (!data.text || !data.preview) {
-        status.textContent = `«${mediaTitle(id)}» уже обработан (${MEDIA_STATES[data.state] || data.state}).`;
+        list.insertAdjacentHTML('beforeend', `<li class="media-post is-removed"><p class="media-post-error">«${mediaEsc(mediaTitle(id))}» уже обработан: ${mediaEsc((MEDIA_STATES[data.state] || [data.state])[0])}.</p></li>`);
         continue;
       }
-      mediaReview.push({ candidate_id: data.id, preview: data.preview, title: mediaTitle(id), removed: false });
-      const position = mediaReview.length - 1;
-      list.insertAdjacentHTML('beforeend', `<li data-review="${position}"><pre>${mediaEsc(data.text)}</pre><button type="button" data-media-toggle="${position}">Убрать</button></li>`);
+      mediaReview.push({ candidate_id: data.id, preview: data.preview, removed: false });
+      list.insertAdjacentHTML('beforeend', mediaPostCard(mediaReview.length - 1, data.text, mediaTitle(id)));
     } catch (error) {
-      list.insertAdjacentHTML('beforeend', `<li class="is-removed">Не удалось подготовить «${mediaEsc(mediaTitle(id))}»: ${mediaEsc(error.message)}</li>`);
+      list.insertAdjacentHTML('beforeend', `<li class="media-post is-removed"><p class="media-post-error">Не удалось подготовить «${mediaEsc(mediaTitle(id))}»: ${mediaEsc(error.message)}</p></li>`);
     }
   }
-  status.textContent = mediaReview.length ? `Готово: ${mediaReview.length}. Прочитай и убери лишнее.` : 'Нечего отправлять.';
+  delete status.dataset.busy;
+  status.textContent = mediaReview.length ? `Готово ${mediaReview.length}. Прочитай ниже и убери лишнее.` : 'Нечего отправлять.';
   document.getElementById('media-review').hidden = mediaReview.length === 0;
-  mediaUpdatePrepare();
+  mediaUpdateSend();
+  button.disabled = false;
+  document.getElementById('media-review').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 }
 
 async function mediaSend() {
@@ -9917,10 +10150,12 @@ async function mediaSend() {
     const results = data.items || [];
     const ok = results.filter(item => item.state === 'queued' || item.state === 'sent');
     const times = ok.map(item => mediaTime(item.due_at)).filter(Boolean).join(', ');
-    status.textContent = `Отправлено в очередь: ${ok.length} из ${chosen.length}${times ? `. Выйдут в ${times}` : ''}.`;
     mediaReview = [];
     document.getElementById('media-review').hidden = true;
     await mediaLoad();
+    status.dataset.busy = '1';
+    status.textContent = `В очереди: ${ok.length} из ${chosen.length}${times ? `. Выйдут в ${times}` : ''}.`;
+    setTimeout(() => { delete status.dataset.busy; }, 8000);
   } catch (error) {
     status.textContent = `Не удалось подтвердить отправку (${error.message}). Обнови вкладку и проверь очередь, повторять вслепую не нужно.`;
   } finally {
@@ -9938,42 +10173,63 @@ function mediaInit() {
     if (!/^\d{2}:\d{2}$/.test(value) || mediaSlots.includes(value) || mediaSlots.length >= 10) return;
     mediaSlots = [...mediaSlots, value].sort();
     input.value = '';
+    document.getElementById('media-save-row').classList.remove('is-ok');
     mediaRenderSlots();
   });
   document.getElementById('media-slots').addEventListener('click', event => {
     const slot = event.target.closest('[data-media-remove-slot]')?.dataset.mediaRemoveSlot;
     if (!slot) return;
     mediaSlots = mediaSlots.filter(value => value !== slot);
+    document.getElementById('media-save-row').classList.remove('is-ok');
     mediaRenderSlots();
   });
   document.getElementById('media-save-slots').addEventListener('click', async () => {
+    const row = document.getElementById('media-save-row');
     const status = document.getElementById('media-slots-status');
     try {
       await mediaPost('schedule', { slots: mediaSlots });
-      status.textContent = 'Расписание сохранено.';
+      row.classList.add('is-ok');
       await mediaLoad();
+      row.hidden = false;
+      status.textContent = 'Расписание сохранено';
+      document.getElementById('media-save-slots').hidden = true;
     } catch (error) {
       status.textContent = error.status === 422 ? `Не сохранено: ${error.message}` : 'Не удалось сохранить, попробуй ещё раз.';
     }
   });
-  document.getElementById('media-news').addEventListener('change', mediaUpdatePrepare);
-  document.getElementById('media-news').addEventListener('click', async event => {
+  document.getElementById('media-select-all').addEventListener('click', () => {
+    const boxes = [...document.querySelectorAll('#media-news input[type="checkbox"]')];
+    const check = !boxes.every(box => box.checked);
+    boxes.forEach((box, index) => { box.checked = check && index < 10; });
+    mediaUpdatePrepare();
+  });
+  const news = document.getElementById('media-news');
+  news.addEventListener('change', mediaUpdatePrepare);
+  news.addEventListener('click', async event => {
+    const pick = event.target.closest('[data-media-pick]');
+    if (pick && !event.target.closest('a')) {
+      const box = pick.closest('.media-story').querySelector('input[type="checkbox"]');
+      box.checked = !box.checked;
+      mediaUpdatePrepare();
+      return;
+    }
     const id = event.target.closest('[data-media-read]')?.dataset.mediaRead;
     if (!id) return;
     const row = event.target.closest('li');
     const button = event.target.closest('button');
+    const open = row.querySelector('.media-post');
+    if (open) { open.remove(); button.textContent = 'Читать пост'; return; }
     button.disabled = true;
-    button.textContent = 'Готовлю…';
+    button.textContent = 'Пишу…';
     try {
       const data = await mediaPost('preview', { article_id: id });
-      row.querySelector('.media-preview-text')?.remove();
-      row.insertAdjacentHTML('beforeend', `<p class="media-preview-text">${mediaEsc(data.text || MEDIA_STATES[data.state] || data.state)}</p>`);
-      row.style.flexWrap = 'wrap';
+      row.insertAdjacentHTML('beforeend', `<div class="media-post"><div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>так будет выглядеть пост</small></div></div><pre class="media-post-text">${mediaEsc(data.text || (MEDIA_STATES[data.state] || [data.state])[0])}</pre></div>`);
+      button.textContent = 'Свернуть';
     } catch (error) {
       document.getElementById('media-news-status').textContent = `Не удалось подготовить пост: ${error.message}`;
+      button.textContent = 'Читать пост';
     } finally {
       button.disabled = false;
-      button.textContent = 'Читать';
     }
   });
   document.getElementById('media-prepare').addEventListener('click', mediaPrepare);
@@ -9982,15 +10238,15 @@ function mediaInit() {
     if (index === undefined) return;
     const item = mediaReview[Number(index)];
     item.removed = !item.removed;
-    event.target.textContent = item.removed ? 'Вернуть' : 'Убрать';
+    event.target.closest('button').textContent = item.removed ? 'Вернуть' : 'Убрать';
     event.target.closest('li').classList.toggle('is-removed', item.removed);
-    document.getElementById('media-send').textContent = `Отправить в LinkedIn (${mediaReview.filter(entry => !entry.removed).length})`;
+    mediaUpdateSend();
   });
   document.getElementById('media-send').addEventListener('click', mediaSend);
   document.getElementById('media-cancel').addEventListener('click', () => {
     mediaReview = [];
     document.getElementById('media-review').hidden = true;
-    document.getElementById('media-news-status').textContent = '';
+    mediaUpdatePrepare();
   });
 }
 try { mediaInit(); } catch (error) { console.warn('media tab init failed', error); }
