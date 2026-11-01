@@ -4447,7 +4447,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-filters button[aria-pressed="true"] { background:var(--mm-selection); color:var(--mm-ink); font-weight:600; }
 /* Readable document records: content first, source action always visible. */
 .docxx-record { border:0; border-bottom:1px solid var(--mm-line); border-radius:0; margin:0; padding:0; background:transparent; }
-.docxx-record summary { display:grid; grid-template-columns:32px minmax(0,1fr) max-content 16px; grid-template-areas:"icon name state toggle" "icon name action toggle"; align-items:start; column-gap:16px; row-gap:10px; list-style:none; cursor:pointer; padding:22px 0; border-radius:0; }
+.docxx-record summary { display:grid; grid-template-columns:32px minmax(0,1fr) max-content 16px; grid-template-areas:"icon name state toggle" "icon name action toggle"; align-items:start; column-gap:16px; row-gap:8px; list-style:none; cursor:pointer; padding:16px 0; border-radius:0; }
 .docxx-record summary::-webkit-details-marker { display:none; }
 .docxx-record summary::after { grid-area:toggle; align-self:center; justify-self:end; content:'⌄'; color:var(--mm-muted); font-size:18px; line-height:24px; }
 .docxx-record[open] summary::after { content:'⌃'; }
@@ -4462,12 +4462,12 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-record-source { grid-area:action; justify-self:end; display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 12px; border:1px solid var(--mm-control-line); border-radius:7px; background:transparent; color:var(--mm-accent); font-size:13px; font-weight:600; line-height:1.4; text-decoration:none; white-space:nowrap; transition:background-color 150ms ease-out; }
 .docxx-record-source:hover { background:var(--mm-selection); text-decoration:none; }
 .docxx-record-source:active { background:var(--mm-surface-hover); }
-.docxx-record-state { grid-area:state; justify-self:end; max-width:220px; border-radius:999px; padding:4px 12px; background:var(--mm-selection); color:var(--mm-ink); font-size:13px; font-weight:600; line-height:1.4; text-align:center; }
+.docxx-record-state { grid-area:state; justify-self:end; max-width:220px; border-radius:999px; padding:3px 10px; background:var(--mm-selection); color:var(--mm-ink); font-size:12px; font-weight:600; line-height:1.4; text-align:center; }
 .docxx-record-state[data-tone="attention"] { background:var(--mm-warning-soft); color:var(--mm-warning); }
 /* Mark 2026-10-26: open and delete side by side, the same size as the other card buttons. */
 .docxx-warnings[hidden], #docxx-state-info[hidden] { display:none !important; }
 .docxx-record-actions { grid-area:action; justify-self:end; display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
-.docxx-record-actions .docxx-record-source { min-height:46px; padding:10px 18px; border-radius:12px; font-size:15px; }
+.docxx-record-actions .docxx-record-source { min-height:36px; padding:6px 14px; border-radius:999px; font-size:13px; }
 .docxx-undo { margin-left:6px; padding:4px 12px; border:1px solid var(--mm-control-line); border-radius:999px; background:var(--mm-surface); color:var(--mm-accent); font:650 13px/1.3 'Inter', -apple-system, sans-serif; cursor:pointer; }
 .docxx-record-state[data-tone="attention"] { color:var(--mm-warning); }
 .docxx-record-body { margin:0 0 0 48px; border-top:1px solid var(--mm-line); padding:16px 0 20px; color:var(--mm-ink); font-size:13px; line-height:1.6; overflow-wrap:anywhere; }
@@ -4477,6 +4477,20 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-record-body a,.docxx-links a { color:var(--mm-accent); margin-right:18px; }
 .docxx-record-body .docxx-record-source { min-height:44px; padding:8px 0; border:0; background:none; justify-content:flex-start; font-weight:500; }
 @media(prefers-reduced-motion:reduce) { .docxx-record-source { transition:none; } }
+/* Mark 2026-11-02: one quiet line under the name — mailbox, date, folder. */
+.docxx-record-meta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 0; margin-top:4px; color:var(--mm-muted); font-size:13px; line-height:1.5; }
+.docxx-record-meta > * + *::before { content:'·'; margin:0 8px; color:var(--mm-muted); }
+.docxx-record-from { display:inline-flex; flex-wrap:wrap; align-items:baseline; gap:0 5px; min-width:0; }
+.docxx-record-from b { color:var(--mm-ink); font-weight:600; overflow-wrap:anywhere; }
+.docxx-record-folder { color:var(--mm-ink); }
+.docxx-record-body dt { font-size:12px; }
+.docxx-record-links { display:flex; flex-wrap:wrap; gap:8px 18px; }
+.docxx-record-links a { margin:0; }
+.docxx-record-note { margin:12px 0 0; color:var(--mm-muted); font-size:12.5px; }
+/* Desktop: status and the one action sit on the same row as the name. */
+@media(min-width:701px) { .docxx-record summary { grid-template-columns:32px minmax(0,1fr) max-content max-content 16px; grid-template-areas:"icon name state action toggle"; align-items:center; } .docxx-record-icon { align-self:start; } .docxx-record summary::after { align-self:center; } }
+.docxx-record-body dl { grid-template-columns:140px minmax(0,1fr); }
+@media(max-width:700px) { .docxx-record-meta { font-size:14px; } .docxx-record-meta > .docxx-record-folder { flex-basis:100%; } .docxx-record-meta > .docxx-record-folder::before { content:none; } .docxx-record-from.has-account .docxx-record-via { display:none; } .docxx-record-meta > * { white-space:nowrap; } .docxx-record-from b { white-space:normal; } .docxx-record-actions .docxx-record-source { min-height:44px; } .docxx-record-body dl { grid-template-columns:1fr; } }
 .docxx-empty { padding:25px 0; color:var(--mm-muted); font-size:14px; line-height:1.7; }
 .docxx-help { padding:24px 0; border-bottom:1px solid var(--mm-line); font-size:14px; line-height:1.7; }
 .docxx-help h3 { font-size:18px; margin:0 0 12px; }
@@ -4576,6 +4590,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media(max-width:1000px) { .docxx-flow { gap:8px; grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); } .docxx-node { padding:12px 10px; gap:8px; } .docxx-symbol { min-width:18px; font-size:20px; } }
 @media(max-width:700px) { .docxx-head { align-items:flex-start; } .docxx-flow { grid-template-columns:1fr; gap:16px; padding-top:24px; } .docxx-column h3 { margin-bottom:12px; } .docxx-connector { margin:0; justify-content:center; height:16px; } .docxx-connector span { flex:none; width:32px; } .docxx-connector b { transform:rotate(90deg); } .docxx-processor { display:grid; grid-template-columns:1fr 1fr; gap:12px; } .docxx-processor h3,.docxx-processor .docxx-caption { grid-column:1/-1; margin:0; } .docxx-machine { min-height:165px; } .docxx-steps { align-self:center; margin:0; } .docxx-explainer { flex-wrap:wrap; } .docxx-explainer>div { flex:1; min-width:0; } .docxx-explainer a { margin-left:34px; } .docxx-results-head { flex-direction:column; align-items:stretch; gap:12px; } .docxx-record summary { grid-template-columns:28px minmax(0,1fr) 16px; grid-template-areas:"icon name toggle" ". state ." ". action ."; column-gap:10px; row-gap:10px; padding:20px 0; } .docxx-record-icon { width:28px; height:32px; } .docxx-record-name > strong { font-size:16px; margin-top:0; } .docxx-record-name > small,.docxx-record-validity > span,.docxx-record-state { font-size:14px; } .docxx-record-validity { display:grid; gap:2px; margin-top:10px; } .docxx-record-source { justify-self:start; min-height:44px; font-size:14px; } .docxx-record-state { justify-self:start; max-width:none; text-align:left; } .docxx-record summary::after { align-self:start; font-size:18px; } .docxx-record-body { margin:0 0 0 38px; padding:16px 0; font-size:14px; } .docxx-record-body dl { grid-template-columns:1fr; gap:2px; } .docxx-record-body dd { margin-bottom:10px; } }
 @media(max-width:700px) { .docxx-record-actions { justify-self:stretch; justify-content:flex-start; } .docxx-record-actions > * { flex:1 1 auto; } .docxx-record-state { justify-self:start; text-align:center; } }
+/* Phone: badge and «Открыть» share one row under the name. */
+@media(max-width:700px) { .docxx-record summary { grid-template-columns:28px minmax(0,1fr) max-content 16px; grid-template-areas:"icon name name toggle" ". state action ."; align-items:center; padding:16px 0; } .docxx-record-icon,.docxx-record-name { align-self:start; } .docxx-record-state { font-size:12.5px; } .docxx-record-actions { justify-self:end; } .docxx-record-actions > * { flex:none; } }
 @media(prefers-reduced-motion:reduce) { #section-documents *,#section-documents *::after { animation:none!important; transition:none!important; } }
 
 /* Mark 2026-10-24 «удали по максимуму ненужной инфы, метадату… замени на i»: counters, timings, ports and
@@ -14434,6 +14450,20 @@ function ccDocxxRecordDate(value) {
 }
 let ccDocxxWarnings=[];
 function ccDocxxCount(n,one,few,many) { const m10=n%10, m100=n%100; return n+' '+(m10===1&&m100!==11?one:m10>=2&&m10<=4&&(m100<12||m100>14)?few:many); }
+// Mark 2026-11-02: say which mailbox a document came from, not just «Gmail».
+function ccDocxxFrom(row) {
+  const via={gmail:'Из почты',icloud:'Из iCloud',drive:'Из Google Drive',manual:'Добавлен вручную'}[row.source];
+  if(!via) return null;
+  const account=row.source==='gmail' && typeof row.source_account==='string' && /^[^\s@]{1,64}@[^\s@]{1,190}$/.test(row.source_account) ? row.source_account : '';
+  return {via:row.source==='gmail' && !account ? 'Из Gmail' : via, account};
+}
+// Library path without «10 — » numbering, emoji or the file's own name; «To review» is the inbox, not a place.
+function ccDocxxFolder(row) {
+  const parts=String(row.destination||'').split('/').map(p=>p.replace(/^\s*\d+\s*[—–-]\s*/,'').replace(/[\p{Extended_Pictographic}\uFE0F]/gu,'').trim()).filter(Boolean);
+  if(parts.length && (parts[parts.length-1]===row.name || parts[parts.length-1]===row.original_name || /\.[A-Za-z0-9]{2,5}$/.test(parts[parts.length-1]))) parts.pop();
+  if(!parts.length) return null;
+  return {full:parts.join(' › '), short:parts.slice(-2).join(' › '), review:parts.some(p=>/to review|на разбор/i.test(p))};
+}
 function ccDocxxShortDate(value) { const d=new Date(value || ''); return Number.isNaN(d.valueOf()) ? '' : d.toLocaleDateString('ru-RU',{day:'numeric',month:'short',timeZone:'Europe/Paris'}).replace('.',''); }
 ccInfoSources.docxx=()=>{
   const n=id=>{ const t=document.getElementById(id)?.textContent?.trim(); return t && t!=='—' ? t : ''; };
@@ -14578,7 +14608,7 @@ function ccDocxxRenderRecords() {
   ccDocxxRecordsSignature=signature;
   const opened=new Set([...list.querySelectorAll('details[open]')].map(d=>d.dataset.key));
   list.replaceChildren();
-  const rows=(ccDocxxData?.records || []).filter(r=>(ccDocxxFilter==='all'||(ccDocxxFilter==='attention'?ccDocxxAttention.has(r.status):['verified','copied','already_present','sorted'].includes(r.status))) && `${r.name} ${r.original_name} ${r.destination} ${r.description || ''}`.toLocaleLowerCase('ru').includes(q));
+  const rows=(ccDocxxData?.records || []).filter(r=>(ccDocxxFilter==='all'||(ccDocxxFilter==='attention'?ccDocxxAttention.has(r.status):['verified','copied','already_present','sorted'].includes(r.status))) && `${r.name} ${r.original_name} ${r.destination} ${r.description || ''} ${r.source_account || ''}`.toLocaleLowerCase('ru').includes(q));
   // Import history reports outcomes; filing decisions belong to the processor.
   ccDocxxSortVisible=[]; ccDocxxPickable=[]; ccDocxxSelected.clear();
   ccDocxxSortBar();
@@ -14588,27 +14618,34 @@ function ccDocxxRenderRecords() {
     const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
     name.append(ccDocxxEl('strong',row.name));
-    if(row.destination) name.append(ccDocxxEl('span',row.destination,'docxx-record-description'));
-    const source={gmail:'Gmail',icloud:'iCloud',drive:'Google Drive',manual:'Добавлен вручную'}[row.source];
-    const provenance=[ccDocxxShortDate(row.at),source].filter(Boolean).join(' · ');
-    if(provenance) name.append(ccDocxxEl('small',provenance));
+    // Mark 2026-11-02: one quiet line — which mailbox it came from and when; the rest is inside the card.
+    const from=ccDocxxFrom(row), folder=ccDocxxFolder(row);
+    const meta=ccDocxxEl('span',undefined,'docxx-record-meta');
+    if(from) { const who=ccDocxxEl('span',undefined,'docxx-record-from'); who.dataset.source=row.source||''; who.append(ccDocxxEl('span',from.via,'docxx-record-via')); if(from.account) { who.className+=' has-account'; who.append(ccDocxxEl('b',from.account)); } meta.append(who); }
+    const when=ccDocxxShortDate(row.at); if(when) meta.append(ccDocxxEl('span',when,'docxx-record-when'));
+    if(folder && !folder.review) meta.append(ccDocxxEl('span',folder.short,'docxx-record-folder'));
+    if(meta.children.length) name.append(meta);
     if(row.description) name.append(ccDocxxEl('span',row.description,'docxx-record-description'));
-    if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Срок действия'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
-    if(ccDocxxAttention.has(row.status) && row.reason) name.append(ccDocxxEl('span',row.reason,'docxx-record-description'));
+    if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Действует'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
     summary.append(icon,name);
-    const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку ↗':'Открыть документ ↗',row.url) || ccDocxxSourceLink('Открыть в Gmail ↗',row.source_url);
+    const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку':'Открыть',row.url) || ccDocxxSourceLink('Открыть письмо',row.source_url);
     const acts=ccDocxxEl('span',undefined,'docxx-record-actions');
     if(openLink) { openLink.className='docxx-record-source'; acts.append(openLink); }
     summary.append(badge); if(acts.children.length) summary.append(acts);
     const body=ccDocxxEl('div',undefined,'docxx-record-body');
     const dl=ccDocxxEl('dl');
-    for(const [label,value] of [['Было',row.original_name],['Теперь',row.destination],['Пояснение',row.reason]]) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
-    body.append(dl);
-    for(const [label,url] of [['Открыть документ ↗',row.url],['Открыть оригинал ↗',row.canonical_url]]) { const a=ccDocxxLink(label,url); if(a) body.append(a); }
-    const sourceLink=ccDocxxSourceLink('Исходное письмо с вложением ↗',row.source_url); if(sourceLink) body.append(sourceLink);
-    if(!row.url && !row.source_url && !row.canonical_url) body.append(ccDocxxEl('p','Ссылка на оригинал пока недоступна. Документ остаётся на разборе.'));
-    if(row.historical) body.append(ccDocxxEl('p','Это запись о прошлой операции. Текущее местоположение документа могло измениться.'));
+    const facts=[['Папка',folder && !folder.review?folder.full:''],
+      ['Имя в письме',row.original_name && row.original_name!==row.name?row.original_name:''],
+      [ccDocxxAttention.has(row.status)?'Почему на разборе':'Заметка',row.reason]];
+    for(const [label,value] of facts) if(value) dl.append(ccDocxxEl('dt',label),ccDocxxEl('dd',value));
+    if(dl.children.length) body.append(dl);
+    const links=ccDocxxEl('div',undefined,'docxx-record-links');
+    for(const [label,url] of [['Открыть документ ↗',row.url],['Оригинал ↗',row.canonical_url]]) { const a=ccDocxxLink(label,url); if(a) links.append(a); }
+    const sourceLink=ccDocxxSourceLink('Письмо с вложением ↗',row.source_url); if(sourceLink) links.append(sourceLink);
+    if(links.children.length) body.append(links);
+    if(!row.url && !row.source_url && !row.canonical_url) body.append(ccDocxxEl('p','Ссылка на оригинал пока недоступна. Документ остаётся на разборе.','docxx-record-note'));
+    if(row.historical) body.append(ccDocxxEl('p','Это запись о прошлой операции. Сейчас документ может лежать в другом месте.','docxx-record-note'));
     details.append(summary,body); list.append(details);
   }
 }
