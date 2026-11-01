@@ -38,14 +38,14 @@ def agent(route_id: str, project: str, state_at: datetime | None, state: str | N
     }
 
 
-def payload() -> dict:
+def payload(now: datetime = NOW) -> dict:
     return {
         "state": "empty",
         "events": [],
         "agents": [
             agent("main-manager", "MAIN MANAGER", None),
-            agent("my-dictionary", "MY DICTIONARY", NOW - timedelta(minutes=2), "running"),
-            agent("health-os", "HEALTH OS", NOW - timedelta(days=IDLE_DAYS + 3)),
+            agent("my-dictionary", "MY DICTIONARY", now - timedelta(minutes=2), "running"),
+            agent("health-os", "HEALTH OS", now - timedelta(days=IDLE_DAYS + 3)),
             agent("jarvis", "JARVIS", None),
         ],
         "activity_counts": {},
@@ -155,7 +155,7 @@ class CampusArchiveEndpointTest(unittest.TestCase):
         with (patch.object(SERVER, "CAMPUS_ARCHIVE_FILE", self.path),
               patch.object(SERVER, "_dashboard_run_token", return_value="fixture-owner"),
               patch.object(SERVER, "_bridge_request", return_value={"tasks": []}),
-              patch.object(SERVER, "_department_campus_payload", side_effect=lambda *_a, **_k: payload()),
+              patch.object(SERVER, "_department_campus_payload", side_effect=lambda *_a, **_k: payload(datetime.now(timezone.utc))),  # The endpoint archives by the real clock.
               patch.object(SERVER.Handler, "_cloudflare_access_owner", return_value=False)):
             getattr(handler, f"do_{method}")()
         return output

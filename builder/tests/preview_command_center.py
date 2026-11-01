@@ -400,8 +400,15 @@ def prepare_docxx_sorting():
     for index, name in enumerate(("ticketa4_a4_24102026-115416.pdf", "scan_0042.pdf", "IMG_2291.jpeg")):
         (review / name).write_bytes(b"synthetic")
         attachments[name] = {"state": "delivered", "needs_review": True, "name": name, "destination": str(review / name),
-                             "delivered_at": (now - timedelta(hours=index + 1)).isoformat()}
-    (state / "gmail-journal.json").write_text(json.dumps({"schema_version": 1, "attachments": attachments}))
+                             "delivered_at": (now - timedelta(hours=index + 1)).isoformat(),
+                             "thread_id": f"18f0c0ffee{index:06d}"}
+    attachments["IMG_2291.jpeg"]["source_account"] = "work.example@gmail.com"  # A second mailbox.
+    (library / "20 — France/Impôts/Avis d'impôt 2026.pdf").write_bytes(b"synthetic")
+    attachments["avis.pdf"] = {"state": "delivered", "name": "avis.pdf", "cloud_file_id": "synthetic_document_1234",
+                               "destination": str(library / "20 — France/Impôts/Avis d'impôt 2026.pdf"),
+                               "delivered_at": (now - timedelta(days=2)).isoformat(), "thread_id": "18f0c0ffee999999"}
+    (state / "gmail-journal.json").write_text(json.dumps({"schema_version": 1, "source_account": "owner.example@gmail.com",
+                                                          "attachments": attachments}))
     for name in ("journal.json", "drive-ingress-journal.json", "config.json"):
         (state / name).write_text("{}")
     (state / "runner.lock").touch()
