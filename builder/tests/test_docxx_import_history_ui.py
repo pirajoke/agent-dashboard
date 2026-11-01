@@ -12,7 +12,7 @@ class ImportHistoryUITests(unittest.TestCase):
         source = HTML.read_text()
         functions = '\n'.join(function(source, name) for name in (
             'ccDocxxEl', 'ccDocxxSafeLink', 'ccDocxxLink', 'ccDocxxSourceLink',
-            'ccDocxxShortDate', 'ccDocxxRecordDate', 'ccDocxxDate', 'ccDocxxRenderRecords',
+            'ccDocxxShortDate', 'ccDocxxFrom', 'ccDocxxFolder', 'ccDocxxRecordDate', 'ccDocxxDate', 'ccDocxxRenderRecords',
             'ccDocxxText', 'ccDocxxCount', 'ccDocxxPick', 'ccDocxxAct', 'ccDocxxMovable',
             'ccDocxxSuggested', 'ccDocxxFolderName', 'ccDocxxRecordActions',
             'ccDocxxGuessed', 'ccDocxxSortBar'))
@@ -32,11 +32,12 @@ let ccDocxxData={records:[]};
 
     def test_completed_import_shows_name_location_date_and_source_without_mutation_controls(self):
         self.run_dom('''
-ccDocxxData.records=[{key:'done',name:'Birth certificate — Example — RU-FR.pdf',original_name:'scan.pdf',source:'gmail',status:'verified',label:'Проверено',at:'2026-10-28T14:00:00Z',destination:'Family/Grandparents/Example/Certificates',url:'https://drive.google.com/file/d/abcdefghijklmnop/view',source_url:'https://mail.google.com/mail/#all/0123456789abcdef'}];
+ccDocxxData.records=[{key:'done',name:'Birth certificate — Example — RU-FR.pdf',original_name:'scan.pdf',source:'gmail',source_account:'owner@example.com',status:'verified',label:'Проверено',at:'2026-10-28T14:00:00Z',destination:'40 — Family/Grandparents/Example/Certificates',url:'https://drive.google.com/file/d/abcdefghijklmnop/view',source_url:'https://mail.google.com/mail/#all/0123456789abcdef'}];
 ccDocxxRenderRecords(); const card=list.children[0], summary=card.children[0];
 assert.match(flatten(summary),/Birth certificate — Example — RU-FR/);
-assert.match(flatten(summary),/Family\/Grandparents\/Example\/Certificates/);
-assert.match(flatten(summary),/28/); assert.match(flatten(summary),/Gmail/);
+assert.match(flatten(summary),/Example › Certificates/);
+assert.match(flatten(card),/Family › Grandparents › Example › Certificates/);
+assert.match(flatten(summary),/28/); assert.match(flatten(summary),/owner@example\.com/);
 assert.ok(nodes(card).some(e=>e.tag==='a'&&e.href==='https://drive.google.com/file/d/abcdefghijklmnop/view'));
 assert.ok(nodes(card).some(e=>e.tag==='a'&&e.href==='https://mail.google.com/mail/#all/0123456789abcdef'));
 assert.equal(nodes(card).some(e=>e.role==='checkbox'),false);

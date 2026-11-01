@@ -277,6 +277,12 @@ MAX_ENRICHMENTS = 100
 MAX_EXTRACTION = 12000
 
 
+def _mail_account(value):
+    if not isinstance(value, str): return None
+    value = value.strip().lower()
+    return value if len(value) <= 254 and re.fullmatch(r'[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,189}\.[a-z]{2,24}', value) else None
+
+
 def _gmail_source_link(value):
     for key in ('thread_id', 'message_id'):
         ident = value.get(key)
@@ -385,6 +391,7 @@ def _gmail_records(directory):
     if saved.get('schema_version') != 1 or not isinstance(entries, dict) or len(entries) > 20000:
         raise ValueError('invalid_gmail_journal')
     enrichments = _gmail_enrichments(directory, entries)
+    mailbox = _mail_account(saved.get('source_account'))
     merged = {}
     for key, value in entries.items():
         if not isinstance(value, dict): continue
@@ -399,6 +406,9 @@ def _gmail_records(directory):
         row = _record(data, 'gmail', key, historical=state == 'delivered' and not review)
         source_url = _gmail_source_link(value)
         if source_url: row['source_url'] = source_url
+        # Owner-only (the whole projection is): which of Mark's mailboxes sent it (2026-11-02).
+        account = _mail_account(value.get('source_account')) or mailbox
+        if account: row['source_account'] = account
         sha, size = value.get('sha256'), value.get('size')
         if isinstance(sha, str) and type(size) is int:
             if re.fullmatch(r'[0-9a-f]{64}', sha):

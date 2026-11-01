@@ -22,8 +22,19 @@ class GmailRecordsTests(unittest.TestCase):
     'text':'PRIVATE_TEXT'}})
   result=self.read();self.assertEqual(len(result['records']),1)
   row=result['records'][0];self.assertEqual(row['source'],'gmail');self.assertEqual(row['status'],'verified')
-  for private in ('PRIVATE_','source@example.com','archive@example.com','/Users/private','secret_attachment'):
+  # Mark 2026-11-02: the owner sees which mailbox sent it; nothing else from the mail leaks.
+  self.assertEqual(row['source_account'],'source@example.com')
+  for private in ('PRIVATE_','archive@example.com','/Users/private','secret_attachment'):
    self.assertNotIn(private,json.dumps(result))
+
+ def test_per_attachment_mailbox_wins_and_junk_accounts_are_dropped(self):
+  self.seed({'a':{'state':'delivered','name':'a.pdf','destination':'/Users/private/DOCXXx/A/a.pdf',
+    'cloud_file_id':'synthetic_document_aaaa','delivered_at':NOW-20,'source_account':'Other@Example.com'},
+    'b':{'state':'delivered','name':'b.pdf','destination':'/Users/private/DOCXXx/B/b.pdf',
+    'cloud_file_id':'synthetic_document_bbbb','delivered_at':NOW-20,'source_account':'PRIVATE_<script>'}})
+  rows={r['name']:r for r in self.read()['records']}
+  self.assertEqual(rows['a.pdf']['source_account'],'other@example.com')
+  self.assertEqual(rows['b.pdf']['source_account'],'source@example.com')
 
  def test_reviewed_original_and_translation_are_one_result(self):
   item={'state':'delivered','destination':'/Users/private/DOCXXx/France/Acte.pdf',
