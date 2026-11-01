@@ -156,7 +156,10 @@ class CampusArchiveEndpointTest(unittest.TestCase):
               patch.object(SERVER, "_dashboard_run_token", return_value="fixture-owner"),
               patch.object(SERVER, "_bridge_request", return_value={"tasks": []}),
               patch.object(SERVER, "_department_campus_payload", side_effect=lambda *_a, **_k: payload()),
-              patch.object(SERVER.Handler, "_cloudflare_access_owner", return_value=False)):
+              patch.object(SERVER.Handler, "_cloudflare_access_owner", return_value=False),
+              # Pin the archive clock to the fixture's NOW, or the fixture ages past IDLE_DAYS.
+              patch.object(SERVER, "apply_campus_archive",
+                           side_effect=lambda data, path, now: apply_campus_archive(data, path, now=NOW))):
             getattr(handler, f"do_{method}")()
         return output
 
