@@ -18,6 +18,7 @@ from pathlib import Path
 ALLOWED_ORIGINS = {"http://127.0.0.1:8790", "https://singularity.meshly.fr"}
 TIME_RE = re.compile(r"^([01]?\d|2[0-3]):[0-5]\d$")
 MAX_BATCH = 10
+MAX_INSTRUCTION = 300
 
 
 class MediaUnavailable(RuntimeError):
@@ -101,6 +102,19 @@ def preview(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
     article_id = str(uuid.UUID(str(body.get("article_id", ""))))
     # Generation runs two model passes; allow it time.
     return call("POST", f"/media-control/news/{article_id}/preview", timeout=240, home=home)
+
+
+def rewrite(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """Rework a prepared draft by the owner's short instruction ("короче", ...)."""
+    candidate_id = str(uuid.UUID(str(body.get("candidate_id", ""))))
+    instruction = body.get("instruction")
+    if not isinstance(instruction, str):
+        raise ValueError("invalid_instruction")
+    instruction = " ".join(instruction.split())
+    if not 1 <= len(instruction) <= MAX_INSTRUCTION:
+        raise ValueError("invalid_instruction")
+    return call("POST", f"/media-control/candidates/{candidate_id}/rewrite",
+                {"instruction": instruction}, timeout=240, home=home)
 
 
 def send_batch(body: dict, *, home: Path | None = None) -> tuple[int, dict]:

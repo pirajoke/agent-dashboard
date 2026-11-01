@@ -3775,6 +3775,16 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-post-text { margin: 0; padding: 10px 14px 12px; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; line-height: 1.5; max-height: 16em; overflow: auto; }
 .media-post-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--mm-line); background: var(--mm-background); }
 .media-post-error { padding: 12px 14px; color: var(--mm-danger); font-size: 13px; }
+.media-rewrite { display: grid; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--mm-line); }
+.media-rewrite-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.media-rewrite-chips .media-ghost { min-height: 32px; padding: 4px 12px; }
+.media-rewrite-form { display: flex; gap: 8px; }
+.media-rewrite-form input { flex: 1; min-width: 0; min-height: 36px; padding: 4px 14px; border: 1px solid var(--mm-control-line); border-radius: 999px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; }
+.media-rewrite-form input:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.media-post-foot .media-rewrite-status { margin-right: auto; align-self: center; color: var(--mm-muted); font-size: 12px; }
+.media-post-foot .media-rewrite-status.is-bad { color: var(--mm-danger); }
+.media-post.is-busy .media-post-text { opacity: .5; }
+.media-post.is-removed .media-rewrite { display: none; }
 .media-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
 .media-slots li { position: relative; display: flex; align-items: center; justify-content: center; min-height: 52px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-background); font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .media-slots li.is-new { border-style: dashed; border-color: var(--mm-accent); color: var(--mm-accent); }
@@ -3825,6 +3835,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
   .media-timeline li { grid-template-columns: 64px minmax(0, 1fr) auto; }
   .media-bar { border-radius: 18px; }
   .media-bar .media-primary { flex: 1; justify-content: center; }
+  .media-rewrite-form { flex-direction: column; }
+  .media-rewrite-form .media-ghost { justify-content: center; }
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .media-primary { color: #0b2226; } }
 :root[data-theme="dark"] .media-primary { color: #0b2226; }
@@ -10111,8 +10123,51 @@ function mediaPostCard(position, text, title) {
   return `<li class="media-post" data-review="${position}">
     <div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>${mediaEsc(title)}</small></div></div>
     <pre class="media-post-text">${mediaEsc(text)}</pre>
-    <div class="media-post-foot"><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button></div>
+    <div class="media-rewrite">
+      <div class="media-rewrite-chips" role="group" aria-label="Быстрые правки">${MEDIA_REWRITE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
+      <form class="media-rewrite-form" data-media-rewrite-form="${position}">
+        <label class="media-sr" for="media-ask-${position}">Что поменять в посте</label>
+        <input id="media-ask-${position}" maxlength="300" autocomplete="off" placeholder="Что поменять? Например: короче, без цифр">
+        <button type="submit" class="media-ghost">Переделать</button>
+      </form>
+    </div>
+    <div class="media-post-foot"><span class="media-rewrite-status" aria-live="polite"></span><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button></div>
   </li>`;
+}
+
+const MEDIA_REWRITE_CHIPS = [
+  ['Короче', 'Сделай заметно короче: оставь главное и 2–3 пункта.'],
+  ['Проще', 'Проще и живее, как человек пишет коллеге, без канцелярита.'],
+  ['Меньше эмодзи', 'Оставь не больше двух эмодзи.'],
+];
+
+async function mediaRewrite(position, instruction) {
+  const entry = mediaReview[position];
+  const card = document.querySelector(`#media-review-list [data-review="${position}"]`);
+  instruction = (instruction || '').trim().slice(0, 300);
+  if (!entry || !card || !instruction || card.classList.contains('is-busy')) return;
+  const status = card.querySelector('.media-rewrite-status');
+  const buttons = [...card.querySelectorAll('.media-rewrite button')];
+  card.classList.add('is-busy');
+  card.setAttribute('aria-busy', 'true');
+  buttons.forEach(button => { button.disabled = true; });
+  status.className = 'media-rewrite-status';
+  status.textContent = 'Переделываю… до минуты.';
+  try {
+    const data = await mediaPost('rewrite', { candidate_id: entry.candidate_id, instruction });
+    if (!data.text || !data.preview) throw new Error('пост уже не черновик');
+    entry.preview = data.preview;
+    card.querySelector('.media-post-text').textContent = data.text;
+    card.querySelector('.media-rewrite-form input').value = '';
+    status.textContent = 'Готово. Можно переделать ещё раз.';
+  } catch (error) {
+    status.className = 'media-rewrite-status is-bad';
+    status.textContent = error.status === 409 ? 'Пост уже отправлен или изменён. Обнови вкладку.' : `Не получилось: ${error.message}. Текст прежний.`;
+  } finally {
+    card.classList.remove('is-busy');
+    card.removeAttribute('aria-busy');
+    buttons.forEach(button => { button.disabled = false; });
+  }
 }
 
 function mediaUpdateSend() {
@@ -10158,6 +10213,10 @@ async function mediaPrepare() {
 async function mediaSend() {
   const chosen = mediaReview.filter(item => !item.removed);
   if (!chosen.length) return;
+  if (document.querySelector('#media-review-list .media-post.is-busy')) {
+    document.getElementById('media-news-status').textContent = 'Дождись, пока пост переделается, потом отправляй.';
+    return;
+  }
   const send = document.getElementById('media-send');
   const status = document.getElementById('media-news-status');
   send.disabled = true;
@@ -10249,7 +10308,18 @@ function mediaInit() {
     }
   });
   document.getElementById('media-prepare').addEventListener('click', mediaPrepare);
+  document.getElementById('media-review-list').addEventListener('submit', event => {
+    const form = event.target.closest('[data-media-rewrite-form]');
+    if (!form) return;
+    event.preventDefault();
+    mediaRewrite(Number(form.dataset.mediaRewriteForm), form.querySelector('input').value);
+  });
   document.getElementById('media-review-list').addEventListener('click', event => {
+    const ask = event.target.closest('[data-media-rewrite]');
+    if (ask) {
+      mediaRewrite(Number(ask.closest('[data-review]').dataset.review), ask.dataset.mediaRewrite);
+      return;
+    }
     const index = event.target.closest('[data-media-toggle]')?.dataset.mediaToggle;
     if (index === undefined) return;
     const item = mediaReview[Number(index)];
