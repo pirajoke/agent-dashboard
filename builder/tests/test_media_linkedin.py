@@ -79,6 +79,21 @@ class ForwardingTests(unittest.TestCase):
                 {"candidate_id": "22222222-2222-4222-8222-222222222222", "preview": {"signature": "s"}}]})
             self.assertEqual(call.call_args.args[:2], ("POST", "/media-control/send-batch"))
 
+    def test_rewrite_forwards_a_clean_bounded_instruction(self):
+        cid = "33333333-3333-4333-8333-333333333333"
+        with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
+            for bad in ({"candidate_id": "../x", "instruction": "short"},
+                        {"candidate_id": cid, "instruction": "   "},
+                        {"candidate_id": cid, "instruction": "x" * 301},
+                        {"candidate_id": cid, "instruction": ["short"]}):
+                with self.assertRaises(ValueError):
+                    media_linkedin.rewrite(bad)
+            call.assert_not_called()
+            media_linkedin.rewrite({"candidate_id": cid, "instruction": "  сделай\n короче "})
+            self.assertEqual(call.call_args.args,
+                             ("POST", f"/media-control/candidates/{cid}/rewrite", {"instruction": "сделай короче"}))
+            self.assertEqual(call.call_args.kwargs["timeout"], 240)
+
 
 class ServerTests(unittest.TestCase):
     def handler(self, *, owner, method="GET", path="/api/media/linkedin", body=None):
@@ -118,6 +133,18 @@ class ServerTests(unittest.TestCase):
                                          body={"article_id": "nope"})
         handler.do_POST()
         self.assertEqual(response["status"], 400)
+        rewrite = {"candidate_id": "33333333-3333-4333-8333-333333333333", "instruction": "короче"}
+        handler, response = self.handler(owner=False, method="POST", path="/api/media/linkedin/rewrite",
+                                         body=rewrite)
+        with patch.object(media_linkedin, "call") as call:
+            handler.do_POST()
+            call.assert_not_called()
+        self.assertEqual(response["status"], 401)
+        handler, response = self.handler(owner=True, method="POST", path="/api/media/linkedin/rewrite",
+                                         body=rewrite)
+        with patch.object(media_linkedin, "call", return_value=(200, {"text": "t", "preview": {}})):
+            handler.do_POST()
+        self.assertEqual(response, {"status": 200, "payload": {"text": "t", "preview": {}}})
 
 
 class PageTests(unittest.TestCase):
