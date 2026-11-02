@@ -25,10 +25,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-10-26 on Mark's ask to watch memory and disk: a plain «ок / перегружена» row under each header.
         # 2026-10-26 on Mark's «дочистить Технику»: «MacBook Pro» instead of the host name, Russian labels.
         # 2026-10-28 on Mark's «унифицированный дизайн»: «Обновить» is the same outlined button as elsewhere.
+        # 2026-11-02 on Mark's «визуализируй это в технике когда я нажимаю на мак про»: MacBook Pro gets
+        # «Уход и защита» (watchdog, daily check, weekly restart, firewall, updates); «Обновить» reloads it too.
         expected = {
             "section-mac-mini": "3b2566cb374c6909c49b224804a8e7f452ef379276bb1e4f85caff89f5b3d62a",
             "section-air": "744a4d48469d44a53f2b354be488131d4298312b8ade8e681c9861e2cb8ecef3",
-            "section-pro": "af2ebeb93d67119f82132d71cecd1262ad245eade83c83e420ec5e935c5b4640",
+            "section-pro": "a6a825501fb2a96ed659fa335602df7762e6a9f74044b10a579983eca657e65a",
         }
         source = HTML.read_text()
         for identity, digest in expected.items():
@@ -42,11 +44,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # grace period so a slow laptop does not flash «Нет связи»), and the values on those tiles, and on
         # «дочистить Технику»: plain machine names, words instead of counters, services switched off on purpose.
         # 2026-10-28 on Mark's «унифицированный дизайн»: every service described in Russian.
+        # 2026-11-02 on Mark's «визуализируй это в технике когда я нажимаю на мак про»: MacBook Pro care block.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "9d1dcb9eba3af578219847ff870dd332c05eae4a2d0e87f2fb589a5adcb7ac48")
+                         "d2635aa1dd4ce47ecf1051c683344a5cb43f737f8c425a293191601402197527")
 
 
 if __name__ == "__main__":

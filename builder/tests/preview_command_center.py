@@ -357,6 +357,30 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path == "/api/live-sessions":
             super().do_GET()
             return
+        if parsed.path == "/api/machines/care":
+            # Synthetic MacBook care status: the firewall is off and an update waits, as on 2026-11-02.
+            if MODE == "anonymous":
+                self._json_response(200, {"ok": True, "state": "owner_only", "machine": "macbook-pro"})
+                return
+            if MODE == "empty":
+                self._json_response(200, {"ok": True, "state": "not_installed", "machine": "macbook-pro"})
+                return
+            now = datetime.now(timezone.utc)
+            stamp = lambda delta: (now - delta).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+            self._json_response(200, {
+                "ok": True, "state": "stale" if MODE == "stale" else "fresh", "machine": "macbook-pro",
+                "generated_at": stamp(timedelta(hours=3) if MODE == "stale" else timedelta(minutes=4)),
+                "age_seconds": 10800 if MODE == "stale" else 240,
+                "watchdog": {"job": "loaded", "events_7d": 2, "last_event_at": stamp(timedelta(hours=20)), "last_event": "Example App 96% CPU 6 мин — остановлен"},
+                "hygiene": {"job": "loaded", "report_at": stamp(timedelta(hours=2)), "headline": "Диск 27%, кэши в норме", "attention": 0},
+                "restart": {"scheduled": True, "schedule": "restart at 4:00AM Sunday", "boot_at": stamp(timedelta(hours=5))},
+                "firewall": {"enabled": False},
+                "updates": {"pending": ["macOS 26.7.2"], "checked_at": stamp(timedelta(hours=6))},
+                "swap": {"used_gb": 0.8, "total_gb": 2.0},
+                "top_processes": [{"name": "Example Browser", "cpu": 31}, {"name": "WindowServer", "cpu": 12}, {"name": "Example Sync", "cpu": 4}],
+                "disabled_agents": 16,
+            })
+            return
         if parsed.path.startswith("/api/"):
             self._json_response(200, {"status": "ok", "tasks": [], "services": [], "history": [], "counts": {}})
             return
