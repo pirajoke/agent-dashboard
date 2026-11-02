@@ -40,8 +40,9 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator
 
 # 3: asks, replies and folders from the newer Codex rollouts; 4: ChatGPT app projects are named
-# «ChatGPT · <project>». Older days are collected again.
-SCHEMA = 4
+# «ChatGPT · <project>»; 5: scheduled Codex automation turns count only for their own length.
+# Older days are collected again.
+SCHEMA = 5
 HOME = Path.home()
 DEFAULT_OUT = HOME / ".agent-bridge" / "daily-work"
 CLAUDE_DIRS = [HOME / ".claude" / "projects", HOME / ".config" / "claude" / "projects"]
@@ -54,6 +55,14 @@ GITHUB_API = "https://api.github.com"
 IDLE_GAP_SECONDS = 30 * 60
 # A lone event (one prompt, one reply) still costs about a minute.
 EVENT_SECONDS = 60
+# Codex turns started by a schedule, not by a person (e.g. the «main-manager» heartbeat every
+# 15 minutes). Bridging their 15-minute gaps made one idle thread look like 24 h of work a day
+# (Mark 2026-11-02: «160 часов в командный центр»), so such a turn counts only from its start to
+# its end, and a turn that did nothing (failed on a usage limit) counts zero.
+AUTOMATION_TRIGGER_PREFIX = "automation"
+# Bookkeeping Codex writes between turns (settings re-applied before each scheduled turn, late item
+# receipts after one). Outside a turn they are not activity.
+CODEX_BETWEEN_TURN_EVENTS = {"thread_settings_applied", "item_completed"}
 TOPIC_LIMIT = 110
 # Inputs for the plain-language summary: a few asks and the last reply per day.
 ASK_LIMIT = 280
@@ -356,6 +365,21 @@ def active_intervals(times: Iterable[datetime]) -> list[tuple[datetime, datetime
     return [(start, end) for start, end in intervals]
 
 
+def merge_intervals(intervals: Iterable[tuple[datetime, datetime]]) -> list[tuple[datetime, datetime]]:
+    """Union of overlapping intervals, ordered by start."""
+    merged: list[list[datetime]] = []
+    for start, end in sorted(intervals):
+        if merged and start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return [(start, end) for start, end in merged]
+
+
+def session_intervals(session: "Session") -> list[tuple[datetime, datetime]]:
+    return merge_intervals(active_intervals(session.events) + list(session.turn_intervals))
+
+
 def interval_minutes(intervals: Iterable[tuple[datetime, datetime]]) -> int:
     return round(sum((end - start).total_seconds() for start, end in intervals) / 60)
 
@@ -409,6 +433,8 @@ class Session:
         self.topic: str | None = None
         self.summary: str | None = None
         self.events: list[datetime] = []
+        # Exact work spans that must not be stretched by IDLE_GAP_SECONDS (automation turns).
+        self.turn_intervals: list[tuple[datetime, datetime]] = []
         self.prompts: list[datetime] = []
         self.infra_actions: list[dict[str, Any]] = []
         self.asks: list[tuple[datetime, str]] = []
@@ -563,8 +589,45 @@ def parse_codex_file(path: Path) -> list[Session]:
     has_ask_events = has_reply_events = False
     task_topic: str | None = None
     work_dirs: dict[str, int] = {}
+    # The open scheduled-automation turn: [start, last event, did it do anything].
+    auto_turn: list | None = None
+    in_turn = False
+
+    def close_auto_turn() -> None:
+        nonlocal auto_turn
+        if auto_turn and auto_turn[2]:
+            start, end = auto_turn[0], auto_turn[1]
+            session.turn_intervals.append((start, max(end, start + timedelta(seconds=EVENT_SECONDS))))
+        auto_turn = None
+
     for record in iter_jsonl(path):
         payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
+        if record.get("type") == "event_msg" and payload.get("type") == "task_started":
+            close_auto_turn()
+            in_turn = True
+            trigger = (payload.get("turn_attribution") or {}).get("turn_trigger") \
+                if isinstance(payload.get("turn_attribution"), dict) else None
+            moment = parse_ts(record.get("timestamp"))
+            if isinstance(trigger, str) and trigger.startswith(AUTOMATION_TRIGGER_PREFIX) and moment:
+                auto_turn = [moment, moment, False]
+                continue
+        if auto_turn is not None:
+            # Inside a scheduled turn: only its own span counts, and its prompt and report are
+            # not Mark's asks or the day's outcome.
+            moment = parse_ts(record.get("timestamp"))
+            if moment:
+                auto_turn[1] = max(auto_turn[1], moment)
+            if record.get("type") == "response_item" and not (
+                    payload.get("type") == "message" and payload.get("role") == "user"):
+                auto_turn[2] = True
+            if record.get("type") == "event_msg" and payload.get("type") == "task_complete":
+                close_auto_turn()
+                in_turn = False
+            continue
+        if record.get("type") == "event_msg" and payload.get("type") == "task_complete":
+            in_turn = False
+        elif not in_turn and record.get("type") == "event_msg" and payload.get("type") in CODEX_BETWEEN_TURN_EVENTS:
+            continue
         if record.get("type") == "session_meta" or ("id" in record and "instructions" in record):
             meta = payload or record
             session.session_id = str(meta.get("id") or session.session_id)
@@ -601,6 +664,7 @@ def parse_codex_file(path: Path) -> list[Session]:
         if text is not None:
             has_ask_events = True
             _codex_note_prompt(session, moment, text)
+    close_auto_turn()
     if not has_ask_events:
         for moment, text in item_asks:
             _codex_note_prompt(session, moment, text)
@@ -619,7 +683,7 @@ def parse_codex_file(path: Path) -> list[Session]:
             if repo:
                 session.cwd, session.repo = work_dir, repo
                 break
-    return [session] if session.events else []
+    return [session] if session.events or session.turn_intervals else []
 
 
 def _codex_note_prompt(session: Session, moment: datetime, text: str) -> None:
@@ -682,7 +746,7 @@ def day_records(sessions: list[Session], days: set[str]) -> dict[str, list[dict[
     by_day: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for session in sessions:
         # Intervals are built over the whole session first, then clipped per day.
-        for day, intervals in split_by_local_day(active_intervals(session.events)).items():
+        for day, intervals in split_by_local_day(session_intervals(session)).items():
             if day not in days:
                 continue
             prompts = sum(1 for moment in session.prompts if local_day(moment) == day)
