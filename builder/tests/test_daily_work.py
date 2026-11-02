@@ -101,6 +101,74 @@ class CollectorParsingTest(unittest.TestCase):
         self.assertEqual(lexi["project"], "lexi")
         self.assertEqual(lexi["active_minutes"], 10)
 
+    def test_scheduled_codex_heartbeats_count_only_their_own_length(self):
+        # Mark 2026-11-02: a Codex «main-manager» heartbeat every 15 minutes was counted as
+        # 21-24 h of work a day. A scheduled turn counts start to end; a failed one counts zero.
+        os.environ["TZ"] = "UTC"
+        time.tzset()
+        t0 = datetime(2026, 11, 1, 0, 0, tzinfo=timezone.utc)
+
+        def turn(start, minutes, *, trigger="automation_heartbeat_scheduled", work=True):
+            records = [
+                {"timestamp": _iso(start), "type": "event_msg", "payload": {
+                    "type": "task_started", "turn_attribution": {"turn_trigger": trigger}}},
+                {"timestamp": _iso(start), "type": "response_item", "payload": {
+                    "type": "message", "role": "user",
+                    "content": [{"type": "input_text", "text": "<heartbeat>main-manager</heartbeat>"}]}},
+            ]
+            if work:
+                records.append({"timestamp": _iso(start + timedelta(minutes=minutes)), "type": "response_item",
+                                "payload": {"type": "function_call", "name": "shell"}})
+            records.append({"timestamp": _iso(start + timedelta(minutes=minutes)), "type": "event_msg", "payload": {
+                "type": "task_complete", "last_agent_message": None if not work else "<heartbeat>DONT_NOTIFY</heartbeat>",
+                **({} if work else {"error": {"message": "You've hit your usage limit"}})}})
+            return records
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rollout-heartbeat.jsonl"
+            records = [{"timestamp": _iso(t0), "type": "session_meta", "payload": {"id": "hb", "cwd": "/nonexistent/agent-dashboard"}}]
+            # 8 hours of heartbeats every 15 minutes, 2 minutes of checking each.
+            for index in range(32):
+                records += turn(t0 + timedelta(minutes=15 * index), 2)
+            # 8 more hours where every heartbeat fails at once.
+            for index in range(32, 64):
+                records += turn(t0 + timedelta(minutes=15 * index), 0, work=False)
+            # Mark asks something himself in the evening: 20 minutes of normal work.
+            evening = t0 + timedelta(hours=20)
+            records += [
+                {"timestamp": _iso(evening), "type": "event_msg", "payload": {
+                    "type": "task_started", "turn_attribution": {"turn_trigger": "user_message"}}},
+                {"timestamp": _iso(evening), "type": "event_msg", "payload": {"type": "user_message", "message": "Проверь сайт"}},
+                {"timestamp": _iso(evening + timedelta(minutes=20)), "type": "event_msg", "payload": {
+                    "type": "agent_message", "message": "Сайт работает"}},
+            ]
+            _write_jsonl(path, records)
+            with patch.object(COLLECTOR, "_git_remote", lambda cwd: None), \
+                    patch.dict(COLLECTOR._REMOTE_CACHE, clear=True):
+                sessions = COLLECTOR.parse_codex_file(path)
+        record = COLLECTOR.day_records(sessions, {"2026-11-01"})["2026-11-01"][0]
+        # 32 × 2 min of real checks + 21 min of Mark's own ask, not ~16 h.
+        self.assertEqual(record["active_minutes"], 32 * 2 + 21)
+        self.assertEqual(record["prompts"], 1)
+        self.assertEqual(record["asks"], ["Проверь сайт"])
+        self.assertEqual(record["outcome"], "Сайт работает")
+
+    def test_failed_heartbeats_alone_are_not_work(self):
+        t0 = datetime(2026, 11, 1, 0, 0, tzinfo=timezone.utc)
+        records = []
+        for index in range(8):
+            start = t0 + timedelta(minutes=15 * index)
+            records += [
+                {"timestamp": _iso(start), "type": "event_msg", "payload": {
+                    "type": "task_started", "turn_attribution": {"turn_trigger": "automation_heartbeat_scheduled"}}},
+                {"timestamp": _iso(start), "type": "event_msg", "payload": {
+                    "type": "task_complete", "error": {"message": "usage limit"}}},
+            ]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rollout-idle.jsonl"
+            _write_jsonl(path, records)
+            self.assertEqual(COLLECTOR.parse_codex_file(path), [])
+
     def test_newer_codex_rollouts_keep_asks_replies_and_the_repo(self):
         os.environ["TZ"] = "UTC"
         time.tzset()
