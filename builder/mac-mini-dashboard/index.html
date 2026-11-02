@@ -4669,6 +4669,29 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .cc-i:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
 .cc-i:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .cc-info-body { display: grid; gap: 12px; font-size: 14px; line-height: 1.55; }
+/* Медик on Техника (Mark 2026-11-02). */
+.cc-medic { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 4px 16px 4px 6px; border: 1px solid var(--mm-control-line, var(--mm-line)); border-radius: 999px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; text-align: left; cursor: pointer; }
+.cc-medic:hover { border-color: var(--mm-accent); }
+.cc-medic:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.cc-medic-art { width: 40px; height: 40px; flex: none; }
+.cc-medic-text { display: grid; line-height: 1.25; }
+.cc-medic-text strong { font-size: 14.5px; font-weight: 700; }
+.cc-medic-text span { font-size: 12.5px; color: var(--mm-muted); }
+.cc-medic[data-state="ok"] .cc-medic-text span { color: var(--mm-success); }
+.cc-medic[data-state="warn"] .cc-medic-text span { color: var(--mm-warning); }
+.cc-medic[data-state="bad"] .cc-medic-text span { color: var(--mm-danger); }
+.cc-medic-report { display: grid; gap: 14px; }
+.cc-medic-verdict { display: flex; gap: 12px; align-items: center; }
+.cc-medic-verdict svg { width: 52px; height: 52px; flex: none; }
+.cc-medic-verdict p { font-weight: 650; font-size: 15px; }
+.cc-medic-machine { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--mm-line); border-radius: 12px; }
+.cc-medic-machine h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14.5px; font-weight: 700; }
+.cc-medic-machine h3::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--mm-success); flex: none; }
+.cc-medic-machine.is-warn h3::before { background: var(--mm-warning); }
+.cc-medic-machine.is-bad h3::before { background: var(--mm-danger); }
+.cc-medic-machine.is-off h3::before { background: var(--mm-muted); }
+.cc-medic-machine p { color: var(--mm-ink); }
+.cc-medic-machine .cc-medic-advice { color: var(--mm-muted); }
 .cc-info-body p { margin: 0; }
 .cc-info-body dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 18px; margin: 0; }
 .cc-info-body dt { color: var(--mm-muted); }
@@ -5109,6 +5132,18 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <path d="M6 78h18l5-9 7 18 6-12 4 3h14" fill="none" stroke="#EF4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     <circle cx="96" cy="84" r="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
     <path d="M96 78v12M90 84h12" stroke="#EF4444" stroke-width="3.4" stroke-linecap="round"/>
+  </symbol>
+  <!-- Медик on Техника: a little doctor with a cap and a stethoscope -->
+  <symbol id="cc-mascot-medic" viewBox="0 0 120 120">
+    <ellipse cx="60" cy="111" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M60 24c-24 0-36 18-36 40s12 42 36 42 36-20 36-42-12-40-36-40z" fill="#A7F3D0" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M30 40c4-16 16-24 30-24s26 8 30 24c-10-5-20-7-30-7s-20 2-30 7z" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M60 18v12M54 24h12" stroke="#EF4444" stroke-width="3.6" stroke-linecap="round"/>
+    <use href="#cc-face" transform="translate(60 58)"/>
+    <path d="M40 74c0 14 8 20 20 20s20-6 20-20" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="80" cy="72" r="3.4" fill="#1A1A1A"/><circle cx="40" cy="72" r="3.4" fill="#1A1A1A"/>
+    <path d="M60 94v6" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="103" r="5.5" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
   </symbol>
   <!-- AI Singularity: a friendly spark -->
   <symbol id="cc-mascot-singularity" viewBox="0 0 120 120">
@@ -6163,6 +6198,11 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <h2 class="cc-page-title" id="machines-title">Техника</h2>
         <p class="cc-page-lede">Работают ли компьютеры и сервисы на них.</p>
       </div>
+      <!-- Mark 2026-11-02: an agent-medic that tells, in plain words, how the switched-on computers feel. -->
+      <button type="button" class="cc-medic" id="cc-medic" data-cc-info="machine-medic" data-state="unknown" aria-label="Медик: как себя чувствуют компьютеры">
+        <svg class="cc-medic-art" viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-medic"/></svg>
+        <span class="cc-medic-text"><strong>Медик</strong><span id="cc-medic-word">осматриваю…</span></span>
+      </button>
     </header>
     <nav class="nav-pills cc-machine-nav" aria-label="Компьютеры">
     <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
@@ -12401,6 +12441,107 @@ document.addEventListener('click', event => {
   document.getElementById('cc-info-close').addEventListener('click', close);
   dialog.addEventListener('click', event => { if (event.target === dialog) close(); });
 })();
+
+// ─── Медик ─── Mark 2026-11-02: «нажимаю, и он рассказывает про состояние включенных устройств».
+// He reads only what the page already received from each computer (memory, disk, processor, services);
+// nothing is sent anywhere and no model is called. A computer that does not answer is named, not guessed.
+const MEDIC_MACHINES = [['mini', 'Mac mini'], ['pro', 'MacBook Pro'], ['air', 'MacBook Air']];
+
+function medicServiceProblems(key) {
+  const rendered = svcRendered[`${key}-svc-tbody`];
+  if (!rendered) return null;
+  const choices = readSvcArchiveChoices();
+  const problems = [];
+  for (const s of rendered.services || []) {
+    const problem = svcProblem(s);
+    if (!problem) continue;
+    // An old archived job that is simply not loaded is expected; anything else is worth saying.
+    if (isSvcArchived(s, choices, `${key}-svc-tbody`) && problem.label === 'Не запущена') continue;
+    problems.push(`${s.name || s.label}: ${problem.why}`);
+  }
+  return { total: (rendered.services || []).length, problems };
+}
+
+function medicUptimeDays(text) {
+  const match = /(\d+)\s*(?:day|дн)/i.exec(String(text || ''));
+  return match ? Number(match[1]) : 0;
+}
+
+function medicExam(key, title) {
+  const sys = machineSystem[key];
+  if (!machineRecentlySeen(key) || !sys) return { key, title, level: 'off', lines: ['Не на связи: выключен, спит или нет сети. Осмотреть не могу.'], advice: [] };
+  const items = Object.fromEntries(machineHealthItems(sys).map(item => [item.id, item]));
+  const lines = [];
+  const advice = [];
+  const ram = items.ram, disk = items.disk, cpu = items.cpu;
+  const ramText = { ok: 'Память в порядке', warn: 'Память занята почти вся', bad: 'Память перегружена', unknown: 'Про память данных нет' }[ram.level];
+  const diskFree = sys.disk_total_gb ? Math.max(0, Math.round(sys.disk_total_gb - sys.disk_used_gb)) : null;
+  const diskText = { ok: 'диск в порядке', warn: 'диск заполняется', bad: 'диск почти полон', unknown: 'про диск данных нет' }[disk.level];
+  const cpuText = { ok: 'процессор отдыхает', warn: 'процессор нагружен', bad: 'процессор перегружен', unknown: 'про процессор данных нет' }[cpu.level];
+  const num = value => Number(value).toLocaleString('ru-RU');
+  lines.push(`${ramText}${ram.value ? ` (${ram.value})` : ''}, ${diskText}${diskFree !== null ? ` (свободно ${num(diskFree)} ГБ)` : ''}, ${cpuText}${cpu.value ? ` (${cpu.value})` : ''}.`);
+  if (ram.level !== 'ok' && ram.level !== 'unknown') advice.push('Закрой лишние программы или перезагрузи, чтобы освободить память.');
+  if (disk.level !== 'ok' && disk.level !== 'unknown') advice.push('Стоит почистить диск: старые загрузки, кэш, копии.');
+  if (cpu.level === 'bad') advice.push('Что-то сильно грузит процессор, проверь Мониторинг системы.');
+  const days = medicUptimeDays(sys.uptime);
+  if (days >= 30) advice.push(`Не перезагружался ${days} дн., перезагрузка не помешает.`);
+  const svc = medicServiceProblems(key);
+  if (svc && svc.problems.length) {
+    lines.push(`Не работает: ${svc.problems.join('; ')}.`);
+    advice.push('Подробности в его списке сервисов.');
+  } else if (svc && svc.total) {
+    lines.push('Все сервисы работают.');
+  }
+  const worst = [ram.level, disk.level, cpu.level].includes('bad') || (svc && svc.problems.length) ? 'bad'
+    : [ram.level, disk.level, cpu.level].includes('warn') ? 'warn' : 'ok';
+  return { key, title, level: worst, lines, advice };
+}
+
+function medicExamAll() {
+  const exams = MEDIC_MACHINES.map(([key, title]) => medicExam(key, title));
+  const on = exams.filter(exam => exam.level !== 'off');
+  const sick = on.filter(exam => exam.level !== 'ok');
+  let state = 'unknown', word = 'осматриваю…', verdict = 'Пока ни один компьютер не ответил. Попробуй чуть позже.';
+  if (on.length) {
+    state = sick.some(exam => exam.level === 'bad') ? 'bad' : sick.length ? 'warn' : 'ok';
+    word = state === 'ok' ? 'все здоровы' : `проверь: ${sick.map(exam => exam.title).join(', ')}`;
+    verdict = state === 'ok'
+      ? `Включено ${on.length} из ${exams.length}. Все здоровы, ничего делать не нужно.`
+      : `Включено ${on.length} из ${exams.length}. Есть на что посмотреть: ${sick.map(exam => exam.title).join(', ')}.`;
+  }
+  return { exams, state, word, verdict };
+}
+
+function medicRender() {
+  const button = document.getElementById('cc-medic');
+  if (!button) return;
+  const { state, word } = medicExamAll();
+  button.dataset.state = state;
+  document.getElementById('cc-medic-word').textContent = word;
+  button.setAttribute('aria-label', `Медик: ${word}. Нажми, чтобы он рассказал подробнее`);
+}
+setInterval(medicRender, 5000);
+
+ccInfoSources['machine-medic'] = () => {
+  const { exams, verdict } = medicExamAll();
+  const report = document.createElement('div');
+  report.className = 'cc-medic-report';
+  const head = document.createElement('div');
+  head.className = 'cc-medic-verdict';
+  head.innerHTML = '<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-medic"/></svg>';
+  const say = document.createElement('p'); say.textContent = verdict; head.append(say);
+  report.append(head);
+  // Switched-on computers first: those are the ones he examined.
+  for (const exam of [...exams.filter(e => e.level !== 'off'), ...exams.filter(e => e.level === 'off')]) {
+    const card = document.createElement('section');
+    card.className = `cc-medic-machine is-${exam.level}`;
+    const h = document.createElement('h3'); h.textContent = exam.title; card.append(h);
+    for (const line of exam.lines) { const p = document.createElement('p'); p.textContent = line; card.append(p); }
+    for (const line of exam.advice) { const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = line; card.append(p); }
+    report.append(card);
+  }
+  return { title: 'Медик', node: report };
+};
 
 // ─── «Архитектура» ─── Mark 2026-10-26: one map of the agent system on the Mac mini. The wiring is fixed in
 // dashboard_builder/architecture.py; states come only from fresh events, and a live process is not shown as work.
