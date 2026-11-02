@@ -41,6 +41,7 @@ from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MA
 from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
+from dashboard_builder.repair_log import MAX_BODY_BYTES as REPAIR_LOG_MAX_BYTES, change_entries as change_repair_log, load_entries as load_repair_log
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.architecture import collect_architecture
 from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
@@ -73,6 +74,8 @@ PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
+# «Журнал починок» for the Медик on Техника (Mark 2026-11-02). Owner only.
+REPAIR_LOG_FILE = HOME / ".agent-bridge" / "machine-repairs.json"
 MEDIA_LINKEDIN_ACTIONS = {
     "/api/media/linkedin/schedule": lambda body: media_linkedin.save_schedule(body),
     "/api/media/linkedin/preview": lambda body: media_linkedin.preview(body),
@@ -1968,6 +1971,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
             return
+        if parsed.path == '/api/machines/repairs':
+            self._handle_repair_log_save()
+            return
         if parsed.path in MEDIA_LINKEDIN_ACTIONS:
             self._handle_media_linkedin_action(parsed.path)
             return
@@ -2746,6 +2752,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except OSError:
             self._json_response(503, {'error': 'owner_todo_unavailable'})
 
+    def _handle_repair_log_save(self):
+        body = self._platform_owner_body(REPAIR_LOG_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            self._json_response(200, {'state': 'ready', **change_repair_log(REPAIR_LOG_FILE, body)})
+        except LookupError:
+            self._json_response(404, {'error': 'entry_not_found'})
+        except ValueError as error:
+            self._json_response(400, {'error': 'invalid_repair', 'reason': str(error)})
+        except OSError:
+            self._json_response(503, {'error': 'repair_log_unavailable'})
+
     def _handle_manager_decision_response(self):
         if not self._decision_owner_authorized():
             self._json_response(401, {'error': 'owner_token_required'})
@@ -3010,6 +3029,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
+            return
+        if parsed.path == '/api/machines/repairs':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'entries': []})
+                return
+            try:
+                record = load_repair_log(REPAIR_LOG_FILE)
+            except OSError:
+                self._json_response(503, {'error': 'repair_log_unavailable', 'state': 'unavailable', 'entries': []})
+                return
+            self._json_response(200, {'state': 'ready', **record})
             return
         if parsed.path == '/api/live-sessions':
             # Claude Code and Codex sessions open on Mark's Macs (Mark 2026-10-25). Owner only.
