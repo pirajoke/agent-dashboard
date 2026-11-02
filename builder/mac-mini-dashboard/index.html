@@ -211,6 +211,28 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-health-item.is-bad .machine-health-bar > span { background: var(--red); }
 .machine-health-item.is-unknown .machine-health-word { color: var(--text2); }
 @media (max-width: 640px) { .machine-health { gap: 6px; } .machine-health-item { padding: 10px; } .machine-health-word { font-size: 14px; } .machine-health-value { font-size: 12px; } }
+/* Mark 2026-11-02: how the MacBook Pro is looked after (watchdog, hygiene, restart, firewall, updates). */
+.machine-care { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 0 0 20px; background: var(--card, transparent); }
+.machine-care[hidden] { display: none; }
+.machine-care-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.machine-care-title { font-size: 16px; font-weight: 600; margin: 0; }
+.machine-care-when { font-size: 12px; color: var(--text2); }
+.machine-care-when.is-stale { color: var(--orange, #d97706); font-weight: 600; }
+.machine-care-note { font-size: 13px; color: var(--text2); margin: 0; }
+.machine-care-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.machine-care-row { display: grid; grid-template-columns: 10px 1fr; gap: 4px 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--bg2, rgba(127,127,127,.06)); }
+.machine-care-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; background: var(--text2); }
+.machine-care-row.is-ok .machine-care-dot { background: var(--green); }
+.machine-care-row.is-warn .machine-care-dot { background: var(--orange, #d97706); }
+.machine-care-row.is-bad .machine-care-dot { background: var(--red); }
+.machine-care-line { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.machine-care-label { font-size: 13px; color: var(--text2); }
+.machine-care-word { font-size: 14px; font-weight: 600; }
+.machine-care-row.is-ok .machine-care-word { color: var(--green); }
+.machine-care-row.is-warn .machine-care-word { color: var(--orange, #d97706); }
+.machine-care-row.is-bad .machine-care-word { color: var(--red); }
+.machine-care-detail { grid-column: 2; font-size: 12px; color: var(--text2); overflow-wrap: anywhere; }
+@media (max-width: 640px) { .machine-care { padding: 12px; } .machine-care-list { grid-template-columns: 1fr; } }
 
 /* Grid layouts */
 .grid { display: grid; gap: 20px; }
@@ -6269,6 +6291,14 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <span class="machine-badge offline" id="pro-online-badge">проверка</span>
     </div>
     <div class="machine-health" id="pro-health" aria-live="polite"></div>
+    <section class="machine-care" id="pro-care" aria-labelledby="pro-care-title" hidden>
+      <div class="machine-care-head">
+        <h3 class="machine-care-title" id="pro-care-title">Уход и защита</h3>
+        <span class="machine-care-when" id="pro-care-when"></span>
+      </div>
+      <p class="machine-care-note" id="pro-care-note" role="status"></p>
+      <ul class="machine-care-list" id="pro-care-list"></ul>
+    </section>
 
     <!-- System gauges row — same layout as Mac Mini/Air -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -6298,7 +6328,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <div class="card" style="padding:0; overflow:hidden;">
       <div style="padding:20px 20px 0; display:flex; align-items:center; justify-content:space-between;">
         <div style="font-size:16px; font-weight:600;">Сервисы <span style="font-size:12px; color:var(--muted); font-weight:400;" id="pro-svc-count"></span></div>
-        <button class="cc-refresh" type="button" onclick="refreshPro()">Обновить</button>
+        <button class="cc-refresh" type="button" onclick="machineCareLoadedAt.pro = 0; refreshPro()">Обновить</button>
       </div>
       <div style="padding:8px 8px 0;">
         <table class="svc-table">
@@ -11833,6 +11863,7 @@ async function airAction(label, action) {
 
 // ─── MacBook Pro ───
 async function refreshPro() {
+  refreshMachineCare('pro', 'macbook-pro');
   if (machineInFlight.pro) return;
   machineInFlight.pro = true;
   const data = await fetchJSON(PRO_API, `${PRO_API_PATH_PREFIX}/all`).finally(() => { machineInFlight.pro = false; });
@@ -11860,6 +11891,135 @@ async function refreshPro() {
   document.getElementById('pro-svc-count').textContent = '';
   renderSvcTable('pro-svc-tbody', svcs, 'proAction');
   renderGauges('pro', sys);
+}
+
+// ─── MacBook care (Mark 2026-11-02 «визуализируй это в технике когда я нажимаю на мак про») ───
+// Written on the MacBook by builder/mac_care_collector.py every 15 min; the server shows it to the owner only.
+const MACHINE_CARE_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/machines/care`
+  : 'https://command.meshly.fr/api/machines/care';
+const MACHINE_CARE_REFRESH_MS = 2 * 60 * 1000;
+const machineCareLoadedAt = {};
+
+function machineCareWhen(iso, now = Date.now()) {
+  const at = Date.parse(iso || '');
+  if (!Number.isFinite(at)) return '';
+  const date = new Date(at);
+  const time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const days = Math.floor((new Date(now).setHours(0, 0, 0, 0) - new Date(at).setHours(0, 0, 0, 0)) / 86400000);
+  if (days === 0) return `сегодня ${time}`;
+  if (days === 1) return `вчера ${time}`;
+  return `${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} ${time}`;
+}
+
+function machineCareRows(care, now = Date.now()) {
+  const rows = [];
+  const unknown = (label, detail = 'нет данных') => ({ label, level: 'unknown', word: 'неизвестно', detail });
+  const plural = (n, one, few, many) => {
+    const t = n % 10, h = n % 100;
+    return t === 1 && h !== 11 ? one : t >= 2 && t <= 4 && (h < 12 || h > 14) ? few : many;
+  };
+  const w = care.watchdog || {};
+  if (w.job == null && w.events_7d == null) rows.push(unknown('Защита от зависаний'));
+  else if (w.job === 'missing') rows.push({ label: 'Защита от зависаний', level: 'bad', word: 'не запущена', detail: 'cpu-watchdog не найден в launchd' });
+  else {
+    const n = w.events_7d;
+    const last = w.last_event_at ? `последний раз ${machineCareWhen(w.last_event_at, now)}${w.last_event ? `: ${w.last_event}` : ''}` : '';
+    const detail = n == null ? 'журнал не читается'
+      : n === 0 ? `за неделю не срабатывала${last ? `; ${last}` : ''}`
+      : `за неделю ${n} ${plural(n, 'запись', 'записи', 'записей')}; ${last}`;
+    rows.push({ label: 'Защита от зависаний', level: n >= 10 ? 'warn' : 'ok', word: 'работает', detail });
+  }
+  const h = care.hygiene || {};
+  const reportAge = h.report_at ? (now - Date.parse(h.report_at)) / 3600000 : null;
+  if (!h.report_at) rows.push({ label: 'Ежедневная проверка, 10:00', level: h.job === 'missing' ? 'bad' : 'warn', word: h.job === 'missing' ? 'не запущена' : 'нет отчёта', detail: 'отчёт ещё не появлялся' });
+  else {
+    const attention = h.attention > 0 ? `; замечаний: ${h.attention}` : '';
+    const stale = reportAge > 36;
+    rows.push({ label: 'Ежедневная проверка, 10:00', level: stale ? 'warn' : (h.attention > 0 ? 'warn' : 'ok'),
+      word: stale ? 'отчёт старый' : (h.attention > 0 ? 'есть замечания' : 'всё чисто'),
+      detail: `отчёт ${machineCareWhen(h.report_at, now)}${attention}${h.headline ? ` — ${h.headline}` : ''}` });
+  }
+  const r = care.restart || {};
+  const boot = r.boot_at ? `последний запуск ${machineCareWhen(r.boot_at, now)}` : '';
+  if (r.scheduled == null) rows.push(unknown('Перезагрузка по воскресеньям', boot || 'нет данных'));
+  else rows.push({ label: 'Перезагрузка по воскресеньям', level: r.scheduled ? 'ok' : 'warn', word: r.scheduled ? 'включена' : 'не настроена',
+    detail: [r.scheduled ? 'вс 04:00' : 'pmset не знает о расписании', boot].filter(Boolean).join('; ') });
+  const f = care.firewall || {};
+  if (f.enabled == null) rows.push(unknown('Файрвол'));
+  else rows.push({ label: 'Файрвол', level: f.enabled ? 'ok' : 'warn', word: f.enabled ? 'включён' : 'выключен',
+    detail: f.enabled ? 'входящие подключения под контролем' : 'Настройки → Сеть → Файрвол' });
+  const u = care.updates || {};
+  if (!Array.isArray(u.pending)) rows.push(unknown('Обновления'));
+  else rows.push({ label: 'Обновления', level: u.pending.length ? 'warn' : 'ok', word: u.pending.length ? `ждут: ${u.pending.length}` : 'всё установлено',
+    detail: u.pending.length ? u.pending.slice(0, 3).join(', ') : (u.checked_at ? `проверено ${machineCareWhen(u.checked_at, now)}` : '') });
+  const sw = care.swap;
+  if (!sw || typeof sw.used_gb !== 'number') rows.push(unknown('Память на диске (swap)'));
+  else rows.push({ label: 'Память на диске (swap)', level: sw.used_gb >= 6 ? 'bad' : sw.used_gb >= 2 ? 'warn' : 'ok',
+    word: sw.used_gb >= 6 ? 'много' : sw.used_gb >= 2 ? 'заметно' : 'мало', detail: `${sw.used_gb.toLocaleString('ru-RU')} из ${Number(sw.total_gb).toLocaleString('ru-RU')} ГБ` });
+  const top = Array.isArray(care.top_processes) ? care.top_processes : null;
+  if (!top) rows.push(unknown('Сейчас грузят процессор'));
+  else {
+    const peak = top.length ? top[0].cpu : 0;
+    rows.push({ label: 'Сейчас грузят процессор', level: peak >= 90 ? 'warn' : 'ok', word: peak >= 90 ? 'есть тяжёлый' : 'спокойно',
+      detail: top.length ? top.map(p => `${p.name} ${p.cpu}%`).join(', ') : 'никто' });
+  }
+  if (typeof care.disabled_agents === 'number') rows.push({ label: 'Отключённые фоновые агенты', level: 'ok',
+    word: `${care.disabled_agents}`, detail: care.disabled_agents ? 'убраны при чистке, вернуть можно по README в той же папке' : 'нет' });
+  return rows;
+}
+
+function renderMachineCare(key, care) {
+  const host = document.getElementById(`${key}-care`);
+  if (!host) return;
+  const note = document.getElementById(`${key}-care-note`);
+  const list = document.getElementById(`${key}-care-list`);
+  const when = document.getElementById(`${key}-care-when`);
+  host.hidden = false;
+  when.className = 'machine-care-when';
+  when.textContent = '';
+  list.replaceChildren();
+  const messages = {
+    owner_only: 'Подробности видны только владельцу. Войди как владелец, чтобы их увидеть.',
+    not_installed: 'MacBook ещё не присылал эти данные. Нужно один раз запустить установщик сборщика на MacBook Pro.',
+    unreadable: 'Данные пришли, но не читаются. Сборщик пришлёт новые в течение 15 минут.',
+  };
+  if (!care || !care.state) { note.textContent = 'Нет связи с Command Center, попробую ещё раз.'; return; }
+  if (messages[care.state]) { note.textContent = messages[care.state]; return; }
+  if (care.state !== 'fresh' && care.state !== 'stale') { note.textContent = 'Нет данных.'; return; }
+  note.textContent = '';
+  if (care.state === 'stale') {
+    const minutes = typeof care.age_seconds === 'number' ? Math.round(care.age_seconds / 60) : null;
+    when.className = 'machine-care-when is-stale';
+    when.textContent = `устарело: данные от ${machineCareWhen(care.generated_at)}${minutes ? ` (${minutes} мин назад)` : ''}`;
+  } else {
+    when.textContent = `обновлено ${machineCareWhen(care.generated_at)}`;
+  }
+  for (const row of machineCareRows(care)) {
+    const item = document.createElement('li');
+    item.className = `machine-care-row is-${row.level}`;
+    const dot = document.createElement('span'); dot.className = 'machine-care-dot'; dot.setAttribute('aria-hidden', 'true');
+    const line = document.createElement('span'); line.className = 'machine-care-line';
+    const label = document.createElement('span'); label.className = 'machine-care-label'; label.textContent = row.label;
+    const word = document.createElement('span'); word.className = 'machine-care-word'; word.textContent = row.word;
+    line.append(label, word);
+    item.append(dot, line);
+    if (row.detail) { const detail = document.createElement('span'); detail.className = 'machine-care-detail'; detail.textContent = row.detail; item.append(detail); }
+    list.append(item);
+  }
+}
+
+async function refreshMachineCare(key, machine, force = false) {
+  if (!force && machineCareLoadedAt[key] && Date.now() - machineCareLoadedAt[key] < MACHINE_CARE_REFRESH_MS) return;
+  machineCareLoadedAt[key] = Date.now();
+  let care = null;
+  try {
+    const response = await fetch(`${MACHINE_CARE_API}?machine=${encodeURIComponent(machine)}`, {
+      headers: jarvisRunHeaders(), signal: AbortSignal.timeout(5000),
+    });
+    if (response.ok) care = await response.json();
+  } catch { care = null; }
+  renderMachineCare(key, care);
 }
 
 async function proAction(label, action) {
