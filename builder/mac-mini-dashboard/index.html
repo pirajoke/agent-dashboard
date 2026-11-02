@@ -4604,6 +4604,23 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 @media(max-width:700px) { .docxx-record-actions { justify-self:stretch; justify-content:flex-start; } .docxx-record-actions > * { flex:1 1 auto; } .docxx-record-state { justify-self:start; text-align:center; } }
 /* Phone: badge and «Открыть» share one row under the name. */
 @media(max-width:700px) { .docxx-record summary { grid-template-columns:28px minmax(0,1fr) max-content 16px; grid-template-areas:"icon name name toggle" ". state action ."; align-items:center; padding:16px 0; } .docxx-record-icon,.docxx-record-name { align-self:start; } .docxx-record-state { font-size:12.5px; } .docxx-record-actions { justify-self:end; } .docxx-record-actions > * { flex:none; } }
+/* Mark 2026-11-02 «много шрифтов разного размера»: one 14px size in every row; weight and colour carry the hierarchy. */
+.docxx-record summary { padding:12px 0; row-gap:2px; }
+.docxx-record-name > strong { font-size:14px; line-height:1.45; font-weight:600; letter-spacing:0; }
+.docxx-record-meta,.docxx-record-description,.docxx-record-validity,.docxx-record-validity > span { font-size:14px; }
+.docxx-record-meta { margin-top:2px; }
+.docxx-record-from b { font-weight:400; color:var(--mm-muted); }
+.docxx-record-folder { color:var(--mm-muted); }
+.docxx-record-state,.docxx-record-state[data-tone="attention"] { background:none; padding:0; font-size:14px; font-weight:400; color:var(--mm-muted); display:inline-flex; align-items:center; gap:7px; }
+.docxx-record-state::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--mm-success, #3c9a5f); flex:none; }
+.docxx-record-state[data-tone="attention"] { color:var(--mm-warning); }
+.docxx-record-state[data-tone="attention"]::before { background:var(--mm-warning); }
+.docxx-record-actions .docxx-record-source { width:36px; min-width:36px; min-height:36px; height:36px; padding:0; border-radius:50%; font-size:16px; font-weight:500; }
+.docxx-record-body { font-size:14px; }
+.docxx-record-body dt,.docxx-record-note { font-size:14px; }
+.docxx-record summary::after,.docxx-record[open] summary::after { content:none; display:none; }
+@media(min-width:701px) { .docxx-record summary { grid-template-columns:32px minmax(0,1fr) max-content max-content; grid-template-areas:"icon name state action"; } }
+@media(max-width:700px) { .docxx-record summary { grid-template-columns:28px minmax(0,1fr) 44px; grid-template-areas:"icon name action" ". state action"; align-items:center; padding:12px 0; row-gap:4px; } .docxx-record-state { justify-self:start; } .docxx-record-actions { grid-area:action; align-self:center; } .docxx-record-name > strong,.docxx-record-meta,.docxx-record-state { font-size:14px; } .docxx-record-actions .docxx-record-source { width:44px; min-width:44px; height:44px; min-height:44px; } }
 @media(prefers-reduced-motion:reduce) { #section-documents *,#section-documents *::after { animation:none!important; transition:none!important; } }
 
 /* Mark 2026-10-24 «удали по максимуму ненужной инфы, метадату… замени на i»: counters, timings, ports and
@@ -14520,6 +14537,11 @@ function ccDocxxRecordDate(value) {
 }
 let ccDocxxWarnings=[];
 function ccDocxxCount(n,one,few,many) { const m10=n%10, m100=n%100; return n+' '+(m10===1&&m100!==11?one:m10>=2&&m10<=4&&(m100<12||m100>14)?few:many); }
+// Mark 2026-11-02 «много шрифтов, много метаданных»: a file name reads as a title — no extension, no underscores.
+function ccDocxxTitle(name) {
+  const text=String(name||'').replace(/\.(pdf|jpe?g|png|heic|docx?|xlsx?|txt|gdoc|gsheet)$/i,'').replace(/[_]+/g,' ').replace(/\s{2,}/g,' ').trim();
+  return text || String(name||'Документ');
+}
 // Mark 2026-11-02: say which mailbox a document came from, not just «Gmail».
 function ccDocxxFrom(row) {
   const via={gmail:'Из почты',icloud:'Из iCloud',drive:'Из Google Drive',manual:'Добавлен вручную'}[row.source];
@@ -14687,7 +14709,7 @@ function ccDocxxRenderRecords() {
     const details=ccDocxxEl('details',undefined,'docxx-record'); details.dataset.key=row.key; details.open=opened.has(row.key);
     const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
-    name.append(ccDocxxEl('strong',row.name));
+    const title=ccDocxxEl('strong',ccDocxxTitle(row.name)); title.title=row.name; name.append(title);
     // Mark 2026-11-02: one quiet line — which mailbox it came from and when; the rest is inside the card.
     const from=ccDocxxFrom(row), folder=ccDocxxFolder(row);
     const meta=ccDocxxEl('span',undefined,'docxx-record-meta');
@@ -14701,7 +14723,7 @@ function ccDocxxRenderRecords() {
     summary.append(icon,name);
     const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку':'Открыть',row.url) || ccDocxxSourceLink('Открыть письмо',row.source_url);
     const acts=ccDocxxEl('span',undefined,'docxx-record-actions');
-    if(openLink) { openLink.className='docxx-record-source'; acts.append(openLink); }
+    if(openLink) { openLink.setAttribute('aria-label',openLink.textContent); openLink.title=openLink.textContent; openLink.textContent='↗'; openLink.className='docxx-record-source'; acts.append(openLink); }
     summary.append(badge); if(acts.children.length) summary.append(acts);
     const body=ccDocxxEl('div',undefined,'docxx-record-body');
     const dl=ccDocxxEl('dl');

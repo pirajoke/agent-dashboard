@@ -33,6 +33,8 @@ for doc in data["documents"]:
         answer[doc["id"]] = {"folder": "France/Médiathèque", "junk": False, "why": "Билет медиатеки"}
     elif doc["name"] == "scan.pdf":
         answer[doc["id"]] = {"folder": "Invented/Folder", "junk": True, "why": "Пустой скан"}
+    elif doc["name"] == "letter.pdf":
+        answer[doc["id"]] = {"folder": None, "junk": False, "why": "Непонятно"}
 print(json.dumps({"result": json.dumps(answer, ensure_ascii=False)}))
 '''
 
@@ -78,8 +80,9 @@ class SuggestTests(unittest.TestCase):
         env.start()
         self.addCleanup(env.stop)
 
-    def run_main(self):
-        return SUGGEST.main(['--state', str(self.state), '--home', str(self.home), '--claude', str(self.cli)])
+    def run_main(self, sort=False):
+        return SUGGEST.main(['--state', str(self.state), '--home', str(self.home), '--claude', str(self.cli)]
+                            + ([] if sort else ['--no-sort']))
 
     def calls(self):
         return [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
@@ -104,6 +107,28 @@ class SuggestTests(unittest.TestCase):
 
         self.run_main()
         self.assertEqual(len(self.calls()), 1)  # Documents already guessed are not asked again.
+
+    def test_mark_2026_11_02_documents_sort_themselves_and_copies_go_to_trash(self):
+        journal = json.loads((self.state / 'gmail-journal.json').read_text())
+        for name, extra in (('letter.pdf', {}), ('ticket copy.pdf', {'sha256': SHA, 'size': 14})):
+            path = self.library / REVIEW / name
+            path.write_bytes(b'%PDF ' + name.encode())
+            journal['attachments'][name] = {'state': 'delivered', 'needs_review': True, 'name': name,
+                                            'destination': str(path), 'delivered_at': time.time() - 30, **extra}
+        (self.state / 'gmail-journal.json').write_text(json.dumps(journal), encoding='utf-8')
+        self.assertEqual(self.run_main(sort=True), 0)
+        self.assertTrue((self.library / 'France/Médiathèque/ticket.pdf').exists())
+        self.assertTrue((self.library / '90 — Archive/letter.pdf').exists())
+        left = sorted(p.name for p in (self.library / REVIEW).iterdir() if p.is_file())
+        self.assertEqual(left, [])  # Junk and the second copy of the ticket went to the trash folder.
+        trash = sorted(p.name for p in (self.library / '10 — 📥 To review' / 'Корзина').iterdir())
+        self.assertEqual(trash, ['scan.pdf', 'ticket copy.pdf'])
+        status = json.loads((self.home / '.agent-bridge' / 'docxx-suggestions.json').read_text())['status']
+        self.assertEqual(status['sorted'], {'move': 1, 'archive': 1, 'trash': 2})
+
+    def test_documents_without_a_guess_wait_and_nothing_moves_with_no_sort(self):
+        self.run_main()
+        self.assertTrue((self.library / REVIEW / 'ticket.pdf').exists())
 
     def test_credential_values_on_their_own_line_are_dropped_too(self):
         cleaned = SUGGEST.clean_text('Bibliothèque\nMot de passe\nprivate-secret\nIdentifiant :\nmark42\nValable 1h')

@@ -7,9 +7,14 @@ Mark 2026-10-26: «смотреть по контексту… есть все �
 sends the file name, the start of the text DOCXX already extracted (lines with passwords or
 logins removed) and the list of existing library folders to the Claude Code CLI signed in on
 this Mac (``claude -p``, no tools, same call as the day summarizer). The answer per document is
-one folder from that list, «junk», or nothing. Results go to ``~/.agent-bridge/docxx-suggestions.json``;
-the owner-only ``/api/docxx`` shows them on the cards and «Разложить по подсказкам» moves only
-documents whose folder fits. Nothing moves here and nothing is sent anywhere else.
+one folder from that list, «junk», or nothing. Results go to ``~/.agent-bridge/docxx-suggestions.json``.
+
+Mark 2026-11-02: «не забирай дубли… автоматически определять, куда что пошло. Остальное просто
+в архив». After the guesses, each open review document is sorted by itself through the same
+reversible decisions the site uses (``docxx_actions.apply``, «Вернуть» undoes it): a copy of a
+document already in the library or already seen goes to the trash folder, a document with a
+fitting folder goes there, junk goes to the trash folder, and everything else the model looked at
+goes to the archive folder. Nothing is deleted and nothing is sent anywhere else.
 """
 from __future__ import annotations
 
@@ -29,7 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from daily_work_summarizer import call_claude, find_cli, iso_z, redact, write_json  # noqa: E402
 from dashboard_builder.docxx import state_path  # noqa: E402
 from dashboard_builder.docxx_actions import (  # noqa: E402
-    decisions_path, folders_view, load_decisions, load_suggestions, suggestions_path, _sortable)
+    MAX_KEYS, apply, decisions_path, folders_view, load_decisions, load_suggestions, suggestions_path, _sortable)
 
 SCHEMA = 1
 HOME = Path.home()
@@ -160,6 +165,51 @@ def parse_reply(text: str, ids: set[str], folders: set[str]) -> dict[str, dict[s
     return out
 
 
+def sort_plan(rows: dict, guesses: dict, view: dict) -> dict[str, list]:
+    """Which open review documents go where: {(action, folder): [keys]}. Pure, so it can be tested."""
+    movable = set(view.get("movable") or [])
+    filed = {content_sha(row) for row in rows.values() if row.get("status") != "needs_review"} - {None}
+    seen: set[str] = set()
+    plan: dict = {}
+    open_rows = sorted((row for key, row in rows.items() if key in movable and row.get("status") == "needs_review"),
+                       key=lambda row: str(row.get("at") or ""))
+    for row in open_rows:
+        sha = content_sha(row)
+        if sha and (sha in filed or sha in seen):
+            plan.setdefault(("trash", None), []).append(row["key"])
+            continue
+        if sha:
+            seen.add(sha)
+        guess = guesses.get(row["key"])
+        if not isinstance(guess, dict) or guess.get("name") != row.get("name"):
+            continue  # No guess yet: wait for the model, the next run sorts it.
+        if guess.get("junk") is True:
+            plan.setdefault(("trash", None), []).append(row["key"])
+        elif guess.get("folder") in (view.get("folders") or []):
+            plan.setdefault(("move", guess["folder"]), []).append(row["key"])
+        elif view.get("archive"):
+            plan.setdefault(("archive", None), []).append(row["key"])
+    return plan
+
+
+def auto_sort(state: Path, home: Path) -> dict[str, int]:
+    decisions_file = decisions_path(home)
+    view = folders_view(state, decisions_file)
+    if view.get("state") != "ready":
+        return {}
+    rows, _ = _sortable(state, load_decisions(decisions_file))
+    done: dict[str, int] = {}
+    for (action, folder), keys in sort_plan(rows, load_suggestions(suggestions_path(home)), view).items():
+        for start in range(0, len(keys), MAX_KEYS):
+            body = {"action": action, "keys": keys[start:start + MAX_KEYS], **({"folder": folder} if folder else {})}
+            try:
+                result = apply(state, decisions_file, body)
+            except (OSError, ValueError):
+                continue
+            done[action] = done.get(action, 0) + sum(1 for item in result["results"] if item.get("ok"))
+    return done
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--state", type=Path, default=state_path(HOME))
@@ -168,6 +218,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--claude", default=os.environ.get("DOCXX_SUGGEST_CLAUDE"), help="path to the claude CLI")
     parser.add_argument("--batches", type=int, default=MAX_BATCHES, help="Claude calls per run")
     parser.add_argument("--dry-run", action="store_true", help="print the prompts instead of calling Claude")
+    parser.add_argument("--no-sort", action="store_true", help="only write guesses, move nothing")
     return parser.parse_args(argv)
 
 
@@ -217,6 +268,9 @@ def main(argv: list[str] | None = None) -> int:
                 status["written"] += 1
         write_json(out, saved)
     status["pending"] = max(0, len(due) - status["written"])
+    if not args.no_sort:
+        write_json(out, saved)
+        status["sorted"] = auto_sort(args.state, args.home)
     saved["status"] = status
     write_json(out, saved)
     try:

@@ -36,6 +36,17 @@ class GmailRecordsTests(unittest.TestCase):
   self.assertEqual(rows['a.pdf']['source_account'],'other@example.com')
   self.assertEqual(rows['b.pdf']['source_account'],'source@example.com')
 
+ def test_mark_2026_11_02_the_same_attachment_shows_once(self):
+  item={'state':'pending','name':'5_Справка.jpg','attempted_at':NOW-20}
+  self.seed({f'copy{i}':dict(item,thread_id=f'{i:016x}') for i in range(6)} |
+    {'filed':{'state':'delivered','name':'b.pdf','destination':'/Users/private/DOCXXx/A/b.pdf',
+      'cloud_file_id':'synthetic_document_bbbb','delivered_at':NOW-90,'sha256':'b'*64,'size':3},
+     'again':{'state':'delivered','needs_review':True,'name':'b-again.pdf','delivered_at':NOW-10,'sha256':'b'*64,'size':3}})
+  result=self.read()
+  names=sorted(r['name'] for r in result['records'])
+  self.assertEqual(names,['5_Справка.jpg','b.pdf'])
+  self.assertEqual(result['review_count'],1)
+
  def test_reviewed_original_and_translation_are_one_result(self):
   item={'state':'delivered','destination':'/Users/private/DOCXXx/France/Acte.pdf',
     'cloud_file_id':'synthetic_document_1234','delivered_at':NOW-20}

@@ -470,6 +470,22 @@ def _apply_suggestions(rows, suggestions):
             row['suggest'] = {'folder': None, 'why': why}
 
 
+def _mark_duplicates(rows):
+    """Same content (sha256), or same name, source, state and place: keep the newest, flag the rest."""
+    seen = set()
+    newest = sorted(rows.values(), key=lambda r: (not r['historical'], r['at'] or ''), reverse=True)
+    # A copy already filed wins over one still waiting, so the waiting one is the duplicate.
+    for row in sorted(newest, key=lambda r: r['status'] in ('needs_review', 'awaiting_verification', 'pending', 'settling')):
+        if row.get('hidden'):
+            continue
+        sha = row.get('_sha')
+        idents = {('sha',) + tuple(sha)} if sha else set()
+        idents.add(('meta', row['name'], row['source'], row['status'], row['destination']))
+        if idents & seen:
+            row['duplicate'] = True
+        seen |= idents
+
+
 def docxx_projection(directory, *, owner=False, now=None, decisions=None, include_paths=False, suggestions=None):
     if not owner:
         return {'state': 'owner_required'}  # Do not even stat private sources.
@@ -531,7 +547,8 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
     # Count the latest visible identity once, just as the operation list does.
     settled = _apply_decisions(rows, decisions)
     _apply_suggestions(rows, suggestions)
-    current = [row for row in rows.values() if not row['historical']]
+    _mark_duplicates(rows)
+    current = [row for row in rows.values() if not row['historical'] and not row.get('duplicate')]
     issues = {'needs_review','error','duplicate_found','retained','awaiting_verification'}
     review = sum(row['status'] in issues for row in current)
     pending_icloud = sum(row['source'] == 'icloud' and row['status'] in ('settling','pending','awaiting_verification') for row in current)
@@ -584,12 +601,14 @@ def docxx_projection(directory, *, owner=False, now=None, decisions=None, includ
     except (OSError, ValueError, TypeError): pass
     records = sorted(rows.values(), key=lambda r:(not r['historical'], r['at'] or ''), reverse=True)
     # Deleted rows never take a place among the 100 shown; actions and «Вернуть» still see them.
-    shown = [row for row in records if not row.get('hidden')]
+    # Mark 2026-11-02 «не забирай дубли»: the same document shows once; the sorter still sees copies.
+    shown = [row for row in records if not row.get('hidden') and not row.get('duplicate')]
     total = len(shown)
-    records = shown[:100] + ([row for row in records if row.get('hidden')] if include_paths else [])
+    records = shown[:100] + ([row for row in records if row.get('hidden') or row.get('duplicate')] if include_paths else [])
     for row in records:
         if not include_paths:
             row.pop('hidden', None)
+            row.pop('duplicate', None)
         path, sha = row.pop('_path', None), row.pop('_sha', None)
         if include_paths and path:
             row['_path'] = path
