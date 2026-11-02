@@ -19,6 +19,7 @@ ALLOWED_ORIGINS = {"http://127.0.0.1:8790", "https://singularity.meshly.fr"}
 TIME_RE = re.compile(r"^([01]?\d|2[0-3]):[0-5]\d$")
 MAX_BATCH = 10
 MAX_INSTRUCTION = 300
+MAX_POST_TEXT = 3000
 
 
 class MediaUnavailable(RuntimeError):
@@ -85,9 +86,12 @@ def overview(*, home: Path | None = None) -> dict:
         status, news = call("GET", "/media-control/news", home=home)
         if status != 200:
             return {"state": "unavailable", "reason": f"news_http_{status}"}
+        # Today's queue is optional: an older news service without it still works.
+        status, today = call("GET", "/media-control/today", home=home)
     except MediaUnavailable as error:
         return {"state": "not_configured" if str(error) == "not_configured" else "unavailable"}
-    return {"state": "ready", "schedule": schedule, "news": news.get("items", [])}
+    return {"state": "ready", "schedule": schedule, "news": news.get("items", []),
+            "today": today if status == 200 else None}
 
 
 def save_schedule(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
@@ -115,6 +119,16 @@ def rewrite(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
         raise ValueError("invalid_instruction")
     return call("POST", f"/media-control/candidates/{candidate_id}/rewrite",
                 {"instruction": instruction}, timeout=240, home=home)
+
+
+def edit(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """Save the owner's own wording for a prepared draft."""
+    candidate_id = str(uuid.UUID(str(body.get("candidate_id", ""))))
+    text = body.get("text")
+    if not isinstance(text, str) or not 1 <= len(text.strip()) <= MAX_POST_TEXT:
+        raise ValueError("invalid_text")
+    return call("POST", f"/media-control/candidates/{candidate_id}/text",
+                {"text": text.strip()}, home=home)
 
 
 def send_batch(body: dict, *, home: Path | None = None) -> tuple[int, dict]:

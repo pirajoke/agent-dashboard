@@ -3785,6 +3785,19 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-post-foot .media-rewrite-status.is-bad { color: var(--mm-danger); }
 .media-post.is-busy .media-post-text { opacity: .5; }
 .media-post.is-removed .media-rewrite { display: none; }
+.media-edit { display: grid; gap: 8px; padding: 10px 12px 12px; }
+.media-main { display: grid; gap: 18px; min-width: 0; }
+.media-today-panel .media-posts-preview { margin-top: 4px; }
+.media-post-head .media-chip { margin-left: auto; align-self: flex-start; }
+.media-post.is-locked .media-post-text { max-height: 8em; color: var(--mm-muted); }
+.media-post-locked { margin: 0; padding: 8px 14px 12px; color: var(--mm-muted); font-size: 12px; }
+.media-post-foot .media-send-now { min-height: 36px; padding: 6px 16px; font-size: 13px !important; }
+.media-edit[hidden], .media-post.is-editing .media-post-text, .media-post.is-editing .media-rewrite, .media-post.is-editing [data-media-edit] { display: none; }
+.media-edit textarea { width: 100%; min-height: 18em; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; }
+.media-edit textarea:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.media-edit-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.media-edit-actions small { margin-right: auto; color: var(--mm-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.media-edit-actions small.is-bad { color: var(--mm-danger); }
 .media-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
 .media-slots li { position: relative; display: flex; align-items: center; justify-content: center; min-height: 52px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-background); font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .media-slots li.is-new { border-style: dashed; border-color: var(--mm-accent); color: var(--mm-accent); }
@@ -6120,6 +6133,17 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       </div>
 
       <div class="media-layout">
+        <div class="media-main">
+        <article class="media-panel media-today-panel" id="media-today" aria-labelledby="media-today-title" hidden>
+          <header class="media-panel-head">
+            <span class="media-tile media-tile-queue" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-tasks"/></svg></span>
+            <div>
+              <h3 id="media-today-title">Сегодня в LinkedIn</h3>
+              <p id="media-today-note"></p>
+            </div>
+          </header>
+          <ol class="media-posts-preview" id="media-today-list"></ol>
+        </article>
         <article class="media-panel media-news-panel" aria-labelledby="media-news-title">
           <header class="media-panel-head">
             <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
@@ -6146,6 +6170,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
             </div>
           </div>
         </article>
+        </div>
 
         <div class="media-side">
           <article class="media-panel" aria-labelledby="media-slots-title">
@@ -10236,11 +10261,12 @@ function mediaRenderHero(schedule) {
 function mediaRender(data) {
   const schedule = data.schedule || {};
   mediaRenderHero(schedule);
+  mediaRenderToday(data.today);
   mediaSavedSlots = [...(schedule.slots || [])];
   mediaSlots = [...mediaSavedSlots];
   mediaRenderSlots();
   document.getElementById('media-mode-note').textContent = schedule.mode === 'owner_slots'
-    ? 'Время Парижа. К каждому слоту бот за 1,5 часа берёт самую свежую новость.'
+    ? 'Время Парижа. К каждому слоту бот берёт самую свежую новость и передаёт её в Buffer за 15 минут.'
     : 'Сейчас время задаёт Buffer. Добавь своё, и посты пойдут по нему.';
   const slots = schedule.upcoming_slots || [];
   document.getElementById('media-upcoming').innerHTML = slots.length
@@ -10309,19 +10335,29 @@ function mediaTitle(id) {
   return (mediaNews.find(item => item.id === id) || {}).title || '';
 }
 
-function mediaPostCard(position, text, title) {
-  return `<li class="media-post" data-review="${position}">
-    <div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>${mediaEsc(title)}</small></div></div>
+function mediaPostCard(position, text, title, options = {}) {
+  const today = Boolean(options.today);
+  const key = today ? `t${position}` : position;
+  const foot = today
+    ? `<button type="button" class="media-ghost" data-media-edit>Изменить</button><button type="button" class="media-primary media-send-now" data-media-send-now>Отправить сейчас</button>`
+    : `<button type="button" class="media-ghost" data-media-edit>Изменить</button><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button>`;
+  return `<li class="media-post" ${today ? `data-today="${position}"` : `data-review="${position}"`}>
+    <div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>${mediaEsc(title)}</small></div>${options.badge ? `<span class="media-chip ${options.badgeClass || ''}">${mediaEsc(options.badge)}</span>` : ''}</div>
     <pre class="media-post-text">${mediaEsc(text)}</pre>
     <div class="media-rewrite">
       <div class="media-rewrite-chips" role="group" aria-label="Быстрые правки">${MEDIA_REWRITE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
       <form class="media-rewrite-form" data-media-rewrite-form="${position}">
-        <label class="media-sr" for="media-ask-${position}">Что поменять в посте</label>
-        <input id="media-ask-${position}" maxlength="300" autocomplete="off" placeholder="Что поменять? Например: короче, без цифр">
+        <label class="media-sr" for="media-ask-${key}">Что поменять в посте</label>
+        <input id="media-ask-${key}" maxlength="300" autocomplete="off" placeholder="Что поменять? Например: короче, без цифр">
         <button type="submit" class="media-ghost">Переделать</button>
       </form>
     </div>
-    <div class="media-post-foot"><span class="media-rewrite-status" aria-live="polite"></span><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button></div>
+    <div class="media-edit" hidden>
+      <label class="media-sr" for="media-edit-${key}">Текст поста</label>
+      <textarea id="media-edit-${key}" maxlength="3000" spellcheck="true"></textarea>
+      <div class="media-edit-actions"><small aria-live="polite"></small><button type="button" class="media-ghost" data-media-edit-cancel>Отмена</button><button type="button" class="media-ghost" data-media-edit-save>Сохранить</button></div>
+    </div>
+    <div class="media-post-foot"><span class="media-rewrite-status" aria-live="polite"></span>${foot}</div>
   </li>`;
 }
 
@@ -10331,9 +10367,63 @@ const MEDIA_REWRITE_CHIPS = [
   ['Меньше эмодзи', 'Оставь не больше двух эмодзи.'],
 ];
 
-async function mediaRewrite(position, instruction) {
-  const entry = mediaReview[position];
-  const card = document.querySelector(`#media-review-list [data-review="${position}"]`);
+let mediaToday = [];
+
+function mediaEntryOf(card) {
+  return card.dataset.today !== undefined ? mediaToday[Number(card.dataset.today)] : mediaReview[Number(card.dataset.review)];
+}
+
+function mediaEditCount(card) {
+  const area = card.querySelector('.media-edit textarea');
+  const count = card.querySelector('.media-edit-actions small');
+  count.className = area.value.length > 3000 ? 'is-bad' : '';
+  count.textContent = `${area.value.length} / 3000`;
+}
+
+function mediaEditOpen(card, open) {
+  const area = card.querySelector('.media-edit textarea');
+  card.classList.toggle('is-editing', open);
+  card.querySelector('.media-edit').hidden = !open;
+  if (open) {
+    area.value = card.querySelector('.media-post-text').textContent;
+    mediaEditCount(card);
+    area.focus();
+  } else {
+    card.querySelector('[data-media-edit]').focus();
+  }
+}
+
+async function mediaEditSave(card) {
+  const entry = mediaEntryOf(card);
+  const area = card.querySelector('.media-edit textarea');
+  const status = card.querySelector('.media-edit-actions small');
+  const text = area.value.trim();
+  if (!entry || !text || text.length > 3000 || card.classList.contains('is-busy')) return;
+  const buttons = [...card.querySelectorAll('.media-edit button')];
+  card.classList.add('is-busy');
+  card.setAttribute('aria-busy', 'true');
+  buttons.forEach(button => { button.disabled = true; });
+  status.textContent = 'Сохраняю…';
+  try {
+    const data = await mediaPost('edit', { candidate_id: entry.candidate_id, text });
+    if (!data.text || !data.preview) throw new Error('пост уже не черновик');
+    entry.preview = data.preview;
+    card.querySelector('.media-post-text').textContent = data.text;
+    mediaEditOpen(card, false);
+    card.querySelector('.media-rewrite-status').className = 'media-rewrite-status';
+    card.querySelector('.media-rewrite-status').textContent = 'Сохранено. Отправится этот текст.';
+  } catch (error) {
+    status.className = 'is-bad';
+    status.textContent = error.status === 409 ? 'Пост уже отправлен или изменён. Обнови вкладку.' : `Не сохранилось: ${error.message}`;
+  } finally {
+    card.classList.remove('is-busy');
+    card.removeAttribute('aria-busy');
+    buttons.forEach(button => { button.disabled = false; });
+  }
+}
+
+async function mediaRewrite(card, instruction) {
+  const entry = card && mediaEntryOf(card);
   instruction = (instruction || '').trim().slice(0, 300);
   if (!entry || !card || !instruction || card.classList.contains('is-busy')) return;
   const status = card.querySelector('.media-rewrite-status');
@@ -10407,6 +10497,10 @@ async function mediaSend() {
     document.getElementById('media-news-status').textContent = 'Дождись, пока пост переделается, потом отправляй.';
     return;
   }
+  if (document.querySelector('#media-review-list .media-post.is-editing:not(.is-removed)')) {
+    document.getElementById('media-news-status').textContent = 'Сохрани или отмени правку поста, потом отправляй.';
+    return;
+  }
   const send = document.getElementById('media-send');
   const status = document.getElementById('media-news-status');
   send.disabled = true;
@@ -10425,6 +10519,94 @@ async function mediaSend() {
     status.textContent = `Не удалось подтвердить отправку (${error.message}). Обнови вкладку и проверь очередь, повторять вслепую не нужно.`;
   } finally {
     send.disabled = false;
+  }
+}
+
+function mediaBindPostList(list) {
+  if (!list) return;
+  list.addEventListener('submit', event => {
+    const form = event.target.closest('[data-media-rewrite-form]');
+    if (!form) return;
+    event.preventDefault();
+    mediaRewrite(form.closest('.media-post'), form.querySelector('input').value);
+  });
+  list.addEventListener('input', event => {
+    const card = event.target.closest('.media-edit') && event.target.closest('.media-post');
+    if (card) mediaEditCount(card);
+  });
+  list.addEventListener('keydown', event => {
+    const card = event.target.closest('.media-edit') && event.target.closest('.media-post');
+    if (!card) return;
+    if (event.key === 'Escape') mediaEditOpen(card, false);
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); mediaEditSave(card); }
+  });
+  list.addEventListener('click', event => {
+    const card = event.target.closest('.media-post');
+    if (!card) return;
+    if (event.target.closest('[data-media-edit]')) { mediaEditOpen(card, true); return; }
+    if (event.target.closest('[data-media-edit-cancel]')) { mediaEditOpen(card, false); return; }
+    if (event.target.closest('[data-media-edit-save]')) { mediaEditSave(card); return; }
+    if (event.target.closest('[data-media-send-now]')) { mediaSendNow(card); return; }
+    const ask = event.target.closest('[data-media-rewrite]');
+    if (ask) { mediaRewrite(card, ask.dataset.mediaRewrite); return; }
+    const index = event.target.closest('[data-media-toggle]')?.dataset.mediaToggle;
+    if (index === undefined) return;
+    const item = mediaReview[Number(index)];
+    item.removed = !item.removed;
+    event.target.closest('button').textContent = item.removed ? 'Вернуть' : 'Убрать';
+    card.classList.toggle('is-removed', item.removed);
+    mediaUpdateSend();
+  });
+}
+
+function mediaRenderToday(today) {
+  const panel = document.getElementById('media-today');
+  const list = document.getElementById('media-today-list');
+  if (!today) { panel.hidden = true; mediaToday = []; return; }
+  panel.hidden = false;
+  const minutes = Number(today.handoff_minutes) || 15;
+  document.getElementById('media-today-note').textContent = `Каждый пост уходит в Buffer за ${minutes} минут до своего времени. До этого его можно изменить или отправить сразу.`;
+  mediaToday = (today.drafts || []).map(item => ({ candidate_id: item.id, preview: item.preview }));
+  const drafts = (today.drafts || []).map((item, index) => mediaPostCard(index, item.text, item.title, {
+    today: true,
+    badge: item.next_slot ? `следующий · ${mediaTime(item.next_slot)}` : 'в запасе',
+    badgeClass: item.next_slot ? 'is-accent' : '',
+  }));
+  const queued = (today.queued || []).map(item => {
+    const [label, chip] = MEDIA_STATES[item.state] || [item.state, ''];
+    return `<li class="media-post is-locked">
+      <div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>${mediaEsc(item.title)}</small></div><span class="media-chip ${chip}">${mediaEsc(label)} · ${mediaEsc(mediaTime(item.due_at))}</span></div>
+      <pre class="media-post-text">${mediaEsc(item.text || '')}</pre>
+      <p class="media-post-locked">Уже в Buffer: выйдет в ${mediaEsc(mediaTime(item.due_at))}. Здесь его больше не изменить.</p>
+    </li>`;
+  });
+  list.innerHTML = [...queued, ...drafts].join('')
+    || '<li class="media-empty">На сегодня готовых постов нет. Как только бот опубликует новость в канале, её пост появится здесь.</li>';
+}
+
+async function mediaSendNow(card) {
+  const entry = mediaEntryOf(card);
+  if (!entry || card.classList.contains('is-busy') || card.classList.contains('is-editing')) return;
+  const status = card.querySelector('.media-rewrite-status');
+  const button = card.querySelector('[data-media-send-now]');
+  card.classList.add('is-busy');
+  card.setAttribute('aria-busy', 'true');
+  button.disabled = true;
+  status.className = 'media-rewrite-status';
+  status.textContent = 'Отправляю…';
+  try {
+    const data = await mediaPost('send-batch', { items: [{ candidate_id: entry.candidate_id, preview: entry.preview }] });
+    const result = (data.items || [])[0] || {};
+    if (result.state !== 'queued' && result.state !== 'sent') throw new Error(result.error || result.state || 'не принят');
+    status.textContent = `Отправлено. Выйдет в ${mediaTime(result.due_at)}.`;
+    setTimeout(mediaLoad, 1500);
+  } catch (error) {
+    status.className = 'media-rewrite-status is-bad';
+    status.textContent = `Не отправилось: ${error.message}. Обнови вкладку и проверь очередь.`;
+    button.disabled = false;
+  } finally {
+    card.classList.remove('is-busy');
+    card.removeAttribute('aria-busy');
   }
 }
 
@@ -10498,26 +10680,7 @@ function mediaInit() {
     }
   });
   document.getElementById('media-prepare').addEventListener('click', mediaPrepare);
-  document.getElementById('media-review-list').addEventListener('submit', event => {
-    const form = event.target.closest('[data-media-rewrite-form]');
-    if (!form) return;
-    event.preventDefault();
-    mediaRewrite(Number(form.dataset.mediaRewriteForm), form.querySelector('input').value);
-  });
-  document.getElementById('media-review-list').addEventListener('click', event => {
-    const ask = event.target.closest('[data-media-rewrite]');
-    if (ask) {
-      mediaRewrite(Number(ask.closest('[data-review]').dataset.review), ask.dataset.mediaRewrite);
-      return;
-    }
-    const index = event.target.closest('[data-media-toggle]')?.dataset.mediaToggle;
-    if (index === undefined) return;
-    const item = mediaReview[Number(index)];
-    item.removed = !item.removed;
-    event.target.closest('button').textContent = item.removed ? 'Вернуть' : 'Убрать';
-    event.target.closest('li').classList.toggle('is-removed', item.removed);
-    mediaUpdateSend();
-  });
+  ['media-review-list', 'media-today-list'].forEach(id => mediaBindPostList(document.getElementById(id)));
   document.getElementById('media-send').addEventListener('click', mediaSend);
   document.getElementById('media-cancel').addEventListener('click', () => {
     mediaReview = [];

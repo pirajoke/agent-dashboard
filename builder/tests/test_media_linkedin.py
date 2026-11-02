@@ -53,12 +53,21 @@ class ForwardingTests(unittest.TestCase):
 
         def fake(method, path, body=None, **kwargs):
             calls.append((method, path))
+            if path.endswith("today"):
+                return today_reply
             return 200, {"slots": ["09:00"]} if path.endswith("schedule") else {"items": [{"id": "x"}]}
 
+        today_reply = (200, {"drafts": [{"id": "d"}], "queued": []})
         with patch.object(media_linkedin, "call", side_effect=fake):
             result = media_linkedin.overview()
-        self.assertEqual(result, {"state": "ready", "schedule": {"slots": ["09:00"]}, "news": [{"id": "x"}]})
-        self.assertEqual(calls, [("GET", "/media-control/schedule"), ("GET", "/media-control/news")])
+        self.assertEqual(result, {"state": "ready", "schedule": {"slots": ["09:00"]}, "news": [{"id": "x"}],
+                                  "today": {"drafts": [{"id": "d"}], "queued": []}})
+        self.assertEqual(calls, [("GET", "/media-control/schedule"), ("GET", "/media-control/news"),
+                                 ("GET", "/media-control/today")])
+        # An older news service without /today still gives the rest of the tab.
+        today_reply = (404, {})
+        with patch.object(media_linkedin, "call", side_effect=fake):
+            self.assertIsNone(media_linkedin.overview()["today"])
 
     def test_inputs_are_validated_before_forwarding(self):
         with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
@@ -78,6 +87,20 @@ class ForwardingTests(unittest.TestCase):
             media_linkedin.send_batch({"items": [
                 {"candidate_id": "22222222-2222-4222-8222-222222222222", "preview": {"signature": "s"}}]})
             self.assertEqual(call.call_args.args[:2], ("POST", "/media-control/send-batch"))
+
+    def test_edit_forwards_the_owner_text_within_limits(self):
+        cid = "44444444-4444-4444-8444-444444444444"
+        with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
+            for bad in ({"candidate_id": "../x", "text": "t"},
+                        {"candidate_id": cid, "text": "  \n "},
+                        {"candidate_id": cid, "text": "x" * 3001},
+                        {"candidate_id": cid, "text": None}):
+                with self.assertRaises(ValueError):
+                    media_linkedin.edit(bad)
+            call.assert_not_called()
+            media_linkedin.edit({"candidate_id": cid, "text": "  🤖 Title\n\n• Fact  "})
+            self.assertEqual(call.call_args.args,
+                             ("POST", f"/media-control/candidates/{cid}/text", {"text": "🤖 Title\n\n• Fact"}))
 
     def test_rewrite_forwards_a_clean_bounded_instruction(self):
         cid = "33333333-3333-4333-8333-333333333333"
@@ -133,6 +156,12 @@ class ServerTests(unittest.TestCase):
                                          body={"article_id": "nope"})
         handler.do_POST()
         self.assertEqual(response["status"], 400)
+        handler, response = self.handler(owner=False, method="POST", path="/api/media/linkedin/edit",
+                                         body={"candidate_id": "33333333-3333-4333-8333-333333333333", "text": "t"})
+        with patch.object(media_linkedin, "call") as call:
+            handler.do_POST()
+            call.assert_not_called()
+        self.assertEqual(response["status"], 401)
         rewrite = {"candidate_id": "33333333-3333-4333-8333-333333333333", "instruction": "короче"}
         handler, response = self.handler(owner=False, method="POST", path="/api/media/linkedin/rewrite",
                                          body=rewrite)
@@ -152,7 +181,7 @@ class PageTests(unittest.TestCase):
         self.assertIn("aria-controls=\"section-media\"", PAGE)
         self.assertIn("onclick=\"showSection('media')\"", PAGE)
         self.assertIn("if (name === 'media') setTimeout(mediaLoad, 0);", PAGE)
-        for element in ("media-slots", "media-add-form", "media-save-slots", "media-upcoming",
+        for element in ("media-today", "media-today-list", "media-slots", "media-add-form", "media-save-slots", "media-upcoming",
                         "media-posts", "media-news", "media-prepare", "media-review", "media-send"):
             self.assertIn(f'id="{element}"', PAGE)
         self.assertIn("/api/media/linkedin", PAGE)

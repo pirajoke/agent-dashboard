@@ -80,6 +80,7 @@ MEDIA_LINKEDIN_ACTIONS = {
     "/api/media/linkedin/schedule": lambda body: media_linkedin.save_schedule(body),
     "/api/media/linkedin/preview": lambda body: media_linkedin.preview(body),
     "/api/media/linkedin/rewrite": lambda body: media_linkedin.rewrite(body),
+    "/api/media/linkedin/edit": lambda body: media_linkedin.edit(body),
     "/api/media/linkedin/send-batch": lambda body: media_linkedin.send_batch(body),
 }
 CAMPUS_ARCHIVE_FILE = HOME / ".agent-bridge" / "campus-archive.json"
