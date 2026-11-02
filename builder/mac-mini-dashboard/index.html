@@ -8631,8 +8631,9 @@ function showSection(name) {
   else window.dispatchEvent(new Event('context-lock'));
 }
 
-// MAIN MANAGER is the first screen. «По дням» was removed on 2026-10-14 (Mark: MAIN MANAGER already says
-// what it said), so its old links (?tab=today) open MAIN MANAGER.
+// Mark 2026-11-02: a fresh load or refresh opens the first item of the menu, in his saved order
+// (drag-and-drop above), not always MAIN MANAGER. A ?tab= link still opens its own tab, and the old
+// «По дням» links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
 if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'growth'].includes(INITIAL_SECTION)) {
@@ -8640,7 +8641,8 @@ if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms'
   const agentsView = new URLSearchParams(window.location.search).get('view');
   if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
 } else {
-  showSection('work');
+  const firstTab = tabOrderButtons()[0];
+  showSection(firstTab ? tabOrderRoute(firstTab) : 'work');
 }
 
 function initPixelAgentsFrame() {

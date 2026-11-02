@@ -1117,7 +1117,8 @@ let mmProjectData;
         # дизайну». MAIN MANAGER is the first screen; old «По дням» links (?tab=today) open it.
         self.assertIn('<section id="section-work" class="section active" aria-labelledby="mm-title">', html)
         self.assertIn("const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;", html)
-        self.assertIn("  showSection('work');\n}", html)
+        # Mark (2026-11-02): without ?tab= the page opens the first menu item in his saved order.
+        self.assertIn("  const firstTab = tabOrderButtons()[0];\n  showSection(firstTab ? tabOrderRoute(firstTab) : 'work');\n}", html)
         # One app shell: the only primary navigation sits in the sidebar, the sections in the page.
         primary_nav = '<nav class="nav-pills cc-main-nav" aria-label="Command Center sections">'
         self.assertEqual(html.count(primary_nav), 1)
