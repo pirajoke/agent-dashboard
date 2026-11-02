@@ -79,6 +79,20 @@ class ForwardingTests(unittest.TestCase):
                 {"candidate_id": "22222222-2222-4222-8222-222222222222", "preview": {"signature": "s"}}]})
             self.assertEqual(call.call_args.args[:2], ("POST", "/media-control/send-batch"))
 
+    def test_edit_forwards_the_owner_text_within_limits(self):
+        cid = "44444444-4444-4444-8444-444444444444"
+        with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
+            for bad in ({"candidate_id": "../x", "text": "t"},
+                        {"candidate_id": cid, "text": "  \n "},
+                        {"candidate_id": cid, "text": "x" * 3001},
+                        {"candidate_id": cid, "text": None}):
+                with self.assertRaises(ValueError):
+                    media_linkedin.edit(bad)
+            call.assert_not_called()
+            media_linkedin.edit({"candidate_id": cid, "text": "  🤖 Title\n\n• Fact  "})
+            self.assertEqual(call.call_args.args,
+                             ("POST", f"/media-control/candidates/{cid}/text", {"text": "🤖 Title\n\n• Fact"}))
+
     def test_rewrite_forwards_a_clean_bounded_instruction(self):
         cid = "33333333-3333-4333-8333-333333333333"
         with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
@@ -133,6 +147,12 @@ class ServerTests(unittest.TestCase):
                                          body={"article_id": "nope"})
         handler.do_POST()
         self.assertEqual(response["status"], 400)
+        handler, response = self.handler(owner=False, method="POST", path="/api/media/linkedin/edit",
+                                         body={"candidate_id": "33333333-3333-4333-8333-333333333333", "text": "t"})
+        with patch.object(media_linkedin, "call") as call:
+            handler.do_POST()
+            call.assert_not_called()
+        self.assertEqual(response["status"], 401)
         rewrite = {"candidate_id": "33333333-3333-4333-8333-333333333333", "instruction": "короче"}
         handler, response = self.handler(owner=False, method="POST", path="/api/media/linkedin/rewrite",
                                          body=rewrite)

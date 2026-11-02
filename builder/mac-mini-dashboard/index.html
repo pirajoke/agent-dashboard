@@ -3785,6 +3785,13 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-post-foot .media-rewrite-status.is-bad { color: var(--mm-danger); }
 .media-post.is-busy .media-post-text { opacity: .5; }
 .media-post.is-removed .media-rewrite { display: none; }
+.media-edit { display: grid; gap: 8px; padding: 10px 12px 12px; }
+.media-edit[hidden], .media-post.is-editing .media-post-text, .media-post.is-editing .media-rewrite, .media-post.is-editing [data-media-edit] { display: none; }
+.media-edit textarea { width: 100%; min-height: 18em; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; }
+.media-edit textarea:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.media-edit-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.media-edit-actions small { margin-right: auto; color: var(--mm-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.media-edit-actions small.is-bad { color: var(--mm-danger); }
 .media-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
 .media-slots li { position: relative; display: flex; align-items: center; justify-content: center; min-height: 52px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-background); font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .media-slots li.is-new { border-style: dashed; border-color: var(--mm-accent); color: var(--mm-accent); }
@@ -10191,7 +10198,12 @@ function mediaPostCard(position, text, title) {
         <button type="submit" class="media-ghost">Переделать</button>
       </form>
     </div>
-    <div class="media-post-foot"><span class="media-rewrite-status" aria-live="polite"></span><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button></div>
+    <div class="media-edit" hidden>
+      <label class="media-sr" for="media-edit-${position}">Текст поста</label>
+      <textarea id="media-edit-${position}" maxlength="3000" spellcheck="true"></textarea>
+      <div class="media-edit-actions"><small aria-live="polite"></small><button type="button" class="media-ghost" data-media-edit-cancel>Отмена</button><button type="button" class="media-ghost" data-media-edit-save>Сохранить</button></div>
+    </div>
+    <div class="media-post-foot"><span class="media-rewrite-status" aria-live="polite"></span><button type="button" class="media-ghost" data-media-edit>Изменить</button><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button></div>
   </li>`;
 }
 
@@ -10200,6 +10212,55 @@ const MEDIA_REWRITE_CHIPS = [
   ['Проще', 'Проще и живее, как человек пишет коллеге, без канцелярита.'],
   ['Меньше эмодзи', 'Оставь не больше двух эмодзи.'],
 ];
+
+function mediaEditCount(card) {
+  const area = card.querySelector('.media-edit textarea');
+  const count = card.querySelector('.media-edit-actions small');
+  count.className = area.value.length > 3000 ? 'is-bad' : '';
+  count.textContent = `${area.value.length} / 3000`;
+}
+
+function mediaEditOpen(card, open) {
+  const area = card.querySelector('.media-edit textarea');
+  card.classList.toggle('is-editing', open);
+  card.querySelector('.media-edit').hidden = !open;
+  if (open) {
+    area.value = card.querySelector('.media-post-text').textContent;
+    mediaEditCount(card);
+    area.focus();
+  } else {
+    card.querySelector('[data-media-edit]').focus();
+  }
+}
+
+async function mediaEditSave(card) {
+  const entry = mediaReview[Number(card.dataset.review)];
+  const area = card.querySelector('.media-edit textarea');
+  const status = card.querySelector('.media-edit-actions small');
+  const text = area.value.trim();
+  if (!entry || !text || text.length > 3000 || card.classList.contains('is-busy')) return;
+  const buttons = [...card.querySelectorAll('.media-edit button')];
+  card.classList.add('is-busy');
+  card.setAttribute('aria-busy', 'true');
+  buttons.forEach(button => { button.disabled = true; });
+  status.textContent = 'Сохраняю…';
+  try {
+    const data = await mediaPost('edit', { candidate_id: entry.candidate_id, text });
+    if (!data.text || !data.preview) throw new Error('пост уже не черновик');
+    entry.preview = data.preview;
+    card.querySelector('.media-post-text').textContent = data.text;
+    mediaEditOpen(card, false);
+    card.querySelector('.media-rewrite-status').className = 'media-rewrite-status';
+    card.querySelector('.media-rewrite-status').textContent = 'Сохранено. Отправится этот текст.';
+  } catch (error) {
+    status.className = 'is-bad';
+    status.textContent = error.status === 409 ? 'Пост уже отправлен или изменён. Обнови вкладку.' : `Не сохранилось: ${error.message}`;
+  } finally {
+    card.classList.remove('is-busy');
+    card.removeAttribute('aria-busy');
+    buttons.forEach(button => { button.disabled = false; });
+  }
+}
 
 async function mediaRewrite(position, instruction) {
   const entry = mediaReview[position];
@@ -10275,6 +10336,10 @@ async function mediaSend() {
   if (!chosen.length) return;
   if (document.querySelector('#media-review-list .media-post.is-busy')) {
     document.getElementById('media-news-status').textContent = 'Дождись, пока пост переделается, потом отправляй.';
+    return;
+  }
+  if (document.querySelector('#media-review-list .media-post.is-editing:not(.is-removed)')) {
+    document.getElementById('media-news-status').textContent = 'Сохрани или отмени правку поста, потом отправляй.';
     return;
   }
   const send = document.getElementById('media-send');
@@ -10374,7 +10439,21 @@ function mediaInit() {
     event.preventDefault();
     mediaRewrite(Number(form.dataset.mediaRewriteForm), form.querySelector('input').value);
   });
+  document.getElementById('media-review-list').addEventListener('input', event => {
+    const card = event.target.closest('.media-edit') && event.target.closest('[data-review]');
+    if (card) mediaEditCount(card);
+  });
+  document.getElementById('media-review-list').addEventListener('keydown', event => {
+    const card = event.target.closest('.media-edit') && event.target.closest('[data-review]');
+    if (!card) return;
+    if (event.key === 'Escape') mediaEditOpen(card, false);
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); mediaEditSave(card); }
+  });
   document.getElementById('media-review-list').addEventListener('click', event => {
+    const editCard = event.target.closest('[data-review]');
+    if (editCard && event.target.closest('[data-media-edit]')) { mediaEditOpen(editCard, true); return; }
+    if (editCard && event.target.closest('[data-media-edit-cancel]')) { mediaEditOpen(editCard, false); return; }
+    if (editCard && event.target.closest('[data-media-edit-save]')) { mediaEditSave(editCard); return; }
     const ask = event.target.closest('[data-media-rewrite]');
     if (ask) {
       mediaRewrite(Number(ask.closest('[data-review]').dataset.review), ask.dataset.mediaRewrite);
