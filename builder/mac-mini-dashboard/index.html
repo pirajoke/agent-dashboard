@@ -3787,6 +3787,22 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-post.is-removed .media-rewrite { display: none; }
 .media-edit { display: grid; gap: 8px; padding: 10px 12px 12px; }
 .media-main { display: grid; gap: 18px; min-width: 0; }
+.media-comment-form { display: grid; gap: 10px; margin-top: 12px; }
+.media-comment-form input, .media-comment-form textarea, .media-comment-card textarea { width: 100%; box-sizing: border-box; padding: 8px 14px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; }
+.media-comment-form input { min-height: 40px; border-radius: 999px; }
+.media-comment-form input:focus-visible, .media-comment-form textarea:focus-visible, .media-comment-card textarea:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.media-comment-more summary { cursor: pointer; color: var(--mm-muted); font-size: 13px; }
+.media-comment-more textarea { margin-top: 8px; resize: vertical; }
+.media-comment-form-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.media-comment-form-foot .media-rewrite-status { margin-right: auto; color: var(--mm-muted); font-size: 12px; }
+.media-comment-form-foot .media-rewrite-status.is-bad { color: var(--mm-danger); }
+.media-comment-source { margin: 0; padding: 10px 14px 0; color: var(--mm-muted); font-size: 13px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.media-comment-link { display: inline-block; margin: 4px 14px 0; color: var(--mm-accent); font-size: 13px; font-weight: 650; }
+.media-comment-variants { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px 0; }
+.media-comment-variants .media-ghost { min-height: 30px; padding: 3px 12px; }
+.media-comment-variants .media-ghost[aria-pressed="true"] { border-color: var(--mm-accent); color: var(--mm-accent); }
+.media-comment-card textarea { display: block; width: calc(100% - 24px); min-height: 6em; margin: 10px 12px 0; resize: vertical; }
+.media-comment-card .media-post-foot { flex-wrap: wrap; }
 .media-today-panel .media-posts-preview { margin-top: 4px; }
 .media-post-head .media-chip { margin-left: auto; align-self: flex-start; }
 .media-post.is-locked .media-post-text { max-height: 8em; color: var(--mm-muted); }
@@ -6143,6 +6159,26 @@ button.cc-refresh:hover { background: var(--mm-selection); }
             </div>
           </header>
           <ol class="media-posts-preview" id="media-today-list"></ol>
+        </article>
+        <article class="media-panel media-comments-panel" id="media-comments" aria-labelledby="media-comments-title" hidden>
+          <header class="media-panel-head">
+            <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
+            <div>
+              <h3 id="media-comments-title">Комментарии в LinkedIn</h3>
+              <p id="media-comments-note">Вставь ссылку на чужой пост по нашей теме. Бот предложит 3 варианта комментария от GRACHEV AI STUDIO, ничего не отправляя сам.</p>
+            </div>
+          </header>
+          <form class="media-comment-form" id="media-comment-form">
+            <label class="media-sr" for="media-comment-url">Ссылка на пост LinkedIn</label>
+            <input id="media-comment-url" type="url" inputmode="url" autocomplete="off" required placeholder="https://www.linkedin.com/feed/update/…">
+            <details class="media-comment-more">
+              <summary>Пост не читается? Вставь его текст</summary>
+              <label class="media-sr" for="media-comment-source">Текст поста</label>
+              <textarea id="media-comment-source" maxlength="8000" rows="4" placeholder="Скопируй текст поста из LinkedIn"></textarea>
+            </details>
+            <div class="media-comment-form-foot"><span class="media-rewrite-status" id="media-comment-status" aria-live="polite"></span><button type="submit" class="media-primary" id="media-comment-create">Предложить комментарии</button></div>
+          </form>
+          <ol class="media-posts-preview" id="media-comments-list"></ol>
         </article>
         <article class="media-panel media-news-panel" aria-labelledby="media-news-title">
           <header class="media-panel-head">
@@ -10264,6 +10300,7 @@ function mediaRender(data) {
   const schedule = data.schedule || {};
   mediaRenderHero(schedule);
   mediaRenderToday(data.today);
+  mediaRenderComments(data.comments);
   mediaSavedSlots = [...(schedule.slots || [])];
   mediaSlots = [...mediaSavedSlots];
   mediaRenderSlots();
@@ -10612,8 +10649,156 @@ async function mediaSendNow(card) {
   }
 }
 
+// ── Reviewed LinkedIn comments (Mark 2026-11-02) ──
+// Drafts only; a comment leaves only on the owner's «Отправить» with the exact reviewed text.
+const MEDIA_COMMENT_STATES = {
+  draft: ['черновик', ''],
+  sending: ['отправляется', 'is-info'],
+  sent: ['опубликован', 'is-ok'],
+  ambiguous: ['проверь в LinkedIn', 'is-warn'],
+  manual: ['опубликован вручную', 'is-ok'],
+};
+const MEDIA_COMMENT_CHIPS = [
+  ['Короче', 'Make it shorter, one sentence'],
+  ['Проще', 'Simpler, more conversational words'],
+  ['Вопросом', 'Turn it into one precise question to the author'],
+  ['Другой угол', 'Take a different angle than the current draft'],
+];
+let mediaComments = [];
+let mediaCommentsSend = false;
+
+function mediaRenderComments(data) {
+  const panel = document.getElementById('media-comments');
+  if (!data) { panel.hidden = true; return; }
+  panel.hidden = false;
+  mediaCommentsSend = Boolean(data.send_enabled);
+  mediaComments = data.items || [];
+  document.getElementById('media-comments-list').innerHTML = mediaComments.map(mediaCommentCard).join('')
+    || '<li class="media-empty">Пока пусто. Вставь ссылку на пост, под которым студии стоит высказаться.</li>';
+}
+
+function mediaCommentCard(item) {
+  const [label, chip] = MEDIA_COMMENT_STATES[item.state] || [item.state, ''];
+  const open = item.state === 'draft';
+  const canSend = open && mediaCommentsSend && item.can_send;
+  const variants = (item.variants || []).map((text, index) => `<button type="button" class="media-ghost" data-comment-variant="${index}" aria-pressed="${text === item.text}">Вариант ${index + 1}</button>`).join('');
+  const error = item.error ? `<p class="media-post-error">LinkedIn не принял: ${mediaEsc(item.error)}. Можно поправить и отправить ещё раз или опубликовать вручную.</p>` : '';
+  const foot = open
+    ? `<button type="button" class="media-ghost" data-comment-close="dismiss">Убрать</button>
+       <button type="button" class="media-ghost" data-comment-copy>Скопировать и открыть пост</button>
+       <button type="button" class="media-ghost" data-comment-close="manual">Я опубликовал</button>
+       ${canSend ? '<button type="button" class="media-primary media-send-now" data-comment-send>Отправить от студии</button>' : ''}`
+    : item.state === 'ambiguous'
+      ? '<button type="button" class="media-ghost" data-comment-copy>Открыть пост</button>'
+      : '';
+  return `<li class="media-post media-comment-card${open ? '' : ' is-locked'}" data-comment="${mediaEsc(item.id)}">
+    <div class="media-post-head"><span class="media-avatar" aria-hidden="true">GS</span><div><strong>GRACHEV AI STUDIO</strong><small>${mediaEsc(mediaAgo(item.created_at))}</small></div><span class="media-chip ${chip}">${mediaEsc(label)}</span></div>
+    <p class="media-comment-source">${mediaEsc(item.post_excerpt)}</p>
+    <a class="media-comment-link" href="${mediaEsc(item.post_url)}" target="_blank" rel="noopener noreferrer">Открыть пост в LinkedIn ↗</a>
+    ${open ? `<div class="media-comment-variants" role="group" aria-label="Варианты">${variants}</div>
+    <label class="media-sr" for="media-comment-text-${mediaEsc(item.id)}">Текст комментария</label>
+    <textarea id="media-comment-text-${mediaEsc(item.id)}" maxlength="1250" spellcheck="true">${mediaEsc(item.text)}</textarea>
+    <div class="media-rewrite">
+      <div class="media-rewrite-chips" role="group" aria-label="Быстрые правки">${MEDIA_COMMENT_CHIPS.map(([text, ask]) => `<button type="button" class="media-ghost" data-comment-rewrite="${mediaEsc(ask)}">${mediaEsc(text)}</button>`).join('')}</div>
+    </div>` : `<pre class="media-post-text">${mediaEsc(item.text)}</pre>`}
+    ${error}
+    ${item.state === 'ambiguous' ? '<p class="media-post-locked">Ответ LinkedIn не пришёл. Посмотри под постом, появился ли комментарий. Повторно бот его не отправит.</p>' : ''}
+    ${foot ? `<div class="media-post-foot"><span class="media-rewrite-status" aria-live="polite"></span>${foot}</div>` : ''}
+  </li>`;
+}
+
+function mediaCommentReplace(card, item) {
+  mediaComments = mediaComments.map(entry => entry.id === item.id ? item : entry);
+  card.outerHTML = mediaCommentCard(item);
+}
+
+async function mediaCommentSaveText(card, item) {
+  const text = card.querySelector('textarea').value.trim();
+  if (!text || text === item.text) return item;
+  return mediaPost('comment-text', { comment_id: item.id, text });
+}
+
+async function mediaCommentAction(event) {
+  const card = event.target.closest('[data-comment]');
+  const button = event.target.closest('button');
+  if (!card || !button || card.classList.contains('is-busy')) return;
+  const item = mediaComments.find(entry => entry.id === card.dataset.comment);
+  if (!item) return;
+  const status = card.querySelector('.media-rewrite-status');
+  const variant = button.dataset.commentVariant;
+  if (variant !== undefined) {
+    card.querySelector('textarea').value = item.variants[Number(variant)] || '';
+    card.querySelectorAll('[data-comment-variant]').forEach(el => el.setAttribute('aria-pressed', String(el === button)));
+    return;
+  }
+  if (button.hasAttribute('data-comment-copy')) {
+    const text = card.querySelector('textarea')?.value.trim() || item.text;
+    try { await navigator.clipboard.writeText(text); status.textContent = 'Текст скопирован. Вставь его под постом.'; } catch (_) { status.textContent = 'Скопируй текст вручную.'; }
+    window.open(item.post_url, '_blank', 'noopener');
+    return;
+  }
+  card.classList.add('is-busy');
+  card.setAttribute('aria-busy', 'true');
+  status.className = 'media-rewrite-status';
+  try {
+    let result;
+    if (button.dataset.commentRewrite) {
+      status.textContent = 'Переписываю…';
+      await mediaCommentSaveText(card, item);
+      result = await mediaPost('comment-rewrite', { comment_id: item.id, instruction: button.dataset.commentRewrite });
+    } else if (button.dataset.commentClose) {
+      result = await mediaPost('comment-close', { comment_id: item.id, action: button.dataset.commentClose });
+      if (result.state === 'dismissed') {
+        mediaComments = mediaComments.filter(entry => entry.id !== item.id);
+        card.remove();
+        return;
+      }
+    } else if (button.hasAttribute('data-comment-send')) {
+      status.textContent = 'Сохраняю и отправляю…';
+      const saved = await mediaCommentSaveText(card, item);
+      result = await mediaPost('comment-send', { comment_id: item.id, text_sha256: saved.text_sha256 });
+    } else {
+      return;
+    }
+    mediaCommentReplace(card, result);
+  } catch (error) {
+    status.className = 'media-rewrite-status is-bad';
+    status.textContent = `Не получилось: ${error.message}`;
+  } finally {
+    card.classList.remove('is-busy');
+    card.removeAttribute('aria-busy');
+  }
+}
+
+async function mediaCommentCreate(event) {
+  event.preventDefault();
+  const url = document.getElementById('media-comment-url');
+  const source = document.getElementById('media-comment-source');
+  const status = document.getElementById('media-comment-status');
+  const button = document.getElementById('media-comment-create');
+  button.disabled = true;
+  status.className = 'media-rewrite-status';
+  status.textContent = 'Читаю пост и пишу варианты…';
+  try {
+    const item = await mediaPost('comment', { url: url.value.trim(), post_text: source.value.trim() });
+    mediaComments = [item, ...mediaComments.filter(entry => entry.id !== item.id)];
+    mediaRenderComments({ send_enabled: mediaCommentsSend, items: mediaComments });
+    url.value = '';
+    source.value = '';
+    status.textContent = '';
+  } catch (error) {
+    status.className = 'media-rewrite-status is-bad';
+    status.textContent = error.message;
+    if (error.status === 422) document.querySelector('.media-comment-more').open = true;
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function mediaInit() {
   if (!document.getElementById('section-media')) return;
+  document.getElementById('media-comment-form').addEventListener('submit', mediaCommentCreate);
+  document.getElementById('media-comments-list').addEventListener('click', mediaCommentAction);
   document.getElementById('media-refresh').addEventListener('click', mediaLoad);
   document.getElementById('media-add-form').addEventListener('submit', event => {
     event.preventDefault();

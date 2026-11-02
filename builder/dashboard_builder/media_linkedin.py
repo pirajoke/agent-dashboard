@@ -20,6 +20,10 @@ TIME_RE = re.compile(r"^([01]?\d|2[0-3]):[0-5]\d$")
 MAX_BATCH = 10
 MAX_INSTRUCTION = 300
 MAX_POST_TEXT = 3000
+MAX_COMMENT = 1250
+MAX_SOURCE_TEXT = 8000
+SHA_RE = re.compile(r"^[a-f0-9]{64}$")
+LINKEDIN_POST_RE = re.compile(r"^https://([a-z]{2,3}\.|www\.)?linkedin\.com/\S{1,2000}$")
 
 
 class MediaUnavailable(RuntimeError):
@@ -88,10 +92,13 @@ def overview(*, home: Path | None = None) -> dict:
             return {"state": "unavailable", "reason": f"news_http_{status}"}
         # Today's queue is optional: an older news service without it still works.
         status, today = call("GET", "/media-control/today", home=home)
+        # Reviewed comments are optional too (news service before #73).
+        comments_status, comments = call("GET", "/media-control/comments", home=home)
     except MediaUnavailable as error:
         return {"state": "not_configured" if str(error) == "not_configured" else "unavailable"}
     return {"state": "ready", "schedule": schedule, "news": news.get("items", []),
-            "today": today if status == 200 else None}
+            "today": today if status == 200 else None,
+            "comments": comments if comments_status == 200 else None}
 
 
 def save_schedule(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
@@ -142,3 +149,55 @@ def send_batch(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
         clean.append({"candidate_id": str(uuid.UUID(str(item.get("candidate_id", "")))),
                       "preview": item["preview"]})
     return call("POST", "/media-control/send-batch", {"items": clean}, timeout=120, home=home)
+
+
+def _comment_id(body: dict) -> str:
+    return str(uuid.UUID(str(body.get("comment_id", ""))))
+
+
+def comment_create(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """Draft comments for someone else's LinkedIn post the owner picked."""
+    url = body.get("url")
+    post_text = body.get("post_text") or ""
+    if not isinstance(url, str) or not LINKEDIN_POST_RE.match(url.strip()):
+        raise ValueError("invalid_url")
+    if not isinstance(post_text, str) or len(post_text) > MAX_SOURCE_TEXT:
+        raise ValueError("invalid_post_text")
+    return call("POST", "/media-control/comments",
+                {"url": url.strip(), "post_text": post_text.strip()}, timeout=240, home=home)
+
+
+def comment_text(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    text = body.get("text")
+    if not isinstance(text, str) or not 1 <= len(text.strip()) <= MAX_COMMENT:
+        raise ValueError("invalid_text")
+    return call("POST", f"/media-control/comments/{_comment_id(body)}/text",
+                {"text": text.strip()}, home=home)
+
+
+def comment_rewrite(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    instruction = body.get("instruction")
+    if not isinstance(instruction, str):
+        raise ValueError("invalid_instruction")
+    instruction = " ".join(instruction.split())
+    if not 1 <= len(instruction) <= MAX_INSTRUCTION:
+        raise ValueError("invalid_instruction")
+    return call("POST", f"/media-control/comments/{_comment_id(body)}/rewrite",
+                {"instruction": instruction}, timeout=240, home=home)
+
+
+def comment_send(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """Send exactly the reviewed text: the news service checks this hash."""
+    digest = body.get("text_sha256")
+    if not isinstance(digest, str) or not SHA_RE.match(digest):
+        raise ValueError("invalid_text_sha256")
+    return call("POST", f"/media-control/comments/{_comment_id(body)}/send",
+                {"text_sha256": digest}, timeout=60, home=home)
+
+
+def comment_close(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """«Я опубликовал» (manual) or «Убрать» (dismiss)."""
+    action = body.get("action")
+    if action not in ("manual", "dismiss"):
+        raise ValueError("invalid_action")
+    return call("POST", f"/media-control/comments/{_comment_id(body)}/{action}", {}, home=home)
