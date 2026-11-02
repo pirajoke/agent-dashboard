@@ -55,19 +55,26 @@ class ForwardingTests(unittest.TestCase):
             calls.append((method, path))
             if path.endswith("today"):
                 return today_reply
+            if path.endswith("comments"):
+                return comments_reply
             return 200, {"slots": ["09:00"]} if path.endswith("schedule") else {"items": [{"id": "x"}]}
 
         today_reply = (200, {"drafts": [{"id": "d"}], "queued": []})
+        comments_reply = (200, {"send_enabled": False, "items": []})
         with patch.object(media_linkedin, "call", side_effect=fake):
             result = media_linkedin.overview()
         self.assertEqual(result, {"state": "ready", "schedule": {"slots": ["09:00"]}, "news": [{"id": "x"}],
-                                  "today": {"drafts": [{"id": "d"}], "queued": []}})
+                                  "today": {"drafts": [{"id": "d"}], "queued": []},
+                                  "comments": {"send_enabled": False, "items": []}})
         self.assertEqual(calls, [("GET", "/media-control/schedule"), ("GET", "/media-control/news"),
-                                 ("GET", "/media-control/today")])
-        # An older news service without /today still gives the rest of the tab.
+                                 ("GET", "/media-control/today"), ("GET", "/media-control/comments")])
+        # An older news service without /today or /comments still gives the rest of the tab.
         today_reply = (404, {})
+        comments_reply = (404, {})
         with patch.object(media_linkedin, "call", side_effect=fake):
-            self.assertIsNone(media_linkedin.overview()["today"])
+            result = media_linkedin.overview()
+        self.assertIsNone(result["today"])
+        self.assertIsNone(result["comments"])
 
     def test_inputs_are_validated_before_forwarding(self):
         with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
@@ -87,6 +94,40 @@ class ForwardingTests(unittest.TestCase):
             media_linkedin.send_batch({"items": [
                 {"candidate_id": "22222222-2222-4222-8222-222222222222", "preview": {"signature": "s"}}]})
             self.assertEqual(call.call_args.args[:2], ("POST", "/media-control/send-batch"))
+
+    def test_comment_actions_validate_before_forwarding(self):
+        cid = "55555555-5555-4555-8555-555555555555"
+        post = "https://www.linkedin.com/feed/update/urn:li:share:7391234567890123456/"
+        with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
+            for fn, bad in (
+                (media_linkedin.comment_create, {"url": "https://evil.example/x"}),
+                (media_linkedin.comment_create, {"url": "http://www.linkedin.com/feed/"}),
+                (media_linkedin.comment_create, {"url": post, "post_text": "x" * 8001}),
+                (media_linkedin.comment_text, {"comment_id": cid, "text": "x" * 1251}),
+                (media_linkedin.comment_text, {"comment_id": "../x", "text": "ok"}),
+                (media_linkedin.comment_rewrite, {"comment_id": cid, "instruction": "  "}),
+                (media_linkedin.comment_send, {"comment_id": cid, "text_sha256": "abc"}),
+                (media_linkedin.comment_close, {"comment_id": cid, "action": "send"}),
+            ):
+                with self.assertRaises(ValueError):
+                    fn(bad)
+            call.assert_not_called()
+            media_linkedin.comment_create({"url": " " + post, "post_text": " Text "})
+            self.assertEqual(call.call_args.args,
+                             ("POST", "/media-control/comments", {"url": post, "post_text": "Text"}))
+            media_linkedin.comment_send({"comment_id": cid, "text_sha256": "a" * 64})
+            self.assertEqual(call.call_args.args,
+                             ("POST", f"/media-control/comments/{cid}/send", {"text_sha256": "a" * 64}))
+            media_linkedin.comment_close({"comment_id": cid, "action": "manual"})
+            self.assertEqual(call.call_args.args[1], f"/media-control/comments/{cid}/manual")
+            media_linkedin.comment_rewrite({"comment_id": cid, "instruction": " Короче  "})
+            self.assertEqual(call.call_args.args[2], {"instruction": "Короче"})
+
+    def test_page_has_comment_panel_and_routes(self):
+        self.assertIn('id="media-comments"', PAGE)
+        self.assertIn("mediaPost('comment-send'", PAGE)
+        for path in ("comment", "comment-text", "comment-rewrite", "comment-send", "comment-close"):
+            self.assertIn(f"/api/media/linkedin/{path}", SERVER.MEDIA_LINKEDIN_ACTIONS)
 
     def test_edit_forwards_the_owner_text_within_limits(self):
         cid = "44444444-4444-4444-8444-444444444444"
