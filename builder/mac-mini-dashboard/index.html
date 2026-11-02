@@ -4691,7 +4691,19 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .cc-medic-machine.is-bad h3::before { background: var(--mm-danger); }
 .cc-medic-machine.is-off h3::before { background: var(--mm-muted); }
 .cc-medic-machine p { color: var(--mm-ink); }
-.cc-medic-machine .cc-medic-advice { color: var(--mm-muted); }
+.cc-medic-machine .cc-medic-advice, .cc-medic-history .cc-medic-advice { color: var(--mm-muted); }
+.cc-medic-history { display: grid; gap: 8px; padding-top: 4px; }
+.cc-medic-history h3 { margin: 0; font-size: 14.5px; font-weight: 700; }
+.cc-medic-history ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cc-medic-history li { display: grid; gap: 1px; padding: 8px 0; border-top: 1px solid var(--mm-line); }
+.cc-medic-when { color: var(--mm-muted); font-size: 12.5px; }
+.cc-medic-add { justify-self: start; }
+.cc-medic-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cc-medic-form[hidden] { display: none; }
+.cc-medic-form label { display: grid; gap: 4px; font-size: 13px; color: var(--mm-muted); }
+.cc-medic-form label.is-wide { grid-column: 1 / -1; }
+.cc-medic-form input, .cc-medic-form select { min-height: 40px; padding: 6px 10px; color: var(--mm-ink); font: inherit; font-size: 14px; background: var(--mm-surface); border: 1px solid var(--mm-control-line, var(--mm-line)); border-radius: 10px; }
+.cc-medic-form-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--mm-muted); }
 .cc-info-body p { margin: 0; }
 .cc-info-body dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 18px; margin: 0; }
 .cc-info-body dt { color: var(--mm-muted); }
@@ -12494,6 +12506,12 @@ function medicExam(key, title) {
   }
   const worst = [ram.level, disk.level, cpu.level].includes('bad') || (svc && svc.problems.length) ? 'bad'
     : [ram.level, disk.level, cpu.level].includes('warn') ? 'warn' : 'ok';
+  const signs = [['ram', ram.level], ['cpu', cpu.level], ['disk', disk.level]]
+    .filter(([, level]) => level === 'warn' || level === 'bad').map(([sign]) => sign);
+  if (svc && svc.problems.length) signs.push('service');
+  // Mark 2026-11-02 «помнил контекст»: the same trouble again → what helped last time on this computer.
+  const past = medicPastRepair(key, signs);
+  if (past) advice.unshift(`В прошлый раз (${medicDay(past.date)}) было похоже: ${past.problem.replace(/[.!]?$/, '.')} Помогло: ${past.fix}`);
   return { key, title, level: worst, lines, advice };
 }
 
@@ -12522,6 +12540,97 @@ function medicRender() {
 }
 setInterval(medicRender, 5000);
 
+// ─── Журнал починок ─── what broke, what was done, when. Owner only, kept on the Mac mini.
+const MEDIC_REPAIRS_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/machines/repairs`;
+const MEDIC_MACHINE_NAMES = Object.fromEntries(MEDIC_MACHINES);
+const MEDIC_SIGN_NAMES = { ram: 'память', cpu: 'процессор', disk: 'диск', service: 'сервис', network: 'связь', other: 'другое' };
+let medicRepairs = null;  // null: not loaded or not allowed; [] : empty log
+
+function medicDay(day) {
+  const date = new Date(`${day}T12:00:00Z`);
+  return Number.isNaN(date.getTime()) ? day : date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
+
+function medicPastRepair(key, signs) {
+  if (!medicRepairs || !signs.length) return null;
+  return medicRepairs.find(entry => entry.machine === key && (entry.signs || []).some(sign => signs.includes(sign))) || null;
+}
+
+async function medicLoadRepairs() {
+  if (!MEDIC_REPAIRS_API) return;
+  try {
+    const response = await fetch(MEDIC_REPAIRS_API, { headers: mmHeaders(), cache: 'no-store' });
+    const payload = response.ok ? await response.json() : null;
+    medicRepairs = payload && payload.state === 'ready' && Array.isArray(payload.entries) ? payload.entries : null;
+  } catch (_) {
+    medicRepairs = null;
+  }
+}
+medicLoadRepairs();
+setInterval(medicLoadRepairs, 5 * 60 * 1000);
+
+async function medicSaveRepair(body) {
+  if (!MEDIC_REPAIRS_API) return 'offline';
+  try {
+    const response = await fetch(MEDIC_REPAIRS_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', body: JSON.stringify(body) });
+    const payload = await response.json().catch(() => null);
+    if (response.ok && payload?.state === 'ready') { medicRepairs = payload.entries; return null; }
+    return response.status === 401 ? 'owner' : 'error';
+  } catch (_) {
+    return 'network';
+  }
+}
+
+function medicHistoryNode() {
+  const box = document.createElement('section');
+  box.className = 'cc-medic-history';
+  const h = document.createElement('h3'); h.textContent = 'История починок'; box.append(h);
+  if (medicRepairs === null) {
+    const p = document.createElement('p'); p.className = 'cc-medic-advice';
+    p.textContent = 'Журнал виден только тебе, после входа на сайт.';
+    box.append(p);
+    return box;
+  }
+  if (!medicRepairs.length) {
+    const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = 'Пока ничего не чинили.'; box.append(p);
+  }
+  const list = document.createElement('ul');
+  for (const entry of medicRepairs.slice(0, 8)) {
+    const li = document.createElement('li');
+    const when = document.createElement('span'); when.className = 'cc-medic-when';
+    when.textContent = `${medicDay(entry.date)} · ${MEDIC_MACHINE_NAMES[entry.machine] || entry.machine}`;
+    const what = document.createElement('span'); what.textContent = entry.problem;
+    const fix = document.createElement('span'); fix.className = 'cc-medic-advice'; fix.textContent = `Сделали: ${entry.fix}`;
+    li.append(when, what, fix);
+    list.append(li);
+  }
+  if (medicRepairs.length) box.append(list);
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button'; toggle.className = 'cc-refresh cc-medic-add'; toggle.textContent = 'Записать починку';
+  const form = document.createElement('form');
+  form.className = 'cc-medic-form'; form.hidden = true;
+  form.innerHTML = `
+    <label>Компьютер<select name="machine">${MEDIC_MACHINES.map(([key, title]) => `<option value="${key}">${title}</option>`).join('')}</select></label>
+    <label>Что было<select name="sign">${Object.entries(MEDIC_SIGN_NAMES).map(([key, name]) => `<option value="${key}">${name}</option>`).join('')}</select></label>
+    <label class="is-wide">Что случилось<input name="problem" maxlength="300" required placeholder="Например: Mac тормозил, вентилятор шумел"></label>
+    <label class="is-wide">Что сделали<input name="fix" maxlength="300" required placeholder="Например: закрыл Google Drive и Plaud"></label>
+    <div class="cc-medic-form-actions"><button type="submit" class="cc-refresh">Сохранить</button><span role="status" aria-live="polite"></span></div>`;
+  toggle.addEventListener('click', () => { form.hidden = !form.hidden; if (!form.hidden) form.querySelector('input').focus(); });
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const status = form.querySelector('[role="status"]');
+    status.textContent = 'Сохраняю…';
+    const error = await medicSaveRepair({ action: 'add', machine: data.get('machine'), signs: [data.get('sign')],
+      problem: String(data.get('problem') || ''), fix: String(data.get('fix') || ''), by: 'mark' });
+    if (error) { status.textContent = error === 'owner' ? 'Нужно войти на сайт как владелец.' : 'Не сохранилось, попробуй ещё раз.'; return; }
+    ccOpenInfo('machine-medic');
+  });
+  box.append(toggle, form);
+  return box;
+}
+
 ccInfoSources['machine-medic'] = () => {
   const { exams, verdict } = medicExamAll();
   const report = document.createElement('div');
@@ -12540,6 +12649,7 @@ ccInfoSources['machine-medic'] = () => {
     for (const line of exam.advice) { const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = line; card.append(p); }
     report.append(card);
   }
+  report.append(medicHistoryNode());
   return { title: 'Медик', node: report };
 };
 
