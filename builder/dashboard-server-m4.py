@@ -78,6 +78,7 @@ OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 REPAIR_LOG_FILE = HOME / ".agent-bridge" / "machine-repairs.json"
 MEDIA_LINKEDIN_ACTIONS = {
     "/api/media/linkedin/schedule": lambda body: media_linkedin.save_schedule(body),
+    "/api/media/linkedin/settings": lambda body: media_linkedin.save_settings(body),
     "/api/media/linkedin/preview": lambda body: media_linkedin.preview(body),
     "/api/media/linkedin/rewrite": lambda body: media_linkedin.rewrite(body),
     "/api/media/linkedin/edit": lambda body: media_linkedin.edit(body),
