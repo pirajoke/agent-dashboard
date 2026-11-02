@@ -60,6 +60,9 @@ EVENT_SECONDS = 60
 # (Mark 2026-11-02: «160 часов в командный центр»), so such a turn counts only from its start to
 # its end, and a turn that did nothing (failed on a usage limit) counts zero.
 AUTOMATION_TRIGGER_PREFIX = "automation"
+# Bookkeeping Codex writes between turns (settings re-applied before each scheduled turn, late item
+# receipts after one). Outside a turn they are not activity.
+CODEX_BETWEEN_TURN_EVENTS = {"thread_settings_applied", "item_completed"}
 TOPIC_LIMIT = 110
 # Inputs for the plain-language summary: a few asks and the last reply per day.
 ASK_LIMIT = 280
@@ -588,6 +591,7 @@ def parse_codex_file(path: Path) -> list[Session]:
     work_dirs: dict[str, int] = {}
     # The open scheduled-automation turn: [start, last event, did it do anything].
     auto_turn: list | None = None
+    in_turn = False
 
     def close_auto_turn() -> None:
         nonlocal auto_turn
@@ -600,6 +604,7 @@ def parse_codex_file(path: Path) -> list[Session]:
         payload = record.get("payload") if isinstance(record.get("payload"), dict) else {}
         if record.get("type") == "event_msg" and payload.get("type") == "task_started":
             close_auto_turn()
+            in_turn = True
             trigger = (payload.get("turn_attribution") or {}).get("turn_trigger") \
                 if isinstance(payload.get("turn_attribution"), dict) else None
             moment = parse_ts(record.get("timestamp"))
@@ -617,6 +622,11 @@ def parse_codex_file(path: Path) -> list[Session]:
                 auto_turn[2] = True
             if record.get("type") == "event_msg" and payload.get("type") == "task_complete":
                 close_auto_turn()
+                in_turn = False
+            continue
+        if record.get("type") == "event_msg" and payload.get("type") == "task_complete":
+            in_turn = False
+        elif not in_turn and record.get("type") == "event_msg" and payload.get("type") in CODEX_BETWEEN_TURN_EVENTS:
             continue
         if record.get("type") == "session_meta" or ("id" in record and "instructions" in record):
             meta = payload or record

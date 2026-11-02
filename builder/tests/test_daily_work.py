@@ -110,6 +110,7 @@ class CollectorParsingTest(unittest.TestCase):
 
         def turn(start, minutes, *, trigger="automation_heartbeat_scheduled", work=True):
             records = [
+                {"timestamp": _iso(start), "type": "event_msg", "payload": {"type": "thread_settings_applied"}},
                 {"timestamp": _iso(start), "type": "event_msg", "payload": {
                     "type": "task_started", "turn_attribution": {"turn_trigger": trigger}}},
                 {"timestamp": _iso(start), "type": "response_item", "payload": {
@@ -119,6 +120,8 @@ class CollectorParsingTest(unittest.TestCase):
             if work:
                 records.append({"timestamp": _iso(start + timedelta(minutes=minutes)), "type": "response_item",
                                 "payload": {"type": "function_call", "name": "shell"}})
+            records.append({"timestamp": _iso(start + timedelta(minutes=minutes)), "type": "event_msg",
+                            "payload": {"type": "item_completed"}})
             records.append({"timestamp": _iso(start + timedelta(minutes=minutes)), "type": "event_msg", "payload": {
                 "type": "task_complete", "last_agent_message": None if not work else "<heartbeat>DONT_NOTIFY</heartbeat>",
                 **({} if work else {"error": {"message": "You've hit your usage limit"}})}})
