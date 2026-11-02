@@ -12,7 +12,7 @@ class ImportHistoryUITests(unittest.TestCase):
         source = HTML.read_text()
         functions = '\n'.join(function(source, name) for name in (
             'ccDocxxEl', 'ccDocxxSafeLink', 'ccDocxxLink', 'ccDocxxSourceLink',
-            'ccDocxxShortDate', 'ccDocxxFrom', 'ccDocxxFolder', 'ccDocxxRecordDate', 'ccDocxxDate', 'ccDocxxRenderRecords',
+            'ccDocxxShortDate', 'ccDocxxFrom', 'ccDocxxFolder', 'ccDocxxTitle', 'ccDocxxRecordDate', 'ccDocxxDate', 'ccDocxxRenderRecords',
             'ccDocxxText', 'ccDocxxCount', 'ccDocxxPick', 'ccDocxxAct', 'ccDocxxMovable',
             'ccDocxxSuggested', 'ccDocxxFolderName', 'ccDocxxRecordActions',
             'ccDocxxGuessed', 'ccDocxxSortBar'))

@@ -403,6 +403,10 @@ def prepare_docxx_sorting():
                              "delivered_at": (now - timedelta(hours=index + 1)).isoformat(),
                              "thread_id": f"18f0c0ffee{index:06d}"}
     attachments["IMG_2291.jpeg"]["source_account"] = "work.example@gmail.com"  # A second mailbox.
+    for copy in range(4):  # The same attachment from four mails: the list shows it once.
+        attachments[f"copy{copy}"] = {"state": "pending", "name": "3_Справка_о_рождении_Пример_1941.jpg",
+                                      "attempted_at": (now - timedelta(minutes=30 + copy)).isoformat(),
+                                      "thread_id": f"18f0c0ffee{copy + 100:06d}"}
     (library / "20 — France/Impôts/Avis d'impôt 2026.pdf").write_bytes(b"synthetic")
     attachments["avis.pdf"] = {"state": "delivered", "name": "avis.pdf", "cloud_file_id": "synthetic_document_1234",
                                "destination": str(library / "20 — France/Impôts/Avis d'impôt 2026.pdf"),
