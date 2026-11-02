@@ -102,6 +102,36 @@ def overview(*, home: Path | None = None) -> dict:
             "comments": comments if comments_status == 200 else None}
 
 
+IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+
+
+def image(candidate_id: str, *, home: Path | None = None) -> tuple[bytes, str] | None:
+    """The picture that goes to LinkedIn with this post (Mark 2026-11-02: «весь пост»).
+
+    None when the news service has no picture for it, is older than the image route,
+    or answers with anything that is not a plain image.
+    """
+    candidate_id = str(uuid.UUID(str(candidate_id)))
+    config = news_config(home)
+    if config is None:
+        raise MediaUnavailable("not_configured")
+    request = urllib.request.Request(
+        f"{config[0]}/media-control/candidates/{candidate_id}/image",
+        headers={"Authorization": "Bearer " + config[1], "Accept": "image/*"})
+    try:
+        with _OPENER.open(request, timeout=30) as response:
+            mime = (response.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+            data = response.read(MAX_IMAGE_BYTES + 1)
+    except urllib.error.HTTPError:
+        return None
+    except OSError as error:
+        raise MediaUnavailable("unreachable") from error
+    if mime not in IMAGE_TYPES or not data or len(data) > MAX_IMAGE_BYTES:
+        return None
+    return data, mime
+
+
 def save_schedule(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
     slots = body.get("slots")
     if not isinstance(slots, list) or len(slots) > 10 or not all(

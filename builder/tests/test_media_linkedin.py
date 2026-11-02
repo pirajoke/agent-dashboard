@@ -256,6 +256,75 @@ class SettingsTests(unittest.TestCase):
         self.assertIn("mediaPost('settings'", PAGE)
 
 
+class _FakeImageReply:
+    def __init__(self, data, mime):
+        self.data, self.headers = data, {"Content-Type": mime}
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self, limit=-1):
+        return self.data[:limit] if limit >= 0 else self.data
+
+
+class ImageTests(unittest.TestCase):
+    """Mark 2026-11-02: the «Медиа» post card shows the post's picture too."""
+    ID = "33333333-3333-4333-8333-333333333333"
+
+    def setUp(self):
+        patcher = patch.dict(os.environ, {"JARVIS_NEWS_URL": "http://127.0.0.1:8790",
+                                          "JARVIS_NEWS_CONTROL_TOKEN": TOKEN})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_image_is_fetched_with_the_service_token_and_checked(self):
+        with patch.object(media_linkedin._OPENER, "open",
+                          return_value=_FakeImageReply(b"\x89PNG", "image/png")) as opener:
+            self.assertEqual(media_linkedin.image(self.ID), (b"\x89PNG", "image/png"))
+        request = opener.call_args.args[0]
+        self.assertEqual(request.full_url, f"http://127.0.0.1:8790/media-control/candidates/{self.ID}/image")
+        self.assertEqual(request.get_header("Authorization"), "Bearer " + TOKEN)
+        # Anything that is not a plain picture never reaches the page.
+        with patch.object(media_linkedin._OPENER, "open", return_value=_FakeImageReply(b"<svg/>", "image/svg+xml")):
+            self.assertIsNone(media_linkedin.image(self.ID))
+        with patch.object(media_linkedin._OPENER, "open", return_value=_FakeImageReply(b"{}", "application/json")):
+            self.assertIsNone(media_linkedin.image(self.ID))
+        with self.assertRaises(ValueError):
+            media_linkedin.image("../schedule")
+
+    def test_older_news_service_without_the_route_means_no_picture(self):
+        error = media_linkedin.urllib.error.HTTPError("u", 404, "nf", {}, io.BytesIO(b""))
+        with patch.object(media_linkedin._OPENER, "open", side_effect=error):
+            self.assertIsNone(media_linkedin.image(self.ID))
+
+    def test_server_route_is_owner_only(self):
+        server = ServerTests()
+        handler, response = server.handler(owner=False, path=f"/api/media/linkedin/image?id={self.ID}")
+        with patch.object(media_linkedin, "image") as image:
+            handler.do_GET()
+            image.assert_not_called()
+        self.assertEqual(response["status"], 401)
+        handler, response = server.handler(owner=True, path=f"/api/media/linkedin/image?id={self.ID}")
+        sent = []
+        handler.send_response = lambda code: sent.append(code)
+        handler.send_header = lambda name, value: sent.append((name, value))
+        handler.end_headers = lambda: None
+        handler.wfile = io.BytesIO()
+        with patch.object(media_linkedin, "image", return_value=(b"\xff\xd8\xff", "image/jpeg")):
+            handler.do_GET()
+        self.assertEqual(sent[0], 200)
+        self.assertIn(("Content-Type", "image/jpeg"), sent)
+        self.assertIn(("Cache-Control", "private, no-store"), sent)
+        self.assertEqual(handler.wfile.getvalue(), b"\xff\xd8\xff")
+        handler, response = server.handler(owner=True, path=f"/api/media/linkedin/image?id={self.ID}")
+        with patch.object(media_linkedin, "image", return_value=None):
+            handler.do_GET()
+        self.assertEqual(response["status"], 404)
+
+
 class PageTests(unittest.TestCase):
     def test_media_tab_is_a_stable_route_with_owner_controls(self):
         self.assertIn("aria-controls=\"section-media\"", PAGE)

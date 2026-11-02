@@ -3768,11 +3768,24 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-post { border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); overflow: hidden; transition: opacity .2s; }
 .media-post.is-removed { opacity: .45; }
 .media-post.is-removed .media-post-text { text-decoration: line-through; text-decoration-color: var(--mm-muted); }
-.media-post-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 0; }
+.media-post-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 0; }
 .media-avatar { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--mm-tint-ai-singularity); color: var(--mm-violet); font-weight: 800; font-size: 14px; }
-.media-post-head strong { display: block; font-size: 14px; }
-.media-post-head small { color: var(--mm-muted); font-size: 12px; }
-.media-post-text { margin: 0; padding: 10px 14px 12px; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; line-height: 1.5; max-height: 16em; overflow: auto; }
+.media-post-head > div { min-width: 0; }
+.media-post-head strong { display: block; font-size: 14px; line-height: 1.3; }
+.media-post-head small { display: block; color: var(--mm-muted); font-size: 12px; line-height: 1.4; }
+.media-post-head small.is-accent { color: var(--mm-accent); font-weight: 650; }
+.media-post-head small.is-warn { color: var(--mm-warning); font-weight: 650; }
+.media-post-text { margin: 10px 16px 12px; padding: 0; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 14px; line-height: 1.55; color: var(--mm-ink); }
+.media-post-text.is-clamped { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.media-post-more { display: block; margin: -8px 16px 10px auto; padding: 2px 0; border: 0; background: none; color: var(--mm-muted); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+.media-post-more[hidden] { display: none; }
+.media-post-more:hover, .media-post-more:focus-visible { color: var(--mm-accent); }
+.media-post-more:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; border-radius: 4px; }
+.media-post-image { margin: 0; border-top: 1px solid var(--mm-line); border-bottom: 1px solid var(--mm-line); background: var(--mm-background); }
+.media-post-image[hidden] { display: none; }
+.media-post-image.is-loading { aspect-ratio: 1.91 / 1; }
+.media-post-image img { display: block; width: 100%; max-height: 560px; object-fit: contain; }
+.media-post-image + .media-post-foot, .media-post-image + .media-rewrite { border-top: 0; }
 .media-post-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--mm-line); background: var(--mm-background); }
 .media-post-error { padding: 12px 14px; color: var(--mm-danger); font-size: 13px; }
 .media-rewrite { display: grid; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--mm-line); }
@@ -3805,10 +3818,10 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-comment-card .media-post-foot { flex-wrap: wrap; }
 .media-today-panel .media-posts-preview { margin-top: 4px; }
 .media-post-head .media-chip { margin-left: auto; align-self: flex-start; }
-.media-post.is-locked .media-post-text { max-height: 8em; color: var(--mm-muted); }
 .media-post-locked { margin: 0; padding: 8px 14px 12px; color: var(--mm-muted); font-size: 12px; }
+.media-post > .media-post-image:last-child { border-bottom: 0; }
 .media-post-foot .media-send-now { min-height: 36px; padding: 6px 16px; font-size: 13px !important; }
-.media-edit[hidden], .media-post.is-editing .media-post-text, .media-post.is-editing .media-rewrite, .media-post.is-editing [data-media-edit] { display: none; }
+.media-edit[hidden], .media-post.is-editing .media-post-text, .media-post.is-editing .media-post-more, .media-post.is-editing .media-rewrite, .media-post.is-editing [data-media-edit] { display: none; }
 .media-edit textarea { width: 100%; min-height: 18em; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; }
 .media-edit textarea:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
 .media-edit-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
@@ -10413,6 +10426,17 @@ function mediaTitle(id) {
   return (mediaNews.find(item => item.id === id) || {}).title || '';
 }
 
+// A post card looks like the LinkedIn post itself: author, status, text, picture (Mark 2026-11-02).
+function mediaPostHead(status, statusClass = '') {
+  return `<div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong>${status ? `<small class="${statusClass}">${mediaEsc(status)}</small>` : ''}</div></div>`;
+}
+
+function mediaPostBody(text, candidateId) {
+  return `<pre class="media-post-text is-clamped">${mediaEsc(text)}</pre>
+    <button type="button" class="media-post-more" data-media-more hidden aria-expanded="false">…ещё</button>
+    ${candidateId ? `<figure class="media-post-image is-loading" data-media-image="${mediaEsc(candidateId)}"></figure>` : ''}`;
+}
+
 function mediaPostCard(position, text, title, options = {}) {
   const today = Boolean(options.today);
   const key = today ? `t${position}` : position;
@@ -10420,8 +10444,8 @@ function mediaPostCard(position, text, title, options = {}) {
     ? `<button type="button" class="media-ghost" data-media-edit>Изменить</button><button type="button" class="media-primary media-send-now" data-media-send-now>Отправить сейчас</button>`
     : `<button type="button" class="media-ghost" data-media-edit>Изменить</button><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button>`;
   return `<li class="media-post" ${today ? `data-today="${position}"` : `data-review="${position}"`}>
-    <div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>${mediaEsc(title)}</small></div>${options.badge ? `<span class="media-chip ${options.badgeClass || ''}">${mediaEsc(options.badge)}</span>` : ''}</div>
-    <pre class="media-post-text">${mediaEsc(text)}</pre>
+    ${mediaPostHead(options.status || '', options.statusClass || '')}
+    ${mediaPostBody(text, options.candidateId)}
     <div class="media-rewrite">
       <div class="media-rewrite-chips" role="group" aria-label="Быстрые правки">${MEDIA_REWRITE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
       <form class="media-rewrite-form" data-media-rewrite-form="${position}">
@@ -10487,6 +10511,8 @@ async function mediaEditSave(card) {
     if (!data.text || !data.preview) throw new Error('пост уже не черновик');
     entry.preview = data.preview;
     card.querySelector('.media-post-text').textContent = data.text;
+    card.querySelector('.media-post-text').classList.add('is-clamped');
+    mediaPostsReady(card.parentElement);
     mediaEditOpen(card, false);
     card.querySelector('.media-rewrite-status').className = 'media-rewrite-status';
     card.querySelector('.media-rewrite-status').textContent = 'Сохранено. Отправится этот текст.';
@@ -10516,6 +10542,8 @@ async function mediaRewrite(card, instruction) {
     if (!data.text || !data.preview) throw new Error('пост уже не черновик');
     entry.preview = data.preview;
     card.querySelector('.media-post-text').textContent = data.text;
+    card.querySelector('.media-post-text').classList.add('is-clamped');
+    mediaPostsReady(card.parentElement);
     card.querySelector('.media-rewrite-form input').value = '';
     status.textContent = 'Готово. Можно переделать ещё раз.';
   } catch (error) {
@@ -10555,7 +10583,8 @@ async function mediaPrepare() {
         continue;
       }
       mediaReview.push({ candidate_id: data.id, preview: data.preview, removed: false });
-      list.insertAdjacentHTML('beforeend', mediaPostCard(mediaReview.length - 1, data.text, mediaTitle(id)));
+      list.insertAdjacentHTML('beforeend', mediaPostCard(mediaReview.length - 1, data.text, mediaTitle(id), { candidateId: data.id }));
+      mediaPostsReady(list);
     } catch (error) {
       list.insertAdjacentHTML('beforeend', `<li class="media-post is-removed"><p class="media-post-error">Не удалось подготовить «${mediaEsc(mediaTitle(id))}»: ${mediaEsc(error.message)}</p></li>`);
     }
@@ -10625,6 +10654,13 @@ function mediaBindPostList(list) {
     if (event.target.closest('[data-media-edit-cancel]')) { mediaEditOpen(card, false); return; }
     if (event.target.closest('[data-media-edit-save]')) { mediaEditSave(card); return; }
     if (event.target.closest('[data-media-send-now]')) { mediaSendNow(card); return; }
+    const more = event.target.closest('[data-media-more]');
+    if (more) {
+      const open = card.querySelector('.media-post-text').classList.toggle('is-clamped') === false;
+      more.textContent = open ? 'Свернуть' : '…ещё';
+      more.setAttribute('aria-expanded', String(open));
+      return;
+    }
     const ask = event.target.closest('[data-media-rewrite]');
     if (ask) { mediaRewrite(card, ask.dataset.mediaRewrite); return; }
     const index = event.target.closest('[data-media-toggle]')?.dataset.mediaToggle;
@@ -10647,19 +10683,72 @@ function mediaRenderToday(today) {
   mediaToday = (today.drafts || []).map(item => ({ candidate_id: item.id, preview: item.preview }));
   const drafts = (today.drafts || []).map((item, index) => mediaPostCard(index, item.text, item.title, {
     today: true,
-    badge: item.next_slot ? `следующий · ${mediaTime(item.next_slot)}` : 'в запасе',
-    badgeClass: item.next_slot ? 'is-accent' : '',
+    candidateId: item.id,
+    status: item.next_slot ? `Следующий · выйдет в ${mediaTime(item.next_slot)}` : 'В запасе',
+    statusClass: item.next_slot ? 'is-accent' : '',
   }));
   const queued = (today.queued || []).map(item => {
-    const [label, chip] = MEDIA_STATES[item.state] || [item.state, ''];
-    return `<li class="media-post is-locked">
-      <div class="media-post-head"><span class="media-avatar" aria-hidden="true">AI</span><div><strong>AI Singularity</strong><small>${mediaEsc(item.title)}</small></div><span class="media-chip ${chip}">${mediaEsc(label)} · ${mediaEsc(mediaTime(item.due_at))}</span></div>
-      <pre class="media-post-text">${mediaEsc(item.text || '')}</pre>
-      <p class="media-post-locked">Уже в Buffer: выйдет в ${mediaEsc(mediaTime(item.due_at))}. Здесь его больше не изменить.</p>
+    const status = item.state === 'ambiguous'
+      ? 'Нужна проверка в Buffer'
+      : `В Buffer · выйдет в ${mediaTime(item.due_at)}`;
+    return `<li class="media-post is-locked" title="Уже в Buffer: здесь его больше не изменить">
+      ${mediaPostHead(status, item.state === 'ambiguous' ? 'is-warn' : '')}
+      ${mediaPostBody(item.text || '', item.id)}
     </li>`;
   });
   list.innerHTML = [...queued, ...drafts].join('')
     || '<li class="media-empty">На сегодня готовых постов нет. Как только бот опубликует новость в канале, её пост появится здесь.</li>';
+  mediaPostsReady(list);
+}
+
+// Pictures come through the owner-only server route; fetched with the owner header, kept per post.
+const mediaImages = new Map();
+
+function mediaImageUrl(id) {
+  if (!mediaImages.has(id)) {
+    mediaImages.set(id, fetch(`${MEDIA_API}/image?id=${encodeURIComponent(id)}`, { headers: mmHeaders(), cache: 'no-store' })
+      .then(response => (response.ok ? response.blob() : null))
+      .then(blob => (blob && blob.type.startsWith('image/') ? URL.createObjectURL(blob) : null))
+      .catch(() => null)
+      .then(url => { if (!url) mediaImages.delete(id); return url; }));
+  }
+  return mediaImages.get(id);
+}
+
+function mediaPostsReady(list) {
+  list.querySelectorAll('.media-post-text.is-clamped').forEach(text => {
+    const more = text.nextElementSibling;
+    if (!more || !more.matches('[data-media-more]')) return;
+    const value = text.textContent;
+    let long;
+    if (text.clientHeight) {
+      const clamped = text.clientHeight;
+      text.classList.remove('is-clamped');
+      long = text.clientHeight > clamped + 4;
+      if (long) text.classList.add('is-clamped');
+    } else {
+      // A hidden tab has no layout yet: judge by length then.
+      long = value.split('\n').length > 6 || value.length > 420;
+      if (!long) text.classList.remove('is-clamped');
+    }
+    more.hidden = !long;
+    more.textContent = '…ещё';
+    more.setAttribute('aria-expanded', 'false');
+  });
+  if (!MEDIA_API) return;
+  list.querySelectorAll('[data-media-image]:not([data-loaded])').forEach(figure => {
+    figure.dataset.loaded = '1';
+    mediaImageUrl(figure.dataset.mediaImage).then(url => {
+      if (!url) { figure.hidden = true; return; }
+      const img = new Image();
+      img.alt = 'Картинка поста';
+      img.decoding = 'async';
+      img.onload = () => figure.classList.remove('is-loading');
+      img.onerror = () => { figure.hidden = true; };
+      img.src = url;
+      figure.append(img);
+    });
+  });
 }
 
 async function mediaSendNow(card) {

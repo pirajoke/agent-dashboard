@@ -2743,6 +2743,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         self._json_response(status, payload)
 
+    def _handle_media_linkedin_image(self, candidate_id: str):
+        # The post's picture, so Mark sees the whole LinkedIn post (2026-11-02). Owner only.
+        try:
+            found = media_linkedin.image(candidate_id)
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_request'})
+            return
+        except media_linkedin.MediaUnavailable as error:
+            self._json_response(503, {'error': 'media_unavailable', 'state': str(error)})
+            return
+        if found is None:
+            self._json_response(404, {'error': 'image_not_found'})
+            return
+        data, mime = found
+        self.send_response(200)
+        self.send_header('Content-Type', mime)
+        self.send_header('Content-Length', len(data))
+        self.send_header('Cache-Control', 'private, no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.end_headers()
+        self.wfile.write(data)
+
     def _handle_owner_todo_save(self):
         body = self._platform_owner_body(OWNER_TODO_MAX_BYTES)
         if body is None:
@@ -3025,6 +3047,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required'})
                 return
             self._json_response(200, media_linkedin.overview())
+            return
+        if parsed.path == '/api/media/linkedin/image':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required'})
+                return
+            self._handle_media_linkedin_image(parse_qs(parsed.query).get('id', [''])[0])
             return
         if parsed.path == '/api/owner-todo':
             if not self._decision_owner_authorized():
