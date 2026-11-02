@@ -4619,6 +4619,46 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .docxx-record-body { font-size:14px; }
 .docxx-record-body dt,.docxx-record-note { font-size:14px; }
 .docxx-record summary::after,.docxx-record[open] summary::after { content:none; display:none; }
+/* Mark 2026-11-02 «красивую табличку»: the list is one table card, like Контекст. */
+.docxx-table { container-type:inline-size; background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:14px; box-shadow:var(--mm-shadow-soft); overflow:hidden; }
+.docxx-table:has(.docxx-empty),.docxx-table:has(.cc-owner-gate) { background:none; border:0; box-shadow:none; }
+.docxx-table:has(.docxx-empty) .docxx-table-head,.docxx-table:has(.cc-owner-gate) .docxx-table-head { display:none; }
+.docxx-table-head,.docxx-table .docxx-record summary { display:grid; grid-template-columns:28px minmax(0,1fr) minmax(150px,230px) 64px 200px 36px; grid-template-areas:none; align-items:center; column-gap:16px; }
+.docxx-table-head { padding:10px 16px; border-bottom:1px solid var(--mm-line); color:var(--mm-muted); font-size:12px; font-weight:650; letter-spacing:.04em; text-transform:uppercase; }
+.docxx-table-head span:first-child { grid-column:2; }
+.docxx-table .docxx-record { border-bottom:1px solid var(--mm-line); }
+.docxx-table .docxx-record:last-child { border-bottom:0; }
+.docxx-table .docxx-record summary { min-height:56px; padding:10px 16px; row-gap:0; }
+.docxx-table .docxx-record summary:hover,.docxx-table .docxx-record[open] summary { background:var(--mm-info-soft); }
+.docxx-table .docxx-record summary > * { grid-area:auto; justify-self:stretch; align-self:center; }
+.docxx-table .docxx-record-icon { width:28px; height:28px; border-radius:8px; background:var(--mm-selection); color:var(--mm-accent); }
+.docxx-table .docxx-record-icon svg { width:16px; height:16px; }
+.docxx-table .docxx-record-name > strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:none; }
+.docxx-table .docxx-record-folder,.docxx-table .docxx-record-description { display:block; margin:0; color:var(--mm-muted); font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.docxx-table .docxx-record-meta { display:contents; }
+.docxx-table .docxx-record-meta > *::before { content:none; }
+.docxx-table .docxx-record-from,.docxx-table .docxx-record-when { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--mm-muted); font-size:14px; }
+.docxx-table .docxx-record-when { font-variant-numeric:tabular-nums; }
+.docxx-table .docxx-record summary > .docxx-record-state { justify-self:start; text-align:left; align-items:baseline; }
+.docxx-table .docxx-record-actions { justify-self:end; }
+.docxx-table .docxx-record-actions .docxx-record-source { border-color:transparent; }
+.docxx-table .docxx-record summary:hover .docxx-record-source { border-color:var(--mm-control-line); }
+.docxx-table .docxx-record-body { margin:0; padding:14px 16px 16px 60px; border-top:0; background:var(--mm-info-soft); }
+@container (max-width:760px) {
+  .docxx-table-head { display:none; }
+  .docxx-table .docxx-record summary { grid-template-columns:28px minmax(0,1fr) 44px; column-gap:12px; row-gap:4px; padding:12px 14px; }
+  .docxx-table .docxx-record summary > .docxx-record-icon { grid-column:1; grid-row:1 / 4; align-self:start; }
+  .docxx-table .docxx-record summary > .docxx-record-name { grid-column:2; grid-row:1; }
+  .docxx-table .docxx-record-name > strong { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .docxx-table .docxx-record summary > .docxx-record-meta { grid-column:2; grid-row:2; display:flex; flex-wrap:nowrap; gap:0; min-width:0; overflow:hidden; }
+  .docxx-table .docxx-record-when { flex:none; }
+  .docxx-table .docxx-record-when:not(:empty)::before { content:'·'; margin:0 8px; }
+  .docxx-table .docxx-record-from { display:block; flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .docxx-table .docxx-record summary > .docxx-record-state { grid-column:2; grid-row:3; }
+  .docxx-table .docxx-record summary > .docxx-record-actions { grid-column:3; grid-row:1 / 4; }
+  .docxx-table .docxx-record-actions .docxx-record-source { border-color:var(--mm-control-line); width:44px; min-width:44px; height:44px; }
+  .docxx-table .docxx-record-body { padding:12px 14px 14px 54px; }
+}
 @media(min-width:701px) { .docxx-record summary { grid-template-columns:32px minmax(0,1fr) max-content max-content; grid-template-areas:"icon name state action"; } }
 @media(max-width:700px) { .docxx-record summary { grid-template-columns:28px minmax(0,1fr) 44px; grid-template-areas:"icon name action" ". state action"; align-items:center; padding:12px 0; row-gap:4px; } .docxx-record-state { justify-self:start; } .docxx-record-actions { grid-area:action; align-self:center; } .docxx-record-name > strong,.docxx-record-meta,.docxx-record-state { font-size:14px; } .docxx-record-actions .docxx-record-source { width:44px; min-width:44px; height:44px; min-height:44px; } }
 @media(prefers-reduced-motion:reduce) { #section-documents *,#section-documents *::after { animation:none!important; transition:none!important; } }
@@ -5467,7 +5507,10 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       </div>
       <p class="docxx-sort-note" id="docxx-sort-note" role="status" aria-live="polite"></p>
     </div>
-    <div id="docxx-records" class="docxx-records"><p class="docxx-empty">Проверяем доступ к журналу обработки…</p></div>
+    <div class="docxx-table">
+      <div class="docxx-table-head" aria-hidden="true"><span>Документ</span><span>Откуда</span><span>Дата</span><span>Статус</span></div>
+      <div id="docxx-records" class="docxx-records"><p class="docxx-empty">Проверяем доступ к журналу обработки…</p></div>
+    </div>
     <dialog class="platform-archive-dialog platform-edit-dialog" id="docxx-move-dialog" aria-labelledby="docxx-move-title">
       <header class="platform-archive-head">
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
@@ -14710,21 +14753,21 @@ function ccDocxxRenderRecords() {
     const summary=ccDocxxEl('summary'); const icon=ccDocxxEl('span',undefined,'docxx-record-icon'); icon.innerHTML=row.kind==='folder'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2h9A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5Z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M7 3h7l4 4v14H7Z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg>'; icon.setAttribute('aria-hidden','true');
     const name=ccDocxxEl('span',undefined,'docxx-record-name');
     const title=ccDocxxEl('strong',ccDocxxTitle(row.name)); title.title=row.name; name.append(title);
-    // Mark 2026-11-02: one quiet line — which mailbox it came from and when; the rest is inside the card.
+    // Mark 2026-11-02 «красивую табличку»: one row per document — Документ · Откуда · Дата · Статус · ↗.
     const from=ccDocxxFrom(row), folder=ccDocxxFolder(row);
-    const meta=ccDocxxEl('span',undefined,'docxx-record-meta');
-    if(from) { const who=ccDocxxEl('span',undefined,'docxx-record-from'); who.dataset.source=row.source||''; who.append(ccDocxxEl('span',from.via,'docxx-record-via')); if(from.account) { who.className+=' has-account'; who.append(ccDocxxEl('b',from.account)); } meta.append(who); }
-    const when=ccDocxxShortDate(row.at); if(when) meta.append(ccDocxxEl('span',when,'docxx-record-when'));
-    if(folder && !folder.review) meta.append(ccDocxxEl('span',folder.short,'docxx-record-folder'));
-    if(meta.children.length) name.append(meta);
+    if(folder && !folder.review) name.append(ccDocxxEl('span',folder.short,'docxx-record-folder'));
     if(row.description) name.append(ccDocxxEl('span',row.description,'docxx-record-description'));
     if(row.valid_from && row.valid_until) { const validity=ccDocxxEl('span',undefined,'docxx-record-validity'); validity.append(ccDocxxEl('span','Действует'),ccDocxxEl('strong',ccDocxxRecordDate(row.valid_from)+' — '+ccDocxxRecordDate(row.valid_until))); name.append(validity); }
+    const meta=ccDocxxEl('span',undefined,'docxx-record-meta');
+    const who=ccDocxxEl('span',undefined,'docxx-record-from'); who.dataset.source=row.source||'';
+    if(from) { if(from.account) { who.append(ccDocxxEl('span',from.account,'docxx-record-account')); who.title=from.via+' '+from.account; } else who.append(ccDocxxEl('span',from.via.replace(/^Из /,'').replace(/^почты$/,'Почта'),'docxx-record-account')); }
+    meta.append(who,ccDocxxEl('span',ccDocxxShortDate(row.at),'docxx-record-when'));
     const badge=ccDocxxEl('span',row.label,'docxx-record-state'); badge.dataset.tone=ccDocxxAttention.has(row.status)?'attention':'neutral';
-    summary.append(icon,name);
-    const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку':'Открыть',row.url) || ccDocxxSourceLink('Открыть письмо',row.source_url);
+    summary.append(icon,name,meta);
+    const openLink=ccDocxxLink(row.kind==='folder'?'Открыть папку':'Открыть документ',row.url) || ccDocxxSourceLink('Открыть письмо',row.source_url);
     const acts=ccDocxxEl('span',undefined,'docxx-record-actions');
     if(openLink) { openLink.setAttribute('aria-label',openLink.textContent); openLink.title=openLink.textContent; openLink.textContent='↗'; openLink.className='docxx-record-source'; acts.append(openLink); }
-    summary.append(badge); if(acts.children.length) summary.append(acts);
+    summary.append(badge,acts);
     const body=ccDocxxEl('div',undefined,'docxx-record-body');
     const dl=ccDocxxEl('dl');
     const facts=[['Папка',folder && !folder.review?folder.full:''],
