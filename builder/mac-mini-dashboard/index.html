@@ -5007,6 +5007,31 @@ button.cc-refresh:hover { background: var(--mm-selection); }
 /* Platform cards: the «sign in» line once above the grid, not on every card. */
 .platform-sign-in-note { margin: -6px 0 14px; color: var(--mm-muted); font-size: 13px; }
 .platform-sign-in-note[hidden] { display: none; }
+/* Mark 2026-11-02: «добавь сбоку +- для увеличения и уменьшения только размера самих карточек».
+   Two small buttons on the right edge scale only the Платформы cards; the choice stays in this browser. */
+#section-platforms { --platform-card-scale: 1; }
+@media (min-width: 761px) { #section-platforms { padding-right: 46px; } }
+#section-platforms > .platform-directory { grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(230px * var(--platform-card-scale))), 1fr)); }
+#section-platforms > .platform-directory > .platform-entry { zoom: var(--platform-card-scale); }
+.platform-zoom {
+  position: fixed; right: 14px; top: 50%; z-index: 30; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 2px; padding: 3px;
+  border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-surface);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+}
+.platform-zoom button {
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; padding: 0;
+  border: 0; border-radius: 9px; background: transparent; color: var(--mm-ink);
+  font: 600 20px/1 'Inter', -apple-system, sans-serif; cursor: pointer;
+}
+.platform-zoom button:hover:not(:disabled) { background: var(--mm-surface-hover); color: var(--mm-accent); }
+.platform-zoom button:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.platform-zoom button:disabled { opacity: .35; cursor: default; }
+@media (max-width: 760px) {
+  .platform-zoom { top: auto; transform: none; right: 10px; bottom: calc(var(--cc-tabbar) + env(safe-area-inset-bottom) + 12px); }
+  .platform-zoom button { width: 38px; height: 38px; }
+}
+@media print { .platform-zoom { display: none; } }
 </style>
 </head>
 <body>
@@ -5600,6 +5625,10 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <li class="private"><svg class="platform-access-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-lock"/></svg><strong>Закрыто · SSH</strong><small>сначала SSH-туннель</small></li>
     </ul>
 
+    <div class="platform-zoom" role="group" aria-label="Размер карточек">
+      <button type="button" id="platform-zoom-in" aria-label="Карточки крупнее" title="Крупнее">+</button>
+      <button type="button" id="platform-zoom-out" aria-label="Карточки мельче" title="Мельче">−</button>
+    </div>
     <p class="platform-order-status" id="platform-order-status" role="status" aria-live="polite" aria-atomic="true"></p>
     <div class="platform-directory" title="Удерживайте карточку и перетащите, чтобы поменять порядок">
       <h3 class="platform-group-head" data-platform-group-head="product">Продукты</h3>
@@ -7705,6 +7734,40 @@ tabOrderNav.addEventListener('keydown', event => {
 document.getElementById('reset-tab-order').addEventListener('click', resetTabOrder);
 applyTabOrder(readTabOrder());
 
+// Card size (Mark 2026-11-02): «+» and «−» on the side scale only the Платформы cards. Per-browser convenience.
+const PLATFORM_CARD_SCALE_KEY = 'command-center.platform-card-scale.v1';
+const PLATFORM_CARD_SCALES = [0.8, 0.9, 1, 1.15, 1.3, 1.5, 1.75];
+function applyPlatformCardScale(scale, save) {
+  const section = document.getElementById('section-platforms');
+  if (!section) return;
+  let index = PLATFORM_CARD_SCALES.indexOf(scale);
+  if (index < 0) index = PLATFORM_CARD_SCALES.indexOf(1);
+  section.style.setProperty('--platform-card-scale', String(PLATFORM_CARD_SCALES[index]));
+  const zoomIn = document.getElementById('platform-zoom-in');
+  const zoomOut = document.getElementById('platform-zoom-out');
+  if (zoomIn) zoomIn.disabled = index >= PLATFORM_CARD_SCALES.length - 1;
+  if (zoomOut) zoomOut.disabled = index <= 0;
+  if (save) {
+    try { localStorage.setItem(PLATFORM_CARD_SCALE_KEY, String(PLATFORM_CARD_SCALES[index])); } catch (_) { /* optional */ }
+  }
+}
+function stepPlatformCardScale(step) {
+  const current = parseFloat(getComputedStyle(document.getElementById('section-platforms')).getPropertyValue('--platform-card-scale')) || 1;
+  let index = PLATFORM_CARD_SCALES.indexOf(current);
+  if (index < 0) index = PLATFORM_CARD_SCALES.indexOf(1);
+  index = Math.max(0, Math.min(PLATFORM_CARD_SCALES.length - 1, index + step));
+  applyPlatformCardScale(PLATFORM_CARD_SCALES[index], true);
+}
+(function initPlatformCardScale() {
+  let saved = 1;
+  try { saved = parseFloat(localStorage.getItem(PLATFORM_CARD_SCALE_KEY)) || 1; } catch (_) { /* optional */ }
+  applyPlatformCardScale(saved, false);
+  const zoomIn = document.getElementById('platform-zoom-in');
+  const zoomOut = document.getElementById('platform-zoom-out');
+  if (zoomIn) zoomIn.addEventListener('click', () => stepPlatformCardScale(1));
+  if (zoomOut) zoomOut.addEventListener('click', () => stepPlatformCardScale(-1));
+})();
+
 // Platform order is local-only. Restore known IDs once and append any newly shipped cards.
 const PLATFORM_ORDER_STORAGE_KEY = 'command-center.platform-order.v1';
 const PLATFORM_LONG_PRESS_MS = 500;
@@ -7851,16 +7914,30 @@ function releasePlatformPointerCapture(state) {
 
 // The dragged card follows the finger: its layout box (offsetLeft/Top, not affected by
 // transforms) plus a translate that puts the grabbed point under the pointer.
+// Cards can be zoomed with «+»/«−» (CSS zoom): offset* and translate then count in the card's own
+// zoomed pixels, so layout boxes are multiplied and pointer moves divided by the zoom.
+function platformZoomOf(element) {
+  const zoom = parseFloat(getComputedStyle(element).zoom);
+  return Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+}
+
 function platformLayoutBox(card) {
   const parent = card.offsetParent || document.body;
   const origin = parent.getBoundingClientRect();
-  return { left: origin.left + card.offsetLeft - parent.scrollLeft, top: origin.top + card.offsetTop - parent.scrollTop };
+  const zoom = platformZoomOf(card);
+  return {
+    left: origin.left + card.offsetLeft * zoom - parent.scrollLeft,
+    top: origin.top + card.offsetTop * zoom - parent.scrollTop,
+    width: card.offsetWidth * zoom,
+    height: card.offsetHeight * zoom,
+  };
 }
 
 function followPlatformPointer(state, x, y) {
   const box = platformLayoutBox(state.card);
-  const dx = x - state.grabX - box.left;
-  const dy = y - state.grabY - box.top;
+  const zoom = platformZoomOf(state.card);
+  const dx = (x - state.grabX - box.left) / zoom;
+  const dy = (y - state.grabY - box.top) / zoom;
   state.card.style.transform = `translate(${dx}px, ${dy}px) scale(1.04)`;
 }
 
@@ -7871,8 +7948,9 @@ function flipPlatformCards(mutate, except) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   before.forEach((rect, card) => {
     const after = card.getBoundingClientRect();
-    const dx = rect.left - after.left;
-    const dy = rect.top - after.top;
+    const zoom = platformZoomOf(card);
+    const dx = (rect.left - after.left) / zoom;
+    const dy = (rect.top - after.top) / zoom;
     if (!dx && !dy) return;
     card.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
       { duration: 220, easing: 'cubic-bezier(.2, .8, .2, 1)' });
@@ -7884,8 +7962,8 @@ function flipPlatformCards(mutate, except) {
 function platformCardAtPoint(x, y) {
   return platformCards().find(card => {
     const box = platformLayoutBox(card);
-    return x >= box.left && x <= box.left + card.offsetWidth
-      && y >= box.top && y <= box.top + card.offsetHeight;
+    return x >= box.left && x <= box.left + box.width
+      && y >= box.top && y <= box.top + box.height;
   }) || null;
 }
 
@@ -7893,8 +7971,8 @@ function platformGroupHeadAtPoint(x, y) {
   return Array.from(platformDirectory.querySelectorAll('.platform-group-head')).find(head => {
     if (head.hidden) return false;
     const box = platformLayoutBox(head);
-    return x >= box.left && x <= box.left + head.offsetWidth
-      && y >= box.top - 6 && y <= box.top + head.offsetHeight + 6;
+    return x >= box.left && x <= box.left + box.width
+      && y >= box.top - 6 && y <= box.top + box.height + 6;
   }) || null;
 }
 
@@ -8062,7 +8140,7 @@ function beginPlatformLongPress(event) {
       platformDirectory.appendChild(card);
     }
     try { platformDirectory.setPointerCapture(state.pointerId); } catch (error) { /* optional */ }
-    state.grabX = Math.min(Math.max(state.startX - rect.left, 0), card.offsetWidth || rect.width);
+    state.grabX = Math.min(Math.max(state.startX - rect.left, 0), rect.width);
     state.grabY = Math.min(Math.max(state.startY - rect.top, 0), 40);
     platformDirectory.classList.add('is-arranging');
     showPlatformArchiveDropZone(true);
