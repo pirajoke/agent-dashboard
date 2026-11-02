@@ -217,6 +217,45 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(response, {"status": 200, "payload": {"text": "t", "preview": {}}})
 
 
+class SettingsTests(unittest.TestCase):
+    """«Настройки Медиа» (Mark 2026-11-02): posts per day, 1–10, owner only."""
+
+    def test_posts_per_day_is_validated_before_forwarding(self):
+        with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
+            for bad in ({}, {"posts_per_day": 0}, {"posts_per_day": 11}, {"posts_per_day": "5"},
+                        {"posts_per_day": 2.5}, {"posts_per_day": True}):
+                with self.assertRaises(ValueError):
+                    media_linkedin.save_settings(bad)
+            call.assert_not_called()
+            media_linkedin.save_settings({"posts_per_day": 3})
+            call.assert_called_with("PUT", "/media-control/settings", {"posts_per_day": 3}, home=None)
+
+    def test_settings_route_requires_owner(self):
+        make = ServerTests.handler.__get__(ServerTests())
+        handler, response = make(owner=False, method="POST", path="/api/media/linkedin/settings",
+                                 body={"posts_per_day": 5})
+        with patch.object(media_linkedin, "call") as call:
+            handler.do_POST()
+            call.assert_not_called()
+        self.assertEqual(response["status"], 401)
+        handler, response = make(owner=True, method="POST", path="/api/media/linkedin/settings",
+                                 body={"posts_per_day": 5})
+        reply = {"settings": {"posts_per_day": 5}, "budget": {}}
+        with patch.object(media_linkedin, "call", return_value=(200, reply)) as call:
+            handler.do_POST()
+        call.assert_called_with("PUT", "/media-control/settings", {"posts_per_day": 5}, home=None)
+        self.assertEqual(response, {"status": 200, "payload": reply})
+        handler, response = make(owner=True, method="POST", path="/api/media/linkedin/settings",
+                                 body={"posts_per_day": 50})
+        handler.do_POST()
+        self.assertEqual(response["status"], 400)
+
+    def test_page_has_settings_window(self):
+        for element in ("media-settings-open", "media-settings-dialog", "media-per-day", "media-settings-save"):
+            self.assertIn(f'id="{element}"', PAGE)
+        self.assertIn("mediaPost('settings'", PAGE)
+
+
 class PageTests(unittest.TestCase):
     def test_media_tab_is_a_stable_route_with_owner_controls(self):
         self.assertIn("aria-controls=\"section-media\"", PAGE)

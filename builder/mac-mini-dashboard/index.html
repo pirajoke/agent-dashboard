@@ -3814,6 +3814,15 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-edit-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
 .media-edit-actions small { margin-right: auto; color: var(--mm-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .media-edit-actions small.is-bad { color: var(--mm-danger); }
+.media-head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.media-stepper { display: flex; align-items: center; gap: 10px; }
+.media-stepper input { width: 88px; text-align: center; font-size: 24px !important; font-weight: 750; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.media-stepper input::-webkit-outer-spin-button, .media-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.media-step { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--mm-control-line); border-radius: 50%; background: var(--mm-surface); color: var(--mm-ink); font: 700 22px/1 system-ui, sans-serif; cursor: pointer; }
+.media-step:hover:not(:disabled) { border-color: var(--mm-accent); color: var(--mm-accent); }
+.media-step:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.media-step:disabled { opacity: .4; cursor: not-allowed; }
+.media-settings-hint { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--mm-selection); color: var(--mm-ink); font-size: 13px; line-height: 1.45; }
 .media-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
 .media-slots li { position: relative; display: flex; align-items: center; justify-content: center; min-height: 52px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-background); font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .media-slots li.is-new { border-style: dashed; border-color: var(--mm-accent); color: var(--mm-accent); }
@@ -4149,6 +4158,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .platform-edit-actions button:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .platform-edit-note { min-height: 16px; margin: 0; color: var(--mm-muted); font-size: 12px; }
 .platform-edit-note:empty { display: none; }
+.platform-edit-note.is-bad { color: var(--mm-danger); }
 /* Own cards (Mark 2026-10-21): «+ Новая карточка» next to «Архив»; picture and links in the same window. */
 .platform-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .platform-toolbar .platform-archive { margin-top: 0; }
@@ -6123,7 +6133,10 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <h2 class="cc-page-title" id="media-title">Медиа</h2>
         <p class="cc-page-lede">LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.</p>
       </div>
-      <button class="media-ghost" id="media-refresh" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Обновить</span></button>
+      <div class="media-head-actions">
+        <button class="media-ghost" id="media-settings-open" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Настройки</span></button>
+        <button class="media-ghost" id="media-refresh" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Обновить</span></button>
+      </div>
     </header>
     <p class="mm-notice" id="media-state" role="status" aria-live="polite">Загружаю…</p>
     <div class="media-studio" id="media-body" hidden>
@@ -6244,6 +6257,29 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         </div>
       </div>
     </div>
+    <!-- Mark 2026-11-02: «сделай настройки медиа отдела», first setting: posts per day. -->
+    <dialog class="platform-archive-dialog platform-edit-dialog" id="media-settings-dialog" aria-labelledby="media-settings-title">
+      <header class="platform-archive-head">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-media"/></svg>
+        <h3 id="media-settings-title">Настройки Медиа</h3>
+        <button class="platform-archive-close" id="media-settings-close" type="button" aria-label="Закрыть без сохранения">✕</button>
+      </header>
+      <form class="platform-edit-form" id="media-settings-form" method="dialog" novalidate>
+        <label for="media-per-day">Постов в LinkedIn в день</label>
+        <div class="media-stepper">
+          <button type="button" class="media-step" data-media-step="-1" aria-label="На один пост меньше">−</button>
+          <input id="media-per-day" name="posts_per_day" type="number" inputmode="numeric" min="1" max="10" step="1" required aria-describedby="media-per-day-help">
+          <button type="button" class="media-step" data-media-step="1" aria-label="На один пост больше">+</button>
+        </div>
+        <small id="media-per-day-help">От 1 до 10. Бот сам выпускает не больше стольких постов за день. Пост, который ты отправишь сам, тоже засчитается.</small>
+        <p class="media-settings-hint" id="media-settings-hint" hidden></p>
+        <p class="platform-edit-note" id="media-settings-status" role="status" aria-live="polite"></p>
+        <div class="platform-edit-actions">
+          <button type="submit" class="platform-edit-save" id="media-settings-save">Сохранить</button>
+          <button type="button" id="media-settings-cancel">Отмена</button>
+        </div>
+      </form>
+    </dialog>
   </section>
 
   <!-- Mark 2026-10-26: «Архитектура» — where agents run, who manages them, how work arrives, where results go
@@ -10201,6 +10237,7 @@ let mediaSavedSlots = [];
 let mediaReview = [];
 let mediaNews = [];
 let mediaLoading = false;
+let mediaSettings = null;
 
 function mediaEsc(value) {
   return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -10281,7 +10318,8 @@ async function mediaLoad() {
 function mediaRenderHero(schedule) {
   const budget = schedule.budget || {};
   const posts = schedule.posts || [];
-  const limit = Number(budget.limit) || 10;
+  // The owner's «постов в день» when the news service knows it, else its hard cap.
+  const limit = Number(schedule.settings?.posts_per_day) || Number(budget.limit) || 10;
   const published = Number(budget.published) || 0;
   const reserved = Number(budget.reserved) || 0;
   const next = posts.filter(post => post.due_at && ['queued', 'submitting'].includes(post.state))
@@ -10298,6 +10336,7 @@ function mediaRenderHero(schedule) {
 
 function mediaRender(data) {
   const schedule = data.schedule || {};
+  mediaSettings = schedule.settings || null;
   mediaRenderHero(schedule);
   mediaRenderToday(data.today);
   mediaRenderComments(data.comments);
@@ -10795,8 +10834,91 @@ async function mediaCommentCreate(event) {
   }
 }
 
+function mediaSettingsValue() {
+  const value = Number(document.getElementById('media-per-day').value);
+  return Number.isInteger(value) ? value : NaN;
+}
+
+function mediaSettingsRefresh() {
+  const value = mediaSettingsValue();
+  const ok = value >= 1 && value <= 10;
+  document.querySelector('[data-media-step="-1"]').disabled = !(value > 1) && !Number.isNaN(value);
+  document.querySelector('[data-media-step="1"]').disabled = !(value < 10) && !Number.isNaN(value);
+  const hint = document.getElementById('media-settings-hint');
+  const slots = Number(mediaSettings?.slots) || 0;
+  hint.hidden = !(ok && slots && value > slots);
+  hint.textContent = `В расписании ${slots} ${slots === 1 ? 'время' : slots < 5 ? 'времени' : 'времён'}, поэтому выйдет не больше ${slots}. Чтобы было ${value}, добавь время в «Расписании».`;
+  return ok;
+}
+
+function mediaSettingsOpen() {
+  const dialog = document.getElementById('media-settings-dialog');
+  const input = document.getElementById('media-per-day');
+  const status = document.getElementById('media-settings-status');
+  const known = Boolean(mediaSettings);
+  input.value = known ? mediaSettings.posts_per_day : '';
+  input.disabled = !known;
+  document.getElementById('media-settings-save').disabled = !known;
+  status.className = 'platform-edit-note';
+  status.textContent = known ? '' : (document.getElementById('media-body').hidden
+    ? 'Сервис новостей сейчас недоступен. Открой настройки, когда вкладка загрузится.'
+    : 'Бот новостей ещё не обновлён и пока не знает эту настройку.');
+  mediaSettingsRefresh();
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+  if (known) input.focus();
+}
+
+function mediaSettingsClose() {
+  const dialog = document.getElementById('media-settings-dialog');
+  if (dialog.open) dialog.close();
+  else dialog.removeAttribute('open');
+}
+
+async function mediaSettingsSave(event) {
+  event.preventDefault();
+  const status = document.getElementById('media-settings-status');
+  const save = document.getElementById('media-settings-save');
+  if (!mediaSettingsRefresh()) {
+    status.className = 'platform-edit-note is-bad';
+    status.textContent = 'Впиши число от 1 до 10.';
+    return;
+  }
+  save.disabled = true;
+  status.className = 'platform-edit-note';
+  status.textContent = 'Сохраняю…';
+  try {
+    const data = await mediaPost('settings', { posts_per_day: mediaSettingsValue() });
+    if (data.settings) mediaSettings = data.settings;
+    if (data.budget) mediaRenderHero(data);
+    status.textContent = 'Сохранено.';
+    setTimeout(() => { mediaSettingsClose(); mediaLoad(); }, 600);
+  } catch (error) {
+    status.className = 'platform-edit-note is-bad';
+    status.textContent = error.status === 401 || error.status === 403
+      ? 'Сохранять может только владелец.'
+      : 'Не сохранилось. Попробуй ещё раз.';
+  } finally {
+    save.disabled = false;
+  }
+}
+
 function mediaInit() {
   if (!document.getElementById('section-media')) return;
+  document.getElementById('media-settings-open').addEventListener('click', mediaSettingsOpen);
+  document.getElementById('media-settings-close').addEventListener('click', mediaSettingsClose);
+  document.getElementById('media-settings-cancel').addEventListener('click', mediaSettingsClose);
+  document.getElementById('media-settings-form').addEventListener('submit', mediaSettingsSave);
+  document.getElementById('media-per-day').addEventListener('input', mediaSettingsRefresh);
+  document.getElementById('media-settings-dialog').addEventListener('click', event => {
+    if (event.target.id === 'media-settings-dialog') mediaSettingsClose();
+    const step = Number(event.target.closest('[data-media-step]')?.dataset.mediaStep || 0);
+    if (!step) return;
+    const input = document.getElementById('media-per-day');
+    const current = Number.isInteger(Number(input.value)) && input.value !== '' ? Number(input.value) : (mediaSettings?.posts_per_day || 5);
+    input.value = Math.min(10, Math.max(1, current + step));
+    mediaSettingsRefresh();
+  });
   document.getElementById('media-comment-form').addEventListener('submit', mediaCommentCreate);
   document.getElementById('media-comments-list').addEventListener('click', mediaCommentAction);
   document.getElementById('media-refresh').addEventListener('click', mediaLoad);

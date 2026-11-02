@@ -18,6 +18,7 @@ from pathlib import Path
 ALLOWED_ORIGINS = {"http://127.0.0.1:8790", "https://singularity.meshly.fr"}
 TIME_RE = re.compile(r"^([01]?\d|2[0-3]):[0-5]\d$")
 MAX_BATCH = 10
+POSTS_PER_DAY_RANGE = (1, 10)
 MAX_INSTRUCTION = 300
 MAX_POST_TEXT = 3000
 MAX_COMMENT = 1250
@@ -107,6 +108,15 @@ def save_schedule(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
             isinstance(s, str) and TIME_RE.match(s.strip()) for s in slots):
         raise ValueError("invalid_slots")
     return call("PUT", "/media-control/schedule", {"slots": [s.strip() for s in slots]}, home=home)
+
+
+def save_settings(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """«Настройки Медиа»: how many LinkedIn posts the bot may put out per day."""
+    value = body.get("posts_per_day")
+    low, high = POSTS_PER_DAY_RANGE
+    if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
+        raise ValueError("invalid_posts_per_day")
+    return call("PUT", "/media-control/settings", {"posts_per_day": value}, home=home)
 
 
 def preview(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
