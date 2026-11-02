@@ -53,12 +53,21 @@ class ForwardingTests(unittest.TestCase):
 
         def fake(method, path, body=None, **kwargs):
             calls.append((method, path))
+            if path.endswith("today"):
+                return today_reply
             return 200, {"slots": ["09:00"]} if path.endswith("schedule") else {"items": [{"id": "x"}]}
 
+        today_reply = (200, {"drafts": [{"id": "d"}], "queued": []})
         with patch.object(media_linkedin, "call", side_effect=fake):
             result = media_linkedin.overview()
-        self.assertEqual(result, {"state": "ready", "schedule": {"slots": ["09:00"]}, "news": [{"id": "x"}]})
-        self.assertEqual(calls, [("GET", "/media-control/schedule"), ("GET", "/media-control/news")])
+        self.assertEqual(result, {"state": "ready", "schedule": {"slots": ["09:00"]}, "news": [{"id": "x"}],
+                                  "today": {"drafts": [{"id": "d"}], "queued": []}})
+        self.assertEqual(calls, [("GET", "/media-control/schedule"), ("GET", "/media-control/news"),
+                                 ("GET", "/media-control/today")])
+        # An older news service without /today still gives the rest of the tab.
+        today_reply = (404, {})
+        with patch.object(media_linkedin, "call", side_effect=fake):
+            self.assertIsNone(media_linkedin.overview()["today"])
 
     def test_inputs_are_validated_before_forwarding(self):
         with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
@@ -172,7 +181,7 @@ class PageTests(unittest.TestCase):
         self.assertIn("aria-controls=\"section-media\"", PAGE)
         self.assertIn("onclick=\"showSection('media')\"", PAGE)
         self.assertIn("if (name === 'media') setTimeout(mediaLoad, 0);", PAGE)
-        for element in ("media-slots", "media-add-form", "media-save-slots", "media-upcoming",
+        for element in ("media-today", "media-today-list", "media-slots", "media-add-form", "media-save-slots", "media-upcoming",
                         "media-posts", "media-news", "media-prepare", "media-review", "media-send"):
             self.assertIn(f'id="{element}"', PAGE)
         self.assertIn("/api/media/linkedin", PAGE)

@@ -86,9 +86,12 @@ def overview(*, home: Path | None = None) -> dict:
         status, news = call("GET", "/media-control/news", home=home)
         if status != 200:
             return {"state": "unavailable", "reason": f"news_http_{status}"}
+        # Today's queue is optional: an older news service without it still works.
+        status, today = call("GET", "/media-control/today", home=home)
     except MediaUnavailable as error:
         return {"state": "not_configured" if str(error) == "not_configured" else "unavailable"}
-    return {"state": "ready", "schedule": schedule, "news": news.get("items", [])}
+    return {"state": "ready", "schedule": schedule, "news": news.get("items", []),
+            "today": today if status == 200 else None}
 
 
 def save_schedule(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
