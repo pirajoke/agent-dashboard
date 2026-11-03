@@ -4741,7 +4741,15 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .cc-medic-machine h3::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--mm-success); flex: none; }
 .cc-medic-machine.is-warn h3::before { background: var(--mm-warning); }
 .cc-medic-machine.is-bad h3::before { background: var(--mm-danger); }
-.cc-medic-machine.is-off h3::before { background: var(--mm-muted); }
+.cc-medic-machine.is-off h3::before, .cc-medic-machine.is-checking h3::before { background: var(--mm-muted); }
+.cc-medic-now { display: grid; gap: 14px; }
+.cc-medic-fix { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 0; border-top: 1px solid var(--mm-line); }
+.cc-medic-fix > p { flex: 1 1 260px; margin: 0; }
+.cc-medic-fix-actions { display: flex; gap: 8px; flex: none; }
+.cc-medic-fix-actions .cc-refresh { min-height: 36px; }
+.cc-medic-park { min-height: 36px; padding: 6px 12px; color: var(--mm-muted); font: inherit; font-size: 13px; background: transparent; border: 1px solid var(--mm-line); border-radius: 10px; cursor: pointer; }
+.cc-medic-park:hover { color: var(--mm-ink); border-color: var(--mm-control-line, var(--mm-line)); }
+.cc-medic-fix-note { flex-basis: 100%; margin: 0; color: var(--mm-danger); font-size: 13px; }
 .cc-medic-machine p { color: var(--mm-ink); }
 .cc-medic-machine .cc-medic-advice, .cc-medic-history .cc-medic-advice { color: var(--mm-muted); }
 .cc-medic-history { display: grid; gap: 8px; padding-top: 4px; }
@@ -5197,17 +5205,24 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <circle cx="96" cy="84" r="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
     <path d="M96 78v12M90 84h12" stroke="#EF4444" stroke-width="3.4" stroke-linecap="round"/>
   </symbol>
-  <!-- Медик on Техника: a little doctor with a cap and a stethoscope -->
+  <!-- Медик on Техника (Mark 2026-11-03 «поменяй маскота»): a robot doctor with a pulse on its visor -->
   <symbol id="cc-mascot-medic" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="111" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <path d="M60 24c-24 0-36 18-36 40s12 42 36 42 36-20 36-42-12-40-36-40z" fill="#A7F3D0" stroke="#1A1A1A" stroke-width="3"/>
-    <path d="M30 40c4-16 16-24 30-24s26 8 30 24c-10-5-20-7-30-7s-20 2-30 7z" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M60 18v12M54 24h12" stroke="#EF4444" stroke-width="3.6" stroke-linecap="round"/>
-    <use href="#cc-face" transform="translate(60 58)"/>
-    <path d="M40 74c0 14 8 20 20 20s20-6 20-20" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="80" cy="72" r="3.4" fill="#1A1A1A"/><circle cx="40" cy="72" r="3.4" fill="#1A1A1A"/>
-    <path d="M60 94v6" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="60" cy="103" r="5.5" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
+    <ellipse cx="60" cy="112" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M60 26V17" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="11" r="8" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M60 6.5v9M55.5 11h9" stroke="#EF4444" stroke-width="3" stroke-linecap="round"/>
+    <rect x="38" y="80" width="44" height="24" rx="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M60 86v12M54 92h12" stroke="#EF4444" stroke-width="3.4" stroke-linecap="round"/>
+    <rect x="20" y="26" width="80" height="58" rx="24" fill="#BAE6FD" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="30" y="38" width="60" height="32" rx="15" fill="#0F172A"/>
+    <circle cx="49" cy="49" r="4.2" fill="#5EEAD4"/><circle cx="71" cy="49" r="4.2" fill="#5EEAD4"/>
+    <path d="M35 61h11l3-5 4 9 3-6 3 2h26" fill="none" stroke="#5EEAD4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="28" cy="74" rx="4" ry="2.4" fill="#F9A8A8" opacity=".85"/>
+    <ellipse cx="92" cy="74" rx="4" ry="2.4" fill="#F9A8A8" opacity=".85"/>
+    <circle cx="30" cy="30" r="9" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="30" cy="30" r="3.5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/>
+    <path d="M40 82c-8 6-8 20 6 22M80 82c8 6 6 16-2 20" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="77" cy="104" r="5.5" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
   </symbol>
   <!-- AI Singularity: a friendly spark -->
   <symbol id="cc-mascot-singularity" viewBox="0 0 120 120">
@@ -13016,23 +13031,73 @@ document.addEventListener('click', event => {
 })();
 
 // ─── Медик ─── Mark 2026-11-02: «нажимаю, и он рассказывает про состояние включенных устройств».
-// He reads only what the page already received from each computer (memory, disk, processor, services);
-// nothing is sent anywhere and no model is called. A computer that does not answer is named, not guessed.
+// Mark 2026-11-03 «не работает»: the window said every computer was off and the log needed a sign-in.
+// Now the Медик asks each computer himself when opened (and keeps watching while the window is open),
+// says «осматриваю…» until it answers, and names the real reason when one does not. Nothing is sent
+// anywhere else and no model is called.
 const MEDIC_MACHINES = [['mini', 'Mac mini'], ['pro', 'MacBook Pro'], ['air', 'MacBook Air']];
+const MEDIC_TIMEOUT_MS = 20000;
+const medicVisits = {};   // key → { at, sys, services } or { at, error }
+const medicPending = {};  // key → Promise while a visit is running
 
-function medicServiceProblems(key) {
-  const rendered = svcRendered[`${key}-svc-tbody`];
-  if (!rendered) return null;
+function medicEndpoint(key) {
+  if (key === 'mini') return MAC_MINI_API ? `${MAC_MINI_API}/api/all` : null;
+  if (key === 'air') return AIR_API ? `${AIR_API}${AIR_API_PATH_PREFIX}/all` : null;
+  return PRO_API ? `${PRO_API}${PRO_API_PATH_PREFIX}/all` : null;
+}
+
+function medicVisit(key) {
+  if (medicPending[key]) return medicPending[key];
+  const url = medicEndpoint(key);
+  medicPending[key] = (async () => {
+    let visit;
+    if (!url) visit = { at: Date.now(), error: 'no_route' };
+    else {
+      try {
+        const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(MEDIC_TIMEOUT_MS) });
+        const data = response.ok ? await response.json().catch(() => null) : null;
+        // The site answers 502/504 when it cannot reach a laptop: that computer is off or offline.
+        if (!response.ok) visit = { at: Date.now(), error: response.status === 401 || response.status === 403 ? 'sign_in' : response.status >= 500 ? 'network' : 'http' };
+        else if (!data || !data.system) visit = { at: Date.now(), error: 'no_data' };
+        else visit = { at: Date.now(), sys: data.system, services: visibleRuntimeServices(data.services_detailed || data.services || []) };
+      } catch (error) {
+        visit = { at: Date.now(), error: error && error.name === 'TimeoutError' ? 'timeout' : 'network' };
+      }
+    }
+    medicVisits[key] = visit;
+    delete medicPending[key];
+    return visit;
+  })();
+  return medicPending[key];
+}
+
+// The freshest picture of a computer: the Медик's own visit, or what the page panels received.
+function medicPicture(key) {
+  const visit = medicVisits[key];
+  const pageSeen = machineRecentlySeen(key) && machineSystem[key];
+  if (visit && visit.sys && (!pageSeen || visit.at >= machineLastSeen[key])) return { sys: visit.sys, services: visit.services };
+  if (pageSeen) return { sys: machineSystem[key], services: (svcRendered[`${key}-svc-tbody`] || {}).services || null };
+  if (medicPending[key] && !visit) return { checking: true };
+  return { error: visit ? visit.error : (medicPending[key] ? null : 'unknown') , checking: Boolean(medicPending[key]) };
+}
+
+// Mark 2026-11-03: Ollama and Tag Website were switched off on purpose, so the Медик does not call them a problem.
+const MEDIC_OFF_ON_PURPOSE = ['ollama', 'tag-website'];
+
+function medicServiceProblems(key, services) {
+  if (!services) return null;
   const choices = readSvcArchiveChoices();
   const problems = [];
-  for (const s of rendered.services || []) {
+  for (const s of services) {
     const problem = svcProblem(s);
     if (!problem) continue;
-    // An old archived job that is simply not loaded is expected; anything else is worth saying.
-    if (isSvcArchived(s, choices, `${key}-svc-tbody`) && problem.label === 'Не запущена') continue;
-    problems.push(`${s.name || s.label}: ${problem.why}`);
+    if (MEDIC_OFF_ON_PURPOSE.includes(svcSlug(s.name)) || MEDIC_OFF_ON_PURPOSE.includes(svcSlug(s.label))) continue;
+    // A service Mark put in the archive and that is simply not running is parked, not broken.
+    if (isSvcArchived(s, choices, `${key}-svc-tbody`) && problem.label !== 'Ошибка') continue;
+    problems.push({ name: s.name || s.label, label: s.label, id: svcId(s), why: problem.why,
+      action: problem.label === 'Не отвечает' ? 'restart' : 'start' });
   }
-  return { total: (rendered.services || []).length, problems };
+  return { total: services.length, problems };
 }
 
 function medicUptimeDays(text) {
@@ -13040,9 +13105,21 @@ function medicUptimeDays(text) {
   return match ? Number(match[1]) : 0;
 }
 
+const MEDIC_OFF_WORDS = {
+  timeout: 'Не ответил за 20 секунд: выключен, спит или нет сети.',
+  network: 'Нет связи: выключен, спит или нет сети.',
+  http: 'Сайт не смог до него достучаться. Попробую ещё раз через несколько секунд.',
+  sign_in: 'Чтобы осмотреть, нужно войти на сайт.',
+  no_data: 'Ответил, но без данных о памяти и диске.',
+  no_route: 'С этой страницы до него не достучаться.',
+  unknown: 'Пока не ответил.',
+};
+
 function medicExam(key, title) {
-  const sys = machineSystem[key];
-  if (!machineRecentlySeen(key) || !sys) return { key, title, level: 'off', lines: ['Не на связи: выключен, спит или нет сети. Осмотреть не могу.'], advice: [] };
+  const picture = medicPicture(key);
+  if (picture.checking) return { key, title, level: 'checking', lines: ['Осматриваю…'], advice: [] };
+  if (!picture.sys) return { key, title, level: 'off', lines: [MEDIC_OFF_WORDS[picture.error] || MEDIC_OFF_WORDS.unknown], advice: [] };
+  const sys = picture.sys;
   const items = Object.fromEntries(machineHealthItems(sys).map(item => [item.id, item]));
   const lines = [];
   const advice = [];
@@ -13058,11 +13135,9 @@ function medicExam(key, title) {
   if (cpu.level === 'bad') advice.push('Что-то сильно грузит процессор, проверь Мониторинг системы.');
   const days = medicUptimeDays(sys.uptime);
   if (days >= 30) advice.push(`Не перезагружался ${days} дн., перезагрузка не помешает.`);
-  const svc = medicServiceProblems(key);
-  if (svc && svc.problems.length) {
-    lines.push(`Не работает: ${svc.problems.join('; ')}.`);
-    advice.push('Подробности в его списке сервисов.');
-  } else if (svc && svc.total) {
+  const svc = medicServiceProblems(key, picture.services);
+  const fixes = svc ? svc.problems : [];
+  if (svc && !svc.problems.length && svc.total) {
     lines.push('Все сервисы работают.');
   }
   const worst = [ram.level, disk.level, cpu.level].includes('bad') || (svc && svc.problems.length) ? 'bad'
@@ -13071,22 +13146,26 @@ function medicExam(key, title) {
     .filter(([, level]) => level === 'warn' || level === 'bad').map(([sign]) => sign);
   if (svc && svc.problems.length) signs.push('service');
   // Mark 2026-11-02 «помнил контекст»: the same trouble again → what helped last time on this computer.
-  const past = medicPastRepair(key, signs);
+  const past = medicPastRepair(key, signs, fixes.map(fix => fix.name));
   if (past) advice.unshift(`В прошлый раз (${medicDay(past.date)}) было похоже: ${past.problem.replace(/[.!]?$/, '.')} Помогло: ${past.fix}`);
-  return { key, title, level: worst, lines, advice };
+  return { key, title, level: worst, lines, advice, fixes };
 }
 
 function medicExamAll() {
   const exams = MEDIC_MACHINES.map(([key, title]) => medicExam(key, title));
-  const on = exams.filter(exam => exam.level !== 'off');
+  const on = exams.filter(exam => exam.level !== 'off' && exam.level !== 'checking');
+  const checking = exams.some(exam => exam.level === 'checking');
   const sick = on.filter(exam => exam.level !== 'ok');
-  let state = 'unknown', word = 'осматриваю…', verdict = 'Пока ни один компьютер не ответил. Попробуй чуть позже.';
+  let state = 'unknown', word = 'осматриваю…', verdict = 'Осматриваю компьютеры…';
   if (on.length) {
     state = sick.some(exam => exam.level === 'bad') ? 'bad' : sick.length ? 'warn' : 'ok';
     word = state === 'ok' ? 'все здоровы' : `проверь: ${sick.map(exam => exam.title).join(', ')}`;
     verdict = state === 'ok'
       ? `Включено ${on.length} из ${exams.length}. Все здоровы, ничего делать не нужно.`
       : `Включено ${on.length} из ${exams.length}. Есть на что посмотреть: ${sick.map(exam => exam.title).join(', ')}.`;
+  } else if (!checking) {
+    word = 'никто не ответил';
+    verdict = 'Ни один компьютер не ответил. Проверь интернет или обнови страницу.';
   }
   return { exams, state, word, verdict };
 }
@@ -13105,26 +13184,34 @@ setInterval(medicRender, 5000);
 const MEDIC_REPAIRS_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/machines/repairs`;
 const MEDIC_MACHINE_NAMES = Object.fromEntries(MEDIC_MACHINES);
 const MEDIC_SIGN_NAMES = { ram: 'память', cpu: 'процессор', disk: 'диск', service: 'сервис', network: 'связь', other: 'другое' };
-let medicRepairs = null;  // null: not loaded or not allowed; [] : empty log
+let medicRepairs = null;  // the entries once loaded
+let medicRepairsState = 'loading';  // loading | ready | owner | missing | error | offline
 
 function medicDay(day) {
   const date = new Date(`${day}T12:00:00Z`);
   return Number.isNaN(date.getTime()) ? day : date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
 
-function medicPastRepair(key, signs) {
+// A past repair counts when it was on this computer and about the same thing; for a service, the same service.
+function medicPastRepair(key, signs, serviceNames = []) {
   if (!medicRepairs || !signs.length) return null;
-  return medicRepairs.find(entry => entry.machine === key && (entry.signs || []).some(sign => signs.includes(sign))) || null;
+  const sameService = entry => serviceNames.some(name => entry.problem.toLowerCase().includes(String(name).toLowerCase()));
+  return medicRepairs.find(entry => entry.machine === key && (entry.signs || []).some(sign =>
+    signs.includes(sign) && (sign !== 'service' || sameService(entry)))) || null;
 }
 
 async function medicLoadRepairs() {
-  if (!MEDIC_REPAIRS_API) return;
+  if (!MEDIC_REPAIRS_API) { medicRepairsState = 'offline'; return; }
   try {
-    const response = await fetch(MEDIC_REPAIRS_API, { headers: mmHeaders(), cache: 'no-store' });
-    const payload = response.ok ? await response.json() : null;
-    medicRepairs = payload && payload.state === 'ready' && Array.isArray(payload.entries) ? payload.entries : null;
+    const response = await fetch(MEDIC_REPAIRS_API, { headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin' });
+    const payload = await response.json().catch(() => null);
+    if (response.ok && payload && payload.state === 'ready' && Array.isArray(payload.entries)) {
+      medicRepairs = payload.entries; medicRepairsState = 'ready';
+    } else {
+      medicRepairsState = response.status === 401 || response.status === 403 ? 'owner' : response.status === 404 ? 'missing' : 'error';
+    }
   } catch (_) {
-    medicRepairs = null;
+    medicRepairsState = 'error';
   }
 }
 medicLoadRepairs();
@@ -13133,27 +13220,35 @@ setInterval(medicLoadRepairs, 5 * 60 * 1000);
 async function medicSaveRepair(body) {
   if (!MEDIC_REPAIRS_API) return 'offline';
   try {
-    const response = await fetch(MEDIC_REPAIRS_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', body: JSON.stringify(body) });
+    const response = await fetch(MEDIC_REPAIRS_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin', body: JSON.stringify(body) });
     const payload = await response.json().catch(() => null);
-    if (response.ok && payload?.state === 'ready') { medicRepairs = payload.entries; return null; }
-    return response.status === 401 ? 'owner' : 'error';
+    if (response.ok && payload?.state === 'ready') { medicRepairs = payload.entries; medicRepairsState = 'ready'; return null; }
+    return response.status === 401 || response.status === 403 ? 'owner' : 'error';
   } catch (_) {
     return 'network';
   }
 }
 
+const MEDIC_REPAIRS_WORDS = {
+  loading: 'Открываю журнал…',
+  owner: 'Журнал виден только владельцу. Обнови страницу: если сайт попросит войти, войди своей почтой.',
+  missing: 'Журнал ещё не включён на сервере: обновление сайта до Mac mini пока не дошло.',
+  error: 'Журнал сейчас не открылся. Попробую ещё раз, когда откроешь медика снова.',
+  offline: 'Журнал открывается только на сайте.',
+};
+
 function medicHistoryNode() {
   const box = document.createElement('section');
   box.className = 'cc-medic-history';
   const h = document.createElement('h3'); h.textContent = 'История починок'; box.append(h);
-  if (medicRepairs === null) {
+  if (medicRepairsState !== 'ready') {
     const p = document.createElement('p'); p.className = 'cc-medic-advice';
-    p.textContent = 'Журнал виден только тебе, после входа на сайт.';
+    p.textContent = MEDIC_REPAIRS_WORDS[medicRepairsState] || MEDIC_REPAIRS_WORDS.error;
     box.append(p);
     return box;
   }
   if (!medicRepairs.length) {
-    const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = 'Пока ничего не чинили.'; box.append(p);
+    const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = 'Пока ничего не записано.'; box.append(p);
   }
   const list = document.createElement('ul');
   for (const entry of medicRepairs.slice(0, 8)) {
@@ -13186,31 +13281,128 @@ function medicHistoryNode() {
     const error = await medicSaveRepair({ action: 'add', machine: data.get('machine'), signs: [data.get('sign')],
       problem: String(data.get('problem') || ''), fix: String(data.get('fix') || ''), by: 'mark' });
     if (error) { status.textContent = error === 'owner' ? 'Нужно войти на сайт как владелец.' : 'Не сохранилось, попробуй ещё раз.'; return; }
-    ccOpenInfo('machine-medic');
+    medicPaintHistory();
   });
   box.append(toggle, form);
   return box;
 }
 
-ccInfoSources['machine-medic'] = () => {
+function medicMachinesNode() {
   const { exams, verdict } = medicExamAll();
-  const report = document.createElement('div');
-  report.className = 'cc-medic-report';
+  const wrap = document.createElement('div');
+  wrap.className = 'cc-medic-now';
   const head = document.createElement('div');
   head.className = 'cc-medic-verdict';
   head.innerHTML = '<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-medic"/></svg>';
   const say = document.createElement('p'); say.textContent = verdict; head.append(say);
-  report.append(head);
+  wrap.append(head);
   // Switched-on computers first: those are the ones he examined.
-  for (const exam of [...exams.filter(e => e.level !== 'off'), ...exams.filter(e => e.level === 'off')]) {
+  const order = { bad: 0, warn: 1, ok: 2, checking: 3, off: 4 };
+  for (const exam of [...exams].sort((a, b) => order[a.level] - order[b.level])) {
     const card = document.createElement('section');
     card.className = `cc-medic-machine is-${exam.level}`;
     const h = document.createElement('h3'); h.textContent = exam.title; card.append(h);
     for (const line of exam.lines) { const p = document.createElement('p'); p.textContent = line; card.append(p); }
+    for (const fix of exam.fixes || []) card.append(medicFixRow(exam.key, fix));
     for (const line of exam.advice) { const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = line; card.append(p); }
-    report.append(card);
+    wrap.append(card);
   }
-  report.append(medicHistoryNode());
+  return wrap;
+}
+
+// One stopped service: what is wrong, what the Медик suggests, and a button that does it.
+const MEDIC_FIX_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/machines/fix`;
+const medicFixState = {};  // `${machine}:${label}` → working | done | failed | owner
+
+function medicFixRow(key, fix) {
+  const row = document.createElement('div');
+  row.className = 'cc-medic-fix';
+  const text = document.createElement('p');
+  const name = document.createElement('strong'); name.textContent = fix.name;
+  text.append(name, document.createTextNode(` ${fix.why}. `));
+  const tip = document.createElement('span'); tip.className = 'cc-medic-advice';
+  tip.textContent = fix.action === 'restart' ? 'Совет: перезапустить.' : 'Совет: запустить заново. Если он не нужен, убери в архив.';
+  text.append(tip);
+  const actions = document.createElement('div'); actions.className = 'cc-medic-fix-actions';
+  const stateKey = `${key}:${fix.label}`;
+  const state = medicFixState[stateKey];
+  const go = document.createElement('button');
+  go.type = 'button'; go.className = 'cc-refresh';
+  go.textContent = state === 'working' ? 'Запускаю…' : fix.action === 'restart' ? 'Перезапустить' : 'Запустить';
+  go.disabled = state === 'working';
+  go.setAttribute('aria-label', `${go.textContent}: ${fix.name}`);
+  go.addEventListener('click', () => medicApplyFix(key, fix));
+  const park = document.createElement('button');
+  park.type = 'button'; park.className = 'cc-medic-park'; park.textContent = 'Не нужен';
+  park.setAttribute('aria-label', `${fix.name} не нужен: убрать в архив`);
+  park.addEventListener('click', () => { toggleSvcArchive(`${key}-svc-tbody`, fix.id, true); medicPaintMachines(); });
+  actions.append(go, park);
+  row.append(text, actions);
+  if (state === 'failed' || state === 'owner') {
+    const note = document.createElement('p'); note.className = 'cc-medic-fix-note'; note.setAttribute('role', 'status');
+    note.textContent = state === 'owner' ? 'Нужно войти на сайт как владелец.' : 'Не получилось: компьютер не ответил. Попробуй ещё раз.';
+    row.append(note);
+  }
+  return row;
+}
+
+async function medicApplyFix(key, fix) {
+  const stateKey = `${key}:${fix.label}`;
+  if (!MEDIC_FIX_API || medicFixState[stateKey] === 'working') return;
+  medicFixState[stateKey] = 'working';
+  medicPaintMachines();
+  let ok = false;
+  try {
+    const response = await fetch(MEDIC_FIX_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin',
+      body: JSON.stringify({ machine: key, label: fix.label, action: fix.action }) });
+    ok = response.ok;
+    medicFixState[stateKey] = ok ? 'done' : response.status === 401 || response.status === 403 ? 'owner' : 'failed';
+  } catch (_) {
+    medicFixState[stateKey] = 'failed';
+  }
+  if (ok) {
+    // Remember it, so next time the Медик can say what helped.
+    medicSaveRepair({ action: 'add', machine: key, signs: ['service'], by: 'medic',
+      problem: `${fix.name} не работал (${fix.why})`.slice(0, 300),
+      fix: fix.action === 'restart' ? 'Перезапустили кнопкой медика' : 'Запустили заново кнопкой медика' })
+      .then(() => { if (medicDialogOpen()) medicPaintHistory(); });
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    delete medicVisits[key];
+    await medicVisit(key);
+  }
+  if (medicDialogOpen()) medicPaintMachines();
+}
+
+function medicPaintMachines() {
+  const now = document.querySelector('#cc-info-body .cc-medic-now');
+  if (now) now.replaceWith(medicMachinesNode());
+  medicRender();
+}
+
+function medicPaintHistory() {
+  const history = document.querySelector('#cc-info-body .cc-medic-history');
+  // Leave a half-filled form alone; the next opening shows the fresh log.
+  if (history && !history.querySelector('.cc-medic-form:not([hidden])')) history.replaceWith(medicHistoryNode());
+  medicPaintMachines();
+}
+
+function medicDialogOpen() {
+  const dialog = document.getElementById('cc-info-dialog');
+  return Boolean(dialog && dialog.open && document.querySelector('#cc-info-body .cc-medic-report'));
+}
+
+// Each opening: ask every computer now, repaint as each one answers, and keep checking every 10 s while open.
+function medicInspect() {
+  for (const [key] of MEDIC_MACHINES) medicVisit(key).then(() => { if (medicDialogOpen()) medicPaintMachines(); });
+}
+setInterval(() => { if (medicDialogOpen()) medicInspect(); }, 10000);
+
+ccInfoSources['machine-medic'] = () => {
+  medicInspect();
+  if (medicRepairsState !== 'ready') medicLoadRepairs().then(() => { if (medicDialogOpen()) medicPaintHistory(); });
+  const report = document.createElement('div');
+  report.className = 'cc-medic-report';
+  report.append(medicMachinesNode(), medicHistoryNode());
   return { title: 'Медик', node: report };
 };
 

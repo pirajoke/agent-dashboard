@@ -1128,6 +1128,10 @@ def _pro_health_request(method: str, path: str, payload: dict | None = None) -> 
     return _remote_health_request(PRO_HEALTH_API_URL, method, path, payload)
 
 
+MACHINE_FIX_TARGETS = {"mini": _health_request, "air": _air_health_request, "pro": _pro_health_request}
+MACHINE_FIX_LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$")
+
+
 def _air_proxy_path(path: str) -> str | None:
     if path.startswith("/api/air/"):
         return "/api/" + path[len("/api/air/"):]
@@ -1981,6 +1985,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/machines/repairs':
             self._handle_repair_log_save()
             return
+        if parsed.path == '/api/machines/fix':
+            self._handle_machine_fix()
+            return
         if parsed.path in MEDIA_LINKEDIN_ACTIONS:
             self._handle_media_linkedin_action(parsed.path)
             return
@@ -2780,6 +2787,32 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(400, {'error': 'invalid_owner_todo', 'reason': str(error)})
         except OSError:
             self._json_response(503, {'error': 'owner_todo_unavailable'})
+
+    def _handle_machine_fix(self):
+        # Mark 2026-11-03: the Медик offers «Запустить» next to a stopped service. Owner only, the same
+        # guard as the repair log; it only starts (or restarts) a launchd job through that computer's
+        # own health API, exactly what the service list's start button does on the local dashboard.
+        body = self._platform_owner_body(1024)
+        if body is None:
+            return
+        machine, label, action = body.get('machine'), body.get('label'), body.get('action')
+        if (machine not in MACHINE_FIX_TARGETS or action not in ('start', 'restart')
+                or not isinstance(label, str) or not MACHINE_FIX_LABEL.match(label)):
+            self._json_response(400, {'error': 'invalid_fix'})
+            return
+        request = MACHINE_FIX_TARGETS[machine]
+        try:
+            if action == 'restart':
+                try:
+                    request('POST', f'/api/service/{label}/stop')
+                except Exception:
+                    pass  # A job that is already down cannot be stopped; starting it is what matters.
+                time.sleep(1)
+            result = request('POST', f'/api/service/{label}/start')
+        except Exception:
+            self._json_response(502, {'error': 'machine_unreachable'})
+            return
+        self._json_response(200, {'state': 'done', 'machine': machine, 'label': label, 'action': action, 'result': result})
 
     def _handle_repair_log_save(self):
         body = self._platform_owner_body(REPAIR_LOG_MAX_BYTES)
