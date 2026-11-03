@@ -37,6 +37,7 @@ from dashboard_builder.daily_work import work_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.work_tools import work_tools_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
+from dashboard_builder.machine_layout import MAX_BODY_BYTES as MACHINE_LAYOUT_MAX_BYTES, load_layout, save_layout
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
@@ -72,6 +73,7 @@ JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
 PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
+MACHINE_LAYOUT_FILE = HOME / ".agent-bridge" / "machine-layout.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 # «Журнал починок» for the Медик on Техника (Mark 2026-11-02). Owner only.
@@ -1972,6 +1974,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/platform-cards':
             self._handle_platform_cards_save()
             return
+        if parsed.path == '/api/machine-layout':
+            self._handle_machine_layout_save()
+            return
         if parsed.path == '/api/growth':
             self._handle_growth_edit()
             return
@@ -2702,6 +2707,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except OSError:
             self._json_response(503, {'error': 'campus_archive_unavailable'})
 
+    def _handle_machine_layout_save(self):
+        # Mark's order and archive of the computers on «Техника»; same owner guard as Platforms.
+        body = self._platform_owner_body(MACHINE_LAYOUT_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            self._json_response(200, {'state': 'ready', **save_layout(MACHINE_LAYOUT_FILE, body)})
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_machine_layout'})
+        except OSError:
+            self._json_response(503, {'error': 'machine_layout_unavailable'})
+
     def _handle_platform_edits_save(self):
         body = self._platform_owner_body(PLATFORM_EDITS_MAX_BYTES)
         if body is None:
@@ -3024,6 +3041,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/site-version':
             self._json_response(200, _site_version())
+            return
+        if parsed.path == '/api/machine-layout':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required'})
+                return
+            self._json_response(200, {'state': 'ready', **load_layout(MACHINE_LAYOUT_FILE)})
             return
         if parsed.path == '/api/platform-edits':
             if not self._decision_owner_authorized():

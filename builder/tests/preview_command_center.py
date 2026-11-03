@@ -303,7 +303,7 @@ class PreviewHandler(SERVER.Handler):
                 ]
             self._json_response(200, payload)
             return
-        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth"}:
+        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth", "/api/machine-layout"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
         if parsed.path == "/api/owner-projects":
@@ -369,6 +369,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_edits_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/platform-cards":
             self._handle_platform_cards_save()
+        elif urlsplit(self.path).path == "/api/machine-layout":
+            self._handle_machine_layout_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/growth":
             self._handle_growth_edit()  # Writes only the synthetic note in the fixture state.
         elif urlsplit(self.path).path == "/api/docxx/decide":
@@ -470,6 +472,7 @@ if __name__ == "__main__":
         SERVER.MANAGER_DECISIONS_FILE = FIXTURE_STATE / "responses.jsonl"
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
+        SERVER.MACHINE_LAYOUT_FILE = FIXTURE_STATE / "machine-layout.json"
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.CAMPUS_ARCHIVE_FILE = FIXTURE_STATE / "campus-archive.json"
         SERVER.LIVE_SESSIONS_DIR = FIXTURE_STATE / "live-sessions"

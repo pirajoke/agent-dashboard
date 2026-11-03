@@ -3414,6 +3414,38 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .cc-tabs button[aria-pressed="true"],
 .cc-main .cc-subnav button[aria-pressed="true"],
 .cc-main .cc-machine-nav .nav-pill.active { color: var(--mm-ink); background: var(--mm-surface); border-color: transparent; box-shadow: var(--mm-shadow-soft); }
+/* Mark 2026-11-03: the computer switcher can be reordered by dragging, and a computer can go to «Архив». */
+.cc-machine-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 20px; }
+.cc-main .cc-machine-bar .nav-pills.cc-machine-nav { margin: 0; }
+.cc-machine-bar .platform-archive { margin: 0; }
+.cc-main .cc-machine-nav .nav-pill[hidden] { display: none; }
+.cc-main .cc-machine-nav .nav-pill { touch-action: pan-x; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.cc-main .cc-machine-nav.is-reordering, .cc-main .cc-machine-nav.is-reordering .nav-pill { cursor: grabbing; touch-action: none; }
+/* The held computer stays visible when it leaves the row on its way to «Архив». */
+.cc-main .cc-machine-bar .nav-pills.cc-machine-nav.is-reordering { overflow: visible; }
+.cc-main .cc-machine-nav .nav-pill.is-dragging { position: relative; z-index: 2; color: var(--mm-ink); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
+.cc-main .cc-machine-nav .nav-pill.is-dragging.is-over-archive { opacity: .45; }
+.cc-machine-archive .platform-archive-open b { min-width: 20px; padding: 0 6px; color: var(--mm-accent); background: var(--mm-selection); border-radius: 999px; font-size: 11.5px; line-height: 18px; text-align: center; }
+.cc-machine-archive .platform-archive-open b[hidden] { display: none; }
+.cc-machine-archive.is-drop-zone .platform-archive-open { border-style: dashed; border-color: var(--mm-control-line); color: var(--mm-ink); }
+.cc-machine-archive.is-drop-zone .platform-archive-open.is-drop-target { border-style: solid; border-color: var(--mm-accent); color: var(--mm-accent); background: var(--mm-selection); transform: scale(1.06); }
+.platform-archive-dialog.cc-machine-archive-dialog { width: min(480px, calc(100vw - 32px)); }
+.cc-machine-archive-dialog .platform-archive-close { margin-left: auto; }
+.cc-machine-list-title { margin: 14px 0 6px; color: var(--mm-muted); font-size: 12px; font-weight: 650; }
+.cc-machine-list-title:first-of-type { margin-top: 0; }
+.cc-machine-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.cc-machine-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 6px 6px 14px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; font-size: 14px; font-weight: 600; }
+.cc-machine-list li.cc-machine-empty { justify-content: flex-start; color: var(--mm-muted); font-weight: 500; background: none; border-style: dashed; }
+.cc-machine-list button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 760px) {
+  .cc-machine-bar { flex-wrap: nowrap; }
+  .cc-main .cc-machine-bar .nav-pills.cc-machine-nav { flex: 1 1 auto; min-width: 0; }
+  .cc-machine-bar .platform-archive-open span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .cc-machine-bar .platform-archive-open { min-height: 48px; padding: 6px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-machine-archive.is-drop-zone .platform-archive-open.is-drop-target { transform: none; }
+}
 .cc-tabs b,
 .cc-main .cc-machine-nav .pill-badge,
 #decision-count:not(:empty) { min-width: 22px; padding: 0 7px; color: var(--mm-accent); background: var(--mm-selection); border-radius: 999px; font-size: 12px; font-weight: 650; text-align: center; }
@@ -6326,20 +6358,42 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <span class="cc-medic-text"><strong>Медик</strong><span id="cc-medic-word">осматриваю…</span></span>
       </button>
     </header>
-    <nav class="nav-pills cc-machine-nav" aria-label="Компьютеры">
-    <button class="nav-pill" type="button" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
-      Mac mini
+    <!-- Mark 2026-11-03: the computers can be dragged into his order (long press on a phone) and put into «Архив». -->
+    <div class="cc-machine-bar">
+    <nav class="nav-pills cc-machine-nav" aria-label="Компьютеры" aria-describedby="machine-order-hint">
+    <button class="nav-pill" type="button" data-machine="mac-mini" aria-controls="section-mac-mini" aria-pressed="false" onclick="showSection('mac-mini')">
+      <span class="cc-machine-name">Mac mini</span>
       <span class="pill-badge" id="mini-badge">…</span>
     </button>
-    <button class="nav-pill" type="button" aria-controls="section-air" aria-pressed="false" onclick="showSection('air')">
-      MacBook Air
+    <button class="nav-pill" type="button" data-machine="air" aria-controls="section-air" aria-pressed="false" onclick="showSection('air')">
+      <span class="cc-machine-name">MacBook Air</span>
       <span class="pill-badge" id="air-badge">…</span>
     </button>
-    <button class="nav-pill" type="button" aria-controls="section-pro" aria-pressed="false" onclick="showSection('pro')">
-      MacBook Pro
+    <button class="nav-pill" type="button" data-machine="pro" aria-controls="section-pro" aria-pressed="false" onclick="showSection('pro')">
+      <span class="cc-machine-name">MacBook Pro</span>
       <span class="pill-badge" id="pro-badge">…</span>
     </button>
     </nav>
+    <div class="platform-archive cc-machine-archive" id="machine-archive">
+      <button class="platform-archive-open" id="machine-archive-open" type="button" aria-haspopup="dialog" aria-controls="machine-archive-dialog"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg><span>Архив</span><b id="machine-archive-count" hidden>0</b></button>
+    </div>
+    </div>
+    <p class="cc-visually-hidden" id="machine-order-hint">Перетащите компьютер, чтобы поменять порядок, или на «Архив», чтобы убрать. На телефоне сначала подержите палец. С клавиатуры: Alt и стрелка.</p>
+    <p class="cc-visually-hidden" id="machine-order-status" role="status" aria-live="polite"></p>
+    <dialog class="platform-archive-dialog cc-machine-archive-dialog" id="machine-archive-dialog" aria-labelledby="machine-archive-title">
+      <header class="platform-archive-head">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-archive"/></svg>
+        <h3 id="machine-archive-title">Архив компьютеров</h3>
+        <button class="platform-archive-close" id="machine-archive-close" type="button" aria-label="Закрыть архив">✕</button>
+      </header>
+      <div class="platform-archive-body">
+        <p class="platform-archive-status" id="machine-archive-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        <h4 class="cc-machine-list-title">В архиве</h4>
+        <ul class="cc-machine-list" id="machine-archive-list"></ul>
+        <h4 class="cc-machine-list-title">На странице</h4>
+        <ul class="cc-machine-list" id="machine-active-list"></ul>
+      </div>
+    </dialog>
   <!-- ═══════════════ MAC MINI ═══════════════ -->
   <div id="section-mac-mini" class="section">
     <div class="machine-header">
@@ -7895,6 +7949,300 @@ tabOrderNav.addEventListener('keydown', event => {
 
 document.getElementById('reset-tab-order').addEventListener('click', resetTabOrder);
 applyTabOrder(readTabOrder());
+
+// Mark 2026-11-03: «сделай drag drop и archive desarchive» on «Техника». The computers in the switcher
+// can be dragged into his order (a long press first on a phone, Alt + arrow from the keyboard), and
+// one he does not use goes to «Архив» by dropping it there or from the archive window, where «Вернуть»
+// brings it back. The order and the archive live on the Mac mini (/api/machine-layout, owner only), so
+// every device shows the same; this browser keeps a copy for a fast first paint. One computer always stays.
+const MACHINE_IDS = Object.freeze(['mac-mini', 'air', 'pro']);
+const MACHINE_LAYOUT_CACHE_KEY = 'command-center.machine-layout.v1';
+const machineNav = document.querySelector('.cc-machine-nav');
+const machineArchive = document.getElementById('machine-archive');
+const machineArchiveOpen = document.getElementById('machine-archive-open');
+const machineArchiveDialog = document.getElementById('machine-archive-dialog');
+let machineLayout = { order: [...MACHINE_IDS], archived: [] };
+let machineDrag = null;
+let machineDragSwallowClick = false;
+
+function machineButtons() {
+  return Array.from(machineNav.querySelectorAll('.nav-pill[data-machine]'));
+}
+
+function machineVisibleButtons() {
+  return machineButtons().filter(button => !button.hidden);
+}
+
+function machineName(id) {
+  return machineNav.querySelector(`[data-machine="${id}"] .cc-machine-name`)?.textContent.trim() || id;
+}
+
+function normalizeMachineLayout(value) {
+  const order = [];
+  (Array.isArray(value?.order) ? value.order : []).forEach(id => {
+    if (MACHINE_IDS.includes(id) && !order.includes(id)) order.push(id);
+  });
+  MACHINE_IDS.forEach(id => { if (!order.includes(id)) order.push(id); });
+  const wanted = Array.isArray(value?.archived) ? value.archived : [];
+  let archived = order.filter(id => wanted.includes(id));
+  if (archived.length >= order.length) archived = archived.slice(0, order.length - 1);
+  return { order, archived };
+}
+
+function applyMachineLayout(value) {
+  machineLayout = normalizeMachineLayout(value);
+  const byId = new Map(machineButtons().map(button => [button.dataset.machine, button]));
+  machineNav.append(...machineLayout.order.map(id => byId.get(id)).filter(Boolean));
+  byId.forEach((button, id) => { button.hidden = machineLayout.archived.includes(id); });
+  const count = document.getElementById('machine-archive-count');
+  count.textContent = String(machineLayout.archived.length);
+  count.hidden = !machineLayout.archived.length;
+  machineArchiveOpen.setAttribute('aria-label', machineLayout.archived.length
+    ? `Архив компьютеров: ${machineLayout.archived.length}` : 'Архив компьютеров');
+  renderMachineArchive();
+  // The open computer went to the archive: show the first one still on the page.
+  if (machineLayout.archived.includes(selectedMachine)) {
+    const next = machineLayout.order.find(id => !machineLayout.archived.includes(id));
+    if (document.getElementById('section-machines')?.classList.contains('active')) showSection(next);
+    else selectedMachine = next;
+  }
+}
+
+function readMachineLayoutCache() {
+  try { return JSON.parse(localStorage.getItem(MACHINE_LAYOUT_CACHE_KEY) || 'null'); } catch (_) { return null; }
+}
+
+function writeMachineLayoutCache(layout) {
+  try { localStorage.setItem(MACHINE_LAYOUT_CACHE_KEY, JSON.stringify(layout)); } catch (_) { /* optional */ }
+}
+
+async function saveMachineLayout() {
+  const layout = { order: [...machineLayout.order], archived: [...machineLayout.archived] };
+  writeMachineLayoutCache(layout);
+  if (IS_FILE_DASHBOARD) return;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/machine-layout`, {
+      method: 'POST', headers: jarvisRunHeaders(), cache: 'no-store', body: JSON.stringify(layout),
+    });
+    if (!response.ok) return;
+    const payload = await response.json().catch(() => null);
+    if (payload?.state === 'ready') writeMachineLayoutCache(normalizeMachineLayout(payload));
+  } catch (_) { /* this browser keeps its copy; the next change tries again */ }
+}
+
+async function loadMachineLayout() {
+  if (IS_FILE_DASHBOARD) return;
+  try {
+    const response = await fetch(`${DASHBOARD_API}/api/machine-layout`, { headers: jarvisRunHeaders(), cache: 'no-store' });
+    if (!response.ok) return;
+    const payload = await response.json();
+    if (payload?.state !== 'ready' || machineDrag) return;
+    const layout = normalizeMachineLayout(payload);
+    writeMachineLayoutCache(layout);
+    applyMachineLayout(layout);
+  } catch (_) { /* keep the cached copy */ }
+}
+
+function announceMachine(text) {
+  document.getElementById('machine-order-status').textContent = text;
+  const status = document.getElementById('machine-archive-status');
+  if (machineArchiveDialog.open) status.textContent = text;
+}
+
+function setMachineArchived(id, archived) {
+  if (!MACHINE_IDS.includes(id)) return false;
+  const rest = machineLayout.archived.filter(item => item !== id);
+  if (archived && rest.length + 1 >= MACHINE_IDS.length) {
+    announceMachine('Один компьютер всегда остаётся на странице.');
+    return false;
+  }
+  applyMachineLayout({ order: machineLayout.order, archived: archived ? [...rest, id] : rest });
+  saveMachineLayout();
+  announceMachine(archived ? `${machineName(id)}: убран в архив.` : `${machineName(id)}: вернулся на страницу.`);
+  return true;
+}
+
+function renderMachineArchive() {
+  const archivedList = document.getElementById('machine-archive-list');
+  const activeList = document.getElementById('machine-active-list');
+  const lastOne = machineLayout.order.length - machineLayout.archived.length <= 1;
+  const row = (id, archived) => {
+    const item = document.createElement('li');
+    const name = document.createElement('span');
+    name.textContent = machineName(id);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'platform-archive-open';
+    button.textContent = archived ? 'Вернуть' : 'В архив';
+    button.setAttribute('aria-label', `${machineName(id)}: ${archived ? 'вернуть на страницу' : 'убрать в архив'}`);
+    if (!archived && lastOne) {
+      button.disabled = true;
+      button.title = 'Один компьютер всегда остаётся на странице';
+    }
+    button.addEventListener('click', () => setMachineArchived(id, !archived));
+    item.append(name, button);
+    return item;
+  };
+  const archived = machineLayout.order.filter(id => machineLayout.archived.includes(id));
+  if (archived.length) archivedList.replaceChildren(...archived.map(id => row(id, true)));
+  else {
+    const empty = document.createElement('li');
+    empty.className = 'cc-machine-empty';
+    empty.textContent = 'Пусто. Перетащите компьютер на «Архив» или нажмите «В архив» ниже.';
+    archivedList.replaceChildren(empty);
+  }
+  activeList.replaceChildren(...machineLayout.order.filter(id => !machineLayout.archived.includes(id)).map(id => row(id, false)));
+}
+
+machineArchiveOpen.addEventListener('click', () => {
+  document.getElementById('machine-archive-status').textContent = '';
+  renderMachineArchive();
+  if (typeof machineArchiveDialog.showModal === 'function') machineArchiveDialog.showModal();
+  else machineArchiveDialog.setAttribute('open', '');
+});
+document.getElementById('machine-archive-close').addEventListener('click', () => machineArchiveDialog.close());
+machineArchiveDialog.addEventListener('click', event => {
+  if (event.target === machineArchiveDialog) machineArchiveDialog.close();
+});
+
+function saveMachineOrderFromPage() {
+  const shown = machineButtons().map(button => button.dataset.machine);
+  applyMachineLayout({ order: shown, archived: machineLayout.archived });
+  saveMachineLayout();
+}
+
+// Same gliding move as the main menu: neighbours move around the held item, never the item itself.
+function moveMachineButton(button, index) {
+  const order = machineVisibleButtons();
+  const from = order.indexOf(button);
+  if (index === from || index < 0 || index >= order.length) return;
+  const others = order.filter(item => item !== button);
+  const before = new Map(others.map(item => [item, item.offsetLeft]));
+  if (index > from) button.before(...order.slice(from + 1, index + 1));
+  else button.after(...order.slice(index, from));
+  if (tabOrderReducedMotion.matches) return;
+  others.forEach(item => {
+    const dx = before.get(item) - item.offsetLeft;
+    if (!dx) return;
+    item.style.transition = 'none';
+    item.style.transform = `translateX(${dx}px)`;
+    item.getBoundingClientRect();
+    item.style.transition = 'transform .16s ease';
+    item.style.transform = '';
+    item.addEventListener('transitionend', () => { item.style.transition = ''; }, { once: true });
+  });
+}
+
+function machineOverArchive(x, y) {
+  const box = machineArchiveOpen.getBoundingClientRect();
+  return x >= box.left - 8 && x <= box.right + 8 && y >= box.top - 8 && y <= box.bottom + 8;
+}
+
+function startMachineDrag() {
+  if (!machineDrag || machineDrag.active) return;
+  clearTimeout(machineDrag.timer);
+  machineDrag.active = true;
+  machineDrag.startOffset = machineDrag.button.offsetLeft;
+  machineNav.classList.add('is-reordering');
+  machineDrag.button.classList.add('is-dragging');
+  machineArchive.classList.add('is-drop-zone');
+  try { machineDrag.button.setPointerCapture(machineDrag.pointerId); } catch (_) { /* the nav still gets the moves */ }
+  if (machineDrag.touch && navigator.vibrate) navigator.vibrate(12);
+}
+
+function dragMachineTo(x, y) {
+  const { button } = machineDrag;
+  const over = machineOverArchive(x, y);
+  machineDrag.overArchive = over;
+  machineArchiveOpen.classList.toggle('is-drop-target', over);
+  button.classList.toggle('is-over-archive', over);
+  const pointerShift = x - machineDrag.x;
+  if (!over) {
+    const others = machineVisibleButtons().filter(item => item !== button);
+    const center = machineDrag.startOffset + button.offsetWidth / 2 + pointerShift;
+    moveMachineButton(button, others.filter(item => item.offsetLeft + item.offsetWidth / 2 < center).length);
+  }
+  const shift = pointerShift - (button.offsetLeft - machineDrag.startOffset);
+  const lift = tabOrderReducedMotion.matches ? '' : ' scale(1.03)';
+  button.style.transform = `translate(${shift}px, ${y - machineDrag.y}px)${lift}`;
+}
+
+function endMachineDrag() {
+  if (!machineDrag) return;
+  clearTimeout(machineDrag.timer);
+  const { button, active, overArchive } = machineDrag;
+  machineDrag = null;
+  if (!active) return;
+  machineDragSwallowClick = true;
+  setTimeout(() => { machineDragSwallowClick = false; }, 400);
+  machineNav.classList.remove('is-reordering');
+  button.classList.remove('is-dragging', 'is-over-archive');
+  machineArchive.classList.remove('is-drop-zone');
+  machineArchiveOpen.classList.remove('is-drop-target');
+  button.style.transition = tabOrderReducedMotion.matches ? '' : 'transform .16s ease';
+  button.style.transform = '';
+  setTimeout(() => { button.style.transition = ''; }, 200);
+  if (overArchive && setMachineArchived(button.dataset.machine, true)) return;
+  saveMachineOrderFromPage();
+  const order = machineVisibleButtons();
+  announceMachine(`${machineName(button.dataset.machine)}: место ${order.indexOf(button) + 1} из ${order.length}`);
+}
+
+machineNav.addEventListener('pointerdown', event => {
+  if (machineDrag || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  const button = event.target.closest('.nav-pill[data-machine]');
+  if (!button) return;
+  const touch = event.pointerType !== 'mouse';
+  machineDrag = { button, touch, pointerId: event.pointerId, x: event.clientX, y: event.clientY, active: false, timer: 0, overArchive: false };
+  if (touch) machineDrag.timer = setTimeout(startMachineDrag, TAB_ORDER_LONG_PRESS_MS);
+});
+
+machineNav.addEventListener('pointermove', event => {
+  if (!machineDrag || event.pointerId !== machineDrag.pointerId) return;
+  if (!machineDrag.touch && event.buttons === 0) { endMachineDrag(); return; }
+  if (!machineDrag.active) {
+    if (Math.hypot(event.clientX - machineDrag.x, event.clientY - machineDrag.y) < TAB_ORDER_MOVE_SLOP) return;
+    // A finger that moves before the long press is scrolling, not dragging.
+    if (machineDrag.touch) { endMachineDrag(); return; }
+    startMachineDrag();
+  }
+  event.preventDefault();
+  dragMachineTo(event.clientX, event.clientY);
+});
+
+machineNav.addEventListener('pointerup', endMachineDrag);
+machineNav.addEventListener('pointercancel', endMachineDrag);
+machineNav.addEventListener('lostpointercapture', event => {
+  if (machineDrag?.active && event.pointerId === machineDrag.pointerId) endMachineDrag();
+});
+machineNav.addEventListener('touchmove', event => {
+  if (machineDrag?.active) event.preventDefault();
+}, { passive: false });
+machineNav.addEventListener('contextmenu', event => {
+  if (machineDrag) event.preventDefault();
+});
+machineNav.addEventListener('click', event => {
+  if (!machineDragSwallowClick) return;
+  machineDragSwallowClick = false;
+  event.preventDefault();
+  event.stopPropagation();
+}, true);
+
+machineNav.addEventListener('keydown', event => {
+  if (!event.altKey || event.ctrlKey || event.metaKey) return;
+  const step = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[event.key];
+  const button = event.target.closest('.nav-pill[data-machine]');
+  if (!step || !button) return;
+  event.preventDefault();
+  moveMachineButton(button, machineVisibleButtons().indexOf(button) + step);
+  button.focus();
+  saveMachineOrderFromPage();
+  const order = machineVisibleButtons();
+  announceMachine(`${machineName(button.dataset.machine)}: место ${order.indexOf(button) + 1} из ${order.length}`);
+});
+
+applyMachineLayout(readMachineLayoutCache());
+loadMachineLayout();
 
 // Card size (Mark 2026-11-02): «+» and «−» on the side scale only the Платформы cards. Per-browser convenience.
 const PLATFORM_CARD_SCALE_KEY = 'command-center.platform-card-scale.v1';
@@ -13077,7 +13425,9 @@ function medicExam(key, title) {
 }
 
 function medicExamAll() {
-  const exams = MEDIC_MACHINES.map(([key, title]) => medicExam(key, title));
+  // A computer Mark put into «Архив» on «Техника» (2026-11-03) is switched off on purpose: the medic skips it.
+  const exams = MEDIC_MACHINES.filter(([key]) => !machineLayout.archived.includes(key === 'mini' ? 'mac-mini' : key))
+    .map(([key, title]) => medicExam(key, title));
   const on = exams.filter(exam => exam.level !== 'off');
   const sick = on.filter(exam => exam.level !== 'ok');
   let state = 'unknown', word = 'осматриваю…', verdict = 'Пока ни один компьютер не ответил. Попробуй чуть позже.';
