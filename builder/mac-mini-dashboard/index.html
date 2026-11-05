@@ -3817,6 +3817,35 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-comment-card textarea { display: block; width: calc(100% - 24px); min-height: 6em; margin: 10px 12px 0; resize: vertical; }
 .media-comment-card .media-post-foot { flex-wrap: wrap; }
 .media-today-panel .media-posts-preview { margin-top: 4px; }
+.media-today-panel .media-posts-preview:empty { display: none; }
+/* Mark 2026-11-05: posts as a small train of cards, like Платформы; one opens below. */
+.media-train { position: relative; display: flex; gap: 12px; margin: 0; padding: 2px 2px 8px; list-style: none; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.media-train > .media-empty { flex: 1; }
+.media-ticket { position: relative; flex: 0 0 176px; min-width: 0; scroll-snap-align: start; }
+.media-ticket + .media-ticket::before { content: ''; position: absolute; top: 20px; left: -12px; width: 12px; height: 2px; background: var(--mm-line); }
+.media-ticket > button, .media-ticket > a, .media-ticket-card { display: flex; flex-direction: column; gap: 6px; width: 100%; height: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; text-align: left; text-decoration: none; transition: transform .2s ease, border-color .15s, background .15s; }
+.media-ticket > button:hover, .media-ticket > a:hover { transform: translateY(-2px); background: var(--mm-surface-hover); }
+.media-ticket > a:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.media-ticket.is-open > button { border-color: var(--mm-accent); box-shadow: 0 0 0 1px var(--mm-accent) inset; }
+.media-ticket-tag { display: flex; align-items: center; gap: 6px; color: var(--mm-muted); font-size: 10px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.media-ticket-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.media-ticket.is-sent .media-ticket-tag { color: var(--mm-success); }
+.media-ticket.is-queued .media-ticket-tag { color: var(--mm-info); }
+.media-ticket.is-next .media-ticket-tag { color: var(--mm-accent); }
+.media-ticket.is-warn .media-ticket-tag { color: var(--mm-warning); }
+.media-ticket.is-sent > a, .media-ticket.is-sent .media-ticket-card { opacity: .8; }
+.media-ticket-title { font-size: 13px; font-weight: 650; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.media-ticket-hint { margin-top: auto; color: var(--mm-muted); font-size: 11px; }
+/* News: a compact grid of small cards instead of a long list. */
+.media-news-panel .media-stories { grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 8px; }
+.media-news-panel .media-story { grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; padding: 10px 12px; border-radius: 12px; }
+.media-news-panel .media-story:has(.media-post) { grid-column: 1 / -1; }
+.media-news-panel .media-story h4 { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.media-news-panel .media-story-summary { display: none; }
+.media-news-panel .media-story-meta { gap: 6px; margin-bottom: 2px; font-size: 11px; }
+.media-news-panel .media-story-meta .media-chip { padding: 1px 7px; font-size: 10px; }
+.media-news-panel .media-story > .media-ghost { grid-column: 2; justify-self: start; min-height: 28px; padding: 2px 10px; font-size: 12px !important; }
+.media-news-panel .media-check, .media-news-panel .media-check span { width: 20px; height: 20px; }
 .media-post-head .media-chip { margin-left: auto; align-self: flex-start; }
 .media-post-locked { margin: 0; padding: 8px 14px 12px; color: var(--mm-muted); font-size: 12px; }
 .media-post > .media-post-image:last-child { border-bottom: 0; }
@@ -3892,7 +3921,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .media-primary { color: #0b2226; } }
 :root[data-theme="dark"] .media-primary { color: #0b2226; }
 @media (prefers-reduced-motion: reduce) {
-  .media-story, .media-meter span, .media-post, .media-check span { transition: none; }
+  .media-story, .media-meter span, .media-post, .media-check span, .media-ticket > button, .media-ticket > a { transition: none; }
+  .media-ticket > button:hover, .media-ticket > a:hover { transform: none; }
 }
 .growth-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); align-items: start; gap: 12px; }
 /* Mark 2026-10-26: compact cards like Платформы; the whole card opens a window with the steps. */
@@ -6271,6 +6301,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
               <p id="media-today-note"></p>
             </div>
           </header>
+          <ol class="media-train" id="media-train" aria-label="Посты по порядку: что ушло, что в Buffer, что следующее"></ol>
           <ol class="media-posts-preview" id="media-today-list"></ol>
         </article>
         <article class="media-panel media-comments-panel" id="media-comments" aria-labelledby="media-comments-title" hidden>
@@ -10438,7 +10469,7 @@ function mediaRender(data) {
   const schedule = data.schedule || {};
   mediaSettings = schedule.settings || null;
   mediaRenderHero(schedule);
-  mediaRenderToday(data.today);
+  mediaRenderToday(data.today, schedule.posts || []);
   mediaRenderComments(data.comments);
   mediaSavedSlots = [...(schedule.slots || [])];
   mediaSlots = [...mediaSavedSlots];
@@ -10461,7 +10492,7 @@ function mediaRender(data) {
   mediaNews = data.news || [];
   document.getElementById('media-news').innerHTML = mediaNews.length ? mediaNews.map(item => {
     const id = mediaEsc(item.id);
-    const meta = [item.source ? `<span class="media-source">${mediaEsc(item.source)}</span>` : '', item.published_at ? `<span>${mediaEsc(mediaAgo(item.published_at))}</span>` : ''].join('');
+    const meta = [item.source ? `<span class="media-source">${mediaEsc(item.source)}</span>` : '', item.published_at ? `<span>${mediaEsc(mediaAgo(item.published_at))}</span>` : '', item.in_channel ? '<span class="media-chip is-ok">в канале</span>' : ''].join('');
     return `<li class="media-story" data-id="${id}">
       <label class="media-check"><input type="checkbox" value="${id}" aria-label="Выбрать: ${mediaEsc(item.title)}"><span>${MEDIA_CHECK_SVG}</span></label>
       <div class="media-story-body" data-media-pick="${id}">
@@ -10760,32 +10791,79 @@ function mediaBindPostList(list) {
   });
 }
 
-function mediaRenderToday(today) {
+// Mark 2026-11-05: «как на платформе», minimal; a small train of cards — what went out,
+// what is in Buffer, what is next. A card opens its full post (rewrite, edit, send now) below.
+let mediaTrainOpen = '';
+
+function mediaTicket(key, kind, tag, title, hint, url) {
+  const inner = `<span class="media-ticket-tag"><i class="media-ticket-dot" aria-hidden="true"></i>${mediaEsc(tag)}</span>
+    <span class="media-ticket-title">${mediaEsc(title)}</span>${hint ? `<span class="media-ticket-hint">${mediaEsc(hint)}</span>` : ''}`;
+  if (!key) {
+    return `<li class="media-ticket ${kind}">${url
+      ? `<a href="${mediaEsc(url)}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+      : `<div class="media-ticket-card">${inner}</div>`}</li>`;
+  }
+  return `<li class="media-ticket ${kind}"><button type="button" data-media-train="${mediaEsc(key)}" aria-expanded="false">${inner}</button></li>`;
+}
+
+function mediaTrainShow(key) {
+  mediaTrainOpen = key || '';
+  document.querySelectorAll('#media-train [data-media-train]').forEach(button => {
+    const open = button.dataset.mediaTrain === mediaTrainOpen;
+    button.setAttribute('aria-expanded', String(open));
+    button.closest('.media-ticket').classList.toggle('is-open', open);
+  });
+  const list = document.getElementById('media-today-list');
+  [...list.children].forEach(card => { card.hidden = !card.dataset.trainKey || card.dataset.trainKey !== mediaTrainOpen; });
+  if (mediaTrainOpen) mediaPostsReady(list);
+}
+
+function mediaRenderToday(today, posts = []) {
   const panel = document.getElementById('media-today');
   const list = document.getElementById('media-today-list');
+  const train = document.getElementById('media-train');
   if (!today) { panel.hidden = true; mediaToday = []; return; }
   panel.hidden = false;
   const minutes = Number(today.handoff_minutes) || 15;
-  document.getElementById('media-today-note').textContent = `Каждый пост уходит в Buffer за ${minutes} минут до своего времени. До этого его можно изменить или отправить сразу.`;
-  mediaToday = (today.drafts || []).map(item => ({ candidate_id: item.id, preview: item.preview }));
-  const drafts = (today.drafts || []).map((item, index) => mediaPostCard(index, item.text, item.title, {
-    today: true,
-    candidateId: item.id,
-    status: item.next_slot ? `Следующий · выйдет в ${mediaTime(item.next_slot)}` : 'В запасе',
-    statusClass: item.next_slot ? 'is-accent' : '',
-  }));
-  const queued = (today.queued || []).map(item => {
-    const status = item.state === 'ambiguous'
-      ? 'Нужна проверка в Buffer'
-      : `В Buffer · выйдет в ${mediaTime(item.due_at)}`;
-    return `<li class="media-post is-locked" title="Уже в Buffer: здесь его больше не изменить">
-      ${mediaPostHead(status, item.state === 'ambiguous' ? 'is-warn' : '')}
+  document.getElementById('media-today-note').textContent = `Нажми на карточку, чтобы открыть пост: переделать, изменить или отправить сразу. В Buffer он уходит за ${minutes} минут до своего времени.`;
+  const dayAgo = Date.now() - 864e5;
+  const sent = posts
+    .filter(post => post.state === 'sent' && post.due_at && new Date(post.due_at).getTime() >= dayAgo)
+    .sort((a, b) => new Date(a.due_at) - new Date(b.due_at));
+  const queuedItems = today.queued || [];
+  const drafts = [...(today.drafts || [])].sort((a, b) => Boolean(b.next_slot) - Boolean(a.next_slot));
+  mediaToday = drafts.map(item => ({ candidate_id: item.id, preview: item.preview }));
+  const tickets = [];
+  const cards = [];
+  sent.forEach(post => tickets.push(mediaTicket('', 'is-sent', `Ушёл · ${mediaTime(post.due_at)}`, post.title, '', post.url)));
+  queuedItems.forEach((item, index) => {
+    const warn = item.state === 'ambiguous';
+    const key = `q${index}`;
+    tickets.push(mediaTicket(key, warn ? 'is-warn' : 'is-queued', warn ? 'Проверить в Buffer' : `В Buffer · ${mediaTime(item.due_at)}`, item.title || '', 'открыть пост'));
+    cards.push({ key, html: `<li class="media-post is-locked" title="Уже в Buffer: здесь его больше не изменить">
+      ${mediaPostHead(warn ? 'Нужна проверка в Buffer' : `В Buffer · выйдет в ${mediaTime(item.due_at)}`, warn ? 'is-warn' : '')}
       ${mediaPostBody(item.text || '', item.id)}
-    </li>`;
+    </li>` });
   });
-  list.innerHTML = [...queued, ...drafts].join('')
-    || '<li class="media-empty">На сегодня готовых постов нет. Как только бот опубликует новость в канале, её пост появится здесь.</li>';
-  mediaPostsReady(list);
+  drafts.forEach((item, index) => {
+    const key = `d${index}`;
+    tickets.push(mediaTicket(key, item.next_slot ? 'is-next' : 'is-reserve', item.next_slot ? `Следующий · ${mediaTime(item.next_slot)}` : 'В запасе', item.title || '', 'открыть · переделать'));
+    cards.push({ key, html: mediaPostCard(index, item.text, item.title, {
+      today: true,
+      candidateId: item.id,
+      status: item.next_slot ? `Следующий · выйдет в ${mediaTime(item.next_slot)}` : 'В запасе',
+      statusClass: item.next_slot ? 'is-accent' : '',
+    }) });
+  });
+  train.innerHTML = tickets.join('')
+    || '<li class="media-empty">На сегодня постов нет. Как только бот опубликует новость в канале, её пост появится здесь.</li>';
+  list.innerHTML = cards.map(card => card.html).join('');
+  [...list.children].forEach((element, index) => { element.dataset.trainKey = cards[index].key; });
+  mediaTrainShow(cards.some(card => card.key === mediaTrainOpen) ? mediaTrainOpen : '');
+  // Start the train at the last post that went out, so what comes next is in view.
+  const ahead = train.querySelector('.media-ticket:not(.is-sent)');
+  const behind = ahead && ahead.previousElementSibling;
+  train.scrollLeft = behind ? behind.offsetLeft : 0;
 }
 
 // Pictures come through the owner-only server route; fetched with the owner header, kept per post.
@@ -11166,6 +11244,10 @@ function mediaInit() {
   });
   document.getElementById('media-prepare').addEventListener('click', mediaPrepare);
   ['media-review-list', 'media-today-list'].forEach(id => mediaBindPostList(document.getElementById(id)));
+  document.getElementById('media-train').addEventListener('click', event => {
+    const key = event.target.closest('[data-media-train]')?.dataset.mediaTrain;
+    if (key) mediaTrainShow(key === mediaTrainOpen ? '' : key);
+  });
   document.getElementById('media-send').addEventListener('click', mediaSend);
   document.getElementById('media-cancel').addEventListener('click', () => {
     mediaReview = [];
