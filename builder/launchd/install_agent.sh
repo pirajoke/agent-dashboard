@@ -31,6 +31,13 @@ install_launchd_agent() {
   fi
 
   mv "$candidate" "$destination"
+  # The owner turned this agent off (`launchctl disable`): bootstrapping it fails
+  # with error 5 and would abort the whole deploy and its rollback. Keep it off.
+  if launchctl print-disabled "$domain" 2>/dev/null \
+      | grep -Eq "\"$label\" => (disabled|true)"; then
+    echo "LaunchAgent $label is disabled in launchd; left off" >&2
+    return 0
+  fi
   if ! launchctl bootstrap "$domain" "$destination"; then
     echo "Failed to bootstrap LaunchAgent $label" >&2
     return 1

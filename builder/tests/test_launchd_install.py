@@ -39,6 +39,11 @@ case "$1" in
     fi
     test -f "$MOCK_LOADED"
     ;;
+  print-disabled)
+    if [[ "${MOCK_DISABLED:-0}" == 1 ]]; then
+      printf '\tdisabled services = {\n\t\t"%s" => disabled\n\t}\n' "$MOCK_LABEL"
+    fi
+    ;;
   bootout)
     if (( ${MOCK_UNLOAD_READS:-0} > 0 )); then
       echo "$MOCK_UNLOAD_READS" > "$MOCK_LOADED.pending"
@@ -78,7 +83,7 @@ esac
         start = script.index('  plutil -lint "$plist.tmp"')
         return script[start:script.index("\n}", start)]
 
-    def _run(self, caller, *, installed="same", loaded=True, fail=False, unload_reads=0):
+    def _run(self, caller, *, installed="same", loaded=True, fail=False, unload_reads=0, disabled=False):
         self.calls.write_text("")
         self.loaded.unlink(missing_ok=True)
         Path(str(self.loaded) + ".pending").unlink(missing_ok=True)
@@ -94,6 +99,7 @@ esac
             MOCK_CALLS=str(self.calls), MOCK_LOADED=str(self.loaded),
             MOCK_BOOTSTRAP_FAIL="1" if fail else "0",
             MOCK_UNLOAD_READS=str(unload_reads),
+            MOCK_DISABLED="1" if disabled else "0", MOCK_LABEL=self.label,
             PUBLISHER_LABEL=self.label, PUBLISHER_PLIST=str(self.plist),
             label=self.label, plist=str(self.plist),
             TEST_INSTALL_HELPER=str(BUILDER_DIR / "launchd" / "install_agent.sh"),
@@ -105,7 +111,7 @@ esac
             env=env, capture_output=True, text=True, timeout=20,
         )
         self.mutations = [line.split()[0] for line in self.calls.read_text().splitlines()
-                          if not line.startswith("print ")]
+                          if not line.startswith(("print ", "print-disabled "))]
         return result
 
     def test_unchanged_loaded_agent_is_not_restarted(self):
@@ -168,6 +174,16 @@ esac
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn(self.label, result.stdout + result.stderr)
                 self.assertIn("Bootstrap failed", result.stderr)
+                self.assertFalse(self.loaded.exists())
+
+    def test_agent_disabled_by_owner_is_left_off_without_failing_the_deploy(self):
+        for caller in ("publisher", "collector"):
+            with self.subTest(caller=caller):
+                result = self._run(caller, installed="different", loaded=False, fail=True, disabled=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(self.mutations, [], "A disabled agent must not be bootstrapped")
+                self.assertIn("disabled", result.stderr)
+                self.assertEqual(self.plist.read_text(), "desired plist\n")
                 self.assertFalse(self.loaded.exists())
 
 
