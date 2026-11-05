@@ -3773,13 +3773,21 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-car-hint { color: var(--mm-accent); font-size: 11.5px; font-weight: 650; }
 .media-train-now { flex: none; display: flex; }
 .media-train-now span { display: grid; place-items: center; padding: 0 2px 0 6px; border-left: 2px solid var(--mm-accent); color: var(--mm-accent); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
-.platform-archive-dialog.media-post-dialog { width: min(620px, calc(100vw - 32px)); }
+.platform-archive-dialog.media-post-dialog { width: min(980px, calc(100vw - 32px)); max-height: min(92vh, 860px); }
 .media-post-dialog .media-post-close { margin-left: auto; }
 .media-post-dialog .platform-archive-head h3 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#media-post-dialog-list { margin: 0; padding: 16px; overflow: auto; overscroll-behavior: contain; }
+/* Mark 2026-11-05: the whole post and its picture at once, actions always reachable. */
+#media-post-dialog-list { flex: 1 1 auto; min-height: 0; margin: 0; padding: 14px; overflow: auto; overscroll-behavior: contain; }
+.media-post-dialog .media-post { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: start; }
+.media-post-dialog .media-post > * { grid-column: 2; min-width: 0; }
+.media-post-dialog .media-post > .media-post-image { grid-column: 1; grid-row: 1 / span 20; align-self: stretch; display: flex; align-items: center; margin: 0; border: 0; border-right: 1px solid var(--mm-line); background: var(--mm-background); }
+.media-post-dialog .media-post-text { margin: 8px 16px 10px; font-size: 13.5px; line-height: 1.5; }
+.media-post-dialog .media-post-foot { flex-wrap: wrap; }
+.media-post-dialog .media-edit textarea { min-height: 14em; }
 .media-post-dialog .media-post-text.is-clamped { display: block; -webkit-line-clamp: unset; overflow: visible; }
 .media-post-dialog .media-post-more { display: none; }
-.media-post-dialog .media-post-image img { max-height: 380px; }
+.media-post-dialog .media-post-image img { width: 100%; max-height: calc(min(92vh, 860px) - 100px); object-fit: contain; }
+.media-post-dialog .media-post-image.is-loading { aspect-ratio: 1 / 1; }
 .media-post-title { margin: 10px 16px 12px; font-size: 15px; font-weight: 650; line-height: 1.4; }
 .media-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr); gap: 18px; align-items: start; }
 .media-side { display: grid; gap: 18px; min-width: 0; }
@@ -3803,6 +3811,8 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-ghost svg { width: 16px; height: 16px; }
 .media-link { border: 0; background: none; padding: 6px 4px; color: var(--mm-accent); font-size: 13px !important; font-weight: 700 !important; }
 .media-stories { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.media-news-panel.is-collapsed .media-stories, .media-news-panel.is-collapsed #media-news-bar, .media-news-panel.is-collapsed #media-select-all { display: none !important; }
+.media-news-panel.is-collapsed .media-panel-head { margin-bottom: 0; }
 .media-stories-more { grid-column: 1 / -1; display: flex; justify-content: center; }
 .media-story[hidden] { display: none; }
 .media-story { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-surface); transition: border-color .15s, background .15s, box-shadow .15s; }
@@ -3917,6 +3927,11 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-chip.is-accent { background: var(--mm-selection); color: var(--mm-accent); }
 @media (max-width: 980px) {
   .media-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .media-post-dialog .media-post { display: block; }
+  .media-post-dialog .media-post > .media-post-image { position: static; border-right: 0; border-top: 1px solid var(--mm-line); border-bottom: 1px solid var(--mm-line); }
+  .media-post-dialog .media-post-image img { max-height: 42vh; }
 }
 @media (max-width: 560px) {
   .media-panel { padding: 14px 14px 16px; border-radius: 16px; }
@@ -6302,14 +6317,16 @@ button.cc-refresh:hover { background: var(--mm-selection); }
 
       <div class="media-layout">
         <div class="media-main">
-        <article class="media-panel media-news-panel" aria-labelledby="media-news-title">
+        <!-- Mark 2026-11-05: the list repeats the feed, so it stays folded until asked for. -->
+        <article class="media-panel media-news-panel is-collapsed" id="media-news-panel" aria-labelledby="media-news-title">
           <header class="media-panel-head">
             <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
             <div>
-              <h3 id="media-news-title">Новости для LinkedIn</h3>
-              <p>Отметь, что отправить самому. Отправленные сюда не попадают.</p>
+              <h3 id="media-news-title">Выбрать новость самому</h3>
+              <p>Бот и так берёт свежие новости в ленту. Сюда, если хочешь отправить что-то своё.</p>
             </div>
             <button type="button" class="media-link" id="media-select-all">Выбрать все</button>
+            <button type="button" class="media-ghost" id="media-news-toggle" aria-expanded="false" aria-controls="media-news">Показать</button>
           </header>
           <ul class="media-stories" id="media-news"></ul>
           <div class="media-bar" id="media-news-bar">
@@ -6327,6 +6344,26 @@ button.cc-refresh:hover { background: var(--mm-selection); }
               <button type="button" class="media-primary" id="media-send"><span class="media-in media-in-small" aria-hidden="true">in</span>Отправить в LinkedIn</button>
             </div>
           </div>
+        </article>
+        <article class="media-panel media-comments-panel" id="media-comments" aria-labelledby="media-comments-title" hidden>
+          <header class="media-panel-head">
+            <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
+            <div>
+              <h3 id="media-comments-title">Комментарии в LinkedIn</h3>
+              <p id="media-comments-note">Вставь ссылку на чужой пост по нашей теме. Бот предложит 3 варианта комментария от GRACHEV AI STUDIO, ничего не отправляя сам.</p>
+            </div>
+          </header>
+          <form class="media-comment-form" id="media-comment-form">
+            <label class="media-sr" for="media-comment-url">Ссылка на пост LinkedIn</label>
+            <input id="media-comment-url" type="url" inputmode="url" autocomplete="off" required placeholder="https://www.linkedin.com/feed/update/…">
+            <details class="media-comment-more">
+              <summary>Пост не читается? Вставь его текст</summary>
+              <label class="media-sr" for="media-comment-source">Текст поста</label>
+              <textarea id="media-comment-source" maxlength="8000" rows="4" placeholder="Скопируй текст поста из LinkedIn"></textarea>
+            </details>
+            <div class="media-comment-form-foot"><span class="media-rewrite-status" id="media-comment-status" aria-live="polite"></span><button type="submit" class="media-primary" id="media-comment-create">Предложить комментарии</button></div>
+          </form>
+          <ol class="media-posts-preview" id="media-comments-list"></ol>
         </article>
         </div>
 
@@ -6349,26 +6386,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
               <span id="media-slots-status" role="status" aria-live="polite">Есть несохранённые изменения</span>
               <button type="button" class="media-primary" id="media-save-slots">Сохранить</button>
             </div>
-          </article>
-          <article class="media-panel media-comments-panel" id="media-comments" aria-labelledby="media-comments-title" hidden>
-            <header class="media-panel-head">
-              <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
-              <div>
-                <h3 id="media-comments-title">Комментарии в LinkedIn</h3>
-                <p id="media-comments-note">Вставь ссылку на чужой пост по нашей теме. Бот предложит 3 варианта комментария от GRACHEV AI STUDIO, ничего не отправляя сам.</p>
-              </div>
-            </header>
-            <form class="media-comment-form" id="media-comment-form">
-              <label class="media-sr" for="media-comment-url">Ссылка на пост LinkedIn</label>
-              <input id="media-comment-url" type="url" inputmode="url" autocomplete="off" required placeholder="https://www.linkedin.com/feed/update/…">
-              <details class="media-comment-more">
-                <summary>Пост не читается? Вставь его текст</summary>
-                <label class="media-sr" for="media-comment-source">Текст поста</label>
-                <textarea id="media-comment-source" maxlength="8000" rows="4" placeholder="Скопируй текст поста из LinkedIn"></textarea>
-              </details>
-              <div class="media-comment-form-foot"><span class="media-rewrite-status" id="media-comment-status" aria-live="polite"></span><button type="submit" class="media-primary" id="media-comment-create">Предложить комментарии</button></div>
-            </form>
-            <ol class="media-posts-preview" id="media-comments-list"></ol>
           </article>
         </div>
       </div>
@@ -10803,6 +10820,14 @@ function mediaRender(data) {
   }).join('') + (extra ? `<li class="media-stories-more"><button type="button" class="media-ghost" id="media-news-more" aria-expanded="${mediaNewsAll}">${mediaNewsAll ? 'Свернуть' : `Ещё ${mediaNews.length - MEDIA_NEWS_SHOWN}`}</button></li>` : '')
     : '<li class="media-empty">Свежих новостей за сутки нет. Загляни позже.</li>';
   mediaUpdatePrepare();
+  mediaNewsToggleLabel();
+}
+
+function mediaNewsToggleLabel() {
+  const open = !document.getElementById('media-news-panel').classList.contains('is-collapsed');
+  const button = document.getElementById('media-news-toggle');
+  button.textContent = open ? 'Свернуть' : (mediaNews.length ? `Показать ${mediaNews.length}` : 'Показать');
+  button.setAttribute('aria-expanded', String(open));
 }
 
 function mediaRenderSlots() {
@@ -11567,6 +11592,10 @@ function mediaInit() {
     const check = !boxes.every(box => box.checked);
     boxes.forEach((box, index) => { box.checked = check && index < 10; });
     mediaUpdatePrepare();
+  });
+  document.getElementById('media-news-toggle').addEventListener('click', () => {
+    document.getElementById('media-news-panel').classList.toggle('is-collapsed');
+    mediaNewsToggleLabel();
   });
   const news = document.getElementById('media-news');
   news.addEventListener('change', mediaUpdatePrepare);
