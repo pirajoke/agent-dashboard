@@ -4110,6 +4110,9 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   font-size: 0; white-space: nowrap; transform: none;
 }
 .platform-links .platform-link .platform-access { min-width: 0; padding: 3px 8px; font-size: 10.5px; }
+/* A long link label on a narrow card stays inside the card (Mark 2026-11-05, GEN.AI card). */
+.platform-links .platform-link { max-width: 100%; }
+.platform-links .platform-link .platform-access { max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; }
 .platform-links .platform-link::after { margin-left: 0; font-size: 12px; }
 .platform-links .platform-link:hover { transform: none; }
 .platform-links .platform-link:first-child::before { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
