@@ -107,6 +107,7 @@ function fetchJSON() { const next = answers.shift(); return next === 'hang' ? ne
 const visibleRuntimeServices = s => s; const renderSvcTable = () => {}; const renderHeaderDate = () => {};
 const PRO_API = '/api/pro'; const PRO_API_PATH_PREFIX = '';
 const ccInfoSources = {};
+const refreshMachineCare = () => {};
 """
 
 
