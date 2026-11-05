@@ -330,13 +330,13 @@ class PageTests(unittest.TestCase):
         self.assertIn("aria-controls=\"section-media\"", PAGE)
         self.assertIn("onclick=\"showSection('media')\"", PAGE)
         self.assertIn("if (name === 'media') setTimeout(mediaLoad, 0);", PAGE)
-        for element in ("media-today", "media-today-list", "media-slots", "media-add-form", "media-save-slots", "media-upcoming",
-                        "media-posts", "media-news", "media-prepare", "media-review", "media-send"):
+        for element in ("media-train", "media-train-stats", "media-post-dialog", "media-post-dialog-list", "media-slots",
+                        "media-add-form", "media-save-slots", "media-news", "media-prepare", "media-review", "media-send"):
             self.assertIn(f'id="{element}"', PAGE)
         self.assertIn("/api/media/linkedin", PAGE)
         # Titles from the news service are escaped before they reach innerHTML.
         self.assertIn("mediaEsc(item.title)", PAGE)
-        self.assertIn("mediaEsc(post.title)", PAGE)
+        self.assertIn("mediaEsc(car.title)", PAGE)
 
 
 if __name__ == "__main__":
