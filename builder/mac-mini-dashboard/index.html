@@ -3799,30 +3799,32 @@ button.media-dot:hover { transform: scale(1.15); }
 .media-now b { position: absolute; top: -6px; left: 4px; white-space: nowrap; color: var(--mm-accent); font-size: 10.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .media-later { position: absolute; right: -10px; top: 60px; color: var(--mm-muted); font-size: 11px; font-weight: 650; }
 .media-air-note { margin: 0; color: var(--mm-muted); font-size: 12.5px; line-height: 1.45; }
-.media-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.media-board { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
 .media-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px; border-radius: 18px; background: color-mix(in srgb, var(--mm-surface-hover) 55%, transparent); border: 1px solid var(--mm-line); }
-.media-col > header { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
+.media-col > header { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 4px; }
+.media-col > header .media-col-add { margin-left: auto; min-height: 34px; padding: 4px 14px; }
 .media-col h3 { margin: 0; font-size: 14px; font-weight: 750; }
 .media-col-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--mm-surface); color: var(--mm-muted); font-size: 12px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
-.media-col[data-col="draft"] h3::before, .media-col[data-col="queue"] h3::before, .media-col[data-col="sent"] h3::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; vertical-align: 1px; background: var(--mm-accent); }
-.media-col[data-col="queue"] h3::before { background: var(--mm-info); }
+.media-col[data-col="plan"] h3::before, .media-col[data-col="sent"] h3::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; vertical-align: 1px; background: var(--mm-accent); }
 .media-col[data-col="sent"] h3::before { background: var(--mm-success); }
-.media-col-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; max-height: 560px; overflow: auto; scrollbar-width: thin; }
+.media-col-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; max-height: 620px; overflow: auto; scrollbar-width: thin; }
 .media-col-empty { padding: 18px 10px; color: var(--mm-muted); font-size: 13px; text-align: center; }
-.media-card-open { display: block; width: 100%; margin: 0; padding: 0; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; text-align: left; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
+.media-card-open { display: grid; grid-template-columns: minmax(120px, 38%) minmax(0, 1fr); align-items: stretch; width: 100%; margin: 0; padding: 0; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; text-align: left; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
 button.media-card-open:hover { transform: translateY(-2px); box-shadow: var(--mm-shadow-soft); }
-.media-card .media-car-art { width: 100%; height: auto; aspect-ratio: 2.4 / 1; border-radius: 0; }
-.media-card .media-car-body { padding: 10px 12px 12px; }
-.media-card.is-free .media-card-open { border-style: dashed; background: transparent; color: var(--mm-muted); }
-.media-card.is-free .media-car-art { aspect-ratio: auto; height: 36px; border: 0; }
-.media-card.is-free .media-car-title { font-weight: 500; font-size: 12.5px; }
+.media-card .media-car-art { width: 100%; height: 100%; min-height: 96px; aspect-ratio: 1.91 / 1; border-radius: 0; }
+.media-card .media-car-body { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 10px 14px; }
 .media-card.is-sent .media-card-open { opacity: .92; }
+.media-day { padding: 8px 4px 0; }
+.media-day:first-child { padding-top: 0; }
+.media-day h4 { margin: 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.media-free { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px dashed var(--mm-control-line); border-radius: 14px; color: var(--mm-muted); font-size: 13px; }
+.media-free-time { color: var(--mm-ink); font-weight: 750; font-variant-numeric: tabular-nums; }
 .media-col-add { min-height: 40px; border: 1px dashed var(--mm-control-line); border-radius: 12px; background: transparent; color: var(--mm-muted); font-size: 13px !important; font-weight: 700 !important; }
 .media-col-add:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
 @media (max-width: 980px) {
   .media-air { grid-template-columns: minmax(0, 1fr); }
-  .media-board { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(260px, 82%); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
-  .media-col { scroll-snap-align: start; }
+  .media-board { grid-template-columns: minmax(0, 1fr); }
+  .media-col-list { max-height: none; }
 }
 @media (max-width: 560px) {
   .media-air-card { grid-template-columns: minmax(0, 1fr); }
@@ -3901,6 +3903,22 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-stories { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
 .media-news-panel.is-collapsed .media-stories, .media-news-panel.is-collapsed #media-news-bar, .media-news-panel.is-collapsed #media-select-all { display: none !important; }
 .media-news-panel.is-collapsed .media-panel-head { margin-bottom: 0; }
+.media-news-panel .media-stories { grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.media-news-group { grid-column: 1 / -1; padding-top: 6px; }
+.media-news-group:first-child { padding-top: 0; }
+.media-news-group h4 { margin: 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.media-news-group[hidden] { display: none; }
+.media-story.media-news-card { display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden; border-radius: 14px; }
+.media-news-card .media-check { position: absolute; top: 10px; left: 10px; z-index: 1; margin: 0; }
+.media-news-card .media-check span { box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.media-news-card .media-story-body { display: flex; flex-direction: column; flex: 1; }
+.media-news-art { position: relative; display: grid; place-items: center; flex: none; width: 100%; aspect-ratio: 1.91 / 1; overflow: hidden;
+  background: linear-gradient(135deg, hsl(var(--news-hue) 55% 42%), hsl(calc(var(--news-hue) + 40) 60% 30%)); }
+.media-news-art-name { color: rgba(255,255,255,.9); font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.media-news-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.media-news-text { padding: 10px 12px 4px; }
+.media-news-card .media-story-read { align-self: flex-start; margin: 0 12px 10px; }
+@media (max-width: 560px) { .media-news-panel .media-panel-head { flex-wrap: wrap; } .media-news-panel .media-panel-head > div { flex-basis: calc(100% - 64px); } }
 .media-stories-more { grid-column: 1 / -1; display: flex; justify-content: center; }
 .media-story[hidden] { display: none; }
 .media-story { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-surface); transition: border-color .15s, background .15s, box-shadow .15s; }
@@ -6549,20 +6567,19 @@ button.cc-refresh:hover { background: var(--mm-selection); }
           <p class="media-air-note" id="media-train-note"></p>
         </div>
       </section>
-      <section class="media-board" aria-label="Посты по стадиям">
-        <div class="media-col" data-col="draft"><header><h3>Черновики</h3><span class="media-col-count" id="media-count-draft">0</span></header>
-          <ol class="media-col-list" id="media-col-draft"></ol>
-          <button type="button" class="media-col-add" id="media-add-own">+ Своя новость</button></div>
-        <div class="media-col" data-col="queue"><header><h3>В очереди</h3><span class="media-col-count" id="media-count-queue">0</span></header>
-          <ol class="media-col-list" id="media-col-queue"></ol></div>
+      <!-- Mark 2026-11-05 23:03Z: «две колонки хватит»: что планируется (сегодня, завтра) и что вышло. -->
+      <section class="media-board" aria-label="Посты LinkedIn">
+        <div class="media-col" data-col="plan"><header><h3>В плане</h3><span class="media-col-count" id="media-count-plan">0</span>
+          <button type="button" class="media-col-add" id="media-add-own">+ Своя новость</button></header>
+          <ol class="media-col-list" id="media-col-plan"></ol></div>
         <div class="media-col" data-col="sent"><header><h3>Вышло</h3><span class="media-col-count" id="media-count-sent">0</span></header>
           <ol class="media-col-list" id="media-col-sent"></ol></div>
       </section>
 
       <div class="media-layout">
         <div class="media-main">
-        <!-- Mark 2026-11-05: the list repeats the feed, so it stays folded until asked for. -->
-        <article class="media-panel media-news-panel is-collapsed" id="media-news-panel" aria-labelledby="media-news-title">
+        <!-- Mark 2026-11-05 23:03Z: news as picture cards, grouped by how fresh they are; can still be folded. -->
+        <article class="media-panel media-news-panel" id="media-news-panel" aria-labelledby="media-news-title">
           <header class="media-panel-head">
             <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
             <div>
@@ -6570,7 +6587,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
               <p>Бот и так берёт свежие новости в ленту. Сюда, если хочешь отправить что-то своё.</p>
             </div>
             <button type="button" class="media-link" id="media-select-all">Выбрать все</button>
-            <button type="button" class="media-ghost" id="media-news-toggle" aria-expanded="false" aria-controls="media-news">Показать</button>
+            <button type="button" class="media-ghost" id="media-news-toggle" aria-expanded="true" aria-controls="media-news">Свернуть</button>
           </header>
           <ul class="media-stories" id="media-news"></ul>
           <div class="media-bar" id="media-news-bar">
@@ -11058,14 +11075,20 @@ function mediaRender(data) {
     : 'Сейчас время задаёт Buffer. Добавь своё, и посты пойдут по нему.';
   mediaNews = data.news || [];
   const extra = mediaNews.length > MEDIA_NEWS_SHOWN + 1;
+  let group = null;
   document.getElementById('media-news').innerHTML = mediaNews.length ? mediaNews.map((item, index) => {
     const id = mediaEsc(item.id);
+    const hidden = extra && index >= MEDIA_NEWS_SHOWN;
+    const name = mediaNewsGroup(item.published_at);
+    const head = name !== group ? `<li class="media-news-group${hidden ? ' is-extra' : ''}"${hidden && !mediaNewsAll ? ' hidden' : ''}><h4>${mediaEsc(name)}</h4></li>` : '';
+    group = name;
     const meta = [item.source ? `<span class="media-source">${mediaEsc(item.source)}</span>` : '', item.published_at ? `<span>${mediaEsc(mediaAgo(item.published_at))}</span>` : ''].join('');
-    return `<li class="media-story${extra && index >= MEDIA_NEWS_SHOWN ? ' is-extra' : ''}" data-id="${id}"${extra && index >= MEDIA_NEWS_SHOWN && !mediaNewsAll ? ' hidden' : ''}>
+    return `${head}<li class="media-story media-news-card${hidden ? ' is-extra' : ''}" data-id="${id}"${hidden && !mediaNewsAll ? ' hidden' : ''}>
       <label class="media-check"><input type="checkbox" value="${id}" aria-label="Выбрать: ${mediaEsc(item.title)}"><span>${MEDIA_CHECK_SVG}</span></label>
       <div class="media-story-body" data-media-pick="${id}"${item.summary ? ` title="${mediaEsc(item.summary)}"` : ''}>
-        ${meta ? `<div class="media-story-meta">${meta}</div>` : ''}
-        <h4>${mediaEsc(item.title)}</h4>
+        ${mediaNewsArt(item)}
+        <div class="media-news-text">${meta ? `<div class="media-story-meta">${meta}</div>` : ''}
+        <h4>${mediaEsc(item.title)}</h4></div>
       </div>
       <button type="button" class="media-link media-story-read" data-media-read="${id}" aria-haspopup="dialog">Каким будет пост</button>
     </li>`;
@@ -11075,6 +11098,23 @@ function mediaRender(data) {
   mediaNewsToggleLabel();
 }
 
+// Fresh news first: the last three hours, the rest of today, earlier.
+function mediaNewsGroup(iso) {
+  const when = new Date(iso || '').getTime();
+  if (Number.isNaN(when)) return 'Без даты';
+  if (Date.now() - when < 3 * 3600e3) return 'Последние 3 часа';
+  return mediaDayName(iso) === 'Сегодня' ? 'Сегодня раньше' : 'Вчера и раньше';
+}
+// The article's own picture when the news service gives one (https only, no referrer),
+// otherwise a calm tile with the source's name.
+function mediaNewsArt(item) {
+  const source = String(item.source || 'AI').trim();
+  let hue = 0;
+  for (const ch of source) hue = (hue * 31 + ch.codePointAt(0)) % 360;
+  const url = typeof item.image_url === 'string' && /^https:\/\//i.test(item.image_url) ? item.image_url : '';
+  return `<span class="media-news-art" style="--news-hue:${hue}" aria-hidden="true"><span class="media-news-art-name">${mediaEsc(source)}</span>${url
+    ? `<img src="${mediaEsc(url)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}</span>`;
+}
 function mediaNewsToggleLabel() {
   const open = !document.getElementById('media-news-panel').classList.contains('is-collapsed');
   const button = document.getElementById('media-news-toggle');
@@ -11475,25 +11515,42 @@ function mediaRenderAir() {
   mediaThumbsReady(box);
 }
 
+// Paris calendar day of a time, as a heading: Сегодня, Завтра, Вчера or a date.
+function mediaDayName(at) {
+  if (!at) return 'В запасе';
+  const key = date => mediaParis(date, { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const day = key(new Date(at));
+  const shift = days => key(new Date(Date.now() + days * 864e5));
+  if (day === shift(0)) return 'Сегодня';
+  if (day === shift(1)) return 'Завтра';
+  if (day === shift(-1)) return 'Вчера';
+  return mediaParis(new Date(at), { day: 'numeric', month: 'long' });
+}
 function mediaRenderBoard() {
-  const cols = { draft: [], queue: [], sent: [] };
-  mediaCars.forEach((car, index) => {
-    const col = ['next', 'draft'].includes(car.kind) ? 'draft' : ['sent', 'failed'].includes(car.kind) ? 'sent' : 'queue';
-    cols[col].push([car, index]);
-  });
-  cols.sent.reverse();
-  const empty = { draft: 'Черновиков нет: бот готовит их к слотам сам.', queue: 'В Buffer пока ничего нет.', sent: 'Сегодня ещё ничего не вышло.' };
-  Object.entries(cols).forEach(([col, items]) => {
+  const plan = [], sent = [];
+  mediaCars.forEach((car, index) => (['sent', 'failed'].includes(car.kind) ? sent : plan).push([car, index]));
+  const time = car => (car.at ? new Date(car.at).getTime() : Infinity);
+  plan.sort((a, b) => time(a[0]) - time(b[0]) || a[1] - b[1]);
+  sent.sort((a, b) => (time(b[0]) === Infinity ? 0 : time(b[0])) - (time(a[0]) === Infinity ? 0 : time(a[0])));
+  const empty = { plan: 'Слотов нет. Добавь время в «Настройках».', sent: 'Пока ничего не вышло.' };
+  Object.entries({ plan, sent }).forEach(([col, items]) => {
     document.getElementById(`media-count-${col}`).textContent = items.filter(([car]) => car.kind !== 'free').length;
-    const list = document.getElementById(`media-col-${col}`);
-    list.innerHTML = items.map(([car, index]) => {
+    let day = null;
+    const rows = items.map(([car, index]) => {
+      const name = mediaDayName(car.at);
+      const head = name !== day ? `<li class="media-day"><h4>${mediaEsc(name)}</h4></li>` : '';
+      day = name;
       const [, chip] = MEDIA_CARS[car.kind] || ['', ''];
-      const inner = `${mediaCarThumb(car)}<span class="media-car-body"><span class="media-car-tag media-chip ${chip}">${mediaEsc(mediaCarTag(car))}</span>
-        <span class="media-car-title">${mediaEsc(car.title)}</span></span>`;
-      return car.kind === 'free'
-        ? `<li class="media-card is-free"><div class="media-card-open">${inner}</div></li>`
-        : `<li class="media-card is-${mediaEsc(car.kind)}"><button type="button" class="media-card-open" data-media-car="${index}" aria-haspopup="dialog">${inner}</button></li>`;
-    }).join('') || `<li class="media-col-empty">${empty[col]}</li>`;
+      if (car.kind === 'free') {
+        return `${head}<li class="media-free"><span class="media-free-time">${mediaEsc(car.at ? mediaParis(new Date(car.at), { hour: '2-digit', minute: '2-digit' }) : '')}</span>
+          <span class="media-free-text">Свободный слот. ${mediaEsc(car.title)}</span></li>`;
+      }
+      return `${head}<li class="media-card is-${mediaEsc(car.kind)}"><button type="button" class="media-card-open" data-media-car="${index}" aria-haspopup="dialog">
+        ${mediaCarThumb(car)}<span class="media-car-body"><span class="media-car-tag media-chip ${chip}">${mediaEsc(mediaCarTag(car))}</span>
+        <span class="media-car-title">${mediaEsc(car.title)}</span></span></button></li>`;
+    }).join('');
+    const list = document.getElementById(`media-col-${col}`);
+    list.innerHTML = rows || `<li class="media-col-empty">${empty[col]}</li>`;
     mediaThumbsReady(list);
   });
 }
@@ -11918,7 +11975,7 @@ function mediaInit() {
     }
     if (event.target.closest('#media-news-more')) {
       mediaNewsAll = !mediaNewsAll;
-      news.querySelectorAll('.media-story.is-extra').forEach(row => { row.hidden = !mediaNewsAll; });
+      news.querySelectorAll('.is-extra').forEach(row => { row.hidden = !mediaNewsAll; });
       const more = event.target.closest('button');
       more.textContent = mediaNewsAll ? 'Свернуть' : `Ещё ${news.querySelectorAll('.media-story.is-extra').length}`;
       more.setAttribute('aria-expanded', String(mediaNewsAll));
