@@ -41,6 +41,7 @@ from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MA
 from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
+from dashboard_builder.genealogy import GenealogyUnavailable, load_genealogy
 from dashboard_builder.repair_log import MAX_BODY_BYTES as REPAIR_LOG_MAX_BYTES, change_entries as change_repair_log, load_entries as load_repair_log
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.architecture import collect_architecture
@@ -76,6 +77,8 @@ GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 # «Журнал починок» for the Медик on Техника (Mark 2026-11-02). Owner only.
 REPAIR_LOG_FILE = HOME / ".agent-bridge" / "machine-repairs.json"
+# «Генеалогия»: Mark's family research, owner-only (dashboard_builder/genealogy.py).
+GENEALOGY_FILE = HOME / ".agent-bridge" / "genealogy.json"
 MEDIA_LINKEDIN_ACTIONS = {
     "/api/media/linkedin/schedule": lambda body: media_linkedin.save_schedule(body),
     "/api/media/linkedin/settings": lambda body: media_linkedin.save_settings(body),
@@ -3098,6 +3101,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
+            return
+        if parsed.path == '/api/genealogy':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required'})
+                return
+            try:
+                record = load_genealogy(GENEALOGY_FILE)
+            except FileNotFoundError:
+                self._json_response(404, {'error': 'genealogy_missing', 'state': 'missing'})
+                return
+            except (OSError, GenealogyUnavailable):
+                self._json_response(503, {'error': 'genealogy_unavailable', 'state': 'unavailable'})
+                return
+            self._json_response(200, record)
             return
         if parsed.path == '/api/machines/repairs':
             if not self._decision_owner_authorized():
