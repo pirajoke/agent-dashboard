@@ -5193,6 +5193,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
 @media print { .platform-zoom { display: none; } }
 /* ─── Генеалогия (Mark 2026-11-05) ─── */
 .gen-wrap { display: grid; gap: 14px; }
+.gen-back { font: inherit; font-size: 13px; background: none; border: 0; padding: 0 0 6px; color: var(--mm-accent); cursor: pointer; }
 .gen-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .gen-stats li { background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; padding: 8px 12px; font-size: 13px; color: var(--mm-muted); }
 .gen-stats strong { display: block; font-size: 18px; color: var(--mm-ink); font-variant-numeric: tabular-nums; }
@@ -5491,7 +5492,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <symbol id="cc-icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="3" fill="#FEF3C7" stroke="#1A1A1A" stroke-width="1.6"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="#1A1A1A" stroke-width="1.6"/><circle cx="12" cy="15.5" r="1.6" fill="#9A7100"/></symbol>
   <!-- Navigation icons -->
   <symbol id="cc-icon-machines" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 20h6M12 16v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
-  <symbol id="cc-icon-genealogy" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="5.5" cy="18.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18.5" cy="18.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.4V12M5.5 16.1V12h13v4.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-agents" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor"/></symbol>
   <symbol id="cc-icon-platforms" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="17" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="cc-icon-today" viewBox="0 0 24 24"><path d="M5 5h11v14H6a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1Zm11 4h3a1 1 0 0 1 1 1v7a2 2 0 0 1-2 2h-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h5M8 12.5h5M8 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
@@ -5646,7 +5646,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
     <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-genealogy" aria-pressed="false" onclick="showSection('genealogy')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-genealogy"/></svg></span><span class="cc-tab-label" data-tab-label="genealogy">Генеалогия</span></button>
   </nav>
   <div class="cc-side-foot">
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
@@ -6493,7 +6492,8 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <section id="section-genealogy" class="section" aria-labelledby="genealogy-title">
     <header class="cc-page-head">
       <div>
-        <h2 class="cc-page-title" id="genealogy-title">Генеалогия</h2>
+        <button type="button" class="gen-back" onclick="showSection('platforms')">← Платформы</button>
+        <h2 class="cc-page-title" id="genealogy-title">GEN.AI · Генеалогия</h2>
         <p class="cc-page-lede">Семейное дерево и карта переездов семьи по годам.</p>
       </div>
     </header>
@@ -7725,13 +7725,13 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'machines', 'genealogy']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'machines']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
 })));
 let activeTabNames = { ...TAB_NAME_DEFAULTS };
-const TAB_PAGE_TITLE_IDS = Object.freeze({ work: 'mm-title', growth: 'growth-title', agents: 'agents-title', platforms: 'platforms-title', context: 'context-title', documents: 'docxx-title', machines: 'machines-title', genealogy: 'genealogy-title' });
+const TAB_PAGE_TITLE_IDS = Object.freeze({ work: 'mm-title', growth: 'growth-title', agents: 'agents-title', platforms: 'platforms-title', context: 'context-title', documents: 'docxx-title', machines: 'machines-title' });
 
 function sanitizeTabName(value) {
   const normalized = String(value ?? '').normalize('NFC')
@@ -8921,7 +8921,8 @@ function showSection(name) {
   });
   const section = document.getElementById('section-' + parent);
   section.classList.add('active');
-  const trigger = document.querySelector(`.cc-main-nav [aria-controls="section-${parent}"]`);
+  // «Генеалогия» has no tab of its own (Mark 2026-11-05): it opens from the GEN.AI card on «Платформы».
+  const trigger = document.querySelector(`.cc-main-nav [aria-controls="section-${parent === 'genealogy' ? 'platforms' : parent}"]`);
   if (trigger) {
     trigger.classList.add('active');
     trigger.setAttribute('aria-pressed', 'true');

@@ -74,6 +74,9 @@ class GenealogyWiringTest(unittest.TestCase):
         self.assertIn("${DASHBOARD_API}/api/genealogy", html)
         self.assertIn("if (name === 'genealogy') setTimeout(genLoad, 0);", html)
         self.assertNotIn("genealogy.json", html)
+        # No tab of its own: it opens from the owner's GEN.AI card on «Платформы».
+        self.assertNotIn('aria-controls="section-genealogy"', html)
+        self.assertIn("parent === 'genealogy' ? 'platforms' : parent", html)
         # Family surnames and places from the private file must not be in the public page.
         for word in ("Рудник", "Муравич", "Яндашевск", "Грачёвы", "Афанасьев", "Губята", "Мордюшенко"):
             self.assertIsNone(re.search(word, html), word)

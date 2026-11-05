@@ -216,7 +216,6 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
                 ("documents", "Документы"),
                 ("context", "Контекст"),
                 ("machines", "Техника"),
-                ("genealogy", "Генеалогия"),
             ],
         )
 
