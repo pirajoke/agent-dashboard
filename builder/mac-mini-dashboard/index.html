@@ -3852,6 +3852,8 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-rewrite { display: grid; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--mm-line); }
 .media-rewrite-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .media-rewrite-chips .media-ghost { min-height: 32px; padding: 4px 12px; }
+.media-voice-chips { align-items: center; }
+.media-voice-label { margin-right: 2px; color: var(--mm-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .media-rewrite-form { display: flex; gap: 8px; }
 .media-rewrite-form input { flex: 1; min-width: 0; min-height: 36px; padding: 4px 14px; border: 1px solid var(--mm-control-line); border-radius: 999px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; }
 .media-rewrite-form input:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
@@ -10863,6 +10865,7 @@ function mediaPostCard(position, text, title, options = {}) {
     ${mediaPostBody(text, options.candidateId)}
     <div class="media-rewrite">
       <div class="media-rewrite-chips" role="group" aria-label="Быстрые правки">${MEDIA_REWRITE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
+      <div class="media-rewrite-chips media-voice-chips" role="group" aria-label="Голос поста"><span class="media-voice-label">Голос</span>${MEDIA_VOICE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
       <form class="media-rewrite-form" data-media-rewrite-form="${position}">
         <label class="media-sr" for="media-ask-${key}">Что поменять в посте</label>
         <input id="media-ask-${key}" maxlength="300" autocomplete="off" placeholder="Что поменять? Например: короче, без цифр">
@@ -10882,6 +10885,14 @@ const MEDIA_REWRITE_CHIPS = [
   ['Короче', 'Сделай заметно короче: оставь главное и 2–3 пункта.'],
   ['Проще', 'Проще и живее, как человек пишет коллеге, без канцелярита.'],
   ['Меньше эмодзи', 'Оставь не больше двух эмодзи.'],
+];
+// Mark 2026-11-05: «сделай разные профили типа критик, энтузиаст». Same facts, a different voice.
+const MEDIA_VOICE_CHIPS = [
+  ['Критик', 'Перепиши голосом критика: спокойно назови слабые места и риски новости, без сарказма. Факты и цифры не меняй, новых не добавляй.'],
+  ['Энтузиаст', 'Перепиши голосом энтузиаста: энергично, почему это круто и что это открывает. Без преувеличений, факты и цифры не меняй.'],
+  ['Практик', 'Перепиши голосом практика: что это меняет в работе бизнеса и что можно сделать уже сейчас. Факты не меняй, новых не добавляй.'],
+  ['Скептик', 'Перепиши голосом скептика: что пока не доказано и какой вопрос стоит задать. Факты и цифры не меняй, новых не добавляй.'],
+  ['Аналитик', 'Перепиши голосом аналитика: сухо, главное число, контекст рынка и вывод в одну строку. Факты не меняй, новых не добавляй.'],
 ];
 
 let mediaToday = [];
