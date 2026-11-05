@@ -3742,7 +3742,73 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-in { flex: none; display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 14px; background: #0a66c2; color: #fff; font: 800 24px/1 system-ui, sans-serif; letter-spacing: -.04em; }
 .media-in-small { width: 20px; height: 20px; border-radius: 5px; font-size: 12px; background: #fff; color: #0a66c2; }
 .media-in-tile { width: 40px; height: 40px; border-radius: 12px; font-size: 19px; }
-/* Mark 2026-11-05: the day as a «поезд» of small cards, like Платформы. */
+/* Mark 2026-11-05 «медиа-штаб»: эфир сверху, доска стадий, крупные картинки. */
+.media-air { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px; }
+.media-air-next, .media-air-day { min-width: 0; border: 1px solid var(--mm-line); border-radius: 18px; background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); overflow: hidden; }
+.media-air-card { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); width: 100%; height: 100%; margin: 0; padding: 0; border: 0; background: none; color: var(--mm-ink); font: inherit; text-align: left; }
+.media-air-card:hover .media-air-open { color: var(--mm-accent); }
+.media-car-art.media-air-art { width: 100%; height: 100%; min-height: 168px; border-radius: 0; aspect-ratio: auto; }
+.media-air-art .media-in { width: 48px; height: 48px; border-radius: 12px; font-size: 24px; }
+.media-air-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 16px 18px; }
+.media-air-time { font-size: 30px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.media-air-time small { display: block; margin-top: 2px; color: var(--mm-accent); font-size: 13px; font-weight: 650; letter-spacing: 0; }
+.media-air-title { font-size: 14px; font-weight: 650; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.media-air-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+.media-air-open { color: var(--mm-muted); font-size: 12.5px; font-weight: 700; }
+.media-air-empty { display: flex; align-items: center; gap: 14px; height: 100%; padding: 18px; color: var(--mm-muted); font-size: 14px; }
+.media-air-day { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; }
+.media-air-day-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.media-air-day-head .media-train-stats { margin: 0; }
+.media-onair { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.media-onair i { width: 8px; height: 8px; border-radius: 50%; background: #0a66c2; box-shadow: 0 0 0 4px color-mix(in srgb, #0a66c2 22%, transparent); }
+.media-dayline { position: relative; height: 78px; margin: 4px 10px 0; }
+.media-dayline-track { position: absolute; left: 0; right: 0; top: 22px; height: 4px; border-radius: 999px; background: var(--mm-surface-hover); }
+.media-tick { position: absolute; top: 40px; transform: translateX(-50%); color: var(--mm-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.media-dot { position: absolute; top: 14px; width: 20px; height: 20px; margin: 0 0 0 -10px; padding: 0; border: 3px solid var(--mm-surface); border-radius: 50%; background: var(--mm-control-line); box-shadow: 0 0 0 1px var(--mm-line); cursor: pointer; }
+.media-dot.is-sent { background: var(--mm-success); }
+.media-dot.is-failed { background: var(--mm-danger); }
+.media-dot.is-queued, .media-dot.is-submitting { background: var(--mm-info); }
+.media-dot.is-ambiguous { background: var(--mm-warning); }
+.media-dot.is-next { background: var(--mm-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--mm-accent) 25%, transparent); }
+.media-dot.is-free { background: var(--mm-surface); border: 2px dashed var(--mm-control-line); box-shadow: none; cursor: default; }
+button.media-dot:hover { transform: scale(1.15); }
+.media-now { position: absolute; top: 4px; bottom: 26px; width: 0; border-left: 2px solid var(--mm-accent); }
+.media-now.is-late b { left: auto; right: 4px; }
+.media-now b { position: absolute; top: -6px; left: 4px; white-space: nowrap; color: var(--mm-accent); font-size: 10.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.media-later { position: absolute; right: -10px; top: 60px; color: var(--mm-muted); font-size: 11px; font-weight: 650; }
+.media-air-note { margin: 0; color: var(--mm-muted); font-size: 12.5px; line-height: 1.45; }
+.media-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.media-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px; border-radius: 18px; background: color-mix(in srgb, var(--mm-surface-hover) 55%, transparent); border: 1px solid var(--mm-line); }
+.media-col > header { display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
+.media-col h3 { margin: 0; font-size: 14px; font-weight: 750; }
+.media-col-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--mm-surface); color: var(--mm-muted); font-size: 12px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+.media-col[data-col="draft"] h3::before, .media-col[data-col="queue"] h3::before, .media-col[data-col="sent"] h3::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; vertical-align: 1px; background: var(--mm-accent); }
+.media-col[data-col="queue"] h3::before { background: var(--mm-info); }
+.media-col[data-col="sent"] h3::before { background: var(--mm-success); }
+.media-col-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; max-height: 560px; overflow: auto; scrollbar-width: thin; }
+.media-col-empty { padding: 18px 10px; color: var(--mm-muted); font-size: 13px; text-align: center; }
+.media-card-open { display: block; width: 100%; margin: 0; padding: 0; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; text-align: left; overflow: hidden; transition: transform .2s ease, box-shadow .2s ease; }
+button.media-card-open:hover { transform: translateY(-2px); box-shadow: var(--mm-shadow-soft); }
+.media-card .media-car-art { width: 100%; height: auto; aspect-ratio: 2.4 / 1; border-radius: 0; }
+.media-card .media-car-body { padding: 10px 12px 12px; }
+.media-card.is-free .media-card-open { border-style: dashed; background: transparent; color: var(--mm-muted); }
+.media-card.is-free .media-car-art { aspect-ratio: auto; height: 36px; border: 0; }
+.media-card.is-free .media-car-title { font-weight: 500; font-size: 12.5px; }
+.media-card.is-sent .media-card-open { opacity: .92; }
+.media-col-add { min-height: 40px; border: 1px dashed var(--mm-control-line); border-radius: 12px; background: transparent; color: var(--mm-muted); font-size: 13px !important; font-weight: 700 !important; }
+.media-col-add:hover { color: var(--mm-accent); border-color: var(--mm-accent); }
+@media (max-width: 980px) {
+  .media-air { grid-template-columns: minmax(0, 1fr); }
+  .media-board { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(260px, 82%); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 6px; }
+  .media-col { scroll-snap-align: start; }
+}
+@media (max-width: 560px) {
+  .media-air-card { grid-template-columns: minmax(0, 1fr); }
+  .media-car-art.media-air-art { min-height: 0; aspect-ratio: 1.91 / 1; }
+  .media-air-time { font-size: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { .media-card-open, button.media-card-open:hover, button.media-dot:hover { transition: none; transform: none; } }
+/* Older «поезд» pieces kept for the review list and stats. */
 .media-train-nav { display: flex; gap: 6px; }
 .media-train-step { width: 36px; height: 36px; font-size: 20px; }
 .media-train-stats { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; padding: 0; list-style: none; }
@@ -6297,23 +6363,26 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     </header>
     <p class="mm-notice" id="media-state" role="status" aria-live="polite">Загружаю…</p>
     <div class="media-studio" id="media-body" hidden>
-      <!-- Mark 2026-11-05: «как на платформах», small cards in one «поезд»: что ушло, что планируется,
-           что перегенерировать. A card opens the whole post. -->
-      <article class="media-panel media-train-panel" aria-labelledby="media-train-title">
-        <header class="media-panel-head">
-          <span class="media-in media-in-tile" aria-hidden="true">in</span>
-          <div>
-            <h3 id="media-train-title">Лента LinkedIn</h3>
-            <p id="media-train-note">Слева то, что ушло, дальше очередь и черновики. Нажми на карточку, чтобы открыть пост.</p>
-          </div>
-          <div class="media-train-nav">
-            <button type="button" class="media-step media-train-step" data-media-train="-1" aria-label="Листать ленту назад">‹</button>
-            <button type="button" class="media-step media-train-step" data-media-train="1" aria-label="Листать ленту вперёд">›</button>
-          </div>
-        </header>
-        <ul class="media-train-stats" id="media-train-stats" aria-label="Сводка за сегодня"></ul>
-        <ol class="media-train" id="media-train" aria-label="Посты LinkedIn по времени" tabindex="0"></ol>
-      </article>
+      <!-- Mark 2026-11-05: «сделай как медиа-штаб, красиво». Эфир (следующий выход + день) и доска
+           Черновики → В очереди → Вышло; карточка открывает пост. -->
+      <section class="media-air" aria-labelledby="media-air-title">
+        <h3 class="media-sr" id="media-air-title">Эфир LinkedIn</h3>
+        <div class="media-air-next" id="media-air-next"></div>
+        <div class="media-air-day">
+          <div class="media-air-day-head"><span class="media-onair"><i aria-hidden="true"></i>LinkedIn · сегодня</span><ul class="media-train-stats" id="media-train-stats" aria-label="Сводка за сегодня"></ul></div>
+          <div class="media-dayline" id="media-dayline" role="img" aria-label="Посты сегодня по времени"></div>
+          <p class="media-air-note" id="media-train-note"></p>
+        </div>
+      </section>
+      <section class="media-board" aria-label="Посты по стадиям">
+        <div class="media-col" data-col="draft"><header><h3>Черновики</h3><span class="media-col-count" id="media-count-draft">0</span></header>
+          <ol class="media-col-list" id="media-col-draft"></ol>
+          <button type="button" class="media-col-add" id="media-add-own">+ Своя новость</button></div>
+        <div class="media-col" data-col="queue"><header><h3>В очереди</h3><span class="media-col-count" id="media-count-queue">0</span></header>
+          <ol class="media-col-list" id="media-col-queue"></ol></div>
+        <div class="media-col" data-col="sent"><header><h3>Вышло</h3><span class="media-col-count" id="media-count-sent">0</span></header>
+          <ol class="media-col-list" id="media-col-sent"></ol></div>
+      </section>
 
       <div class="media-layout">
         <div class="media-main">
@@ -11162,31 +11231,88 @@ function mediaRenderTrain(schedule, today) {
   const when = car => (car.at ? new Date(car.at).getTime() : Infinity);
   cars.sort((a, b) => (when(a) - when(b)) || (rank[a.kind] ?? 5) - (rank[b.kind] ?? 5));
   mediaCars = cars;
-  const now = Date.now();
-  const past = cars.filter(car => ['sent', 'failed'].includes(car.kind) || when(car) <= now).length;
-  const html = cars.map((car, index) => {
-    const [, chip] = MEDIA_CARS[car.kind] || ['', ''];
-    const art = car.id ? `<span class="media-car-art" data-media-thumb="${mediaEsc(car.id)}" aria-hidden="true"><span class="media-in">in</span></span>`
-      : '<span class="media-car-art is-empty" aria-hidden="true">+</span>';
-    const editable = ['next', 'draft'].includes(car.kind);
-    const inner = `${art}<span class="media-car-body"><span class="media-car-tag media-chip ${chip}">${mediaEsc(mediaCarTag(car))}</span>
-      <span class="media-car-title">${mediaEsc(car.title)}</span>${editable ? '<span class="media-car-hint">Изменить · переделать</span>' : ''}</span>`;
-    const item = car.kind === 'free'
-      ? `<li class="media-car is-free"><div class="media-car-open">${inner}</div></li>`
-      : `<li class="media-car is-${mediaEsc(car.kind)}"><button type="button" class="media-car-open" data-media-car="${index}" aria-haspopup="dialog">${inner}</button></li>`;
-    return (index === past && past > 0 ? '<li class="media-train-now" aria-label="Сейчас"><span>сейчас</span></li>' : '') + item;
-  }).join('');
-  const list = document.getElementById('media-train');
-  list.innerHTML = html || '<li class="media-empty">Сегодня постов ещё нет. Как только бот опубликует новость в канале, её пост появится здесь.</li>';
   const minutes = Number(today?.handoff_minutes) || 15;
-  document.getElementById('media-train-note').textContent = today
-    ? `Слева то, что ушло, дальше очередь и черновики. Черновик уходит в Buffer за ${minutes} минут до своего времени, до этого его можно изменить. Нажми на карточку, чтобы открыть пост.`
-    : 'Слева то, что ушло, дальше очередь. Нажми на карточку, чтобы открыть пост.';
-  mediaThumbsReady(list);
-  // Start the view at «сейчас», keeping the last sent post in sight.
-  const marker = list.querySelector('.media-train-now');
-  const lastSent = marker?.previousElementSibling;
-  list.scrollLeft = lastSent ? Math.max(0, lastSent.offsetLeft - list.firstElementChild.offsetLeft) : 0;
+  document.getElementById('media-train-note').textContent =
+    `Черновик уходит в Buffer за ${minutes} минут до своего времени, до этого его можно изменить или переделать.`;
+  mediaRenderAir();
+  mediaRenderBoard();
+}
+
+function mediaCarThumb(car, extra = '') {
+  return car.id ? `<span class="media-car-art${extra}" data-media-thumb="${mediaEsc(car.id)}" aria-hidden="true"><span class="media-in">in</span></span>`
+    : `<span class="media-car-art is-empty${extra}" aria-hidden="true">+</span>`;
+}
+
+function mediaUntil(iso) {
+  const minutes = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  if (!Number.isFinite(minutes)) return '';
+  if (minutes <= 0) return 'сейчас';
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  return `через ${h ? `${h} ч ` : ''}${m} мин`;
+}
+
+function mediaRenderAir() {
+  const now = Date.now();
+  const index = mediaCars.findIndex(car => car.at && ['queued', 'submitting', 'next'].includes(car.kind) && new Date(car.at).getTime() > now);
+  const fallback = index >= 0 ? index : mediaCars.findIndex(car => car.kind === 'draft');
+  const box = document.getElementById('media-air-next');
+  const car = mediaCars[fallback];
+  if (!car) {
+    box.innerHTML = '<div class="media-air-empty"><span class="media-in">in</span><p>Следующего поста пока нет. Бот подберёт свежую новость к ближайшему слоту.</p></div>';
+  } else {
+    const [, chip] = MEDIA_CARS[car.kind] || ['', ''];
+    box.innerHTML = `<button type="button" class="media-air-card" data-media-car="${fallback}" aria-haspopup="dialog">
+      ${mediaCarThumb(car, ' media-air-art')}
+      <span class="media-air-body"><span class="media-eyebrow">Следующий выход</span>
+        <span class="media-air-time">${mediaEsc(car.at ? mediaTime(car.at) : 'в запасе')}<small>${mediaEsc(car.at ? mediaUntil(car.at) : '')}</small></span>
+        <span class="media-air-title">${mediaEsc(car.title)}</span>
+        <span class="media-air-foot"><span class="media-chip ${chip}">${mediaEsc((MEDIA_CARS[car.kind] || [car.kind])[0])}</span><span class="media-air-open">Открыть пост →</span></span></span>
+    </button>`;
+  }
+  // The day from 06:00 to 24:00 Paris time, one dot per post or free slot.
+  const parisMinutes = date => { const [h, m] = mediaParis(date, { hour: '2-digit', minute: '2-digit', hour12: false }).split(':').map(Number); return (h % 24) * 60 + m; };
+  const todayKey = mediaParis(new Date(), { day: '2-digit', month: '2-digit' });
+  const start = 6 * 60, span = 18 * 60;
+  const pos = mins => Math.min(100, Math.max(0, (mins - start) / span * 100));
+  const ticks = [6, 9, 12, 15, 18, 21, 24].map(h => `<span class="media-tick" style="left:${pos(h * 60)}%">${String(h % 24).padStart(2, '0')}</span>`).join('');
+  let later = 0;
+  const dots = mediaCars.map((item, i) => {
+    if (!item.at) return '';
+    const date = new Date(item.at);
+    if (mediaParis(date, { day: '2-digit', month: '2-digit' }) !== todayKey) { if (date.getTime() > now) later += 1; return ''; }
+    const label = `${mediaCarTag(item)}: ${item.title}`;
+    const style = `left:${pos(parisMinutes(date))}%`;
+    return item.kind === 'free'
+      ? `<span class="media-dot is-free" style="${style}" title="${mediaEsc(label)}"></span>`
+      : `<button type="button" class="media-dot is-${mediaEsc(item.kind)}" style="${style}" data-media-car="${i}" title="${mediaEsc(label)}" aria-label="${mediaEsc(label)}"></button>`;
+  }).join('');
+  const nowPos = pos(parisMinutes(new Date()));
+  const nowMark = `<span class="media-now${nowPos > 80 ? ' is-late' : ''}" style="left:${nowPos}%"><b>${mediaEsc(mediaParis(new Date(), { hour: '2-digit', minute: '2-digit' }))}</b></span>`;
+  document.getElementById('media-dayline').innerHTML = `<div class="media-dayline-track"></div>${ticks}${dots}${nowMark}${later ? `<span class="media-later">+${later} завтра</span>` : ''}`;
+  mediaThumbsReady(box);
+}
+
+function mediaRenderBoard() {
+  const cols = { draft: [], queue: [], sent: [] };
+  mediaCars.forEach((car, index) => {
+    const col = ['next', 'draft'].includes(car.kind) ? 'draft' : ['sent', 'failed'].includes(car.kind) ? 'sent' : 'queue';
+    cols[col].push([car, index]);
+  });
+  cols.sent.reverse();
+  const empty = { draft: 'Черновиков нет: бот готовит их к слотам сам.', queue: 'В Buffer пока ничего нет.', sent: 'Сегодня ещё ничего не вышло.' };
+  Object.entries(cols).forEach(([col, items]) => {
+    document.getElementById(`media-count-${col}`).textContent = items.filter(([car]) => car.kind !== 'free').length;
+    const list = document.getElementById(`media-col-${col}`);
+    list.innerHTML = items.map(([car, index]) => {
+      const [, chip] = MEDIA_CARS[car.kind] || ['', ''];
+      const inner = `${mediaCarThumb(car)}<span class="media-car-body"><span class="media-car-tag media-chip ${chip}">${mediaEsc(mediaCarTag(car))}</span>
+        <span class="media-car-title">${mediaEsc(car.title)}</span></span>`;
+      return car.kind === 'free'
+        ? `<li class="media-card is-free"><div class="media-card-open">${inner}</div></li>`
+        : `<li class="media-card is-${mediaEsc(car.kind)}"><button type="button" class="media-card-open" data-media-car="${index}" aria-haspopup="dialog">${inner}</button></li>`;
+    }).join('') || `<li class="media-col-empty">${empty[col]}</li>`;
+    mediaThumbsReady(list);
+  });
 }
 
 function mediaThumbsReady(root) {
@@ -11631,15 +11757,16 @@ function mediaInit() {
       button.textContent = 'Каким будет пост';
     }
   });
-  const train = document.getElementById('media-train');
-  train.addEventListener('click', event => {
+  document.getElementById('media-body').addEventListener('click', event => {
     const car = event.target.closest('[data-media-car]');
     if (car) mediaOpenCar(Number(car.dataset.mediaCar), car);
   });
-  document.querySelectorAll('[data-media-train]').forEach(button => button.addEventListener('click', () => {
-    const step = Number(button.dataset.mediaTrain) * Math.max(240, train.clientWidth * 0.8);
-    train.scrollBy({ left: step, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-  }));
+  document.getElementById('media-add-own').addEventListener('click', () => {
+    const panel = document.getElementById('media-news-panel');
+    panel.classList.remove('is-collapsed');
+    mediaNewsToggleLabel();
+    panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  });
   const dialog = document.getElementById('media-post-dialog');
   document.getElementById('media-post-dialog-close').addEventListener('click', mediaDialogClose);
   dialog.addEventListener('click', event => { if (event.target === dialog) mediaDialogClose(); });

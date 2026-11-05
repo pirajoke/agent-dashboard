@@ -330,7 +330,7 @@ class PageTests(unittest.TestCase):
         self.assertIn("aria-controls=\"section-media\"", PAGE)
         self.assertIn("onclick=\"showSection('media')\"", PAGE)
         self.assertIn("if (name === 'media') setTimeout(mediaLoad, 0);", PAGE)
-        for element in ("media-train", "media-train-stats", "media-post-dialog", "media-post-dialog-list", "media-slots",
+        for element in ("media-air-next", "media-dayline", "media-col-draft", "media-col-queue", "media-col-sent", "media-train-stats", "media-post-dialog", "media-post-dialog-list", "media-slots",
                         "media-add-form", "media-save-slots", "media-news", "media-prepare", "media-review", "media-send"):
             self.assertIn(f'id="{element}"', PAGE)
         self.assertIn("/api/media/linkedin", PAGE)
