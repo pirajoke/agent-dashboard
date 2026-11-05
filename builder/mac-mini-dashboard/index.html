@@ -220,6 +220,11 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-care-when.is-stale { color: var(--orange, #d97706); font-weight: 600; }
 .machine-care-note { font-size: 13px; color: var(--text2); margin: 0; }
 .machine-care-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.machine-care-groups { display: grid; gap: 14px; }
+.machine-care-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 6px; }
+.machine-care-group-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: var(--text2); }
+.machine-care-group-sum { font-size: 12px; color: var(--green); }
+.machine-care-group-sum.has-issues { color: var(--orange, #d97706); font-weight: 600; }
 .machine-care-row { display: grid; grid-template-columns: 10px 1fr; gap: 4px 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--bg2, rgba(127,127,127,.06)); }
 .machine-care-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; background: var(--text2); }
 .machine-care-row.is-ok .machine-care-dot { background: var(--green); }
@@ -7026,7 +7031,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <span class="machine-care-when" id="pro-care-when"></span>
       </div>
       <p class="machine-care-note" id="pro-care-note" role="status"></p>
-      <ul class="machine-care-list" id="pro-care-list"></ul>
+      <div class="machine-care-groups" id="pro-care-list"></div>
     </section>
 
     <!-- System gauges row — same layout as Mac Mini/Air -->
@@ -13675,60 +13680,78 @@ function machineCareSchedule(text) {
   return `${action}, ${days[day[0].toLowerCase()]} ${String(hour).padStart(2, '0')}:${time[2]}`;
 }
 
+// Mark 2026-11-06 «по логике расположены»: fixed groups in a fixed order, so a row is always in the same place.
+const MACHINE_CARE_GROUPS = [
+  { id: 'now', title: 'Сейчас' },
+  { id: 'protection', title: 'Защита' },
+  { id: 'upkeep', title: 'Обслуживание' },
+];
+
 function machineCareRows(care, now = Date.now()) {
   const rows = [];
-  const unknown = (label, detail = 'нет данных') => ({ label, level: 'unknown', word: 'неизвестно', detail });
+  const unknown = (group, label, detail = 'нет данных') => ({ group, label, level: 'unknown', word: 'неизвестно', detail });
   const plural = (n, one, few, many) => {
     const t = n % 10, h = n % 100;
     return t === 1 && h !== 11 ? one : t >= 2 && t <= 4 && (h < 12 || h > 14) ? few : many;
   };
+  // Сейчас: what the laptop is doing at this moment.
+  const top = Array.isArray(care.top_processes) ? care.top_processes : null;
+  if (!top) rows.push(unknown('now', 'Процессор'));
+  else {
+    const peak = top.length ? top[0].cpu : 0;
+    rows.push({ group: 'now', label: 'Процессор', level: peak >= 90 ? 'warn' : 'ok', word: peak >= 90 ? 'есть тяжёлый' : 'спокойно',
+      detail: top.length ? `больше всех: ${top.map(p => `${p.name} ${p.cpu}%`).join(', ')}` : 'никто не грузит' });
+  }
+  const sw = care.swap;
+  if (!sw || typeof sw.used_gb !== 'number') rows.push(unknown('now', 'Память на диске (swap)'));
+  else rows.push({ group: 'now', label: 'Память на диске (swap)', level: sw.used_gb >= 6 ? 'bad' : sw.used_gb >= 2 ? 'warn' : 'ok',
+    word: sw.used_gb >= 6 ? 'много' : sw.used_gb >= 2 ? 'заметно' : 'мало', detail: `${sw.used_gb.toLocaleString('ru-RU')} из ${Number(sw.total_gb).toLocaleString('ru-RU')} ГБ` });
+  // Защита: what keeps it from hanging and from the network.
   const w = care.watchdog || {};
-  if (w.job == null && w.events_7d == null) rows.push(unknown('Защита от зависаний'));
-  else if (w.job === 'missing') rows.push({ label: 'Защита от зависаний', level: 'bad', word: 'не запущена', detail: 'cpu-watchdog не найден в launchd' });
+  if (w.job == null && w.events_7d == null) rows.push(unknown('protection', 'Защита от зависаний'));
+  else if (w.job === 'missing') rows.push({ group: 'protection', label: 'Защита от зависаний', level: 'bad', word: 'не запущена', detail: 'cpu-watchdog не найден в launchd' });
   else {
     const n = w.events_7d;
     const last = w.last_event_at ? `последний раз ${machineCareWhen(w.last_event_at, now)}${w.last_event ? `: ${w.last_event}` : ''}` : '';
-    const detail = n == null ? 'журнал не читается'
+    // No log yet means the watchdog has never had to step in.
+    const detail = n == null ? 'ни разу не срабатывала'
       : n === 0 ? `за неделю не срабатывала${last ? `; ${last}` : ''}`
-      : `за неделю ${n} ${plural(n, 'запись', 'записи', 'записей')}; ${last}`;
-    rows.push({ label: 'Защита от зависаний', level: n >= 10 ? 'warn' : 'ok', word: 'работает', detail });
+      : `за неделю ${n} ${plural(n, 'раз', 'раза', 'раз')}; ${last}`;
+    rows.push({ group: 'protection', label: 'Защита от зависаний', level: n >= 10 ? 'warn' : 'ok', word: 'работает', detail });
   }
+  const f = care.firewall || {};
+  if (f.enabled == null) rows.push(unknown('protection', 'Файрвол'));
+  else rows.push({ group: 'protection', label: 'Файрвол', level: f.enabled ? 'ok' : 'warn', word: f.enabled ? 'включён' : 'выключен',
+    detail: f.enabled ? 'входящие подключения под контролем' : 'Настройки → Сеть → Файрвол' });
+  // Обслуживание: regular upkeep.
+  const u = care.updates || {};
+  if (!Array.isArray(u.pending)) rows.push(unknown('upkeep', 'Обновления'));
+  else rows.push({ group: 'upkeep', label: 'Обновления', level: u.pending.length ? 'warn' : 'ok', word: u.pending.length ? `ждут: ${u.pending.length}` : 'всё установлено',
+    detail: u.pending.length ? u.pending.slice(0, 3).join(', ') : (u.checked_at ? `проверено ${machineCareWhen(u.checked_at, now)}` : '') });
+  const r = care.restart || {};
+  const bootAt = Date.parse(r.boot_at || '');
+  const boot = Number.isFinite(bootAt) ? `последний запуск ${machineCareWhen(r.boot_at, now)}` : '';
+  // A weekly restart that left the Mac running for more than 8 days did not happen.
+  const missed = r.scheduled && Number.isFinite(bootAt) && now - bootAt > 8 * 86400000;
+  if (r.scheduled == null) rows.push(unknown('upkeep', 'Перезагрузка по расписанию', boot || 'нет данных'));
+  else if (missed) rows.push({ group: 'upkeep', label: 'Перезагрузка по расписанию', level: 'warn', word: 'не сработала',
+    detail: `по плану ${machineCareSchedule(r.schedule).replace(/^перезагрузка, /, '')}, но Mac не перезагружался с ${machineCareWhen(r.boot_at, now)}` });
+  else rows.push({ group: 'upkeep', label: 'Перезагрузка по расписанию', level: r.scheduled ? 'ok' : 'warn', word: r.scheduled ? 'включена' : 'не настроена',
+    detail: [r.scheduled ? machineCareSchedule(r.schedule) : 'расписания нет', boot].filter(Boolean).join('; ') });
   const h = care.hygiene || {};
   const reportAge = h.report_at ? (now - Date.parse(h.report_at)) / 3600000 : null;
-  if (!h.report_at) rows.push({ label: 'Ежедневная проверка, 10:00', level: h.job === 'missing' ? 'bad' : 'warn', word: h.job === 'missing' ? 'не запущена' : 'нет отчёта', detail: 'отчёт ещё не появлялся' });
+  if (!h.report_at) rows.push({ group: 'upkeep', label: 'Ежедневная проверка, 10:00', level: h.job === 'missing' ? 'bad' : 'warn', word: h.job === 'missing' ? 'не запущена' : 'нет отчёта', detail: 'отчёт ещё не появлялся' });
   else {
     const attention = h.attention > 0 ? `; замечаний: ${h.attention}` : '';
+    // The report's first line often just repeats the count («Замечаний: 4»).
+    const headline = h.headline && !/замечани/i.test(h.headline) ? ` — ${h.headline}` : '';
     const stale = reportAge > 36;
-    rows.push({ label: 'Ежедневная проверка, 10:00', level: stale ? 'warn' : (h.attention > 0 ? 'warn' : 'ok'),
+    rows.push({ group: 'upkeep', label: 'Ежедневная проверка, 10:00', level: stale || h.attention > 0 ? 'warn' : 'ok',
       word: stale ? 'отчёт старый' : (h.attention > 0 ? 'есть замечания' : 'всё чисто'),
-      detail: `отчёт ${machineCareWhen(h.report_at, now)}${attention}${h.headline ? ` — ${h.headline}` : ''}` });
+      detail: `отчёт ${machineCareWhen(h.report_at, now)}${attention}${headline}` });
   }
-  const r = care.restart || {};
-  const boot = r.boot_at ? `последний запуск ${machineCareWhen(r.boot_at, now)}` : '';
-  if (r.scheduled == null) rows.push(unknown('Перезагрузка по воскресеньям', boot || 'нет данных'));
-  else rows.push({ label: 'Перезагрузка по воскресеньям', level: r.scheduled ? 'ok' : 'warn', word: r.scheduled ? 'включена' : 'не настроена',
-    detail: [r.scheduled ? machineCareSchedule(r.schedule) : 'pmset не знает о расписании', boot].filter(Boolean).join('; ') });
-  const f = care.firewall || {};
-  if (f.enabled == null) rows.push(unknown('Файрвол'));
-  else rows.push({ label: 'Файрвол', level: f.enabled ? 'ok' : 'warn', word: f.enabled ? 'включён' : 'выключен',
-    detail: f.enabled ? 'входящие подключения под контролем' : 'Настройки → Сеть → Файрвол' });
-  const u = care.updates || {};
-  if (!Array.isArray(u.pending)) rows.push(unknown('Обновления'));
-  else rows.push({ label: 'Обновления', level: u.pending.length ? 'warn' : 'ok', word: u.pending.length ? `ждут: ${u.pending.length}` : 'всё установлено',
-    detail: u.pending.length ? u.pending.slice(0, 3).join(', ') : (u.checked_at ? `проверено ${machineCareWhen(u.checked_at, now)}` : '') });
-  const sw = care.swap;
-  if (!sw || typeof sw.used_gb !== 'number') rows.push(unknown('Память на диске (swap)'));
-  else rows.push({ label: 'Память на диске (swap)', level: sw.used_gb >= 6 ? 'bad' : sw.used_gb >= 2 ? 'warn' : 'ok',
-    word: sw.used_gb >= 6 ? 'много' : sw.used_gb >= 2 ? 'заметно' : 'мало', detail: `${sw.used_gb.toLocaleString('ru-RU')} из ${Number(sw.total_gb).toLocaleString('ru-RU')} ГБ` });
-  const top = Array.isArray(care.top_processes) ? care.top_processes : null;
-  if (!top) rows.push(unknown('Сейчас грузят процессор'));
-  else {
-    const peak = top.length ? top[0].cpu : 0;
-    rows.push({ label: 'Сейчас грузят процессор', level: peak >= 90 ? 'warn' : 'ok', word: peak >= 90 ? 'есть тяжёлый' : 'спокойно',
-      detail: top.length ? top.map(p => `${p.name} ${p.cpu}%`).join(', ') : 'никто' });
-  }
-  if (typeof care.disabled_agents === 'number') rows.push({ label: 'Отключённые фоновые агенты', level: 'ok',
-    word: `${care.disabled_agents}`, detail: care.disabled_agents ? 'убраны при чистке, вернуть можно по README в той же папке' : 'нет' });
+  if (typeof care.disabled_agents === 'number') rows.push({ group: 'upkeep', label: 'Отключённые фоновые агенты', level: 'ok',
+    word: `${care.disabled_agents} шт.`, detail: care.disabled_agents ? 'убраны при чистке, вернуть можно по README в той же папке' : 'нет' });
   return rows;
 }
 
@@ -13758,7 +13781,22 @@ function renderMachineCare(key, care) {
   } else {
     when.textContent = `обновлено ${machineCareWhen(care.generated_at)}`;
   }
-  for (const row of machineCareRows(care)) {
+  const rows = machineCareRows(care);
+  for (const group of MACHINE_CARE_GROUPS) {
+    const groupRows = rows.filter(row => row.group === group.id);
+    if (!groupRows.length) continue;
+    const section = document.createElement('div'); section.className = 'machine-care-group';
+    const head = document.createElement('div'); head.className = 'machine-care-group-head';
+    const title = document.createElement('h4'); title.className = 'machine-care-group-title'; title.textContent = group.title;
+    const issues = groupRows.filter(row => row.level === 'warn' || row.level === 'bad').length;
+    const summary = document.createElement('span');
+    summary.className = `machine-care-group-sum${issues ? ' has-issues' : ''}`;
+    summary.textContent = issues ? `требует внимания: ${issues}` : 'всё в порядке';
+    head.append(title, summary);
+    const ul = document.createElement('ul'); ul.className = 'machine-care-list';
+    section.append(head, ul);
+    list.append(section);
+    for (const row of groupRows) {
     const item = document.createElement('li');
     item.className = `machine-care-row is-${row.level}`;
     const dot = document.createElement('span'); dot.className = 'machine-care-dot'; dot.setAttribute('aria-hidden', 'true');
@@ -13768,7 +13806,8 @@ function renderMachineCare(key, care) {
     line.append(label, word);
     item.append(dot, line);
     if (row.detail) { const detail = document.createElement('span'); detail.className = 'machine-care-detail'; detail.textContent = row.detail; item.append(detail); }
-    list.append(item);
+    ul.append(item);
+    }
   }
 }
 
