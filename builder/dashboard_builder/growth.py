@@ -29,6 +29,9 @@ from pathlib import Path
 from typing import Any
 
 NOTE_FILE = Path.home() / "ObsidianVault" / "AMBITIONS-DREAMS" / "ТОЧКИ-РОСТА.md"
+# Mark 2026-11-05: «все планы, которые я реализовал» belong on the same page. Results live in their
+# own note next to the growth note, so a done result is never mixed up with a step still ahead.
+TRACTION_FILE_NAME = "ТРЕКШН.md"
 PICTURES = {"pe", "digital", "research", "podcast", "design", "coworking", "trading", "pmp", "robots", "agents", "growth"}
 # Without a known «Картинка:», the title picks one. Order matters: «Дизайн-агентство» is design, not agents.
 _PICTURE_HINTS = (
@@ -109,6 +112,90 @@ def parse_note(text: str) -> list[dict[str, Any]]:
     return areas
 
 
+_YEAR_RE = re.compile(r"^##\s+(.+?)\s*$")
+_GROUP_RE = re.compile(r"^###\s+(.+?)\s*$")
+_ITEM_RE = re.compile(r"^[-*]\s+(?:\[[xX ]\]\s+)?(.+?)\s*$")
+# Year context lines (Mark 2026-11-05: «темы, планы, цели, интересы, что планирую»). They describe the
+# year and are never counted as results. «Цифра: 45 000 € | вложено в ремонты» is a headline number.
+_YEAR_META = {"тема": "theme", "цифра": "stats", "план": "plans", "отложено": "postponed",
+              "интерес": "interests", "мечта": "dreams", "где был": "places"}
+_YEAR_META_RE = re.compile(r"^[-*]\s+(Тема|Цифра|План|Отложено|Интерес|Мечта|Где был)\s*:\s*(.+?)\s*$", re.IGNORECASE)
+_PROOF_RE = re.compile(r"^\s+[-*]\s+(?:Пруф|Доказательство|Proof)\s*:\s*(.+?)\s*$", re.IGNORECASE)
+
+
+def parse_traction(text: str) -> list[dict[str, Any]]:
+    """``## <год>`` → optional ``### <область>`` → ``- результат`` with an indented ``- Пруф: …``.
+
+    Only what is written is shown: a result without a proof line has ``proof`` empty, never a guess.
+    """
+    years: list[dict[str, Any]] = []
+    year: dict[str, Any] | None = None
+    group: dict[str, Any] | None = None
+    item: dict[str, Any] | None = None
+    for line in text.splitlines():
+        heading = _YEAR_RE.match(line)
+        if heading and not line.startswith("###"):
+            year = {"title": _clean(heading.group(1), 80), "groups": [], "theme": "", "stats": [], "plans": [],
+                    "postponed": [], "interests": [], "dreams": [], "places": []}
+            years.append(year)
+            group = item = None
+            continue
+        if year is None:
+            continue
+        sub = _GROUP_RE.match(line)
+        if sub:
+            group = {"title": _clean(sub.group(1), 80), "items": []}
+            year["groups"].append(group)
+            item = None
+            continue
+        proof = _PROOF_RE.match(line)
+        if proof:
+            if item is not None:
+                item["proof"] = _clean(proof.group(1))
+            continue
+        if line[:1] in " \t":
+            continue  # other nested lines are notes for Mark, not results
+        meta = _YEAR_META_RE.match(line)
+        if meta:
+            key, value = _YEAR_META[meta.group(1).lower()], meta.group(2)
+            if key == "theme":
+                year["theme"] = _clean(value)
+            elif key == "stats":
+                number, _, label = value.partition("|")
+                year["stats"].append({"value": _clean(number, 40), "label": _clean(label, 80)})
+            else:
+                year[key].append(_clean(value))
+            item = None
+            continue
+        entry = _ITEM_RE.match(line)
+        if not entry:
+            continue
+        if group is None:
+            group = {"title": "", "items": []}
+            year["groups"].append(group)
+        item = {"text": _clean(entry.group(1)), "proof": ""}
+        group["items"].append(item)
+    for year in years:
+        year["groups"] = [g for g in year["groups"] if g["items"]]
+        year["count"] = sum(len(g["items"]) for g in year["groups"])
+    # A year with only plans (the next one) still shows; an empty heading does not.
+    return [year for year in years if year["count"] or year["theme"] or year["stats"] or year["plans"]]
+
+
+def traction_projection(traction_file: Path) -> dict[str, Any]:
+    try:
+        text = traction_file.read_text(encoding="utf-8")
+        changed = datetime.fromtimestamp(traction_file.stat().st_mtime, timezone.utc)
+    except FileNotFoundError:
+        return {"state": "empty", "years": [], "count": 0}
+    except OSError:
+        return {"state": "unavailable", "years": [], "count": 0}
+    years = parse_traction(text)
+    return {"state": "live", "years": years, "count": sum(year["count"] for year in years),
+            "source": f"Obsidian · AMBITIONS-DREAMS/{traction_file.name}",
+            "note_updated_at": changed.isoformat(timespec="seconds")}
+
+
 def _minutes_by_project(daily_work_dir: Path, today: date) -> dict[str, int] | None:
     """Active minutes per normalised project name over the last TIME_WINDOW_DAYS days.
 
@@ -144,25 +231,30 @@ def _minutes_by_project(daily_work_dir: Path, today: date) -> dict[str, int] | N
     return totals
 
 
-def growth_projection(note_file: Path, daily_work_dir: Path, *, owner: bool, today: date | None = None) -> dict[str, Any]:
+def growth_projection(note_file: Path, daily_work_dir: Path, *, owner: bool, today: date | None = None,
+                      traction_file: Path | None = None) -> dict[str, Any]:
     today = today or date.today()
     observed_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    traction = traction_projection(traction_file or note_file.parent / TRACTION_FILE_NAME)
+    if not owner:
+        # The public view says how many results exist, never what they are.
+        traction = {"state": traction["state"], "years": [], "count": traction["count"]}
     try:
         text = note_file.read_text(encoding="utf-8")
         changed = datetime.fromtimestamp(note_file.stat().st_mtime, timezone.utc)
     except FileNotFoundError:
         return {"ok": True, "state": "empty", "owner_view": owner, "areas": [], "count": 0,
-                "observed_at": observed_at}
+                "traction": traction, "observed_at": observed_at}
     except OSError:
         return {"ok": False, "state": "unavailable", "owner_view": owner, "areas": [], "count": 0,
-                "observed_at": observed_at}
+                "traction": traction, "observed_at": observed_at}
     areas = parse_note(text)
     note_age_days = max(0, (today - changed.date()).days)
     state = "stale" if note_age_days >= NOTE_STALE_DAYS else "live"
     if not owner:
         # The public view says how many areas exist, never what they are.
         return {"ok": True, "state": state, "owner_view": False, "areas": [], "count": len(areas),
-                "observed_at": observed_at}
+                "traction": traction, "observed_at": observed_at}
     minutes = _minutes_by_project(daily_work_dir, today)
     for area in areas:
         total = len(area["steps"])
@@ -176,7 +268,7 @@ def growth_projection(note_file: Path, daily_work_dir: Path, *, owner: bool, tod
             area["minutes_30d"] = None
         area.pop("projects")
     return {"ok": True, "state": state, "owner_view": True, "areas": areas, "count": len(areas),
-            "source": "Obsidian · AMBITIONS-DREAMS/ТОЧКИ-РОСТА.md", "window_days": TIME_WINDOW_DAYS,
+            "traction": traction, "source": "Obsidian · AMBITIONS-DREAMS/ТОЧКИ-РОСТА.md", "window_days": TIME_WINDOW_DAYS,
             "time_available": minutes is not None, "note_updated_at": changed.isoformat(timespec="seconds"),
             "note_age_days": note_age_days, "stale_after_days": NOTE_STALE_DAYS, "observed_at": observed_at}
 
