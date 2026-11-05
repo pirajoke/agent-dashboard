@@ -163,6 +163,8 @@ PUBLIC_FILE_PATHS = {
     "/dashboard-assets/icon-512.png",
     "/dashboard-assets/apple-touch-icon.png",
     "/dashboard-assets/favicon-32.png",
+    # Dot-matrix font for the «Трекшн» story (Mark 2026-11-05, «как Nothing OS»).
+    "/dashboard-assets/doto-latin.woff2",
     "/favicon.ico",
     "/live-feed.json",
     "/scripts/live-feed.json",
