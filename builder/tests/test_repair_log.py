@@ -68,3 +68,66 @@ class RepairLogTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+import importlib.util
+import io
+from unittest.mock import patch
+
+BUILDER = Path(__file__).resolve().parents[1]
+_spec = importlib.util.spec_from_file_location("dashboard_repair_log_test", BUILDER / "dashboard-server-m4.py")
+SERVER = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(SERVER)
+
+
+class MedicEndpointTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.path = Path(temp.name) / "machine-repairs.json"
+        self.calls = []
+
+    def call(self, path, method, body=None, *, token="fixture-owner", host="command.meshly.fr", origin=None):
+        handler = SERVER.Handler.__new__(SERVER.Handler)
+        handler.path, handler.command = path, method
+        data = json.dumps(body or {}).encode()
+        handler.headers = {"Host": host, "Content-Length": str(len(data)), "Content-Type": "application/json"}
+        if token is not None:
+            handler.headers["X-Dashboard-Run-Token"] = token
+        if origin is not None:
+            handler.headers["Origin"] = origin
+        handler.rfile = io.BytesIO(data)
+        output = {}
+        handler._json_response = lambda status, payload: output.update(status=status, payload=payload)
+        handler.send_error = lambda status, *args: output.update(status=status)
+        fake = lambda method, path, payload=None: self.calls.append((method, path)) or {"ok": True}
+        with (patch.object(SERVER, "REPAIR_LOG_FILE", self.path),
+              patch.dict(SERVER.MACHINE_FIX_TARGETS, {"mini": fake, "pro": fake, "air": fake}),
+              patch.object(SERVER.time, "sleep", lambda _: None),
+              patch.object(SERVER, "_dashboard_run_token", return_value="fixture-owner"),
+              patch.object(SERVER.Handler, "_cloudflare_access_owner", return_value=False)):
+            getattr(handler, f"do_{method}")()
+        return output
+
+    def test_owner_reads_and_adds_repairs_on_the_public_host(self):
+        self.assertEqual(self.call("/api/machines/repairs", "GET")["payload"], {"state": "ready", "entries": []})
+        saved = self.call("/api/machines/repairs", "POST", {"action": "add", "machine": "pro", "problem": "x", "fix": "y"})
+        self.assertEqual((saved["status"], saved["payload"]["entries"][0]["machine"]), (200, "pro"))
+
+    def test_owner_starts_and_restarts_a_service_on_the_public_host(self):
+        done = self.call("/api/machines/fix", "POST", {"machine": "pro", "label": "com.mark.murmur", "action": "start"})
+        self.assertEqual((done["status"], self.calls), (200, [("POST", "/api/service/com.mark.murmur/start")]))
+        self.calls.clear()
+        self.call("/api/machines/fix", "POST", {"machine": "mini", "label": "com.x.web", "action": "restart"})
+        self.assertEqual(self.calls, [("POST", "/api/service/com.x.web/stop"), ("POST", "/api/service/com.x.web/start")])
+
+    def test_fix_refuses_strangers_and_odd_input(self):
+        self.assertEqual(self.call("/api/machines/fix", "POST", {"machine": "pro", "label": "a", "action": "start"}, token=None)["status"], 401)
+        self.assertEqual(self.call("/api/machines/repairs", "GET", token=None)["status"], 401)
+        for body in ({"machine": "pc", "label": "a", "action": "start"},
+                     {"machine": "pro", "label": "../etc", "action": "start"},
+                     {"machine": "pro", "label": "a/b", "action": "start"},
+                     {"machine": "pro", "label": "a", "action": "stop"}):
+            with self.subTest(body=body):
+                self.assertEqual(self.call("/api/machines/fix", "POST", body)["status"], 400)
+        self.assertEqual(self.calls, [])

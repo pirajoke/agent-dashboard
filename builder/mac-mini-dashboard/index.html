@@ -4773,7 +4773,15 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .cc-medic-machine h3::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--mm-success); flex: none; }
 .cc-medic-machine.is-warn h3::before { background: var(--mm-warning); }
 .cc-medic-machine.is-bad h3::before { background: var(--mm-danger); }
-.cc-medic-machine.is-off h3::before { background: var(--mm-muted); }
+.cc-medic-machine.is-off h3::before, .cc-medic-machine.is-checking h3::before { background: var(--mm-muted); }
+.cc-medic-now { display: grid; gap: 14px; }
+.cc-medic-fix { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 0; border-top: 1px solid var(--mm-line); }
+.cc-medic-fix > p { flex: 1 1 260px; margin: 0; }
+.cc-medic-fix-actions { display: flex; gap: 8px; flex: none; }
+.cc-medic-fix-actions .cc-refresh { min-height: 36px; }
+.cc-medic-park { min-height: 36px; padding: 6px 12px; color: var(--mm-muted); font: inherit; font-size: 13px; background: transparent; border: 1px solid var(--mm-line); border-radius: 10px; cursor: pointer; }
+.cc-medic-park:hover { color: var(--mm-ink); border-color: var(--mm-control-line, var(--mm-line)); }
+.cc-medic-fix-note { flex-basis: 100%; margin: 0; color: var(--mm-danger); font-size: 13px; }
 .cc-medic-machine p { color: var(--mm-ink); }
 .cc-medic-machine .cc-medic-advice, .cc-medic-history .cc-medic-advice { color: var(--mm-muted); }
 .cc-medic-history { display: grid; gap: 8px; padding-top: 4px; }
@@ -4901,6 +4909,70 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .mm-os .mm-home-link { min-height: 32px; padding: 4px 2px; color: var(--mm-accent); font: inherit; font-size: 14px; font-weight: 650; background: none !important; border: 0 !important; cursor: pointer; }
 .mm-os .mm-home-link:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; border-radius: 6px; }
 .mm-home-card { overflow: hidden; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 20px; box-shadow: var(--mm-shadow-soft); }
+/* «Календарь» (Mark 2026-11-03): two weeks on the board, a month in a window, a day's results on a click.
+   The busiest day is dark, today is outlined, days ahead are dashed, like the day results he liked. */
+.mm-cal-card { padding: 14px; }
+.mm-cal-week, .mm-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.mm-cal-week { margin-bottom: 6px; }
+.mm-cal-week span { padding-inline: 6px; color: var(--mm-muted); font-size: 12px; font-weight: 650; }
+.mm-os .mm-cal-day { position: relative; display: flex; flex-direction: column; gap: 5px; min-width: 0; min-height: 88px; padding: 7px 8px; color: var(--mm-ink); font: inherit; text-align: left; background: var(--mm-background); border: 1px solid var(--mm-line); border-radius: 10px; }
+.mm-os button.mm-cal-day { cursor: pointer; }
+.mm-os button.mm-cal-day:hover { border-color: var(--mm-control-line); background: var(--mm-surface-hover); }
+.mm-os button.mm-cal-day:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.mm-os .mm-cal-day.is-blank { background: transparent; border-color: transparent; }
+.mm-os .mm-cal-day.is-rest { color: var(--mm-muted); background: transparent; }
+.mm-os .mm-cal-day.is-future { color: var(--mm-muted); background: transparent; border-style: dashed; opacity: .6; }
+.mm-os .mm-cal-day.is-peak { color: var(--mm-background); background: var(--mm-ink); border-color: var(--mm-ink); }
+.mm-os .mm-cal-day.is-peak:hover { background: var(--mm-ink); opacity: .92; }
+.mm-os .mm-cal-day.is-today { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
+.mm-cal-top { display: flex; align-items: baseline; gap: 6px; }
+.mm-cal-top b { font-size: 16px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.mm-cal-top small { margin-left: auto; font-size: 12px; opacity: .75; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mm-cal-bar { height: 3px; overflow: hidden; border-radius: 2px; background: color-mix(in srgb, currentColor 16%, transparent); }
+.mm-cal-bar i { display: block; height: 100%; background: currentColor; opacity: .65; }
+.mm-cal-names { display: -webkit-box; overflow: hidden; font-size: 12px; line-height: 1.3; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.mm-cal-done { margin-top: auto; color: var(--mm-success); font-size: 12px; font-weight: 700; }
+.mm-os .mm-cal-day.is-peak .mm-cal-done { color: inherit; }
+.mm-cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.mm-cal-month-sum { color: var(--mm-muted); font-size: 14px; }
+.mm-cal-step { display: inline-flex; gap: 6px; margin-left: auto; }
+.mm-os .mm-cal-step button, .mm-os .mm-cal-back { min-width: 40px; min-height: 40px; padding: 0 12px; color: var(--mm-ink); font: inherit; font-size: 15px; font-weight: 650; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+.mm-os .mm-cal-step button:disabled { opacity: .35; cursor: default; }
+.mm-os .mm-cal-step button:focus-visible, .mm-os .mm-cal-back:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.mm-cal-hint { margin: 12px 0 0; color: var(--mm-muted); font-size: 13px; }
+.mm-cal-headline { margin: 0 0 4px; font-size: 18px; font-weight: 700; line-height: 1.35; }
+.mm-cal-sum { margin: 0 0 14px; color: var(--mm-muted); font-size: 14px; }
+.mm-cal-note { margin: 0 0 14px; padding: 10px 12px; color: var(--mm-muted); font-size: 14px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 10px; }
+.mm-cal-projects { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.mm-cal-project { padding: 12px 14px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.mm-os .mm-cal-project-head { display: flex; align-items: center; gap: 10px; width: 100%; padding: 0; color: var(--mm-ink); font: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
+.mm-os .mm-cal-project-head:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; border-radius: 8px; }
+.mm-cal-project-head .mm-project-art { width: 38px; height: 38px; flex: none; border-radius: 10px; }
+.mm-cal-project-head .mm-project-art svg { width: 32px; height: 32px; }
+.mm-cal-project-head .mm-art-initials { font-size: 12px; }
+.mm-cal-dialog .platform-archive-close { margin-left: auto; }
+.mm-cal-project-head b { font-size: 15.5px; }
+.mm-cal-project-head small { color: var(--mm-muted); font-size: 13px; }
+.mm-cal-project-head > span:last-child { margin-left: auto; color: var(--mm-accent); font-weight: 700; }
+.mm-cal-project .mm-bullets { margin: 10px 0 0; }
+.mm-cal-prs { display: grid; gap: 4px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 13.5px; }
+.mm-cal-prs a { color: var(--mm-success); text-decoration: none; }
+.mm-cal-prs a:hover { text-decoration: underline; }
+.mm-cal-quiet { margin: 12px 0 0; color: var(--mm-muted); font-size: 13.5px; }
+.mm-cal-dialog { width: min(820px, calc(100vw - 32px)); }
+@media (max-width: 600px) {
+  .mm-cal-card { padding: 10px; }
+  .mm-cal-week, .mm-cal-grid { gap: 4px; }
+  .mm-cal-week span { padding-inline: 2px; text-align: center; }
+  .mm-os .mm-cal-day { min-height: 56px; padding: 5px; gap: 4px; align-items: center; text-align: center; }
+  .mm-cal-top { flex-direction: column; align-items: center; gap: 0; }
+  .mm-cal-top small { margin-left: 0; font-size: 11px; }
+  .mm-cal-bar { align-self: stretch; }
+  .mm-cal-names { display: none; }
+  .mm-cal-done { margin-top: 0; font-size: 11px; }
+  .mm-cal-dialog { width: 100vw; }
+}
+@media (prefers-reduced-motion: reduce) { .mm-os .mm-cal-day { transition: none; } }
 /* «Ждёт тебя». */
 .mm-todo-slot .mm-todo-card { margin: 0; padding: 6px 20px 14px; border-radius: 20px; box-shadow: var(--mm-shadow-soft); }
 .mm-todo-slot .mm-todo-items { margin: 0; }
@@ -5229,17 +5301,24 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <circle cx="96" cy="84" r="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
     <path d="M96 78v12M90 84h12" stroke="#EF4444" stroke-width="3.4" stroke-linecap="round"/>
   </symbol>
-  <!-- Медик on Техника: a little doctor with a cap and a stethoscope -->
+  <!-- Медик on Техника (Mark 2026-11-03 «поменяй маскота»): a robot doctor with a pulse on its visor -->
   <symbol id="cc-mascot-medic" viewBox="0 0 120 120">
-    <ellipse cx="60" cy="111" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
-    <path d="M60 24c-24 0-36 18-36 40s12 42 36 42 36-20 36-42-12-40-36-40z" fill="#A7F3D0" stroke="#1A1A1A" stroke-width="3"/>
-    <path d="M30 40c4-16 16-24 30-24s26 8 30 24c-10-5-20-7-30-7s-20 2-30 7z" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
-    <path d="M60 18v12M54 24h12" stroke="#EF4444" stroke-width="3.6" stroke-linecap="round"/>
-    <use href="#cc-face" transform="translate(60 58)"/>
-    <path d="M40 74c0 14 8 20 20 20s20-6 20-20" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="80" cy="72" r="3.4" fill="#1A1A1A"/><circle cx="40" cy="72" r="3.4" fill="#1A1A1A"/>
-    <path d="M60 94v6" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
-    <circle cx="60" cy="103" r="5.5" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
+    <ellipse cx="60" cy="112" rx="30" ry="5" fill="#1A1A1A" opacity=".08"/>
+    <path d="M60 26V17" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="60" cy="11" r="8" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M60 6.5v9M55.5 11h9" stroke="#EF4444" stroke-width="3" stroke-linecap="round"/>
+    <rect x="38" y="80" width="44" height="24" rx="11" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M60 86v12M54 92h12" stroke="#EF4444" stroke-width="3.4" stroke-linecap="round"/>
+    <rect x="20" y="26" width="80" height="58" rx="24" fill="#BAE6FD" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="30" y="38" width="60" height="32" rx="15" fill="#0F172A"/>
+    <circle cx="49" cy="49" r="4.2" fill="#5EEAD4"/><circle cx="71" cy="49" r="4.2" fill="#5EEAD4"/>
+    <path d="M35 61h11l3-5 4 9 3-6 3 2h26" fill="none" stroke="#5EEAD4" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="28" cy="74" rx="4" ry="2.4" fill="#F9A8A8" opacity=".85"/>
+    <ellipse cx="92" cy="74" rx="4" ry="2.4" fill="#F9A8A8" opacity=".85"/>
+    <circle cx="30" cy="30" r="9" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
+    <circle cx="30" cy="30" r="3.5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/>
+    <path d="M40 82c-8 6-8 20 6 22M80 82c8 6 6 16-2 20" fill="none" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="77" cy="104" r="5.5" fill="#E5E7EB" stroke="#1A1A1A" stroke-width="3"/>
   </symbol>
   <!-- AI Singularity: a friendly spark -->
   <symbol id="cc-mascot-singularity" viewBox="0 0 120 120">
@@ -6101,6 +6180,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <div class="mm-home" id="mm-home">
         <div class="mm-todo-slot" id="mm-owner-todo" hidden></div>
         <section class="mm-week" id="mm-week" aria-labelledby="mm-week-title" hidden></section>
+        <section class="mm-cal" id="mm-cal" aria-labelledby="mm-cal-title" hidden></section>
         <div class="mm-view" data-mm-panel="map">
           <div id="mm-map"><p class="mm-empty">Загружаю проекты…</p></div>
         </div>
@@ -6115,6 +6195,13 @@ button.cc-refresh:hover { background: var(--mm-selection); }
           <button class="platform-archive-close" id="mm-summary-close" type="button" aria-label="Закрыть">✕</button>
         </header>
         <div class="platform-archive-body"><section class="mm-summary" id="mm-summary"></section></div>
+      </dialog>
+      <dialog class="platform-archive-dialog mm-cal-dialog" id="mm-cal-dialog" aria-labelledby="mm-cal-dialog-title">
+        <header class="platform-archive-head">
+          <h3 id="mm-cal-dialog-title">Календарь</h3>
+          <button class="platform-archive-close" id="mm-cal-close" type="button" aria-label="Закрыть">✕</button>
+        </header>
+        <div class="platform-archive-body" id="mm-cal-body"></div>
       </dialog>
       <dialog class="platform-archive-dialog" id="mm-others-dialog" aria-labelledby="mm-others-title">
         <header class="platform-archive-head">
@@ -13364,23 +13451,73 @@ document.addEventListener('click', event => {
 })();
 
 // ─── Медик ─── Mark 2026-11-02: «нажимаю, и он рассказывает про состояние включенных устройств».
-// He reads only what the page already received from each computer (memory, disk, processor, services);
-// nothing is sent anywhere and no model is called. A computer that does not answer is named, not guessed.
+// Mark 2026-11-03 «не работает»: the window said every computer was off and the log needed a sign-in.
+// Now the Медик asks each computer himself when opened (and keeps watching while the window is open),
+// says «осматриваю…» until it answers, and names the real reason when one does not. Nothing is sent
+// anywhere else and no model is called.
 const MEDIC_MACHINES = [['mini', 'Mac mini'], ['pro', 'MacBook Pro'], ['air', 'MacBook Air']];
+const MEDIC_TIMEOUT_MS = 20000;
+const medicVisits = {};   // key → { at, sys, services } or { at, error }
+const medicPending = {};  // key → Promise while a visit is running
 
-function medicServiceProblems(key) {
-  const rendered = svcRendered[`${key}-svc-tbody`];
-  if (!rendered) return null;
+function medicEndpoint(key) {
+  if (key === 'mini') return MAC_MINI_API ? `${MAC_MINI_API}/api/all` : null;
+  if (key === 'air') return AIR_API ? `${AIR_API}${AIR_API_PATH_PREFIX}/all` : null;
+  return PRO_API ? `${PRO_API}${PRO_API_PATH_PREFIX}/all` : null;
+}
+
+function medicVisit(key) {
+  if (medicPending[key]) return medicPending[key];
+  const url = medicEndpoint(key);
+  medicPending[key] = (async () => {
+    let visit;
+    if (!url) visit = { at: Date.now(), error: 'no_route' };
+    else {
+      try {
+        const response = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(MEDIC_TIMEOUT_MS) });
+        const data = response.ok ? await response.json().catch(() => null) : null;
+        // The site answers 502/504 when it cannot reach a laptop: that computer is off or offline.
+        if (!response.ok) visit = { at: Date.now(), error: response.status === 401 || response.status === 403 ? 'sign_in' : response.status >= 500 ? 'network' : 'http' };
+        else if (!data || !data.system) visit = { at: Date.now(), error: 'no_data' };
+        else visit = { at: Date.now(), sys: data.system, services: visibleRuntimeServices(data.services_detailed || data.services || []) };
+      } catch (error) {
+        visit = { at: Date.now(), error: error && error.name === 'TimeoutError' ? 'timeout' : 'network' };
+      }
+    }
+    medicVisits[key] = visit;
+    delete medicPending[key];
+    return visit;
+  })();
+  return medicPending[key];
+}
+
+// The freshest picture of a computer: the Медик's own visit, or what the page panels received.
+function medicPicture(key) {
+  const visit = medicVisits[key];
+  const pageSeen = machineRecentlySeen(key) && machineSystem[key];
+  if (visit && visit.sys && (!pageSeen || visit.at >= machineLastSeen[key])) return { sys: visit.sys, services: visit.services };
+  if (pageSeen) return { sys: machineSystem[key], services: (svcRendered[`${key}-svc-tbody`] || {}).services || null };
+  if (medicPending[key] && !visit) return { checking: true };
+  return { error: visit ? visit.error : (medicPending[key] ? null : 'unknown') , checking: Boolean(medicPending[key]) };
+}
+
+// Mark 2026-11-03: Ollama and Tag Website were switched off on purpose, so the Медик does not call them a problem.
+const MEDIC_OFF_ON_PURPOSE = ['ollama', 'tag-website'];
+
+function medicServiceProblems(key, services) {
+  if (!services) return null;
   const choices = readSvcArchiveChoices();
   const problems = [];
-  for (const s of rendered.services || []) {
+  for (const s of services) {
     const problem = svcProblem(s);
     if (!problem) continue;
-    // An old archived job that is simply not loaded is expected; anything else is worth saying.
-    if (isSvcArchived(s, choices, `${key}-svc-tbody`) && problem.label === 'Не запущена') continue;
-    problems.push(`${s.name || s.label}: ${problem.why}`);
+    if (MEDIC_OFF_ON_PURPOSE.includes(svcSlug(s.name)) || MEDIC_OFF_ON_PURPOSE.includes(svcSlug(s.label))) continue;
+    // A service Mark put in the archive and that is simply not running is parked, not broken.
+    if (isSvcArchived(s, choices, `${key}-svc-tbody`) && problem.label !== 'Ошибка') continue;
+    problems.push({ name: s.name || s.label, label: s.label, id: svcId(s), why: problem.why,
+      action: problem.label === 'Не отвечает' ? 'restart' : 'start' });
   }
-  return { total: (rendered.services || []).length, problems };
+  return { total: services.length, problems };
 }
 
 function medicUptimeDays(text) {
@@ -13388,9 +13525,21 @@ function medicUptimeDays(text) {
   return match ? Number(match[1]) : 0;
 }
 
+const MEDIC_OFF_WORDS = {
+  timeout: 'Не ответил за 20 секунд: выключен, спит или нет сети.',
+  network: 'Нет связи: выключен, спит или нет сети.',
+  http: 'Сайт не смог до него достучаться. Попробую ещё раз через несколько секунд.',
+  sign_in: 'Чтобы осмотреть, нужно войти на сайт.',
+  no_data: 'Ответил, но без данных о памяти и диске.',
+  no_route: 'С этой страницы до него не достучаться.',
+  unknown: 'Пока не ответил.',
+};
+
 function medicExam(key, title) {
-  const sys = machineSystem[key];
-  if (!machineRecentlySeen(key) || !sys) return { key, title, level: 'off', lines: ['Не на связи: выключен, спит или нет сети. Осмотреть не могу.'], advice: [] };
+  const picture = medicPicture(key);
+  if (picture.checking) return { key, title, level: 'checking', lines: ['Осматриваю…'], advice: [] };
+  if (!picture.sys) return { key, title, level: 'off', lines: [MEDIC_OFF_WORDS[picture.error] || MEDIC_OFF_WORDS.unknown], advice: [] };
+  const sys = picture.sys;
   const items = Object.fromEntries(machineHealthItems(sys).map(item => [item.id, item]));
   const lines = [];
   const advice = [];
@@ -13406,11 +13555,9 @@ function medicExam(key, title) {
   if (cpu.level === 'bad') advice.push('Что-то сильно грузит процессор, проверь Мониторинг системы.');
   const days = medicUptimeDays(sys.uptime);
   if (days >= 30) advice.push(`Не перезагружался ${days} дн., перезагрузка не помешает.`);
-  const svc = medicServiceProblems(key);
-  if (svc && svc.problems.length) {
-    lines.push(`Не работает: ${svc.problems.join('; ')}.`);
-    advice.push('Подробности в его списке сервисов.');
-  } else if (svc && svc.total) {
+  const svc = medicServiceProblems(key, picture.services);
+  const fixes = svc ? svc.problems : [];
+  if (svc && !svc.problems.length && svc.total) {
     lines.push('Все сервисы работают.');
   }
   const worst = [ram.level, disk.level, cpu.level].includes('bad') || (svc && svc.problems.length) ? 'bad'
@@ -13419,24 +13566,28 @@ function medicExam(key, title) {
     .filter(([, level]) => level === 'warn' || level === 'bad').map(([sign]) => sign);
   if (svc && svc.problems.length) signs.push('service');
   // Mark 2026-11-02 «помнил контекст»: the same trouble again → what helped last time on this computer.
-  const past = medicPastRepair(key, signs);
+  const past = medicPastRepair(key, signs, fixes.map(fix => fix.name));
   if (past) advice.unshift(`В прошлый раз (${medicDay(past.date)}) было похоже: ${past.problem.replace(/[.!]?$/, '.')} Помогло: ${past.fix}`);
-  return { key, title, level: worst, lines, advice };
+  return { key, title, level: worst, lines, advice, fixes };
 }
 
 function medicExamAll() {
   // A computer Mark put into «Архив» on «Техника» (2026-11-03) is switched off on purpose: the medic skips it.
   const exams = MEDIC_MACHINES.filter(([key]) => !machineLayout.archived.includes(key === 'mini' ? 'mac-mini' : key))
     .map(([key, title]) => medicExam(key, title));
-  const on = exams.filter(exam => exam.level !== 'off');
+  const on = exams.filter(exam => exam.level !== 'off' && exam.level !== 'checking');
+  const checking = exams.some(exam => exam.level === 'checking');
   const sick = on.filter(exam => exam.level !== 'ok');
-  let state = 'unknown', word = 'осматриваю…', verdict = 'Пока ни один компьютер не ответил. Попробуй чуть позже.';
+  let state = 'unknown', word = 'осматриваю…', verdict = 'Осматриваю компьютеры…';
   if (on.length) {
     state = sick.some(exam => exam.level === 'bad') ? 'bad' : sick.length ? 'warn' : 'ok';
     word = state === 'ok' ? 'все здоровы' : `проверь: ${sick.map(exam => exam.title).join(', ')}`;
     verdict = state === 'ok'
       ? `Включено ${on.length} из ${exams.length}. Все здоровы, ничего делать не нужно.`
       : `Включено ${on.length} из ${exams.length}. Есть на что посмотреть: ${sick.map(exam => exam.title).join(', ')}.`;
+  } else if (!checking) {
+    word = 'никто не ответил';
+    verdict = 'Ни один компьютер не ответил. Проверь интернет или обнови страницу.';
   }
   return { exams, state, word, verdict };
 }
@@ -13455,26 +13606,34 @@ setInterval(medicRender, 5000);
 const MEDIC_REPAIRS_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/machines/repairs`;
 const MEDIC_MACHINE_NAMES = Object.fromEntries(MEDIC_MACHINES);
 const MEDIC_SIGN_NAMES = { ram: 'память', cpu: 'процессор', disk: 'диск', service: 'сервис', network: 'связь', other: 'другое' };
-let medicRepairs = null;  // null: not loaded or not allowed; [] : empty log
+let medicRepairs = null;  // the entries once loaded
+let medicRepairsState = 'loading';  // loading | ready | owner | missing | error | offline
 
 function medicDay(day) {
   const date = new Date(`${day}T12:00:00Z`);
   return Number.isNaN(date.getTime()) ? day : date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 }
 
-function medicPastRepair(key, signs) {
+// A past repair counts when it was on this computer and about the same thing; for a service, the same service.
+function medicPastRepair(key, signs, serviceNames = []) {
   if (!medicRepairs || !signs.length) return null;
-  return medicRepairs.find(entry => entry.machine === key && (entry.signs || []).some(sign => signs.includes(sign))) || null;
+  const sameService = entry => serviceNames.some(name => entry.problem.toLowerCase().includes(String(name).toLowerCase()));
+  return medicRepairs.find(entry => entry.machine === key && (entry.signs || []).some(sign =>
+    signs.includes(sign) && (sign !== 'service' || sameService(entry)))) || null;
 }
 
 async function medicLoadRepairs() {
-  if (!MEDIC_REPAIRS_API) return;
+  if (!MEDIC_REPAIRS_API) { medicRepairsState = 'offline'; return; }
   try {
-    const response = await fetch(MEDIC_REPAIRS_API, { headers: mmHeaders(), cache: 'no-store' });
-    const payload = response.ok ? await response.json() : null;
-    medicRepairs = payload && payload.state === 'ready' && Array.isArray(payload.entries) ? payload.entries : null;
+    const response = await fetch(MEDIC_REPAIRS_API, { headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin' });
+    const payload = await response.json().catch(() => null);
+    if (response.ok && payload && payload.state === 'ready' && Array.isArray(payload.entries)) {
+      medicRepairs = payload.entries; medicRepairsState = 'ready';
+    } else {
+      medicRepairsState = response.status === 401 || response.status === 403 ? 'owner' : response.status === 404 ? 'missing' : 'error';
+    }
   } catch (_) {
-    medicRepairs = null;
+    medicRepairsState = 'error';
   }
 }
 medicLoadRepairs();
@@ -13483,27 +13642,35 @@ setInterval(medicLoadRepairs, 5 * 60 * 1000);
 async function medicSaveRepair(body) {
   if (!MEDIC_REPAIRS_API) return 'offline';
   try {
-    const response = await fetch(MEDIC_REPAIRS_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', body: JSON.stringify(body) });
+    const response = await fetch(MEDIC_REPAIRS_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin', body: JSON.stringify(body) });
     const payload = await response.json().catch(() => null);
-    if (response.ok && payload?.state === 'ready') { medicRepairs = payload.entries; return null; }
-    return response.status === 401 ? 'owner' : 'error';
+    if (response.ok && payload?.state === 'ready') { medicRepairs = payload.entries; medicRepairsState = 'ready'; return null; }
+    return response.status === 401 || response.status === 403 ? 'owner' : 'error';
   } catch (_) {
     return 'network';
   }
 }
 
+const MEDIC_REPAIRS_WORDS = {
+  loading: 'Открываю журнал…',
+  owner: 'Журнал виден только владельцу. Обнови страницу: если сайт попросит войти, войди своей почтой.',
+  missing: 'Журнал ещё не включён на сервере: обновление сайта до Mac mini пока не дошло.',
+  error: 'Журнал сейчас не открылся. Попробую ещё раз, когда откроешь медика снова.',
+  offline: 'Журнал открывается только на сайте.',
+};
+
 function medicHistoryNode() {
   const box = document.createElement('section');
   box.className = 'cc-medic-history';
   const h = document.createElement('h3'); h.textContent = 'История починок'; box.append(h);
-  if (medicRepairs === null) {
+  if (medicRepairsState !== 'ready') {
     const p = document.createElement('p'); p.className = 'cc-medic-advice';
-    p.textContent = 'Журнал виден только тебе, после входа на сайт.';
+    p.textContent = MEDIC_REPAIRS_WORDS[medicRepairsState] || MEDIC_REPAIRS_WORDS.error;
     box.append(p);
     return box;
   }
   if (!medicRepairs.length) {
-    const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = 'Пока ничего не чинили.'; box.append(p);
+    const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = 'Пока ничего не записано.'; box.append(p);
   }
   const list = document.createElement('ul');
   for (const entry of medicRepairs.slice(0, 8)) {
@@ -13536,31 +13703,128 @@ function medicHistoryNode() {
     const error = await medicSaveRepair({ action: 'add', machine: data.get('machine'), signs: [data.get('sign')],
       problem: String(data.get('problem') || ''), fix: String(data.get('fix') || ''), by: 'mark' });
     if (error) { status.textContent = error === 'owner' ? 'Нужно войти на сайт как владелец.' : 'Не сохранилось, попробуй ещё раз.'; return; }
-    ccOpenInfo('machine-medic');
+    medicPaintHistory();
   });
   box.append(toggle, form);
   return box;
 }
 
-ccInfoSources['machine-medic'] = () => {
+function medicMachinesNode() {
   const { exams, verdict } = medicExamAll();
-  const report = document.createElement('div');
-  report.className = 'cc-medic-report';
+  const wrap = document.createElement('div');
+  wrap.className = 'cc-medic-now';
   const head = document.createElement('div');
   head.className = 'cc-medic-verdict';
   head.innerHTML = '<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><use href="#cc-mascot-medic"/></svg>';
   const say = document.createElement('p'); say.textContent = verdict; head.append(say);
-  report.append(head);
+  wrap.append(head);
   // Switched-on computers first: those are the ones he examined.
-  for (const exam of [...exams.filter(e => e.level !== 'off'), ...exams.filter(e => e.level === 'off')]) {
+  const order = { bad: 0, warn: 1, ok: 2, checking: 3, off: 4 };
+  for (const exam of [...exams].sort((a, b) => order[a.level] - order[b.level])) {
     const card = document.createElement('section');
     card.className = `cc-medic-machine is-${exam.level}`;
     const h = document.createElement('h3'); h.textContent = exam.title; card.append(h);
     for (const line of exam.lines) { const p = document.createElement('p'); p.textContent = line; card.append(p); }
+    for (const fix of exam.fixes || []) card.append(medicFixRow(exam.key, fix));
     for (const line of exam.advice) { const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = line; card.append(p); }
-    report.append(card);
+    wrap.append(card);
   }
-  report.append(medicHistoryNode());
+  return wrap;
+}
+
+// One stopped service: what is wrong, what the Медик suggests, and a button that does it.
+const MEDIC_FIX_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/machines/fix`;
+const medicFixState = {};  // `${machine}:${label}` → working | done | failed | owner
+
+function medicFixRow(key, fix) {
+  const row = document.createElement('div');
+  row.className = 'cc-medic-fix';
+  const text = document.createElement('p');
+  const name = document.createElement('strong'); name.textContent = fix.name;
+  text.append(name, document.createTextNode(` ${fix.why}. `));
+  const tip = document.createElement('span'); tip.className = 'cc-medic-advice';
+  tip.textContent = fix.action === 'restart' ? 'Совет: перезапустить.' : 'Совет: запустить заново. Если он не нужен, убери в архив.';
+  text.append(tip);
+  const actions = document.createElement('div'); actions.className = 'cc-medic-fix-actions';
+  const stateKey = `${key}:${fix.label}`;
+  const state = medicFixState[stateKey];
+  const go = document.createElement('button');
+  go.type = 'button'; go.className = 'cc-refresh';
+  go.textContent = state === 'working' ? 'Запускаю…' : fix.action === 'restart' ? 'Перезапустить' : 'Запустить';
+  go.disabled = state === 'working';
+  go.setAttribute('aria-label', `${go.textContent}: ${fix.name}`);
+  go.addEventListener('click', () => medicApplyFix(key, fix));
+  const park = document.createElement('button');
+  park.type = 'button'; park.className = 'cc-medic-park'; park.textContent = 'Не нужен';
+  park.setAttribute('aria-label', `${fix.name} не нужен: убрать в архив`);
+  park.addEventListener('click', () => { toggleSvcArchive(`${key}-svc-tbody`, fix.id, true); medicPaintMachines(); });
+  actions.append(go, park);
+  row.append(text, actions);
+  if (state === 'failed' || state === 'owner') {
+    const note = document.createElement('p'); note.className = 'cc-medic-fix-note'; note.setAttribute('role', 'status');
+    note.textContent = state === 'owner' ? 'Нужно войти на сайт как владелец.' : 'Не получилось: компьютер не ответил. Попробуй ещё раз.';
+    row.append(note);
+  }
+  return row;
+}
+
+async function medicApplyFix(key, fix) {
+  const stateKey = `${key}:${fix.label}`;
+  if (!MEDIC_FIX_API || medicFixState[stateKey] === 'working') return;
+  medicFixState[stateKey] = 'working';
+  medicPaintMachines();
+  let ok = false;
+  try {
+    const response = await fetch(MEDIC_FIX_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin',
+      body: JSON.stringify({ machine: key, label: fix.label, action: fix.action }) });
+    ok = response.ok;
+    medicFixState[stateKey] = ok ? 'done' : response.status === 401 || response.status === 403 ? 'owner' : 'failed';
+  } catch (_) {
+    medicFixState[stateKey] = 'failed';
+  }
+  if (ok) {
+    // Remember it, so next time the Медик can say what helped.
+    medicSaveRepair({ action: 'add', machine: key, signs: ['service'], by: 'medic',
+      problem: `${fix.name} не работал (${fix.why})`.slice(0, 300),
+      fix: fix.action === 'restart' ? 'Перезапустили кнопкой медика' : 'Запустили заново кнопкой медика' })
+      .then(() => { if (medicDialogOpen()) medicPaintHistory(); });
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    delete medicVisits[key];
+    await medicVisit(key);
+  }
+  if (medicDialogOpen()) medicPaintMachines();
+}
+
+function medicPaintMachines() {
+  const now = document.querySelector('#cc-info-body .cc-medic-now');
+  if (now) now.replaceWith(medicMachinesNode());
+  medicRender();
+}
+
+function medicPaintHistory() {
+  const history = document.querySelector('#cc-info-body .cc-medic-history');
+  // Leave a half-filled form alone; the next opening shows the fresh log.
+  if (history && !history.querySelector('.cc-medic-form:not([hidden])')) history.replaceWith(medicHistoryNode());
+  medicPaintMachines();
+}
+
+function medicDialogOpen() {
+  const dialog = document.getElementById('cc-info-dialog');
+  return Boolean(dialog && dialog.open && document.querySelector('#cc-info-body .cc-medic-report'));
+}
+
+// Each opening: ask every computer now, repaint as each one answers, and keep checking every 10 s while open.
+function medicInspect() {
+  for (const [key] of MEDIC_MACHINES) medicVisit(key).then(() => { if (medicDialogOpen()) medicPaintMachines(); });
+}
+setInterval(() => { if (medicDialogOpen()) medicInspect(); }, 10000);
+
+ccInfoSources['machine-medic'] = () => {
+  medicInspect();
+  if (medicRepairsState !== 'ready') medicLoadRepairs().then(() => { if (medicDialogOpen()) medicPaintHistory(); });
+  const report = document.createElement('div');
+  report.className = 'cc-medic-report';
+  report.append(medicMachinesNode(), medicHistoryNode());
   return { title: 'Медик', node: report };
 };
 
@@ -14445,10 +14709,12 @@ function mmInit() {
   mmInitOwnerTodo();
   mmInitOwnerProjects();
   mmInitSummary();
+  mmInitCalendar();
   // The board refreshes while MAIN MANAGER is on screen.
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
     loadDailyWork();
+    mmLoadCalendar();
     mmLoadOwnerProjects();
     mmLoadOwnerTodo();
     mmLoadHealth();
@@ -14501,6 +14767,7 @@ function openMainManager() {
   const firstOpen = !mmInitialised;
   mmInit();
   loadDailyWork(dailyWorkDate);
+  mmLoadCalendar();
   mmLoadOwnerProjects();
   mmLoadOwnerTodo();
   mmLoadHealth();
@@ -14627,7 +14894,7 @@ function mmRenderConn(notice) {
 }
 
 async function mmRetry() {
-  const loads = [loadDailyWork(dailyWorkDate), mmLoadOwnerProjects(), mmLoadOwnerTodo(), mmLoadHealth()];
+  const loads = [loadDailyWork(dailyWorkDate), mmLoadCalendar(), mmLoadOwnerProjects(), mmLoadOwnerTodo(), mmLoadHealth()];
   if (mmView === 'project' && mmProjectId) loads.push(openProject(mmProjectId));
   await Promise.allSettled(loads);
 }
@@ -14962,6 +15229,219 @@ function mmInitSummary() {
     }
     const row = event.target.closest('[data-project]');
     if (row) { document.getElementById('mm-summary-dialog')?.close(); openProject(row.dataset.project); }
+  });
+}
+
+// ─── «Календарь» (Mark 2026-11-03: «календарь прогресса с историей выполненного за каждый день») ───
+// Two weeks on the board, the whole month in a window, and any day of the last 90 opens what got done
+// in it: Claude's plain words per project and the merged PRs. Owner payload only; the public view
+// has no feed, so the tile stays hidden there. Days without work are not buttons.
+const MM_CAL_DAYS = 90;
+const MM_CAL_WEEK = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const MM_CAL_MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+let mmCalData = null;
+let mmCalLoading = false;
+let mmCalView = { mode: 'month', month: null, day: null };
+
+function mmIsoAdd(iso, days) {
+  const moment = new Date(`${iso}T00:00:00Z`);
+  moment.setUTCDate(moment.getUTCDate() + days);
+  return moment.toISOString().slice(0, 10);
+}
+function mmIsoWeekday(iso) { return (new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7; }
+function mmCalDayTitle(iso) {
+  const text = new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+    .format(new Date(`${iso}T00:00:00Z`));
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+function mmCalHours(minutes) {
+  if (!minutes) return '';
+  return minutes < 60 ? `${minutes} мин` : `${Math.round(minutes / 60)} ч`;
+}
+
+async function mmLoadCalendar() {
+  if (mmCalLoading) return;
+  mmCalLoading = true;
+  try {
+    const data = await mmFetchJSON(`${DAILY_WORK_API}?days=${MM_CAL_DAYS}&calendar=1`);
+    mmCalData = data?.owner_view && Array.isArray(data.series) && data.series.length ? data : null;
+  } catch (error) {
+    // The last calendar stays; the notice at the top already says what is wrong with the connection.
+    if (error?.kind === 'signin') mmCalData = null;
+  } finally {
+    mmCalLoading = false;
+  }
+  mmRenderCalendar();
+}
+
+function mmCalIndex() {
+  const series = mmCalData.series;
+  return {
+    totals: Object.fromEntries(series.map(day => [day.date, day])),
+    feed: Object.fromEntries((mmCalData.feed || []).map(day => [day.date, day])),
+    first: series[0].date,
+    today: series[series.length - 1].date,
+  };
+}
+
+function mmCalCell(iso, idx, peak, inMonth = true) {
+  const num = Number(iso.slice(8));
+  if (!inMonth) return '<span class="mm-cal-day is-blank" aria-hidden="true"></span>';
+  const totals = idx.totals[iso];
+  if (iso > idx.today) return `<span class="mm-cal-day is-future"><span class="mm-cal-top"><b>${num}</b></span></span>`;
+  const day = idx.feed[iso];
+  if (!totals || !day) {
+    return `<span class="mm-cal-day is-rest${iso === idx.today ? ' is-today' : ''}"><span class="mm-cal-top"><b>${num}</b></span></span>`;
+  }
+  const minutes = totals.total_minutes || 0;
+  const done = totals.prs_merged || 0;
+  const names = day.projects.filter(p => !p.quiet).map(p => p.name);
+  const classes = ['mm-cal-day', iso === idx.today ? 'is-today' : '', peak && minutes === peak ? 'is-peak' : ''].filter(Boolean).join(' ');
+  const label = [mmCalDayTitle(iso), minutes ? workMinutes(minutes) : '', done ? `${done} ${mmPlural(done, 'изменение', 'изменения', 'изменений')}` : '',
+    names.join(', ')].filter(Boolean).join(', ');
+  return `<button type="button" class="${classes}" data-cal-day="${iso}" aria-label="${mmEsc(label)}">
+    <span class="mm-cal-top"><b>${num}</b>${minutes ? `<small>${mmEsc(mmCalHours(minutes))}</small>` : ''}</span>
+    <span class="mm-cal-bar" aria-hidden="true"><i style="width:${peak ? Math.max(4, Math.round(minutes / peak * 100)) : 0}%"></i></span>
+    ${names.length ? `<span class="mm-cal-names" aria-hidden="true">${mmEsc(names.slice(0, 2).join(', '))}${names.length > 2 ? ` +${names.length - 2}` : ''}</span>` : ''}
+    ${done ? `<span class="mm-cal-done" aria-hidden="true">✓ ${done}</span>` : ''}
+  </button>`;
+}
+
+function mmCalGrid(dates, idx, isIn = () => true) {
+  const peak = Math.max(0, ...dates.filter(iso => isIn(iso) && iso <= idx.today && idx.feed[iso]).map(iso => idx.totals[iso]?.total_minutes || 0));
+  return `<div class="mm-cal-week" aria-hidden="true">${MM_CAL_WEEK.map(name => `<span>${name}</span>`).join('')}</div>
+    <div class="mm-cal-grid">${dates.map(iso => mmCalCell(iso, idx, peak, isIn(iso))).join('')}</div>`;
+}
+
+function mmRenderCalendar() {
+  const tile = document.getElementById('mm-cal');
+  if (!tile) return;
+  if (!mmCalData) {
+    tile.hidden = true;
+    tile.replaceChildren();
+    const dialog = document.getElementById('mm-cal-dialog');
+    if (dialog?.open) dialog.close();
+    return;
+  }
+  const idx = mmCalIndex();
+  // Last week and this week, Monday first, as in the day results Mark liked.
+  const start = mmIsoAdd(idx.today, -mmIsoWeekday(idx.today) - 7);
+  const dates = Array.from({ length: 14 }, (_, i) => mmIsoAdd(start, i));
+  tile.innerHTML = `<div class="mm-home-head"><h3 class="mm-home-label" id="mm-cal-title">Календарь</h3>
+      <button type="button" class="mm-home-link" data-cal-month aria-haspopup="dialog" aria-controls="mm-cal-dialog">Весь месяц ›</button></div>
+    <div class="mm-home-card mm-cal-card">${mmCalGrid(dates, idx, iso => iso >= idx.first)}</div>`;
+  tile.hidden = false;
+  const dialog = document.getElementById('mm-cal-dialog');
+  if (dialog?.open) mmRenderCalendarDialog();
+}
+
+function mmCalMonthKey(iso) { return iso.slice(0, 7); }
+function mmCalMonthShift(key, delta) {
+  const [year, month] = key.split('-').map(Number);
+  const moment = new Date(Date.UTC(year, month - 1 + delta, 1));
+  return moment.toISOString().slice(0, 7);
+}
+
+function mmRenderCalendarDialog() {
+  const body = document.getElementById('mm-cal-body');
+  const title = document.getElementById('mm-cal-dialog-title');
+  if (!body || !mmCalData) return;
+  const idx = mmCalIndex();
+  if (mmCalView.mode === 'day' && mmCalView.day) {
+    const iso = mmCalView.day;
+    title.textContent = mmCalDayTitle(iso);
+    const workDays = Object.keys(idx.feed).sort();
+    const prev = [...workDays].reverse().find(d => d < iso);
+    const next = workDays.find(d => d > iso);
+    const nav = `<div class="mm-cal-nav">
+      <button type="button" class="mm-cal-back" data-cal-month="${mmCalMonthKey(iso)}">‹ ${mmEsc(MM_CAL_MONTHS[Number(iso.slice(5, 7)) - 1])}</button>
+      <span class="mm-cal-step">
+        <button type="button" data-cal-day="${prev || ''}" ${prev ? '' : 'disabled'} aria-label="Предыдущий день с работой">‹</button>
+        <button type="button" data-cal-day="${next || ''}" ${next ? '' : 'disabled'} aria-label="Следующий день с работой">›</button>
+      </span></div>`;
+    body.innerHTML = nav + mmCalDayBody(idx.feed[iso], idx.totals[iso]);
+    return;
+  }
+  const key = mmCalView.month || mmCalMonthKey(idx.today);
+  const [year, month] = key.split('-').map(Number);
+  title.textContent = `${MM_CAL_MONTHS[month - 1]} ${year}`;
+  const first = `${key}-01`;
+  const start = mmIsoAdd(first, -mmIsoWeekday(first));
+  const last = mmIsoAdd(`${mmCalMonthShift(key, 1)}-01`, -1);
+  const cells = (mmIsoWeekday(first) + Number(last.slice(8)) + 6 - mmIsoWeekday(last));
+  const dates = Array.from({ length: cells }, (_, i) => mmIsoAdd(start, i));
+  const canPrev = mmCalMonthShift(key, -1) >= mmCalMonthKey(idx.first);
+  const canNext = mmCalMonthShift(key, 1) <= mmCalMonthKey(idx.today);
+  const inWindow = Object.keys(idx.feed).filter(d => d.startsWith(key));
+  const minutes = mmSum(inWindow.map(d => idx.totals[d]?.total_minutes || 0));
+  const done = mmSum(inWindow.map(d => idx.totals[d]?.prs_merged || 0));
+  body.innerHTML = `<div class="mm-cal-nav">
+      <span class="mm-cal-month-sum">${inWindow.length ? `${inWindow.length} ${mmPlural(inWindow.length, 'день', 'дня', 'дней')} работы · ${mmEsc(mmCalHours(minutes))}${done ? ` · ✓ ${done}` : ''}` : 'В этом месяце работы не было'}</span>
+      <span class="mm-cal-step">
+        <button type="button" data-cal-month="${canPrev ? mmCalMonthShift(key, -1) : ''}" ${canPrev ? '' : 'disabled'} aria-label="Прошлый месяц">‹</button>
+        <button type="button" data-cal-month="${canNext ? mmCalMonthShift(key, 1) : ''}" ${canNext ? '' : 'disabled'} aria-label="Следующий месяц">›</button>
+      </span></div>
+    <div class="mm-cal-month">${mmCalGrid(dates, idx, iso => iso.startsWith(key))}</div>
+    <p class="mm-cal-hint">Нажми на день, чтобы увидеть, что в нём сделано.</p>`;
+}
+
+function mmCalDayBody(day, totals) {
+  if (!day) return '<p class="mm-empty">В этот день работы не было.</p>';
+  const projects = day.projects.filter(p => !p.quiet);
+  const quiet = day.projects.filter(p => p.quiet);
+  const done = totals?.prs_merged || 0;
+  const told = projects.some(p => p.bullets.length);
+  const sum = [day.total_minutes ? `${workMinutes(day.total_minutes)} работы` : '', done ? `${done} ${mmPlural(done, 'изменение слито', 'изменения слито', 'изменений слито')}` : '']
+    .filter(Boolean).join(' · ');
+  const note = told ? '' : `<p class="mm-cal-note">${day.is_today ? 'День ещё идёт: итог словами появится вечером.' : 'Итога словами для этого дня нет, видно только сделанные изменения.'}</p>`;
+  const projectHtml = p => {
+    const prs = p.merged.map(pr => {
+      const url = mmGithubUrl(pr.url);
+      const text = `✓ ${pr.title || `PR #${pr.number}`}`;
+      return `<li>${url ? `<a href="${mmEsc(url)}" target="_blank" rel="noopener">${mmEsc(text)}</a>` : mmEsc(text)}</li>`;
+    }).join('');
+    return `<li class="mm-cal-project">
+      <button type="button" class="mm-cal-project-head" data-project="${mmEsc(p.id)}">${mmArt(p)}<b>${mmEsc(p.name)}</b>${p.minutes ? `<small>${mmEsc(workMinutes(p.minutes))}</small>` : ''}<span aria-hidden="true">›</span></button>
+      ${p.bullets.length ? mmBullets(p.bullets) : ''}
+      ${prs ? `<ul class="mm-cal-prs">${prs}</ul>` : ''}
+    </li>`;
+  };
+  return `${day.headline ? `<p class="mm-cal-headline">${mmEsc(day.headline)}</p>` : ''}
+    ${sum ? `<p class="mm-cal-sum">${mmEsc(sum)}</p>` : ''}${note}
+    ${projects.length ? `<ul class="mm-cal-projects">${projects.map(projectHtml).join('')}</ul>` : ''}
+    ${quiet.length ? `<p class="mm-cal-quiet">Ещё заглядывал: ${mmEsc(quiet.map(p => p.name).join(', '))}</p>` : ''}`;
+}
+
+function mmOpenCalendar(view) {
+  const dialog = document.getElementById('mm-cal-dialog');
+  if (!dialog || !mmCalData) return;
+  mmCalView = { ...mmCalView, ...view };
+  mmRenderCalendarDialog();
+  document.getElementById('mm-cal-body').scrollTop = 0;
+  if (typeof dialog.showModal === 'function') { if (!dialog.open) dialog.showModal(); } else dialog.setAttribute('open', '');
+}
+
+function mmInitCalendar() {
+  const dialog = document.getElementById('mm-cal-dialog');
+  const close = () => { if (typeof dialog.close === 'function') dialog.close(); else dialog.removeAttribute('open'); };
+  const pick = event => {
+    const day = event.target.closest('[data-cal-day]');
+    if (day && day.dataset.calDay) return mmOpenCalendar({ mode: 'day', day: day.dataset.calDay }), true;
+    const month = event.target.closest('[data-cal-month]');
+    if (month) {
+      const key = month.dataset.calMonth || (mmCalData ? mmCalMonthKey(mmCalIndex().today) : null);
+      if (key) mmOpenCalendar({ mode: 'month', month: key });
+      return true;
+    }
+    return false;
+  };
+  document.getElementById('mm-cal').addEventListener('click', pick);
+  document.getElementById('mm-cal-close').addEventListener('click', close);
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) return close();
+    if (pick(event)) return;
+    const project = event.target.closest('[data-project]');
+    if (project) { close(); openProject(project.dataset.project); }
   });
 }
 

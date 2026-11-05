@@ -313,7 +313,8 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path == "/api/work/daily":
             prepare_navigation_fixture()
             self._json_response(200, SERVER.work_projection(SERVER.DAILY_WORK_DIR,
-                now=datetime.now(timezone.utc), owner=self._decision_owner_authorized()))
+                now=datetime.now(timezone.utc), owner=self._decision_owner_authorized(),
+                days=int((query.get("days") or ["30"])[0]), calendar=(query.get("calendar") or ["0"])[0] == "1"))
             return
         if parsed.path in {"/api/manager/decisions", "/api/manager/decisions/responses"}:
             self._handle_manager_decisions(responses=parsed.path.endswith("/responses"))

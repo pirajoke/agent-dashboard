@@ -642,6 +642,15 @@ class ProjectionTest(unittest.TestCase):
                          ("2026-10-09", True, ["mydictionary"]))
         self.assertEqual(today["projects"][0]["commands"], 1)
 
+    def test_calendar_retells_every_day_of_the_window(self):
+        # Mark 2026-11-03: «календарь прогресса» opens any day of the window, not only the last 14.
+        payload = work_projection(self.root, now=self.now, owner=True, days=30, calendar=True)
+        self.assertEqual([day["date"] for day in payload["feed"]],
+                         ["2026-10-08", "2026-10-07", "2026-10-06", "2026-10-05", "2026-09-25"])
+        self.assertEqual(len(payload["series"]), 30)
+        # The public view never gets the days in words.
+        self.assertNotIn("feed", work_projection(self.root, now=self.now, owner=False, days=30, calendar=True))
+
     def test_days_read_what_claude_wrote(self):
         self._write_paper_summary("2026-10-05", {"jarvis": {
             "lead": "Голос в работе", "you": [], "agents": ["Начали голосовой режим"], "next": ["Проверить голос"],
