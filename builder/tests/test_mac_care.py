@@ -110,7 +110,7 @@ class ProjectionTests(unittest.TestCase):
     def test_missing_file_and_host_named_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(care_projection(Path(tmp), "macbook-pro", owner=True, now=NOW)["state"], "not_installed")
-            self.write(Path(tmp), "macbook-pro-de-max.json", "2026-11-02T11:55:00Z")
+            self.write(Path(tmp), "macbook-pro-example.json", "2026-11-02T11:55:00Z")
             self.assertEqual(care_projection(Path(tmp), "macbook-pro", owner=True, now=NOW)["state"], "fresh")
         self.assertEqual(care_projection(Path("/tmp"), "../etc", owner=True)["state"], "unknown_machine")
 
@@ -142,6 +142,7 @@ class CareRowsTests(unittest.TestCase):
         now = int(NOW.timestamp() * 1000)
         script = "\n".join([
             js_function(source, "machineCareWhen"),
+            js_function(source, "machineCareSchedule"),
             js_function(source, "machineCareRows"),
             f"console.log(JSON.stringify(machineCareRows({json.dumps(care)}, {now}).map(r => [r.label, r.level, r.word])));",
         ])
@@ -161,6 +162,12 @@ class CareRowsTests(unittest.TestCase):
         })
         self.assertTrue(all(level == "ok" for _, level, _ in rows), rows)
         self.assertEqual(len(rows), 8)
+
+    def test_restart_detail_comes_from_the_real_schedule(self):
+        source = HTML.read_text()
+        script = js_function(source, "machineCareSchedule") + "\nconsole.log(JSON.stringify(['restart at 4:00AM Sunday', 'shutdown at 11:30PM weekdays', 'odd'].map(machineCareSchedule)));"
+        out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout
+        self.assertEqual(json.loads(out), ["перезагрузка, вс 04:00", "выключение, по будням 23:30", "odd"])
 
     def test_todays_macbook_calls_out_firewall_and_update(self):
         rows = dict((label, (level, word)) for label, level, word in self.rows({

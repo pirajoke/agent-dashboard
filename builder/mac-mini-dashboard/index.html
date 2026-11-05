@@ -13452,6 +13452,20 @@ function machineCareWhen(iso, now = Date.now()) {
   return `${date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} ${time}`;
 }
 
+// pmset says «restart at 4:00AM Sunday»; the page says «перезагрузка, вс 04:00».
+function machineCareSchedule(text) {
+  const raw = String(text || '');
+  const days = { sunday: 'вс', monday: 'пн', tuesday: 'вт', wednesday: 'ср', thursday: 'чт', friday: 'пт', saturday: 'сб', weekdays: 'по будням', weekends: 'по выходным', 'every day': 'каждый день' };
+  const time = raw.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  const day = raw.match(/sunday|monday|tuesday|wednesday|thursday|friday|saturday|weekdays|weekends|every day/i);
+  if (!time || !day) return raw;
+  let hour = Number(time[1]) % 12;
+  if (!time[3]) hour = Number(time[1]);
+  else if (time[3].toUpperCase() === 'PM') hour += 12;
+  const action = /shutdown/i.test(raw) ? 'выключение' : 'перезагрузка';
+  return `${action}, ${days[day[0].toLowerCase()]} ${String(hour).padStart(2, '0')}:${time[2]}`;
+}
+
 function machineCareRows(care, now = Date.now()) {
   const rows = [];
   const unknown = (label, detail = 'нет данных') => ({ label, level: 'unknown', word: 'неизвестно', detail });
@@ -13484,7 +13498,7 @@ function machineCareRows(care, now = Date.now()) {
   const boot = r.boot_at ? `последний запуск ${machineCareWhen(r.boot_at, now)}` : '';
   if (r.scheduled == null) rows.push(unknown('Перезагрузка по воскресеньям', boot || 'нет данных'));
   else rows.push({ label: 'Перезагрузка по воскресеньям', level: r.scheduled ? 'ok' : 'warn', word: r.scheduled ? 'включена' : 'не настроена',
-    detail: [r.scheduled ? 'вс 04:00' : 'pmset не знает о расписании', boot].filter(Boolean).join('; ') });
+    detail: [r.scheduled ? machineCareSchedule(r.schedule) : 'pmset не знает о расписании', boot].filter(Boolean).join('; ') });
   const f = care.firewall || {};
   if (f.enabled == null) rows.push(unknown('Файрвол'));
   else rows.push({ label: 'Файрвол', level: f.enabled ? 'ok' : 'warn', word: f.enabled ? 'включён' : 'выключен',

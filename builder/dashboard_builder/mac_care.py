@@ -34,7 +34,7 @@ def care_projection(care_dir: Path, machine: str, *, owner: bool, now: datetime 
         return {"ok": True, "state": "owner_only", "machine": machine}
     path = care_dir / f"{machine}.json"
     if not path.exists():
-        # Without --machine the collector names the file after the host, e.g. «macbook-pro-de-max».
+        # Without --machine the collector names the file after the host, e.g. «macbook-pro-example».
         others = sorted(care_dir.glob(f"{machine}-*.json"), key=lambda item: item.stat().st_mtime, reverse=True)
         path = others[0] if others else path
     try:
