@@ -238,7 +238,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "architecture", "platforms", "media", "documents", "context", "work", "growth"],
+            ["mac-mini", "air", "pro", "machines", "agents", "architecture", "platforms", "media", "documents", "context", "work", "growth", "genealogy"],
         )
         # Агенты opens on «Сессии» since 2026-10-25; the campus is one tap away.
         self.assertIn(
