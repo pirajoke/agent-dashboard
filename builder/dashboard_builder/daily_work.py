@@ -571,7 +571,7 @@ def _upcoming_deadlines(summaries: dict[str, dict[str, Any]], portfolio: dict[st
 
 
 def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
-          summaries: dict[str, dict[str, Any]], today: str) -> list[dict[str, Any]]:
+          summaries: dict[str, dict[str, Any]], today: str, days: int = FEED_DAYS) -> list[dict[str, Any]]:
     """«По дням», the first screen: each day with work, newest first, in Claude's plain words per project.
 
     Only real activity: a day without sessions or PRs, or with quick looks only, is left out. Projects
@@ -579,7 +579,7 @@ def _feed(series: list[dict[str, Any]], portfolio: dict[str, dict[str, Any]],
     ``quiet`` and appear only in the technical details, with the PRs and numbers.
     """
     feed = []
-    for totals in reversed(series[-FEED_DAYS:]):
+    for totals in reversed(series[-days:]):
         day = totals["date"]
         summary = summaries.get(day)
         projects = []
@@ -659,9 +659,12 @@ def _age_days(moment: datetime | None, now: datetime) -> int | None:
 
 def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFAULT_DAYS,
                     selected: str | None = None, owner: bool = False, project: str | None = None,
-                    edition: bool = False) -> dict[str, Any]:
+                    edition: bool = False, calendar: bool = False) -> dict[str, Any]:
     """MAIN MANAGER payload. ``edition`` asks for «По дням», the first screen: the last days with
-    work in plain words; without a chosen day ``day`` is the newest day with work."""
+    work in plain words; without a chosen day ``day`` is the newest day with work. ``calendar``
+    (Mark 2026-11-03, «календарь прогресса») is the same feed for every day of the window, so the
+    calendar can retell any day; older days than the summarizer keeps show only names and PRs."""
+    edition = edition or calendar
     now = now or datetime.now(timezone.utc)
     tz = now.astimezone().tzinfo
     today = now.astimezone(tz).date()
@@ -785,7 +788,8 @@ def work_projection(root: Path, *, now: datetime | None = None, days: int = DEFA
         payload["projects"] = summaries
         payload["todo"] = _todo(portfolio, day_summaries, series_days, today.isoformat())
         if edition:
-            payload["feed"] = _feed(series, portfolio, day_summaries, today.isoformat())
+            payload["feed"] = _feed(series, portfolio, day_summaries, today.isoformat(),
+                                    days=len(series) if calendar else FEED_DAYS)
             payload["deadlines"] = _upcoming_deadlines(day_summaries, portfolio, series_days, today.isoformat())
         if project:
             payload["project"] = _project_detail(portfolio[project], series_days, day_summaries, today.isoformat()) if project in portfolio else None

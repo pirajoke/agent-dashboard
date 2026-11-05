@@ -38,10 +38,12 @@ from dashboard_builder.mac_care import care_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.work_tools import work_tools_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
+from dashboard_builder.machine_layout import MAX_BODY_BYTES as MACHINE_LAYOUT_MAX_BYTES, load_layout, save_layout
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
+from dashboard_builder.repair_log import MAX_BODY_BYTES as REPAIR_LOG_MAX_BYTES, change_entries as change_repair_log, load_entries as load_repair_log
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.architecture import collect_architecture
 from dashboard_builder.growth import EDIT_MAX_BODY_BYTES as GROWTH_EDIT_MAX_BYTES, NOTE_FILE as GROWTH_NOTE_FILE, NoteConflict, change_note, growth_projection
@@ -72,13 +74,23 @@ JARVIS_DASHBOARD_RUN_TOKEN_FILE = HOME / ".agent-bridge" / "dashboard_run_token"
 MANAGER_DECISIONS_FILE = HOME / ".agent-bridge" / "command-center-decisions.jsonl"
 PLATFORM_EDITS_FILE = HOME / ".agent-bridge" / "platform-edits.json"
 PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
+MACHINE_LAYOUT_FILE = HOME / ".agent-bridge" / "machine-layout.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
+# «Журнал починок» for the Медик on Техника (Mark 2026-11-02). Owner only.
+REPAIR_LOG_FILE = HOME / ".agent-bridge" / "machine-repairs.json"
 MEDIA_LINKEDIN_ACTIONS = {
     "/api/media/linkedin/schedule": lambda body: media_linkedin.save_schedule(body),
+    "/api/media/linkedin/settings": lambda body: media_linkedin.save_settings(body),
     "/api/media/linkedin/preview": lambda body: media_linkedin.preview(body),
     "/api/media/linkedin/rewrite": lambda body: media_linkedin.rewrite(body),
+    "/api/media/linkedin/edit": lambda body: media_linkedin.edit(body),
     "/api/media/linkedin/send-batch": lambda body: media_linkedin.send_batch(body),
+    "/api/media/linkedin/comment": lambda body: media_linkedin.comment_create(body),
+    "/api/media/linkedin/comment-text": lambda body: media_linkedin.comment_text(body),
+    "/api/media/linkedin/comment-rewrite": lambda body: media_linkedin.comment_rewrite(body),
+    "/api/media/linkedin/comment-send": lambda body: media_linkedin.comment_send(body),
+    "/api/media/linkedin/comment-close": lambda body: media_linkedin.comment_close(body),
 }
 CAMPUS_ARCHIVE_FILE = HOME / ".agent-bridge" / "campus-archive.json"
 LIVE_SESSIONS_DIR = HOME / ".agent-bridge" / "live-sessions"
@@ -156,6 +168,8 @@ PUBLIC_FILE_PATHS = {
     "/dashboard-assets/icon-512.png",
     "/dashboard-assets/apple-touch-icon.png",
     "/dashboard-assets/favicon-32.png",
+    # Dot-matrix font for the «Трекшн» story (Mark 2026-11-05, «как Nothing OS»).
+    "/dashboard-assets/doto-latin.woff2",
     "/favicon.ico",
     "/live-feed.json",
     "/scripts/live-feed.json",
@@ -1121,6 +1135,10 @@ def _pro_health_request(method: str, path: str, payload: dict | None = None) -> 
     return _remote_health_request(PRO_HEALTH_API_URL, method, path, payload)
 
 
+MACHINE_FIX_TARGETS = {"mini": _health_request, "air": _air_health_request, "pro": _pro_health_request}
+MACHINE_FIX_LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$")
+
+
 def _air_proxy_path(path: str) -> str | None:
     if path.startswith("/api/air/"):
         return "/api/" + path[len("/api/air/"):]
@@ -1965,11 +1983,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/platform-cards':
             self._handle_platform_cards_save()
             return
+        if parsed.path == '/api/machine-layout':
+            self._handle_machine_layout_save()
+            return
         if parsed.path == '/api/growth':
             self._handle_growth_edit()
             return
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
+            return
+        if parsed.path == '/api/machines/repairs':
+            self._handle_repair_log_save()
+            return
+        if parsed.path == '/api/machines/fix':
+            self._handle_machine_fix()
             return
         if parsed.path in MEDIA_LINKEDIN_ACTIONS:
             self._handle_media_linkedin_action(parsed.path)
@@ -2692,6 +2719,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except OSError:
             self._json_response(503, {'error': 'campus_archive_unavailable'})
 
+    def _handle_machine_layout_save(self):
+        # Mark's order and archive of the computers on «Техника»; same owner guard as Platforms.
+        body = self._platform_owner_body(MACHINE_LAYOUT_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            self._json_response(200, {'state': 'ready', **save_layout(MACHINE_LAYOUT_FILE, body)})
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_machine_layout'})
+        except OSError:
+            self._json_response(503, {'error': 'machine_layout_unavailable'})
+
     def _handle_platform_edits_save(self):
         body = self._platform_owner_body(PLATFORM_EDITS_MAX_BYTES)
         if body is None:
@@ -2733,6 +2772,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         self._json_response(status, payload)
 
+    def _handle_media_linkedin_image(self, candidate_id: str):
+        # The post's picture, so Mark sees the whole LinkedIn post (2026-11-02). Owner only.
+        try:
+            found = media_linkedin.image(candidate_id)
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_request'})
+            return
+        except media_linkedin.MediaUnavailable as error:
+            self._json_response(503, {'error': 'media_unavailable', 'state': str(error)})
+            return
+        if found is None:
+            self._json_response(404, {'error': 'image_not_found'})
+            return
+        data, mime = found
+        self.send_response(200)
+        self.send_header('Content-Type', mime)
+        self.send_header('Content-Length', len(data))
+        self.send_header('Cache-Control', 'private, no-store')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.end_headers()
+        self.wfile.write(data)
+
     def _handle_owner_todo_save(self):
         body = self._platform_owner_body(OWNER_TODO_MAX_BYTES)
         if body is None:
@@ -2748,6 +2809,45 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(400, {'error': 'invalid_owner_todo', 'reason': str(error)})
         except OSError:
             self._json_response(503, {'error': 'owner_todo_unavailable'})
+
+    def _handle_machine_fix(self):
+        # Mark 2026-11-03: the Медик offers «Запустить» next to a stopped service. Owner only, the same
+        # guard as the repair log; it only starts (or restarts) a launchd job through that computer's
+        # own health API, exactly what the service list's start button does on the local dashboard.
+        body = self._platform_owner_body(1024)
+        if body is None:
+            return
+        machine, label, action = body.get('machine'), body.get('label'), body.get('action')
+        if (machine not in MACHINE_FIX_TARGETS or action not in ('start', 'restart')
+                or not isinstance(label, str) or not MACHINE_FIX_LABEL.match(label)):
+            self._json_response(400, {'error': 'invalid_fix'})
+            return
+        request = MACHINE_FIX_TARGETS[machine]
+        try:
+            if action == 'restart':
+                try:
+                    request('POST', f'/api/service/{label}/stop')
+                except Exception:
+                    pass  # A job that is already down cannot be stopped; starting it is what matters.
+                time.sleep(1)
+            result = request('POST', f'/api/service/{label}/start')
+        except Exception:
+            self._json_response(502, {'error': 'machine_unreachable'})
+            return
+        self._json_response(200, {'state': 'done', 'machine': machine, 'label': label, 'action': action, 'result': result})
+
+    def _handle_repair_log_save(self):
+        body = self._platform_owner_body(REPAIR_LOG_MAX_BYTES)
+        if body is None:
+            return
+        try:
+            self._json_response(200, {'state': 'ready', **change_repair_log(REPAIR_LOG_FILE, body)})
+        except LookupError:
+            self._json_response(404, {'error': 'entry_not_found'})
+        except ValueError as error:
+            self._json_response(400, {'error': 'invalid_repair', 'reason': str(error)})
+        except OSError:
+            self._json_response(503, {'error': 'repair_log_unavailable'})
 
     def _handle_manager_decision_response(self):
         if not self._decision_owner_authorized():
@@ -2875,6 +2975,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 owner=self._dashboard_run_authorized(),
                 project=project[:80] if project else None,
                 edition=(query.get('edition') or ['0'])[0] == '1',
+                calendar=(query.get('calendar') or ['0'])[0] == '1',
             )
         except Exception:
             # Keep the cause in the server log: the page only learns that the day data failed.
@@ -2980,6 +3081,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/site-version':
             self._json_response(200, _site_version())
             return
+        if parsed.path == '/api/machine-layout':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required'})
+                return
+            self._json_response(200, {'state': 'ready', **load_layout(MACHINE_LAYOUT_FILE)})
+            return
         if parsed.path == '/api/platform-edits':
             if not self._decision_owner_authorized():
                 self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'edits': {}})
@@ -3003,6 +3110,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             self._json_response(200, media_linkedin.overview())
             return
+        if parsed.path == '/api/media/linkedin/image':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required'})
+                return
+            self._handle_media_linkedin_image(parse_qs(parsed.query).get('id', [''])[0])
+            return
         if parsed.path == '/api/owner-todo':
             if not self._decision_owner_authorized():
                 self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'items': []})
@@ -3013,6 +3126,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(503, {'error': 'owner_todo_unavailable', 'state': 'unavailable', 'items': []})
                 return
             self._json_response(200, {'state': 'ready', **record, 'runner': _agent_runner_status()})
+            return
+        if parsed.path == '/api/machines/repairs':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'entries': []})
+                return
+            try:
+                record = load_repair_log(REPAIR_LOG_FILE)
+            except OSError:
+                self._json_response(503, {'error': 'repair_log_unavailable', 'state': 'unavailable', 'entries': []})
+                return
+            self._json_response(200, {'state': 'ready', **record})
             return
         if parsed.path == '/api/live-sessions':
             # Claude Code and Codex sessions open on Mark's Macs (Mark 2026-10-25). Owner only.

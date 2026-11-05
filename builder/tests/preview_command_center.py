@@ -303,7 +303,7 @@ class PreviewHandler(SERVER.Handler):
                 ]
             self._json_response(200, payload)
             return
-        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth"}:
+        if parsed.path in {"/api/platform-edits", "/api/platform-cards", "/api/owner-todo", "/api/growth", "/api/machine-layout"}:
             super().do_GET()  # The product's owner-only read of card edits and owner-made cards.
             return
         if parsed.path == "/api/owner-projects":
@@ -313,7 +313,8 @@ class PreviewHandler(SERVER.Handler):
         if parsed.path == "/api/work/daily":
             prepare_navigation_fixture()
             self._json_response(200, SERVER.work_projection(SERVER.DAILY_WORK_DIR,
-                now=datetime.now(timezone.utc), owner=self._decision_owner_authorized()))
+                now=datetime.now(timezone.utc), owner=self._decision_owner_authorized(),
+                days=int((query.get("days") or ["30"])[0]), calendar=(query.get("calendar") or ["0"])[0] == "1"))
             return
         if parsed.path in {"/api/manager/decisions", "/api/manager/decisions/responses"}:
             self._handle_manager_decisions(responses=parsed.path.endswith("/responses"))
@@ -393,6 +394,8 @@ class PreviewHandler(SERVER.Handler):
             self._handle_platform_edits_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/platform-cards":
             self._handle_platform_cards_save()
+        elif urlsplit(self.path).path == "/api/machine-layout":
+            self._handle_machine_layout_save()  # Writes only to the isolated fixture state.
         elif urlsplit(self.path).path == "/api/growth":
             self._handle_growth_edit()  # Writes only the synthetic note in the fixture state.
         elif urlsplit(self.path).path == "/api/docxx/decide":
@@ -494,6 +497,7 @@ if __name__ == "__main__":
         SERVER.MANAGER_DECISIONS_FILE = FIXTURE_STATE / "responses.jsonl"
         SERVER.PLATFORM_EDITS_FILE = FIXTURE_STATE / "platform-edits.json"
         SERVER.PLATFORM_CARDS_FILE = FIXTURE_STATE / "platform-cards.json"
+        SERVER.MACHINE_LAYOUT_FILE = FIXTURE_STATE / "machine-layout.json"
         SERVER.OWNER_TODO_FILE = FIXTURE_STATE / "owner-todo.json"
         SERVER.CAMPUS_ARCHIVE_FILE = FIXTURE_STATE / "campus-archive.json"
         SERVER.LIVE_SESSIONS_DIR = FIXTURE_STATE / "live-sessions"
@@ -503,6 +507,7 @@ if __name__ == "__main__":
         SERVER.GROWTH_NOTE_FILE = FIXTURE_STATE / "growth-note.md"
         SERVER.GROWTH_EDITS_JOURNAL = FIXTURE_STATE / "growth-edits.jsonl"
         SERVER.GROWTH_NOTE_FILE.write_text("# Точки роста\n\n## Synthetic research area\n- Зачем: Synthetic reason.\n- [x] Synthetic first step\n- [ ] Synthetic second step\n\n## Synthetic design area\n", encoding="utf-8")
+        (FIXTURE_STATE / "ТРЕКШН.md").write_text("# Трекшн\n\n## 2024\n- Тема: Synthetic first year\n- Цифра: 22.04 | synthetic date\n- Цифра: 1,17 млн ₽ | synthetic amount\n- План: Synthetic chess plan\n- Отложено: Synthetic chess plan\n- Интерес: Synthetic interest\n### Synthetic area\n- Synthetic early result\n\n## 2025\n- Тема: Synthetic second year\n- Цифра: ≈45 000 € | synthetic invested\n- Цифра: 2 | synthetic count\n- План: Synthetic chess again\n- Отложено: Synthetic chess again\n- Мечта: Synthetic dream\n- Где был: Synthetic city\n### Synthetic area\n- Synthetic result\n  - Пруф: synthetic proof\n- Synthetic result without proof\n### Synthetic other\n- Synthetic other result\n\n## 2026\n- Тема: Synthetic third year\n### Synthetic area\n- Synthetic newest result\n  - Пруф: synthetic document\n### Synthetic new\n- Synthetic new area result\n- Synthetic new area second\n\n## 2027\n- План: Synthetic future plan\n- План: Synthetic second plan\n", encoding="utf-8")
         SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
         SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": (STARTED - timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}))
         prepare_navigation_fixture()

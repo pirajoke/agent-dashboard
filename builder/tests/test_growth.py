@@ -11,7 +11,7 @@ import unittest
 BUILDER_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BUILDER_DIR))
 
-from dashboard_builder.growth import PICTURES, growth_projection, parse_note  # noqa: E402
+from dashboard_builder.growth import PICTURES, growth_projection, parse_note, parse_traction  # noqa: E402
 import re  # noqa: E402
 
 NOTE = """# Мои точки роста
@@ -41,7 +41,69 @@ def _day(root: Path, machine: str, day: str, sessions: list[dict]) -> None:
     path.write_text(json.dumps({"sessions": sessions}), encoding="utf-8")
 
 
+TRACTION = """# Трекшн
+> Только то, что сделано и чем подтверждено.
+
+## 2025
+- Тема: Год проектного менеджера
+- Цифра: ≈45 000 € | вложено в ремонты
+- План: Шахматы 1600
+- Отложено: Шахматы 1600
+- Интерес: n8n
+### Карьера
+- Год проектной работы в Inovshop
+  - Пруф: контракт alternance
+  - заметка для себя, не результат
+### Учёба
+- [x] Сдал тест Agile PMI
+- Результат без пруфа
+
+## 2026
+- Job Radar: [[Job Radar|бета]] запущена
+  - Пруф: PR #120
+
+## Пустой год
+
+## 2027
+- План: Meshly на рынок
+"""
+
+
 class GrowthTest(unittest.TestCase):
+    def test_traction_note_becomes_years_groups_and_proofs(self):
+        years = parse_traction(TRACTION)
+        self.assertEqual([y["title"] for y in years], ["2025", "2026", "2027"])  # an empty year is dropped
+        self.assertEqual(years[0]["theme"], "Год проектного менеджера")
+        self.assertEqual(years[0]["stats"], [{"value": "≈45 000 €", "label": "вложено в ремонты"}])
+        self.assertEqual((years[0]["plans"], years[0]["postponed"], years[0]["interests"]), (["Шахматы 1600"], ["Шахматы 1600"], ["n8n"]))
+        self.assertEqual((years[2]["count"], years[2]["plans"]), (0, ["Meshly на рынок"]))  # plans only: still shown
+        career, study = years[0]["groups"]
+        self.assertEqual(career, {"title": "Карьера", "items": [{"text": "Год проектной работы в Inovshop", "proof": "контракт alternance"}]})
+        self.assertEqual([i["text"] for i in study["items"]], ["Сдал тест Agile PMI", "Результат без пруфа"])
+        self.assertEqual(study["items"][1]["proof"], "")  # no proof written: none shown, none guessed
+        self.assertEqual(years[0]["count"], 3)
+        self.assertEqual(years[1]["groups"][0]["title"], "")
+        self.assertEqual(years[1]["groups"][0]["items"][0], {"text": "Job Radar: бета запущена", "proof": "PR #120"})
+
+    def test_traction_sits_next_to_the_note_and_public_view_is_a_count(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            note = root / "ТОЧКИ-РОСТА.md"
+            note.write_text(NOTE, encoding="utf-8")
+            self.assertEqual(growth_projection(note, root, owner=True)["traction"]["state"], "empty")
+            (root / "ТРЕКШН.md").write_text(TRACTION, encoding="utf-8")
+            owner = growth_projection(note, root, owner=True)["traction"]
+            public = growth_projection(note, root, owner=False)["traction"]
+            note.unlink()
+            without_note = growth_projection(note, root, owner=True)
+        self.assertEqual(owner["state"], "live")
+        self.assertEqual(owner["count"], 4)
+        self.assertEqual(owner["source"], "Obsidian · AMBITIONS-DREAMS/ТРЕКШН.md")
+        self.assertEqual(public, {"state": "live", "years": [], "count": 4})
+        self.assertEqual(without_note["state"], "empty")  # results still show without the growth note
+        self.assertEqual(without_note["traction"]["count"], 4)
+
+
     def test_note_becomes_areas_with_steps_and_pictures(self):
         areas = parse_note(NOTE)
         self.assertEqual([a["title"] for a in areas], ["Private Equity", "Digital-монетизация", "Без шагов"])

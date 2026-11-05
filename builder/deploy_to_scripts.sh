@@ -39,7 +39,7 @@ cp "$SRC_DIR/dashboard-assets/ai-town-32x32folk.png" "$SCRIPTS_DIR/dashboard-ass
 cp "$SRC_DIR/dashboard-assets/ai-town-32x32folk.png" "$PUBLIC_ASSETS_DIR/ai-town-32x32folk.png"
 cp "$SRC_DIR/dashboard-assets/pixel-verse-campus-bg.webp" "$PUBLIC_ASSETS_DIR/pixel-verse-campus-bg.webp"
 cp "$SRC_DIR/dashboard-assets/three.module.min.js" "$PUBLIC_ASSETS_DIR/three.module.min.js"
-for asset in manifest.json icon-192.png icon-512.png apple-touch-icon.png favicon-32.png; do
+for asset in manifest.json icon-192.png icon-512.png apple-touch-icon.png favicon-32.png doto-latin.woff2; do
   cp "$SRC_DIR/dashboard-assets/$asset" "$PUBLIC_ASSETS_DIR/$asset"
 done
 
