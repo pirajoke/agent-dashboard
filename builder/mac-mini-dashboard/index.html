@@ -3791,6 +3791,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .media-rewrite { display: grid; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--mm-line); }
 .media-rewrite-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .media-rewrite-chips .media-ghost { min-height: 32px; padding: 4px 12px; }
+.media-voices { align-items: center; }
+.media-voices-label { margin-right: 2px; color: var(--mm-muted); font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; }
 .media-rewrite-form { display: flex; gap: 8px; }
 .media-rewrite-form input { flex: 1; min-width: 0; min-height: 36px; padding: 4px 14px; border: 1px solid var(--mm-control-line); border-radius: 999px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; }
 .media-rewrite-form input:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 1px; }
@@ -10566,6 +10568,7 @@ function mediaPostCard(position, text, title, options = {}) {
     ${mediaPostBody(text, options.candidateId)}
     <div class="media-rewrite">
       <div class="media-rewrite-chips" role="group" aria-label="Быстрые правки">${MEDIA_REWRITE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
+      <div class="media-rewrite-chips media-voices" role="group" aria-label="Голос поста"><span class="media-voices-label">Голос</span>${MEDIA_VOICES.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
       <form class="media-rewrite-form" data-media-rewrite-form="${position}">
         <label class="media-sr" for="media-ask-${key}">Что поменять в посте</label>
         <input id="media-ask-${key}" maxlength="300" autocomplete="off" placeholder="Что поменять? Например: короче, без цифр">
@@ -10586,6 +10589,17 @@ const MEDIA_REWRITE_CHIPS = [
   ['Проще', 'Проще и живее, как человек пишет коллеге, без канцелярита.'],
   ['Меньше эмодзи', 'Оставь не больше двух эмодзи.'],
 ];
+
+// Mark 2026-11-05: «разные профили типа критик, энтузиаст» — the same post in another voice.
+// Each ask stays under the 300-character rewrite limit and keeps the facts, source and hashtags.
+const MEDIA_VOICE_KEEP = ' Факты, цифры, источник и хэштеги не меняй, ничего не выдумывай.';
+const MEDIA_VOICES = [
+  ['🧐 Критик', 'Перепиши голосом трезвого критика: что в новости спорно, чего не хватает, какие риски.'],
+  ['🚀 Энтузиаст', 'Перепиши голосом энтузиаста: почему это важно и что теперь станет возможно, живо, без пафоса.'],
+  ['📊 Аналитик', 'Перепиши голосом аналитика: суть, цифры, что это значит для рынка, спокойно и по пунктам.'],
+  ['🛠 Практик', 'Перепиши голосом практика: как это применить в работе уже сейчас, 2–3 конкретных шага.'],
+  ['🤨 Скептик', 'Перепиши голосом скептика с лёгкой иронией: что пока звучит громче, чем есть на деле.'],
+].map(([label, ask]) => [label, ask + MEDIA_VOICE_KEEP]);
 
 let mediaToday = [];
 

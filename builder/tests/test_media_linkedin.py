@@ -338,6 +338,18 @@ class PageTests(unittest.TestCase):
         self.assertIn("mediaEsc(item.title)", PAGE)
         self.assertIn("mediaEsc(post.title)", PAGE)
 
+    def test_rewrite_offers_voice_profiles_within_the_instruction_limit(self):
+        import re
+        self.assertIn('class="media-rewrite-chips media-voices"', PAGE)
+        block = PAGE[PAGE.index("const MEDIA_VOICES = ["):PAGE.index("].map(([label, ask]) => [label, ask + MEDIA_VOICE_KEEP]);")]
+        keep = re.search(r"const MEDIA_VOICE_KEEP = '([^']+)';", PAGE).group(1)
+        asks = re.findall(r"\['[^']+', '([^']+)'\]", block)
+        self.assertGreaterEqual(len(asks), 4)
+        for ask in asks:
+            self.assertLessEqual(len(ask + keep), media_linkedin.MAX_INSTRUCTION)
+        for label in ("Критик", "Энтузиаст"):
+            self.assertIn(label, block)
+
 
 if __name__ == "__main__":
     unittest.main()
