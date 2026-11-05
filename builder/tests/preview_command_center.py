@@ -480,6 +480,7 @@ if __name__ == "__main__":
         SERVER.GROWTH_NOTE_FILE = FIXTURE_STATE / "growth-note.md"
         SERVER.GROWTH_EDITS_JOURNAL = FIXTURE_STATE / "growth-edits.jsonl"
         SERVER.GROWTH_NOTE_FILE.write_text("# Точки роста\n\n## Synthetic research area\n- Зачем: Synthetic reason.\n- [x] Synthetic first step\n- [ ] Synthetic second step\n\n## Synthetic design area\n", encoding="utf-8")
+        (FIXTURE_STATE / "ТРЕКШН.md").write_text("# Трекшн\n\n## 2025\n### Synthetic area\n- Synthetic result\n  - Пруф: synthetic proof\n- Synthetic result without proof\n\n## 2026\n- Synthetic newest result\n  - Пруф: synthetic document\n", encoding="utf-8")
         SERVER.AUTO_DEPLOY_STATE_FILE = FIXTURE_STATE / "auto-deploy-state.json"
         SERVER.AUTO_DEPLOY_STATE_FILE.write_text(json.dumps({"deployed_at": (STARTED - timedelta(minutes=7)).strftime("%Y-%m-%dT%H:%M:%SZ")}))
         prepare_navigation_fixture()
