@@ -3972,6 +3972,92 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .growth-results li::before { content: "✓"; display: grid; place-items: center; width: 16px; height: 16px; margin-top: 2px; color: #fff; font-size: 11px; font-weight: 800; background: var(--mm-success); border-radius: 4px; }
 .growth-proof { display: block; color: var(--mm-muted); font-size: 12.5px; }
 @media (prefers-reduced-motion: reduce) { .growth-year > summary::after { transition: none; } }
+/* «Трекшн» story (Mark 2026-11-05): an animated, slightly 3D chart of the years, one click per year. */
+.growth-traction-head .ts-open { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 16px; color: #fff; font: inherit; font-size: 14px; font-weight: 700; background: linear-gradient(135deg, #0a7f93, #1d7a46); border: 0; border-radius: 999px; box-shadow: 0 6px 18px rgba(10,127,147,.28); cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.growth-traction-head .ts-open:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(10,127,147,.36); }
+.growth-traction-head .ts-open:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
+.growth-traction-head .ts-open svg { width: 18px; height: 18px; }
+.traction-story { --ts-bg: #0b1220; --ts-panel: rgba(255,255,255,.06); --ts-line: rgba(255,255,255,.12); --ts-ink: #eef4f8; --ts-muted: #9fb0c0; --ts-glow: #3ee0c5; --ts-glow2: #5aa9ff; --ts-gold: #ffc861;
+  width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; padding: 0; color: var(--ts-ink); background: radial-gradient(1200px 600px at 20% -10%, #17325a 0%, transparent 60%), radial-gradient(900px 500px at 110% 10%, #0f3d3a 0%, transparent 55%), var(--ts-bg); border: 0; overflow: hidden; }
+.traction-story::backdrop { background: rgba(5,8,15,.7); }
+.traction-story[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.ts-top { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--ts-line); }
+.ts-top h2 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.2px; }
+.ts-top p { margin: 0; color: var(--ts-muted); font-size: 13px; }
+.ts-top .ts-actions { display: flex; gap: 8px; margin-left: auto; }
+.ts-btn { min-height: 40px; padding: 8px 14px; color: var(--ts-ink); font: inherit; font-size: 14px; font-weight: 650; background: var(--ts-panel); border: 1px solid var(--ts-line); border-radius: 10px; cursor: pointer; }
+.ts-btn:hover { background: rgba(255,255,255,.12); }
+.ts-btn:focus-visible, .ts-year:focus-visible, .ts-point:focus-visible { outline: 2px solid var(--ts-glow); outline-offset: 2px; }
+.ts-body { overflow-y: auto; padding: 20px 24px 40px; }
+.ts-inner { display: grid; gap: 22px; max-width: 1180px; margin: 0 auto; }
+.ts-stage { position: relative; height: 340px; perspective: 1100px; }
+.ts-plane { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(18deg) rotateY(-6deg); transform-origin: 50% 100%; transition: transform .9s cubic-bezier(.2,.8,.2,1); border-radius: 18px;
+  background: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px) 0 0 / 100% 56px, linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 80px 100%, linear-gradient(180deg, rgba(62,224,197,.06), rgba(90,169,255,.02)); border: 1px solid var(--ts-line); box-shadow: 0 40px 80px rgba(0,0,0,.45); }
+.traction-story.is-intro .ts-plane { transform: rotateX(62deg) rotateY(0) translateY(40px); }
+.ts-stage:hover .ts-plane { transform: rotateX(12deg) rotateY(-3deg); }
+.ts-chart { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ts-area { fill: url(#ts-area-grad); opacity: 0; transition: opacity 1s ease .4s; }
+.ts-path { fill: none; stroke: url(#ts-line-grad); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 8px rgba(62,224,197,.7)); }
+.ts-plan { fill: none; stroke: var(--ts-gold); stroke-width: 2.5; stroke-dasharray: 6 7; opacity: .85; }
+.ts-bar-front { fill: rgba(90,169,255,.35); }
+.ts-bar-side { fill: rgba(90,169,255,.18); }
+.ts-bar-top { fill: rgba(170,210,255,.5); }
+.ts-bar { transform-box: fill-box; transform-origin: 50% 100%; animation: ts-grow .8s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes ts-grow { from { transform: scaleY(0); } }
+.ts-point { cursor: pointer; }
+.ts-point circle.ts-dot { fill: var(--ts-bg); stroke: var(--ts-glow); stroke-width: 3; transition: r .25s ease; }
+.ts-point.is-plan circle.ts-dot { stroke: var(--ts-gold); stroke-dasharray: 3 3; }
+.ts-point circle.ts-halo { fill: var(--ts-glow); opacity: 0; }
+.ts-point.is-active circle.ts-halo { opacity: .25; animation: ts-pulse 1.8s ease-in-out infinite; }
+.ts-point.is-active circle.ts-dot { fill: var(--ts-glow); }
+.ts-point.is-plan.is-active circle.ts-dot { fill: var(--ts-gold); }
+@keyframes ts-pulse { 50% { opacity: .05; } }
+.ts-point text { fill: var(--ts-ink); font: 700 13px/1 system-ui, sans-serif; }
+.ts-point text.ts-val { fill: var(--ts-glow); font-size: 15px; }
+.ts-point.is-plan text.ts-val { fill: var(--ts-gold); }
+.ts-years { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.ts-year { min-width: 92px; min-height: 44px; padding: 8px 16px; color: var(--ts-ink); font: inherit; font-size: 15px; font-weight: 750; background: var(--ts-panel); border: 1px solid var(--ts-line); border-radius: 999px; cursor: pointer; transition: background .2s ease, transform .2s ease; }
+.ts-year:hover { transform: translateY(-2px); }
+.ts-year[aria-pressed="true"] { color: #06131a; background: linear-gradient(135deg, var(--ts-glow), var(--ts-glow2)); border-color: transparent; }
+.ts-year.is-plan[aria-pressed="true"] { background: linear-gradient(135deg, var(--ts-gold), #ff9a5a); }
+.ts-year small { display: block; color: inherit; font-size: 11px; font-weight: 600; opacity: .75; }
+.ts-panel { display: grid; gap: 18px; }
+.ts-panel > * { animation: ts-rise .6s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes ts-rise { from { opacity: 0; transform: translateY(18px) rotateX(12deg); } }
+.ts-theme { margin: 0; font-size: clamp(20px, 3vw, 30px); font-weight: 800; line-height: 1.2; letter-spacing: -.3px; }
+.ts-theme span { background: linear-gradient(90deg, var(--ts-glow), var(--ts-glow2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.ts-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.ts-stat { padding: 16px; background: var(--ts-panel); border: 1px solid var(--ts-line); border-radius: 16px; transform-style: preserve-3d; transition: transform .3s ease; }
+.ts-stat:hover { transform: perspective(600px) rotateX(6deg) rotateY(-6deg) translateY(-3px); }
+.ts-stat strong { display: block; font-size: 28px; font-weight: 800; letter-spacing: -.5px; color: var(--ts-glow); font-variant-numeric: tabular-nums; }
+.ts-stat span { color: var(--ts-muted); font-size: 13px; }
+.ts-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
+.ts-card { padding: 16px 18px; background: var(--ts-panel); border: 1px solid var(--ts-line); border-radius: 16px; }
+.ts-card h3 { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: var(--ts-muted); }
+.ts-card h3 b { color: var(--ts-ink); font-size: 15px; letter-spacing: 0; text-transform: none; }
+.ts-card h4 { margin: 10px 0 4px; color: var(--ts-muted); font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; }
+.ts-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.ts-list li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; font-size: 14px; line-height: 1.45; animation: ts-rise .5s ease both; animation-delay: calc(var(--i, 0) * 50ms + 200ms); }
+.ts-list li::before { content: "•"; color: var(--ts-muted); text-align: center; }
+.ts-list.is-done li::before { content: "✓"; color: var(--ts-glow); font-weight: 800; }
+.ts-list li.is-postponed::before { content: "⏸"; color: var(--ts-gold); }
+.ts-list li.is-postponed { color: var(--ts-muted); }
+.ts-list small { display: block; color: var(--ts-muted); font-size: 12px; }
+.ts-ratio { height: 8px; margin: 4px 0 12px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+.ts-ratio span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--ts-glow), var(--ts-glow2)); transition: width 1.2s cubic-bezier(.2,.8,.2,1) .3s; }
+.ts-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ts-chip { padding: 6px 10px; font-size: 13px; background: rgba(62,224,197,.1); border: 1px solid rgba(62,224,197,.25); border-radius: 999px; animation: ts-rise .5s ease both; animation-delay: calc(var(--i, 0) * 60ms + 250ms); }
+.ts-chip.is-dream { background: rgba(255,200,97,.1); border-color: rgba(255,200,97,.3); }
+.ts-places { margin: 8px 0 0; color: var(--ts-muted); font-size: 13px; line-height: 1.5; }
+.ts-heat { width: 100%; border-collapse: separate; border-spacing: 4px; font-size: 13px; }
+.ts-heat th { color: var(--ts-muted); font-weight: 700; text-align: left; }
+.ts-heat td { min-width: 44px; padding: 8px 6px; text-align: center; font-weight: 750; border-radius: 8px; background: rgba(62,224,197, calc(var(--h, 0) * .7 + .04)); color: var(--ts-ink); }
+.ts-heat td.is-zero { color: var(--ts-muted); font-weight: 500; }
+.ts-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.ts-insights { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.ts-insights li { padding: 10px 12px; font-size: 14px; line-height: 1.45; background: rgba(255,255,255,.04); border-left: 3px solid var(--ts-glow); border-radius: 8px; }
+@media (max-width: 700px) { .ts-top { flex-wrap: wrap; padding: 12px 16px; } .ts-top .ts-actions { width: 100%; margin-left: 0; } .ts-body { padding: 14px 16px 32px; } .ts-stage { height: 240px; } .ts-point text { font-size: 11px; } .ts-stat strong { font-size: 22px; } }
+@media (prefers-reduced-motion: reduce) { .traction-story *, .traction-story *::before { animation: none !important; transition: none !important; } .traction-story.is-intro .ts-plane, .ts-stage:hover .ts-plane { transform: rotateX(18deg) rotateY(-6deg); } }
 .growth-empty { padding: 28px; color: var(--mm-muted); text-align: center; background: var(--mm-surface); border: 1px dashed var(--mm-line); border-radius: 14px; }
 @media (max-width: 600px) { .platform-archive-dialog.growth-window { width: 100vw; } .growth-window-art { height: 112px; margin: -12px -12px 14px; } .growth-window-art svg { width: 88px; height: 88px; } }
 
@@ -6239,6 +6325,21 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <button class="platform-archive-close" id="growth-area-close" type="button" aria-label="Закрыть">✕</button>
       </header>
       <div class="platform-archive-body" id="growth-area-body"></div>
+    </dialog>
+    <dialog class="traction-story" id="traction-story" aria-labelledby="ts-title">
+      <div class="ts-top">
+        <div><h2 id="ts-title">📈 Мой трекшн</h2><p id="ts-sub">Только подтверждённые результаты. Планы показаны отдельно и пунктиром.</p></div>
+        <div class="ts-actions">
+          <button type="button" class="ts-btn" id="ts-play">▶ Проиграть</button>
+          <button type="button" class="ts-btn" id="ts-patterns" aria-pressed="false">🔎 Паттерны</button>
+          <button type="button" class="ts-btn" id="ts-close" aria-label="Закрыть трекшн">✕</button>
+        </div>
+      </div>
+      <div class="ts-body"><div class="ts-inner">
+        <div class="ts-stage" id="ts-stage"><div class="ts-plane"><svg class="ts-chart" id="ts-chart" role="img" aria-labelledby="ts-chart-desc"><desc id="ts-chart-desc"></desc></svg></div></div>
+        <div class="ts-years" id="ts-years" role="group" aria-label="Годы"></div>
+        <div class="ts-panel" id="ts-panel" aria-live="polite"></div>
+      </div></div>
     </dialog>
     <p class="mm-notice" id="growth-state" role="status" aria-live="polite">Загружаю точки роста…</p>
     <div class="growth-summary" id="growth-summary"></div>
@@ -14192,7 +14293,10 @@ function growthYearsNewestFirst(years) {
 function renderTraction(data) {
   const box = document.getElementById('growth-traction');
   const traction = data.traction || {state: 'empty', years: [], count: 0};
-  const head = (lede) => `<div class="growth-traction-head"><h3 id="growth-traction-title">🚀 Трекшн: что уже сделано</h3><p>${lede}</p></div>`;
+  const story = data.owner_view && (traction.years || []).length
+    ? '<button type="button" class="ts-open" data-ts-open aria-haspopup="dialog" aria-controls="traction-story"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 20h18M5 16l5-5 4 3 6-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 6h4v4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Смотреть трекшн</button>'
+    : '';
+  const head = (lede) => `<div class="growth-traction-head"><h3 id="growth-traction-title">🚀 Трекшн: что уже сделано</h3><p>${lede}</p>${story}</div>`;
   if (!data.owner_view) {
     box.innerHTML = traction.count ? head(`Результатов: ${traction.count}. Сами результаты видны только после входа владельца.`) : '';
     return;
@@ -14203,7 +14307,7 @@ function renderTraction(data) {
   const list = items => `<ul class="growth-results">${items.map(item => `<li><span>${mmEsc(item.text)}${item.proof ? `<span class="growth-proof">Пруф: ${mmEsc(item.proof)}</span>` : ''}</span></li>`).join('')}</ul>`;
   const groups = groups => `<div class="growth-year-groups">${groups.map(group => `<div class="growth-year-group">${group.title ? `<h4>${mmEsc(group.title)}</h4>` : ''}${list(group.items)}</div>`).join('')}</div>`;
   const plural = n => (n % 10 === 1 && n % 100 !== 11) ? 'результат' : ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) ? 'результата' : 'результатов';
-  const years = growthYearsNewestFirst(traction.years || []);
+  const years = growthYearsNewestFirst((traction.years || []).filter(year => year.count));
   const blocks = years.map((year, index) => `<details class="growth-year"${index < 2 ? ' open' : ''}><summary>${mmEsc(year.title)} <span>${year.count} ${plural(year.count)}</span></summary>${groups(year.groups)}</details>`);
   if (tickedCount) blocks.push(`<details class="growth-year" open><summary>Сделано в точках роста <span>${tickedCount} ${plural(tickedCount)}</span></summary>${groups(ticked)}</details>`);
   const lede = traction.state === 'unavailable'
@@ -14213,6 +14317,262 @@ function renderTraction(data) {
       : 'Только то, что реально сделано. Источник: заметка «ТРЕКШН» в Obsidian и отмеченные шаги точек роста ниже.';
   box.innerHTML = head(lede) + blocks.join('');
 }
+
+// ── «Трекшн» story: the years as a rising line; each year opens its theme, numbers, results, plans and interests.
+// Facts only from ТРЕКШН.md: results are counted, plans are drawn dashed and never added to the facts.
+const TS_REDUCED = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+let tsYear = null;
+let tsTimer = null;
+
+function tsYears() {
+  return [...(growthData?.traction?.years || [])].sort((a, b) => (parseInt(a.title, 10) || 0) - (parseInt(b.title, 10) || 0));
+}
+
+function tsPlural(n, one, few, many) {
+  return (n % 10 === 1 && n % 100 !== 11) ? one : ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) ? few : many;
+}
+
+function tsKey(text) {
+  // The first meaningful word of a plan, to see what comes back year after year («Шахматы», «Python», «Meshly»).
+  const words = String(text).toLowerCase().replace(/[^a-zа-яё0-9 ]/gi, ' ').split(/\s+/).filter(word => word.length > 3);
+  return words[0] || '';
+}
+
+function tsIsPostponed(plan, postponed) {
+  const key = tsKey(plan);
+  return Boolean(key) && postponed.some(item => tsKey(item) === key || item.toLowerCase().includes(key));
+}
+
+function tsCountUp(el) {
+  // «≈45 000 €» counts up to 45 000 and keeps its prefix and suffix; text without a number stays as is.
+  const text = el.dataset.value || '';
+  const match = text.match(/^(\D*?)(\d[\d\s]*(?:[.,]\d+)?)(.*)$/);
+  if (!match || TS_REDUCED || /\d{2}\.\d{2}/.test(text)) { el.textContent = text; return; }
+  const [, prefix, raw, suffix] = match;
+  const target = parseFloat(raw.replace(/\s/g, '').replace(',', '.'));
+  const decimals = (raw.split(/[.,]/)[1] || '').length;
+  const separator = raw.includes(',') ? ',' : '.';
+  const grouped = /\d\s\d/.test(raw);
+  const start = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - start) / 1100);
+    const value = target * (1 - Math.pow(1 - t, 3));
+    let shown = value.toFixed(decimals).replace('.', separator);
+    if (grouped) shown = shown.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    el.textContent = prefix + shown + suffix;
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function tsDrawChart() {
+  const svg = document.getElementById('ts-chart');
+  const years = tsYears();
+  const box = svg.getBoundingClientRect();
+  const width = Math.max(320, box.width || 900);
+  const height = Math.max(200, box.height || 340);
+  const pad = {l: 40, r: 50, t: 50, b: 44};
+  let total = 0;
+  const points = years.map(year => {
+    const fact = year.count > 0;
+    const planned = fact ? 0 : (year.plans || []).length;
+    total += year.count;
+    return {year, fact, value: total, ghost: total + planned};
+  });
+  const max = Math.max(1, ...points.map(p => p.fact ? p.value : p.ghost));
+  const x = i => pad.l + (points.length < 2 ? (width - pad.l - pad.r) / 2 : i * (width - pad.l - pad.r) / (points.length - 1));
+  const y = v => height - pad.b - (v / max) * (height - pad.t - pad.b);
+  const facts = points.map((p, i) => ({...p, i})).filter(p => p.fact);
+  const linePath = facts.map((p, k) => `${k ? 'L' : 'M'}${x(p.i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
+  const last = facts[facts.length - 1];
+  const areaPath = facts.length ? `${linePath} L${x(last.i).toFixed(1)},${height - pad.b} L${x(facts[0].i).toFixed(1)},${height - pad.b} Z` : '';
+  const plans = points.map((p, i) => ({...p, i})).filter(p => !p.fact);
+  const planPath = last && plans.length ? `M${x(last.i)},${y(last.value)} ` + plans.map(p => `L${x(p.i)},${y(p.ghost)}`).join(' ') : '';
+  const barW = Math.min(46, (width - pad.l - pad.r) / Math.max(points.length, 1) * .32);
+  const depth = barW * .35;
+  const barMax = Math.max(1, ...years.map(year => year.count));
+  const bars = points.map((p, i) => {
+    if (!p.fact) return '';
+    const h = (p.year.count / barMax) * (height - pad.t - pad.b) * .45;
+    const bx = x(i) - barW / 2;
+    const by = height - pad.b - h;
+    return `<g class="ts-bar" style="animation-delay:${i * 160}ms">
+      <polygon class="ts-bar-side" points="${bx + barW},${by} ${bx + barW + depth},${by - depth} ${bx + barW + depth},${height - pad.b - depth} ${bx + barW},${height - pad.b}"/>
+      <polygon class="ts-bar-top" points="${bx},${by} ${bx + depth},${by - depth} ${bx + barW + depth},${by - depth} ${bx + barW},${by}"/>
+      <rect class="ts-bar-front" x="${bx}" y="${by}" width="${barW}" height="${h}"/></g>`;
+  }).join('');
+  const dots = points.map((p, i) => {
+    const vy = p.fact ? y(p.value) : y(p.ghost);
+    const label = p.fact ? `${p.value}` : `+${(p.year.plans || []).length} план.`;
+    const name = p.fact
+      ? `${p.year.title}: ${p.year.count} ${tsPlural(p.year.count, 'результат', 'результата', 'результатов')}, всего ${p.value}`
+      : `${p.year.title}: планы, ${(p.year.plans || []).length}`;
+    return `<g class="ts-point${p.fact ? '' : ' is-plan'}${tsYear === p.year.title ? ' is-active' : ''}" data-ts-year="${mmEsc(p.year.title)}" tabindex="0" role="button" aria-label="${mmEsc(name)}">
+      <circle class="ts-halo" cx="${x(i)}" cy="${vy}" r="20"/><circle class="ts-dot" cx="${x(i)}" cy="${vy}" r="8"/>
+      <text class="ts-val" x="${x(i)}" y="${vy - 18}" text-anchor="middle">${mmEsc(label)}</text>
+      <text x="${x(i)}" y="${height - pad.b + 26}" text-anchor="middle">${mmEsc(p.year.title)}</text></g>`;
+  }).join('');
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.innerHTML = `<desc id="ts-chart-desc">Накопленные результаты по годам: ${facts.map(p => `${p.year.title} — ${p.value}`).join(', ')}.${plans.length ? ' Пунктиром — планы, это не факт.' : ''}</desc>
+    <defs><linearGradient id="ts-line-grad" x1="0" x2="1"><stop offset="0" stop-color="#5aa9ff"/><stop offset="1" stop-color="#3ee0c5"/></linearGradient>
+    <linearGradient id="ts-area-grad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3ee0c5" stop-opacity=".35"/><stop offset="1" stop-color="#3ee0c5" stop-opacity="0"/></linearGradient></defs>
+    ${bars}<path class="ts-area" d="${areaPath}"/><path class="ts-path" d="${linePath}"/>${planPath ? `<path class="ts-plan" d="${planPath}"/>` : ''}${dots}`;
+  const path = svg.querySelector('.ts-path');
+  if (path && !TS_REDUCED && path.getTotalLength) {
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = `${length}`;
+    path.style.strokeDashoffset = `${length}`;
+    path.getBoundingClientRect();
+    path.style.transition = 'stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)';
+    requestAnimationFrame(() => { path.style.strokeDashoffset = '0'; });
+  }
+  requestAnimationFrame(() => { const area = svg.querySelector('.ts-area'); if (area) area.style.opacity = '1'; });
+}
+
+function tsRenderYears() {
+  document.getElementById('ts-years').innerHTML = tsYears().map(year => {
+    const note = year.count ? `${year.count} ${tsPlural(year.count, 'результат', 'результата', 'результатов')}` : 'план';
+    return `<button type="button" class="ts-year${year.count ? '' : ' is-plan'}" data-ts-year="${mmEsc(year.title)}" aria-pressed="${tsYear === year.title}">${mmEsc(year.title)}<small>${note}</small></button>`;
+  }).join('');
+}
+
+function tsSelect(title) {
+  tsYear = title;
+  document.getElementById('ts-patterns').setAttribute('aria-pressed', 'false');
+  tsRenderYears();
+  document.querySelectorAll('#ts-chart .ts-point').forEach(point => point.classList.toggle('is-active', point.dataset.tsYear === title));
+  const year = tsYears().find(item => item.title === title);
+  const panel = document.getElementById('ts-panel');
+  if (!year) { panel.innerHTML = ''; return; }
+  let order = 0;
+  const block = html => `<div style="--i:${order++}">${html}</div>`;
+  const list = (items, cls = '') => `<ul class="ts-list ${cls}">${items.map((item, i) => item).join('')}</ul>`;
+  const theme = year.theme ? `<p class="ts-theme"><span>${mmEsc(year.title)}.</span> ${mmEsc(year.theme)}</p>` : `<p class="ts-theme"><span>${mmEsc(year.title)}</span></p>`;
+  const stats = year.stats?.length ? `<div class="ts-stats">${year.stats.map(stat => `<div class="ts-stat"><strong data-value="${mmEsc(stat.value)}">${mmEsc(stat.value)}</strong><span>${mmEsc(stat.label)}</span></div>`).join('')}</div>` : '';
+  const done = (year.groups || []).map(group => `${group.title ? `<h4>${mmEsc(group.title)}</h4>` : ''}${list(group.items.map((item, i) => `<li style="--i:${i}"><span>${mmEsc(item.text)}${item.proof ? `<small>Пруф: ${mmEsc(item.proof)}</small>` : ''}</span></li>`), 'is-done')}`).join('');
+  const plans = year.plans || [];
+  const postponedPlans = plans.filter(plan => tsIsPostponed(plan, year.postponed || []));
+  const plansHtml = plans.length ? `<div class="ts-card"><h3>🎯 Планы года <b>${plans.length}</b></h3>
+    ${year.count ? `<p class="ts-places">Отложено ${postponedPlans.length} из ${plans.length}. Остальное либо сделано (см. результаты), либо не отмечено.</p><div class="ts-ratio" aria-hidden="true"><span data-w="${Math.round((1 - postponedPlans.length / plans.length) * 100)}"></span></div>` : '<p class="ts-places">Это планы, а не факт.</p>'}
+    ${list(plans.map((plan, i) => `<li style="--i:${i}" class="${tsIsPostponed(plan, year.postponed || []) ? 'is-postponed' : ''}"><span>${mmEsc(plan)}${tsIsPostponed(plan, year.postponed || []) ? '<small>отложено</small>' : ''}</span></li>`))}</div>` : '';
+  const interests = (year.interests || []).map((item, i) => `<span class="ts-chip" style="--i:${i}">${mmEsc(item)}</span>`).join('');
+  const dreams = (year.dreams || []).map((item, i) => `<span class="ts-chip is-dream" style="--i:${i}">✨ ${mmEsc(item)}</span>`).join('');
+  const mind = interests || dreams || year.places?.length ? `<div class="ts-card"><h3>💡 Что занимало</h3>
+    ${interests ? `<div class="ts-chips">${interests}</div>` : ''}${dreams ? `<h4>Мечты</h4><div class="ts-chips">${dreams}</div>` : ''}
+    ${year.places?.length ? `<h4>Где был</h4><p class="ts-places">📍 ${year.places.map(mmEsc).join(' · ')}</p>` : ''}</div>` : '';
+  panel.innerHTML = [theme, stats,
+    `<div class="ts-grid2">${year.count ? `<div class="ts-card"><h3>✅ Сделано <b>${year.count}</b></h3>${done}</div>` : ''}${plansHtml}${mind}</div>`]
+    .filter(Boolean).map(block).join('');
+  panel.querySelectorAll('.ts-stat strong').forEach(tsCountUp);
+  requestAnimationFrame(() => panel.querySelectorAll('.ts-ratio span').forEach(bar => { bar.style.width = `${bar.dataset.w}%`; }));
+}
+
+function tsPatterns() {
+  tsStop();
+  tsYear = null;
+  tsRenderYears();
+  document.querySelectorAll('#ts-chart .ts-point').forEach(point => point.classList.remove('is-active'));
+  document.getElementById('ts-patterns').setAttribute('aria-pressed', 'true');
+  const years = tsYears();
+  const facts = years.filter(year => year.count);
+  const areas = [...new Set(facts.flatMap(year => year.groups.map(group => group.title || 'Без области')))];
+  const counts = areas.map(area => facts.map(year => year.groups.filter(group => (group.title || 'Без области') === area).reduce((sum, group) => sum + group.items.length, 0)));
+  const peak = Math.max(1, ...counts.flat());
+  const totals = areas.map((area, i) => ({area, total: counts[i].reduce((a, b) => a + b, 0), steady: counts[i].every(n => n > 0)})).sort((a, b) => b.total - a.total);
+  // What keeps coming back as a plan or a postponed item in more than one year.
+  const seen = new Map();
+  years.forEach(year => [...(year.plans || []), ...(year.postponed || [])].forEach(text => {
+    const key = tsKey(text);
+    if (!key) return;
+    if (!seen.has(key)) seen.set(key, {text, years: new Set()});
+    seen.get(key).years.add(year.title);
+  }));
+  const repeats = [...seen.values()].filter(item => item.years.size > 1).sort((a, b) => b.years.size - a.years.size).slice(0, 6);
+  const insights = [];
+  if (facts.length > 1) insights.push(`Результатов по годам: ${facts.map(year => `${year.title} — ${year.count}`).join(', ')}. Всего ${facts.reduce((s, y) => s + y.count, 0)}.`);
+  if (totals[0]) insights.push(`Больше всего результатов в области «${totals[0].area}»: ${totals[0].total}.`);
+  const steady = totals.filter(item => item.steady).map(item => `«${item.area}»`);
+  if (steady.length) insights.push(`Каждый год есть результат: ${steady.join(', ')}.`);
+  const fresh = areas.filter((area, i) => counts[i].slice(0, -1).every(n => !n) && counts[i][counts[i].length - 1] > 0);
+  if (fresh.length) insights.push(`Новое в ${facts[facts.length - 1].title}: ${fresh.map(a => `«${a}»`).join(', ')}.`);
+  if (repeats.length) insights.push(`Переходит из года в год и пока не сделано: ${repeats.map(item => `${item.text} (${[...item.years].join(', ')})`).join('; ')}.`);
+  const postponedTotal = years.reduce((sum, year) => sum + (year.postponed || []).length, 0);
+  if (postponedTotal) insights.push(`Отложено за всё время: ${postponedTotal}.${repeats.length ? ' Повторяющиеся пункты стоит или сделать, или честно закрыть.' : ''}`);
+  const heat = `<table class="ts-heat"><caption class="ts-sr">Результаты по областям и годам</caption><thead><tr><th scope="col">Область</th>${facts.map(year => `<th scope="col">${mmEsc(year.title)}</th>`).join('')}</tr></thead><tbody>
+    ${areas.map((area, i) => `<tr><th scope="row">${mmEsc(area)}</th>${counts[i].map(n => `<td class="${n ? '' : 'is-zero'}" style="--h:${(n / peak).toFixed(2)}">${n || '—'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  let order = 0;
+  document.getElementById('ts-panel').innerHTML = [
+    `<p class="ts-theme"><span>Паттерны.</span> Как двигался трекшн и что повторяется</p>`,
+    `<div class="ts-grid2"><div class="ts-card"><h3>🔥 Карта областей</h3>${heat}</div><div class="ts-card"><h3>🧭 Что видно</h3><ul class="ts-insights">${insights.map(text => `<li>${mmEsc(text)}</li>`).join('')}</ul></div></div>`,
+  ].map(html => `<div style="--i:${order++}">${html}</div>`).join('');
+}
+
+function tsStop() {
+  if (tsTimer) clearTimeout(tsTimer);
+  tsTimer = null;
+  document.getElementById('ts-play').textContent = '▶ Проиграть';
+}
+
+function tsPlay() {
+  if (tsTimer) return tsStop();
+  const years = tsYears();
+  let index = 0;
+  document.getElementById('ts-play').textContent = '⏸ Пауза';
+  const next = () => {
+    if (index >= years.length) { tsStop(); return; }
+    tsSelect(years[index++].title);
+    tsTimer = setTimeout(next, 4200);
+  };
+  next();
+}
+
+function openTractionStory() {
+  const dialog = document.getElementById('traction-story');
+  const years = tsYears();
+  const facts = years.filter(year => year.count);
+  const first = years[0]?.title, lastFact = facts[facts.length - 1]?.title;
+  document.getElementById('ts-title').textContent = `📈 Мой трекшн${first ? ` ${first} → ${years[years.length - 1].title}` : ''}`;
+  document.getElementById('ts-sub').textContent = `${facts.reduce((s, y) => s + y.count, 0)} подтверждённых результатов. Планы показаны отдельно и пунктиром.`;
+  if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
+  dialog.classList.add('is-intro');
+  tsYear = lastFact || first || null;
+  tsRenderYears();
+  requestAnimationFrame(() => {
+    tsDrawChart();
+    setTimeout(() => dialog.classList.remove('is-intro'), TS_REDUCED ? 0 : 60);
+    if (tsYear) tsSelect(tsYear);
+  });
+}
+
+function initTractionStory() {
+  const dialog = document.getElementById('traction-story');
+  document.getElementById('growth-traction').addEventListener('click', event => {
+    if (event.target.closest('[data-ts-open]')) openTractionStory();
+  });
+  document.getElementById('ts-close').addEventListener('click', () => { tsStop(); dialog.close(); });
+  dialog.addEventListener('close', () => { tsStop(); document.querySelector('#growth-traction [data-ts-open]')?.focus(); });
+  document.getElementById('ts-play').addEventListener('click', tsPlay);
+  document.getElementById('ts-patterns').addEventListener('click', tsPatterns);
+  const pick = event => {
+    const target = event.target.closest('[data-ts-year]');
+    if (!target) return;
+    if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+    if (event.type === 'keydown') event.preventDefault();
+    tsStop();
+    tsSelect(target.dataset.tsYear);
+  };
+  ['click', 'keydown'].forEach(type => {
+    document.getElementById('ts-years').addEventListener(type, pick);
+    document.getElementById('ts-chart').addEventListener(type, pick);
+  });
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (!dialog.open) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(tsDrawChart, 150);
+  });
+}
+initTractionStory();
 
 function renderGrowth(data) {
   growthData = data;

@@ -115,6 +115,11 @@ def parse_note(text: str) -> list[dict[str, Any]]:
 _YEAR_RE = re.compile(r"^##\s+(.+?)\s*$")
 _GROUP_RE = re.compile(r"^###\s+(.+?)\s*$")
 _ITEM_RE = re.compile(r"^[-*]\s+(?:\[[xX ]\]\s+)?(.+?)\s*$")
+# Year context lines (Mark 2026-11-05: «темы, планы, цели, интересы, что планирую»). They describe the
+# year and are never counted as results. «Цифра: 45 000 € | вложено в ремонты» is a headline number.
+_YEAR_META = {"тема": "theme", "цифра": "stats", "план": "plans", "отложено": "postponed",
+              "интерес": "interests", "мечта": "dreams", "где был": "places"}
+_YEAR_META_RE = re.compile(r"^[-*]\s+(Тема|Цифра|План|Отложено|Интерес|Мечта|Где был)\s*:\s*(.+?)\s*$", re.IGNORECASE)
 _PROOF_RE = re.compile(r"^\s+[-*]\s+(?:Пруф|Доказательство|Proof)\s*:\s*(.+?)\s*$", re.IGNORECASE)
 
 
@@ -130,7 +135,8 @@ def parse_traction(text: str) -> list[dict[str, Any]]:
     for line in text.splitlines():
         heading = _YEAR_RE.match(line)
         if heading and not line.startswith("###"):
-            year = {"title": _clean(heading.group(1), 80), "groups": []}
+            year = {"title": _clean(heading.group(1), 80), "groups": [], "theme": "", "stats": [], "plans": [],
+                    "postponed": [], "interests": [], "dreams": [], "places": []}
             years.append(year)
             group = item = None
             continue
@@ -149,6 +155,18 @@ def parse_traction(text: str) -> list[dict[str, Any]]:
             continue
         if line[:1] in " \t":
             continue  # other nested lines are notes for Mark, not results
+        meta = _YEAR_META_RE.match(line)
+        if meta:
+            key, value = _YEAR_META[meta.group(1).lower()], meta.group(2)
+            if key == "theme":
+                year["theme"] = _clean(value)
+            elif key == "stats":
+                number, _, label = value.partition("|")
+                year["stats"].append({"value": _clean(number, 40), "label": _clean(label, 80)})
+            else:
+                year[key].append(_clean(value))
+            item = None
+            continue
         entry = _ITEM_RE.match(line)
         if not entry:
             continue
@@ -160,7 +178,8 @@ def parse_traction(text: str) -> list[dict[str, Any]]:
     for year in years:
         year["groups"] = [g for g in year["groups"] if g["items"]]
         year["count"] = sum(len(g["items"]) for g in year["groups"])
-    return [year for year in years if year["count"]]
+    # A year with only plans (the next one) still shows; an empty heading does not.
+    return [year for year in years if year["count"] or year["theme"] or year["stats"] or year["plans"]]
 
 
 def traction_projection(traction_file: Path) -> dict[str, Any]:

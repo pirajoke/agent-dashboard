@@ -45,6 +45,11 @@ TRACTION = """# Трекшн
 > Только то, что сделано и чем подтверждено.
 
 ## 2025
+- Тема: Год проектного менеджера
+- Цифра: ≈45 000 € | вложено в ремонты
+- План: Шахматы 1600
+- Отложено: Шахматы 1600
+- Интерес: n8n
 ### Карьера
 - Год проектной работы в Inovshop
   - Пруф: контракт alternance
@@ -58,13 +63,20 @@ TRACTION = """# Трекшн
   - Пруф: PR #120
 
 ## Пустой год
+
+## 2027
+- План: Meshly на рынок
 """
 
 
 class GrowthTest(unittest.TestCase):
     def test_traction_note_becomes_years_groups_and_proofs(self):
         years = parse_traction(TRACTION)
-        self.assertEqual([y["title"] for y in years], ["2025", "2026"])  # a year without results is dropped
+        self.assertEqual([y["title"] for y in years], ["2025", "2026", "2027"])  # an empty year is dropped
+        self.assertEqual(years[0]["theme"], "Год проектного менеджера")
+        self.assertEqual(years[0]["stats"], [{"value": "≈45 000 €", "label": "вложено в ремонты"}])
+        self.assertEqual((years[0]["plans"], years[0]["postponed"], years[0]["interests"]), (["Шахматы 1600"], ["Шахматы 1600"], ["n8n"]))
+        self.assertEqual((years[2]["count"], years[2]["plans"]), (0, ["Meshly на рынок"]))  # plans only: still shown
         career, study = years[0]["groups"]
         self.assertEqual(career, {"title": "Карьера", "items": [{"text": "Год проектной работы в Inovshop", "proof": "контракт alternance"}]})
         self.assertEqual([i["text"] for i in study["items"]], ["Сдал тест Agile PMI", "Результат без пруфа"])
