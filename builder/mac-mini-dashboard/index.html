@@ -5543,6 +5543,50 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   .cc-main .cc-machine-nav { gap: 2px; }
   .cc-main .cc-machine-nav .nav-pill { padding: 8px 8px; font-size: 13px; }
 }
+/* Mark 2026-11-06 «меньше вкладок и одна главная страница «что важно сегодня»».
+   Menu: the first four tabs in his order, then «Ещё». On a computer «Ещё» unfolds the rest in place
+   (so they can still be dragged into the first four); on a phone it opens the sheet. The open tab always shows. */
+@media (min-width: 761px) {
+  .cc-side .cc-main-nav:not(.is-expanded) > .nav-pill:nth-child(n + 5):not(.active) { display: none; }
+  .cc-side .cc-more-tab {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 40px; margin-top: 2px; padding: 8px 12px;
+    color: var(--mm-muted); font: inherit; font-size: 14px; font-weight: 550; text-align: left;
+    background: none; border: 0; border-radius: 10px; cursor: pointer;
+  }
+  .cc-side .cc-more-tab:hover { color: var(--mm-ink); background: var(--mm-surface-hover); }
+  .cc-side .cc-more-tab:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -2px; }
+  .cc-side .cc-more-tab .pill-icon { display: inline-flex; width: 20px; justify-content: center; }
+  .cc-side .cc-more-tab .pill-icon svg { width: 18px; height: 18px; }
+  .cc-side .cc-more-tab::after { content: "›"; margin-left: auto; font-size: 18px; transition: transform .16s ease; }
+  .cc-side .cc-more-tab[aria-expanded="true"]::after { transform: rotate(90deg); }
+}
+@media (min-width: 761px) and (prefers-reduced-motion: reduce) { .cc-side .cc-more-tab::after { transition: none; } }
+/* «Сегодня»: the Техника line and today's work. */
+.mm-tech .mm-health { display: flex; align-items: center; gap: 12px; width: 100%; max-width: none; min-height: 52px; margin: 0; padding: 10px 18px; border-radius: 16px; }
+.mm-tech .mm-health::before { align-self: flex-start; margin-top: 6px; }
+.mm-health-text { display: grid; gap: 2px; min-width: 0; }
+.mm-health-text b { font-size: 15px; font-weight: 700; }
+.mm-health-text small { color: var(--mm-ink); font-size: 13.5px; font-weight: 500; opacity: .85; }
+.mm-health-go { margin-left: auto; font-size: 20px; font-weight: 500; }
+.mm-done-card { display: grid; }
+.mm-done-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 10px 18px;
+  color: var(--mm-ink); font: inherit; text-align: left; background: none; border: 0; border-top: 1px solid var(--mm-line); cursor: pointer;
+}
+.mm-done-row:hover { background: var(--mm-surface-hover); }
+.mm-done-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -2px; }
+.mm-done-row .mm-project-art { flex: none; width: 36px; height: 36px; }
+.mm-done-main { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.mm-done-main b { font-size: 15px; font-weight: 650; }
+.mm-done-main small { overflow: hidden; color: var(--mm-muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.mm-done-side { flex: none; color: var(--mm-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.mm-done-side i { color: var(--mm-success); font-style: normal; font-weight: 650; }
+.mm-done-go { flex: none; color: var(--mm-muted); font-size: 20px; }
+.mm-done-empty { margin: 0; padding: 16px 18px; color: var(--mm-muted); font-size: 14px; }
+@media (max-width: 600px) {
+  .mm-done-row { padding: 10px 14px; gap: 10px; }
+  .mm-tech .mm-health { padding: 10px 14px; }
+}
 /* ─── Генеалогия (Mark 2026-11-05) ─── */
 .gen-wrap { display: grid; gap: 14px; }
 .gen-back { font: inherit; font-size: 13px; background: none; border: 0; padding: 0 0 6px; color: var(--mm-accent); cursor: pointer; }
@@ -5994,15 +6038,15 @@ button.cc-refresh:hover { background: var(--mm-selection); }
 
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
-    <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">MAIN MANAGER</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
-    <button class="nav-pill" type="button" aria-controls="section-architecture" aria-pressed="false" onclick="showSection('architecture')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-architecture"/></svg></span><span class="cc-tab-label" data-tab-label="architecture">Архитектура</span></button>
+    <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">Сегодня</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-media" aria-pressed="false" onclick="showSection('media')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-media"/></svg></span><span class="cc-tab-label" data-tab-label="media">Медиа</span></button>
     <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-media" aria-pressed="false" onclick="showSection('media')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-media"/></svg></span><span class="cc-tab-label" data-tab-label="media">Медиа</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-architecture" aria-pressed="false" onclick="showSection('architecture')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-architecture"/></svg></span><span class="cc-tab-label" data-tab-label="architecture">Архитектура</span></button>
   </nav>
   <!-- Mark 2026-11-06 «лучше на телефоне»: the phone bar shows four tabs and «Ещё», like a native app. -->
   <button type="button" class="cc-more-tab" id="cc-more-tab" aria-haspopup="dialog" aria-controls="cc-more-dialog"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span><span class="cc-tab-label">Ещё</span></button>
@@ -6524,12 +6568,10 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <div class="mm-os" id="mm-os">
       <header class="cc-page-head mm-head">
         <div>
-          <h2 class="cc-page-title" id="mm-title">MAIN MANAGER</h2>
-          <p class="cc-page-lede" id="mm-today">Ваши проекты: где идёт работа и что ждёт вас.</p>
+          <h2 class="cc-page-title" id="mm-title">Сегодня</h2>
+          <p class="cc-page-lede" id="mm-today">Главное за сегодня.</p>
         </div>
-        <!-- Mark 2026-10-22: whether everything on the Mac mini is alive; since 2026-10-23 a small badge, not a banner. -->
         <div class="mm-head-side">
-          <button type="button" class="mm-health" id="mm-health" hidden></button>
           <!-- Mark 2026-10-26 «это все мусор»: data sources and «открыть на телефоне» live behind this «i». -->
           <button type="button" class="cc-i" id="mm-about-open" aria-haspopup="dialog" aria-controls="mm-about-dialog" aria-label="Откуда данные и как открыть на телефоне">i</button>
         </div>
@@ -6605,6 +6647,14 @@ button.cc-refresh:hover { background: var(--mm-selection); }
            The week tile opens «Сводка» in a window. -->
       <div class="mm-home" id="mm-home">
         <div class="mm-todo-slot" id="mm-owner-todo" hidden></div>
+        <!-- Mark 2026-11-06 «что важно сегодня»: whether the computers and services are well, from the same
+             checks as Техника and its Медик; one calm line when all is fine, the trouble by name when not. -->
+        <section class="mm-tech" id="mm-tech" aria-labelledby="mm-tech-title" hidden>
+          <h3 class="mm-home-label mm-home-head" id="mm-tech-title">Техника</h3>
+          <button type="button" class="mm-health" id="mm-health" hidden></button>
+        </section>
+        <!-- What was done today, from the same day feed as the calendar; a click opens the day. -->
+        <section class="mm-done" id="mm-done" aria-labelledby="mm-done-title" hidden></section>
         <section class="mm-week" id="mm-week" aria-labelledby="mm-week-title" hidden></section>
         <section class="mm-cal" id="mm-cal" aria-labelledby="mm-cal-title" hidden></section>
         <div class="mm-view" data-mm-panel="map">
@@ -8135,7 +8185,8 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-const TAB_NAME_ROUTES = Object.freeze(['work', 'growth', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'machines']);
+// Mark 2026-11-06 «меньше вкладок»: the first four are the menu, the rest wait under «Ещё».
+const TAB_NAME_ROUTES = Object.freeze(['work', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'media', 'architecture']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -8586,7 +8637,28 @@ function closeMoreSheet() {
   if (moreDialog.open) moreDialog.close();
 }
 
+// Mark 2026-11-06 «меньше вкладок»: on a computer too the menu keeps four tabs; «Ещё» unfolds the rest
+// in place, so they stay one click away and can still be dragged into the first four.
+const morePhone = window.matchMedia('(max-width: 760px)');
+const moreLabel = moreTab.querySelector('.cc-tab-label');
+
+function setMoreExpanded(open) {
+  tabOrderNav.classList.toggle('is-expanded', open);
+  moreTab.setAttribute('aria-expanded', String(open));
+  moreLabel.textContent = open ? 'Свернуть' : 'Ещё';
+}
+
+function syncMoreRole() {
+  // A sheet on a phone, a fold-out list on a computer.
+  if (morePhone.matches) moreTab.setAttribute('aria-haspopup', 'dialog');
+  else moreTab.removeAttribute('aria-haspopup');
+}
+
+morePhone.addEventListener('change', () => { closeMoreSheet(); setMoreExpanded(false); syncMoreRole(); });
+syncMoreRole();
+
 moreTab.addEventListener('click', () => {
+  if (!morePhone.matches) return setMoreExpanded(!tabOrderNav.classList.contains('is-expanded'));
   renderMoreSheet();
   moreTab.setAttribute('aria-expanded', 'true');
   if (typeof moreDialog.showModal === 'function') moreDialog.showModal();
@@ -16599,6 +16671,7 @@ function mmCalGrid(dates, idx, isIn = () => true) {
 function mmRenderCalendar() {
   const tile = document.getElementById('mm-cal');
   if (!tile) return;
+  mmRenderDoneToday();
   if (!mmCalData) {
     tile.hidden = true;
     tile.replaceChildren();
@@ -16616,6 +16689,28 @@ function mmRenderCalendar() {
   tile.hidden = false;
   const dialog = document.getElementById('mm-cal-dialog');
   if (dialog?.open) mmRenderCalendarDialog();
+}
+
+// Mark 2026-11-06 «что важно сегодня»: today's work in one card, project by project, from the same day
+// feed as the calendar (owner only). A row opens the day window; nothing today says so plainly.
+function mmRenderDoneToday() {
+  const tile = document.getElementById('mm-done');
+  if (!tile) return;
+  if (!mmCalData) { tile.hidden = true; tile.replaceChildren(); return; }
+  const idx = mmCalIndex();
+  const day = idx.feed[idx.today];
+  const projects = day ? day.projects.filter(p => !p.quiet) : [];
+  const rows = projects.map(p => {
+    const done = (p.merged || []).length;
+    const said = p.bullets && p.bullets.length ? p.bullets[0] : (p.merged || [])[0]?.title || '';
+    return `<button type="button" class="mm-done-row" data-cal-day="${idx.today}">${mmArt(p)}
+      <span class="mm-done-main"><b>${mmEsc(p.name)}</b>${said ? `<small>${mmEsc(said)}</small>` : ''}</span>
+      <span class="mm-done-side">${p.minutes ? mmEsc(mmCalHours(p.minutes)) : ''}${done ? ` <i>✓ ${done}</i>` : ''}</span>
+      <span class="mm-done-go" aria-hidden="true">›</span></button>`;
+  }).join('');
+  tile.innerHTML = `<h3 class="mm-home-label mm-home-head" id="mm-done-title">Сегодня сделано</h3>
+    <div class="mm-home-card mm-done-card">${rows || '<p class="mm-done-empty">Сегодня по проектам пока ничего. Когда агенты поработают, здесь появится что сделано.</p>'}</div>`;
+  tile.hidden = false;
 }
 
 function mmCalMonthKey(iso) { return iso.slice(0, 7); }
@@ -16719,6 +16814,7 @@ function mmInitCalendar() {
     return false;
   };
   document.getElementById('mm-cal').addEventListener('click', pick);
+  document.getElementById('mm-done').addEventListener('click', pick);
   document.getElementById('mm-cal-close').addEventListener('click', close);
   dialog.addEventListener('click', event => {
     if (event.target === dialog) return close();
@@ -16734,7 +16830,7 @@ function mmRenderToday(day, prsToMerge) {
   if (!line) return;
   if (!day) {
     line.hidden = false;
-    line.textContent = 'Ваши проекты: где идёт работа и что ждёт вас.';
+    line.textContent = 'Главное за сегодня.';
     return;
   }
   // Today's hours are in «Сводка» right below; the title line keeps only what waits for a merge.
@@ -16905,39 +17001,68 @@ function mmHealthArchived(service) {
   return isSvcArchived(service, readSvcArchiveChoices(), 'mini-svc-tbody');
 }
 
+// Mark 2026-11-06 «что важно сегодня»: the «Техника» line on «Сегодня». Services that stopped on the
+// Mac mini (the same rule as before) plus what the Медик sees on each switched-on computer: memory,
+// disk, processor. Calm and green when all is fine; the trouble by name when not. A click opens Техника.
+function mmMedicTrouble() {
+  if (typeof medicExamAll !== 'function') return [];
+  let exams = [];
+  try { exams = medicExamAll().exams; } catch (error) { return []; }
+  const calm = /в порядке|отдыхает|данных нет|сервисы работают/i;
+  return exams.filter(exam => exam.level === 'warn' || exam.level === 'bad').map(exam => {
+    const parts = String(exam.lines[0] || '').replace(/\s*\([^)]*\)/g, '').replace(/\.$/, '').split(/,\s+(?![^(]*\))/).filter(part => part && !calm.test(part));
+    return parts.length ? `${exam.title}: ${parts.join(', ').replace(/^./, c => c.toLowerCase())}` : '';
+  }).filter(Boolean);
+}
+
 function mmRenderHealth(data) {
   const line = document.getElementById('mm-health');
+  const tile = document.getElementById('mm-tech');
   if (!line) return;
+  const show = visible => { line.hidden = !visible; if (tile) tile.hidden = !visible; };
   line.replaceChildren();
+  line.removeAttribute('title');
   line.classList.remove('is-problem', 'is-unknown');
-  if (!data && mmConn) {
+  if (!data && (mmConn || !mmHealthTried)) {
     // The card above already says why nothing came; «Mac mini не отвечает» would blame the wrong thing.
-    line.hidden = true;
+    show(false);
     return;
   }
+  const trouble = mmMedicTrouble();
+  let head = '';
+  const rows = [];
   if (!data || !Array.isArray(data.services_detailed || data.services)) {
     line.classList.add('is-unknown');
-    line.appendChild(mmEl('span', '', 'Mac mini не отвечает'));
+    head = 'Mac mini не отвечает';
   } else {
     const services = visibleRuntimeServices(data.services_detailed || data.services || []).filter(service => !mmHealthArchived(service));
     const down = services.filter(service => service.status !== 'running');
     if (!services.length) {
       // No services seen is not proof that they run.
       line.classList.add('is-unknown');
-      line.appendChild(mmEl('span', '', 'Нет списка сервисов'));
-    } else if (!down.length) {
-      line.appendChild(mmEl('span', '', 'Всё работает'));
-      line.title = `${services.length} ${services.length % 10 === 1 && services.length % 100 !== 11 ? 'сервис' : [2, 3, 4].includes(services.length % 10) && ![12, 13, 14].includes(services.length % 100) ? 'сервиса' : 'сервисов'} на Mac mini · открыть Технику`;
-    } else {
+      head = 'Нет списка сервисов';
+    } else if (down.length) {
       line.classList.add('is-problem');
       const names = down.slice(0, 3).map(service => service.name || service.label).join(', ');
       const more = down.length > 3 ? ` и ещё ${down.length - 3}` : '';
-      line.appendChild(mmEl('span', '', `Не работает: ${names}${more}`));
+      head = `Не работает: ${names}${more}`;
     }
   }
-  line.hidden = false;
+  if (trouble.length) {
+    if (!head) { line.classList.add('is-problem'); head = 'Есть на что посмотреть'; }
+    rows.push(...trouble);
+  }
+  if (!head) head = 'Всё работает';
+  const text = mmEl('span', 'mm-health-text');
+  text.appendChild(mmEl('b', '', head));
+  rows.forEach(row => text.appendChild(mmEl('small', '', row)));
+  line.appendChild(text);
+  line.appendChild(mmEl('span', 'mm-health-go', '›'));
+  line.setAttribute('aria-label', `${[head, ...rows].join('. ')}. Открыть Технику`);
+  show(true);
 }
 
+let mmHealthTried = false;
 async function mmLoadHealth() {
   const generation = ++mmHealthGeneration;
   let data = null;
@@ -16949,6 +17074,7 @@ async function mmLoadHealth() {
   }
   if (generation !== mmHealthGeneration) return;
   mmHealthLast = data;
+  mmHealthTried = true;
   if (signin && !mmConn) return mmSetConn('signin');
   mmRenderHealth(data);
 }
@@ -17341,6 +17467,8 @@ function mmInitOwnerTodo() {
   const dialog = document.getElementById('todo-edit-dialog');
   dialog.addEventListener('click', event => { if (event.target === dialog) mmCloseTodoEdit(); });
   document.getElementById('mm-health').addEventListener('click', () => showSection('machines'));
+  // The Медик's picture changes as the computers answer; the line follows it without a new request.
+  setInterval(() => { if (mmHealthTried && !document.hidden) mmRenderHealth(mmHealthLast); }, 5000);
   // While an agent holds an item, look more often so its walk and result show up soon.
   setInterval(() => {
     if (document.hidden || !document.getElementById('section-work').classList.contains('active')) return;
