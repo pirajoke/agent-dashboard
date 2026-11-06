@@ -24,7 +24,8 @@ const listeners = {};
 function setTabNameStatus() {}
 function pill(route) {
   const label = {dataset: {tabLabel: route}, textContent: route};
-  return {route, label, classList: {add() {}, remove() {}}, style: {}, parentElement: null, offsetLeft: 0, offsetWidth: 220, offsetHeight: 40,
+  const classes = new Set();
+  return {route, label, classes, classList: {add(c) { classes.add(c); }, remove(c) { classes.delete(c); }, toggle(c, on) { on ? classes.add(c) : classes.delete(c); }, contains: c => classes.has(c)}, style: {}, parentElement: null, offsetLeft: 0, offsetWidth: 220, offsetHeight: 40,
     get offsetTop() { return nav.items.indexOf(this) * SLOT; },
     querySelector: () => label, closest(sel) { return sel === '.nav-pill' ? this : null; },
     get nextElementSibling() { return nav.items[nav.items.indexOf(this) + 1] || null; },
@@ -32,14 +33,15 @@ function pill(route) {
     after(...items) { items.forEach(i => nav.remove(i)); nav.items.splice(nav.items.indexOf(this) + 1, 0, ...items); },
     setPointerCapture() {}, focus() {}, getBoundingClientRect() { return {}; }, addEventListener() {}};
 }
-const nav = {items: [], classList: {add() {}, remove() {}},
+const navClasses = new Set();
+const nav = {items: [], classList: {add(c) { navClasses.add(c); }, remove(c) { navClasses.delete(c); }, toggle(c, on) { on ? navClasses.add(c) : navClasses.delete(c); }, contains: c => navClasses.has(c)},
   remove(item) { const i = this.items.indexOf(item); if (i >= 0) this.items.splice(i, 1); item.parentElement = this; },
   append(item) { this.remove(item); this.items.push(item); },
   querySelectorAll: () => nav.items.slice(),
   addEventListener(type, fn) { listeners[type] = listeners[type] || []; listeners[type].push(fn); }};
 ROUTES.forEach(r => nav.append(pill(r)));
 const resetButton = {hidden: true, addEventListener(type, fn) { this.click = fn; }};
-const orderStatus = {textContent: ''};
+const orderStatus = {textContent: '', addEventListener() {}};
 const document = {querySelector: () => nav, getElementById: id => id === 'reset-tab-order' ? resetButton : orderStatus};
 const window = {matchMedia: () => ({matches: true})};
 const navigator = {};
@@ -56,7 +58,8 @@ function fire(type, props) {
 const order = () => nav.items.map(i => i.route).join(',');
 const find = r => nav.items.find(i => i.route === r);
 CODE
-const out = {loaded: order(), resetHidden: resetButton.hidden};
+const inMore = () => nav.items.filter(i => i.classes.has('is-more')).map(i => i.route).join(',');
+const out = {loaded: order(), resetHidden: resetButton.hidden, more: inMore(), hasMore: navClasses.has('has-more')};
 // Mouse: press on Техника, drag it up two places, let go.
 let t = find('machines');
 // A press let go outside the menu before the drag began must not turn into a drag on the way back.
@@ -95,6 +98,20 @@ resetButton.click();
 out.reset = order();
 out.savedAfterReset = store.get('command-center.tab-order.v1') || null;
 out.resetHiddenAgain = resetButton.hidden;
+// Mark 2026-11-06: six tabs are the menu, the rest wait in «Ещё»; dragging across the line moves one in or out.
+t = find('machines');
+fire('keydown', {target: t, altKey: true, key: 'ArrowUp'});
+out.intoMenu = {order: order(), more: inMore(), saved: store.get('command-center.tab-menu-count.v1') || null, hasMore: navClasses.has('has-more')};
+resetButton.click();
+fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
+fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
+fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
+fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
+fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
+fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
+out.outOfMenu = {order: order(), more: inMore(), saved: store.get('command-center.tab-menu-count.v1') || null};
+resetButton.click();
+out.resetMore = {more: inMore(), saved: store.get('command-center.tab-menu-count.v1') || null};
 process.stdout.write(JSON.stringify(out));
 """
 
@@ -130,6 +147,24 @@ class TabOrderTest(unittest.TestCase):
         self.assertEqual(data["reset"], "work,growth,agents,platforms,documents,context,machines")
         self.assertIsNone(data["savedAfterReset"])
         self.assertTrue(data["resetHiddenAgain"])
+
+    def test_six_in_the_menu_and_dragging_across_ehche(self):
+        data = run({})
+        self.assertEqual(data["more"], "machines")
+        self.assertTrue(data["hasMore"])
+        # Техника moved up out of «Ещё»: all seven are in the menu, «Ещё» goes away.
+        self.assertEqual(data["intoMenu"]["more"], "")
+        self.assertEqual(data["intoMenu"]["saved"], "7")
+        self.assertFalse(data["intoMenu"]["hasMore"])
+        # From the default, Сегодня pushed down past the line joins «Ещё»: the menu keeps five.
+        self.assertEqual(data["outOfMenu"]["order"].split(",")[-1], "work")
+        self.assertEqual(data["outOfMenu"]["more"], "machines,work")
+        self.assertEqual(data["outOfMenu"]["saved"], "5")
+        self.assertEqual(data["resetMore"], {"more": "machines", "saved": None})
+
+    def test_saved_menu_size_is_kept(self):
+        self.assertEqual(run({"command-center.tab-menu-count.v1": "3"})["more"], "platforms,documents,context,machines")
+        self.assertEqual(run({"command-center.tab-menu-count.v1": "99"})["more"], "machines")
 
     def test_saved_order_is_cleaned(self):
         saved = {"command-center.tab-order.v1": json.dumps(["machines", "bogus", "work", "machines", 3])}
