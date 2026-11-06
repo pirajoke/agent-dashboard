@@ -129,6 +129,14 @@ class ForwardingTests(unittest.TestCase):
         for path in ("comment", "comment-text", "comment-rewrite", "comment-send", "comment-close"):
             self.assertIn(f"/api/media/linkedin/{path}", SERVER.MEDIA_LINKEDIN_ACTIONS)
 
+    def test_page_shows_the_owner_channel_queue(self):
+        # Mark 2026-11-06: his own Telegram posts (news-bot /today `channel`) are visible in Media.
+        self.assertIn('id="media-channel"', PAGE)
+        self.assertIn("mediaRenderChannel(data.today)", PAGE)
+        for state in ("scheduled", "sent", "failed", "reconcile_required", "cancelled"):
+            self.assertIn(f"{state}:", PAGE.split("MEDIA_CHANNEL_STATES", 1)[1].split("};", 1)[0])
+        self.assertIn("mediaEsc(text)", PAGE)
+
     def test_edit_forwards_the_owner_text_within_limits(self):
         cid = "44444444-4444-4444-8444-444444444444"
         with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
