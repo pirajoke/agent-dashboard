@@ -5493,6 +5493,55 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   .platform-zoom button { width: 38px; height: 38px; }
 }
 @media print { .platform-zoom { display: none; } }
+/* Mark 2026-11-06: «сделай вид командного центра лучше на телефоне».
+   Phone bar: four tabs plus «Ещё», like a native app, instead of a sideways-scrolling strip with cut items.
+   The rest of the tabs, the theme switch and renaming live in the «Ещё» sheet, not at the bottom of every page. */
+.cc-more-tab { display: none; }
+.cc-more-list { display: grid; gap: 2px; }
+.cc-more-settings { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--mm-line); }
+.cc-more-row {
+  display: flex; align-items: center; gap: 14px; width: 100%; min-height: 52px; padding: 10px 12px;
+  color: var(--mm-ink); font: inherit; font-size: 16px; font-weight: 600; text-align: left;
+  background: none; border: 0; border-radius: 12px; cursor: pointer;
+}
+.cc-more-row:hover, .cc-more-row:focus-visible { background: var(--mm-surface-hover); }
+.cc-more-row:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -2px; }
+.cc-more-row.active { color: var(--mm-accent); background: var(--mm-selection); }
+.cc-more-row svg { flex: none; width: 22px; height: 22px; }
+.cc-more-row .pill-icon { display: inline-flex; color: var(--mm-muted); }
+.cc-more-row.active .pill-icon { color: var(--mm-accent); }
+.cc-more-row::after { content: "›"; margin-left: auto; color: var(--mm-muted); font-size: 20px; font-weight: 500; }
+.cc-more-settings .cc-more-row { font-size: 15px; font-weight: 550; color: var(--mm-muted); }
+.cc-more-settings .cc-more-row::after { content: none; }
+@media (max-width: 760px) {
+  .cc-side .cc-main-nav { overflow: hidden; padding-right: calc(20% + 4px); scroll-snap-type: none; }
+  .cc-side .cc-main-nav .nav-pill { flex: 1 1 0; min-width: 0; justify-content: flex-start; padding: 6px 2px 0; }
+  .cc-side .cc-main-nav .nav-pill:nth-child(n + 5) { display: none; }
+  .cc-main-nav .cc-tab-label { font-size: 10.5px; }
+  .cc-more-tab {
+    position: fixed; right: 0; bottom: 0; z-index: 41; display: flex; flex-direction: column; align-items: center;
+    justify-content: flex-start; gap: 3px; width: 20%; height: calc(var(--cc-tabbar) + env(safe-area-inset-bottom));
+    padding: 12px 2px calc(6px + env(safe-area-inset-bottom)); color: var(--mm-muted); font: inherit; font-size: 11px; font-weight: 600;
+    background: var(--mm-surface); border: 0; border-top: 1px solid var(--mm-line); cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cc-more-tab .pill-icon { display: inline-flex; height: 22px; }
+  .cc-more-tab .pill-icon svg { width: 22px; height: 22px; }
+  .cc-more-tab .cc-tab-label { font-size: 10.5px; line-height: 1.15; }
+  .cc-more-tab.active, .cc-more-tab[aria-expanded="true"] { color: var(--mm-accent); }
+  .cc-more-tab:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: -4px; border-radius: 10px; }
+  /* Theme and renaming moved into «Ещё»: the pages end with their own content. */
+  .cc-side-foot { display: none; }
+  .cc-main { padding-bottom: 28px; }
+  /* Платформы: «+ / −» sit in the page flow, not on top of the cards. */
+  .platform-zoom { position: static; flex-direction: row; width: fit-content; margin: 0 0 10px auto; box-shadow: none; }
+  .platform-zoom button { width: 36px; height: 32px; font-size: 18px; }
+  /* A card with no project materials ends after its links instead of keeping an empty line. */
+  #section-platforms .platform-resources:empty { min-height: 0; padding: 0; }
+  /* Техника: all three computers fit next to the archive button. */
+  .cc-main .cc-machine-nav { gap: 2px; }
+  .cc-main .cc-machine-nav .nav-pill { padding: 8px 8px; font-size: 13px; }
+}
 /* ─── Генеалогия (Mark 2026-11-05) ─── */
 .gen-wrap { display: grid; gap: 14px; }
 .gen-back { font: inherit; font-size: 13px; background: none; border: 0; padding: 0 0 6px; color: var(--mm-accent); cursor: pointer; }
@@ -5954,6 +6003,8 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
   </nav>
+  <!-- Mark 2026-11-06 «лучше на телефоне»: the phone bar shows four tabs and «Ещё», like a native app. -->
+  <button type="button" class="cc-more-tab" id="cc-more-tab" aria-haspopup="dialog" aria-controls="cc-more-dialog"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span><span class="cc-tab-label">Ещё</span></button>
   <div class="cc-side-foot">
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
     <div class="tab-name-customizer">
@@ -5987,6 +6038,19 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     </form>
   </dialog>
   <p class="cc-visually-hidden" id="tab-order-status" role="status" aria-live="polite"></p>
+  <dialog class="tab-name-dialog cc-more-dialog" id="cc-more-dialog" aria-labelledby="cc-more-title">
+    <div class="tab-name-editor">
+      <div class="tab-name-head">
+        <strong class="tab-name-editor-title" id="cc-more-title">Ещё</strong>
+        <button type="button" class="tab-name-close" id="cc-more-close" aria-label="Закрыть">×</button>
+      </div>
+      <div class="cc-more-list" id="cc-more-list"></div>
+      <div class="cc-more-list cc-more-settings">
+        <button type="button" class="cc-more-row" data-more-proxy="cc-theme-toggle"></button>
+        <button type="button" class="cc-more-row" data-more-proxy="edit-tab-names"></button>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Mark 2026-10-24: one shared window for every «i». -->
   <dialog class="tab-name-dialog cc-info-dialog" id="cc-info-dialog" aria-labelledby="cc-info-title">
@@ -8389,7 +8453,10 @@ function dragTabTo(x, y) {
   const others = tabOrderButtons().filter(item => item !== button);
   const size = vertical ? button.offsetHeight : button.offsetWidth;
   const center = tabDrag.startOffset + size / 2 + pointerShift;
-  const index = others.filter(item => tabOrderCenter(item, vertical) < center).length;
+  // On a phone the tabs past the fourth wait in «Ещё» and take no room: only the shown ones count.
+  const shown = others.filter(item => item.offsetWidth > 0);
+  const before = shown.filter(item => tabOrderCenter(item, vertical) < center).length;
+  const index = before < shown.length ? others.indexOf(shown[before]) : others.indexOf(shown[shown.length - 1]) + 1;
   moveTabButton(button, index);
   const placeShift = (vertical ? button.offsetTop : button.offsetLeft) - tabDrag.startOffset;
   const shift = pointerShift - placeShift;
@@ -8473,6 +8540,73 @@ tabOrderNav.addEventListener('keydown', event => {
 
 document.getElementById('reset-tab-order').addEventListener('click', resetTabOrder);
 applyTabOrder(readTabOrder());
+
+// Mark 2026-11-06 «лучше на телефоне»: the phone bar shows the first four tabs (in his order) and «Ещё».
+// «Ещё» opens a sheet with the other tabs, the theme switch and renaming; it lights up when one of them is open.
+const MORE_TAB_COUNT = 4;
+const moreTab = document.getElementById('cc-more-tab');
+const moreDialog = document.getElementById('cc-more-dialog');
+const moreList = document.getElementById('cc-more-list');
+
+function moreHiddenTabs() {
+  return tabOrderButtons().slice(MORE_TAB_COUNT);
+}
+
+function syncMoreTab() {
+  moreTab.classList.toggle('active', moreHiddenTabs().some(button => button.classList.contains('active')));
+}
+
+function moreRow(source, className) {
+  const row = document.createElement('button');
+  row.type = 'button';
+  row.className = className;
+  const icon = source.querySelector('.pill-icon, svg');
+  if (icon) row.append(icon.cloneNode(true));
+  const label = document.createElement('span');
+  label.textContent = (source.querySelector('[data-tab-label], span:not(.pill-icon):not(.pill-badge)')?.textContent || '').trim();
+  row.append(label);
+  return row;
+}
+
+function renderMoreSheet() {
+  moreList.replaceChildren(...moreHiddenTabs().map(button => {
+    const row = moreRow(button, 'cc-more-row' + (button.classList.contains('active') ? ' active' : ''));
+    if (button.classList.contains('active')) row.setAttribute('aria-current', 'page');
+    row.addEventListener('click', () => { closeMoreSheet(); button.click(); });
+    return row;
+  }));
+  moreDialog.querySelectorAll('[data-more-proxy]').forEach(row => {
+    const source = document.getElementById(row.dataset.moreProxy);
+    row.replaceChildren(...moreRow(source, '').childNodes);
+  });
+}
+
+function closeMoreSheet() {
+  if (moreDialog.open) moreDialog.close();
+}
+
+moreTab.addEventListener('click', () => {
+  renderMoreSheet();
+  moreTab.setAttribute('aria-expanded', 'true');
+  if (typeof moreDialog.showModal === 'function') moreDialog.showModal();
+  else moreDialog.setAttribute('open', '');
+  moreList.querySelector('.cc-more-row')?.focus();
+});
+moreDialog.addEventListener('close', () => { moreTab.setAttribute('aria-expanded', 'false'); moreTab.focus({ preventScroll: true }); });
+document.getElementById('cc-more-close').addEventListener('click', closeMoreSheet);
+moreDialog.addEventListener('click', event => { if (event.target === moreDialog) closeMoreSheet(); });
+moreDialog.querySelectorAll('[data-more-proxy]').forEach(row => {
+  row.addEventListener('click', () => {
+    const source = document.getElementById(row.dataset.moreProxy);
+    // Renaming opens its own window, so the sheet closes first; the theme switch keeps it open.
+    if (source.getAttribute('aria-haspopup') === 'dialog') closeMoreSheet();
+    source.click();
+    if (moreDialog.open) renderMoreSheet();
+  });
+});
+moreTab.setAttribute('aria-expanded', 'false');
+new MutationObserver(syncMoreTab).observe(tabOrderNav, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+syncMoreTab();
 
 // Mark 2026-11-03: «сделай drag drop и archive desarchive» on «Техника». The computers in the switcher
 // can be dragged into his order (a long press first on a phone, Alt + arrow from the keyboard), and
