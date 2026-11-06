@@ -3396,6 +3396,8 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .cc-main-nav.is-reordering, .cc-main-nav.is-reordering .nav-pill { cursor: grabbing; }
 .cc-main-nav .nav-pill.is-dragging { position: relative; z-index: 2; color: var(--mm-ink); background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); }
 .tab-order-note { margin: 14px 0 0; color: var(--text2); font-size: 12px; line-height: 1.5; }
+.tab-more-switch { margin-top: 10px; min-height: 36px; padding: 6px 12px; color: var(--mm-ink); font: inherit; font-size: 13px; background: var(--mm-surface); border: 1px solid var(--mm-control-line, var(--mm-line)); border-radius: 10px; cursor: pointer; }
+.tab-more-switch:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
 .cc-side-foot { display: grid; gap: 2px; margin-top: auto; padding: 14px 0 0; border-top: 1px solid var(--mm-line); }
 .cc-side-button,
 .cc-side .tab-name-customizer > button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 12px; color: var(--mm-muted); font: inherit; font-size: 13px; font-weight: 500; text-align: left; background: none; border: 0; border-radius: 10px; cursor: pointer; }
@@ -5547,7 +5549,18 @@ button.cc-refresh:hover { background: var(--mm-selection); }
    Menu: the first four tabs in his order, then «Ещё». On a computer «Ещё» unfolds the rest in place
    (so they can still be dragged into the first four); on a phone it opens the sheet. The open tab always shows. */
 @media (min-width: 761px) {
-  .cc-side .cc-main-nav:not(.is-expanded) > .nav-pill:nth-child(n + 5):not(.active) { display: none; }
+  .cc-side .cc-main-nav:not(.is-expanded) > .nav-pill.is-more:not(.active) { display: none; }
+  /* Unfolded, the tabs that live in «Ещё» sit under a thin «Ещё» line; dragging a tab across it moves it. */
+  .cc-side .cc-main-nav.is-expanded > .nav-pill:not(.is-more) + .nav-pill.is-more,
+  .cc-side .cc-main-nav.is-expanded > .nav-pill.is-more:first-child { position: relative; margin-top: 30px; }
+  .cc-side .cc-main-nav.is-expanded > .nav-pill:not(.is-more) + .nav-pill.is-more::before,
+  .cc-side .cc-main-nav.is-expanded > .nav-pill.is-more:first-child::before {
+    content: "Ещё"; position: absolute; left: 12px; right: 12px; top: -22px; padding-top: 6px;
+    color: var(--mm-muted); font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    border-top: 1px solid var(--mm-line); pointer-events: none;
+  }
+  /* «Ещё» switched off: every tab is in the menu and the button goes away. */
+  .cc-side .cc-main-nav:not(.has-more) + .cc-more-tab { display: none; }
   .cc-side .cc-more-tab {
     display: flex; align-items: center; gap: 12px; width: 100%; min-height: 40px; margin-top: 2px; padding: 8px 12px;
     color: var(--mm-muted); font: inherit; font-size: 14px; font-weight: 550; text-align: left;
@@ -6053,7 +6066,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <div class="cc-side-foot">
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
     <div class="tab-name-customizer">
-      <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename aria-haspopup="dialog" aria-controls="tab-name-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Переименовать вкладки</span></button>
+      <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename aria-haspopup="dialog" aria-controls="tab-name-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Настроить вкладки</span></button>
     </div>
     <!-- Footer -->
     <div class="footer">
@@ -6068,7 +6081,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <dialog class="tab-name-dialog" id="tab-name-dialog" aria-labelledby="tab-name-editor-title">
     <form class="tab-name-editor" id="tab-name-editor">
       <div class="tab-name-head">
-        <strong class="tab-name-editor-title" id="tab-name-editor-title">Названия вкладок</strong>
+        <strong class="tab-name-editor-title" id="tab-name-editor-title">Вкладки: названия, порядок, «Ещё»</strong>
         <button type="button" class="tab-name-close" id="close-tab-names" aria-label="Закрыть">×</button>
       </div>
       <div class="tab-name-fields" id="tab-name-fields"></div>
@@ -6078,7 +6091,8 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <button type="button" id="reset-tab-names" data-tab-names-reset>Сбросить все</button>
         <button type="button" id="reset-tab-order" hidden>Вернуть порядок</button>
       </div>
-      <p class="tab-order-note">Порядок меняется перетаскиванием, на телефоне сначала долгое нажатие. С клавиатуры: Alt и стрелка.</p>
+      <p class="tab-order-note">Порядок меняется перетаскиванием, на телефоне сначала долгое нажатие. С клавиатуры: Alt и стрелка. На компьютере перетащи вкладку под черту «Ещё», чтобы убрать её туда, или над ней, чтобы вернуть в меню.</p>
+      <button type="button" class="tab-more-switch" id="toggle-more-tabs">Убрать «Ещё»: все вкладки в меню</button>
       <p class="tab-name-status" id="tab-name-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </form>
   </dialog>
@@ -8185,7 +8199,7 @@ function initOwnerDecisions() {
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
-// Mark 2026-11-06 «меньше вкладок»: the first four are the menu, the rest wait under «Ещё».
+// Mark 2026-11-06 «меньше вкладок»: the first six are the menu, the rest wait under «Ещё».
 const TAB_NAME_ROUTES = Object.freeze(['work', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'media', 'architecture']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
@@ -8404,7 +8418,38 @@ function currentTabOrder() {
 }
 
 function tabOrderIsDefault(order) {
-  return TAB_NAME_ROUTES.every((route, index) => order[index] === route);
+  return TAB_NAME_ROUTES.every((route, index) => order[index] === route) && tabMenuCount === TAB_MENU_DEFAULT;
+}
+
+// Mark 2026-11-06 «ставь 6 вкладок … переносить в «Ещё» или выносить из «Ещё» … и убрать «Ещё»»:
+// how many of his tabs (in his order) are the menu; the rest wait in «Ещё». All of them = no «Ещё».
+// A browser-local preference like the order. The phone bar has room for four and keeps its own «Ещё».
+const TAB_MENU_STORAGE_KEY = 'command-center.tab-menu-count.v1';
+const TAB_MENU_DEFAULT = 6;
+let tabMenuCount = (() => {
+  try {
+    const saved = Number(localStorage.getItem(TAB_MENU_STORAGE_KEY));
+    if (Number.isInteger(saved) && saved >= 1 && saved <= TAB_NAME_ROUTES.length) return saved;
+  } catch (error) { /* private mode: the default */ }
+  return TAB_MENU_DEFAULT;
+})();
+
+function syncTabMenu() {
+  const pills = tabOrderButtons();
+  pills.forEach((pill, index) => pill.classList.toggle('is-more', index >= tabMenuCount));
+  tabOrderNav.classList.toggle('has-more', tabMenuCount < pills.length);
+  const toggle = document.getElementById('toggle-more-tabs');
+  if (toggle) toggle.textContent = tabMenuCount < pills.length ? 'Убрать «Ещё»: все вкладки в меню' : `Вернуть «Ещё»: в меню ${TAB_MENU_DEFAULT} вкладок`;
+}
+
+function setTabMenuCount(count, save = true) {
+  tabMenuCount = Math.max(1, Math.min(TAB_NAME_ROUTES.length, count));
+  syncTabMenu();
+  if (!save) return;
+  try {
+    if (tabMenuCount === TAB_MENU_DEFAULT) localStorage.removeItem(TAB_MENU_STORAGE_KEY);
+    else localStorage.setItem(TAB_MENU_STORAGE_KEY, String(tabMenuCount));
+  } catch (error) { /* holds until the page reloads */ }
 }
 
 function readTabOrder() {
@@ -8423,10 +8468,12 @@ function readTabOrder() {
 function applyTabOrder(order) {
   const byRoute = new Map(tabOrderButtons().map(button => [tabOrderRoute(button), button]));
   order.forEach(route => { if (byRoute.has(route)) tabOrderNav.append(byRoute.get(route)); });
+  syncTabMenu();
   syncTabOrderReset();
 }
 
 function saveTabOrder() {
+  setTabMenuCount(tabMenuCount);
   const order = currentTabOrder();
   try {
     if (tabOrderIsDefault(order)) localStorage.removeItem(TAB_ORDER_STORAGE_KEY);
@@ -8442,6 +8489,7 @@ function syncTabOrderReset() {
 }
 
 function resetTabOrder() {
+  setTabMenuCount(TAB_MENU_DEFAULT);
   applyTabOrder(TAB_NAME_ROUTES);
   saveTabOrder();
   setTabNameStatus('Порядок вкладок вернулся к обычному.');
@@ -8468,10 +8516,14 @@ function moveTabButton(button, index) {
   const order = tabOrderButtons();
   const from = order.indexOf(button);
   if (index === from || index < 0 || index >= order.length) return;
+  // Crossing the «Ещё» line takes the tab into the menu or out of it; the other tabs keep their side.
+  if (from >= tabMenuCount && index < tabMenuCount) tabMenuCount += 1;
+  else if (from < tabMenuCount && index >= tabMenuCount) tabMenuCount -= 1;
   const others = order.filter(item => item !== button);
   const before = new Map(others.map(item => [item, [item.offsetLeft, item.offsetTop]]));
   if (index > from) button.before(...order.slice(from + 1, index + 1));
   else button.after(...order.slice(index, from));
+  syncTabMenu();
   if (tabOrderReducedMotion.matches) return;
   others.forEach(item => {
     const [left, top] = before.get(item);
@@ -8494,6 +8546,8 @@ function startTabDrag() {
   tabDrag.vertical = tabOrderVertical();
   tabDrag.startOffset = tabDrag.vertical ? tabDrag.button.offsetTop : tabDrag.button.offsetLeft;
   tabOrderNav.classList.add('is-reordering');
+  // On a computer the «Ещё» tabs unfold while dragging, so a tab can be dropped in or out of «Ещё».
+  if (tabOrderVertical() && tabOrderNav.classList.contains('has-more') && typeof setMoreExpanded === 'function') setMoreExpanded(true);
   tabDrag.button.classList.add('is-dragging');
   try { tabDrag.button.setPointerCapture(tabDrag.pointerId); } catch (error) { /* the nav still gets the moves */ }
   if (tabDrag.touch && navigator.vibrate) navigator.vibrate(12);
@@ -8591,6 +8645,13 @@ tabOrderNav.addEventListener('keydown', event => {
 });
 
 document.getElementById('reset-tab-order').addEventListener('click', resetTabOrder);
+document.getElementById('toggle-more-tabs').addEventListener('click', () => {
+  const all = TAB_NAME_ROUTES.length;
+  setTabMenuCount(tabMenuCount < all ? all : TAB_MENU_DEFAULT);
+  syncTabOrderReset();
+  if (typeof setMoreExpanded === 'function') setMoreExpanded(false);
+  setTabNameStatus(tabMenuCount < all ? `«Ещё» вернулось: в меню ${tabMenuCount} вкладок.` : 'Все вкладки теперь в меню, «Ещё» убрано.');
+});
 applyTabOrder(readTabOrder());
 
 // Mark 2026-11-06 «лучше на телефоне»: the phone bar shows the first four tabs (in his order) and «Ещё».
@@ -8637,7 +8698,7 @@ function closeMoreSheet() {
   if (moreDialog.open) moreDialog.close();
 }
 
-// Mark 2026-11-06 «меньше вкладок»: on a computer too the menu keeps four tabs; «Ещё» unfolds the rest
+// Mark 2026-11-06 «меньше вкладок»: on a computer the menu keeps six tabs (his choice); «Ещё» unfolds the rest
 // in place, so they stay one click away and can still be dragged into the first four.
 const morePhone = window.matchMedia('(max-width: 760px)');
 const moreLabel = moreTab.querySelector('.cc-tab-label');
