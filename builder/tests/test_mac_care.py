@@ -36,6 +36,15 @@ class CollectorTests(unittest.TestCase):
         self.assertIn("Plaud", status["last_event"])
         self.assertNotIn("/Users/mark", status["last_event"])
 
+    def test_watchdog_log_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(collector.log_state(Path(tmp) / "none.log"), "missing")
+            (Path(tmp) / "w.log").write_text("")
+            self.assertIsNone(collector.log_state(Path(tmp) / "w.log"))
+        self.assertEqual(collector.watchdog_status(None, {}, NOW, "missing")["log"], "missing")
+        self.assertEqual(collector.watchdog_status(None, {}, NOW)["log"], "unreadable")
+        self.assertEqual(collector.watchdog_status("", {}, NOW)["log"], "ok")
+
     def test_unreadable_sources_stay_unknown(self):
         self.assertEqual(collector.watchdog_status(None, None, NOW)["events_7d"], None)
         self.assertEqual(collector.watchdog_status(None, None, NOW)["job"], None)
@@ -200,7 +209,7 @@ class CareRowsTests(unittest.TestCase):
         # What Mark saw: no watchdog log yet, a report whose first line repeats the count,
         # and a Sunday restart that has not happened since 15 Oct.
         rows = {row[0]: row for row in self.full_rows({
-            "watchdog": {"job": "loaded", "events_7d": None, "last_event_at": None, "last_event": ""},
+            "watchdog": {"job": "loaded", "events_7d": None, "last_event_at": None, "last_event": "", "log": "missing"},
             "hygiene": {"job": "loaded", "report_at": "2026-11-01T09:00:00Z", "headline": "Замечаний: 4", "attention": 4},
             "restart": {"scheduled": True, "schedule": "restart at 4:00AM Sunday", "boot_at": "2026-10-15T21:45:00Z"},
         })}
@@ -209,6 +218,18 @@ class CareRowsTests(unittest.TestCase):
         self.assertEqual(rows["Ежедневная проверка, 10:00"][4].count("амечаний"), 1)
         self.assertEqual(rows["Перезагрузка по расписанию"][1:3], ["warn", "не сработала"])
         self.assertTrue(rows["Перезагрузка по расписанию"][4].startswith("по плану вс 04:00, но Mac не перезагружался с "))
+
+    def test_unreadable_watchdog_log_is_not_called_quiet(self):
+        rows = {row[0]: row for row in self.full_rows({"watchdog": {"job": "loaded", "events_7d": None, "log": "unreadable"}})}
+        self.assertEqual(rows["Защита от зависаний"][4], "история срабатываний неизвестна")
+        rows = {row[0]: row for row in self.full_rows({"watchdog": {"job": "loaded", "events_7d": None}})}
+        self.assertEqual(rows["Защита от зависаний"][4], "история срабатываний неизвестна")
+
+    def test_group_summary_never_says_ok_over_unknown_rows(self):
+        source = HTML.read_text()
+        start = source.index("    const issues = groupRows.filter")
+        block = source[start:source.index("head.append(title, summary);", start)]
+        self.assertIn("unknowns ? `нет данных: ${unknowns}` : 'всё в порядке'", block)
 
     def full_rows(self, care):
         self.rows(care)

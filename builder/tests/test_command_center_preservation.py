@@ -50,7 +50,7 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "3b6751b8e9d12587464166cdc08a4227ad11091ca237ae1ee97ad8e37f0076b4")
+                         "7fc67c4a8c094042fd8df00986b93c118f0b4aeb37e71c95a942e894d4e506de")
 
 
 if __name__ == "__main__":

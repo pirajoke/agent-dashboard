@@ -92,7 +92,10 @@ def job_state(jobs: dict[str, int | None] | None, needle: str) -> str | None:
     return "loaded" if any(needle in label for label in jobs) else "missing"
 
 
-def watchdog_status(log_text: str | None, jobs: dict[str, int | None] | None, now: datetime) -> dict[str, Any]:
+def watchdog_status(log_text: str | None, jobs: dict[str, int | None] | None, now: datetime,
+                    log_state: str | None = None) -> dict[str, Any]:
+    """``log_state``: «missing» when the log was never written (the watchdog has not stepped in yet),
+    «unreadable» when it exists but cannot be read; then the history is unknown."""
     events_7d = None
     last_at = None
     last_event = ""
@@ -110,7 +113,18 @@ def watchdog_status(log_text: str | None, jobs: dict[str, int | None] | None, no
                 last_at = stamp
                 last_event = clean_text(_STAMP.sub("", line, count=1))
     return {"job": job_state(jobs, "cpu-watchdog"), "events_7d": events_7d,
-            "last_event_at": iso_z(last_at), "last_event": last_event}
+            "last_event_at": iso_z(last_at), "last_event": last_event,
+            "log": "ok" if log_text is not None else (log_state or "unreadable")}
+
+
+def log_state(path: Path) -> str | None:
+    try:
+        path.stat()
+    except FileNotFoundError:
+        return "missing"
+    except OSError:
+        return "unreadable"
+    return None
 
 
 def hygiene_status(report: Path, jobs: dict[str, int | None] | None) -> dict[str, Any]:
@@ -232,7 +246,7 @@ def collect(now: datetime | None = None) -> dict[str, Any]:
     listing = run(["launchctl", "list"])
     jobs = launchd_jobs(listing) if listing is not None else None
     return {
-        "watchdog": watchdog_status(read_text(WATCHDOG_LOG), jobs, now),
+        "watchdog": watchdog_status(read_text(WATCHDOG_LOG), jobs, now, log_state(WATCHDOG_LOG)),
         "hygiene": hygiene_status(HYGIENE_REPORT, jobs),
         "restart": restart_status(run(["pmset", "-g", "sched"]), boot_time(run(["sysctl", "-n", "kern.boottime"]))),
         "firewall": firewall_status(run([FIREWALL_TOOL, "--getglobalstate"])),

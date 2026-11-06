@@ -225,6 +225,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-care-group-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: var(--text2); }
 .machine-care-group-sum { font-size: 12px; color: var(--green); }
 .machine-care-group-sum.has-issues { color: var(--orange, #d97706); font-weight: 600; }
+.machine-care-group-sum.is-unknown { color: var(--text2); }
 .machine-care-row { display: grid; grid-template-columns: 10px 1fr; gap: 4px 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--bg2, rgba(127,127,127,.06)); }
 .machine-care-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; background: var(--text2); }
 .machine-care-row.is-ok .machine-care-dot { background: var(--green); }
@@ -13713,8 +13714,8 @@ function machineCareRows(care, now = Date.now()) {
   else {
     const n = w.events_7d;
     const last = w.last_event_at ? `последний раз ${machineCareWhen(w.last_event_at, now)}${w.last_event ? `: ${w.last_event}` : ''}` : '';
-    // No log yet means the watchdog has never had to step in.
-    const detail = n == null ? 'ни разу не срабатывала'
+    // Only a log that was never written means the watchdog has not stepped in; otherwise the history is unknown.
+    const detail = n == null ? (w.log === 'missing' ? 'ни разу не срабатывала' : 'история срабатываний неизвестна')
       : n === 0 ? `за неделю не срабатывала${last ? `; ${last}` : ''}`
       : `за неделю ${n} ${plural(n, 'раз', 'раза', 'раз')}; ${last}`;
     rows.push({ group: 'protection', label: 'Защита от зависаний', level: n >= 10 ? 'warn' : 'ok', word: 'работает', detail });
@@ -13789,9 +13790,11 @@ function renderMachineCare(key, care) {
     const head = document.createElement('div'); head.className = 'machine-care-group-head';
     const title = document.createElement('h4'); title.className = 'machine-care-group-title'; title.textContent = group.title;
     const issues = groupRows.filter(row => row.level === 'warn' || row.level === 'bad').length;
+    const unknowns = groupRows.filter(row => row.level === 'unknown').length;
     const summary = document.createElement('span');
-    summary.className = `machine-care-group-sum${issues ? ' has-issues' : ''}`;
-    summary.textContent = issues ? `требует внимания: ${issues}` : 'всё в порядке';
+    summary.className = `machine-care-group-sum${issues ? ' has-issues' : unknowns ? ' is-unknown' : ''}`;
+    // An unknown row never counts as «всё в порядке».
+    summary.textContent = issues ? `требует внимания: ${issues}` : unknowns ? `нет данных: ${unknowns}` : 'всё в порядке';
     head.append(title, summary);
     const ul = document.createElement('ul'); ul.className = 'machine-care-list';
     section.append(head, ul);

@@ -372,7 +372,7 @@ class PreviewHandler(SERVER.Handler):
                 "ok": True, "state": "stale" if MODE == "stale" else "fresh", "machine": "macbook-pro",
                 "generated_at": stamp(timedelta(hours=3) if MODE == "stale" else timedelta(minutes=4)),
                 "age_seconds": 10800 if MODE == "stale" else 240,
-                "watchdog": {"job": "loaded", "events_7d": None, "last_event_at": None, "last_event": ""},
+                "watchdog": {"job": "loaded", "events_7d": None, "last_event_at": None, "last_event": "", "log": "missing"},
                 "hygiene": {"job": "loaded", "report_at": stamp(timedelta(hours=14)), "headline": "Замечаний: 4", "attention": 4},
                 # The Sunday restart missed: running for three weeks.
                 "restart": {"scheduled": True, "schedule": "restart at 4:00AM Sunday", "boot_at": stamp(timedelta(days=21))},
