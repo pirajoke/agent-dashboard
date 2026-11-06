@@ -2200,9 +2200,10 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
   }
 }
 @media (max-width: 760px) {
+  /* Mark 2026-11-06: same 16px side margins as every other page (was pulled out by 2px). */
   #section-agents.active {
-    margin-left: -2px;
-    margin-right: -2px;
+    margin-left: 0;
+    margin-right: 0;
   }
   .pixel-agents-shell {
     height: clamp(560px, calc(100dvh - 226px), 720px);
@@ -4950,7 +4951,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 #section-documents.has-3d .docxx-node strong { margin: 0; font-size: 13px; }
 #section-documents.has-3d .docxx-symbol { width: 30px; height: 30px; border-radius: 50%; }
 #section-documents.has-3d .docxx-symbol svg { width: 17px; height: 17px; }
-@media (max-width: 700px) { .docxx-stage { height: 360px; border-radius: 16px; } .docxx-stage-hint { display: none; } .docxx-stage-label { font-size: 12px; padding: 5px 9px; } }
+@media (max-width: 700px) { .docxx-stage { height: 360px; border-radius: 16px; } .docxx-stage-hint { display: none; } .docxx-stage-label { font-size: 12px; padding: 5px 9px; } .docxx-stage-label small { display: none; } }
 @keyframes docxx-travel { from { transform:translateX(-16px); } to { transform:translateX(48px); } }
 @keyframes docxx-pulse { 50% { opacity:.25; } }
 @media(max-width:1000px) { .docxx-flow { gap:8px; grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr); } .docxx-node { padding:12px 10px; gap:8px; } .docxx-symbol { min-width:18px; font-size:20px; } }
@@ -18316,6 +18317,7 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
     const projected = new THREE.Vector3();
     let last = performance.now();
     let clock = 0;
+    let fit = 1;
     function frame(now) {
       const visible = !document.hidden && section.classList.contains('active');
       if (!visible) { setTimeout(() => requestAnimationFrame(frame), 800); return; }
@@ -18324,15 +18326,18 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
         renderer.setSize(width, height, false);
         camera.aspect = width / Math.max(1, height);
         camera.updateProjectionMatrix();
+        // Mark 2026-11-06: on a narrow phone screen the side cards were cut off; the camera steps back to keep them in view.
+        fit = Math.min(1.35, Math.max(1, 1.8 / camera.aspect));
       }
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       const busy = document.getElementById('docxx-flow')?.dataset.active === 'true';
       const moving = busy && !reduced.matches;
       if (moving) clock += dt;
+      const distance = view.distance * fit;
       camera.position.set(
-        target.x + view.distance * Math.cos(view.elevation) * Math.sin(view.azimuth),
-        target.y + view.distance * Math.sin(view.elevation),
-        target.z + view.distance * Math.cos(view.elevation) * Math.cos(view.azimuth));
+        target.x + distance * Math.cos(view.elevation) * Math.sin(view.azimuth),
+        target.y + distance * Math.sin(view.elevation),
+        target.z + distance * Math.cos(view.elevation) * Math.cos(view.azimuth));
       camera.lookAt(target);
       if (!reduced.matches) bobbers.forEach(([object, base, phase]) => { object.position.y = base + Math.sin(now / 900 + phase) * 0.06; });
       led.material.color.setHex(busy && Math.sin(now / 180) > 0 ? 0x7cf0b0 : 0x34c27a);
@@ -18350,7 +18355,10 @@ for(const button of document.querySelectorAll('[data-docxx-step]')) button.addEv
       renderer.render(scene, camera);
       labels.forEach(label => {
         projected.copy(anchors[label.step]).project(camera);
-        label.button.style.transform = `translate(${(projected.x * 0.5 + 0.5) * width}px, ${(-projected.y * 0.5 + 0.5) * height}px) translate(-50%, -100%)`;
+        // A caption never sticks out of the scene: near an edge it slides inward.
+        const half = label.button.offsetWidth / 2 + 6;
+        const x = Math.min(width - half, Math.max(half, (projected.x * 0.5 + 0.5) * width));
+        label.button.style.transform = `translate(${x}px, ${(-projected.y * 0.5 + 0.5) * height}px) translate(-50%, -100%)`;
       });
       requestAnimationFrame(frame);
     }
