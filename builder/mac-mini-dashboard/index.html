@@ -4403,9 +4403,6 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
   font-size: 0; white-space: nowrap; transform: none;
 }
 .platform-links .platform-link .platform-access { min-width: 0; padding: 3px 8px; font-size: 10.5px; }
-/* A long link label on a narrow card stays inside the card (Mark 2026-11-05, GEN.AI card). */
-.platform-links .platform-link { max-width: 100%; }
-.platform-links .platform-link .platform-access { max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; }
 .platform-links .platform-link::after { margin-left: 0; font-size: 12px; }
 .platform-links .platform-link:hover { transform: none; }
 .platform-links .platform-link:first-child::before { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
@@ -5574,6 +5571,11 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   .gen-map { height: 340px; }
   .gen-year { font-size: 24px; min-width: 64px; }
 }
+/* Mark 2026-11-06 (GEN.AI card with four links): chips never shrink or get cut off; extra ones move to the next line. */
+.platform-entry .platform-links { flex-wrap: wrap; row-gap: 6px; }
+.platform-entry .platform-links .platform-link { flex: 0 0 auto; max-width: 100%; }
+.platform-entry .platform-links .platform-link .platform-access { overflow: visible; }
+.platform-entry .platform-links:has(> .platform-link:nth-child(3)) { flex-direction: row; align-items: center; }
 </style>
 </head>
 <body>
