@@ -27,10 +27,11 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-10-28 on Mark's «унифицированный дизайн»: «Обновить» is the same outlined button as elsewhere.
         # 2026-11-02 on Mark's «визуализируй это в технике когда я нажимаю на мак про»: MacBook Pro gets
         # «Уход и защита» (watchdog, daily check, weekly restart, firewall, updates); «Обновить» reloads it too.
+        # 2026-11-06 on Mark's «по логике расположены»: the care rows sit in groups «Сейчас», «Защита», «Обслуживание».
         expected = {
             "section-mac-mini": "3b2566cb374c6909c49b224804a8e7f452ef379276bb1e4f85caff89f5b3d62a",
             "section-air": "744a4d48469d44a53f2b354be488131d4298312b8ade8e681c9861e2cb8ecef3",
-            "section-pro": "a6a825501fb2a96ed659fa335602df7762e6a9f74044b10a579983eca657e65a",
+            "section-pro": "a3d9403006e93af97319b0254edb450c3b4286fd838badbcbe834d763e3998a3",
         }
         source = HTML.read_text()
         for identity, digest in expected.items():
@@ -49,7 +50,7 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "8d497cf33798ef726a3c0bb9d9a1f11543c7ace2391699ce02dc38340e87aa2e")
+                         "7fc67c4a8c094042fd8df00986b93c118f0b4aeb37e71c95a942e894d4e506de")
 
 
 if __name__ == "__main__":
