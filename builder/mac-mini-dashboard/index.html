@@ -3868,7 +3868,7 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-post-dialog .platform-archive-head h3 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Mark 2026-11-05: the whole post and its picture at once, actions always reachable. */
 #media-post-dialog-list { flex: 1 1 auto; min-height: 0; margin: 0; padding: 14px; overflow: auto; overscroll-behavior: contain; }
-.media-post-dialog .media-post { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: start; }
+.media-post-dialog .media-post { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); align-items: start; }
 .media-post-dialog .media-post > * { grid-column: 2; min-width: 0; }
 .media-post-dialog .media-post > .media-post-image { grid-column: 1; grid-row: 1 / span 20; align-self: stretch; display: flex; align-items: center; margin: 0; border: 0; border-right: 1px solid var(--mm-line); background: var(--mm-background); }
 .media-post-dialog .media-post-text { margin: 8px 16px 10px; font-size: 13.5px; line-height: 1.5; }
@@ -3966,8 +3966,16 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-post-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--mm-line); background: var(--mm-background); }
 .media-post-error { padding: 12px 14px; color: var(--mm-danger); font-size: 13px; }
 .media-rewrite { display: grid; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--mm-line); }
+.media-rewrite-group { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 6px; }
+.media-rewrite-group .media-rewrite-chips { gap: 4px; }
+.media-rewrite-group .media-chip-btn { min-height: 30px !important; padding: 3px 8px !important; font-size: 12px !important; }
+@media (max-width: 560px) { .media-rewrite-group { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 .media-rewrite-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .media-rewrite-chips .media-ghost { min-height: 32px; padding: 4px 12px; }
+.media-chip-btn { gap: 6px !important; background: var(--mm-surface-hover) !important; border-color: transparent !important; transition: transform .15s ease, background .15s ease; }
+.media-chip-btn:not(:disabled):hover { background: color-mix(in srgb, var(--mm-accent) 16%, var(--mm-surface)) !important; transform: translateY(-1px); }
+.media-chip-btn > span { font-size: 13px; line-height: 1; }
+@media (prefers-reduced-motion: reduce) { .media-chip-btn, .media-chip-btn:not(:disabled):hover { transition: none; transform: none; } }
 .media-voice-chips { align-items: center; }
 .media-voice-label { margin-right: 2px; color: var(--mm-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .media-rewrite-form { display: flex; gap: 8px; }
@@ -11326,18 +11334,20 @@ function mediaPostCard(position, text, title, options = {}) {
   const today = Boolean(options.today);
   const key = today ? `t${position}` : position;
   const foot = today
-    ? `<button type="button" class="media-ghost" data-media-edit>Изменить</button><button type="button" class="media-primary media-send-now" data-media-send-now>Отправить сейчас</button>`
-    : `<button type="button" class="media-ghost" data-media-edit>Изменить</button><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button>`;
+    ? `<button type="button" class="media-ghost" data-media-edit><span aria-hidden="true">✏️</span> Изменить</button><button type="button" class="media-primary media-send-now" data-media-send-now><span aria-hidden="true">🚀</span> Отправить сейчас</button>`
+    : `<button type="button" class="media-ghost" data-media-edit><span aria-hidden="true">✏️</span> Изменить</button><button type="button" class="media-ghost" data-media-toggle="${position}">Убрать</button>`;
   return `<li class="media-post" ${today ? `data-today="${position}" data-candidate="${mediaEsc(options.candidateId || '')}"` : `data-review="${position}"`}>
     ${mediaPostHead(options.status || '', options.statusClass || '')}
     ${mediaPostBody(text, options.candidateId)}
     <div class="media-rewrite">
-      <div class="media-rewrite-chips" role="group" aria-label="Быстрые правки">${MEDIA_REWRITE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
-      <div class="media-rewrite-chips media-voice-chips" role="group" aria-label="Голос поста"><span class="media-voice-label">Голос</span>${MEDIA_VOICE_CHIPS.map(([label, ask]) => `<button type="button" class="media-ghost" data-media-rewrite="${mediaEsc(ask)}">${mediaEsc(label)}</button>`).join('')}</div>
+      <div class="media-rewrite-group"><span class="media-voice-label" id="media-fix-${key}">Правка</span>
+        <div class="media-rewrite-chips" role="group" aria-labelledby="media-fix-${key}">${MEDIA_REWRITE_CHIPS.map(mediaChip).join('')}</div></div>
+      <div class="media-rewrite-group"><span class="media-voice-label" id="media-voice-${key}">Голос</span>
+        <div class="media-rewrite-chips media-voice-chips" role="group" aria-labelledby="media-voice-${key}">${MEDIA_VOICE_CHIPS.map(mediaChip).join('')}</div></div>
       <form class="media-rewrite-form" data-media-rewrite-form="${position}">
         <label class="media-sr" for="media-ask-${key}">Что поменять в посте</label>
         <input id="media-ask-${key}" maxlength="300" autocomplete="off" placeholder="Что поменять? Например: короче, без цифр">
-        <button type="submit" class="media-ghost">Переделать</button>
+        <button type="submit" class="media-ghost"><span aria-hidden="true">🔄</span> Переделать</button>
       </form>
     </div>
     <div class="media-edit" hidden>
@@ -11349,18 +11359,24 @@ function mediaPostCard(position, text, title, options = {}) {
   </li>`;
 }
 
+// Mark 2026-11-05 «добавь эмодзи, сделай красивее»: each chip has its emoji.
+function mediaChip([label, ask, emoji]) {
+  return `<button type="button" class="media-ghost media-chip-btn" data-media-rewrite="${mediaEsc(ask)}"><span aria-hidden="true">${emoji}</span>${mediaEsc(label)}</button>`;
+}
 const MEDIA_REWRITE_CHIPS = [
-  ['Короче', 'Сделай заметно короче: оставь главное и 2–3 пункта.'],
-  ['Проще', 'Проще и живее, как человек пишет коллеге, без канцелярита.'],
-  ['Меньше эмодзи', 'Оставь не больше двух эмодзи.'],
+  ['Короче', 'Сделай заметно короче: оставь главное и 2–3 пункта.', '✂️'],
+  ['Проще', 'Проще и живее, как человек пишет коллеге, без канцелярита.', '💬'],
+  ['Больше эмодзи', 'Добавь уместные эмодзи: в начало строк с пунктами и одну в заголовок, всего не больше шести.', '✨'],
+  ['Меньше эмодзи', 'Оставь не больше двух эмодзи.', '🧹'],
 ];
 // Mark 2026-11-05: «сделай разные профили типа критик, энтузиаст». Same facts, a different voice.
 const MEDIA_VOICE_CHIPS = [
-  ['Критик', 'Перепиши голосом критика: спокойно назови слабые места и риски новости, без сарказма. Факты и цифры не меняй, новых не добавляй.'],
-  ['Энтузиаст', 'Перепиши голосом энтузиаста: энергично, почему это круто и что это открывает. Без преувеличений, факты и цифры не меняй.'],
-  ['Практик', 'Перепиши голосом практика: что это меняет в работе бизнеса и что можно сделать уже сейчас. Факты не меняй, новых не добавляй.'],
-  ['Скептик', 'Перепиши голосом скептика: что пока не доказано и какой вопрос стоит задать. Факты и цифры не меняй, новых не добавляй.'],
-  ['Аналитик', 'Перепиши голосом аналитика: сухо, главное число, контекст рынка и вывод в одну строку. Факты не меняй, новых не добавляй.'],
+  ['Профессионал', 'Голос эксперта отрасли: уверенно, без воды. 3 коротких абзаца: суть, почему важно для рынка, что делать командам. Без эмодзи и восклицаний. Факты и цифры не меняй, новых не добавляй.', '👔'],
+  ['Критик', 'Голос критика: спокойно и по делу, без сарказма. Коротко суть, затем 2–3 пункта со слабыми местами и рисками, в конце честный вывод. Факты и цифры не меняй, новых не добавляй.', '🧐'],
+  ['Энтузиаст', 'Голос энтузиаста: живо, с энергией, от первого лица. Подлиннее: яркий заход, 3–4 пункта с эмодзи, что это открывает, и вопрос к читателю в конце. Без преувеличений. Факты и цифры не меняй, новых не добавляй.', '🚀'],
+  ['Практик', 'Голос практика из бизнеса: просто и приземлённо. Одна фраза сути, затем 3 шага, что можно сделать уже сейчас. Коротко, без теории. Факты не меняй, новых не добавляй.', '🛠️'],
+  ['Скептик', 'Голос скептика: сдержанно, с лёгкой иронией. Очень коротко: что заявлено, что пока не доказано, и один острый вопрос в конце. Факты и цифры не меняй, новых не добавляй.', '🤨'],
+  ['Аналитик', 'Голос аналитика: сухо, цифры вперёд. Заголовок с главным числом, 3 пункта с данными и контекстом рынка, вывод одной строкой. Без эмоций и эмодзи. Факты не меняй, новых не добавляй.', '📊'],
 ];
 
 let mediaToday = [];
