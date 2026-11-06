@@ -57,7 +57,7 @@ const cases = {
         source = HTML.read_text()
         self.assertIn("redirect: 'manual'", source)
         self.assertNotIn("Не удалось получить проекты с сервера Command Center", source)
-        self.assertRegex(source, r"if \(!data && mmConn\) \{[^}]*line\.hidden = true;")
+        self.assertRegex(source, r"if \(!data && \(mmConn \|\| !mmHealthTried\)\) \{[^}]*show\(false\);")
 
 
 if __name__ == "__main__":
