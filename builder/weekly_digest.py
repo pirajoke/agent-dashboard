@@ -11,6 +11,11 @@ The text is always saved to ``~/.agent-bridge/weekly-digest/<week>.md``. It is s
 ``~/.agent-bridge/telegram_digest.json`` holds ``{"bot_token": "...", "chat_id": "..."}`` (mode 600,
 written by Mark); without it the run records ``telegram_not_configured`` and sends nothing.
 A week is sent once; ``--force`` sends it again.
+
+Mark 2026-11-07 («Итоги недели»): projects drop weekly notes into an inbox (see
+``dashboard_builder/weekly_reports.py``); they show up «По направлениям» with «Сделано», «Ждёт тебя» and
+«Дальше». Each week is also saved as ``<monday>.json`` for the «Итоги недели» page. ``--now`` builds the
+week so far (the page button and Jarvis use it) without marking the week as sent.
 """
 from __future__ import annotations
 
@@ -27,6 +32,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from dashboard_builder.daily_work import work_projection  # noqa: E402
+from dashboard_builder.weekly_reports import collect_notes, direction_lines, group_by_direction, report_week  # noqa: E402
 
 HOME = Path.home()
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
@@ -37,6 +43,7 @@ SITE = "https://command.meshly.fr/"
 MAX_PROJECTS = 6
 MAX_TODO = 5
 MONTHS = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+TELEGRAM_LIMIT = 4000
 TOKEN = re.compile(r"^\d{5,}:[A-Za-z0-9_-]{20,}$")
 
 
@@ -53,22 +60,19 @@ def day_label(day: date) -> str:
     return f"{day.day} {MONTHS[day.month - 1]}"
 
 
-def compose(projection: dict[str, Any], todo: list[dict[str, Any]], today: date) -> str:
-    """The digest text. Only real numbers: a week without data says so instead of showing zeros."""
-    first, last = today - timedelta(days=7), today - timedelta(days=1)
-    lines = [f"Итоги недели · {day_label(first)} – {day_label(last)}", ""]
+def digest_data(projection: dict[str, Any], todo: list[dict[str, Any]], today: date,
+                blocks: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """The week as data: the page shows it, ``render`` turns it into the Telegram text."""
+    first, last = report_week(today), today - timedelta(days=1)
     week = (projection.get("traction") or {}).get("last_7") or {}
     before = (projection.get("traction") or {}).get("previous_7") or {}
-    total = int(week.get("total_minutes") or 0)
-    if not total and not week.get("prs_merged"):
-        lines.append("За неделю работы агентов в данных нет.")
-    else:
-        trend = ""
-        if before.get("total_minutes"):
-            trend = f" (неделей раньше {hours(before['total_minutes'])})"
-        lines.append(f"Работа агентов: {hours(total)}{trend}")
-        lines.append(f"Claude Code {hours(week.get('claude_minutes'))} · Codex {hours(week.get('codex_minutes'))}")
-        lines.append(f"Слито PR: {int(week.get('prs_merged') or 0)}")
+    numbers = {"total_minutes": int(week.get("total_minutes") or 0),
+               "claude_minutes": int(week.get("claude_minutes") or 0),
+               "codex_minutes": int(week.get("codex_minutes") or 0),
+               "prs_merged": int(week.get("prs_merged") or 0),
+               "previous_minutes": int(before.get("total_minutes") or 0),
+               # The hours always cover the last seven full days; mid-week that is more than this week.
+               "last_7_days": first != today - timedelta(days=7)}
     moved = []
     for project in projection.get("projects") or []:
         claude = sum((project.get("daily_claude_minutes") or [])[-8:-1])
@@ -76,31 +80,75 @@ def compose(projection: dict[str, Any], todo: list[dict[str, Any]], today: date)
         merged = sum((project.get("daily_prs_merged") or [])[-8:-1])
         if not (claude or codex or merged):
             continue
-        moved.append((bool(project.get("main")), claude + codex, project, claude, codex, merged))
-    moved.sort(key=lambda item: (item[0], item[1]), reverse=True)
+        summary = project.get("last_summary") or {}
+        bullet = (summary.get("bullets") or [None])[0]
+        # Only a line written about the reported week, not today's summary.
+        if not (bullet and (today - timedelta(days=7)).isoformat() <= str(summary.get("date") or "") <= last.isoformat()):
+            bullet = None
+        moved.append({"main": bool(project.get("main")), "name": project.get("name") or project.get("id"),
+                      "minutes": claude + codex, "claude_minutes": claude, "codex_minutes": codex,
+                      "prs_merged": merged, "summary": bullet})
+    moved.sort(key=lambda item: (item["main"], item["minutes"]), reverse=True)
+    waiting = [item["text"] for item in todo if not item.get("done")]
+    return {"week": first.isoformat(), "from": first.isoformat(), "to": last.isoformat(),
+            "title": f"Итоги недели · {day_label(first)} – {day_label(last)}",
+            "numbers": numbers, "directions": blocks or [], "moved": moved, "waiting": waiting}
+
+
+def render(data: dict[str, Any]) -> str:
+    """The digest text. Only real numbers: a week without data says so instead of showing zeros."""
+    lines = [data["title"], ""]
+    numbers = data["numbers"]
+    total = numbers["total_minutes"]
+    if not total and not numbers["prs_merged"]:
+        lines.append("За неделю работы агентов в данных нет.")
+    else:
+        trend = f" (неделей раньше {hours(numbers['previous_minutes'])})" if numbers["previous_minutes"] else ""
+        span = " за 7 дней" if numbers.get("last_7_days") else ""
+        lines.append(f"Работа агентов{span}: {hours(total)}{trend}")
+        lines.append(f"Claude Code {hours(numbers['claude_minutes'])} · Codex {hours(numbers['codex_minutes'])}")
+        lines.append(f"Слито PR: {numbers['prs_merged']}")
+    if data["directions"]:
+        lines += ["", "По направлениям:"] + direction_lines(data["directions"])[1:]
+    moved = data["moved"]
     if moved:
         lines += ["", "Что сдвинулось:"]
-        for _, minutes, project, claude, codex, merged in moved[:MAX_PROJECTS]:
-            split = " / ".join(part for part in (f"Claude Code {hours(claude)}" if claude else "",
-                                                 f"Codex {hours(codex)}" if codex else "") if part)
-            extra = f", PR: {merged}" if merged else ""
-            lines.append(f"• {project.get('name') or project.get('id')} — {hours(minutes)}"
-                         + (f" ({split})" if split else "") + extra)
-            summary = project.get("last_summary") or {}
-            bullet = (summary.get("bullets") or [None])[0]
-            # Only a line written about the reported week, not today's summary.
-            if bullet and first.isoformat() <= str(summary.get("date") or "") <= last.isoformat():
-                lines.append(f"  {bullet}")
+        for item in moved[:MAX_PROJECTS]:
+            split = " / ".join(part for part in (
+                f"Claude Code {hours(item['claude_minutes'])}" if item["claude_minutes"] else "",
+                f"Codex {hours(item['codex_minutes'])}" if item["codex_minutes"] else "") if part)
+            extra = f", PR: {item['prs_merged']}" if item["prs_merged"] else ""
+            lines.append(f"• {item['name']} — {hours(item['minutes'])}" + (f" ({split})" if split else "") + extra)
+            if item["summary"]:
+                lines.append(f"  {item['summary']}")
         if len(moved) > MAX_PROJECTS:
             lines.append(f"• и ещё {len(moved) - MAX_PROJECTS}")
-    waiting = [item for item in todo if not item.get("done")]
+    waiting = data["waiting"]
     if waiting:
         lines += ["", f"Ждёт тебя ({len(waiting)}):"]
-        lines += [f"• {item['text']}" for item in waiting[:MAX_TODO]]
+        lines += [f"• {text}" for text in waiting[:MAX_TODO]]
         if len(waiting) > MAX_TODO:
             lines.append(f"• и ещё {len(waiting) - MAX_TODO}")
-    lines += ["", SITE]
+    lines += ["", SITE + "?tab=weekly"]
     return "\n".join(lines)
+
+
+def compose(projection: dict[str, Any], todo: list[dict[str, Any]], today: date,
+            blocks: list[dict[str, Any]] | None = None) -> str:
+    return render(digest_data(projection, todo, today, blocks))
+
+
+def chunks(text: str, limit: int = TELEGRAM_LIMIT) -> list[str]:
+    """Telegram takes 4096 characters a message; split on line breaks."""
+    parts, current = [], ""
+    for line in text.split("\n"):
+        line = line[:limit]
+        if current and len(current) + 1 + len(line) > limit:
+            parts.append(current)
+            current = line
+        else:
+            current = f"{current}\n{line}" if current else line
+    return parts + [current] if current else parts
 
 
 def load_todo(path: Path) -> list[dict[str, Any]]:
@@ -146,10 +194,17 @@ def write(path: Path, text: str) -> None:
 
 def run(*, now: datetime | None = None, root: Path = DAILY_WORK_DIR, todo_file: Path = OWNER_TODO_FILE,
         out: Path = OUT_DIR, config_file: Path = CONFIG_FILE, force: bool = False, dry_run: bool = False,
+        manual: bool = False, send_now: bool = False, inboxes: list[Path] | None = None,
         opener=urllib.request.urlopen) -> dict[str, Any]:
+    """Build the week, save it, and send it.
+
+    The Monday job (default) sends the finished week once. ``manual`` is «Собрать сводку сейчас»: it saves
+    the week so far and sends only with ``send_now``; it never marks the week as sent, so Monday still
+    sends the whole week."""
     now = now or datetime.now(timezone.utc)
     today = now.astimezone().date()
-    week = (today - timedelta(days=7)).isoformat()
+    week_start = report_week(today)
+    week = week_start.isoformat()
     status_path = out / "status.json"
     try:
         status = json.loads(status_path.read_text(encoding="utf-8"))
@@ -158,15 +213,21 @@ def run(*, now: datetime | None = None, root: Path = DAILY_WORK_DIR, todo_file: 
     # Today is in the window but not in the totals: 15 days give two complete weeks.
     projection = work_projection(root, now=now, days=15, owner=True)
     todo = load_todo(todo_file)
-    text = compose(projection, todo, today)
+    blocks = group_by_direction(collect_notes(week_start, inboxes))
+    data = digest_data(projection, todo, today, blocks)
+    text = render(data)
+    stamp = now.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     write(out / f"{week}.md", text + "\n")
-    result: dict[str, Any] = {"week": week, "at": now.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                              "file": str(out / f"{week}.md")}
+    write(out / f"{week}.json", json.dumps({**data, "text": text, "built_at": stamp}, ensure_ascii=False, indent=2))
+    result: dict[str, Any] = {"week": week, "at": stamp, "file": str(out / f"{week}.md"),
+                              "notes": sum(len(block["projects"]) for block in blocks)}
     if dry_run:
         result.update(ok=True, sent=False, reason="dry_run")
         print(text)
         return result
-    if status.get("sent_week") == week and not force:
+    if manual and not send_now:
+        result.update(ok=True, sent=False, reason="built")
+    elif status.get("sent_week") == week and not force and not manual:
         result.update(ok=True, sent=False, reason="already_sent")
     else:
         config = load_config(config_file)
@@ -174,15 +235,22 @@ def run(*, now: datetime | None = None, root: Path = DAILY_WORK_DIR, todo_file: 
             result.update(ok=False, sent=False, reason="telegram_not_configured")
         else:
             try:
-                send(config, text, opener)
-                result.update(ok=True, sent=True, sent_week=week)
+                for part in chunks(text):
+                    send(config, part, opener)
+                result.update(ok=True, sent=True)
+                if not manual:
+                    result["sent_week"] = week
             except (OSError, ValueError, RuntimeError, urllib.error.URLError) as error:
                 reason = str(error).replace(config["bot_token"], "[token]")
                 result.update(ok=False, sent=False, reason=reason[:200])
-    status.update({key: value for key, value in result.items() if key != "file"})
-    if not result.get("sent"):
-        status.pop("sent", None)
+    if manual:
+        status["last_manual"] = {key: value for key, value in result.items() if key != "file"}
+    else:
+        status.update({key: value for key, value in result.items() if key != "file"})
+        if not result.get("sent"):
+            status.pop("sent", None)
     write(status_path, json.dumps(status, ensure_ascii=False, indent=2))
+    result["text"] = text
     return result
 
 
@@ -190,9 +258,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--force", action="store_true", help="send this week again")
     parser.add_argument("--dry-run", action="store_true", help="print the text, send nothing")
+    parser.add_argument("--now", action="store_true", help="build the week so far and save it (Jarvis, the page)")
+    parser.add_argument("--send", action="store_true", help="with --now: also send it to Telegram")
+    parser.add_argument("--text", action="store_true", help="print only the text (for Jarvis)")
     args = parser.parse_args(argv)
-    result = run(force=args.force, dry_run=args.dry_run)
-    print(json.dumps(result, ensure_ascii=False))
+    result = run(force=args.force, dry_run=args.dry_run, manual=args.now, send_now=args.send)
+    if args.text:
+        print(result.get("text", ""))
+    elif not args.dry_run:
+        print(json.dumps({key: value for key, value in result.items() if key != "text"}, ensure_ascii=False))
     return 0
 
 

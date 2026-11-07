@@ -3758,6 +3758,35 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .growth-summary { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
 .growth-summary .mm-stat { flex: 1 1 160px; padding: 10px 12px; background: var(--mm-background); border: 0; border-radius: 10px; }
 .growth-summary .mm-stat strong { font-size: 22px; }
+/* «Итоги недели» (Mark 2026-11-07) */
+.weekly-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.weekly-send { padding: 9px 14px; color: var(--mm-ink); background: transparent; border: 1px solid var(--mm-line); border-radius: 999px; font: inherit; font-size: 13.5px; cursor: pointer; }
+.weekly-send:hover { background: var(--mm-surface); }
+.weekly-actions button:disabled { opacity: .55; cursor: progress; }
+.weekly-feed { display: grid; gap: 14px; }
+.weekly-week { padding: 16px 18px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 14px; }
+.weekly-week > summary { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; cursor: pointer; list-style: none; }
+.weekly-week > summary::-webkit-details-marker { display: none; }
+.weekly-week > summary h3 { margin: 0; font-size: 17px; }
+.weekly-week > summary small { color: var(--mm-muted); font-size: 12.5px; }
+.weekly-week[open] > summary { margin-bottom: 12px; }
+.weekly-numbers { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 14px; color: var(--mm-muted); font-size: 13.5px; }
+.weekly-numbers b { color: var(--mm-ink); font-weight: 650; }
+.weekly-dirs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; margin-bottom: 12px; }
+.weekly-dir { padding: 12px 14px; background: var(--mm-background); border-radius: 10px; }
+.weekly-dir h4 { margin: 0 0 2px; font-size: 15px; }
+.weekly-dir .weekly-projects { margin: 0 0 8px; color: var(--mm-muted); font-size: 12px; }
+.weekly-dir h5 { margin: 10px 0 4px; color: var(--mm-muted); font-size: 11.5px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.weekly-dir h5.is-waiting { color: var(--mm-warning); }
+.weekly-dir ul, .weekly-more ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.45; }
+.weekly-dir li + li, .weekly-more li + li { margin-top: 3px; }
+.weekly-more { margin-top: 10px; font-size: 13.5px; }
+.weekly-more summary { color: var(--mm-muted); cursor: pointer; }
+.weekly-more ul { margin-top: 6px; }
+.weekly-more .weekly-note { color: var(--mm-muted); }
+.weekly-text { margin: 0; white-space: pre-wrap; font: inherit; font-size: 13.5px; line-height: 1.5; }
+.weekly-inbox { margin: 16px 0 0; color: var(--mm-muted); font-size: 12.5px; }
+.weekly-inbox code { font-size: 12px; }
 /* ── Media · LinkedIn ── */
 .media-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .media-studio { display: grid; gap: 18px; color: var(--mm-ink); }
@@ -5932,6 +5961,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <symbol id="cc-icon-architecture" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="15" y="16" width="6" height="5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v4M6 16v-2h12v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
   <symbol id="cc-icon-media" viewBox="0 0 24 24"><path d="M4 6h16v12H4zM8 10h8M8 14h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <symbol id="cc-icon-growth" viewBox="0 0 24 24"><path d="M12 21v-9M12 12c0-4 3-7 8-7 0 4-3 7-8 7zM12 15c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+  <symbol id="cc-icon-weekly" viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 2.5v3M16 2.5v3M5 9h14M8.5 13l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></symbol>
   <!-- «Точки роста» pictures -->
   <symbol id="cc-growth-pe" viewBox="0 0 120 120">
     <ellipse cx="60" cy="110" rx="30" ry="5" fill="currentColor" opacity=".08"/>
@@ -6058,6 +6088,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
     <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
     <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-weekly" aria-pressed="false" onclick="showSection('weekly')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-weekly"/></svg></span><span class="cc-tab-label" data-tab-label="weekly">Итоги недели</span></button>
     <button class="nav-pill" type="button" aria-controls="section-media" aria-pressed="false" onclick="showSection('media')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-media"/></svg></span><span class="cc-tab-label" data-tab-label="media">Медиа</span></button>
     <button class="nav-pill" type="button" aria-controls="section-architecture" aria-pressed="false" onclick="showSection('architecture')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-architecture"/></svg></span><span class="cc-tab-label" data-tab-label="architecture">Архитектура</span></button>
   </nav>
@@ -6767,6 +6798,24 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <div class="growth-summary" id="growth-summary"></div>
     <div class="growth-traction" id="growth-traction" aria-labelledby="growth-traction-title"></div>
     <div class="growth-grid" id="growth-grid"></div>
+  </section>
+
+  <!-- Mark 2026-11-07: «Итоги недели» — every saved week, newest first, and «Собрать сводку сейчас».
+       Projects drop notes into the weekly inbox; the week groups them by direction. Owner only. -->
+  <section id="section-weekly" class="section" aria-labelledby="weekly-title">
+    <header class="cc-page-head">
+      <div>
+        <h2 class="cc-page-title" id="weekly-title">Итоги недели</h2>
+        <p class="cc-page-lede">Каждый понедельник в 09:00 сводка собирается сама и приходит в Telegram. Здесь лента всех недель.</p>
+      </div>
+      <div class="weekly-actions" id="weekly-actions" hidden>
+        <button class="platform-archive-open" id="weekly-build" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#cc-icon-weekly"/></svg><span>Собрать сводку сейчас</span></button>
+        <button class="weekly-send" id="weekly-send" type="button">Собрать и отправить в Telegram</button>
+      </div>
+    </header>
+    <p class="mm-notice" id="weekly-state" role="status" aria-live="polite">Загружаю итоги недели…</p>
+    <div class="weekly-feed" id="weekly-feed"></div>
+    <p class="weekly-inbox" id="weekly-inbox" hidden></p>
   </section>
 
   <!-- Mark 2026-10-31: «Медиа» — LinkedIn: publication times, the scheduled queue and a manual news picker.
@@ -8206,7 +8255,7 @@ function initOwnerDecisions() {
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
 // Mark 2026-11-06 «меньше вкладок»: the first six are the menu, the rest wait under «Ещё».
-const TAB_NAME_ROUTES = Object.freeze(['work', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'media', 'architecture']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'weekly', 'media', 'architecture']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -9853,6 +9902,7 @@ function showSection(name) {
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
+  if (name === 'weekly') setTimeout(weeklyLoad, 0);
   if (name === 'architecture') setTimeout(archLoad, 0);
   if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') { setTimeout(ccLoadPlatformResources, 0); setTimeout(ccLoadWorkTools, 0); }
@@ -9869,7 +9919,7 @@ function showSection(name) {
 // «По дням» links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'growth', 'genealogy'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'growth', 'weekly', 'genealogy'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
   const agentsView = new URLSearchParams(window.location.search).get('view');
   if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
@@ -15620,6 +15670,121 @@ async function loadGrowth() {
     growthLoading = false;
   }
 }
+
+// Mark 2026-11-07: «Итоги недели». Owner sees every saved week; «Собрать сводку сейчас» builds this week so far.
+const WEEKLY_API = (!IS_FILE_DASHBOARD) ? `${DASHBOARD_API}/api/weekly` : 'https://command.meshly.fr/api/weekly';
+let weeklyBusy = false;
+
+function weeklyMinutes(minutes) {
+  minutes = Math.max(0, parseInt(minutes, 10) || 0);
+  if (minutes < 60) return `${minutes} мин`;
+  const value = minutes / 60;
+  return `${value >= 10 ? value.toFixed(0) : value.toFixed(1).replace(/\.0$/, '').replace('.', ',')} ч`;
+}
+
+function weeklyList(items) {
+  return `<ul>${items.map(item => `<li>${mmEsc(item)}</li>`).join('')}</ul>`;
+}
+
+function weeklyCard(week, open) {
+  const built = week.built_at ? new Date(week.built_at) : null;
+  const when = built && !isNaN(built) ? `собрано ${built.toLocaleString('ru-RU', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})}` : '';
+  let body = '';
+  if (!week.numbers) {
+    body = `<pre class="weekly-text">${mmEsc((week.text || '').split('\n').slice(1).join('\n').trim())}</pre>`;
+  } else {
+    const n = week.numbers;
+    const numbers = (n.total_minutes || n.prs_merged)
+      ? `<p class="weekly-numbers"><span>Работа агентов${n.last_7_days ? ' за 7 дней' : ''}: <b>${weeklyMinutes(n.total_minutes)}</b>${n.previous_minutes ? ` (неделей раньше ${weeklyMinutes(n.previous_minutes)})` : ''}</span><span>Claude Code ${weeklyMinutes(n.claude_minutes)} · Codex ${weeklyMinutes(n.codex_minutes)}</span><span>Слито PR: <b>${n.prs_merged}</b></span></p>`
+      : '<p class="weekly-numbers">За неделю работы агентов в данных нет.</p>';
+    const dirs = (week.directions || []).map(dir => {
+      const others = (dir.projects || []).filter(p => p.toLowerCase() !== String(dir.name).toLowerCase());
+      const part = (label, items, cls = '') => items && items.length ? `<h5 class="${cls}">${label}</h5>${weeklyList(items)}` : '';
+      return `<article class="weekly-dir"><h4>${mmEsc(dir.name)}</h4>${others.length ? `<p class="weekly-projects">${mmEsc(others.join(', '))}</p>` : ''}`
+        + part('Сделано', dir.done) + part('Ждёт тебя', dir.waiting, 'is-waiting') + part('Дальше', dir.next) + '</article>';
+    }).join('');
+    const moved = (week.moved || []).map(item => `<li>${mmEsc(item.name)} — ${weeklyMinutes(item.minutes)}${item.prs_merged ? `, PR: ${item.prs_merged}` : ''}${item.summary ? `<br><span class="weekly-note">${mmEsc(item.summary)}</span>` : ''}</li>`).join('');
+    body = numbers
+      + (dirs ? `<div class="weekly-dirs">${dirs}</div>` : '<p class="weekly-numbers">Заметок от проектов за эту неделю нет.</p>')
+      + (moved ? `<details class="weekly-more"><summary>Что сдвинулось по часам (${week.moved.length})</summary><ul>${moved}</ul></details>` : '')
+      + ((week.waiting || []).length ? `<details class="weekly-more"><summary>Ждёт тебя в списке (${week.waiting.length})</summary>${weeklyList(week.waiting)}</details>` : '');
+  }
+  return `<details class="weekly-week"${open ? ' open' : ''}><summary><h3>${mmEsc(week.title || week.week)}</h3><small>${mmEsc(when)}</small></summary>${body}</details>`;
+}
+
+function weeklyRender(data) {
+  const state = document.getElementById('weekly-state');
+  const feed = document.getElementById('weekly-feed');
+  const inbox = document.getElementById('weekly-inbox');
+  document.getElementById('weekly-actions').hidden = !data.owner_view;
+  if (!data.owner_view) {
+    state.hidden = false;
+    state.className = 'mm-notice';
+    state.textContent = data.count ? `Сохранено недель: ${data.count}. Сами итоги видны только после входа владельца.` : 'Итоги видны только после входа владельца.';
+    feed.innerHTML = '';
+    inbox.hidden = true;
+    return;
+  }
+  const weeks = data.weeks || [];
+  state.hidden = Boolean(weeks.length) && !data.message;
+  state.className = 'mm-notice';
+  state.textContent = data.message || 'Пока ни одной недели. Нажми «Собрать сводку сейчас».';
+  feed.innerHTML = weeks.map((week, index) => weeklyCard(week, index === 0)).join('');
+  const dirs = (data.inboxes || []).map(dir => `<code>${mmEsc(dir)}</code>`).join(' и ');
+  inbox.hidden = !dirs;
+  inbox.innerHTML = dirs ? `Проекты кладут свои итоги заметкой в ${dirs}: разделы «Сделано», «Ждёт тебя», «Дальше», в шапке <code>project:</code> и <code>direction:</code>.` : '';
+}
+
+async function weeklyLoad() {
+  if (weeklyBusy) return;
+  weeklyBusy = true;
+  try {
+    const response = await fetch(WEEKLY_API, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.reason || `HTTP ${response.status}`);
+    weeklyRender(data);
+  } catch (error) {
+    const state = document.getElementById('weekly-state');
+    state.hidden = false;
+    state.className = 'mm-notice error';
+    state.textContent = 'Не удалось получить итоги недели с сервера Command Center.';
+  } finally {
+    weeklyBusy = false;
+  }
+}
+
+async function weeklyBuild(send) {
+  if (weeklyBusy) return;
+  weeklyBusy = true;
+  const buttons = document.querySelectorAll('#weekly-actions button');
+  buttons.forEach(button => { button.disabled = true; });
+  const state = document.getElementById('weekly-state');
+  state.hidden = false;
+  state.className = 'mm-notice';
+  state.textContent = send ? 'Собираю и отправляю в Telegram…' : 'Собираю сводку…';
+  try {
+    const response = await fetch(`${WEEKLY_API}/build`, {
+      method: 'POST', headers: { ...mmHeaders(), 'Content-Type': 'application/json' }, body: JSON.stringify({ send })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.error || `HTTP ${response.status}`);
+    const build = data.build || {};
+    const notes = build.notes ? `, заметок от проектов: ${build.notes}` : ', заметок от проектов пока нет';
+    data.message = send
+      ? (build.sent ? `Готово и отправлено в Telegram${notes}.` : `Собрано${notes}, но в Telegram не ушло: ${build.reason || 'причина неизвестна'}.`)
+      : `Сводка собрана${notes}.`;
+    weeklyRender(data);
+  } catch (error) {
+    state.className = 'mm-notice error';
+    state.textContent = error.message === 'weekly_build_running' ? 'Сводка уже собирается, подожди минуту.' : 'Не получилось собрать сводку. Ничего не отправлено.';
+  } finally {
+    buttons.forEach(button => { button.disabled = false; });
+    weeklyBusy = false;
+  }
+}
+
+document.getElementById('weekly-build').addEventListener('click', () => weeklyBuild(false));
+document.getElementById('weekly-send').addEventListener('click', () => weeklyBuild(true));
 
 function growthYearsNewestFirst(years) {
   // A note may list years in any order; the newest results come first on the page.
