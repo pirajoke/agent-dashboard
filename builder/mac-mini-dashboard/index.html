@@ -6834,6 +6834,12 @@ button.cc-refresh:hover { background: var(--mm-selection); }
             </div>
           </div>
         </article>
+        <!-- The owner's own Telegram channel posts from the news service /today `channel` list (news-bot #80). -->
+        <article class="media-panel media-channel-panel" id="media-channel" aria-labelledby="media-channel-title" hidden>
+          <h3 id="media-channel-title">Telegram · канал</h3>
+          <p class="media-air-note">Твои посты в @technoosingularity: что ждёт своего времени и что вышло за два дня. Время Парижа.</p>
+          <ol class="media-posts-preview" id="media-channel-list"></ol>
+        </article>
         <article class="media-panel media-comments-panel" id="media-comments" aria-labelledby="media-comments-title" hidden>
           <header class="media-panel-head">
             <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
@@ -11490,12 +11496,31 @@ function mediaRenderStats(schedule, today) {
     `<li class="media-chip ${kind}"><span>${label}</span> <strong>${mediaEsc(value)}</strong></li>`).join('');
 }
 
+// The owner's Telegram channel posts (news service /today `channel`): hidden when an older service has no list.
+const MEDIA_CHANNEL_STATES = { scheduled: 'ждёт времени', sent: 'опубликован', failed: 'ошибка', reconcile_required: 'проверить вручную', cancelled: 'отменён' };
+function mediaRenderChannel(today) {
+  const panel = document.getElementById('media-channel');
+  const items = Array.isArray(today?.channel) ? today.channel : null;
+  panel.hidden = !items;
+  if (!items) return;
+  document.getElementById('media-channel-list').innerHTML = items.length ? items.map(item => {
+    const state = MEDIA_CHANNEL_STATES[item.state] || item.state || '';
+    const text = String(item.text || '');
+    return `<li class="media-story" data-id="${mediaEsc(item.id)}">
+      <div class="media-story-meta"><span>${mediaEsc(mediaTime(item.due_at))}</span>${state ? ` <span>${mediaEsc(state)}</span>` : ''}</div>
+      <h4>${mediaEsc(item.title || text.split('\n')[0])}</h4>
+      ${text ? `<details><summary>Текст поста</summary><p style="white-space:pre-line">${mediaEsc(text)}</p></details>` : ''}
+    </li>`;
+  }).join('') : '<li class="media-empty">В канале своих постов не запланировано.</li>';
+}
+
 function mediaRender(data) {
   const schedule = data.schedule || {};
   mediaSettings = schedule.settings || null;
   mediaRenderTrain(schedule, data.today);
   mediaRenderStats(schedule, data.today);
   mediaRenderComments(data.comments);
+  mediaRenderChannel(data.today);
   mediaSavedSlots = [...(schedule.slots || [])];
   mediaSlots = [...mediaSavedSlots];
   mediaRenderSlots();
