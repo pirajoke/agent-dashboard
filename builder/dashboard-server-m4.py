@@ -44,6 +44,7 @@ from dashboard_builder.live_sessions import projection as live_sessions_projecti
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.genealogy import GenealogyUnavailable, load_genealogy
+from dashboard_builder import weekly_reports
 from dashboard_builder.repair_log import MAX_BODY_BYTES as REPAIR_LOG_MAX_BYTES, change_entries as change_repair_log, load_entries as load_repair_log
 from dashboard_builder.infra_changes import infra_projection
 from dashboard_builder.architecture import collect_architecture
@@ -99,6 +100,27 @@ CAMPUS_ARCHIVE_FILE = HOME / ".agent-bridge" / "campus-archive.json"
 LIVE_SESSIONS_DIR = HOME / ".agent-bridge" / "live-sessions"
 AGENT_TASK_STATUS_FILE = HOME / ".agent-bridge" / "agent-tasks" / "status.json"
 DAILY_WORK_DIR = HOME / ".agent-bridge" / "daily-work"
+# «Итоги недели» (Mark 2026-11-07): the weekly digest history and «Собрать сводку сейчас».
+WEEKLY_DIGEST_DIR = HOME / ".agent-bridge" / "weekly-digest"
+WEEKLY_DIGEST_SCRIPT = Path(__file__).resolve().parent / "weekly_digest.py"
+_WEEKLY_BUILD_LOCK = threading.Lock()
+
+
+def _weekly_digest_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("weekly_digest_runtime", WEEKLY_DIGEST_SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
+    return module
+
+
+def _weekly_payload(owner: bool) -> dict:
+    weeks = weekly_reports.history(WEEKLY_DIGEST_DIR)
+    if not owner:
+        return {"ok": True, "owner_view": False, "count": len(weeks)}
+    return {"ok": True, "owner_view": True, "weeks": weeks,
+            "inboxes": [str(path).replace(str(HOME), "~", 1) for path in weekly_reports.inbox_dirs()]}
 AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
 MAC_CARE_DIR = HOME / ".agent-bridge" / "mac-care"
@@ -1992,6 +2014,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/growth':
             self._handle_growth_edit()
             return
+        if parsed.path == '/api/weekly/build':
+            self._handle_weekly_build()
+            return
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
             return
@@ -2797,6 +2822,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _handle_weekly_build(self):
+        # Mark 2026-11-07: «Собрать сводку сейчас». Owner only; builds the week so far and saves it, and sends it
+        # to Telegram only when asked. The Monday job still sends the finished week.
+        body = self._platform_owner_body(256)
+        if body is None:
+            return
+        if not _WEEKLY_BUILD_LOCK.acquire(blocking=False):
+            self._json_response(409, {'ok': False, 'error': 'weekly_build_running'})
+            return
+        try:
+            result = _weekly_digest_module().run(manual=True, send_now=body.get('send') is True)
+        except Exception:
+            traceback.print_exc(file=sys.stderr)
+            self._json_response(200, {'ok': False, 'error': 'weekly_build_failed'})
+            return
+        finally:
+            _WEEKLY_BUILD_LOCK.release()
+        payload = _weekly_payload(True)
+        payload['build'] = {key: result.get(key) for key in ('week', 'sent', 'reason', 'notes')}
+        self._json_response(200, payload)
+
     def _handle_owner_todo_save(self):
         body = self._platform_owner_body(OWNER_TODO_MAX_BYTES)
         if body is None:
@@ -3050,6 +3096,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             suggestions = docxx_load_suggestions(docxx_suggestions_path(HOME)) if owner else None
             self._json_response(200, docxx_projection(docxx_state_path(HOME), owner=owner, decisions=decisions,
                                                       suggestions=suggestions))
+            return
+        if parsed.path == '/api/weekly':
+            # Owner sees the weeks; anyone else only how many there are.
+            try:
+                self._json_response(200, _weekly_payload(self._decision_owner_authorized()))
+            except OSError:
+                self._json_response(200, {'ok': False, 'state': 'unavailable', 'reason': 'weekly_unreadable'})
             return
         if parsed.path == '/api/docxx/folders':
             if not self._decision_owner_authorized():
