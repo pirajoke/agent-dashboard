@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import unittest.mock
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -85,6 +86,59 @@ class CollectorTests(unittest.TestCase):
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
 
 
+class ThermalCollectorTests(unittest.TestCase):
+    """Mark 2026-11-08 «температуру компьютера в технике … чтобы мог трекать»."""
+
+    M1_SENSORS = {"PMU tdie1": 48.2, "PMU tdie4": 55.9, "PMU tdev2": 41.0, "PMU tcal": 51.8,
+                  "NAND CH0 temp": 38.0, "gas gauge battery": 31.5, "PMU TP3w": 44.0}
+
+    def test_cpu_is_the_hottest_die_sensor_and_tcal_is_ignored(self):
+        status = collector.thermal_status(self.M1_SENSORS, "com.apple.system.thermalpressurelevel 0")
+        self.assertEqual(status["cpu_c"], 55.9)
+        self.assertEqual(status["max_c"], 55.9)
+        self.assertEqual(status["ssd_c"], 38.0)
+        self.assertEqual(status["battery_c"], 31.5)
+        self.assertEqual(status["sensors"], 7)
+        self.assertEqual(status["pressure"], "nominal")
+
+    def test_core_sensors_and_pmu_fallback(self):
+        self.assertEqual(collector.thermal_status({"pACC MTR Temp Sensor3": 71.0, "eACC MTR Temp Sensor0": 60.0}, None)["cpu_c"], 71.0)
+        self.assertEqual(collector.thermal_status({"PMU tdev1": 47.0, "PMU tcal": 51.8}, None)["cpu_c"], 47.0)
+        self.assertEqual(collector.thermal_status({"macmon cpu": 63.4}, None)["cpu_c"], 63.4)
+
+    def test_no_sensors_stays_unknown_but_keeps_pressure(self):
+        status = collector.thermal_status(None, "com.apple.system.thermalpressurelevel 2")
+        self.assertIsNone(status["cpu_c"])
+        self.assertEqual(status["sensors"], 0)
+        self.assertEqual(status["pressure"], "heavy")
+        self.assertIsNone(collector.thermal_status({}, "garbage")["pressure"])
+
+    def test_history_keeps_seven_days_and_appends_now(self):
+        old = [{"t": "2026-10-20T12:00:00Z", "cpu": 90.0, "p": "nominal"},
+               {"t": "2026-11-01T12:00:00Z", "cpu": 50.0, "p": "nominal"},
+               {"t": "bad", "cpu": 1}, "junk"]
+        history = collector.thermal_history(old, {"cpu_c": 61.2, "pressure": "moderate"}, NOW)
+        self.assertEqual([p["t"] for p in history], ["2026-11-01T12:00:00Z", "2026-11-02T12:00:00Z"])
+        self.assertEqual(history[-1], {"t": "2026-11-02T12:00:00Z", "cpu": 61.2, "p": "moderate"})
+        # Nothing readable → nothing appended.
+        self.assertEqual(len(collector.thermal_history(old, {"cpu_c": None, "pressure": None}, NOW)), 1)
+
+    def test_main_keeps_history_between_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "mac-mini.json"
+            path.write_text(json.dumps({"thermal_history": [{"t": collector.iso_z(datetime.now(timezone.utc) - timedelta(hours=1)),
+                                                            "cpu": 52.0, "p": "nominal"}]}))
+            with unittest.mock.patch.object(collector, "sensors_in_child", return_value={"PMU tdie1": 57.0}):
+                self.assertEqual(collector.main(["--out", tmp, "--machine", "mac-mini"]), 0)
+            data = json.loads(path.read_text())
+        self.assertEqual(data["thermal"]["cpu_c"], 57.0)
+        self.assertEqual([p["cpu"] for p in data["thermal_history"]], [52.0, 57.0])
+
+    def test_sensor_reader_is_harmless_off_macos(self):
+        if collector.sys.platform != "darwin":
+            self.assertIsNone(collector.read_hid_temperatures())
+
+
 class ProjectionTests(unittest.TestCase):
     def write(self, folder, name, generated_at):
         (folder / name).write_text(json.dumps({"schema": 1, "generated_at": generated_at,
@@ -114,15 +168,37 @@ class ProjectionTests(unittest.TestCase):
             self.assertEqual(care_projection(Path(tmp), "macbook-pro", owner=True, now=NOW)["state"], "fresh")
         self.assertEqual(care_projection(Path("/tmp"), "../etc", owner=True)["state"], "unknown_machine")
 
+    def test_owner_gets_a_day_of_points_and_a_line_per_day(self):
+        history = [{"t": "2026-10-30T12:00:00Z", "cpu": 70.0, "p": "nominal"},
+                   {"t": "2026-10-30T13:00:00Z", "cpu": 80.0, "p": "moderate"},
+                   {"t": "2026-11-02T08:00:00Z", "cpu": 50.0, "p": "nominal"},
+                   {"t": "2026-11-02T11:55:00Z", "cpu": 54.0, "p": "nominal"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "mac-mini.json").write_text(json.dumps({
+                "generated_at": "2026-11-02T11:55:00Z", "thermal": {"cpu_c": 54.0, "pressure": "nominal"},
+                "thermal_history": history}))
+            payload = care_projection(Path(tmp), "mac-mini", owner=True, now=NOW)
+            public = care_projection(Path(tmp), "mac-mini", owner=False, now=NOW)
+        self.assertEqual(payload["thermal"]["cpu_c"], 54.0)
+        self.assertEqual([p["cpu"] for p in payload["thermal_history"]["last_24h"]], [50.0, 54.0])
+        days = payload["thermal_history"]["days"]
+        self.assertEqual(days[0]["max"], 80.0)
+        self.assertEqual(days[0]["avg"], 75.0)
+        self.assertEqual(days[0]["worst_pressure"], "moderate")
+        self.assertNotIn("thermal", public)
+        self.assertNotIn("thermal_history", public)
+
     def test_server_routes_care_through_the_owner_check(self):
         source = SERVER.read_text()
         self.assertIn('"/api/machines/care"', source)
         self.assertIn("care_projection(MAC_CARE_DIR, machine, owner=self._dashboard_run_authorized())", source)
 
-    def test_installer_adds_the_collector_only_for_macs_that_push(self):
+    def test_installer_adds_the_collector_on_every_mac(self):
+        # Mark 2026-11-08: the Mac mini runs it too, so Техника shows its temperature.
         source = INSTALLER.read_text()
-        self.assertIn("install_agent com.pirajoke.mac-care-collector mac_care_collector.py 900", source)
-        self.assertIn('if [[ "$PUSHES" == "1" ]]; then', source)
+        self.assertIn("install_agent com.pirajoke.mac-care-collector mac_care_collector.py 300", source)
+        self.assertIn("live_sessions_collector.py mac_care_collector.py)", source)
+        self.assertNotIn('if [[ "$PUSHES" == "1" ]]; then', source)
 
 
 def js_function(source, name):
@@ -163,6 +239,36 @@ class CareRowsTests(unittest.TestCase):
         self.assertTrue(all(level == "ok" for _, level, _ in rows), rows)
         self.assertEqual(len(rows), 8)
 
+    def thermal(self, care):
+        source = HTML.read_text()
+        now = int(NOW.timestamp() * 1000)
+        script = "\n".join([
+            source[source.index("const THERMAL_HOT_C"):source.index("function machineThermalSummary(")],
+            js_function(source, "thermalLevel"),
+            js_function(source, "machineThermalSummary"),
+            js_function(source, "thermalChartPath"),
+            f"const s = machineThermalSummary({json.dumps(care)}, {now});",
+            f"console.log(JSON.stringify({{level: s.level, word: s.word, value: s.value, detail: s.detail, state: s.state, path: thermalChartPath(s.points, {now}).path}}));",
+        ])
+        out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout
+        return json.loads(out)
+
+    def test_temperature_words_and_chart(self):
+        calm = self.thermal({"thermal": {"cpu_c": 46.4, "ssd_c": 38, "pressure": "nominal"},
+                             "thermal_history": {"last_24h": [{"t": "2026-11-02T10:00:00Z", "cpu": 44},
+                                                              {"t": "2026-11-02T10:05:00Z", "cpu": 70},
+                                                              {"t": "2026-11-02T11:55:00Z", "cpu": 46}], "days": []}})
+        self.assertEqual((calm["level"], calm["word"], calm["value"]), ("ok", "норма", "46°"))
+        self.assertIn("за сутки макс 70°", calm["detail"])
+        self.assertEqual(calm["path"].count("M"), 2)  # the 110-minute gap breaks the line
+        hot = self.thermal({"thermal": {"cpu_c": 88, "pressure": "nominal"}})
+        self.assertEqual((hot["level"], hot["word"]), ("warn", "горячо"))
+        throttled = self.thermal({"thermal": {"cpu_c": 70, "pressure": "heavy"}})
+        self.assertEqual((throttled["level"], throttled["word"]), ("bad", "перегрев"))
+        unknown = self.thermal({"thermal": {"cpu_c": None, "pressure": None}})
+        self.assertEqual(unknown["word"], "датчики не читаются")
+        self.assertEqual(self.thermal({})["state"], "no_thermal")
+
     def test_restart_detail_comes_from_the_real_schedule(self):
         source = HTML.read_text()
         script = js_function(source, "machineCareSchedule") + "\nconsole.log(JSON.stringify(['restart at 4:00AM Sunday', 'shutdown at 11:30PM weekdays', 'odd'].map(machineCareSchedule)));"
@@ -183,6 +289,90 @@ class CareRowsTests(unittest.TestCase):
         self.assertEqual(rows["Память на диске (swap)"], ("bad", "много"))
         self.assertEqual(rows["Сейчас грузят процессор"], ("warn", "есть тяжёлый"))
         self.assertEqual(rows["Перезагрузка по воскресеньям"][0], "unknown")
+
+
+RENDER_SCRIPT = r"""
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const out = {};
+  for (const [name, width] of [['desktop', 1200], ['phone', 390]]) {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
+    const errors = [];
+    page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', route => route.request().url().startsWith('file:') ? route.continue() : route.abort());
+    await page.goto(process.argv[2], { waitUntil: 'domcontentloaded' });
+    out[name] = await page.evaluate(() => {
+      const now = Date.now();
+      const iso = ms => new Date(ms).toISOString();
+      const pts = Array.from({ length: 50 }, (_, i) => ({ t: iso(now - (49 - i) * 300000), cpu: 50 + i % 7, p: 'nominal' }));
+      const show = key => {
+        const el = document.getElementById(`${key}-thermal`);
+        let n = el; while (n && n !== document.body) { n.hidden = false; n.style.display = 'block'; n = n.parentElement; }
+        const box = el.getBoundingClientRect();
+        return { hidden: el.hidden, cls: el.className, note: document.getElementById(`${key}-thermal-note`).textContent,
+                 when: document.getElementById(`${key}-thermal-when`).textContent,
+                 value: el.querySelector('.machine-thermal-value')?.textContent || null,
+                 path: !!el.querySelector('.machine-thermal-chart path')?.getAttribute('d'),
+                 days: el.querySelectorAll('.machine-thermal-day').length,
+                 overflow: box.right > document.documentElement.clientWidth + 1 };
+      };
+      const result = {};
+      renderMachineCare('mini', { state: 'fresh', generated_at: iso(now - 60000),
+        thermal: { cpu_c: 88.2, ssd_c: 40, pressure: 'nominal' },
+        thermal_history: { last_24h: pts, days: [{ day: '2026-11-07', max: 91, avg: 60, worst_pressure: 'nominal' }] } });
+      result.fresh = show('mini');
+      renderMachineCare('pro', { state: 'stale', generated_at: iso(now - 7200000), age_seconds: 7200,
+        thermal: { cpu_c: 45, pressure: 'nominal' }, thermal_history: { last_24h: [], days: [] } });
+      result.stale = show('pro');
+      renderMachineCare('mini', { state: 'not_installed' });
+      result.empty = show('mini');
+      renderMachineCare('pro', { state: 'fresh', generated_at: iso(now) });
+      result.oldCollector = show('pro');
+      renderMachineCare('mini', null);
+      result.offline = show('mini');
+      return result;
+    });
+    out[name].errors = errors.filter(e => !/fetch|network|Failed to load/i.test(e));
+    await page.close();
+  }
+  await browser.close();
+  console.log(JSON.stringify(out));
+})().catch(e => { console.error(e); process.exit(1); });
+"""
+
+
+def _has_playwright():
+    if not shutil.which("node"):
+        return False
+    return subprocess.run(["node", "-e", "require('playwright')"], capture_output=True).returncode == 0
+
+
+@unittest.skipUnless(_has_playwright(), "playwright + chromium are needed to render the page")
+class ThermalRenderTests(unittest.TestCase):
+    """The temperature block in a real browser, desktop and phone, with every API state."""
+
+    def test_temperature_block_renders_every_state_on_desktop_and_phone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "render.js"
+            script.write_text(RENDER_SCRIPT)
+            result = subprocess.run(["node", str(script), HTML.as_uri()], capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        out = json.loads(result.stdout.strip().splitlines()[-1])
+        for name in ("desktop", "phone"):
+            view = out[name]
+            self.assertEqual(view["errors"], [], name)
+            fresh = view["fresh"]
+            self.assertEqual((fresh["hidden"], fresh["value"], fresh["path"], fresh["days"]), (False, "88°", True, 1), name)
+            self.assertIn("is-warn", fresh["cls"])
+            self.assertFalse(fresh["overflow"], name)
+            self.assertIn("устарело", view["stale"]["when"])
+            self.assertEqual(view["stale"]["value"], "45°")
+            self.assertFalse(view["stale"]["path"])
+            self.assertIn("Mac mini ещё не присылал", view["empty"]["note"])
+            self.assertIsNone(view["empty"]["value"])
+            self.assertIn("старым сборщиком", view["oldCollector"]["note"])
+            self.assertIn("Нет связи", view["offline"]["note"])
 
 
 if __name__ == "__main__":
