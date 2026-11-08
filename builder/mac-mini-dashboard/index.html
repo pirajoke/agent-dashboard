@@ -233,6 +233,27 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-care-row.is-bad .machine-care-word { color: var(--red); }
 .machine-care-detail { grid-column: 2; font-size: 12px; color: var(--text2); overflow-wrap: anywhere; }
 @media (max-width: 640px) { .machine-care { padding: 12px; } .machine-care-list { grid-template-columns: 1fr; } }
+/* Temperature (Mark 2026-11-08 «температуру компьютера в технике … чтобы мог трекать») */
+.machine-thermal { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 0 0 20px; background: var(--card, transparent); }
+.machine-thermal[hidden] { display: none; }
+.machine-thermal-now { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.machine-thermal-value { font-size: 36px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.machine-thermal-word { font-size: 15px; font-weight: 600; }
+.machine-thermal.is-ok .machine-thermal-word, .machine-thermal.is-ok .machine-thermal-value { color: var(--green); }
+.machine-thermal.is-warn .machine-thermal-word, .machine-thermal.is-warn .machine-thermal-value { color: var(--orange, #d97706); }
+.machine-thermal.is-bad .machine-thermal-word, .machine-thermal.is-bad .machine-thermal-value { color: var(--red); }
+.machine-thermal-detail { font-size: 12px; color: var(--text2); margin: 0 0 10px; overflow-wrap: anywhere; }
+.machine-thermal-chart { display: block; width: 100%; height: 72px; }
+.machine-thermal-chart .line { fill: none; stroke: var(--text, currentColor); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.machine-thermal-chart .limit { stroke: var(--red); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; opacity: .7; }
+.machine-thermal-chart .warm { stroke: var(--orange, #d97706); stroke-width: 1; stroke-dasharray: 2 4; vector-effect: non-scaling-stroke; opacity: .6; }
+.machine-thermal-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-top: 2px; }
+.machine-thermal-days { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.machine-thermal-day { padding: 6px 4px; border-radius: 8px; background: var(--bg2, rgba(127,127,127,.06)); text-align: center; font-size: 11px; color: var(--text2); }
+.machine-thermal-day b { display: block; font-size: 14px; color: var(--text, inherit); font-variant-numeric: tabular-nums; }
+.machine-thermal-day.is-warn b { color: var(--orange, #d97706); }
+.machine-thermal-day.is-bad b { color: var(--red); }
+@media (max-width: 640px) { .machine-thermal { padding: 12px; } .machine-thermal-days { gap: 4px; } .machine-thermal-day { padding: 6px 2px; } .machine-thermal-day b { font-size: 13px; } }
 
 /* Grid layouts */
 .grid { display: grid; gap: 20px; }
@@ -7106,6 +7127,14 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <span class="machine-badge" id="mini-online-badge">проверка</span>
     </div>
     <div class="machine-health" id="mini-health" aria-live="polite"></div>
+    <section class="machine-thermal" id="mini-thermal" aria-labelledby="mini-thermal-title" hidden>
+      <div class="machine-care-head">
+        <h3 class="machine-care-title" id="mini-thermal-title">Температура</h3>
+        <span class="machine-care-when" id="mini-thermal-when"></span>
+      </div>
+      <p class="machine-care-note" id="mini-thermal-note" role="status"></p>
+      <div id="mini-thermal-body"></div>
+    </section>
 
     <!-- System gauges row -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -7214,6 +7243,14 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <span class="machine-badge offline" id="pro-online-badge">проверка</span>
     </div>
     <div class="machine-health" id="pro-health" aria-live="polite"></div>
+    <section class="machine-thermal" id="pro-thermal" aria-labelledby="pro-thermal-title" hidden>
+      <div class="machine-care-head">
+        <h3 class="machine-care-title" id="pro-thermal-title">Температура</h3>
+        <span class="machine-care-when" id="pro-thermal-when"></span>
+      </div>
+      <p class="machine-care-note" id="pro-thermal-note" role="status"></p>
+      <div id="pro-thermal-body"></div>
+    </section>
     <section class="machine-care" id="pro-care" aria-labelledby="pro-care-title" hidden>
       <div class="machine-care-head">
         <h3 class="machine-care-title" id="pro-care-title">Уход и защита</h3>
@@ -13892,6 +13929,7 @@ function renderGauges(prefix, sys) {
 
 // ─── Mac Mini ───
 async function refreshMini() {
+  refreshMachineCare('mini', 'mac-mini');
   if (!MAC_MINI_API) {
     document.getElementById('mini-status').textContent = 'Нет связи';
     document.getElementById('mini-online-badge').textContent = 'не в сети';
@@ -14094,6 +14132,7 @@ function machineCareRows(care, now = Date.now()) {
 }
 
 function renderMachineCare(key, care) {
+  renderMachineThermal(key, care);
   const host = document.getElementById(`${key}-care`);
   if (!host) return;
   const note = document.getElementById(`${key}-care-note`);
@@ -14130,6 +14169,151 @@ function renderMachineCare(key, care) {
     item.append(dot, line);
     if (row.detail) { const detail = document.createElement('span'); detail.className = 'machine-care-detail'; detail.textContent = row.detail; item.append(detail); }
     list.append(item);
+  }
+}
+
+// ─── Temperature (Mark 2026-11-08 «температуру компьютера в технике … чтобы мог трекать») ───
+// Same file as the care status: mac_care_collector.py reads the Apple Silicon sensors every 5 min,
+// keeps 7 days; the server sends the last 24 h point by point and one line per day.
+// Apple Silicon slows itself down at about 100–105 °C, so 95° is «перегрев», 80° «горячо».
+const THERMAL_HOT_C = 80;
+const THERMAL_LIMIT_C = 95;
+const THERMAL_PRESSURE = {
+  nominal: { word: 'не мешает', level: 'ok' },
+  moderate: { word: 'умеренный нагрев', level: 'warn' },
+  heavy: { word: 'сильный нагрев, macOS притормаживает', level: 'bad' },
+  trapping: { word: 'критический нагрев', level: 'bad' },
+  sleeping: { word: 'критический нагрев, может уснуть', level: 'bad' },
+};
+
+function thermalLevel(celsius) {
+  if (typeof celsius !== 'number') return 'unknown';
+  return celsius >= THERMAL_LIMIT_C ? 'bad' : celsius >= THERMAL_HOT_C ? 'warn' : 'ok';
+}
+
+function machineThermalSummary(care, now = Date.now()) {
+  const t = (care && care.thermal) || null;
+  const history = (care && care.thermal_history) || {};
+  const points = (Array.isArray(history.last_24h) ? history.last_24h : [])
+    .map(p => ({ at: Date.parse(p.t), cpu: typeof p.cpu === 'number' ? p.cpu : null, p: p.p }))
+    .filter(p => Number.isFinite(p.at));
+  const days = Array.isArray(history.days) ? history.days : [];
+  if (!t) return { state: 'no_thermal', points, days };
+  const cpu = typeof t.cpu_c === 'number' ? t.cpu_c : null;
+  const pressure = THERMAL_PRESSURE[t.pressure] || null;
+  let level = thermalLevel(cpu);
+  if (pressure && pressure.level === 'bad') level = 'bad';
+  else if (pressure && pressure.level === 'warn' && level === 'ok') level = 'warn';
+  const word = cpu == null ? (pressure ? `нагрев: ${pressure.word}` : 'датчики не читаются')
+    : level === 'bad' ? 'перегрев' : level === 'warn' ? 'горячо' : cpu >= 60 ? 'тёплый' : 'норма';
+  const values = points.map(p => p.cpu).filter(v => typeof v === 'number');
+  const peak = values.length ? Math.max(...values) : null;
+  const avg = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : null;
+  const parts = [];
+  if (typeof t.ssd_c === 'number') parts.push(`SSD ${Math.round(t.ssd_c)}°`);
+  if (typeof t.battery_c === 'number') parts.push(`батарея ${Math.round(t.battery_c)}°`);
+  if (typeof t.max_c === 'number' && cpu != null && t.max_c - cpu >= 3) parts.push(`самый горячий датчик ${Math.round(t.max_c)}°`);
+  if (pressure) parts.push(`macOS: ${pressure.word}`);
+  if (peak != null) parts.push(`за сутки макс ${Math.round(peak)}°, в среднем ${avg}°`);
+  return { state: 'ok', level, word, value: cpu == null ? '—' : `${Math.round(cpu)}°`, detail: parts.join(' · '), points, days, peak };
+}
+
+function thermalChartPath(points, now = Date.now(), width = 288, height = 72, low = 30, high = 105) {
+  const from = now - 24 * 3600000;
+  const y = c => (height - (Math.min(high, Math.max(low, c)) - low) / (high - low) * height).toFixed(1);
+  const x = at => ((Math.max(from, at) - from) / (now - from) * width).toFixed(1);
+  let path = '';
+  let previous = null;
+  for (const p of points) {
+    if (p.cpu == null) { previous = null; continue; }
+    // A gap of more than 20 minutes (Mac asleep or offline) breaks the line.
+    const move = previous == null || p.at - previous > 20 * 60000;
+    path += `${move ? 'M' : 'L'}${x(p.at)},${y(p.cpu)} `;
+    previous = p.at;
+  }
+  return { path: path.trim(), hot: y(THERMAL_HOT_C), limit: y(THERMAL_LIMIT_C) };
+}
+
+function renderMachineThermal(key, care) {
+  const host = document.getElementById(`${key}-thermal`);
+  if (!host) return;
+  const note = document.getElementById(`${key}-thermal-note`);
+  const when = document.getElementById(`${key}-thermal-when`);
+  const body = document.getElementById(`${key}-thermal-body`);
+  host.hidden = false;
+  host.className = 'machine-thermal';
+  when.className = 'machine-care-when';
+  when.textContent = '';
+  body.replaceChildren();
+  const name = key === 'mini' ? 'Mac mini' : 'MacBook';
+  const messages = {
+    owner_only: 'Температура видна владельцу. Войди как владелец, чтобы её увидеть.',
+    not_installed: key === 'mini'
+      ? 'Mac mini ещё не присылал температуру. Сборщик встанет сам при следующем выкате Command Center.'
+      : 'MacBook ещё не присылал эти данные. Нужно один раз запустить установщик сборщика на MacBook Pro.',
+    unreadable: 'Данные пришли, но не читаются. Сборщик пришлёт новые через 5 минут.',
+  };
+  if (!care || !care.state) { note.textContent = 'Нет связи с Command Center, попробую ещё раз.'; return; }
+  if (messages[care.state]) { note.textContent = messages[care.state]; return; }
+  if (care.state !== 'fresh' && care.state !== 'stale') { note.textContent = 'Нет данных.'; return; }
+  const summary = machineThermalSummary(care);
+  if (summary.state === 'no_thermal') {
+    note.textContent = `${name} присылает данные старым сборщиком без температуры. Перезапусти установщик сборщика на этом Mac.`;
+    return;
+  }
+  note.textContent = '';
+  if (care.state === 'stale') {
+    when.className = 'machine-care-when is-stale';
+    when.textContent = `устарело: данные от ${machineCareWhen(care.generated_at)}`;
+  } else {
+    when.textContent = `обновлено ${machineCareWhen(care.generated_at)}`;
+  }
+  host.className = `machine-thermal is-${summary.level}`;
+  const nowRow = document.createElement('div'); nowRow.className = 'machine-thermal-now';
+  const value = document.createElement('span'); value.className = 'machine-thermal-value'; value.textContent = summary.value;
+  const word = document.createElement('span'); word.className = 'machine-thermal-word'; word.textContent = summary.word;
+  const label = document.createElement('span'); label.className = 'machine-care-label'; label.textContent = 'процессор';
+  nowRow.append(value, word, label);
+  const detail = document.createElement('p'); detail.className = 'machine-thermal-detail'; detail.textContent = summary.detail;
+  body.append(nowRow, detail);
+  const chart = thermalChartPath(summary.points);
+  if (chart.path) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('class', 'machine-thermal-chart');
+    svg.setAttribute('viewBox', '0 0 288 72');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', `Температура процессора за 24 часа${summary.peak != null ? `, максимум ${Math.round(summary.peak)}°` : ''}`);
+    for (const [cls, yy] of [['warm', chart.hot], ['limit', chart.limit]]) {
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('class', cls); line.setAttribute('x1', '0'); line.setAttribute('x2', '288');
+      line.setAttribute('y1', yy); line.setAttribute('y2', yy);
+      svg.append(line);
+    }
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('class', 'line'); path.setAttribute('d', chart.path);
+    svg.append(path);
+    const axis = document.createElement('div'); axis.className = 'machine-thermal-axis';
+    for (const text of ['24 ч назад', `пунктир: ${THERMAL_HOT_C}° горячо, ${THERMAL_LIMIT_C}° перегрев`, 'сейчас']) {
+      const span = document.createElement('span'); span.textContent = text; axis.append(span);
+    }
+    body.append(svg, axis);
+  }
+  if (summary.days.length) {
+    const list = document.createElement('ul'); list.className = 'machine-thermal-days';
+    list.setAttribute('aria-label', 'Максимум по дням за неделю');
+    for (const day of summary.days) {
+      const item = document.createElement('li');
+      const lvl = thermalLevel(day.max);
+      item.className = `machine-thermal-day is-${THERMAL_PRESSURE[day.worst_pressure]?.level === 'bad' ? 'bad' : lvl}`;
+      const date = new Date(`${day.day}T12:00:00`);
+      const peak = document.createElement('b'); peak.textContent = typeof day.max === 'number' ? `${Math.round(day.max)}°` : '—';
+      item.append(peak, document.createTextNode(date.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric' })));
+      item.title = typeof day.avg === 'number' ? `в среднем ${Math.round(day.avg)}°` : '';
+      list.append(item);
+    }
+    body.append(list);
   }
 }
 

@@ -8,9 +8,10 @@
 #     builder/install_daily_work_collector.sh --machine macbook-pro --push-to maxxs-mac-mini
 #
 # Daily Work runs every 2 hours, the Infra change log every 10 minutes and the
-# list of open sessions (Агенты → Сессии) every minute, all at load. A Mac that
-# sends to the Mac mini (--push-to) also sends its care status (Техника → уход:
-# watchdog, hygiene report, weekly restart, firewall, updates) every 15 minutes. All are tokenless. With --summaries, the day summarizer runs every
+# list of open sessions (Агенты → Сессии) every minute, all at load. Every Mac
+# also writes its care status every 5 minutes (Техника: temperature with a 7-day
+# history; a Mac that sends to the Mac mini (--push-to) adds watchdog, hygiene
+# report, weekly restart, firewall and updates for Техника → уход and pushes it). All are tokenless. With --summaries, the day summarizer runs every
 # 3 hours and calls Claude only for finished days whose activity changed.
 set -euo pipefail
 
@@ -37,12 +38,11 @@ done
 
 mkdir -p "$INSTALL_DIR" "$HOME/.agent-bridge/daily-work" "$HOME/.agent-bridge/infra-changes" "$HOME/.agent-bridge/live-sessions"
 chmod 700 "$HOME/.agent-bridge/daily-work" "$HOME/.agent-bridge/infra-changes" "$HOME/.agent-bridge/live-sessions"
-SCRIPTS=(daily_work_collector.py infra_change_collector.py live_sessions_collector.py)
-PUSHES=0
-[[ " ${INFRA_ARGS[*]-} " == *" --push-to "* ]] && PUSHES=1
-if [[ "$PUSHES" == "1" ]]; then
-  SCRIPTS+=(mac_care_collector.py)
-fi
+# Mark 2026-11-08: every Mac (the Mac mini too) runs the care collector, so
+# Техника shows its temperature; only a Mac with --push-to sends it on.
+SCRIPTS=(daily_work_collector.py infra_change_collector.py live_sessions_collector.py mac_care_collector.py)
+mkdir -p "$HOME/.agent-bridge/mac-care"
+chmod 700 "$HOME/.agent-bridge/mac-care"
 if [[ "$SUMMARIES" == "1" ]]; then
   SCRIPTS+=(daily_work_summarizer.py)
   # The summarizer groups days by product with the dashboard's own code.
@@ -87,9 +87,7 @@ PY
 install_agent com.pirajoke.daily-work-collector daily_work_collector.py 7200 ${COLLECTOR_ARGS[@]+"${COLLECTOR_ARGS[@]}"}
 install_agent com.pirajoke.infra-change-collector infra_change_collector.py 600 ${INFRA_ARGS[@]+"${INFRA_ARGS[@]}"}
 install_agent com.pirajoke.live-sessions live_sessions_collector.py 60 ${INFRA_ARGS[@]+"${INFRA_ARGS[@]}"}
-if [[ "$PUSHES" == "1" ]]; then
-  install_agent com.pirajoke.mac-care-collector mac_care_collector.py 900 ${INFRA_ARGS[@]+"${INFRA_ARGS[@]}"}
-fi
+install_agent com.pirajoke.mac-care-collector mac_care_collector.py 300 ${INFRA_ARGS[@]+"${INFRA_ARGS[@]}"}
 if [[ "$SUMMARIES" == "1" ]]; then
   install_agent com.pirajoke.daily-work-summarizer daily_work_summarizer.py 10800
 fi
