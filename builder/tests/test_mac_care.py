@@ -269,13 +269,6 @@ class CareRowsTests(unittest.TestCase):
         self.assertEqual(unknown["word"], "датчики не читаются")
         self.assertEqual(self.thermal({})["state"], "no_thermal")
 
-    def test_both_machines_have_a_temperature_block(self):
-        source = HTML.read_text()
-        for key in ("mini", "pro"):
-            self.assertIn(f'id="{key}-thermal"', source)
-        self.assertIn("refreshMachineCare('mini', 'mac-mini');", source)
-        self.assertIn("renderMachineThermal(key, care);", source)
-
     def test_restart_detail_comes_from_the_real_schedule(self):
         source = HTML.read_text()
         script = js_function(source, "machineCareSchedule") + "\nconsole.log(JSON.stringify(['restart at 4:00AM Sunday', 'shutdown at 11:30PM weekdays', 'odd'].map(machineCareSchedule)));"
@@ -296,6 +289,90 @@ class CareRowsTests(unittest.TestCase):
         self.assertEqual(rows["Память на диске (swap)"], ("bad", "много"))
         self.assertEqual(rows["Сейчас грузят процессор"], ("warn", "есть тяжёлый"))
         self.assertEqual(rows["Перезагрузка по воскресеньям"][0], "unknown")
+
+
+RENDER_SCRIPT = r"""
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const out = {};
+  for (const [name, width] of [['desktop', 1200], ['phone', 390]]) {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
+    const errors = [];
+    page.on('pageerror', e => errors.push(String(e)));
+    await page.route('**/*', route => route.request().url().startsWith('file:') ? route.continue() : route.abort());
+    await page.goto(process.argv[2], { waitUntil: 'domcontentloaded' });
+    out[name] = await page.evaluate(() => {
+      const now = Date.now();
+      const iso = ms => new Date(ms).toISOString();
+      const pts = Array.from({ length: 50 }, (_, i) => ({ t: iso(now - (49 - i) * 300000), cpu: 50 + i % 7, p: 'nominal' }));
+      const show = key => {
+        const el = document.getElementById(`${key}-thermal`);
+        let n = el; while (n && n !== document.body) { n.hidden = false; n.style.display = 'block'; n = n.parentElement; }
+        const box = el.getBoundingClientRect();
+        return { hidden: el.hidden, cls: el.className, note: document.getElementById(`${key}-thermal-note`).textContent,
+                 when: document.getElementById(`${key}-thermal-when`).textContent,
+                 value: el.querySelector('.machine-thermal-value')?.textContent || null,
+                 path: !!el.querySelector('.machine-thermal-chart path')?.getAttribute('d'),
+                 days: el.querySelectorAll('.machine-thermal-day').length,
+                 overflow: box.right > document.documentElement.clientWidth + 1 };
+      };
+      const result = {};
+      renderMachineCare('mini', { state: 'fresh', generated_at: iso(now - 60000),
+        thermal: { cpu_c: 88.2, ssd_c: 40, pressure: 'nominal' },
+        thermal_history: { last_24h: pts, days: [{ day: '2026-11-07', max: 91, avg: 60, worst_pressure: 'nominal' }] } });
+      result.fresh = show('mini');
+      renderMachineCare('pro', { state: 'stale', generated_at: iso(now - 7200000), age_seconds: 7200,
+        thermal: { cpu_c: 45, pressure: 'nominal' }, thermal_history: { last_24h: [], days: [] } });
+      result.stale = show('pro');
+      renderMachineCare('mini', { state: 'not_installed' });
+      result.empty = show('mini');
+      renderMachineCare('pro', { state: 'fresh', generated_at: iso(now) });
+      result.oldCollector = show('pro');
+      renderMachineCare('mini', null);
+      result.offline = show('mini');
+      return result;
+    });
+    out[name].errors = errors.filter(e => !/fetch|network|Failed to load/i.test(e));
+    await page.close();
+  }
+  await browser.close();
+  console.log(JSON.stringify(out));
+})().catch(e => { console.error(e); process.exit(1); });
+"""
+
+
+def _has_playwright():
+    if not shutil.which("node"):
+        return False
+    return subprocess.run(["node", "-e", "require('playwright')"], capture_output=True).returncode == 0
+
+
+@unittest.skipUnless(_has_playwright(), "playwright + chromium are needed to render the page")
+class ThermalRenderTests(unittest.TestCase):
+    """The temperature block in a real browser, desktop and phone, with every API state."""
+
+    def test_temperature_block_renders_every_state_on_desktop_and_phone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "render.js"
+            script.write_text(RENDER_SCRIPT)
+            result = subprocess.run(["node", str(script), HTML.as_uri()], capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        out = json.loads(result.stdout.strip().splitlines()[-1])
+        for name in ("desktop", "phone"):
+            view = out[name]
+            self.assertEqual(view["errors"], [], name)
+            fresh = view["fresh"]
+            self.assertEqual((fresh["hidden"], fresh["value"], fresh["path"], fresh["days"]), (False, "88°", True, 1), name)
+            self.assertIn("is-warn", fresh["cls"])
+            self.assertFalse(fresh["overflow"], name)
+            self.assertIn("устарело", view["stale"]["when"])
+            self.assertEqual(view["stale"]["value"], "45°")
+            self.assertFalse(view["stale"]["path"])
+            self.assertIn("Mac mini ещё не присылал", view["empty"]["note"])
+            self.assertIsNone(view["empty"]["value"])
+            self.assertIn("старым сборщиком", view["oldCollector"]["note"])
+            self.assertIn("Нет связи", view["offline"]["note"])
 
 
 if __name__ == "__main__":
