@@ -5382,12 +5382,36 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 /* «Штаб 3D» (Макс 2026-11-09): the whole personal corporation after both courses, as one 3D map. */
 #section-architecture:not(.is-hq) .hq-map { display: none; }
 #section-architecture.is-hq #arch-state, #section-architecture.is-hq .arch-kpis, #section-architecture.is-hq .arch-blockers, #section-architecture.is-hq .arch-flow, #section-architecture.is-hq .arch-legend { display: none; }
-.hq-stage { height: 620px; }
-.hq-stage .watch-stage-label.is-plan { border-style: dashed; color: var(--mm-muted); }
-.hq-stage .watch-stage-label.is-beat { padding: 3px 9px; font-size: 11.5px; border-left-width: 1px; border-radius: 999px; }
+.hq-stage { height: 760px; }
+.hq-tag { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 7px; color: var(--mm-ink); font: inherit; font-size: 12.5px; font-weight: 650; line-height: 1.2; white-space: nowrap; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 999px; box-shadow: var(--mm-shadow-soft); cursor: pointer; pointer-events: auto; }
+.hq-tag i { font-style: normal; font-size: 15px; line-height: 1; }
+.hq-tag:hover { border-color: var(--hq-tone, var(--mm-accent)); }
+.hq-tag:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.hq-tag.is-plan { color: var(--mm-muted); border-style: dashed; }
+.hq-tag.is-plan::after { content: 'скоро'; color: var(--mm-warning); font-size: 10.5px; font-weight: 700; }
+.hq-tag.is-lit { z-index: 2; border-color: #ff9d2e; box-shadow: 0 0 0 3px rgba(255,157,46,.3), var(--mm-shadow-soft); }
+.hq-floor { position: absolute; left: 0; top: 0; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; width: 206px; pointer-events: none; }
+.hq-floor b { grid-row: span 2; display: grid; place-items: center; width: 34px; height: 34px; color: #fff; font-size: 16px; background: var(--hq-tone); border-radius: 11px; }
+.hq-floor strong { align-self: end; color: var(--mm-ink); font-size: 15px; line-height: 1.2; }
+.hq-floor small { align-self: start; color: var(--mm-muted); font-size: 11.5px; line-height: 1.3; }
+.hq-stage.is-narrow .hq-floor { display: block; width: auto; }
+.hq-stage.is-narrow .hq-floor b { width: 20px; height: 20px; font-size: 11px; border-radius: 999px; box-shadow: 0 0 0 2px var(--mm-surface); }
+.hq-stage.is-narrow .hq-floor strong, .hq-stage.is-narrow .hq-floor small, .hq-stage.is-narrow .hq-tag span, .hq-stage.is-narrow .hq-tag.is-plan::after { display: none; }
+.hq-stage.is-narrow .hq-tag { padding: 3px 5px; }
+.hq-stage.is-narrow .hq-tag i { font-size: 13px; }
+.hq-caption { position: absolute; left: 14px; bottom: 12px; max-width: min(560px, calc(100% - 170px)); margin: 0; padding: 8px 12px; color: var(--mm-ink); font-size: 13.5px; font-weight: 600; line-height: 1.35; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-left: 4px solid #ff9d2e; border-radius: 12px; box-shadow: var(--mm-shadow-soft); pointer-events: none; }
 .hq-hint { margin: 0 0 18px; color: var(--mm-muted); font-size: 12.5px; }
-.hq-group { margin: 0 0 18px; }
-.hq-group h3 { margin: 0 0 8px; color: var(--mm-muted); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.hq-head { margin: 22px 0 10px; font-size: 16px; }
+.hq-story { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; margin: 0 0 8px; padding: 0; list-style: none; }
+.hq-story button { display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: start; width: 100%; height: 100%; padding: 9px 11px; color: var(--mm-ink); font: inherit; font-size: 12.5px; line-height: 1.4; text-align: left; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; cursor: pointer; }
+.hq-story b { display: grid; place-items: center; width: 22px; height: 22px; color: var(--mm-muted); font-size: 12px; background: var(--mm-background); border-radius: 999px; }
+.hq-story button.is-on { border-color: #ff9d2e; box-shadow: 0 0 0 2px rgba(255,157,46,.22); }
+.hq-story button.is-on b { color: #3a2400; background: #ffb65c; }
+.hq-story button:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.hq-group { margin: 0 0 16px; }
+.hq-group h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 14px; }
+.hq-group h3 b { display: grid; place-items: center; width: 24px; height: 24px; color: #fff; font-size: 12.5px; background: var(--hq-tone); border-radius: 8px; }
+.hq-group h3 small { color: var(--mm-muted); font-size: 12.5px; font-weight: 500; }
 .hq-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
 .hq-card { display: grid; gap: 3px; padding: 10px 12px; text-align: left; color: var(--mm-ink); font: inherit; background: var(--mm-surface); border: 1px solid var(--mm-line); border-left: 4px solid var(--hq-tone, var(--mm-accent)); border-radius: 12px; cursor: pointer; }
 .hq-card strong { font-size: 14px; }
@@ -5396,7 +5420,8 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .hq-card.is-plan strong::after { content: ' · в плане'; color: var(--mm-warning); font-weight: 600; font-size: 12px; }
 .hq-card:hover { border-color: var(--hq-tone, var(--mm-accent)); }
 .hq-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-@media (max-width: 700px) { .hq-stage { height: 440px; } .hq-stage .watch-stage-label.is-beat, .hq-stage .watch-stage-label.is-far { display: none; } }
+.hq-legend { display: none; }
+@media (max-width: 700px) { .hq-stage { height: 580px; } .hq-caption { right: 14px; bottom: 50px; max-width: none; font-size: 12.5px; } .hq-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0 0 10px; font-size: 12.5px; font-weight: 650; } .hq-legend span { display: inline-flex; align-items: center; gap: 5px; } .hq-legend b { display: grid; place-items: center; width: 18px; height: 18px; color: #fff; font-size: 10.5px; background: var(--hq-tone); border-radius: 999px; } }
 @media (prefers-reduced-motion: reduce) { #section-architecture * { transition: none !important; animation: none !important; } }
 /* Mark 2026-10-26 «можно красивый классный дизайн?»: the map as mascot cards and live wires. */
 .arch-flow > .ax { align-self: stretch; }
@@ -7027,9 +7052,14 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <div class="hq-map" id="hq-map">
       <div class="watch-stage hq-stage" id="hq-stage" hidden>
         <div class="watch-stage-labels" id="hq-stage-labels"></div>
+        <p class="hq-caption" id="hq-caption"></p>
         <button type="button" class="watch-stage-reset" id="hq-stage-reset">Вернуть вид</button>
       </div>
-      <p class="hq-hint">Карту можно крутить и приближать. Нажми на подпись или карточку, чтобы прочитать, что это и зачем. Пунктир: ещё в плане.</p>
+      <div class="hq-legend" id="hq-legend" aria-hidden="true"></div>
+      <p class="hq-hint">Читай сверху вниз: это один дом из пяти этажей. Огонёк идёт по пути одной задачи. Нажми на любую подпись, чтобы узнать, что это и зачем. Пунктир: ещё в плане. Дом можно повернуть мышкой или пальцем.</p>
+      <h3 class="hq-head">Как идёт одна задача</h3>
+      <ol class="hq-story" id="hq-story"></ol>
+      <h3 class="hq-head">Что стоит на каждом этаже</h3>
       <div id="hq-groups"></div>
     </div>
   </section>
@@ -15648,67 +15678,118 @@ archSetMode('hq');
 
 // ─── «Штаб 3D» (Макс 2026-11-09) ───
 // «Нарисуй архитектуру, которая получится после двух курсов, в командном центре: красиво, понятно, в 3D».
-// The map of the personal corporation: Макс, the HQ hub on the Mac mini, departments around it, the
-// products and stores they work with, and the weekly rhythm. Wiring is fixed here, by hand, from the HQ
-// rules; nothing on this map claims that work is running right now. Names and roles only: no folders,
-// service ids, chats or task texts.
+// Second take after «пока ничего не понятно»: one building with five floors, read top to bottom. You on
+// the top floor, the HQ under you, then departments, products, and the base everything stands on. One
+// light walks the path of a single task, so the floors read as a story. Wiring is fixed here, by hand,
+// from the HQ rules; nothing on this map claims that work is running right now. Names and roles only:
+// no folders, service ids, chats or task texts.
 const HQ_UPDATED = '10.11.2026';
-const HQ_GROUPS = [
-  { id: 'core', title: 'Центр' },
-  { id: 'dept', title: 'Отделы' },
-  { id: 'system', title: 'Продукты и хранилища' },
-  { id: 'beat', title: 'Ритм недели' },
+const HQ_FLOORS = [
+  { id: 'you', title: 'Ты', line: 'говоришь, что нужно, и принимаешь готовое', tone: '#3f464d' },
+  { id: 'hq', title: 'Штаб', line: 'решает, кому отдать, и держит ритм недели', tone: '#0a7f93' },
+  { id: 'dept', title: 'Отделы', line: 'делают работу и помнят, что узнали', tone: '#5b5fd6' },
+  { id: 'product', title: 'Продукты', line: 'то, что работает для людей', tone: '#c2571a' },
+  { id: 'base', title: 'Основа', line: 'где всё лежит и крутится', tone: '#6b7480' },
 ];
 const HQ_NODES = [
-  { id: 'me', group: 'core', name: 'Макс', short: 'ставит цель и принимает работу', tone: '#24292b', state: 'on', what: 'Ты задаёшь результат обычными словами и принимаешь готовое. Решения о деньгах, секретах, удалении, релизах и сообщениях от твоего имени остаются только за тобой.', from: 'Personal Corp, урок 1: «вы ведёте агента, а не он вас»' },
-  { id: 'hq', group: 'core', name: 'Штаб', short: 'карта всей системы и приоритеты', tone: '#0a7f93', state: 'on', what: 'Главная папка на Mac mini. Агент начинает отсюда: читает правила, файл о тебе и таблицу «где живёт правда», потом идёт в нужный отдел. Работа в штабе заканчивается задачей в отделе.', from: 'Personal Corp 3, урок 1; Personal Corp 2, уроки 1 и 4' },
-  { id: 'it', group: 'dept', name: 'ИТ', short: 'машины, доступы, бэкапы', tone: '#5b6ee1', state: 'on', angle: 205, link: 'hq', what: 'Следит за Mac mini и ноутбуками: службы, резервные копии, доступы, обновления. Факты о машинах живут здесь, а не в памяти чатов.', from: 'Personal Corp 3, урок 5' },
-  { id: 'learning', group: 'dept', name: 'Обучение', short: 'курсы и конспекты', tone: '#a35a0c', state: 'on', angle: 255, link: 'hq', what: 'Хранит расшифровки и конспекты курсов. Любой агент может спросить «что Рис говорил про X» и получить ответ с номером урока.', from: 'Personal Corp 2, урок 1: папка обучения' },
-  { id: 'research', group: 'dept', name: 'Исследования', short: 'отчёты с источниками', tone: '#7c5cc4', state: 'on', angle: 305, link: 'hq', what: 'Проверяет рынок, имена, конкурентов и законы. Каждый отчёт лежит в общем списке с датой и источниками.', from: 'Personal Corp 3, урок 3' },
-  { id: 'media', group: 'dept', name: 'Медиа', short: 'посты в Telegram и LinkedIn', tone: '#c2417a', state: 'on', angle: 355, link: 'hq', what: 'Готовит черновики постов по твоим правилам стиля. Публикуешь только ты.', from: 'Personal Corp 3, урок 4; Personal Corp 2, урок 6' },
-  { id: 'family', group: 'dept', name: 'Семья', short: 'генеалогия и семейная история', tone: '#1d7a46', state: 'on', angle: 45, link: 'hq', what: 'Собирает семейную историю: архивы, записи разговоров с бабушкой и дедушкой, дерево рода.', from: 'твой собственный отдел' },
-  { id: 'crm', group: 'dept', name: 'CRM', short: 'люди, встречи, договорённости', tone: '#0f8f86', state: 'plan', angle: 100, link: 'hq', what: 'Будущий отдел. Сырые записи встреч (Granola, PLAUD, голосовые) складываются в одну папку и превращаются в карточки людей, компаний, встреч и возможностей. У каждого факта указан источник.', from: 'Personal Corp 2, урок 4. Последний шаг плана' },
-  { id: 'ai', group: 'dept', name: 'Агенты', short: 'ревьюер и руководитель проекта', tone: '#6c6a63', state: 'plan', angle: 150, link: 'hq', what: 'Будущий отдел с постоянными ролями агентов: один ведёт проект, другой независимо проверяет работу и выносит вердикт.', from: 'Personal Corp 3, урок 7; Personal Corp 2, урок 8' },
-  { id: 'jobradar', group: 'system', name: 'Job Radar', short: 'главный проект, скоро Offrys', tone: '#b8321a', state: 'on', angle: 330, link: 'hq', what: 'Главный продукт. Задачи живут в GitHub Issues, релизы ставятся вручную на Mac mini. Приоритет номер один в штабе.', from: 'правила приоритета штаба' },
-  { id: 'jarvis', group: 'system', name: 'Jarvis', short: 'план дня и голос в Telegram', tone: '#0a7f93', state: 'on', angle: 20, link: 'hq', what: 'Твой помощник в Telegram: каждое утро присылает «📅 День», принимает голосовые, напоминает и готовит сообщения, которые уходят только после твоего «да».', from: 'Personal Corp 3, урок 5: агент 24/7; Personal Corp 2, урок 7: daily' },
-  { id: 'property', group: 'system', name: 'Property OS', short: 'аренда, объекты, деньги', tone: '#a35a0c', state: 'on', angle: 70, link: 'hq', what: 'Учёт недвижимости и аренды. Источник правды по деньгам и объектам.', from: 'таблица «где живёт правда»' },
-  { id: 'drive', group: 'system', name: 'Документы', short: 'библиотека в Google Drive', tone: '#5b6ee1', state: 'on', angle: 120, link: 'hq', what: 'Все важные документы лежат в одной библиотеке в Google Drive. Агенты раскладывают новые файлы по правилам.', from: 'таблица «где живёт правда»' },
-  { id: 'center', group: 'system', name: 'Командный центр', short: 'этот экран', tone: '#24292b', state: 'on', angle: 185, link: 'it', what: 'Показывает одним экраном машины, агентов, итоги недели и эту карту. Сам ничего не решает: только отражает источники.', from: 'Personal Corp 2, урок 7: у штаба свой экран' },
-  { id: 'vault', group: 'system', name: 'Заметки', short: 'Obsidian: справка и история', tone: '#7c5cc4', state: 'on', angle: 240, link: 'learning', what: 'Заметки и история в Obsidian. Это справка, а не список текущих задач.', from: 'таблица «где живёт правда»' },
-  { id: 'news', group: 'system', name: 'Новости', short: 'канал и дайджест', tone: '#c2417a', state: 'on', angle: 290, link: 'media', what: 'Бот собирает новости, ведёт канал и утренний дайджест. Посты от твоего имени выходят из очереди медиаотдела.', from: 'Personal Corp 3, урок 4' },
-  { id: 'mon', group: 'beat', name: 'Пн · план недели', tag: 'Пн · план', short: 'одна цель на отдел', tone: '#0a7f93', state: 'plan', beat: 0.0, what: 'В понедельник агент по итогам ретро собирает план недели: одна цель на отдел и что делаешь ты, а что агенты. Скилл подключён 10.11, первый прогон впереди.', from: 'Personal Corp 2, уроки 2 и 7' },
-  { id: 'day', group: 'beat', name: 'Каждый день · «День»', tag: 'каждый день', short: 'план дня в Telegram', tone: '#1d7a46', state: 'on', beat: 0.36, what: 'Каждое утро Jarvis присылает план дня: одна главная цель и не больше двух мелких дел вокруг реальных встреч.', from: 'Personal Corp 2, урок 7: daily' },
-  { id: 'sun', group: 'beat', name: 'Вс · ретро', short: 'ошибки становятся правилами', tone: '#a35a0c', state: 'plan', beat: 0.72, what: 'В воскресенье агент собирает, что сделано и что застряло. Поправка, которая повторилась дважды, становится строкой правил после твоего «да». Первое ретро: 15.11.', from: 'Personal Corp 2, урок 8: «встретили ошибку — обновите скилл»' },
+  { id: 'me', floor: 'you', icon: '🧑', name: 'Макс', short: 'ставишь цель и принимаешь работу', state: 'on', what: 'Ты задаёшь результат обычными словами и принимаешь готовое. Решения о деньгах, секретах, удалении, релизах и сообщениях от твоего имени остаются только за тобой.', from: 'Personal Corp, урок 1: «вы ведёте агента, а не он вас»' },
+  { id: 'jarvis', floor: 'you', icon: '💬', name: 'Jarvis', short: 'Telegram: голос и план дня', state: 'on', what: 'Твой помощник в Telegram: каждое утро присылает «📅 День», принимает голосовые, напоминает и готовит сообщения, которые уходят только после твоего «да».', from: 'Personal Corp 3, урок 5: агент 24/7; Personal Corp 2, урок 7: daily' },
+  { id: 'chat', floor: 'you', icon: '🧵', name: 'Чаты Claude', short: 'на каждую задачу свой чат', state: 'on', what: 'Проект штаба в Claude: на каждую задачу свой чат. Здесь ты ставишь задачу текстом или голосом и получаешь результат со ссылкой.', from: 'так ты работаешь с агентами сейчас' },
+  { id: 'center', floor: 'you', icon: '📊', name: 'Командный центр', short: 'этот экран', state: 'on', what: 'Показывает одним экраном машины, агентов, итоги недели и эту карту. Сам ничего не решает: только отражает источники.', from: 'Personal Corp 2, урок 7: у штаба свой экран' },
+  { id: 'hq', floor: 'hq', icon: '🏛', name: 'Штаб', short: 'правила и карта всей системы', state: 'on', what: 'Главная папка на Mac mini. Агент начинает отсюда: читает правила, файл о тебе и таблицу «где живёт правда», потом идёт в нужный отдел. Работа в штабе заканчивается задачей в отделе.', from: 'Personal Corp 3, урок 1; Personal Corp 2, уроки 1 и 4' },
+  { id: 'mon', floor: 'hq', icon: '📋', name: 'Пн · план недели', short: 'одна цель на отдел', state: 'plan', what: 'В понедельник агент по итогам ретро собирает план недели: одна цель на отдел и что делаешь ты, а что агенты. Скилл подключён 10.11, первый прогон впереди.', from: 'Personal Corp 2, уроки 2 и 7' },
+  { id: 'day', floor: 'hq', icon: '☀️', name: 'Каждый день', short: 'план дня в Telegram', state: 'on', what: 'Каждое утро Jarvis присылает план дня: одна главная цель и не больше двух мелких дел вокруг реальных встреч.', from: 'Personal Corp 2, урок 7: daily' },
+  { id: 'sun', floor: 'hq', icon: '🔁', name: 'Вс · ретро', short: 'ошибки становятся правилами', state: 'plan', what: 'В воскресенье агент собирает, что сделано и что застряло. Поправка, которая повторилась дважды, становится строкой правил после твоего «да». Первое ретро: 15.11.', from: 'Personal Corp 2, урок 8: «встретили ошибку — обновите скилл»' },
+  { id: 'it', floor: 'dept', icon: '🛠', name: 'ИТ', short: 'машины, доступы, бэкапы', state: 'on', what: 'Следит за Mac mini и ноутбуками: службы, резервные копии, доступы, обновления. Факты о машинах живут здесь, а не в памяти чатов.', from: 'Personal Corp 3, урок 5' },
+  { id: 'learning', floor: 'dept', icon: '🎓', name: 'Обучение', short: 'курсы и конспекты', state: 'on', what: 'Хранит расшифровки и конспекты курсов. Любой агент может спросить «что Рис говорил про X» и получить ответ с номером урока.', from: 'Personal Corp 2, урок 1: папка обучения' },
+  { id: 'crm', floor: 'dept', icon: '🤝', name: 'CRM', short: 'люди, встречи, договорённости', state: 'plan', what: 'Будущий отдел. Сырые записи встреч (Granola, PLAUD, голосовые) складываются в одну папку и превращаются в карточки людей, компаний, встреч и возможностей. У каждого факта указан источник.', from: 'Personal Corp 2, урок 4. Последний шаг плана' },
+  { id: 'ai', floor: 'dept', icon: '🤖', name: 'Агенты', short: 'ревьюер и руководитель проекта', state: 'plan', what: 'Будущий отдел с постоянными ролями агентов: один ведёт проект, другой независимо проверяет работу и выносит вердикт.', from: 'Personal Corp 3, урок 7; Personal Corp 2, урок 8' },
+  { id: 'research', floor: 'dept', icon: '🔎', name: 'Исследования', short: 'отчёты с источниками', state: 'on', what: 'Проверяет рынок, имена, конкурентов и законы. Каждый отчёт лежит в общем списке с датой и источниками.', from: 'Personal Corp 3, урок 3' },
+  { id: 'media', floor: 'dept', icon: '📣', name: 'Медиа', short: 'посты в Telegram и LinkedIn', state: 'on', what: 'Готовит черновики постов по твоим правилам стиля. Публикуешь только ты.', from: 'Personal Corp 3, урок 4; Personal Corp 2, урок 6' },
+  { id: 'family', floor: 'dept', icon: '🌳', name: 'Семья', short: 'генеалогия и семейная история', state: 'on', what: 'Собирает семейную историю: архивы, записи разговоров с бабушкой и дедушкой, дерево рода.', from: 'твой собственный отдел' },
+  { id: 'jobradar', floor: 'product', icon: '🎯', name: 'Job Radar', short: 'главный проект, скоро Offrys', state: 'on', what: 'Главный продукт. Задачи живут в GitHub Issues, релизы ставятся вручную на Mac mini. Приоритет номер один в штабе.', from: 'правила приоритета штаба' },
+  { id: 'property', floor: 'product', icon: '🏠', name: 'Property OS', short: 'аренда, объекты, деньги', state: 'on', what: 'Учёт недвижимости и аренды. Источник правды по деньгам и объектам.', from: 'таблица «где живёт правда»' },
+  { id: 'news', floor: 'product', icon: '📰', name: 'Новости', short: 'канал и дайджест', state: 'on', what: 'Бот собирает новости, ведёт канал и утренний дайджест. Посты от твоего имени выходят из очереди медиаотдела.', from: 'Personal Corp 3, урок 4' },
+  { id: 'github', floor: 'base', icon: '🗂', name: 'GitHub', short: 'код и список задач', state: 'on', what: 'Здесь лежит код продуктов и список задач по ним. Задача считается существующей, только если она записана здесь, а не в чате.', from: 'Personal Corp 2, урок 2: задачи' },
+  { id: 'drive', floor: 'base', icon: '📁', name: 'Документы', short: 'библиотека в Google Drive', state: 'on', what: 'Все важные документы лежат в одной библиотеке в Google Drive. Агенты раскладывают новые файлы по правилам.', from: 'таблица «где живёт правда»' },
+  { id: 'vault', floor: 'base', icon: '📝', name: 'Заметки', short: 'Obsidian: справка и история', state: 'on', what: 'Заметки и история в Obsidian. Это справка, а не список текущих задач.', from: 'таблица «где живёт правда»' },
+  { id: 'mac', floor: 'base', icon: '🖥', name: 'Mac mini', short: 'включён круглые сутки', state: 'on', what: 'Маленький компьютер дома, который не выключается. На нём лежит штаб со всеми отделами и работают продукты, боты и расписания. Раз в час делается резервная копия на внешний диск.', from: 'Personal Corp 3, урок 5: агент 24/7' },
+];
+// The path of one task, floor by floor. `at` is the node the light stops on.
+const HQ_STORY = [
+  { at: 'me', text: 'Ты говоришь, что нужно: голосом или текстом.' },
+  { at: 'jarvis', text: 'Просьба приходит через Jarvis в Telegram или через чат Claude.' },
+  { at: 'hq', text: 'Агент начинает со штаба: читает правила и решает, чей это вопрос.' },
+  { at: 'research', text: 'Отдел делает работу и записывает, что узнал. Например, Исследования.' },
+  { at: 'jobradar', text: 'Результат попадает в продукт. Например, в Job Radar.' },
+  { at: 'mac', text: 'Всё это лежит и работает на Mac mini: он включён круглые сутки.' },
+  { at: 'center', text: 'Итог возвращается к тебе: сюда, в Командный центр, и в Telegram.' },
 ];
 
 (function hqCards() {
-  const host = document.getElementById('hq-groups');
+  const host = document.getElementById('hq-groups'), legend = document.getElementById('hq-legend');
   if (!host) return;
-  for (const group of HQ_GROUPS) {
+  HQ_FLOORS.forEach((floor, index) => {
+    if (legend) {
+      const chip = document.createElement('span'); chip.style.setProperty('--hq-tone', floor.tone);
+      const badge = document.createElement('b'); badge.textContent = String(index + 1);
+      chip.append(badge, floor.title); legend.append(chip);
+    }
     const block = document.createElement('section'); block.className = 'hq-group';
-    const head = document.createElement('h3'); head.textContent = group.title;
+    block.style.setProperty('--hq-tone', floor.tone);
+    const head = document.createElement('h3');
+    const number = document.createElement('b'); number.textContent = String(index + 1);
+    const title = document.createElement('span'); title.textContent = floor.title;
+    const line = document.createElement('small'); line.textContent = floor.line;
+    head.append(number, title, line);
     const cards = document.createElement('div'); cards.className = 'hq-cards';
-    for (const node of HQ_NODES.filter(item => item.group === group.id)) {
+    for (const node of HQ_NODES.filter(item => item.floor === floor.id)) {
       ccInfoSources[`hq-${node.id}`] = () => ({
-        title: node.name,
+        title: `${node.icon} ${node.name}`,
         lines: [node.what],
-        rows: [['Состояние', node.state === 'plan' ? 'в плане, ещё не работает' : 'есть'], ['Откуда идея', node.from], ['Карта обновлена', HQ_UPDATED]],
+        rows: [['Этаж', `${index + 1}. ${floor.title}: ${floor.line}`], ['Состояние', node.state === 'plan' ? 'в плане, ещё не работает' : 'есть'], ['Откуда идея', node.from], ['Карта обновлена', HQ_UPDATED]],
       });
       const card = document.createElement('button');
       card.type = 'button'; card.className = `hq-card${node.state === 'plan' ? ' is-plan' : ''}`;
-      card.style.setProperty('--hq-tone', node.tone);
       card.dataset.ccInfo = `hq-${node.id}`;
-      const strong = document.createElement('strong'); strong.textContent = node.name;
+      const strong = document.createElement('strong'); strong.textContent = `${node.icon} ${node.name}`;
       const span = document.createElement('span'); span.textContent = node.short;
       card.append(strong, span); cards.append(card);
     }
     block.append(head, cards); host.append(block);
-  }
+  });
 })();
 
-// The scene: the HQ tower stands on the Mac mini in the middle, Макс in front of it, departments on the
-// inner ring, products and stores on the outer ring, the week as a ring around the tower. Planned parts
-// are translucent. Small lights travel along the wires only to show direction; they are not live work.
+// The story strip works with or without the 3D scene: seven numbered steps, one of them lit.
+const hqStory = (function hqStoryStrip() {
+  const host = document.getElementById('hq-story');
+  const caption = document.getElementById('hq-caption');
+  const listeners = [];
+  let active = -1;
+  const buttons = host ? HQ_STORY.map((step, index) => {
+    const item = document.createElement('li');
+    const button = document.createElement('button'); button.type = 'button';
+    const number = document.createElement('b'); number.textContent = String(index + 1);
+    const text = document.createElement('span'); text.textContent = step.text;
+    button.append(number, text);
+    button.addEventListener('click', () => listeners.forEach(listener => listener(index)));
+    item.append(button); host.append(item);
+    return button;
+  }) : [];
+  function show(index) {
+    if (index === active) return;
+    active = index;
+    buttons.forEach((button, at) => { button.classList.toggle('is-on', at === index); button.setAttribute('aria-current', at === index ? 'step' : 'false'); });
+    if (caption) caption.textContent = `${index + 1} из ${HQ_STORY.length} · ${HQ_STORY[index].text}`;
+  }
+  listeners.push(show);
+  show(0);
+  return { show, onPick: listener => listeners.push(listener) };
+})();
+
+// The scene: five glass floors on four posts. Things stand on their floor in tidy rows, every one with
+// a name tag. Planned things are translucent. A single light walks the story path: down the front of
+// the building floor by floor, and back up the lift on the right.
 (function hqScene3d() {
   const stage = document.getElementById('hq-stage');
   const section = document.getElementById('section-architecture');
@@ -15718,30 +15799,36 @@ const HQ_NODES = [
     if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return;
   } catch (error) { return; }
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const isDark = () => { const theme = document.documentElement.dataset.theme; return theme === 'dark' || (theme !== 'light' && darkQuery.matches); };
   import(new URL('/dashboard-assets/three.module.min.js', window.location.href).href).then(THREE => {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.setClearColor(0x000000, 0);
     stage.prepend(renderer.domElement);
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(32, 2, 0.1, 200);
-    const target = new THREE.Vector3(0, 0.6, 2.4);
-    const HOME = { azimuth: 0.35, elevation: 0.8, distance: 41 };
-    const look = { ...HOME };
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xd9ccb6, 0.95));
-    const sun = new THREE.DirectionalLight(0xfff1dc, 1.8);
-    sun.position.set(-9, 20, 12); sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20, near: 1, far: 60 });
-    sun.shadow.radius = 4;
+    // Sizes, in scene units. Four columns and up to two rows per floor; a phone gets narrower cells.
+    const CELL_WIDE = 7.5, CELL_NARROW = 4.6, CELL_Z = 2.9, COLS = 4, GAP = 5.4, SIZE = 1.2;
+    const DEPTH = 2 * CELL_Z + 0.6, FRONT = DEPTH / 2 + 0.9;
+    const floorY = index => (HQ_FLOORS.length - 1 - index) * GAP;
+    const TOP = floorY(0) + 2.9;
+    const target = new THREE.Vector3(0, TOP / 2, 0);
+    const HOME = { azimuth: 0.2, elevation: 0.38, zoom: 1 };
+    const look = { ...HOME };
+    let CELL_X = 0, WIDTH = 0, LIFT_X = 0, world = null, built = null;
+
+    const hemisphere = new THREE.HemisphereLight(0xffffff, 0xd9ccb6, 1.0); scene.add(hemisphere);
+    const sun = new THREE.DirectionalLight(0xfff4e2, 2.1);
+    sun.position.set(-10, TOP + 16, 14); sun.target.position.copy(target); scene.add(sun.target);
     scene.add(sun);
-    const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05, ...extra });
-    const ghost = color => mat(color, { transparent: true, opacity: 0.32, roughness: 0.9 });
-    const hex = tone => new THREE.Color(tone).getHex();
+
+    const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05, ...extra });
+    const ghost = color => mat(color, { transparent: true, opacity: 0.26, roughness: 0.9, depthWrite: false });
+    const white = mat(0xfdfbf6, { roughness: 0.45 });
+    const glow = color => new THREE.MeshBasicMaterial({ color });
     function slab(w, d, h, r, material) {
       const shape = new THREE.Shape();
       const x = -w / 2, y = -d / 2;
@@ -15749,125 +15836,229 @@ const HQ_NODES = [
       shape.lineTo(x + w, y + d - r); shape.quadraticCurveTo(x + w, y + d, x + w - r, y + d);
       shape.lineTo(x + r, y + d); shape.quadraticCurveTo(x, y + d, x, y + d - r);
       shape.lineTo(x, y + r); shape.quadraticCurveTo(x, y, x + r, y);
-      const bevel = Math.min(h * 0.35, r * 0.5, 0.06);
-      const geometry = new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.001, h - bevel * 2), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 10 });
+      const bevel = Math.min(h * 0.35, r * 0.5, 0.07);
+      const geometry = new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.001, h - bevel * 2), bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 4, curveSegments: 12 });
       geometry.rotateX(-Math.PI / 2); geometry.translate(0, bevel, 0);
       const mesh = new THREE.Mesh(geometry, material);
-      mesh.castShadow = true; mesh.receiveShadow = true;
-      return mesh;
+      return new THREE.Mesh(geometry, material);
     }
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(22, 72), new THREE.ShadowMaterial({ opacity: 0.12 }));
-    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-    [7.6, 13.2].forEach(radius => {
-      const ring = new THREE.Mesh(new THREE.RingGeometry(radius - 0.03, radius + 0.03, 96), new THREE.MeshBasicMaterial({ color: 0x8a8478, transparent: true, opacity: 0.22, side: THREE.DoubleSide }));
-      ring.rotation.x = -Math.PI / 2; ring.position.y = 0.01; scene.add(ring);
-    });
-
-    const anchors = {};
-    const white = mat(0xfdfbf6, { roughness: 0.45 });
-    const windowsMaterial = new THREE.MeshBasicMaterial({ color: 0xffe2a8 });
-
-    // The Mac mini with the HQ tower on it.
-    const mini = slab(4.2, 4.2, 0.7, 0.8, mat(0xe4e7eb, { metalness: 0.15, roughness: 0.4 })); scene.add(mini);
-    const hqTone = hex('#0a7f93');
-    [[2.6, 1.3, 0.7], [2.0, 1.1, 2.0], [1.4, 0.9, 3.1]].forEach(([size, height, y]) => {
-      const floor = slab(size, size, height, 0.3, mat(hqTone, { roughness: 0.45 })); floor.position.y = y; scene.add(floor);
-      const band = new THREE.Mesh(new THREE.BoxGeometry(size * 0.7, 0.12, size + 0.02), windowsMaterial); band.position.y = y + height * 0.55; scene.add(band);
-    });
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.9, 8), white); mast.position.y = 4.45; scene.add(mast);
-    const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.14, 16, 16), new THREE.MeshBasicMaterial({ color: 0x34c27a })); beacon.position.y = 4.95; scene.add(beacon);
-    anchors.hq = new THREE.Vector3(0, 5.5, 0);
-
-    // Макс in front of the tower, phone in hand.
-    const me = new THREE.Group();
-    const pad = slab(1.7, 1.7, 0.12, 0.5, mat(0x2a2c30, { roughness: 0.8 })); me.add(pad);
-    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.27, 0.5, 6, 16), mat(0x24292b)); body.position.y = 0.66; body.castShadow = true; me.add(body);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 24, 16), mat(0xf0c9a4, { roughness: 0.7 })); head.position.y = 1.36; head.castShadow = true; me.add(head);
-    const phone = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.34, 0.03), new THREE.MeshBasicMaterial({ color: 0x3cc7d9 })); phone.position.set(0.36, 0.9, -0.22); phone.rotation.x = -0.5; me.add(phone);
-    me.position.set(0, 0, 5.4); scene.add(me);
-    anchors.me = new THREE.Vector3(0, 2.3, 5.4);
-
-    const pulses = [];
-    function wire(from, to, tone, planned, lift) {
-      const mid = from.clone().lerp(to, 0.5); mid.y += lift;
-      const curve = new THREE.CatmullRomCurve3([from, mid, to]);
-      scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 36, planned ? 0.018 : 0.035, 8, false), new THREE.MeshBasicMaterial({ color: tone, transparent: true, opacity: planned ? 0.22 : 0.5 })));
-      if (planned) return;
-      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), new THREE.MeshBasicMaterial({ color: tone }));
-      dot.position.copy(curve.getPoint(0.5)); scene.add(dot);
-      pulses.push({ dot, curve, phase: pulses.length * 0.37 });
+    const part = (geometry, material, x, y, z) => { const mesh = new THREE.Mesh(geometry, material); mesh.position.set(x, y, z); return mesh; };
+    // Soft round shadows painted under things: every floor keeps its own, nothing leaks to the floor below.
+    const shade = document.createElement('canvas'); shade.width = shade.height = 128;
+    const ink = shade.getContext('2d'), fade = ink.createRadialGradient(64, 64, 6, 64, 64, 64);
+    fade.addColorStop(0, 'rgba(30,24,16,.42)'); fade.addColorStop(0.55, 'rgba(30,24,16,.16)'); fade.addColorStop(1, 'rgba(30,24,16,0)');
+    ink.fillStyle = fade; ink.fillRect(0, 0, 128, 128);
+    const shadeMaterial = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shade), transparent: true, depthWrite: false });
+    function blob(x, y, z, w, d) {
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, d), shadeMaterial);
+      mesh.rotation.x = -Math.PI / 2; mesh.position.set(x + 0.25, y + 0.02, z + 0.2); world.add(mesh);
     }
-    wire(new THREE.Vector3(0, 1.0, 4.9), new THREE.Vector3(0, 1.4, 1.5), 0x24292b, false, 0.8);
 
-    // One little robot per working department: the agent that lives in that folder.
-    const heads = [];
-    function robot(tone) {
-      const group = new THREE.Group();
-      const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.22, 6, 16), mat(tone)); torso.position.y = 0.3; torso.castShadow = true; group.add(torso);
-      const skull = new THREE.Group(); skull.position.y = 0.72; group.add(skull);
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 14), white); ball.castShadow = true; skull.add(ball);
-      const visor = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.11, 0.05), mat(0x1d1f23, { roughness: 0.2 })); visor.position.z = 0.17; skull.add(visor);
-      heads.push({ head: skull, phase: heads.length * 1.1 });
-      return group;
+    // Everything that depends on the cell width is built here, so a phone and a wide screen get their own building.
+    function build(cellX) {
+      if (world) { world.traverse(item => { if (item.geometry) item.geometry.dispose(); }); scene.remove(world); }
+      world = new THREE.Group(); scene.add(world);
+      CELL_X = cellX; WIDTH = COLS * CELL_X + 1.2; LIFT_X = WIDTH / 2 + 1.5;
+      // Floors and posts. The floor colour follows the page theme.
+      const floorMaterials = HQ_FLOORS.map((floor, index) => {
+        const material = mat(0xffffff, { roughness: 0.75, transparent: true, opacity: 0.94 });
+        const plate = slab(WIDTH, DEPTH, 0.32, 1.0, material); plate.position.y = floorY(index) - 0.32; world.add(plate);
+        const edge = slab(0.5, DEPTH - 1.6, 0.36, 0.2, mat(floor.tone, { roughness: 0.4 })); edge.position.set(-WIDTH / 2 + 0.55, floorY(index) - 0.33, 0); world.add(edge);
+        return { material, tone: new THREE.Color(floor.tone) };
+      });
+      const postMaterial = mat(0xcfc7b8, { roughness: 0.6 });
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, floorY(0), 12), postMaterial);
+        post.position.set(sx * (WIDTH / 2 - 0.55), floorY(0) / 2 - 0.16, sz * (DEPTH / 2 - 0.55)); world.add(post);
+      });
+      blob(0, -0.36, 0.6, WIDTH + 7, DEPTH + 6);
+
+      // What stands on a floor. Every builder returns a group standing at y = 0 and its height.
+      const heads = [];
+      const builders = {
+        me() {
+          const group = new THREE.Group();
+          group.add(slab(1.7, 1.7, 0.14, 0.6, mat(0x2a2c30, { roughness: 0.8 })));
+          group.add(part(new THREE.CapsuleGeometry(0.3, 0.55, 6, 16), mat(0x24292b), 0, 0.72, 0));
+          group.add(part(new THREE.SphereGeometry(0.27, 24, 16), mat(0xf0c9a4, { roughness: 0.7 }), 0, 1.5, 0));
+          return [group, 1.8];
+        },
+        phone(tone) {
+          const group = new THREE.Group(), tilt = new THREE.Group(); tilt.rotation.x = -0.16; group.add(tilt);
+          tilt.add(slab(0.85, 0.16, 1.5, 0.07, mat(0x24292b, { roughness: 0.3 })));
+          tilt.add(part(new THREE.BoxGeometry(0.7, 1.26, 0.02), glow(0x3cc7d9), 0, 0.75, 0.085));
+          [[-0.08, 1.05, 0.4], [0.06, 0.78, 0.34]].forEach(([x, y, w]) => tilt.add(part(new THREE.BoxGeometry(w, 0.16, 0.02), glow(0xfdfbf6), x, y, 0.095)));
+          return [group, 1.6];
+        },
+        laptop(tone) {
+          const group = new THREE.Group(), lid = new THREE.Group(); lid.position.set(0, 0.08, -0.5); lid.rotation.x = -0.24; group.add(lid);
+          group.add(slab(1.6, 1.1, 0.1, 0.12, mat(0xdfe3e8, { metalness: 0.2, roughness: 0.35 })));
+          lid.add(slab(1.6, 0.08, 1.05, 0.06, mat(0xdfe3e8, { metalness: 0.2, roughness: 0.35 })));
+          lid.add(part(new THREE.BoxGeometry(1.42, 0.86, 0.02), glow(0xd9a066), 0, 0.53, 0.045));
+          [[-0.25, 0.7, 0.7], [-0.1, 0.5, 1.0], [-0.35, 0.3, 0.5]].forEach(([x, y, w]) => lid.add(part(new THREE.BoxGeometry(w, 0.09, 0.02), glow(0xfdfbf6), x, y, 0.055)));
+          return [group, 1.2];
+        },
+        monitor(tone) {
+          const group = new THREE.Group();
+          group.add(slab(0.9, 0.6, 0.08, 0.15, mat(0xdfe3e8, { metalness: 0.2, roughness: 0.35 })));
+          group.add(part(new THREE.CylinderGeometry(0.07, 0.07, 0.5, 10), mat(0xdfe3e8), 0, 0.3, 0));
+          const frame = slab(1.9, 0.12, 1.15, 0.08, mat(0x24292b, { roughness: 0.3 })); frame.position.y = 0.5; group.add(frame);
+          const screen = part(new THREE.BoxGeometry(1.7, 0.95, 0.02), glow(0x3cc7d9), 0, 1.08, 0.07); group.add(screen);
+          [[-0.5, 0.3], [0, 0.55], [0.5, 0.4]].forEach(([x, h]) => { const bar = part(new THREE.BoxGeometry(0.28, h, 0.02), glow(0xfdfbf6), x, 0.72 + h / 2, 0.085); group.add(bar); });
+          return [group, 1.75];
+        },
+        tower(tone) {
+          const group = new THREE.Group();
+          [[2.0, 0.6, 0], [1.5, 0.5, 0.6], [1.0, 0.45, 1.1]].forEach(([size, height, y]) => {
+            const tier = slab(size, size, height, 0.25, mat(tone, { roughness: 0.4 })); tier.position.y = y; group.add(tier);
+            const band = part(new THREE.BoxGeometry(size * 0.66, 0.1, size + 0.02), glow(0xffe2a8), 0, y + height * 0.55, 0); group.add(band);
+          });
+          group.add(part(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), white, 0, 1.75, 0));
+          const beacon = part(new THREE.SphereGeometry(0.12, 16, 16), glow(0x34c27a), 0, 2.0, 0); group.add(beacon);
+          return [group, 2.1];
+        },
+        beat(tone, planned) {
+          const group = new THREE.Group();
+          const body = planned ? ghost(tone) : mat(tone, { roughness: 0.4 });
+          const puck = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.5, 40), body); puck.position.y = 0.25; group.add(puck);
+          const face = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.56, 0.06, 40), planned ? ghost(0xfdfbf6) : white); face.position.y = 0.52; group.add(face);
+          return [group, 0.6];
+        },
+        house(tone, planned) {
+          const group = new THREE.Group();
+          const body = planned ? ghost(tone) : mat(tone, { roughness: 0.45 });
+          const pad = slab(2.2, 2.0, 0.1, 0.6, planned ? ghost(tone) : mat(tone, { roughness: 0.9, transparent: true, opacity: 0.3 })); group.add(pad);
+          const walls = slab(1.35, 1.25, 1.15, 0.26, body); walls.position.set(-0.2, 0.1, 0); group.add(walls);
+          if (!planned) {
+            const band = part(new THREE.BoxGeometry(0.9, 0.12, 1.27), glow(0xffe2a8), -0.2, 0.78, 0); group.add(band);
+            // The little robot is the agent that lives in this department.
+            const robot = new THREE.Group(); robot.position.set(0.82, 0.1, 0.5);
+            robot.add(part(new THREE.CapsuleGeometry(0.16, 0.2, 6, 16), mat(tone), 0, 0.28, 0));
+            const skull = new THREE.Group(); skull.position.y = 0.68; robot.add(skull);
+            skull.add(part(new THREE.SphereGeometry(0.19, 20, 14), white, 0, 0, 0));
+            skull.add(part(new THREE.BoxGeometry(0.25, 0.1, 0.05), mat(0x1d1f23, { roughness: 0.2 }), 0, 0, 0.16));
+            heads.push({ head: skull, phase: heads.length * 1.1 });
+            group.add(robot);
+          }
+          return [group, 1.3];
+        },
+        app(tone) {
+          const group = new THREE.Group();
+          group.add(slab(1.9, 1.5, 0.14, 0.5, white));
+          const icon = slab(1.3, 0.34, 1.3, 0.3, mat(tone, { roughness: 0.35 })); icon.position.y = 0.14; icon.rotation.x = -0.12; group.add(icon);
+          const dot = part(new THREE.SphereGeometry(0.2, 20, 14), white, 0, 0.82, 0.2); group.add(dot);
+          return [group, 1.55];
+        },
+        mini() {
+          const group = new THREE.Group();
+          group.add(slab(1.9, 1.9, 0.5, 0.45, mat(0xe4e7eb, { metalness: 0.25, roughness: 0.3 })));
+          const led = part(new THREE.SphereGeometry(0.06, 12, 12), glow(0x34c27a), 0.7, 0.2, 0.96); group.add(led);
+          return [group, 0.6];
+        },
+        stack(tone) {
+          const group = new THREE.Group();
+          [0, 0.34, 0.68].forEach((y, index) => { const sheet = slab(1.6 - index * 0.12, 1.2 - index * 0.1, 0.26, 0.14, mat(index === 2 ? tone : 0xe9e4da, { roughness: 0.6 })); sheet.position.y = y; group.add(sheet); });
+          return [group, 1.0];
+        },
+      };
+      const SHAPES = { me: 'me', jarvis: 'phone', chat: 'laptop', center: 'monitor', hq: 'tower', mon: 'beat', day: 'beat', sun: 'beat', mac: 'mini', github: 'stack', drive: 'stack', vault: 'stack' };
+
+      const anchors = {}, tops = {}, floorOf = {};
+      HQ_FLOORS.forEach((floor, floorIndex) => {
+        const nodes = HQ_NODES.filter(node => node.floor === floor.id);
+        const back = nodes.slice(0, Math.min(COLS, nodes.length)), front = nodes.slice(COLS);
+        const tone = new THREE.Color(floor.tone).getHex();
+        [[back, front.length ? -CELL_Z / 2 : 0], [front, CELL_Z / 2]].forEach(([row, z]) => row.forEach((node, index) => {
+          const x = (index - (row.length - 1) / 2) * CELL_X;
+          const shape = SHAPES[node.id] || (floor.id === 'dept' ? 'house' : 'app');
+          const [group, height] = builders[shape](tone, node.state === 'plan');
+          group.position.set(x, floorY(floorIndex), z); group.scale.setScalar(SIZE); world.add(group);
+          blob(x, floorY(floorIndex), z, 3.0 * SIZE, 2.6 * SIZE);
+          floorOf[node.id] = floorIndex;
+          tops[node.id] = new THREE.Vector3(x, floorY(floorIndex) + height * SIZE, z);
+          // On a floor with two rows the back row's name tags ride a little higher, so the rows never cover each other.
+          anchors[node.id] = new THREE.Vector3(x, floorY(floorIndex) + height * SIZE + (front.length && row === back ? 0.7 : 0.35), z);
+        }));
+        anchors[`floor-${floor.id}`] = new THREE.Vector3(-WIDTH / 2, floorY(floorIndex), 0.4);
+        anchors[`floor-${floor.id}-narrow`] = new THREE.Vector3(-WIDTH / 2 + 0.55, floorY(floorIndex) + 0.1, 0);
+      });
+      // Monday → every day → Sunday: two small arrows on the HQ floor.
+      [['mon', 'day'], ['day', 'sun']].forEach(([from, to]) => {
+        const a = tops[from], b = tops[to], y = floorY(1) + 0.3;
+        const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.5, 16), mat(0x0a7f93)); arrow.rotation.z = -Math.PI / 2; arrow.position.set((a.x + b.x) / 2 + 0.75, y, a.z); world.add(arrow);
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.4, 10), mat(0x0a7f93)); shaft.rotation.z = Math.PI / 2; shaft.position.set((a.x + b.x) / 2 - 0.2, y, a.z); world.add(shaft);
+      });
+
+      // The story path. Down the front of the building floor by floor, back up the lift on the right.
+      const ACCENT = 0xff9d2e;
+      const legs = HQ_STORY.map((step, index) => {
+        const from = tops[step.at].clone(), to = tops[HQ_STORY[(index + 1) % HQ_STORY.length].at].clone();
+        from.y += 0.25; to.y += 0.25;
+        let points;
+        if (Math.abs(from.y - to.y) < GAP / 2) {
+          const mid = from.clone().lerp(to, 0.5); mid.y += 1.3;
+          points = [from, mid, to];
+        } else if (to.y < from.y) {
+          const drop = floorY(floorOf[HQ_STORY[(index + 1) % HQ_STORY.length].at]) + 0.45;
+          points = [from, new THREE.Vector3(from.x, from.y + 0.2, FRONT), new THREE.Vector3(from.x, drop, FRONT), new THREE.Vector3(to.x, drop, FRONT), to];
+        } else {
+          points = [from, new THREE.Vector3(LIFT_X, from.y, from.z), new THREE.Vector3(LIFT_X, to.y + 0.6, to.z), to];
+        }
+        const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.12);
+        const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 80, 0.06, 8, false), new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.16 }));
+        world.add(tube);
+        return { curve, tube };
+      });
+      const walker = new THREE.Mesh(new THREE.SphereGeometry(0.24, 20, 16), glow(ACCENT)); world.add(walker);
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.46, 20, 16), new THREE.MeshBasicMaterial({ color: ACCENT, transparent: true, opacity: 0.25 })); world.add(halo);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.25 * SIZE, 0.06, 8, 48), glow(ACCENT)); ring.rotation.x = Math.PI / 2; world.add(ring);
+      return { floorMaterials, postMaterial, heads, anchors, tops, floorOf, legs, walker, halo, ring };
     }
-    const place = (radius, degrees) => { const a = degrees * Math.PI / 180; return new THREE.Vector3(Math.sin(a) * radius, 0, Math.cos(a) * radius); };
-    const spots = { hq: new THREE.Vector3(0, 0, 0) };
-    HQ_NODES.filter(node => node.group === 'dept').forEach((node, index) => {
-      const at = place(7.6, node.angle); spots[node.id] = at;
-      const tone = hex(node.tone), planned = node.state === 'plan';
-      const floor = new THREE.Mesh(new THREE.CylinderGeometry(1.55, 1.55, 0.1, 48), planned ? ghost(tone) : mat(tone, { roughness: 0.9, transparent: true, opacity: 0.35 }));
-      floor.position.set(at.x, 0.05, at.z); floor.receiveShadow = true; scene.add(floor);
-      const height = 1.2 + (index % 3) * 0.35;
-      const house = slab(1.35, 1.35, height, 0.28, planned ? ghost(tone) : mat(tone)); house.position.set(at.x, 0.1, at.z); house.lookAt(0, 0.1, 0);
-      if (planned) house.castShadow = false;
-      scene.add(house);
-      if (!planned) {
-        const band = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 1.37), windowsMaterial); band.position.set(at.x, 0.1 + height * 0.6, at.z); band.lookAt(0, 0.1 + height * 0.6, 0); scene.add(band);
-        const bot = robot(tone); const side = place(7.6, node.angle + 11); bot.position.set(side.x * 0.84, 0.1, side.z * 0.84); bot.lookAt(0, 0.1, 0); scene.add(bot);
-      }
-      anchors[node.id] = new THREE.Vector3(at.x, height + 0.9, at.z);
-      wire(new THREE.Vector3(at.x * 0.78, 0.25, at.z * 0.78), new THREE.Vector3(at.x * 0.36, 0.5, at.z * 0.36), tone, planned, 0.7);
-    });
-    HQ_NODES.filter(node => node.group === 'system').forEach(node => {
-      const at = place(13.2, node.angle); spots[node.id] = at;
-      const tone = hex(node.tone);
-      const base = slab(1.9, 1.9, 0.28, 0.5, mat(0xfdfbf6, { roughness: 0.7 })); base.position.set(at.x, 0, at.z); scene.add(base);
-      const screen = slab(1.2, 0.16, 0.95, 0.06, mat(tone, { roughness: 0.35 })); screen.position.set(at.x, 0.28, at.z); screen.lookAt(0, 0.28, 0); scene.add(screen);
-      anchors[node.id] = new THREE.Vector3(at.x, 2.1, at.z);
-      const owner = spots[node.link] || spots.hq;
-      const from = new THREE.Vector3(at.x, 0.4, at.z).lerp(new THREE.Vector3(owner.x, 0.4, owner.z), 0.12);
-      const to = new THREE.Vector3(at.x, 0.4, at.z).lerp(new THREE.Vector3(owner.x, 0.6, owner.z), node.link === 'hq' ? 0.8 : 0.72);
-      wire(from, to, tone, false, node.link === 'hq' ? 2.2 : 0.8);
-    });
+    function paint() {
+      if (!built) return;
+      const dark = isDark();
+      const base = new THREE.Color(dark ? 0x2b2721 : 0xfffdf8);
+      built.floorMaterials.forEach(entry => { entry.material.color.copy(base).lerp(entry.tone, dark ? 0.26 : 0.18); });
+      built.postMaterial.color.set(dark ? 0x4a4238 : 0xcfc7b8);
+      hemisphere.intensity = dark ? 0.75 : 1.0;
+    }
+    new MutationObserver(paint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    darkQuery.addEventListener('change', paint);
 
-    // The week: a ring around the tower with three stops and one light going round.
-    const BEAT_RADIUS = 4.3, BEAT_Y = 2.4;
-    const beatRing = new THREE.Mesh(new THREE.TorusGeometry(BEAT_RADIUS, 0.03, 8, 96), new THREE.MeshBasicMaterial({ color: 0x8a8478, transparent: true, opacity: 0.6 }));
-    beatRing.rotation.x = Math.PI / 2; beatRing.position.y = BEAT_Y; scene.add(beatRing);
-    const beatAt = share => { const a = share * Math.PI * 2 + 2.6; return new THREE.Vector3(Math.sin(a) * BEAT_RADIUS, BEAT_Y, Math.cos(a) * BEAT_RADIUS); };
-    HQ_NODES.filter(node => node.group === 'beat').forEach(node => {
-      const stop = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), node.state === 'plan' ? ghost(hex(node.tone)) : mat(hex(node.tone)));
-      stop.position.copy(beatAt(node.beat)); scene.add(stop);
-      anchors[node.id] = stop.position.clone().add(new THREE.Vector3(0, 0.45, 0));
-    });
-    const weekLight = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffb347 }));
-    weekLight.position.copy(beatAt(0.1)); scene.add(weekLight);
-
+    // Name tags: one per thing, one title per floor.
     const labelsHost = document.getElementById('hq-stage-labels');
     const labels = HQ_NODES.map(node => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `watch-stage-label${node.id === 'hq' ? ' is-hub' : ''}${node.state === 'plan' ? ' is-plan' : ''}${node.group === 'beat' ? ' is-beat' : ''}${node.group === 'system' ? ' is-far' : ''}`;
-      button.style.setProperty('--watch-tone', node.tone);
+      button.className = `hq-tag${node.state === 'plan' ? ' is-plan' : ''}`;
+      button.style.setProperty('--hq-tone', HQ_FLOORS.find(floor => floor.id === node.floor).tone);
       button.dataset.ccInfo = `hq-${node.id}`;
-      const strong = document.createElement('strong'); strong.textContent = node.tag || node.name; button.append(strong);
+      button.setAttribute('aria-label', node.name);
+      const icon = document.createElement('i'); icon.textContent = node.icon; icon.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span'); name.textContent = node.name;
+      button.append(icon, name);
       labelsHost.appendChild(button);
-      return { key: node.id, button };
+      return { key: node.id, element: button };
+    });
+    const floorLabels = HQ_FLOORS.map((floor, index) => {
+      const tag = document.createElement('div'); tag.className = 'hq-floor';
+      tag.style.setProperty('--hq-tone', floor.tone);
+      const number = document.createElement('b'); number.textContent = String(index + 1);
+      const title = document.createElement('strong'); title.textContent = floor.title;
+      const line = document.createElement('small'); line.textContent = floor.line;
+      tag.append(number, title, line);
+      labelsHost.appendChild(tag);
+      return { key: `floor-${floor.id}`, element: tag };
     });
 
-    let drag = null;
+    // The story clock. Each step: the light rests on its node, then walks to the next one.
+    const REST = 2200, WALK = 1700, STEP = REST + WALK;
+    let storyStart = performance.now(), frozenStep = 0;
+    hqStory.onPick(index => { storyStart = performance.now() - index * STEP; frozenStep = index; });
+
+    let drag = null, narrow = false;
     const pointers = new Map();
-    const MIN_DISTANCE = 16, MAX_DISTANCE = 70;
+    const frustum = { left: -1, right: 1, top: 1, bottom: -1 };
     stage.addEventListener('pointerdown', event => {
       if (event.target.closest('button')) return;
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -15882,55 +16073,103 @@ const HQ_NODES = [
       if (pointers.size === 2) {
         const after = [...pointers.values()];
         const gap = list => Math.hypot(list[0].x - list[1].x, list[0].y - list[1].y);
-        look.distance = Math.min(MAX_DISTANCE, Math.max(MIN_DISTANCE, look.distance * gap(before) / Math.max(1, gap(after))));
+        look.zoom = Math.min(3, Math.max(0.7, look.zoom * gap(after) / Math.max(1, gap(before))));
         return;
       }
       if (!drag) return;
-      look.azimuth = drag.azimuth - (event.clientX - drag.x) * 0.008;
-      look.elevation = Math.min(1.4, Math.max(0.2, drag.elevation + (event.clientY - drag.y) * 0.006));
+      // The building only turns a little: it must stay readable as floors.
+      look.azimuth = Math.min(1.0, Math.max(-1.0, drag.azimuth - (event.clientX - drag.x) * 0.006));
+      look.elevation = Math.min(0.95, Math.max(0.18, drag.elevation + (event.clientY - drag.y) * 0.005));
     });
     const release = event => { pointers.delete(event.pointerId); if (!pointers.size) { drag = null; stage.classList.remove('is-dragging'); } };
     stage.addEventListener('pointerup', release);
     stage.addEventListener('pointercancel', release);
     stage.addEventListener('wheel', event => {
+      if (!event.ctrlKey && !event.metaKey) return; // plain scrolling belongs to the page
       event.preventDefault();
-      look.distance = Math.min(MAX_DISTANCE, Math.max(MIN_DISTANCE, look.distance * (1 + Math.sign(event.deltaY) * 0.08)));
+      look.zoom = Math.min(3, Math.max(0.7, look.zoom * (1 - Math.sign(event.deltaY) * 0.08)));
     }, { passive: false });
     document.getElementById('hq-stage-reset').addEventListener('click', () => Object.assign(look, HOME));
 
+    function aim() {
+      camera.position.set(
+        target.x + 120 * Math.cos(look.elevation) * Math.sin(look.azimuth),
+        target.y + 120 * Math.sin(look.elevation),
+        target.z + 120 * Math.cos(look.elevation) * Math.cos(look.azimuth));
+      camera.lookAt(target);
+      camera.updateMatrixWorld();
+    }
+    // Fit the whole building into the stage at the home angle, leaving room on the left for floor titles.
+    const corner = new THREE.Vector3();
+    function fit(width, height) {
+      narrow = width < 700;
+      stage.classList.toggle('is-narrow', narrow);
+      const cell = narrow ? CELL_NARROW : CELL_WIDE;
+      if (cell !== CELL_X) { built = build(cell); paint(); }
+      const saved = { ...look }; Object.assign(look, HOME); aim();
+      const inverse = camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const x of [-WIDTH / 2, LIFT_X + 0.4]) for (const y of [-0.4, TOP]) for (const z of [-DEPTH / 2, FRONT + 0.3]) {
+        corner.set(x, y, z).applyMatrix4(inverse);
+        minX = Math.min(minX, corner.x); maxX = Math.max(maxX, corner.x); minY = Math.min(minY, corner.y); maxY = Math.max(maxY, corner.y);
+      }
+      const pad = narrow ? { left: 10, right: 10, top: 34, bottom: 118 } : { left: 236, right: 28, top: 40, bottom: 54 };
+      const roomX = width - pad.left - pad.right, roomY = height - pad.top - pad.bottom;
+      const scale = Math.min(roomX / (maxX - minX), roomY / (maxY - minY));
+      frustum.left = minX - (pad.left + (roomX - (maxX - minX) * scale) / 2) / scale;
+      frustum.right = frustum.left + width / scale;
+      frustum.top = maxY + (pad.top + (roomY - (maxY - minY) * scale) / 2) / scale;
+      frustum.bottom = frustum.top - height / scale;
+      Object.assign(camera, frustum);
+      Object.assign(look, saved);
+    }
+
     const projected = new THREE.Vector3();
+    let fitted = '';
     function frame(now) {
       const visible = !document.hidden && section.classList.contains('active') && section.classList.contains('is-hq');
       if (!visible) { setTimeout(() => requestAnimationFrame(frame), 800); return; }
       const width = stage.clientWidth, height = stage.clientHeight;
-      if (renderer.domElement.width !== Math.round(width * renderer.getPixelRatio()) || renderer.domElement.height !== Math.round(height * renderer.getPixelRatio())) {
+      if (fitted !== `${width}x${height}`) {
+        fitted = `${width}x${height}`;
         renderer.setSize(width, height, false);
-        camera.aspect = width / Math.max(1, height);
-        camera.updateProjectionMatrix();
-        // A narrow phone screen needs the camera further back to keep the outer ring in view.
-        HOME.distance = camera.aspect < 1 ? 62 : 41;
-        if (!drag && look.distance < HOME.distance && camera.aspect < 1) look.distance = HOME.distance;
+        fit(width, height);
       }
-      camera.position.set(
-        target.x + look.distance * Math.cos(look.elevation) * Math.sin(look.azimuth),
-        target.y + look.distance * Math.sin(look.elevation),
-        target.z + look.distance * Math.cos(look.elevation) * Math.cos(look.azimuth));
-      camera.lookAt(target);
+      aim();
+      camera.zoom = look.zoom; camera.updateProjectionMatrix();
+      const { heads, anchors, tops, floorOf, legs, walker, halo, ring } = built;
+
+      let step = frozenStep, share = 0;
       if (!reduced.matches) {
+        const clock = Math.max(0, now - storyStart) % (STEP * HQ_STORY.length);
+        step = Math.floor(clock / STEP);
+        share = Math.max(0, (clock - step * STEP - REST) / WALK);
         heads.forEach(entry => { entry.head.rotation.y = Math.sin(now / 1600 + entry.phase) * 0.7; });
-        pulses.forEach(entry => { entry.dot.position.copy(entry.curve.getPoint((now / 5200 + entry.phase) % 1)); });
-        weekLight.position.copy(beatAt((now / 21000) % 1));
+        halo.scale.setScalar(1 + Math.sin(now / 260) * 0.14);
+        ring.scale.setScalar(1 + Math.sin(now / 420) * 0.06);
       }
+      const eased = share * share * (3 - 2 * share);
+      walker.position.copy(legs[step].curve.getPoint(eased)); halo.position.copy(walker.position);
+      const lit = share > 0.55 ? (step + 1) % HQ_STORY.length : step;
+      const home = tops[HQ_STORY[lit].at];
+      ring.position.set(home.x, floorY(floorOf[HQ_STORY[lit].at]) + 0.06, home.z);
+      legs.forEach((leg, index) => { leg.tube.material.opacity = index === step ? 0.9 : 0.16; });
+      hqStory.show(lit);
+
       renderer.render(scene, camera);
-      labels.forEach(label => {
-        projected.copy(anchors[label.key]).project(camera);
-        label.button.style.transform = `translate(${(projected.x * 0.5 + 0.5) * width}px, ${(-projected.y * 0.5 + 0.5) * height}px) translate(-50%, -100%)`;
-      });
+      const place = (entry, anchor, shift) => {
+        projected.copy(anchor).project(camera);
+        entry.element.style.transform = `translate(${(projected.x * 0.5 + 0.5) * width}px, ${(-projected.y * 0.5 + 0.5) * height}px) ${shift}`;
+      };
+      labels.forEach(label => { place(label, anchors[label.key], 'translate(-50%, -100%)'); label.element.classList.toggle('is-lit', label.key === HQ_STORY[lit].at); });
+      floorLabels.forEach(label => narrow
+        ? place(label, anchors[`${label.key}-narrow`], 'translate(-50%, -50%)')
+        : place(label, anchors[label.key], 'translate(-100%, -50%) translate(-18px, 0)'));
       requestAnimationFrame(frame);
     }
     stage.hidden = false;
     requestAnimationFrame(frame);
-  }).catch(() => { /* The cards below stay as they are. */ });
+  }).catch(() => { /* The floors and the story below stay as they are. */ });
 })();
 
 
