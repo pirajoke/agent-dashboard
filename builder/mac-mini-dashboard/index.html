@@ -15956,7 +15956,7 @@ const HQ_NODES = [
   { id: 'it', floor: 'dept', icon: '🛠', name: 'ИТ', short: 'машины, доступы, бэкапы', state: 'on', what: 'Следит за Mac mini и ноутбуками: службы, резервные копии, доступы, обновления. Факты о машинах живут здесь, а не в памяти чатов.', from: 'Personal Corp 3, урок 5' },
   { id: 'learning', floor: 'dept', icon: '🎓', name: 'Обучение', short: 'курсы и конспекты', state: 'on', what: 'Хранит расшифровки и конспекты курсов. Любой агент может спросить «что Рис говорил про X» и получить ответ с номером урока.', from: 'Personal Corp 2, урок 1: папка обучения' },
   { id: 'crm', floor: 'dept', icon: '🤝', name: 'CRM', short: 'люди, встречи, договорённости', state: 'plan', what: 'Будущий отдел. Сырые записи встреч (Granola, PLAUD, голосовые) складываются в одну папку и превращаются в карточки людей, компаний, встреч и возможностей. У каждого факта указан источник.', from: 'Personal Corp 2, урок 4. Последний шаг плана' },
-  { id: 'ai', floor: 'dept', icon: '🤖', name: 'Агенты', short: 'ревьюер и руководитель проекта', state: 'plan', what: 'Будущий отдел с постоянными ролями агентов: один ведёт проект, другой независимо проверяет работу и выносит вердикт.', from: 'Personal Corp 3, урок 7; Personal Corp 2, урок 8' },
+  { id: 'ai', floor: 'dept', icon: '🤖', name: 'Агенты', short: 'ревьюер и руководитель проекта', state: 'on', what: 'Отдел corp-ai с постоянными ролями агентов: руководитель ведёт проект, ревьюер независимо проверяет работу и выносит вердикт 🟢/🟡/🔴. Оба агента установлены на Mac mini 10.11.', from: 'Personal Corp 3, урок 7; Personal Corp 2, урок 8' },
   { id: 'research', floor: 'dept', icon: '🔎', name: 'Исследования', short: 'отчёты с источниками', state: 'on', what: 'Проверяет рынок, имена, конкурентов и законы. Каждый отчёт лежит в общем списке с датой и источниками.', from: 'Personal Corp 3, урок 3' },
   { id: 'media', floor: 'dept', icon: '📣', name: 'Медиа', short: 'посты в Telegram и LinkedIn', state: 'on', what: 'Готовит черновики постов по твоим правилам стиля. Публикуешь только ты.', from: 'Personal Corp 3, урок 4; Personal Corp 2, урок 6' },
   { id: 'family', floor: 'dept', icon: '🌳', name: 'Семья', short: 'генеалогия и семейная история', state: 'on', what: 'Собирает семейную историю: архивы, записи разговоров с бабушкой и дедушкой, дерево рода.', from: 'твой собственный отдел' },
@@ -16185,9 +16185,16 @@ const HQ_TRUNK = { you: 'me', hq: 'hq' };
     showStep(last ? 0 : step + 1, true);
     timer = setTimeout(tick, step === HQ_STORY.length - 1 ? HOLD : STEP);
   }
+  // On open the whole diagram is there at once (Макс, 10.11: «сделай чтобы сразу появлялось»);
+  // the floor-by-floor growth plays only on «Показать сначала».
+  function showAll() {
+    clearTimeout(timer);
+    phase = 'story'; wire(); showGrown(floors.length); showStep(0, true);
+    if (!reduced.matches) timer = setTimeout(tick, STEP);
+  }
   function play() {
     clearTimeout(timer);
-    if (reduced.matches) { phase = 'story'; wire(); showGrown(floors.length); showStep(0, true); return; }
+    if (reduced.matches) { showAll(); return; }
     phase = 'grow'; showStep(0, false); wire(); showGrown(0);
     say('', 'Как устроен твой штаб: пять этажей, сверху вниз.');
     timer = setTimeout(tick, 500);
@@ -16202,7 +16209,7 @@ const HQ_TRUNK = { you: 'me', hq: 'hq' };
     let queued = 0;
     new ResizeObserver(() => { cancelAnimationFrame(queued); queued = requestAnimationFrame(wire); }).observe(body);
   } else window.addEventListener('resize', wire);
-  play();
+  showAll();
 })();
 
 // The scene: five glass floors on four posts. Things stand on their floor in tidy rows, every one with
