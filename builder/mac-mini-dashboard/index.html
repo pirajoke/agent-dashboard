@@ -13553,8 +13553,17 @@ function formatInterval(sec) {
   return `раз в ${sec} с`;
 }
 
+// Scheduled jobs stay in the list (Mark 2026-11-10, Docker Guardian): a healthy one between runs reads «Ждёт запуска».
 function visibleRuntimeServices(services) {
-  return (services || []).filter(s => s.cat !== 'scheduled');
+  return services || [];
+}
+
+// A job launchd starts on a schedule (StartInterval): between runs it has no process, and that is normal
+// while the last run ended cleanly. A failed run or a job launchd has not loaded stays a problem.
+function svcWaiting(s) {
+  if (s.status === 'running' || !(s.interval || s.cat === 'scheduled')) return false;
+  if (SVC_NOTES.some(note => note.test(String(s.desc || '')))) return false;
+  return s.exit_code === null || s.exit_code === undefined || s.exit_code === 0;
 }
 
 const SVC_ARCHIVE_STORAGE_KEY = 'command-center.service-archive.v1';
@@ -13635,7 +13644,7 @@ function svcUid(tbodyId, s) {
 }
 
 function svcProblem(s) {
-  if (svcOffOnPurpose(s)) return null;
+  if (svcOffOnPurpose(s) || svcWaiting(s)) return null;
   const desc = String(s.desc || '');
   if (s.status !== 'running') {
     if (/не загружена в launchd/.test(desc)) return {label: 'Не запущена', why: 'macOS не загрузила задачу, она не выполняется'};
@@ -13815,7 +13824,7 @@ function renderSvcRow(s, tbodyId, actionFn, archived) {
   const name = escapeHtml(s.name || s.label || '—');
   const off = svcOffOnPurpose(s);
   const state = problem ? 'bad' : off ? 'off' : 'ok';
-  const stateLabel = problem ? problem.label : off ? 'Выключен' : 'Работает';
+  const stateLabel = problem ? problem.label : off ? 'Выключен' : svcWaiting(s) ? 'Ждёт запуска' : 'Работает';
   const desc = escapeHtml(svcPlainDesc(s));
   const control = IS_PUBLIC_DASHBOARD || !s.label ? '' : (s.status === 'running'
     ? `<button class="svc-btn stop" type="button" onclick="${actionFn}('${s.label}','stop')">Остановить</button>`
@@ -13824,6 +13833,7 @@ function renderSvcRow(s, tbodyId, actionFn, archived) {
     problem ? ['Что не так', problem.why] : null,
     s.port ? ['Порт', `:${s.port}${s.port_ok === false ? ' — не отвечает' : (s.port_ok ? ' — отвечает' : '')}`] : null,
     s.interval ? ['Расписание', formatInterval(s.interval)] : null,
+    svcWaiting(s) ? ['Сейчас', 'работает по расписанию, последний запуск без ошибок'] : null,
     ['Как запущен', s.runtime || '—'],
     s.desc && s.desc !== svcPlainDesc(s) ? ['Описание', s.desc] : null,
     ['launchd', s.label || '—'],
@@ -15122,6 +15132,26 @@ const MEDIC_REPAIRS_WORDS = {
   offline: 'Журнал открывается только на сайте.',
 };
 
+// Mark 2026-11-10: three equal medic restarts in a row read as one line «… ×3» with the time of the latest.
+function medicRepairGroups(entries) {
+  const groups = [];
+  for (const entry of entries || []) {
+    const last = groups[groups.length - 1];
+    if (last && last.entry.machine === entry.machine && last.entry.problem === entry.problem && last.entry.fix === entry.fix) {
+      last.count += 1;
+    } else {
+      groups.push({ entry, count: 1 });
+    }
+  }
+  return groups;
+}
+
+function medicTime(at) {
+  const date = at ? new Date(at) : null;
+  return date && !Number.isNaN(date.getTime())
+    ? `, ${date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}` : '';
+}
+
 function medicHistoryNode() {
   const box = document.createElement('section');
   box.className = 'cc-medic-history';
@@ -15136,11 +15166,11 @@ function medicHistoryNode() {
     const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = 'Пока ничего не записано.'; box.append(p);
   }
   const list = document.createElement('ul');
-  for (const entry of medicRepairs.slice(0, 8)) {
+  for (const { entry, count } of medicRepairGroups(medicRepairs).slice(0, 8)) {
     const li = document.createElement('li');
     const when = document.createElement('span'); when.className = 'cc-medic-when';
-    when.textContent = `${medicDay(entry.date)} · ${MEDIC_MACHINE_NAMES[entry.machine] || entry.machine}`;
-    const what = document.createElement('span'); what.textContent = entry.problem;
+    when.textContent = `${medicDay(entry.date)}${medicTime(entry.at)} · ${MEDIC_MACHINE_NAMES[entry.machine] || entry.machine}`;
+    const what = document.createElement('span'); what.textContent = count > 1 ? `${entry.problem} ×${count}` : entry.problem;
     const fix = document.createElement('span'); fix.className = 'cc-medic-advice'; fix.textContent = `Сделали: ${entry.fix}`;
     li.append(when, what, fix);
     list.append(li);
