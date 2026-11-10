@@ -34,7 +34,7 @@ class HqMap3dTest(unittest.TestCase):
         self.assertEqual(len({node[0] for node in nodes}), len(nodes))
         self.assertTrue(all(node[1] in {"you", "hq", "dept", "product", "base"} for node in nodes))
         planned = {node[0] for node in nodes if node[2] == "plan"}
-        self.assertEqual(planned, {"crm", "ai", "mon", "sun"})
+        self.assertEqual(planned, {"crm", "mon", "sun"})
 
     def test_the_story_walks_real_nodes_from_max_down_and_back(self):
         steps = re.findall(r"\{ at: '([a-z]+)', text: '[^']{20,}' \}", self.code)
@@ -81,10 +81,18 @@ class HqMap3dTest(unittest.TestCase):
         tree = self.code[self.code.index("(function hqTree() {"):self.code.index("// The scene: five glass floors")]
         self.assertIn("section.classList.contains('is-hq') && map.classList.contains('is-tree')", tree)
         self.assertIn("if (!visible()) { timer = setTimeout(tick, 800); return; }", tree)
-        self.assertIn("if (reduced.matches) { phase = 'story'; wire(); showGrown(floors.length); showStep(0, true); return; }", tree)
+        self.assertIn("if (reduced.matches) { showAll(); return; }", tree)
         self.assertIn("for (const squeeze of ['is-tight', 'is-tighter'])", tree)
         self.assertIn("tree.classList.toggle('is-stack', wrapped);", tree)
         self.assertIn("@media (prefers-reduced-motion: reduce) { .hq-tree-replay { display: none; } }", PAGE)
+
+
+    def test_the_whole_diagram_is_there_on_open_and_grows_only_on_replay(self):
+        """Макс, 10.11: «сделай чтобы сразу появлялось». Waiting for five floors to grow was too slow."""
+        tree = self.code[self.code.index("(function hqTree() {"):self.code.index("// The scene: five glass floors")]
+        self.assertIn("phase = 'story'; wire(); showGrown(floors.length); showStep(0, true);", tree)
+        self.assertTrue(tree.rstrip().endswith("showAll();\n})();"))
+        self.assertIn("document.getElementById('hq-tree-replay').addEventListener('click', play);", tree)
 
 
 if __name__ == "__main__":
