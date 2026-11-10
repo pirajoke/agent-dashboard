@@ -95,6 +95,9 @@ MEDIA_LINKEDIN_ACTIONS = {
     "/api/media/linkedin/comment-rewrite": lambda body: media_linkedin.comment_rewrite(body),
     "/api/media/linkedin/comment-send": lambda body: media_linkedin.comment_send(body),
     "/api/media/linkedin/comment-close": lambda body: media_linkedin.comment_close(body),
+    # Mark 2026-11-10: the daily digest per channel (Telegram / LinkedIn / X) in «Медиа».
+    "/api/media/linkedin/digest-text": lambda body: media_linkedin.digest_text(body),
+    "/api/media/linkedin/digest-decide": lambda body: media_linkedin.digest_decide(body),
 }
 CAMPUS_ARCHIVE_FILE = HOME / ".agent-bridge" / "campus-archive.json"
 LIVE_SESSIONS_DIR = HOME / ".agent-bridge" / "live-sessions"
