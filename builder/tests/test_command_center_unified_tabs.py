@@ -654,7 +654,8 @@ process.stdout.write(JSON.stringify({keyboard,dragged,restored:readPlatformOrder
         self.assertIsNotNone(nav_match)
         nav = nav_match.group(1)
         # Mark 2026-10-14: «По дням» (today) is gone, MAIN MANAGER is the first tab.
-        routes = ("work", "growth", "agents", "architecture", "platforms", "media", "documents", "context", "machines")
+        # Mark 2026-11-06 «меньше вкладок»: the first four are the menu, the rest wait under «Ещё».
+        routes = ("work", "platforms", "documents", "agents", "machines", "context", "growth", "weekly", "media", "architecture")
 
         for route in routes:
             with self.subTest(route=route):

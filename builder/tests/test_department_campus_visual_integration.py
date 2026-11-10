@@ -203,19 +203,21 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         # Mark (2026-10-14): MAIN MANAGER is the first screen and «По дням» is gone, since
         # MAIN MANAGER already says it; the tabs are in Russian; the technical machine pages
         # stay in the last tab, «Техника». «Точки роста» (Mark 2026-10-14) follows MAIN MANAGER;
-        # «Архитектура» (Mark 2026-10-26) follows Агенты.
+        # «Архитектура» (Mark 2026-10-26) follows Агенты. Mark 2026-11-06 «меньше вкладок»: MAIN MANAGER
+        # became «Сегодня», and the first four tabs are the menu, the rest wait under «Ещё».
         self.assertEqual(
             [(item["target"], item["text"]) for item in parser.navigation],
             [
-                ("work", "MAIN MANAGER"),
-                ("growth", "Точки роста"),
-                ("agents", "Агенты"),
-                ("architecture", "Архитектура"),
+                ("work", "Сегодня"),
                 ("platforms", "Платформы"),
-                ("media", "Медиа"),
                 ("documents", "Документы"),
-                ("context", "Контекст"),
+                ("agents", "Агенты"),
                 ("machines", "Техника"),
+                ("context", "Контекст"),
+                ("growth", "Точки роста"),
+                ("weekly", "Итоги недели"),  # Mark 2026-11-07
+                ("media", "Медиа"),
+                ("architecture", "Архитектура"),
             ],
         )
 
@@ -238,7 +240,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "architecture", "platforms", "media", "documents", "context", "work", "growth", "genealogy"],
+            ["mac-mini", "air", "pro", "machines", "agents", "architecture", "platforms", "media", "documents", "context", "work", "growth", "weekly"],
         )
         # Агенты opens on «Сессии» since 2026-10-25; the campus is one tap away.
         self.assertIn(

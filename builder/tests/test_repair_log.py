@@ -33,6 +33,16 @@ class RepairLogTests(unittest.TestCase):
         self.assertEqual(repair_log.load_entries(self.path), record)
         self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
 
+    def test_new_entry_keeps_its_time_and_same_day_entries_stay_newest_first(self):
+        repair_log.change_entries(self.path, {"action": "add", "machine": "mini", "problem": "a", "fix": "b"}, now=NOW)
+        later = datetime(2026, 11, 2, 14, 5, tzinfo=timezone.utc)
+        record = repair_log.change_entries(self.path, {"action": "add", "machine": "mini", "problem": "c", "fix": "d"}, now=later)
+        self.assertEqual([e["at"] for e in record["entries"]], ["2026-11-02T14:05:00Z", "2026-11-02T10:00:00Z"])
+        self.assertEqual(repair_log.load_entries(self.path), record)
+        backdated = repair_log.change_entries(self.path, {"action": "add", "machine": "pro", "date": "2026-10-30",
+                                                          "problem": "e", "fix": "f"}, now=NOW)
+        self.assertNotIn("at", backdated["entries"][-1])
+
     def test_bad_input_is_refused_without_touching_the_file(self):
         for body in ({"action": "add", "machine": "pc", "problem": "x", "fix": "y"},
                      {"action": "add", "machine": "pro", "problem": "", "fix": "y"},

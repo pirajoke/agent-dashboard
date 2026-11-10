@@ -31,6 +31,7 @@ SIGNS = ("ram", "cpu", "disk", "service", "network", "other")
 _STORE_LOCK = threading.Lock()
 _ID = re.compile(r"^r-[a-f0-9]{8}$")
 _DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_AT = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$")
 
 
 class StoreUnavailable(OSError):
@@ -65,6 +66,10 @@ def _clean_entry(entry: object, *, now: datetime | None = None, new: bool = Fals
     if not isinstance(entry_id, str) or not _ID.match(entry_id):
         return None
     clean = {"id": entry_id, "machine": machine, "date": day, "problem": problem, "fix": fix, "signs": signs}
+    # The time of the entry (UTC) lets the Медик show «×3, last at 14:05»; older entries have only the day.
+    at = (now or datetime.now(timezone.utc)).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if new and not entry.get("date") else entry.get("at")
+    if isinstance(at, str) and _AT.match(at):
+        clean["at"] = at
     try:
         by = _clean_text(entry.get("by"), 40)
     except ValueError:
@@ -87,7 +92,7 @@ def load_entries(path: Path) -> dict:
     if not isinstance(data, dict) or not isinstance(data.get("entries"), list):
         raise StoreUnavailable("repair_log_unreadable")
     entries = [clean for clean in (_clean_entry(item) for item in data["entries"]) if clean]
-    entries.sort(key=lambda item: item["date"], reverse=True)
+    entries.sort(key=lambda item: (item["date"], item.get("at", "")), reverse=True)
     return {"entries": entries[:MAX_ENTRIES]}
 
 
@@ -111,7 +116,7 @@ def change_entries(path: Path, body: object, *, now: datetime | None = None) -> 
                 raise LookupError("entry_not_found")
         else:
             raise ValueError("unknown_action")
-        entries.sort(key=lambda item: item["date"], reverse=True)
+        entries.sort(key=lambda item: (item["date"], item.get("at", "")), reverse=True)
         record = {"entries": entries[:MAX_ENTRIES]}
         _write_json(path, record, prefix=".machine-repairs-")
         return record
