@@ -4108,28 +4108,57 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-schedule .media-save { grid-column: 1 / -1; margin: 0; }
 .media-panel.media-digest-panel, .media-panel.media-news-panel, .media-panel.media-channel-panel, .media-panel.media-comments-panel { padding: 16px 18px; }
 .media-digest-panel > h3, .media-channel-panel > h3 { margin: 0 0 4px; font-size: 16px; font-weight: 750; }
-.media-digest-list { display: grid; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
-.media-digest { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-background); }
-.media-digest-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--mm-muted); }
-.media-digest-head strong { color: var(--mm-ink); font-size: 14px; }
-.media-digest-text { margin: 0; white-space: pre-line; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
-.media-digest-text.media-digest-empty { display: block; padding: 0; }
-.media-digest textarea { width: 100%; min-height: 160px; padding: 10px 12px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box; }
-.media-digest[data-channel="x"] textarea { min-height: 96px; }
+.media-digest-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+.media-digest { flex: 1 1 300px; box-sizing: border-box; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-background); }
+.media-digest.is-today { flex-basis: 100%; grid-template-columns: 148px minmax(0, 1fr); padding: 12px; }
+.media-digest-cover { aspect-ratio: 1; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: var(--mm-surface-hover); }
+.media-digest.is-today .media-digest-cover { aspect-ratio: 4 / 3; }
+.media-digest-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-digest-cover.is-linkedin { background: linear-gradient(135deg, #0a66c2, #5aa7f0); }
+.media-digest-cover.is-telegram { background: linear-gradient(135deg, #229ed9, #7fd0f5); }
+.media-digest-cover.is-x { background: linear-gradient(135deg, #0f1419, #4a5560); }
+.media-digest-cover > span { box-shadow: none; background: rgba(255,255,255,.18); }
+.media-digest-main { display: grid; gap: 6px; min-width: 0; }
+.media-digest-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12.5px; color: var(--mm-muted); }
+.media-digest-head strong { color: var(--mm-ink); font-size: 13.5px; }
+.media-digest-text { margin: 0; white-space: normal; font-size: 13.5px; line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.media-digest.is-today .media-digest-text { -webkit-line-clamp: 4; line-clamp: 4; font-size: 14px; }
+.media-digest-text.is-empty { color: var(--mm-muted); }
+.media-digest-text[hidden], .media-digest-edit[hidden] { display: none; }
+.media-digest-edit { display: grid; gap: 6px; }
+.media-digest textarea { width: 100%; min-height: 140px; padding: 10px 12px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box; }
+.media-digest[data-channel="x"] textarea { min-height: 84px; }
+.media-digest-editbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.media-digest-count { color: var(--mm-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.media-digest-count.is-over { color: var(--mm-danger); font-weight: 700; }
 .media-digest-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.media-digest-foot .media-digest-count { margin-right: auto; color: var(--mm-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.media-digest-foot .media-digest-count.is-over { color: var(--mm-danger); font-weight: 700; }
-.media-digest-status { color: var(--mm-muted); font-size: 12.5px; }
-.media-digest-empty { padding: 14px; color: var(--mm-muted); font-size: 13.5px; }
+.media-digest-status { margin-right: auto; color: var(--mm-muted); font-size: 12.5px; }
+.media-digest-empty { flex-basis: 100%; padding: 14px; color: var(--mm-muted); font-size: 13.5px; }
 /* fewer, smaller pictures: a thumbnail, not a poster */
 .media-card-open { grid-template-columns: 112px minmax(0, 1fr); }
 .media-card .media-car-art { min-height: 72px; aspect-ratio: auto; }
 .media-air-card { grid-template-columns: 180px minmax(0, 1fr); }
 .media-car-art.media-air-art { min-height: 120px; }
 .media-col-list { max-height: 420px; }
+/* Max 2026-11-10 «много пустого места… нужен минимализм»: one line per thing, no empty boxes. */
+.media-air { grid-template-columns: minmax(0, 1fr); }
+.media-air-next { display: none; }
+.media-board:has(#media-col-sent .media-col-empty) { grid-template-columns: minmax(0, 1fr); }
+.media-board:has(#media-col-sent .media-col-empty) .media-col[data-col="sent"] { display: none; }
+.media-col .media-card .media-car-art { min-height: 64px; }
+.media-col .media-card-open { grid-template-columns: 72px minmax(0, 1fr); }
+.media-news-art:not(:has(img)) { aspect-ratio: auto; height: 34px; }
+.media-news-art:not(:has(img)) .media-news-art-name { font-size: 13px; }
 @media (max-width: 760px) {
   .media-schedule { grid-template-columns: minmax(0, 1fr); }
   .media-schedule .media-slots { gap: 6px; }
+  .media-digest.is-today { grid-template-columns: minmax(0, 1fr); }
+  .media-digest.is-today .media-digest-cover { aspect-ratio: 2.4 / 1; }
+  .media-digest-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .media-digest-foot .media-digest-status { grid-column: 1 / -1; }
+  .media-digest-foot .media-digest-status:empty { display: none; }
+  .media-digest-foot button { min-width: 0; justify-content: center; padding-inline: 8px; font-size: 13.5px; }
+  .media-digest-foot .media-primary { grid-column: 1 / -1; }
   .media-schedule .media-slots li { flex: 1 1 calc(25% - 6px); min-width: 0; padding: 0 16px 0 8px; font-size: 15px; }
   .media-channels { width: 100%; flex-wrap: nowrap; gap: 4px; box-sizing: border-box; }
   .media-channel-tab { flex: 1 1 0; min-width: 0; justify-content: center; gap: 6px; padding: 6px; font-size: 13px; }
@@ -11861,35 +11890,48 @@ function mediaRenderDigests(data) {
       continue;
     }
     const items = mediaDigests.items.filter(item => item[channel]);
-    list.innerHTML = items.length ? items.slice(0, 7).map(item => mediaDigestHtml(item, channel)).join('')
+    list.innerHTML = items.length ? items.slice(0, 5).map((item, i) => mediaDigestHtml(item, channel, i === 0)).join('')
       : '<li class="media-digest-empty">Дайджестов за неделю пока нет.</li>';
   }
 }
 
-function mediaDigestHtml(item, channel) {
+function mediaDigestCover(item, channel) {
+  const image = item.linkedin?.image_url;
+  if (typeof image === 'string' && /^https:\/\//i.test(image)) {
+    return `<div class="media-digest-cover"><img src="${mediaEsc(image)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>`;
+  }
+  const icon = document.querySelector(`#media-tab-${channel} > span:first-child`);
+  return `<div class="media-digest-cover is-${channel}" aria-hidden="true">${icon ? icon.outerHTML : ''}</div>`;
+}
+
+function mediaDigestHtml(item, channel, today) {
   const version = item[channel] || {};
   const [stateLabel, stateKind] = MEDIA_DIGEST_STATES[version.state] || [version.state || '', ''];
   const text = String(version.text || '');
   const limit = MEDIA_DIGEST_LIMITS[channel];
   const count = mediaDigestCount(channel, text);
   const editable = item.editable && version.state !== 'missing';
-  const body = editable
-    ? `<label class="media-sr" for="media-digest-${channel}-${mediaEsc(item.id)}">Текст для ${channel}</label>
-       <textarea id="media-digest-${channel}-${mediaEsc(item.id)}" data-digest-text maxlength="${limit * 2}">${mediaEsc(text)}</textarea>`
-    : (text ? `<p class="media-digest-text">${mediaEsc(text)}</p>`
-      : `<p class="media-digest-text media-digest-empty">${mediaEsc(version.reason ? `Версии нет: ${MEDIA_REASONS[version.reason] || 'модель не справилась'}.` : 'Версии нет.')}</p>`);
+  const preview = text ? `<p class="media-digest-text">${mediaEsc(text)}</p>`
+    : `<p class="media-digest-text is-empty">${mediaEsc(version.reason ? `Версии нет: ${MEDIA_REASONS[version.reason] || 'модель не справилась'}.` : 'Версии нет.')}</p>`;
+  const edit = editable ? `
+    <div class="media-digest-edit" hidden>
+      <label class="media-sr" for="media-digest-${channel}-${mediaEsc(item.id)}">Текст для ${channel}</label>
+      <textarea id="media-digest-${channel}-${mediaEsc(item.id)}" data-digest-text maxlength="${limit * 2}">${mediaEsc(text)}</textarea>
+      <div class="media-digest-editbar"><span class="media-digest-count${count > limit ? ' is-over' : ''}" data-digest-count>${count} / ${limit}</span>
+        <button type="button" class="media-ghost" data-digest-save>Сохранить</button></div>
+    </div>` : '';
   const actions = item.editable ? `
-      <button type="button" class="media-ghost" data-digest-save>Сохранить текст</button>
+      ${editable ? '<button type="button" class="media-ghost" data-digest-edit aria-expanded="false">Изменить</button>' : ''}
       <button type="button" class="media-ghost" data-digest-decide="no">✖ Не публиковать</button>
       <button type="button" class="media-primary" data-digest-decide="yes">✅ Одобрить</button>` : '';
-  return `<li class="media-digest" data-id="${mediaEsc(item.id)}" data-channel="${channel}">
-    <div class="media-digest-head"><strong>${mediaEsc(mediaDigestDay(item.telegram?.due_at))}</strong>
-      <span>выход ${mediaEsc(mediaTime(version.due_at))}</span>
-      ${stateLabel ? `<span class="media-chip ${stateKind}">${mediaEsc(stateLabel)}</span>` : ''}</div>
-    ${body}
-    <div class="media-digest-foot">
-      ${editable ? `<span class="media-digest-count${count > limit ? ' is-over' : ''}" data-digest-count>${count} / ${limit}</span>` : ''}
-      <span class="media-digest-status" role="status" aria-live="polite"></span>${actions}
+  return `<li class="media-digest${today ? ' is-today' : ''}" data-id="${mediaEsc(item.id)}" data-channel="${channel}">
+    ${mediaDigestCover(item, channel)}
+    <div class="media-digest-main">
+      <div class="media-digest-head"><strong>${mediaEsc(mediaDigestDay(item.telegram?.due_at))}</strong>
+        <span>${mediaEsc(mediaTime(version.due_at))}</span>
+        ${stateLabel ? `<span class="media-chip ${stateKind}">${mediaEsc(stateLabel)}</span>` : ''}</div>
+      ${preview}${edit}
+      ${actions ? `<div class="media-digest-foot"><span class="media-digest-status" role="status" aria-live="polite"></span>${actions}</div>` : ''}
     </div>
   </li>`;
 }
@@ -12825,6 +12867,19 @@ function mediaInit() {
     counter.classList.toggle('is-over', count > limit);
   });
   document.getElementById('media-body').addEventListener('click', event => {
+    const toggle = event.target.closest('[data-digest-edit]');
+    if (toggle) {
+      const card = toggle.closest('.media-digest');
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.textContent = open ? 'Готово' : 'Изменить';
+      card.querySelector('.media-digest-edit').hidden = !open;
+      const preview = card.querySelector('.media-digest-text');
+      if (!open) preview.textContent = card.querySelector('[data-digest-text]').value;
+      preview.hidden = open;
+      if (open) card.querySelector('[data-digest-text]').focus();
+      return;
+    }
     const button = event.target.closest('[data-digest-save], [data-digest-decide]');
     if (button) mediaDigestAction(button);
   });
