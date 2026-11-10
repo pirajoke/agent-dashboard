@@ -5420,6 +5420,60 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .hq-card.is-plan strong::after { content: ' · в плане'; color: var(--mm-warning); font-weight: 600; font-size: 12px; }
 .hq-card:hover { border-color: var(--hq-tone, var(--mm-accent)); }
 .hq-card:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+/* «Схема растёт» (Макс 2026-11-10, «2 супер»): the same five floors as a flat diagram that grows top to
+   bottom, then one orange line walks the path of a single task. It is the first view; the 3D house stays second. */
+.hq-views { margin: 0 0 12px; }
+.hq-map.is-tree .hq-stage, .hq-map.is-tree .hq-legend, .hq-map.is-tree .hq-hint-3d, .hq-map:not(.is-tree) .hq-tree, .hq-map:not(.is-tree) .hq-hint-tree { display: none; }
+.hq-tree { position: relative; margin: 0 0 12px; padding: 18px 20px 20px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 18px; box-shadow: var(--mm-shadow-soft); }
+.hq-tree-cap { min-height: 2.5em; margin: 0 150px 14px 0; color: var(--mm-ink); font-size: 20px; font-weight: 750; line-height: 1.25; letter-spacing: -0.012em; }
+.hq-tree-cap b { color: #d95a12; font-weight: inherit; }
+.hq-tree-replay { position: absolute; right: 14px; top: 14px; min-height: 32px; padding: 4px 12px; color: var(--mm-accent); font: inherit; font-size: 12.5px; font-weight: 650; background: var(--mm-surface); border: 1px solid var(--mm-control-line); border-radius: 10px; cursor: pointer; }
+.hq-tree-replay:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.hq-tree-body { position: relative; display: grid; gap: 40px; }
+.hq-tree-wires { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.hq-tree-wires path { fill: none; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.hq-wire { stroke: var(--mm-control-line); stroke-width: 2.5; transition: stroke-dashoffset .45s ease var(--hq-wait, 0ms); }
+.hq-wire.is-out { stroke-dashoffset: 1; transition: none; }
+.hq-hot { stroke: #ef6a1a; stroke-width: 4.5; stroke-linecap: round; transition: stroke-dashoffset .9s ease; }
+.hq-hot:not(.is-on) { stroke-dashoffset: 1; visibility: hidden; transition: none; }
+.hq-tree-floor { position: relative; display: grid; grid-template-columns: 172px minmax(0, 1fr); gap: 14px; align-items: center; }
+.hq-tree-lab { display: grid; grid-template-columns: auto 1fr; column-gap: 11px; align-items: center; transition: opacity .35s ease, transform .4s ease; }
+.hq-tree-lab b { grid-row: span 2; min-width: 28px; color: color-mix(in srgb, var(--hq-tone) 72%, var(--mm-ink)); font-size: 42px; font-weight: 900; line-height: 1; letter-spacing: -0.04em; }
+.hq-tree-lab strong { align-self: end; color: var(--mm-ink); font-size: 15px; line-height: 1.2; }
+.hq-tree-lab small { align-self: start; color: var(--mm-muted); font-size: 11.5px; line-height: 1.3; }
+.hq-tree-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding-right: 28px; }
+.hq-node { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 8px 13px; color: #fff; font: inherit; font-size: 13.5px; font-weight: 700; line-height: 1.15; white-space: nowrap; background: var(--hq-tone); border: 2px solid color-mix(in srgb, var(--hq-tone) 78%, var(--mm-ink)); border-radius: 13px; cursor: pointer; transition: opacity .35s ease calc(var(--hq-i, 0) * 55ms + 180ms), transform .45s cubic-bezier(.2, .9, .25, 1.2) calc(var(--hq-i, 0) * 55ms + 180ms), box-shadow .25s ease; }
+.hq-node i { font-style: normal; font-size: 15px; line-height: 1; }
+.hq-node.is-hero { min-width: 132px; font-size: 16.5px; font-weight: 800; }
+.hq-node.is-side { color: var(--mm-ink); background: var(--mm-surface); }
+.hq-node.is-plan { color: var(--mm-muted); background: var(--mm-surface); border-style: dashed; }
+.hq-node.is-plan::after { content: 'скоро'; color: var(--mm-warning); font-size: 10.5px; font-weight: 700; }
+.hq-node:hover { filter: brightness(1.06); }
+.hq-node:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 3px; }
+.hq-node.is-seen { box-shadow: 0 0 0 2px var(--mm-surface), 0 0 0 4px rgba(239, 106, 26, .55); }
+.hq-node.is-lit { box-shadow: 0 0 0 3px var(--mm-surface), 0 0 0 7px #ef6a1a; }
+.hq-tree-floor.is-out .hq-tree-lab { opacity: 0; transform: translateX(-12px); transition: none; }
+.hq-tree-floor.is-out .hq-node { opacity: 0; transform: translateY(10px) scale(.88); transition: none; }
+/* Three steps of squeezing before the diagram gives up and stacks: no «скоро» word, then no icons. */
+.hq-tree.is-tight .hq-tree-floor { grid-template-columns: 148px minmax(0, 1fr); gap: 12px; }
+.hq-tree.is-tight .hq-tree-lab b { font-size: 34px; min-width: 22px; }
+.hq-tree.is-tight .hq-tree-lab small { font-size: 11px; }
+.hq-tree.is-tight .hq-tree-row { gap: 8px; padding-right: 24px; }
+.hq-tree.is-tight .hq-node { padding: 7px 10px; font-size: 13px; }
+.hq-tree.is-tight .hq-node.is-plan::after { content: none; }
+.hq-tree.is-tighter .hq-node i { display: none; }
+.hq-tree.is-stack .hq-tree-wires { display: none; }
+.hq-tree.is-stack .hq-tree-body { gap: 20px; }
+.hq-tree.is-stack .hq-tree-floor { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 12px 12px 14px; background: var(--mm-background); border: 1px solid var(--mm-line); border-left: 4px solid var(--hq-tone); border-radius: 14px; transition: opacity .35s ease; }
+.hq-tree.is-stack .hq-tree-floor.is-out { opacity: 0; transition: none; }
+.hq-tree.is-stack .hq-tree-floor + .hq-tree-floor::before { content: ''; position: absolute; left: 24px; top: -21px; width: 3px; height: 21px; background: var(--mm-control-line); border-radius: 2px; }
+.hq-tree.is-stack .hq-tree-floor.is-passed::before { background: #ef6a1a; }
+.hq-tree.is-stack .hq-tree-lab b { font-size: 28px; min-width: 20px; }
+.hq-tree.is-stack .hq-tree-row { justify-content: flex-start; gap: 7px; padding-right: 0; }
+.hq-tree.is-stack .hq-node { min-height: 38px; padding: 6px 10px; font-size: 13px; }
+.hq-tree.is-stack .hq-node.is-hero { min-width: 0; font-size: 14.5px; }
+@media (max-width: 700px) { .hq-tree { padding: 14px 12px 14px; } .hq-tree-cap { margin-right: 0; font-size: 16.5px; min-height: 3.8em; } .hq-tree-replay { position: static; margin-top: 12px; } }
+@media (prefers-reduced-motion: reduce) { .hq-tree-replay { display: none; } }
 .hq-legend { display: none; }
 @media (max-width: 700px) { .hq-stage { height: 580px; } .hq-caption { right: 14px; bottom: 50px; max-width: none; font-size: 12.5px; } .hq-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 0 0 10px; font-size: 12.5px; font-weight: 650; } .hq-legend span { display: inline-flex; align-items: center; gap: 5px; } .hq-legend b { display: grid; place-items: center; width: 18px; height: 18px; color: #fff; font-size: 10.5px; background: var(--hq-tone); border-radius: 999px; } }
 @media (prefers-reduced-motion: reduce) { #section-architecture * { transition: none !important; animation: none !important; } }
@@ -7040,7 +7094,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <p class="cc-page-lede">Где работают агенты, кто ими управляет и куда уходит результат. Нажми на любой узел. <button type="button" class="cc-i" data-cc-info="arch-about" aria-label="Откуда данные на этой странице">i</button></p>
       </div>
       <div class="arch-modes" role="group" aria-label="Что показать">
-        <button type="button" id="arch-mode-hq" aria-pressed="true">Штаб 3D</button>
+        <button type="button" id="arch-mode-hq" aria-pressed="true">Штаб</button>
         <button type="button" id="arch-mode-live" aria-pressed="false">Сейчас</button>
         <button type="button" id="arch-mode-map" aria-pressed="false">Устройство</button>
       </div>
@@ -7049,14 +7103,24 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <div class="arch-kpis" id="arch-kpis"></div>
     <div class="arch-blockers" id="arch-blockers" hidden></div>
     <div class="arch-flow" id="arch-flow"></div>
-    <div class="hq-map" id="hq-map">
+    <div class="hq-map is-tree" id="hq-map">
+      <div class="arch-modes hq-views" id="hq-views" role="group" aria-label="Как показать штаб" hidden>
+        <button type="button" id="hq-view-tree" aria-pressed="true">Схема</button>
+        <button type="button" id="hq-view-3d" aria-pressed="false">Дом 3D</button>
+      </div>
+      <div class="hq-tree" id="hq-tree">
+        <p class="hq-tree-cap" id="hq-tree-cap"></p>
+        <div class="hq-tree-body" id="hq-tree-body"><svg class="hq-tree-wires" id="hq-tree-wires" aria-hidden="true" focusable="false"></svg></div>
+        <button type="button" class="hq-tree-replay" id="hq-tree-replay">Показать сначала</button>
+      </div>
+      <p class="hq-hint hq-hint-tree">Читай сверху вниз: пять этажей одной системы. Оранжевая линия идёт по пути одной задачи. Нажми на любой блок, чтобы узнать, что это и зачем. Пунктир: ещё в плане.</p>
       <div class="watch-stage hq-stage" id="hq-stage" hidden>
         <div class="watch-stage-labels" id="hq-stage-labels"></div>
         <p class="hq-caption" id="hq-caption"></p>
         <button type="button" class="watch-stage-reset" id="hq-stage-reset">Вернуть вид</button>
       </div>
       <div class="hq-legend" id="hq-legend" aria-hidden="true"></div>
-      <p class="hq-hint">Читай сверху вниз: это один дом из пяти этажей. Огонёк идёт по пути одной задачи. Нажми на любую подпись, чтобы узнать, что это и зачем. Пунктир: ещё в плане. Дом можно повернуть мышкой или пальцем.</p>
+      <p class="hq-hint hq-hint-3d">Читай сверху вниз: это один дом из пяти этажей. Огонёк идёт по пути одной задачи. Нажми на любую подпись, чтобы узнать, что это и зачем. Пунктир: ещё в плане. Дом можно повернуть мышкой или пальцем.</p>
       <h3 class="hq-head">Как идёт одна задача</h3>
       <ol class="hq-story" id="hq-story"></ol>
       <h3 class="hq-head">Что стоит на каждом этаже</h3>
@@ -15787,6 +15851,171 @@ const hqStory = (function hqStoryStrip() {
   return { show, onPick: listener => listeners.push(listener) };
 })();
 
+// Two ways to look at the same floors: the flat diagram (first) and the 3D house. The switch shows up
+// only when the 3D scene really started, so a browser without WebGL just has the diagram.
+const hqView = (function hqViewSwitch() {
+  const map = document.getElementById('hq-map');
+  const buttons = { tree: document.getElementById('hq-view-tree'), house: document.getElementById('hq-view-3d') };
+  function set(view) {
+    if (!map) return;
+    map.classList.toggle('is-tree', view !== 'house');
+    if (buttons.tree) buttons.tree.setAttribute('aria-pressed', String(view !== 'house'));
+    if (buttons.house) buttons.house.setAttribute('aria-pressed', String(view === 'house'));
+  }
+  if (buttons.tree) buttons.tree.addEventListener('click', () => set('tree'));
+  if (buttons.house) buttons.house.addEventListener('click', () => set('house'));
+  return { isHouse: () => Boolean(map) && !map.classList.contains('is-tree'), offerHouse: () => { const host = document.getElementById('hq-views'); if (host) host.hidden = false; } };
+})();
+
+// «Схема растёт» (Макс 2026-11-10 picked this one of three): floors appear one by one from the top, each
+// hanging from the one above; then an orange line draws the path of one task, step by step, and the result
+// rides back up on the right. Floors with a trunk node (Макс, Штаб) hang from it; its neighbours sit beside it.
+const HQ_TRUNK = { you: 'me', hq: 'hq' };
+(function hqTree() {
+  const tree = document.getElementById('hq-tree'), body = document.getElementById('hq-tree-body');
+  const wiresHost = document.getElementById('hq-tree-wires'), cap = document.getElementById('hq-tree-cap');
+  const section = document.getElementById('section-architecture'), map = document.getElementById('hq-map');
+  if (!tree || !body || !wiresHost || !section) return;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const SVG = 'http://www.w3.org/2000/svg';
+  const floorIndex = Object.fromEntries(HQ_FLOORS.map((floor, index) => [floor.id, index]));
+  const nodeFloor = Object.fromEntries(HQ_NODES.map(node => [node.id, floorIndex[node.floor]]));
+  const nodeEls = {};
+  const floors = HQ_FLOORS.map((floor, index) => {
+    const el = document.createElement('section'); el.className = 'hq-tree-floor';
+    el.style.setProperty('--hq-tone', floor.tone);
+    const lab = document.createElement('div'); lab.className = 'hq-tree-lab';
+    const number = document.createElement('b'); number.textContent = String(index + 1);
+    const title = document.createElement('strong'); title.textContent = floor.title;
+    const line = document.createElement('small'); line.textContent = floor.line;
+    lab.append(number, title, line);
+    const row = document.createElement('div'); row.className = 'hq-tree-row';
+    const ids = HQ_NODES.filter(node => node.floor === floor.id).map((node, order) => {
+      const button = document.createElement('button'); button.type = 'button';
+      const trunk = HQ_TRUNK[floor.id];
+      button.className = `hq-node${node.state === 'plan' ? ' is-plan' : trunk && node.id !== trunk ? ' is-side' : ''}${node.id === trunk ? ' is-hero' : ''}`;
+      button.style.setProperty('--hq-i', String(order));
+      button.dataset.ccInfo = `hq-${node.id}`;
+      const icon = document.createElement('i'); icon.textContent = node.icon; icon.setAttribute('aria-hidden', 'true');
+      const name = document.createElement('span'); name.textContent = node.name;
+      button.append(icon, name); row.append(button); nodeEls[node.id] = button;
+      return node.id;
+    });
+    el.append(lab, row); body.append(el);
+    return { el, row, ids, trunk: HQ_TRUNK[floor.id] || null, floor };
+  });
+
+  // What is on screen right now: how many floors have grown, and how far the task has walked.
+  let grown = floors.length, step = 0, phase = 'story', timer = 0, wires = [], legs = [];
+  const GROW = 1350, STEP = 2700, HOLD = 5200;
+
+  function path(points, className, wait) {
+    const el = document.createElementNS(SVG, 'path');
+    el.setAttribute('d', points.map((point, index) => `${index ? 'L' : 'M'}${point[0].toFixed(1)} ${point[1].toFixed(1)}`).join(' '));
+    el.setAttribute('pathLength', '1');
+    el.setAttribute('class', className);
+    if (wait) el.style.setProperty('--hq-wait', `${wait}ms`);
+    wiresHost.append(el);
+    return el;
+  }
+  // Lines are measured from the real boxes, so they follow any width. When a floor no longer fits on one
+  // line (a phone), the diagram becomes a stack of floor cards with a short connector between them.
+  function wire() {
+    if (!body.offsetWidth) return;
+    const wraps = () => floors.some(entry => { const tops = entry.ids.map(id => nodeEls[id].offsetTop); return Math.max(...tops) - Math.min(...tops) > 4; });
+    tree.classList.remove('is-tight', 'is-tighter', 'is-stack');
+    let wrapped = wraps();
+    for (const squeeze of ['is-tight', 'is-tighter']) if (wrapped) { tree.classList.add(squeeze); wrapped = wraps(); }
+    if (wrapped) tree.classList.remove('is-tight', 'is-tighter');
+    tree.classList.toggle('is-stack', wrapped);
+    wiresHost.replaceChildren(); wires = []; legs = [];
+    if (wrapped) return;
+    const box = body.getBoundingClientRect();
+    const at = id => { const r = nodeEls[id].getBoundingClientRect(); return { x: r.left - box.left + r.width / 2, y: r.top - box.top + r.height / 2, top: r.top - box.top, bottom: r.bottom - box.top, left: r.left - box.left, right: r.right - box.left }; };
+    const spot = Object.fromEntries(HQ_NODES.map(node => [node.id, at(node.id)]));
+    const add = (tier, points, wait) => wires.push({ tier, el: path(points, `hq-wire${tier >= grown ? ' is-out' : ''}`, wait) });
+    const bus = [];
+    floors.forEach((entry, index) => {
+      if (entry.trunk) add(index, [[spot[entry.ids[0]].x, spot[entry.ids[0]].y], [spot[entry.ids[entry.ids.length - 1]].x, spot[entry.ids[entry.ids.length - 1]].y]], 150);
+      const next = floors[index + 1];
+      if (!next) return;
+      const upper = entry.trunk ? [entry.trunk] : entry.ids, lower = next.trunk ? [next.trunk] : next.ids;
+      const y = (Math.max(...upper.map(id => spot[id].bottom)) + Math.min(...lower.map(id => spot[id].top))) / 2;
+      bus[index] = y;
+      const xs = [...upper, ...lower].map(id => spot[id].x);
+      upper.forEach(id => add(index + 1, [[spot[id].x, spot[id].bottom], [spot[id].x, y]], 0));
+      if (Math.max(...xs) - Math.min(...xs) > 1) add(index + 1, [[Math.min(...xs), y], [Math.max(...xs), y]], 120);
+      lower.forEach(id => add(index + 1, [[spot[id].x, y], [spot[id].x, spot[id].top]], 300));
+    });
+    const lift = box.width - 6;
+    legs = HQ_STORY.slice(0, -1).map((from, index) => {
+      const a = spot[from.at], b = spot[HQ_STORY[index + 1].at];
+      const down = nodeFloor[HQ_STORY[index + 1].at] - nodeFloor[from.at];
+      let points;
+      if (down === 0) points = b.x > a.x ? [[a.right, a.y], [b.left, b.y]] : [[a.left, a.y], [b.right, b.y]];
+      else if (down > 0) { const y = bus[nodeFloor[HQ_STORY[index + 1].at] - 1]; points = [[a.x, a.bottom], [a.x, y], [b.x, y], [b.x, b.top]]; }
+      else points = [[a.right, a.y], [lift, a.y], [lift, b.y], [b.right, b.y]];
+      return path(points, `hq-hot${index < step && phase === 'story' ? ' is-on' : ''}`);
+    });
+  }
+
+  function say(number, text) {
+    if (!cap) return;
+    const mark = document.createElement('b'); mark.textContent = number;
+    cap.replaceChildren(mark, ` ${text}`);
+  }
+  function showGrown(count) {
+    grown = count;
+    floors.forEach((entry, index) => entry.el.classList.toggle('is-out', index >= count));
+    wires.forEach(entry => entry.el.classList.toggle('is-out', entry.tier >= count));
+  }
+  function showStep(index, walking) {
+    step = index;
+    const seen = HQ_STORY.slice(0, index).map(item => item.at), now = HQ_STORY[index].at;
+    Object.entries(nodeEls).forEach(([id, el]) => { el.classList.toggle('is-lit', walking && id === now); el.classList.toggle('is-seen', walking && id !== now && seen.includes(id)); });
+    legs.forEach((leg, at) => leg.classList.toggle('is-on', walking && at < index));
+    const reached = walking ? Math.max(...[...seen, now].map(id => nodeFloor[id])) : -1;
+    floors.forEach((entry, at) => entry.el.classList.toggle('is-passed', at > 0 && at <= reached));
+    if (walking) { say(`${index + 1} из ${HQ_STORY.length}.`, HQ_STORY[index].text); hqStory.show(index); }
+  }
+  const visible = () => !document.hidden && section.classList.contains('active') && section.classList.contains('is-hq') && map.classList.contains('is-tree');
+  function tick() {
+    if (!visible()) { timer = setTimeout(tick, 800); return; }
+    if (phase === 'grow') {
+      if (grown < floors.length) {
+        showGrown(grown + 1);
+        say(`${grown}.`, `${floors[grown - 1].floor.title}: ${floors[grown - 1].floor.line}.`);
+        timer = setTimeout(tick, grown === floors.length ? GROW + 500 : GROW);
+        return;
+      }
+      phase = 'story'; showStep(0, true);
+      timer = setTimeout(tick, STEP);
+      return;
+    }
+    const last = step === HQ_STORY.length - 1;
+    showStep(last ? 0 : step + 1, true);
+    timer = setTimeout(tick, step === HQ_STORY.length - 1 ? HOLD : STEP);
+  }
+  function play() {
+    clearTimeout(timer);
+    if (reduced.matches) { phase = 'story'; wire(); showGrown(floors.length); showStep(0, true); return; }
+    phase = 'grow'; showStep(0, false); wire(); showGrown(0);
+    say('', 'Как устроен твой штаб: пять этажей, сверху вниз.');
+    timer = setTimeout(tick, 500);
+  }
+  hqStory.onPick(index => {
+    clearTimeout(timer);
+    phase = 'story'; showGrown(floors.length); showStep(index, true);
+    if (!reduced.matches) timer = setTimeout(tick, STEP * 1.6);
+  });
+  document.getElementById('hq-tree-replay').addEventListener('click', play);
+  if (typeof ResizeObserver !== 'undefined') {
+    let queued = 0;
+    new ResizeObserver(() => { cancelAnimationFrame(queued); queued = requestAnimationFrame(wire); }).observe(body);
+  } else window.addEventListener('resize', wire);
+  play();
+})();
+
 // The scene: five glass floors on four posts. Things stand on their floor in tidy rows, every one with
 // a name tag. Planned things are translucent. A single light walks the story path: down the front of
 // the building floor by floor, and back up the lift on the right.
@@ -16127,7 +16356,7 @@ const hqStory = (function hqStoryStrip() {
     const projected = new THREE.Vector3();
     let fitted = '';
     function frame(now) {
-      const visible = !document.hidden && section.classList.contains('active') && section.classList.contains('is-hq');
+      const visible = !document.hidden && section.classList.contains('active') && section.classList.contains('is-hq') && hqView.isHouse();
       if (!visible) { setTimeout(() => requestAnimationFrame(frame), 800); return; }
       const width = stage.clientWidth, height = stage.clientHeight;
       if (fitted !== `${width}x${height}`) {
@@ -16168,8 +16397,9 @@ const hqStory = (function hqStoryStrip() {
       requestAnimationFrame(frame);
     }
     stage.hidden = false;
+    hqView.offerHouse();
     requestAnimationFrame(frame);
-  }).catch(() => { /* The floors and the story below stay as they are. */ });
+  }).catch(() => { /* The diagram, the floors and the story stay as they are. */ });
 })();
 
 
