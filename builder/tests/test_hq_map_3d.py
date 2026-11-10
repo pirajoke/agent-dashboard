@@ -1,8 +1,13 @@
+import json
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
-PAGE = (Path(__file__).resolve().parents[1] / "mac-mini-dashboard" / "index.html").read_text(encoding="utf-8")
+HTML = Path(__file__).resolve().parents[1] / "mac-mini-dashboard" / "index.html"
+PAGE = HTML.read_text(encoding="utf-8")
 
 
 class HqMap3dTest(unittest.TestCase):
@@ -87,12 +92,54 @@ class HqMap3dTest(unittest.TestCase):
         self.assertIn("@media (prefers-reduced-motion: reduce) { .hq-tree-replay { display: none; } }", PAGE)
 
 
+OPEN_SCRIPT = r"""
+const { chromium } = require('playwright');
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto(process.argv[2] + '?tab=architecture');
+  await page.evaluate(() => showSection('architecture'));
+  const state = () => page.evaluate(() => ({
+    floors: document.querySelectorAll('.hq-tree-floor').length,
+    hidden: document.querySelectorAll('.hq-tree-floor.is-out').length,
+    caption: document.getElementById('hq-tree-cap').textContent,
+  }));
+  await page.waitForTimeout(400);
+  const open = await state();
+  await page.click('#hq-tree-replay');
+  await page.waitForTimeout(100);
+  const replay = await state();
+  await page.waitForTimeout(3200);
+  const grown = await state();
+  console.log(JSON.stringify({ open, replay, grown, errors }));
+  await browser.close();
+})().catch(e => { console.error(e); process.exit(1); });
+"""
+
+
+def _has_playwright():
+    if not shutil.which("node"):
+        return False
+    return subprocess.run(["node", "-e", "require('playwright')"], capture_output=True).returncode == 0
+
+
+@unittest.skipUnless(_has_playwright(), "playwright + chromium are needed to render the page")
+class HqTreeOpenTest(unittest.TestCase):
+    """Макс, 10.11: «сделай чтобы сразу появлялось». Waiting for five floors to grow was too slow."""
+
     def test_the_whole_diagram_is_there_on_open_and_grows_only_on_replay(self):
-        """Макс, 10.11: «сделай чтобы сразу появлялось». Waiting for five floors to grow was too slow."""
-        tree = self.code[self.code.index("(function hqTree() {"):self.code.index("// The scene: five glass floors")]
-        self.assertIn("phase = 'story'; wire(); showGrown(floors.length); showStep(0, true);", tree)
-        self.assertTrue(tree.rstrip().endswith("showAll();\n})();"))
-        self.assertIn("document.getElementById('hq-tree-replay').addEventListener('click', play);", tree)
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "open.js"
+            script.write_text(OPEN_SCRIPT)
+            result = subprocess.run(["node", str(script), HTML.as_uri()], capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        out = json.loads(result.stdout.strip().splitlines()[-1])
+        self.assertEqual(out["errors"], [])
+        self.assertEqual((out["open"]["floors"], out["open"]["hidden"]), (5, 0))
+        self.assertTrue(out["open"]["caption"].startswith("1 из 7."), out["open"]["caption"])
+        self.assertEqual(out["replay"]["hidden"], 5)
+        self.assertLess(out["grown"]["hidden"], 5)
 
 
 if __name__ == "__main__":
