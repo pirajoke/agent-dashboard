@@ -4086,6 +4086,97 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-save { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 8px 8px 8px 14px; border-radius: 999px; background: var(--mm-warning-soft); color: var(--mm-warning); font-size: 13px; font-weight: 600; }
 .media-save[hidden] { display: none; }
 .media-save.is-ok { background: var(--mm-success-soft); color: var(--mm-success); }
+/* Mark 2026-11-10: three channels side by side, schedule on top, no empty columns,
+   smaller pictures. */
+.media-channels { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px; border: 1px solid var(--mm-line); border-radius: 16px; background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); width: fit-content; max-width: 100%; }
+.media-channel-tab { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 16px 6px 8px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--mm-muted); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.media-channel-tab:hover { color: var(--mm-ink); background: var(--mm-surface-hover); }
+.media-channel-tab[aria-selected="true"] { color: var(--mm-ink); background: var(--mm-surface-hover); border-color: var(--mm-control-line); }
+.media-channel-tab:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.media-in-tab, .media-tg-tab, .media-x-tab { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-size: 15px; }
+.media-tg-tab { background: #229ed9; color: #fff; }
+.media-x-tab { background: #0f1419; color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.media-tg-tab svg, .media-x-tab svg { width: 17px; height: 17px; }
+.media-view { display: grid; gap: 16px; min-width: 0; }
+.media-view[hidden] { display: none; }
+.media-schedule { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px 16px; padding: 12px 16px; }
+.media-schedule .media-panel-head { margin: 0; }
+.media-schedule .media-panel-head p { max-width: 260px; }
+.media-schedule .media-slots { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.media-schedule .media-slots li { min-width: 84px; min-height: 42px; padding: 0 22px 0 12px; font-size: 17px; }
+.media-schedule .media-add input[type="time"] { width: 120px; flex: none; }
+.media-schedule .media-save { grid-column: 1 / -1; margin: 0; }
+.media-panel.media-digest-panel, .media-panel.media-news-panel, .media-panel.media-channel-panel, .media-panel.media-comments-panel { padding: 16px 18px; }
+.media-digest-panel > h3, .media-channel-panel > h3 { margin: 0 0 4px; font-size: 16px; font-weight: 750; }
+.media-digest-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+.media-digest { flex: 1 1 300px; box-sizing: border-box; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-background); }
+.media-digest.is-today { flex-basis: 100%; grid-template-columns: 148px minmax(0, 1fr); padding: 12px; }
+.media-digest-cover { aspect-ratio: 1; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: var(--mm-surface-hover); }
+.media-digest.is-today .media-digest-cover { aspect-ratio: 4 / 3; }
+.media-digest-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-digest-cover.is-linkedin { background: linear-gradient(135deg, #0a66c2, #5aa7f0); }
+.media-digest-cover.is-telegram { background: linear-gradient(135deg, #229ed9, #7fd0f5); }
+.media-digest-cover.is-x { background: linear-gradient(135deg, #0f1419, #4a5560); }
+.media-digest-cover > span { box-shadow: none; background: rgba(255,255,255,.18); }
+.media-digest-main { display: grid; gap: 6px; min-width: 0; }
+.media-digest-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12.5px; color: var(--mm-muted); }
+.media-digest-head strong { color: var(--mm-ink); font-size: 13.5px; }
+.media-digest-text { margin: 0; white-space: normal; font-size: 13.5px; line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.media-digest.is-today .media-digest-text { -webkit-line-clamp: 4; line-clamp: 4; font-size: 14px; }
+.media-digest-text.is-empty { color: var(--mm-muted); }
+.media-digest-text[hidden], .media-digest-edit[hidden] { display: none; }
+.media-digest-edit { display: grid; gap: 6px; }
+.media-digest textarea { width: 100%; min-height: 140px; padding: 10px 12px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box; }
+.media-digest[data-channel="x"] textarea { min-height: 84px; }
+.media-digest-editbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.media-digest-count { color: var(--mm-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.media-digest-count.is-over { color: var(--mm-danger); font-weight: 700; }
+.media-digest-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.media-digest-status { margin-right: auto; color: var(--mm-muted); font-size: 12.5px; }
+.media-digest-empty { flex-basis: 100%; padding: 14px; color: var(--mm-muted); font-size: 13.5px; }
+/* fewer, smaller pictures: a thumbnail, not a poster */
+.media-card-open { grid-template-columns: 112px minmax(0, 1fr); }
+.media-card .media-car-art { min-height: 72px; aspect-ratio: auto; }
+.media-air-card { grid-template-columns: 180px minmax(0, 1fr); }
+.media-car-art.media-air-art { min-height: 120px; }
+.media-col-list { max-height: 420px; }
+/* Max 2026-11-10 «оставь просто значки платформ»: icon-only tabs; Instagram, YouTube, TikTok soon. */
+.media-channels { gap: 4px; padding: 4px; border-radius: 14px; align-items: center; }
+.media-channel-tab { position: relative; gap: 0; min-height: 0; padding: 5px; border-radius: 11px; }
+.media-channel-tab[aria-selected="true"] { background: var(--mm-selection); border-color: var(--mm-accent); }
+.media-channel-tab.is-soon { cursor: default; opacity: .45; filter: grayscale(.6); }
+.media-channel-tab.is-soon:hover { background: transparent; }
+.media-channel-sep { width: 1px; height: 24px; margin: 0 4px; background: var(--mm-line); }
+.media-soon { position: absolute; right: -2px; bottom: -4px; padding: 0 4px; border-radius: 6px; background: var(--mm-surface); border: 1px solid var(--mm-line); color: var(--mm-muted); font-size: 9px; font-style: normal; font-weight: 700; line-height: 13px; }
+.media-ig-tab, .media-yt-tab, .media-tt-tab { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #fff; }
+.media-ig-tab { background: linear-gradient(45deg, #f9a03f, #e1306c 55%, #833ab4); }
+.media-yt-tab { background: #ff0033; }
+.media-tt-tab { background: #0f1419; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.media-ig-tab svg, .media-yt-tab svg, .media-tt-tab svg { width: 18px; height: 18px; }
+/* Max 2026-11-10 «много пустого места… нужен минимализм»: one line per thing, no empty boxes. */
+.media-air { grid-template-columns: minmax(0, 1fr); }
+.media-air-next { display: none; }
+.media-board:has(#media-col-sent .media-col-empty) { grid-template-columns: minmax(0, 1fr); }
+.media-board:has(#media-col-sent .media-col-empty) .media-col[data-col="sent"] { display: none; }
+.media-col .media-card .media-car-art { min-height: 64px; }
+.media-col .media-card-open { grid-template-columns: 72px minmax(0, 1fr); }
+.media-news-art:not(:has(img)) { aspect-ratio: auto; height: 34px; }
+.media-news-art:not(:has(img)) .media-news-art-name { font-size: 13px; }
+@media (max-width: 760px) {
+  .media-schedule { grid-template-columns: minmax(0, 1fr); }
+  .media-schedule .media-slots { gap: 6px; }
+  .media-digest.is-today { grid-template-columns: minmax(0, 1fr); }
+  .media-digest.is-today .media-digest-cover { aspect-ratio: 2.4 / 1; }
+  .media-digest-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .media-digest-foot .media-digest-status { grid-column: 1 / -1; }
+  .media-digest-foot .media-digest-status:empty { display: none; }
+  .media-digest-foot button { min-width: 0; justify-content: center; padding-inline: 8px; font-size: 13.5px; }
+  .media-digest-foot .media-primary { grid-column: 1 / -1; }
+  .media-schedule .media-slots li { flex: 1 1 calc(25% - 6px); min-width: 0; padding: 0 16px 0 8px; font-size: 15px; }
+  .media-channels { width: fit-content; flex-wrap: nowrap; }
+  .media-card-open { grid-template-columns: 84px minmax(0, 1fr); }
+  .media-air-card { grid-template-columns: 110px minmax(0, 1fr); }
+}
 .media-chip { padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; background: var(--mm-surface-hover); color: var(--mm-muted); }
 .media-chip.is-info { background: var(--mm-info-soft); color: var(--mm-info); }
 .media-chip.is-ok { background: var(--mm-success-soft); color: var(--mm-success); }
@@ -6942,7 +7033,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="media-title">Медиа</h2>
-        <p class="cc-page-lede">LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.</p>
+        <p class="cc-page-lede" id="media-lede">LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.</p>
       </div>
       <div class="media-head-actions">
         <button class="media-ghost" id="media-settings-open" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Настройки</span></button>
@@ -6951,8 +7042,42 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     </header>
     <p class="mm-notice" id="media-state" role="status" aria-live="polite">Загружаю…</p>
     <div class="media-studio" id="media-body" hidden>
-      <!-- Mark 2026-11-05: «сделай как медиа-штаб, красиво». Эфир (следующий выход + день) и доска
-           Черновики → В очереди → Вышло; карточка открывает пост. -->
+      <!-- Mark 2026-11-10: «разделил медиа-отдел: LinkedIn, Telegram и X, переключаюсь по иконке»;
+           «часы наверх, без пустых пробелов, понятная система». One channel at a time. -->
+      <div class="media-channels" role="tablist" aria-label="Канал">
+        <button type="button" role="tab" class="media-channel-tab" id="media-tab-linkedin" data-channel="linkedin" title="LinkedIn" aria-controls="media-view-linkedin" aria-selected="true"><span class="media-in media-in-tab" aria-hidden="true">in</span><span class="media-sr">LinkedIn</span></button>
+        <button type="button" role="tab" class="media-channel-tab" id="media-tab-telegram" data-channel="telegram" title="Telegram" aria-controls="media-view-telegram" aria-selected="false" tabindex="-1"><span class="media-tg-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="media-sr">Telegram</span></button>
+        <button type="button" role="tab" class="media-channel-tab" id="media-tab-x" data-channel="x" title="X" aria-controls="media-view-x" aria-selected="false" tabindex="-1"><span class="media-x-tab" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l16 16M20 4L4 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="media-sr">X</span></button>
+        <span class="media-channel-sep" aria-hidden="true"></span>
+        <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="Instagram · скоро"><span class="media-ig-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="16.8" cy="7.2" r="1.1" fill="currentColor"/></svg></span><span class="media-sr">Instagram, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
+        <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="YouTube · скоро"><span class="media-yt-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 8.5v7l6-3.5z" fill="currentColor"/></svg></span><span class="media-sr">YouTube, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
+        <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="TikTok · скоро"><span class="media-tt-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.5 4v10.2a3.2 3.2 0 1 1-3.2-3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13.5 4c.4 2.4 2 4 4.5 4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="media-sr">TikTok, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
+      </div>
+
+      <div class="media-view" id="media-view-linkedin" role="tabpanel" aria-labelledby="media-tab-linkedin" data-view="linkedin">
+          <article class="media-panel media-schedule" aria-labelledby="media-slots-title">
+            <header class="media-panel-head">
+              <span class="media-tile media-tile-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+              <div>
+                <h3 id="media-slots-title">Расписание</h3>
+                <p id="media-mode-note"></p>
+              </div>
+            </header>
+            <ul class="media-slots" id="media-slots"></ul>
+            <form class="media-add" id="media-add-form">
+              <label class="media-sr" for="media-add-time">Новое время</label>
+              <input type="time" id="media-add-time" step="300" required>
+              <button type="submit" class="media-ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cc-icon-plus"/></svg><span>Добавить время</span></button>
+            </form>
+            <div class="media-save" id="media-save-row" hidden>
+              <span id="media-slots-status" role="status" aria-live="polite">Есть несохранённые изменения</span>
+              <button type="button" class="media-primary" id="media-save-slots">Сохранить</button>
+            </div>
+          </article>
+        <article class="media-panel media-digest-panel" id="media-digest-linkedin" aria-labelledby="media-digest-linkedin-title" hidden>
+          <h3 id="media-digest-linkedin-title">Дайджест дня · английская версия</h3>
+          <ol class="media-digest-list" data-channel="linkedin"></ol>
+        </article>
       <section class="media-air" aria-labelledby="media-air-title">
         <h3 class="media-sr" id="media-air-title">Эфир LinkedIn</h3>
         <div class="media-air-next" id="media-air-next"></div>
@@ -6970,9 +7095,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <div class="media-col" data-col="sent"><header><h3>Вышло</h3><span class="media-col-count" id="media-count-sent">0</span></header>
           <ol class="media-col-list" id="media-col-sent"></ol></div>
       </section>
-
-      <div class="media-layout">
-        <div class="media-main">
         <!-- Mark 2026-11-05 23:03Z: news as picture cards, grouped by how fresh they are; can still be folded. -->
         <article class="media-panel media-news-panel" id="media-news-panel" aria-labelledby="media-news-title">
           <header class="media-panel-head">
@@ -7001,12 +7123,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
             </div>
           </div>
         </article>
-        <!-- The owner's own Telegram channel posts from the news service /today `channel` list (news-bot #80). -->
-        <article class="media-panel media-channel-panel" id="media-channel" aria-labelledby="media-channel-title" hidden>
-          <h3 id="media-channel-title">Telegram · канал</h3>
-          <p class="media-air-note">Твои посты в @technoosingularity: что ждёт своего времени и что вышло за два дня. Время Парижа.</p>
-          <ol class="media-posts-preview" id="media-channel-list"></ol>
-        </article>
         <article class="media-panel media-comments-panel" id="media-comments" aria-labelledby="media-comments-title" hidden>
           <header class="media-panel-head">
             <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
@@ -7027,29 +7143,28 @@ button.cc-refresh:hover { background: var(--mm-selection); }
           </form>
           <ol class="media-posts-preview" id="media-comments-list"></ol>
         </article>
-        </div>
+      </div>
 
-        <div class="media-side">
-          <article class="media-panel" aria-labelledby="media-slots-title">
-            <header class="media-panel-head">
-              <span class="media-tile media-tile-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-              <div>
-                <h3 id="media-slots-title">Расписание</h3>
-                <p id="media-mode-note"></p>
-              </div>
-            </header>
-            <ul class="media-slots" id="media-slots"></ul>
-            <form class="media-add" id="media-add-form">
-              <label class="media-sr" for="media-add-time">Новое время</label>
-              <input type="time" id="media-add-time" step="300" required>
-              <button type="submit" class="media-ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cc-icon-plus"/></svg><span>Добавить время</span></button>
-            </form>
-            <div class="media-save" id="media-save-row" hidden>
-              <span id="media-slots-status" role="status" aria-live="polite">Есть несохранённые изменения</span>
-              <button type="button" class="media-primary" id="media-save-slots">Сохранить</button>
-            </div>
-          </article>
-        </div>
+      <div class="media-view" id="media-view-telegram" role="tabpanel" aria-labelledby="media-tab-telegram" data-view="telegram" hidden>
+        <article class="media-panel media-digest-panel" id="media-digest-telegram" aria-labelledby="media-digest-telegram-title">
+          <h3 id="media-digest-telegram-title">Дайджест дня · @technoosingularity</h3>
+          <p class="media-air-note" id="media-digest-telegram-note"></p>
+          <ol class="media-digest-list" data-channel="telegram"></ol>
+        </article>
+        <!-- The owner's own Telegram channel posts from the news service /today `channel` list (news-bot #80). -->
+        <article class="media-panel media-channel-panel" id="media-channel" aria-labelledby="media-channel-title" hidden>
+          <h3 id="media-channel-title">Telegram · канал</h3>
+          <p class="media-air-note">Твои посты в @technoosingularity: что ждёт своего времени и что вышло за два дня. Время Парижа.</p>
+          <ol class="media-posts-preview" id="media-channel-list"></ol>
+        </article>
+      </div>
+
+      <div class="media-view" id="media-view-x" role="tabpanel" aria-labelledby="media-tab-x" data-view="x" hidden>
+        <p class="mm-notice empty" id="media-x-connect" hidden>Аккаунт студии в X ещё не подключён. Посты уже пишутся и видны здесь, но в X ничего не уходит. Создай аккаунт студии и подключи его в Buffer, остальное сделаю я.</p>
+        <article class="media-panel media-digest-panel" id="media-digest-x" aria-labelledby="media-digest-x-title">
+          <h3 id="media-digest-x-title">Пост дня для X · аккаунт студии, по-английски</h3>
+          <ol class="media-digest-list" data-channel="x"></ol>
+        </article>
       </div>
     </div>
     <dialog class="platform-archive-dialog media-post-dialog" id="media-post-dialog" aria-labelledby="media-post-dialog-title">
@@ -11722,6 +11837,157 @@ function mediaRenderChannel(today) {
   }).join('') : '<li class="media-empty">В канале своих постов не запланировано.</li>';
 }
 
+// Mark 2026-11-10: «медиа-отдел: LinkedIn, Telegram и X, переключаюсь по иконке, смотрю и
+// правлю посты». The daily digest in its three versions (news service /media-control/digests).
+const MEDIA_CHANNELS = ['linkedin', 'telegram', 'x'];
+const MEDIA_DIGEST_LIMITS = { telegram: 3500, linkedin: 2900, x: 280 };
+const MEDIA_DIGEST_STATES = {
+  draft: ['ждёт твоего ✅', 'is-accent'], approved: ['одобрен', 'is-info'], queued: ['в Buffer', 'is-info'],
+  scheduled: ['ждёт времени', 'is-info'], sent: ['опубликован', 'is-ok'], cancelled: ['не публикуем', ''],
+  missing: ['версии нет', 'is-warn'], failed: ['ошибка', 'is-bad'], reconcile_required: ['проверить вручную', 'is-warn'],
+};
+let mediaDigests = null;
+let mediaChannel = 'linkedin';
+try { const saved = localStorage.getItem('media-channel'); if (MEDIA_CHANNELS.includes(saved)) mediaChannel = saved; } catch (_) { /* private mode */ }
+
+const MEDIA_LEDES = {
+  linkedin: 'LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.',
+  telegram: 'Telegram: дайджест дня для канала и посты, которые туда уходят.',
+  x: 'X: короткий пост дня от аккаунта студии, по-английски.',
+};
+const MEDIA_REASONS = {
+  no_english_version: 'английская версия не получилась',
+  no_linkedin_version: 'английская версия не получилась',
+  edited_by_owner: 'текст поправлен вручную',
+};
+function mediaShowChannel(channel, focus = false) {
+  if (!MEDIA_CHANNELS.includes(channel)) return;
+  mediaChannel = channel;
+  const lede = document.getElementById('media-lede');
+  if (lede) lede.textContent = MEDIA_LEDES[channel];
+  try { localStorage.setItem('media-channel', channel); } catch (_) { /* private mode */ }
+  for (const name of MEDIA_CHANNELS) {
+    const tab = document.getElementById(`media-tab-${name}`);
+    const on = name === channel;
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    tab.tabIndex = on ? 0 : -1;
+    document.getElementById(`media-view-${name}`).hidden = !on;
+    if (on && focus) tab.focus();
+  }
+}
+
+// X counts most characters as 1 and links as 23; close enough for a live counter.
+function mediaXLength(text) {
+  return [...String(text).replace(/https?:\/\/\S+/g, 'x'.repeat(23))].reduce((n, ch) => n + (ch.codePointAt(0) > 0x10FF ? 2 : 1), 0);
+}
+function mediaDigestCount(channel, text) {
+  return channel === 'x' ? mediaXLength(text) : String(text).length;
+}
+
+function mediaDigestDay(iso) {
+  const when = new Date(iso || '');
+  return Number.isNaN(when.getTime()) ? '' : mediaParis(when, { day: 'numeric', month: 'long' });
+}
+
+function mediaRenderDigests(data) {
+  mediaDigests = data && Array.isArray(data.items) ? data : null;
+  document.getElementById('media-x-connect').hidden = !(mediaDigests && !mediaDigests.x_connected);
+  const note = document.getElementById('media-digest-telegram-note');
+  note.textContent = mediaDigests
+    ? (mediaDigests.digest_enabled
+      ? `Каждый день в ${String(mediaDigests.draft_hour).padStart(2, '0')}:00 бот присылает черновик тебе в Telegram. Здесь его можно поправить и одобрить. Выходит в ${String(mediaDigests.publish_hour).padStart(2, '0')}:00, LinkedIn через 30 минут, X через час.`
+      : 'Ежедневный дайджест пока выключен. Черновик можно попросить командой /channel_digest в боте.')
+    : '';
+  document.getElementById('media-digest-linkedin').hidden = !mediaDigests;
+  for (const channel of MEDIA_CHANNELS) {
+    const list = document.querySelector(`.media-digest-list[data-channel="${channel}"]`);
+    if (!mediaDigests) {
+      list.innerHTML = '<li class="media-digest-empty">Сервис новостей ещё не обновлён: дайджест появится здесь после выката.</li>';
+      continue;
+    }
+    const items = mediaDigests.items.filter(item => item[channel]);
+    list.innerHTML = items.length ? items.slice(0, 5).map((item, i) => mediaDigestHtml(item, channel, i === 0)).join('')
+      : '<li class="media-digest-empty">Дайджестов за неделю пока нет.</li>';
+  }
+}
+
+function mediaDigestCover(item, channel) {
+  const image = item.linkedin?.image_url;
+  if (typeof image === 'string' && /^https:\/\//i.test(image)) {
+    return `<div class="media-digest-cover"><img src="${mediaEsc(image)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>`;
+  }
+  const icon = document.querySelector(`#media-tab-${channel} > span:first-child`);
+  return `<div class="media-digest-cover is-${channel}" aria-hidden="true">${icon ? icon.outerHTML : ''}</div>`;
+}
+
+function mediaDigestHtml(item, channel, today) {
+  const version = item[channel] || {};
+  const [stateLabel, stateKind] = MEDIA_DIGEST_STATES[version.state] || [version.state || '', ''];
+  const text = String(version.text || '');
+  const limit = MEDIA_DIGEST_LIMITS[channel];
+  const count = mediaDigestCount(channel, text);
+  const editable = item.editable && version.state !== 'missing';
+  const preview = text ? `<p class="media-digest-text">${mediaEsc(text)}</p>`
+    : `<p class="media-digest-text is-empty">${mediaEsc(version.reason ? `Версии нет: ${MEDIA_REASONS[version.reason] || 'модель не справилась'}.` : 'Версии нет.')}</p>`;
+  const edit = editable ? `
+    <div class="media-digest-edit" hidden>
+      <label class="media-sr" for="media-digest-${channel}-${mediaEsc(item.id)}">Текст для ${channel}</label>
+      <textarea id="media-digest-${channel}-${mediaEsc(item.id)}" data-digest-text maxlength="${limit * 2}">${mediaEsc(text)}</textarea>
+      <div class="media-digest-editbar"><span class="media-digest-count${count > limit ? ' is-over' : ''}" data-digest-count>${count} / ${limit}</span>
+        <button type="button" class="media-ghost" data-digest-save>Сохранить</button></div>
+    </div>` : '';
+  const actions = item.editable ? `
+      ${editable ? '<button type="button" class="media-ghost" data-digest-edit aria-expanded="false">Изменить</button>' : ''}
+      <button type="button" class="media-ghost" data-digest-decide="no">✖ Не публиковать</button>
+      <button type="button" class="media-primary" data-digest-decide="yes">✅ Одобрить</button>` : '';
+  return `<li class="media-digest${today ? ' is-today' : ''}" data-id="${mediaEsc(item.id)}" data-channel="${channel}">
+    ${mediaDigestCover(item, channel)}
+    <div class="media-digest-main">
+      <div class="media-digest-head"><strong>${mediaEsc(mediaDigestDay(item.telegram?.due_at))}</strong>
+        <span>${mediaEsc(mediaTime(version.due_at))}</span>
+        ${stateLabel ? `<span class="media-chip ${stateKind}">${mediaEsc(stateLabel)}</span>` : ''}</div>
+      ${preview}${edit}
+      ${actions ? `<div class="media-digest-foot"><span class="media-digest-status" role="status" aria-live="polite"></span>${actions}</div>` : ''}
+    </div>
+  </li>`;
+}
+
+async function mediaDigestAction(button) {
+  const card = button.closest('.media-digest');
+  const status = card.querySelector('.media-digest-status');
+  const id = card.dataset.id;
+  const channel = card.dataset.channel;
+  const buttons = card.querySelectorAll('button');
+  buttons.forEach(b => { b.disabled = true; });
+  try {
+    if (button.hasAttribute('data-digest-save')) {
+      const text = card.querySelector('[data-digest-text]').value;
+      if (mediaDigestCount(channel, text) > MEDIA_DIGEST_LIMITS[channel]) throw new Error('Текст длиннее лимита');
+      status.textContent = 'Сохраняю…';
+      await mediaPost('digest-text', { id, channel, text });
+      status.textContent = 'Сохранено';
+    } else {
+      const approve = button.dataset.digestDecide === 'yes';
+      if (approve && card.querySelector('[data-digest-text]')) {
+        // Save what is on screen first: ✅ must publish exactly what the owner sees.
+        const text = card.querySelector('[data-digest-text]').value;
+        if (text.trim() !== String((mediaDigests?.items || []).find(i => i.id === id)?.[channel]?.text || '').trim()) {
+          await mediaPost('digest-text', { id, channel, text });
+        }
+      }
+      status.textContent = approve ? 'Одобряю…' : 'Отменяю…';
+      const result = await mediaPost('digest-decide', { id, approve });
+      status.textContent = result.state === 'scheduled' ? 'Одобрен, выйдет по расписанию'
+        : result.state === 'cancelled' ? 'Не публикуем' : `Уже решено (${result.state})`;
+      setTimeout(mediaLoad, 800);
+    }
+  } catch (error) {
+    status.textContent = error.status === 409 ? 'Дайджест уже одобрен или отменён' : `Не получилось: ${error.message}`;
+  } finally {
+    buttons.forEach(b => { b.disabled = false; });
+  }
+}
+
 function mediaRender(data) {
   const schedule = data.schedule || {};
   mediaSettings = schedule.settings || null;
@@ -11729,6 +11995,7 @@ function mediaRender(data) {
   mediaRenderStats(schedule, data.today);
   mediaRenderComments(data.comments);
   mediaRenderChannel(data.today);
+  mediaRenderDigests(data.digests);
   mediaSavedSlots = [...(schedule.slots || [])];
   mediaSlots = [...mediaSavedSlots];
   mediaRenderSlots();
@@ -12592,6 +12859,46 @@ function mediaInit() {
   document.getElementById('media-comment-form').addEventListener('submit', mediaCommentCreate);
   document.getElementById('media-comments-list').addEventListener('click', mediaCommentAction);
   document.getElementById('media-refresh').addEventListener('click', mediaLoad);
+  const mediaTabs = document.querySelector('.media-channels');
+  mediaTabs.addEventListener('click', event => {
+    const tab = event.target.closest('[data-channel]');
+    if (tab) mediaShowChannel(tab.dataset.channel);
+  });
+  mediaTabs.addEventListener('keydown', event => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const next = (MEDIA_CHANNELS.indexOf(mediaChannel) + step + MEDIA_CHANNELS.length) % MEDIA_CHANNELS.length;
+    mediaShowChannel(MEDIA_CHANNELS[next], true);
+  });
+  mediaShowChannel(mediaChannel);
+  document.getElementById('media-body').addEventListener('input', event => {
+    const area = event.target.closest('[data-digest-text]');
+    if (!area) return;
+    const card = area.closest('.media-digest');
+    const counter = card.querySelector('[data-digest-count]');
+    const limit = MEDIA_DIGEST_LIMITS[card.dataset.channel];
+    const count = mediaDigestCount(card.dataset.channel, area.value);
+    counter.textContent = `${count} / ${limit}`;
+    counter.classList.toggle('is-over', count > limit);
+  });
+  document.getElementById('media-body').addEventListener('click', event => {
+    const toggle = event.target.closest('[data-digest-edit]');
+    if (toggle) {
+      const card = toggle.closest('.media-digest');
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.textContent = open ? 'Готово' : 'Изменить';
+      card.querySelector('.media-digest-edit').hidden = !open;
+      const preview = card.querySelector('.media-digest-text');
+      if (!open) preview.textContent = card.querySelector('[data-digest-text]').value;
+      preview.hidden = open;
+      if (open) card.querySelector('[data-digest-text]').focus();
+      return;
+    }
+    const button = event.target.closest('[data-digest-save], [data-digest-decide]');
+    if (button) mediaDigestAction(button);
+  });
   document.getElementById('media-add-form').addEventListener('submit', event => {
     event.preventDefault();
     const input = document.getElementById('media-add-time');

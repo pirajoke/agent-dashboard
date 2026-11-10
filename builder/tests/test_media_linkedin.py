@@ -57,24 +57,53 @@ class ForwardingTests(unittest.TestCase):
                 return today_reply
             if path.endswith("comments"):
                 return comments_reply
+            if path.endswith("digests"):
+                return digests_reply
             return 200, {"slots": ["09:00"]} if path.endswith("schedule") else {"items": [{"id": "x"}]}
 
         today_reply = (200, {"drafts": [{"id": "d"}], "queued": []})
         comments_reply = (200, {"send_enabled": False, "items": []})
+        digests_reply = (200, {"items": [], "x_connected": False})
         with patch.object(media_linkedin, "call", side_effect=fake):
             result = media_linkedin.overview()
         self.assertEqual(result, {"state": "ready", "schedule": {"slots": ["09:00"]}, "news": [{"id": "x"}],
                                   "today": {"drafts": [{"id": "d"}], "queued": []},
-                                  "comments": {"send_enabled": False, "items": []}})
+                                  "comments": {"send_enabled": False, "items": []},
+                                  "digests": {"items": [], "x_connected": False}})
         self.assertEqual(calls, [("GET", "/media-control/schedule"), ("GET", "/media-control/news"),
-                                 ("GET", "/media-control/today"), ("GET", "/media-control/comments")])
-        # An older news service without /today or /comments still gives the rest of the tab.
+                                 ("GET", "/media-control/today"), ("GET", "/media-control/comments"),
+                                 ("GET", "/media-control/digests")])
+        # An older news service without /today, /comments or /digests still gives the rest.
         today_reply = (404, {})
         comments_reply = (404, {})
+        digests_reply = (404, {})
         with patch.object(media_linkedin, "call", side_effect=fake):
             result = media_linkedin.overview()
         self.assertIsNone(result["today"])
         self.assertIsNone(result["comments"])
+        self.assertIsNone(result["digests"])
+
+    def test_digest_actions_validate_before_forwarding(self):
+        pid = "66666666-6666-4666-8666-666666666666"
+        with patch.object(media_linkedin, "call", return_value=(200, {})) as call:
+            for fn, bad in (
+                (media_linkedin.digest_text, {"id": pid, "channel": "facebook", "text": "t"}),
+                (media_linkedin.digest_text, {"id": pid, "channel": "x", "text": "  "}),
+                (media_linkedin.digest_text, {"id": pid, "channel": "x", "text": "y" * 601}),
+                (media_linkedin.digest_text, {"id": "../admin", "channel": "x", "text": "t"}),
+                (media_linkedin.digest_decide, {"id": pid, "approve": "yes"}),
+            ):
+                with self.assertRaises(ValueError):
+                    fn(bad)
+            call.assert_not_called()
+            media_linkedin.digest_text({"id": pid, "channel": "telegram", "text": " Мой текст "})
+            call.assert_called_with("POST", f"/media-control/digests/{pid}/text",
+                                    {"channel": "telegram", "text": "Мой текст"}, home=None)
+            media_linkedin.digest_decide({"id": pid, "approve": True})
+            self.assertEqual(call.call_args.args, ("POST", f"/media-control/digests/{pid}/decide",
+                                                   {"approve": True}))
+        self.assertIn("/api/media/linkedin/digest-text", SERVER.MEDIA_LINKEDIN_ACTIONS)
+        self.assertIn("/api/media/linkedin/digest-decide", SERVER.MEDIA_LINKEDIN_ACTIONS)
 
     def test_inputs_are_validated_before_forwarding(self):
         with patch.object(media_linkedin, "call", return_value=(200, {})) as call:

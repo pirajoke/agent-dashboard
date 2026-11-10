@@ -1,4 +1,4 @@
-"""«Медиа» tab: owner-only bridge to the AI Singularity news service (LinkedIn via Buffer).
+"""«Медиа» tab: owner-only bridge to the AI Singularity news service (LinkedIn, Telegram, X).
 
 The news service owns publishing, deduplication and limits. This module only
 forwards the owner's reads and actions to its scoped `/media-control` API with the
@@ -95,11 +95,14 @@ def overview(*, home: Path | None = None) -> dict:
         status, today = call("GET", "/media-control/today", home=home)
         # Reviewed comments are optional too (news service before #73).
         comments_status, comments = call("GET", "/media-control/comments", home=home)
+        # The daily digest in three channels (news service #89); optional as well.
+        digests_status, digests = call("GET", "/media-control/digests", home=home)
     except MediaUnavailable as error:
         return {"state": "not_configured" if str(error) == "not_configured" else "unavailable"}
     return {"state": "ready", "schedule": schedule, "news": news.get("items", []),
             "today": today if status == 200 else None,
-            "comments": comments if comments_status == 200 else None}
+            "comments": comments if comments_status == 200 else None,
+            "digests": digests if digests_status == 200 else None}
 
 
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
@@ -241,3 +244,32 @@ def comment_close(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
     if action not in ("manual", "dismiss"):
         raise ValueError("invalid_action")
     return call("POST", f"/media-control/comments/{_comment_id(body)}/{action}", {}, home=home)
+
+
+DIGEST_CHANNELS = {"telegram": 3500, "linkedin": 2900, "x": 600}
+
+
+def digest_text(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """The owner's own wording for one channel of the daily digest (only while a draft).
+
+    The news service checks the exact limits (X counts like X does); this only rejects
+    what can never be valid."""
+    post_id = str(uuid.UUID(str(body.get("id", ""))))
+    channel = body.get("channel")
+    text = body.get("text")
+    if channel not in DIGEST_CHANNELS:
+        raise ValueError("invalid_channel")
+    if not isinstance(text, str) or not 1 <= len(text.strip()) <= DIGEST_CHANNELS[channel]:
+        raise ValueError("invalid_text")
+    return call("POST", f"/media-control/digests/{post_id}/text",
+                {"channel": channel, "text": text.strip()}, home=home)
+
+
+def digest_decide(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """Same as ✅/✖ under the digest in Telegram: publish today or not."""
+    post_id = str(uuid.UUID(str(body.get("id", ""))))
+    approve = body.get("approve")
+    if not isinstance(approve, bool):
+        raise ValueError("invalid_approve")
+    return call("POST", f"/media-control/digests/{post_id}/decide", {"approve": approve},
+                timeout=120, home=home)
