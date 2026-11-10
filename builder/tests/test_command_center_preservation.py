@@ -48,11 +48,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-10-28 on Mark's «унифицированный дизайн»: every service described in Russian.
         # 2026-11-02 on Mark's «визуализируй это в технике когда я нажимаю на мак про»: MacBook Pro care block.
         # 2026-11-08 on Mark's «температуру компьютера в технике»: the temperature block for Mac mini and MacBook Pro.
+        # 2026-11-10 on the Docker Guardian task: scheduled jobs between clean runs read «Ждёт запуска», not an error.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "37cd20b4e54d3f30c0c0b522bfd43c6e96022168c3450291bd418734376b6fe7")
+                         "972fe9bb4509f23996fd094f8ed0bbe620e554181bf017bc13d5197b2d0041d7")
 
 
 if __name__ == "__main__":
