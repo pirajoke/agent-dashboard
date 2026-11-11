@@ -18490,7 +18490,8 @@ function mmRenderHealth(data) {
     head = 'Mac mini не отвечает';
   } else {
     const services = visibleRuntimeServices(data.services_detailed || data.services || []).filter(service => !mmHealthArchived(service));
-    const down = services.filter(service => service.status !== 'running');
+    // svcProblem is Техника's rule: a scheduled job waiting for its next clean run is not «Не работает».
+    const down = services.filter(service => svcProblem(service));
     if (!services.length) {
       // No services seen is not proof that they run.
       line.classList.add('is-unknown');
