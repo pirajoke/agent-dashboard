@@ -52,5 +52,12 @@ class ScheduledServiceAndRepairHistoryTests(unittest.TestCase):
         self.assertIn("'Ждёт запуска'", source)
 
 
+    def test_main_manager_health_line_uses_the_same_problem_rule(self):
+        # 2026-11-11: the MAIN MANAGER line said «Не работает: Live Feed Generator, Daily Hygiene, Docker Guardian»
+        # for scheduled jobs that were only waiting for their next run.
+        source = HTML.read_text()
+        self.assertNotIn("services.filter(service => service.status !== 'running')", source)
+        self.assertIn("const down = services.filter(service => svcProblem(service));", source)
+
 if __name__ == "__main__":
     unittest.main()
