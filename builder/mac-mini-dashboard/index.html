@@ -193,7 +193,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-badge { font-size: 11px; padding: 4px 12px; border-radius: 6px; font-weight: 600; }
 .machine-badge.online { background: var(--green-bg); color: var(--green); }
 .machine-badge.offline { background: var(--red-bg); color: var(--red); }
-.machine-health { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: -4px 0 20px; }
+.machine-health { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: -4px 0 20px; }
 .machine-health:empty { display: none; }
 .machine-health-item { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card, transparent); color: var(--text); font: inherit; cursor: pointer; }
 .machine-health-item:hover { border-color: var(--text2); }
@@ -14135,7 +14135,9 @@ for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro'
     const sys = machineSystem[key] || {};
     const free = sys.disk_total_gb ? `${Math.max(0, Math.round(sys.disk_total_gb - sys.disk_used_gb))} GB` : '';
     const swap = typeof sys.swap_used_gb === 'number' && sys.swap_used_gb > 0 ? `${sys.swap_used_gb} GB` : '';
-    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+    const gbRow = value => typeof value === 'number' ? `${value} GB` : '';
+    const gpu = typeof sys.gpu_percent === 'number' ? `${Math.round(sys.gpu_percent)}%` : '';
+    return { title, rows: [['Процессор', text('cpu')], ['Видеочип', gpu], ['Память видеочипа', gbRow(sys.gpu_memory_gb)], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Закреплено в памяти (wired)', gbRow(sys.memory_wired_gb)], ['Сжато', gbRow(sys.memory_compressed_gb)], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
   };
 }
 
@@ -14155,15 +14157,24 @@ function machineHealthItems(sys) {
     ram: { ok: 'ок', warn: 'занята почти вся', bad: 'перегружена', unknown: 'нет данных' },
     disk: { ok: 'ок', warn: 'заполняется', bad: 'почти полон', unknown: 'нет данных' },
     cpu: { ok: 'спокойно', warn: 'нагружен', bad: 'перегружен', unknown: 'нет данных' },
+    gpu: { ok: 'спокойно', warn: 'нагружен', bad: 'перегружен', unknown: 'нет данных' },
   };
   // Mark 2026-10-26 «показывай тут значения»: the numbers sit on the tile next to the word.
   const gb = value => Number(value).toLocaleString('ru-RU', { maximumFractionDigits: value < 100 ? 1 : 0 });
   const amount = (used, total) => typeof used === 'number' && total ? `${gb(used)} из ${gb(total)} ГБ` : '';
-  return [
+  const items = [
     { id: 'ram', label: 'Память', pct: ram, level: level(ram, 80, 90), value: amount(sys.memory_used_gb, sys.memory_total_gb) },
     { id: 'disk', label: 'Диск', pct: disk, level: level(disk, 80, 90), value: amount(sys.disk_used_gb, sys.disk_total_gb) },
     { id: 'cpu', label: 'Процессор', pct: cpu, level: level(cpu, 60, 85), value: cpu === null ? '' : `${cpu}%` },
-  ].map(item => ({ ...item, word: words[item.id][item.level] }));
+  ];
+  // Mark 2026-11-17: local models (Ollama/Qwen) run on the GPU, so the CPU tile alone never showed them.
+  // Only computers whose health API reports the GPU get this tile.
+  if (typeof sys.gpu_percent === 'number') {
+    const gpu = Math.round(sys.gpu_percent);
+    const gpuMemory = typeof sys.gpu_memory_gb === 'number' && sys.gpu_memory_gb >= 0.1 ? ` · ${gb(sys.gpu_memory_gb)} ГБ` : '';
+    items.push({ id: 'gpu', label: 'Видеочип', pct: gpu, level: level(gpu, 60, 85), value: `${gpu}%${gpuMemory}` });
+  }
+  return items.map(item => ({ ...item, word: words[item.id][item.level] }));
 }
 
 function renderMachineHealth(key, sys) {
