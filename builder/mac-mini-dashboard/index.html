@@ -16709,7 +16709,7 @@ function claudeModeEventText(entry) {
   if (entry.event === 'switched') return entry.mode === 'bypass' ? 'Включён bypass' : 'Возвращён обычный режим';
   if (entry.event === 'unchanged') return `Уже был ${name}`;
   if (entry.event === 'changed_outside') return `Изменён вручную в settings.json: ${name}`;
-  const reasons = { not_signed_in_owner: 'запрос не от Макса', stale_request: 'запрос устарел', bad_or_repeated_id: 'повтор запроса', unknown_mode: 'непонятный режим' };
+  const reasons = { not_signed_in_owner: 'запрос не от Макса', stale_request: 'запрос устарел', bad_or_repeated_id: 'повтор запроса', unknown_mode: 'непонятный режим', other_mode_left_alone: 'в settings.json свой режим, не трогаю' };
   return `Отказ: ${reasons[entry.reason] || entry.reason || 'ошибка'}`;
 }
 

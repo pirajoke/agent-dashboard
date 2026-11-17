@@ -115,6 +115,31 @@ class SwitchTests(unittest.TestCase):
         self.assertEqual((state["mode"], state["recent"][0]["event"]), ("bypass", "changed_outside"))
 
 
+    def test_junk_in_log_and_inbox_does_not_jam_the_switch(self):
+        self.base.mkdir()
+        (self.base / "switch.log").write_text('1\n{broken\n{"id": "1800000000-11111111", "event": "refused"}\n')
+        (self.base / "inbox").mkdir()
+        (self.base / "inbox" / ".DS_Store").write_text("x")
+        self.ask("bypass", request_id="1800000000-11111111")
+        state = self.run_switch()
+        self.assertEqual((state["mode"], state["recent"][0]["reason"]), ("standard", "bad_or_repeated_id"))
+        self.assertFalse(list((self.base / "inbox").iterdir()))
+
+    def test_a_mode_of_its_own_is_left_alone(self):
+        data = json.loads(self.settings.read_text())
+        data["permissions"]["defaultMode"] = "plan"
+        self.settings.write_text(json.dumps(data))
+        self.ask("bypass")
+        state = self.run_switch()
+        self.assertEqual((state["mode"], state["recent"][0]["reason"]), ("other", "other_mode_left_alone"))
+        self.assertEqual(json.loads(self.settings.read_text()), data)
+
+    def test_the_access_app_is_pinned_not_read_from_disk(self):
+        source = (BUILDER / "claude_mode_switch.py").read_text()
+        self.assertNotIn("cloudflare_access.json", source)
+        self.assertNotIn("configured_access_app", source)
+
+
 class EndpointTests(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()

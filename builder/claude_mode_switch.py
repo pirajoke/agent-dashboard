@@ -15,7 +15,9 @@ allow list that was in force before bypass. Deny rules apply in both modes.
 
 Only the owner can switch: each request carries the Cloudflare Access sign-in of the browser that asked,
 and this script checks its signature again with Cloudflare's keys. A file dropped by anything else on the
-machine is refused and logged. Requests older than two minutes are refused too. Every change keeps a backup
+machine is refused and logged. Requests older than two minutes are refused too. Known limit: a process that reads a request file before
+the switch consumes it could reuse that sign-in until the Access session ends; the inbox is 0700 and is
+emptied on every run. Every change keeps a backup
 of settings.json in ~/.claude-mode/backups and one line in ~/.claude-mode/switch.log.
 """
 from __future__ import annotations
@@ -25,6 +27,7 @@ import fcntl
 import json
 import os
 import re
+import shutil
 import sys
 import tempfile
 import time
@@ -39,6 +42,10 @@ MAX_REQUEST_AGE = 120.0
 MAX_REQUEST_BYTES = 8192
 RECENT = 8
 SCHEMA = "claude_mode_v1"
+# The Access team and app of command.meshly.fr, pinned here on purpose: no file on this machine may
+# point the check at another Cloudflare team. If the app is ever recreated, switching fails closed.
+ACCESS_TEAM = "ancient-sun-8eb5.cloudflareaccess.com"
+ACCESS_AUD = "8b4758a65149a8ec1c706eb925d9f5fee6ab1fd0ffa4603420d84a438917470d"
 
 
 def mode_dir(home: Path) -> Path:
@@ -83,6 +90,8 @@ def apply_mode(settings_file: Path, backups: Path, mode: str, now: float) -> tup
     if not isinstance(settings, dict):
         raise ValueError("settings.json is not an object")
     before, _ = observed_mode(settings)
+    if before == "other":
+        raise ValueError("other_mode_left_alone")
     want = MODES[mode]
     permissions = settings.setdefault("permissions", {})
     if not isinstance(permissions, dict):
@@ -117,17 +126,28 @@ def _recent(base: Path) -> list[dict]:
     out = []
     for line in reversed(lines):
         try:
-            out.append(json.loads(line))
+            entry = json.loads(line)
         except ValueError:
             continue
+        if isinstance(entry, dict):
+            out.append(entry)
     return out
 
 
 def _seen_ids(base: Path) -> set[str]:
     try:
-        return {json.loads(line).get("id") for line in (base / "switch.log").read_text().splitlines() if line.strip()}
-    except (FileNotFoundError, ValueError):
+        lines = (base / "switch.log").read_text().splitlines()
+    except FileNotFoundError:
         return set()
+    seen = set()
+    for line in lines:
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(entry, dict) and isinstance(entry.get("id"), str):
+            seen.add(entry["id"])
+    return seen
 
 
 def _read_request(path: Path) -> dict:
@@ -162,7 +182,14 @@ def process(home: Path, verify, now: float | None = None) -> dict:
             _log(base, {"at": _iso(now), "event": "changed_outside", "from": previous.get("mode"), "mode": current})
         seen = _seen_ids(base)
         last_request = previous.get("last_request")
-        requests = sorted((p for p in inbox.iterdir() if p.suffix == ".json"), key=lambda p: p.stat().st_mtime)
+        # Anything else in the inbox would keep launchd restarting this job; it is not a request.
+        for stray in inbox.iterdir():
+            if stray.suffix != ".json" or stray.is_symlink() or not stray.is_file():
+                try:
+                    stray.unlink()
+                except (IsADirectoryError, PermissionError):
+                    shutil.rmtree(stray, ignore_errors=True)
+        requests = sorted((p for p in inbox.iterdir() if p.suffix == ".json"), key=lambda p: p.lstat().st_mtime)
         for path in requests:
             entry = {"at": _iso(now), "event": "refused"}
             try:
@@ -215,11 +242,9 @@ def process(home: Path, verify, now: float | None = None) -> dict:
 
 def _access_verifier(home: Path):
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from dashboard_builder.cloudflare_access import AccessGate, configured_access_app, discover_access_app
+    from dashboard_builder.cloudflare_access import AccessGate
 
-    host = "command.meshly.fr"
-    config = home / ".agent-bridge" / "cloudflare_access.json"
-    gate = AccessGate(host, discover=lambda h: configured_access_app(config) or discover_access_app(h))
+    gate = AccessGate("command.meshly.fr", discover=lambda host: (ACCESS_TEAM, ACCESS_AUD))
     return lambda token: gate.owner_email(token) if isinstance(token, str) else None
 
 
