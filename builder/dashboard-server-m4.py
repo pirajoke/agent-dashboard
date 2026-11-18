@@ -2018,6 +2018,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         targets.append(candidate.resolve())
                         break
             private_state = (HOME / '.agent-bridge').resolve()
+            # Claude mode requests carry an Access sign-in; settings.json is agent configuration (2026-11-17).
+            claude_private = ((HOME / '.claude-mode').resolve(), (HOME / '.claude').resolve())
             private_files = {MANAGER_DECISIONS_FILE.resolve(),
                              (JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json").resolve()}
             context_catalog = _context_catalog_path()
@@ -2028,6 +2030,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                              docxx_state_path(HOME).resolve()}
             protected = any(
                 path.is_relative_to(private_state) or path in private_files
+                or any(path.is_relative_to(root) for root in claude_private)
                 or any(path.is_relative_to(root) for root in context_roots)
                 for path in targets
             )

@@ -5,6 +5,8 @@ import importlib.util
 import io
 import json
 import os
+import shutil
+import subprocess
 from pathlib import Path
 import tempfile
 import time
@@ -191,13 +193,104 @@ class EndpointTests(unittest.TestCase):
         self.assertEqual((view["mode"], view["agent"], view["pending"]), ("bypass", "ok", []))
 
 
-class PageTests(unittest.TestCase):
-    def test_switch_lives_on_architecture_and_is_owner_only(self):
-        arch = PAGE[PAGE.index('id="section-architecture"'):PAGE.index('id="arch-state"')]
-        self.assertIn('id="claude-mode" data-mode="unknown" hidden', arch)
-        self.assertIn('role="switch"', arch)
-        self.assertIn("setTimeout(claudeModeLoad, 0)", PAGE)
-        self.assertIn("/api/claude-mode", PAGE)
+class StaticServingTests(unittest.TestCase):
+    def test_request_inbox_and_claude_settings_are_never_served(self):
+        # The server serves files from HOME; a waiting request holds an Access sign-in.
+        for path in ("/.claude-mode/inbox/", "/.claude-mode/inbox/1800000000-abcdef12.json",
+                     "/.claude-mode/state.json", "/.claude/settings.json"):
+            handler = SERVER.Handler.__new__(SERVER.Handler)
+            handler.path, handler.command = path, "GET"
+            errors = []
+            handler.send_error = lambda code, message=None: errors.append(code)
+            with patch.object(SERVER.http.server.SimpleHTTPRequestHandler, "send_head", side_effect=AssertionError(path)):
+                self.assertIsNone(handler.send_head())
+            self.assertEqual(errors, [403], path)
+
+
+class CardBehaviourTests(unittest.TestCase):
+    """Run the card's real code on a small DOM: owner sees it and switches, refusals show, visitors see nothing."""
+
+    def run_card(self, scenario):
+        start = PAGE.index("// ─── Claude Code permission mode (Mark 2026-11-17) ───")
+        block = PAGE[start:PAGE.index("// ─── Init ───", start)]
+        script = r"""
+class El { constructor(id){ this.id=id; this.hidden=false; this.disabled=false; this.textContent=''; this.dataset={}; this.attrs={};
+    this.children=[]; this.handlers={}; const self=this; this.classList={ set:new Set(), add(c){this.set.add(c);}, toggle(c,on){ on?this.set.add(c):this.set.delete(c); }, contains(c){return this.set.has(c);} }; }
+  setAttribute(k,v){ this.attrs[k]=String(v); } getAttribute(k){ return this.attrs[k]; }
+  append(...n){ this.children.push(...n); } replaceChildren(...n){ this.children=[...n]; }
+  addEventListener(t,f){ this.handlers[t]=f; } }
+const els={}; const document={ hidden:false, getElementById:id=>els[id]||(els[id]=new El(id)), createElement:t=>new El(t) };
+els['claude-mode'] = new El('claude-mode'); els['claude-mode'].hidden = true;
+const IS_FILE_DASHBOARD=false, DASHBOARD_API='https://command.meshly.fr';
+const mmHeaders=()=>({'Content-Type':'application/json'});
+const setInterval=()=>0; const setTimeout=(f)=>{ f(); return 0; };
+const calls=[]; let replies=[];
+async function fetch(url, opts={}){ calls.push({url, method:opts.method||'GET', body:opts.body});
+  const r=replies.shift(); if(!r) throw new Error('unexpected fetch '+url);
+  return { status:r.status, ok:r.status>=200&&r.status<300, json:async()=>r.body }; }
+const fail=m=>{ throw new Error(m); };
+const $=id=>document.getElementById(id);
+""" + block + r"""
+const state=(mode, extra={})=>({ status:200, body:{ schema:'claude_mode_v1', mode, agent:'ok', pending:[], recent:[], ...extra } });
+(async () => {
+""" + scenario + r"""
+})().catch(e=>{ console.error(e.message); process.exit(1); });
+"""
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("Node runtime is required")
+        run = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=15)
+        self.assertEqual(run.returncode, 0, run.stderr)
+
+    def test_owner_switches_on_and_sees_the_result(self):
+        self.run_card(r"""
+replies=[state('standard')];
+await claudeModeLoad();
+if($('claude-mode').hidden) fail('card hidden for the owner');
+if($('claude-mode-switch').getAttribute('aria-checked')!=='false' || $('claude-mode-switch').disabled) fail('switch state');
+if(!$('claude-mode-line').textContent.includes('Обычный режим')) fail('line '+$('claude-mode-line').textContent);
+const done={ id:'r1', event:'switched', mode:'bypass', at:'2026-11-17T22:00:00Z' };
+replies=[{status:202, body:{state:'pending', id:'r1', mode:'bypass'}}, state('bypass', {last_request:done, recent:[done], changed_at:done.at}), state('bypass', {last_request:done, recent:[done], changed_at:done.at})];
+await $('claude-mode-switch').handlers.click();
+const post=calls.find(c=>c.method==='POST');
+if(!post || JSON.parse(post.body).mode!=='bypass') fail('no bypass request');
+if($('claude-mode-switch').getAttribute('aria-checked')!=='true') fail('switch not on');
+if($('claude-mode').dataset.mode!=='bypass' || $('claude-mode-switch').disabled) fail('card not settled');
+if(!$('claude-mode-log').children[0].children.includes('Включён bypass')) fail('log not shown');
+""")
+
+    def test_refusals_and_failures_are_said_plainly(self):
+        self.run_card(r"""
+replies=[state('standard')];
+await claudeModeLoad();
+const refused={ id:'r2', event:'refused', mode:'bypass', reason:'not_signed_in_owner' };
+replies=[{status:202, body:{state:'pending', id:'r2'}}, state('standard', {last_request:refused, recent:[refused]}), state('standard', {last_request:refused, recent:[refused]})];
+await $('claude-mode-switch').handlers.click();
+if(!$('claude-mode-sub').textContent.includes('запрос не от Макса')) fail('refusal not shown: '+$('claude-mode-sub').textContent);
+if($('claude-mode-switch').getAttribute('aria-checked')!=='false') fail('switch moved after a refusal');
+replies=[{status:401, body:{error:'access_sign_in_required'}}];
+await $('claude-mode-switch').handlers.click();
+if(!$('claude-mode-sub').textContent.includes('только со входом')) fail('sign-in hint missing');
+if(!$('claude-mode-sub').classList.contains('is-warn') || $('claude-mode-switch').disabled) fail('not recoverable');
+replies=[state('standard', {agent:'stale'})];
+await claudeModeLoad();
+if(!$('claude-mode-sub').textContent.includes('не отвечает')) fail('stale agent not shown');
+""")
+
+    def test_visitors_and_unknown_modes_cannot_switch(self):
+        self.run_card(r"""
+replies=[state('bypass'), {status:401, body:{error:'owner_token_required'}}];
+await claudeModeLoad();
+if($('claude-mode').hidden) fail('card hidden for the owner');
+await claudeModeLoad();
+if(!$('claude-mode').hidden) fail('card stays after owner access is lost');
+replies=[state('other', {default_mode:'plan'})];
+await claudeModeLoad();
+if(!$('claude-mode-switch').disabled) fail('switch enabled on a mode of its own');
+replies=[state('standard', {pending:['r9']})];
+await claudeModeLoad();
+if(!$('claude-mode-switch').disabled || !$('claude-mode-sub').textContent.includes('Переключаю')) fail('pending request not shown');
+""")
 
 
 if __name__ == "__main__":
