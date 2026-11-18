@@ -2029,6 +2029,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == '/api/machines/fix':
             self._handle_machine_fix()
             return
+        if parsed.path == '/api/machines/ollama':
+            self._handle_machine_ollama()
+            return
         if parsed.path in MEDIA_LINKEDIN_ACTIONS:
             self._handle_media_linkedin_action(parsed.path)
             return
@@ -2887,6 +2890,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(502, {'error': 'machine_unreachable'})
             return
         self._json_response(200, {'state': 'done', 'machine': machine, 'label': label, 'action': action, 'result': result})
+
+    def _handle_machine_ollama(self):
+        # Mark 2026-11-18 «сделай переключатель для qwen в команд центре»: owner only, the same guard as
+        # the Медик's buttons. It only switches the local Qwen (Ollama) on the MacBook Pro on or off
+        # through that computer's own health API; the model files stay on disk either way.
+        body = self._platform_owner_body(256)
+        if body is None:
+            return
+        action = body.get('action')
+        if action not in ('start', 'stop'):
+            self._json_response(400, {'error': 'invalid_action'})
+            return
+        try:
+            result = MACHINE_FIX_TARGETS['pro']('POST', f'/api/ollama/{action}')
+        except urllib.error.HTTPError as error:
+            self._json_response(502, {'error': 'machine_refused', 'status': error.code})
+            return
+        except Exception:
+            self._json_response(502, {'error': 'machine_unreachable'})
+            return
+        self._json_response(200, {'state': 'done', 'machine': 'pro', 'action': action, 'result': result})
 
     def _handle_repair_log_save(self):
         body = self._platform_owner_body(REPAIR_LOG_MAX_BYTES)

@@ -349,6 +349,9 @@ class PreviewHandler(SERVER.Handler):
             if parsed.path == "/api/pro/all":
                 # Switched off on purpose: shown as «Выключен» in the archive, never as «Нужно внимание».
                 payload["services"].append({"name": "Agent Supervisor", "label": "fixture.agent-supervisor", "desc": "Agent supervisor", "status": "stopped", "runtime": "Python", "pid": None, "cat": "core"})
+                # Qwen (Ollama) is on and the model is in memory, so the switch shows «работает» and how much it takes.
+                payload["ollama"] = {"installed": True, "running": True, "disk_gb": 17.3,
+                                     "loaded": [{"name": "qwen3.8:27b", "size_gb": 18.2}]}
             if parsed.path == "/api/all" and self._decision_owner_authorized():
                 # A running job the health registry does not list is added by the product rule.
                 payload = SERVER.normalize_payload(payload, loaded={"com.example.fixture-extra": 0}, disabled=set(),
