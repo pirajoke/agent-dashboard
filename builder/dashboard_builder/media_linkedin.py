@@ -181,6 +181,18 @@ def edit(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
                 {"text": text.strip()}, home=home)
 
 
+def cancel(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """«Отменить» (Mark 2026-11-18): a planned draft leaves the plan and is never posted."""
+    candidate_id = str(uuid.UUID(str(body.get("candidate_id", ""))))
+    return call("POST", f"/media-control/candidates/{candidate_id}/cancel", home=home)
+
+
+def restore(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
+    """«Вернуть»: a cancelled draft waits for a slot again."""
+    candidate_id = str(uuid.UUID(str(body.get("candidate_id", ""))))
+    return call("POST", f"/media-control/candidates/{candidate_id}/restore", home=home)
+
+
 def send_batch(body: dict, *, home: Path | None = None) -> tuple[int, dict]:
     items = body.get("items")
     if not isinstance(items, list) or not 1 <= len(items) <= MAX_BATCH:
