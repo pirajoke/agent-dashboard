@@ -50,11 +50,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-11-02 on Mark's «визуализируй это в технике когда я нажимаю на мак про»: MacBook Pro care block.
         # 2026-11-08 on Mark's «температуру компьютера в технике»: the temperature block for Mac mini and MacBook Pro.
         # 2026-11-10 on the Docker Guardian task: scheduled jobs between clean runs read «Ждёт запуска», not an error.
+        # 2026-11-17 on Mark's «там же есть нагрузка, видеочип, память … это не работает»: GPU tile and wired/compressed memory.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "bc71805c19a117228864bea94e1d6e4c20d658ff55d41c7495e08029d5b66aa0")
+                         "08282b34ff9c240289c4f3328bea6782f4aef00dc0c36f2e4261e875f7f87a23")
 
 
 if __name__ == "__main__":
