@@ -22,6 +22,10 @@ document.documentElement.dataset.theme = 'light';
 try {
   if (localStorage.getItem('command-center.theme.v3') === 'dark') document.documentElement.dataset.theme = 'dark';
 } catch (error) { /* stays light */ }
+const CC_LINKS_KEY = 'command-center.links-hidden.v1';
+try {
+  document.documentElement.toggleAttribute('data-links-hidden', localStorage.getItem(CC_LINKS_KEY) === 'true');
+} catch (error) { /* Links stay visible if storage is unavailable. */ }
 </script>
 <style>
 /* One design for every tab (Mark 2026-10-14): the Property OS tokens of MAIN MANAGER, light and dark,
@@ -5849,6 +5853,9 @@ button.cc-refresh:hover { background: var(--mm-selection); }
 .platform-entry .platform-links .platform-link { flex: 0 0 auto; max-width: 100%; }
 .platform-entry .platform-links .platform-link .platform-access { overflow: visible; }
 .platform-entry .platform-links:has(> .platform-link:nth-child(3)) { flex-direction: row; align-items: center; }
+html[data-links-hidden] body a[href]:not([href^="#"]) { display: none !important; }
+.cc-eye-slash { display: none; }
+html[data-links-hidden] .cc-eye-slash { display: inline; }
 </style>
 </head>
 <body>
@@ -6224,6 +6231,10 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <!-- Mark 2026-11-06 «лучше на телефоне»: the phone bar shows four tabs and «Ещё», like a native app. -->
   <button type="button" class="cc-more-tab" id="cc-more-tab" aria-haspopup="dialog" aria-controls="cc-more-dialog"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span><span class="cc-tab-label">Ещё</span></button>
   <div class="cc-side-foot">
+    <button type="button" class="cc-side-button" id="cc-links-toggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="cc-eye-slash" d="m3 3 18 18"/></svg>
+      <span>Скрыть ссылки</span>
+    </button>
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
     <div class="tab-name-customizer">
       <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename aria-haspopup="dialog" aria-controls="tab-name-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Настроить вкладки</span></button>
@@ -6265,6 +6276,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       </div>
       <div class="cc-more-list" id="cc-more-list"></div>
       <div class="cc-more-list cc-more-settings">
+        <button type="button" class="cc-more-row" data-more-proxy="cc-links-toggle"></button>
         <button type="button" class="cc-more-row" data-more-proxy="cc-theme-toggle"></button>
         <button type="button" class="cc-more-row" data-more-proxy="edit-tab-names"></button>
       </div>
@@ -9970,6 +9982,18 @@ document.addEventListener('visibilitychange', () => {
 // Light or dark for the whole Command Center (Mark 2026-10-14: one design everywhere). The choice is per
 // browser and set before the first paint in <head>; without one the page is light (Mark 2026-10-14).
 const CC_THEME_KEY = 'command-center.theme.v3';
+
+const linksButton = document.getElementById('cc-links-toggle');
+function syncLinksButton() {
+  const hidden = document.documentElement.hasAttribute('data-links-hidden');
+  linksButton.querySelector('span').textContent = hidden ? 'Показать ссылки' : 'Скрыть ссылки';
+}
+linksButton.addEventListener('click', () => {
+  const hidden = document.documentElement.toggleAttribute('data-links-hidden');
+  try { localStorage.setItem(CC_LINKS_KEY, String(hidden)); } catch (error) { /* Session-only choice. */ }
+  syncLinksButton();
+});
+syncLinksButton();
 
 function ccIsDark() {
   const theme = document.documentElement.dataset.theme;
