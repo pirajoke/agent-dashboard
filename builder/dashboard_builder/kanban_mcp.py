@@ -8,7 +8,11 @@ from typing import Literal
 from mcp.server.fastmcp import FastMCP
 from personal_kanban import Board
 
-server = FastMCP("Command Center tasks")
+server = FastMCP("Command Center tasks", instructions=(
+    "Use this board for the owner's personal task requests, including transcribed voice messages. "
+    "Create or update the task before confirming it. Preserve the request ID on retries, "
+    "return its URL, and use the day view for today's plan."
+))
 
 
 @server.tool()
