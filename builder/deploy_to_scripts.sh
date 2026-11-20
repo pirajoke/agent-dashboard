@@ -33,7 +33,6 @@ cp "$SRC_DIR/docxx_suggest.py" "$SCRIPTS_DIR/docxx_suggest.py"
 cp "$SRC_DIR/retire_job_mail.py" "$SCRIPTS_DIR/retire_job_mail.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
-cp "$SRC_DIR/dashboard-assets/kanban.html" "$SCRIPTS_DIR/dashboard-assets/kanban.html"
 
 # Register tools when this is the host of the existing Jarvis profile.
 # The running Telegram gateway loads the config on its next coordinated reload.

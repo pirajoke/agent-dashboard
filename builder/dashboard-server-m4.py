@@ -3111,12 +3111,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urlsplit(self.path)
         if parsed.path == '/kanban':
-            body = (Path(__file__).resolve().parent / 'dashboard-assets' / 'kanban.html').read_bytes()
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/html; charset=utf-8')
-            self.send_header('Content-Length', str(len(body)))
+            self.send_response(302)
+            self.send_header('Location', '/?tab=tasks')
+            self.send_header('Content-Length', '0')
             self.end_headers()
-            self.wfile.write(body)
             return
         if self._serve_docxx_info_page(parsed.path):
             return
