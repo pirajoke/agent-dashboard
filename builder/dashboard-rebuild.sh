@@ -133,6 +133,21 @@ if [ -d "$REPO_DIR/.git" ]; then
 
     cd "$REPO_DIR"
     git fetch origin main >> "$LOG" 2>&1 || log "WARN: git fetch failed"
+    REMOTE_SHA=$(git rev-parse FETCH_HEAD)
+    if ! PUBLISH_SAFETY=$(python3 "$SCRIPTS/auto_deploy.py" --can-publish "$REMOTE_SHA" 2>&1); then
+        log "Skipping publish: ${PUBLISH_SAFETY:-runtime builder freshness unknown}"
+        exit 0
+    fi
+    # The first build above may have raced with auto-deploy. Rebuild only after the
+    # installed builder is confirmed current, then verify the same SHA once more.
+    (cd "$SCRIPTS" && python3 build-agent-dashboard.py >> "$LOG" 2>&1) || {
+        log "ERROR: post-freshness build failed"
+        exit 1
+    }
+    if ! PUBLISH_SAFETY=$(python3 "$SCRIPTS/auto_deploy.py" --can-publish "$REMOTE_SHA" 2>&1); then
+        log "Skipping publish after rebuild: ${PUBLISH_SAFETY:-runtime builder freshness changed}"
+        exit 0
+    fi
     git worktree add --detach "$PUBLISH_WT" FETCH_HEAD >> "$LOG" 2>&1 || { log "ERROR: publish worktree failed"; exit 1; }
     cp "$HTML_OUT" "$PUBLISH_WT/index.html"
     mkdir -p "$PUBLISH_WT/dashboard-assets"
