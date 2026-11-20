@@ -18,6 +18,9 @@ class Conflict(ValueError):
     pass
 
 
+class RequestRejected(RuntimeError):
+    """The remote create request was definitely rejected before creating an issue."""
+
 def gh(method, path, payload=None):
     exe = shutil.which('gh')
     if not exe:
@@ -29,6 +32,12 @@ def gh(method, path, payload=None):
     result = subprocess.run(args, input=json.dumps(payload) if payload is not None else None,
                             text=True, capture_output=True, timeout=20)
     if result.returncode:
+        error = result.stderr.lower()
+        if method == 'POST' and (
+            re.search(r'http (?:400|401|403|404|405|413|415|422|429)\b', error)
+            or 'connection refused' in error or 'no such host' in error
+        ):
+            raise RequestRejected('GitHub отклонил создание задачи. Можно повторить.')
         raise RuntimeError('GitHub недоступен для этой операции')
     return json.loads(result.stdout)
 
@@ -122,7 +131,9 @@ class Board:
         meta = dict(key=hashlib.sha256(key.encode()).hexdigest(), project=project, lane='todo',
                     plan=checked_date(f.get('plan', '')), due=checked_date(f.get('due', '')))
         sig = hashlib.sha256(json.dumps([title, meta], sort_keys=True).encode()).hexdigest()
-        row = db.execute('SELECT signature, number FROM requests WHERE key=?', (meta['key'],)).fetchone()
+        # GitHub issue numbers are unique only within one repository.
+        ledger_key = self.repo.casefold() + ':' + meta['key']
+        row = db.execute('SELECT signature, number FROM requests WHERE key=?', (ledger_key,)).fetchone()
         if row:
             if row[0] != sig:
                 raise Conflict('Этот запрос уже использован для другой задачи')
@@ -131,14 +142,18 @@ class Board:
         for issue in self.issues():
             m = MARKER.search(issue.get('body') or '')
             if m and json.loads(m[1]).get('key') == meta['key']:
-                db.execute('INSERT OR REPLACE INTO requests VALUES (?,?,?)', (meta['key'], sig, issue['number']))
+                db.execute('INSERT OR REPLACE INTO requests VALUES (?,?,?)', (ledger_key, sig, issue['number']))
                 return self.task(issue)
         if row:
             raise Conflict('GitHub ещё не подтвердил предыдущую попытку. Обнови список.')
-        db.execute('INSERT INTO requests VALUES (?,?,NULL)', (meta['key'], sig))
-        created = self.api('POST', f'{self.root}/issues',
-                           {'title': title, 'body': marker(meta), 'labels': ['command-center']})
-        db.execute('UPDATE requests SET number=? WHERE key=?', (created['number'], meta['key']))
+        db.execute('INSERT INTO requests VALUES (?,?,NULL)', (ledger_key, sig))
+        try:
+            created = self.api('POST', f'{self.root}/issues',
+                               {'title': title, 'body': marker(meta), 'labels': ['command-center']})
+        except (RequestRejected, ConnectionRefusedError, FileNotFoundError):
+            db.execute('DELETE FROM requests WHERE key=?', (ledger_key,))
+            raise
+        db.execute('UPDATE requests SET number=? WHERE key=?', (created['number'], ledger_key))
         return self.task(created)
 
     def update(self, f):
