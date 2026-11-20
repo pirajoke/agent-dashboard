@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from dashboard_builder.personal_kanban import Board, Conflict
+from dashboard_builder.personal_kanban import Board, Conflict, RequestRejected
 
 
 class Issues:
@@ -11,7 +11,7 @@ class Issues:
         self.lose_response = False
 
     def __call__(self, method, path, data=None):
-        if path == 'repos/owner/tasks':
+        if path in ('repos/owner/tasks', 'repos/owner/other'):
             return {'private': self.private}
         if method == 'GET' and '?' in path:
             return [i.copy() for i in self.rows.values() if 'state=all' in path or i['state'] == 'open']
@@ -61,6 +61,28 @@ class BoardTests(unittest.TestCase):
         self.assertEqual(len(self.issues.rows), 1)
         with self.assertRaises(Conflict):
             self.board.apply('create_task', dict(self.draft, title='Different card'))
+
+    def test_confirmed_rejection_retries_original_key(self):
+        def rejected(method, path, data=None):
+            if method == 'POST':
+                raise RequestRejected('HTTP 422')
+            return self.issues(method, path, data)
+        self.board.api = rejected
+        with self.assertRaises(RequestRejected):
+            self.board.apply('create_task', self.draft)
+        self.board.api = self.issues
+        self.assertEqual(self.board.apply('create_task', self.draft)['id'], 1)
+        self.assertEqual(len(self.issues.rows), 1)
+
+    def test_request_ledger_scoped_to_repo(self):
+        self.board.apply('create_task', self.draft)
+        other_api = Issues()
+        other = Board(api=other_api, repo='owner/other', ledger=self.board.ledger)
+        other_api.rows[1] = {'body': 'unrelated', 'number': 1, 'state': 'open'}
+        card = other.apply('create_task', self.draft)
+        self.assertEqual(card['id'], 2)
+        self.assertIn('/owner/other/', card['url'])
+        self.assertEqual(len(other_api.rows), 2)
 
     def test_private_only_and_nonboard_issue(self):
         self.issues.rows[99] = dict(body='ordinary issue', state='open')

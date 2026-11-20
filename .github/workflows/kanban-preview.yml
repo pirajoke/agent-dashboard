@@ -13,9 +13,13 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - run: python -m pip install playwright
+      - run: python -m pip install playwright ruamel.yaml "mcp==1.29.0"
       - name: Test the board at desktop and phone widths
         run: python qa_kanban_screen.py
+      - name: Check MCP registration and request flow
+        run: |
+          python qa_mcp_profile.py
+          python qa_mcp_stdio.py
       - uses: actions/upload-artifact@v4
         with:
           name: kanban-browser-screens
