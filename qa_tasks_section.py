@@ -27,7 +27,7 @@ try:
             page=browser.new_page(viewport=size,reduced_motion='reduce',locale='ru',color_scheme='light')
             errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
-            board=Board(api=Issues(),repo='example/tasks',ledger=Path(d)/str(mobile)/'log.db')
+            board=Board(api=Issues(),repo='owner/tasks',ledger=Path(d)/str(mobile)/'log.db')
             for key,title,project,dates in [
                 ('a','Подготовить демо','Студия',{'plan':str(today)}),
                 ('b','Проверить макет','Дизайн',{'due':str(today-timedelta(days=1))}),
@@ -51,6 +51,12 @@ try:
             assert not page.locator('#kb-archive').evaluate('e => e.open')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.screenshot(path=str(dst/('section-mobile.png' if mobile else 'section-desktop.png')))
+            if mobile:
+                page.locator('.kb-switch [data-lane=doing]').click()
+                expect(page.locator('#kb-doing')).to_be_visible()
+                expect(page.locator('#kb-todo')).to_be_hidden()
+                page.screenshot(path=str(dst/'section-mobile-doing.png'))
+                page.locator('.kb-switch [data-lane=todo]').click()
             if not mobile:
                 page.locator('#cc-theme-toggle').click()
                 expect(page.locator('html')).to_have_attribute('data-theme','dark')

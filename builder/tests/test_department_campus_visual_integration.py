@@ -209,6 +209,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
             [(item["target"], item["text"]) for item in parser.navigation],
             [
                 ("work", "Сегодня"),
+                ("tasks", "Задачи"),
                 ("platforms", "Платформы"),
                 ("documents", "Документы"),
                 ("agents", "Агенты"),
@@ -240,7 +241,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         allowed = re.findall(r"['\"]([^'\"]+)['\"]", initial_guard.group(1))
         self.assertEqual(
             allowed,
-            ["mac-mini", "air", "pro", "machines", "agents", "architecture", "platforms", "media", "documents", "context", "work", "growth", "weekly"],
+            ["mac-mini", "air", "pro", "machines", "agents", "architecture", "platforms", "media", "documents", "context", "work", "tasks", "growth", "weekly"],
         )
         # Агенты opens on «Сессии» since 2026-10-25; the campus is one tap away.
         self.assertIn(

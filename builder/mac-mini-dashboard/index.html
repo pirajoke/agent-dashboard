@@ -5894,13 +5894,19 @@ a.kb-card-title:hover { text-decoration: underline; }
 .kb-tag.is-late { color: var(--mm-warning); }
 .kb-card .kb-actions { gap: 12px; }
 .kb-action { padding: 0; min-height: 44px; color: var(--mm-accent); background: transparent; border: 0; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.kb-switch { display: none; }
 .kb-archive summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
 .kb-archive .kb-card-title { text-decoration: line-through; color: var(--mm-muted); }
 .kb-empty { margin: 3px 0; color: var(--mm-muted); font-size: 14px; }
 @media (max-width: 760px) {
   .kb-lanes, .kb-form { grid-template-columns: minmax(0,1fr); }
   .kb-toolbar .kb-field { flex: 1 1 125px; }
-  .kb-lanes { gap: 12px; }
+  .kb-lanes { margin-top: 8px; }
+  .kb-switch { display: flex; gap: 4px; margin-top: 14px; padding: 3px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-background); }
+  .kb-switch button { flex: 1; min-height: 44px; padding: 3px; color: var(--mm-muted); background: transparent; border: 1px solid transparent; border-radius: 11px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .kb-switch button[aria-pressed=true] { color: var(--mm-ink); background: var(--mm-surface); border-color: var(--mm-control-line); }
+  #kb-board[data-mobile-lane=todo] .kb-lane[data-state=doing],
+  #kb-board[data-mobile-lane=doing] .kb-lane[data-state=todo] { display: none; }
 }
 </style>
 </head>
@@ -6367,7 +6373,11 @@ a.kb-card-title:hover { text-decoration: underline; }
       <button class="kb-button" type="button" id="kb-refresh">Обновить</button>
     </div>
     <p id="kb-message" role="status" aria-live="polite"></p>
-    <div id="kb-board" hidden>
+    <div id="kb-board" data-mobile-lane="todo" hidden>
+      <div class="kb-switch" role="group" aria-label="Колонка доски">
+        <button type="button" aria-pressed="true" aria-controls="kb-todo" data-lane="todo">Сделать <span class="kb-count">0</span></button>
+        <button type="button" aria-pressed="false" aria-controls="kb-doing" data-lane="doing">В процессе <span class="kb-count">0</span></button>
+      </div>
       <div class="kb-lanes">
         <div class="kb-lane" data-state="todo"><h3><span>Сделать</span><span class="kb-count" id="kb-todo-count">0</span></h3><div id="kb-todo" class="kb-stack"></div></div>
         <div class="kb-lane" data-state="doing"><h3><span>В процессе</span><span class="kb-count" id="kb-doing-count">0</span></h3><div id="kb-doing" class="kb-stack"></div></div>
@@ -10140,8 +10150,10 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
   }
   async function api(payload) {
     const headers = {'Content-Type':'application/json'};
-    const token = localStorage.getItem('command-center.jarvis-run-token');
-    if (token) headers['X-Dashboard-Run-Token'] = token;
+    try {
+      const token = localStorage.getItem('command-center.jarvis-run-token');
+      if (token) headers['X-Dashboard-Run-Token'] = token;
+    } catch { /* Cookie-based owner sessions can still load the board. */ }
     const response = await fetch('/api/kanban', {method:'POST', headers, credentials:'same-origin',
       cache:'no-store', body:JSON.stringify(payload)});
     if (!response.ok || response.redirected) {
@@ -10190,6 +10202,12 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
     row.append(label,body);
     return row;
   }
+  const switches = [...board.querySelectorAll('.kb-switch button')];
+  function selectLane(lane) {
+    board.dataset.mobileLane = lane;
+    switches.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lane === lane)));
+  }
+  switches.forEach(b => { b.onclick = () => selectLane(b.dataset.lane); });
   function draw() {
     const projects = [...new Set(cards.map(card => card.project).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ru'));
     const selected = project.value;
@@ -10202,6 +10220,8 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
     for (const lane of ['todo','doing','done']) {
       const group = visible.filter(card => card.status === lane);
       byId(lane + '-count').textContent = String(group.length);
+      const toggle = switches.find(b => b.dataset.lane === lane);
+      if (toggle) toggle.querySelector('span').textContent = String(group.length);
       byId(lane).replaceChildren(...(group.length ? group.map(card => cardRow(card,today)) : [node('p','kb-empty','Задач нет')]));
     }
     board.hidden = false;
@@ -10244,6 +10264,7 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
       const updated = await api({action:'update_task', id:card.id, revision:card.revision, ...changes});
       if (!active()) return;
       cards = cards.map(item => item.id === updated.id ? updated : item);
+      if (updated.status !== 'done' && changes.status) selectLane(updated.status);
       draw();
       const next = [...board.querySelectorAll('.kb-card')].find(row => row.dataset.taskId === String(updated.id));
       const focus = next?.querySelector('input');
@@ -10265,7 +10286,7 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
       if (!active()) return;
       cards = [saved,...cards.filter(card => card.id !== saved.id)];
       draft = null; form.reset(); setForm(false);
-      project.value = ''; view.value = 'all'; draw(); add.focus();
+      project.value = ''; view.value = 'all'; selectLane('todo'); draw(); add.focus();
       return 'Задача добавлена.';
     });
   };
