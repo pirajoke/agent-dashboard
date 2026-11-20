@@ -1,0 +1,23 @@
+name: Native tasks section acceptance
+on:
+  push:
+    branches: [qa/command-center-tasks-section]
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install playwright ruamel.yaml
+      - run: PYTHONPATH=builder python qa_tasks_section.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-tasks-section
+          path: qa-screens/section-*.png
+          retention-days: 5
