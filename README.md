@@ -44,6 +44,23 @@ python3 builder/verify_release.py --expect <text the change adds>
 
 It confirms that auto-deploy put `origin/main` (or `--sha`) live without a failure or rollback, that `:7777` answers 200 and serves every `--expect` text, runs the full test suite on that commit in a throwaway worktree, and takes desktop (1440×1000) and phone (390×844) screenshots through headless Chrome, failing on sideways scroll or uncaught page errors. The report and screenshots go to `~/.agent-bridge/release-checks/<time>/`. Exit code 0 means all good, 2 means auto-deploy has not picked the commit up yet (rerun in 5 minutes), 1 means a failure.
 
+Without access to the Mac mini (a cloud agent, for example), read the GitHub commit status `mac-mini/deploy` on the merged commit. Auto-deploy sets it through the Mac mini's signed-in `gh`: `success` when the commit is live, `failure` after a failed deploy or health check and its rollback.
+
+```bash
+gh api repos/pirajoke/agent-dashboard/commits/<sha>/statuses --jq '.[] | select(.context=="mac-mini/deploy") | [.state, .description] | @tsv'
+```
+
+## MacBook Pro: the same automatic updates
+
+The MacBook Pro keeps its repo code current the same way: the collectors, and the Health API script `builder/macbook/macbook-pro-health.py` once it is in git. Install once, by hand, on the MacBook:
+
+```bash
+git clone https://github.com/pirajoke/agent-dashboard ~/agent-dashboard 2>/dev/null
+cd ~/agent-dashboard && git pull --ff-only && builder/deploy_macbook.sh
+```
+
+This installs `com.pirajoke.macbook-auto-update`. Every 5 minutes it runs `auto_deploy.py` with `builder/deploy_macbook.sh`. That restarts the Health API only when its script changed, checks `:8880/api/all`, and rolls back if the check fails. It marks the commit `macbook-pro/deploy` on GitHub when `gh` is signed in there. A sleeping MacBook catches up when it wakes.
+
 ## Runtime model
 
 The production builder runs on an owner-controlled Mac mini and reads approved local operational sources. It produces:

@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 BUILDER_DIR = Path(__file__).resolve().parents[1]
@@ -77,6 +78,7 @@ class AutoDeployRunTest(unittest.TestCase):
         self.deploys: list[str] = []
         self.deploy_ok = {}
         self.health = [True]
+        self.reports: list[tuple[str, str]] = []
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -92,6 +94,7 @@ class AutoDeployRunTest(unittest.TestCase):
             get_ci=lambda sha: ci,
             do_deploy=deploy,
             is_healthy=lambda: self.health.pop(0) if self.health else True,
+            report=lambda sha, state, description: self.reports.append((sha, state)),
             state_dir=self.state_dir,
         )
 
@@ -116,6 +119,8 @@ class AutoDeployRunTest(unittest.TestCase):
         self.assertEqual(self._state()["deployed_sha"], "bbb")
         log = (self.state_dir / "deploys.jsonl").read_text().splitlines()
         self.assertEqual(json.loads(log[-1])["result"], "deployed")
+        # GitHub learns that this commit is live, so agents can check a deploy without the Mac mini.
+        self.assertEqual(self.reports, [("bbb", "success")])
 
     def test_pending_ci_waits(self):
         AUTO.record_deployed("aaa", self.state_dir)
@@ -129,6 +134,7 @@ class AutoDeployRunTest(unittest.TestCase):
         self.assertEqual(self._run("bbb", ci="red"), "ci_red")
         self.assertEqual(self._run("bbb"), "skipped_failed")
         self.assertEqual(self.deploys, [])
+        self.assertEqual(self.reports, [])  # red CI is already on GitHub
         self.assertEqual(self._run("ccc"), "deployed")
 
     def test_failed_deploy_rolls_back(self):
@@ -139,6 +145,7 @@ class AutoDeployRunTest(unittest.TestCase):
         state = self._state()
         self.assertEqual(state["deployed_sha"], "aaa")
         self.assertEqual(state["failed_sha"], "bbb")
+        self.assertEqual(self.reports, [("bbb", "failure")])
 
     def test_unhealthy_site_rolls_back(self):
         AUTO.record_deployed("aaa", self.state_dir)
@@ -149,6 +156,30 @@ class AutoDeployRunTest(unittest.TestCase):
     def test_first_run_deploys_current_main(self):
         self.assertEqual(self._run("bbb", changed=()), "deployed")
         self.assertEqual(self.deploys, ["bbb"])
+
+
+class ReportStatusTest(unittest.TestCase):
+    def test_marks_the_commit_through_gh(self):
+        calls = []
+
+        def runner(args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args, 0, "", "")
+
+        self.assertTrue(AUTO.report_status("abc123", "success", "Deployed", runner=runner, gh="/opt/homebrew/bin/gh"))
+        self.assertEqual(calls[0][:5], ["/opt/homebrew/bin/gh", "api", "repos/pirajoke/agent-dashboard/statuses/abc123", "-X", "POST"])
+        self.assertIn("context=mac-mini/deploy", calls[0])
+        self.assertIn("state=success", calls[0])
+
+    def test_missing_gh_or_a_failing_call_never_breaks_the_deploy(self):
+        def broken(args, **kwargs):
+            raise OSError("no gh")
+
+        with patch.object(AUTO, "find_gh", return_value=None):
+            self.assertFalse(AUTO.report_status("abc", "success", "x"))
+        self.assertFalse(AUTO.report_status("abc", "success", "x", runner=broken, gh="/x/gh"))
+        failing = lambda args, **kwargs: subprocess.CompletedProcess(args, 1, "", "HTTP 401")
+        self.assertFalse(AUTO.report_status("abc", "failure", "x", runner=failing, gh="/x/gh"))
 
 
 class CiStateTest(unittest.TestCase):

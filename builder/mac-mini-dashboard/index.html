@@ -22,6 +22,10 @@ document.documentElement.dataset.theme = 'light';
 try {
   if (localStorage.getItem('command-center.theme.v3') === 'dark') document.documentElement.dataset.theme = 'dark';
 } catch (error) { /* stays light */ }
+const CC_LINKS_KEY = 'command-center.links-hidden.v1';
+try {
+  document.documentElement.toggleAttribute('data-links-hidden', localStorage.getItem(CC_LINKS_KEY) === 'true');
+} catch (error) { /* Links stay visible if storage is unavailable. */ }
 </script>
 <style>
 /* One design for every tab (Mark 2026-10-14): the Property OS tokens of MAIN MANAGER, light and dark,
@@ -195,6 +199,20 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-badge.offline { background: var(--red-bg); color: var(--red); }
 .machine-health { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: -4px 0 20px; }
 .machine-health:empty { display: none; }
+.machine-qwen-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.machine-qwen-head .machine-care-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.machine-qwen-state { font-size: 14px; font-weight: 600; color: var(--text2); }
+.machine-qwen.is-on .machine-qwen-state { color: var(--green); }
+.machine-qwen.is-busy .machine-qwen-state { color: var(--orange, #d97706); }
+.qwen-switch { position: relative; flex: none; width: 52px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: var(--border); cursor: pointer; padding: 0; transition: background .2s; }
+.qwen-switch > span { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+.qwen-switch[aria-checked="true"] { background: var(--green); border-color: var(--green); }
+.qwen-switch[aria-checked="true"] > span { transform: translateX(22px); }
+.qwen-switch:disabled { opacity: .6; cursor: wait; }
+.qwen-switch:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .qwen-switch, .qwen-switch > span { transition: none; } }
+.machine-qwen-note { margin: 8px 0 0; font-size: 14px; color: var(--text2); }
+.machine-qwen-note.is-error { color: var(--red); }
 .machine-health-item { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card, transparent); color: var(--text); font: inherit; cursor: pointer; }
 .machine-health-item:hover { border-color: var(--text2); }
 .machine-health-label { font-size: 12px; color: var(--text2); }
@@ -5860,6 +5878,61 @@ button.cc-refresh:hover { background: var(--mm-selection); }
 .platform-entry .platform-links .platform-link { flex: 0 0 auto; max-width: 100%; }
 .platform-entry .platform-links .platform-link .platform-access { overflow: visible; }
 .platform-entry .platform-links:has(> .platform-link:nth-child(3)) { flex-direction: row; align-items: center; }
+html[data-links-hidden] body a[href]:not([href^="#"]) { display: none !important; }
+.cc-eye-slash { display: none; }
+html[data-links-hidden] .cc-eye-slash { display: inline; }
+/* Task board in the Command Center shell. */
+#section-tasks { max-width: 1440px; color: var(--mm-ink); }
+#section-tasks [hidden] { display: none !important; }
+.kb-head, .kb-toolbar, .kb-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.kb-head { justify-content: space-between; }
+.kb-toolbar { align-items: end; padding: 0 0 18px; border-bottom: 1px solid var(--mm-line); }
+.kb-field { display: grid; min-width: 0; gap: 5px; font-size: 13px; font-weight: 600; color: var(--mm-muted); }
+.kb-field :is(input, select), .kb-button { min-height: 44px; max-width: 100%; padding: 8px 13px; border: 1px solid var(--mm-control-line); border-radius: 10px; font: inherit; color: var(--mm-ink); background: var(--mm-surface); }
+.kb-field :is(input, select) { min-width: 0; font-size: 15px; }
+.kb-button { font-size: 14px; font-weight: 600; cursor: pointer; }
+.kb-button:hover { background: var(--mm-selection); }
+.kb-button.kb-primary { background: var(--mm-ink); color: var(--mm-surface); border-color: var(--mm-ink); }
+.kb-button:disabled { opacity: .55; cursor: default; }
+#section-tasks :focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 3px; }
+.kb-form, .kb-lane, .kb-archive { border: 1px solid var(--mm-line); border-radius: 16px; padding: clamp(12px, 2vw, 22px); }
+.kb-form { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; background: var(--mm-surface); }
+.kb-wide { grid-column: 1 / -1; }
+#kb-message { margin: 12px 0; color: var(--mm-muted); }
+#kb-message:empty { margin: 0; }
+.kb-lanes { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); align-items: start; gap: 16px; margin: 18px 0; }
+.kb-lane { min-width: 0; background: color-mix(in srgb, var(--mm-line) 20%, var(--mm-background)); }
+.kb-lane[data-state=doing] { background: color-mix(in srgb, var(--mm-selection) 42%, var(--mm-background)); }
+.kb-lane h3 { display: flex; gap: 9px; align-items: center; margin: 0 0 14px; font-size: 18px; color: var(--mm-ink); }
+.kb-lane h3::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--mm-muted); }
+.kb-lane[data-state=doing] h3::before { background: var(--mm-accent); }
+.kb-count, .kb-tag { display: inline-block; border-radius: 8px; padding: 3px 8px; font-size: 12px; line-height: 1.4; font-weight: 600; color: var(--mm-muted); background: var(--mm-surface); }
+.kb-stack { display: grid; gap: 9px; }
+.kb-card { min-width: 0; display: grid; grid-template-columns: 44px minmax(0,1fr); align-items: start; padding: 9px 12px 9px 3px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-surface); }
+.kb-check { display: grid; place-items: center; height: 44px; cursor: pointer; }
+.kb-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--mm-accent); cursor: pointer; }
+.kb-card-body { padding-top: 9px; overflow-wrap: anywhere; }
+.kb-card-title { font-size: 16px; line-height: 1.35; font-weight: 650; color: var(--mm-ink); text-decoration: none; }
+a.kb-card-title:hover { text-decoration: underline; }
+.kb-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.kb-tag { background: var(--mm-background); }
+.kb-tag.is-late { color: var(--mm-warning); }
+.kb-card .kb-actions { gap: 12px; }
+.kb-action { padding: 0; min-height: 44px; color: var(--mm-accent); background: transparent; border: 0; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.kb-switch { display: none; }
+.kb-archive summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
+.kb-archive .kb-card-title { text-decoration: line-through; color: var(--mm-muted); }
+.kb-empty { margin: 3px 0; color: var(--mm-muted); font-size: 14px; }
+@media (max-width: 760px) {
+  .kb-lanes, .kb-form { grid-template-columns: minmax(0,1fr); }
+  .kb-toolbar .kb-field { flex: 1 1 125px; }
+  .kb-lanes { margin-top: 8px; }
+  .kb-switch { display: flex; gap: 4px; margin-top: 14px; padding: 3px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-background); }
+  .kb-switch button { flex: 1; min-height: 44px; padding: 3px; color: var(--mm-muted); background: transparent; border: 1px solid transparent; border-radius: 11px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .kb-switch button[aria-pressed=true] { color: var(--mm-ink); background: var(--mm-surface); border-color: var(--mm-control-line); }
+  #kb-board[data-mobile-lane=todo] .kb-lane[data-state=doing],
+  #kb-board[data-mobile-lane=doing] .kb-lane[data-state=todo] { display: none; }
+}
 </style>
 </head>
 <body>
@@ -6222,6 +6295,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
     <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">Сегодня</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-tasks" aria-pressed="false" onclick="showSection('tasks')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-tasks"/></svg></span><span class="cc-tab-label" data-tab-label="tasks">Задачи</span><span class="pill-badge" id="tasks-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
@@ -6235,6 +6309,10 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <!-- Mark 2026-11-06 «лучше на телефоне»: the phone bar shows four tabs and «Ещё», like a native app. -->
   <button type="button" class="cc-more-tab" id="cc-more-tab" aria-haspopup="dialog" aria-controls="cc-more-dialog"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span><span class="cc-tab-label">Ещё</span></button>
   <div class="cc-side-foot">
+    <button type="button" class="cc-side-button" id="cc-links-toggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="cc-eye-slash" d="m3 3 18 18"/></svg>
+      <span>Скрыть ссылки</span>
+    </button>
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
     <div class="tab-name-customizer">
       <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename aria-haspopup="dialog" aria-controls="tab-name-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Настроить вкладки</span></button>
@@ -6276,6 +6354,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       </div>
       <div class="cc-more-list" id="cc-more-list"></div>
       <div class="cc-more-list cc-more-settings">
+        <button type="button" class="cc-more-row" data-more-proxy="cc-links-toggle"></button>
         <button type="button" class="cc-more-row" data-more-proxy="cc-theme-toggle"></button>
         <button type="button" class="cc-more-row" data-more-proxy="edit-tab-names"></button>
       </div>
@@ -6300,6 +6379,38 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   </div>
 
   <main class="cc-main">
+  <section id="section-tasks" class="section" aria-labelledby="kb-title">
+    <header class="cc-page-head kb-head">
+      <h2 class="cc-page-title" id="kb-title">Задачи</h2>
+      <button type="button" class="kb-button kb-primary" id="kb-add" aria-controls="kb-form" aria-expanded="false" disabled>Добавить задачу</button>
+    </header>
+    <form id="kb-form" class="kb-form" hidden>
+      <label class="kb-field kb-wide">Название задачи<input name="title" required maxlength="250" autocomplete="off"></label>
+      <label class="kb-field">Проект<input name="project" list="kb-projects" maxlength="120" autocomplete="off"></label>
+      <datalist id="kb-projects"></datalist>
+      <label class="kb-field">В план на<input type="date" name="plan"></label>
+      <label class="kb-field">Срок<input type="date" name="due"></label>
+      <div class="kb-actions kb-wide"><button class="kb-button kb-primary" type="submit">Сохранить</button><button type="button" class="kb-button" id="kb-cancel">Отмена</button></div>
+    </form>
+    <div class="kb-toolbar">
+      <label class="kb-field">Проект<select id="kb-filter"><option value="">Все проекты</option></select></label>
+      <label class="kb-field">Показать<select id="kb-view"><option value="all">Все задачи</option><option value="day">План дня</option><option value="overdue">Просроченные</option></select></label>
+      <button class="kb-button" type="button" id="kb-refresh">Обновить</button>
+    </div>
+    <p id="kb-message" role="status" aria-live="polite"></p>
+    <div id="kb-board" data-mobile-lane="todo" hidden>
+      <div class="kb-switch" role="group" aria-label="Колонка доски">
+        <button type="button" aria-pressed="true" aria-controls="kb-todo" data-lane="todo">Сделать <span class="kb-count">0</span></button>
+        <button type="button" aria-pressed="false" aria-controls="kb-doing" data-lane="doing">В процессе <span class="kb-count">0</span></button>
+      </div>
+      <div class="kb-lanes">
+        <div class="kb-lane" data-state="todo"><h3><span>Сделать</span><span class="kb-count" id="kb-todo-count">0</span></h3><div id="kb-todo" class="kb-stack"></div></div>
+        <div class="kb-lane" data-state="doing"><h3><span>В процессе</span><span class="kb-count" id="kb-doing-count">0</span></h3><div id="kb-doing" class="kb-stack"></div></div>
+      </div>
+      <details class="kb-archive" id="kb-archive"><summary>Готово <span class="kb-count" id="kb-done-count">0</span></summary><div class="kb-stack" id="kb-done"></div></details>
+    </div>
+  </section>
+
   <section id="section-documents" class="section" aria-labelledby="docxx-title">
     <header class="cc-page-head docxx-head">
       <div><h2 class="cc-page-title" id="docxx-title">Документы</h2><p class="cc-page-lede">Что Mac mini разобрал и куда положил.</p></div>
@@ -6831,6 +6942,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
            big tiles, then a tile per project; «Личное» and the small folders are tiles too.
            The week tile opens «Сводка» in a window. -->
       <div class="mm-home" id="mm-home">
+        <a class="mm-home-label mm-home-head" href="?tab=tasks">Задачи · Канбан</a>
         <div class="mm-todo-slot" id="mm-owner-todo" hidden></div>
         <!-- Mark 2026-11-06 «что важно сегодня»: whether the computers and services are well, from the same
              checks as Техника and its Медик; one calm line when all is fine, the trouble by name when not. -->
@@ -7351,6 +7463,13 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <span class="machine-badge offline" id="pro-online-badge">проверка</span>
     </div>
     <div class="machine-health" id="pro-health" aria-live="polite"></div>
+    <section class="machine-care machine-qwen" id="pro-qwen" aria-labelledby="pro-qwen-title" hidden>
+      <div class="machine-qwen-head">
+        <h3 class="machine-care-title" id="pro-qwen-title">Qwen <span class="machine-qwen-state" id="pro-qwen-state"></span></h3>
+        <button type="button" role="switch" class="qwen-switch" id="pro-qwen-switch" aria-checked="false" aria-label="Qwen на MacBook Pro"><span></span></button>
+      </div>
+      <p class="machine-qwen-note" id="pro-qwen-note" role="status"></p>
+    </section>
     <section class="machine-thermal" id="pro-thermal" aria-labelledby="pro-thermal-title" hidden>
       <div class="machine-care-head">
         <h3 class="machine-care-title" id="pro-thermal-title">Температура</h3>
@@ -8400,7 +8519,7 @@ function initOwnerDecisions() {
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
 // Mark 2026-11-06 «меньше вкладок»: the first six are the menu, the rest wait under «Ещё».
-const TAB_NAME_ROUTES = Object.freeze(['work', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'weekly', 'media', 'architecture']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'tasks', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'weekly', 'media', 'architecture']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -9983,6 +10102,18 @@ document.addEventListener('visibilitychange', () => {
 // browser and set before the first paint in <head>; without one the page is light (Mark 2026-10-14).
 const CC_THEME_KEY = 'command-center.theme.v3';
 
+const linksButton = document.getElementById('cc-links-toggle');
+function syncLinksButton() {
+  const hidden = document.documentElement.hasAttribute('data-links-hidden');
+  linksButton.querySelector('span').textContent = hidden ? 'Показать ссылки' : 'Скрыть ссылки';
+}
+linksButton.addEventListener('click', () => {
+  const hidden = document.documentElement.toggleAttribute('data-links-hidden');
+  try { localStorage.setItem(CC_LINKS_KEY, String(hidden)); } catch (error) { /* Session-only choice. */ }
+  syncLinksButton();
+});
+syncLinksButton();
+
 function ccIsDark() {
   const theme = document.documentElement.dataset.theme;
   if (theme) return theme === 'dark';
@@ -10016,6 +10147,193 @@ ccSyncThemeButton();
 // Navigation
 // Department names in plain Russian on every screen (the data keeps the English labels).
 const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разработка', Design: 'Дизайн', Infrastructure: 'Инфраструктура', Internal: 'Знания', Finance: 'Финансы' };
+// The section reads the same owner board used by task capture and MCP.
+(() => {
+  const byId = id => document.getElementById('kb-' + id);
+  const form = byId('form'), add = byId('add'), board = byId('board');
+  const project = byId('filter'), view = byId('view'), message = byId('message');
+  const dateFormat = new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short', year:'numeric', timeZone:'UTC'});
+  const parisDate = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Paris', year:'numeric', month:'2-digit', day:'2-digit'});
+  let cards = [], generation = 0, pending = false, draft = null;
+  function node(tag, className, value) {
+    const el = document.createElement(tag);
+    el.className = className;
+    if (value !== undefined) el.textContent = value;
+    return el;
+  }
+  function setForm(open) {
+    form.hidden = !open;
+    add.setAttribute('aria-expanded', String(open));
+    if (open) form.elements.title.focus();
+  }
+  function lock() {
+    generation++;
+    pending = false;
+    cards = [];
+    draft = null;
+    board.hidden = true;
+    add.disabled = true;
+    form.reset();
+    setForm(false);
+    project.replaceChildren(new Option('Все проекты', ''));
+    byId('projects').replaceChildren();
+    for (const lane of ['todo','doing','done']) byId(lane).replaceChildren();
+    byId('archive').open = false;
+    message.textContent = '';
+  }
+  async function api(payload) {
+    const headers = {'Content-Type':'application/json'};
+    try {
+      const token = localStorage.getItem('command-center.jarvis-run-token');
+      if (token) headers['X-Dashboard-Run-Token'] = token;
+    } catch { /* Cookie-based owner sessions can still load the board. */ }
+    const response = await fetch('/api/kanban', {method:'POST', headers, credentials:'same-origin',
+      cache:'no-store', body:JSON.stringify(payload)});
+    if (!response.ok || response.redirected) {
+      const error = new Error('Не удалось подтвердить ответ. Обнови доску.');
+      error.status = response.redirected ? 401 : response.status;
+      if (error.status === 400) error.message = 'Проверь название задачи и даты.';
+      throw error;
+    }
+    return response.json();
+  }
+  function cardRow(card, today) {
+    const done = card.status === 'done', row = node('article','kb-card');
+    const label = node('label','kb-check'), check = document.createElement('input');
+    check.type = 'checkbox';
+    check.checked = done;
+    check.setAttribute('aria-label', (done ? 'Вернуть задачу ' : 'Завершить задачу ') + card.title);
+    check.onchange = () => { check.checked = done; update(card, {status:done ? 'todo' : 'done'}); };
+    label.append(check);
+    const body = node('div','kb-card-body');
+    const validLink = /^https:\/\/github\.com\//i.test(card.url || '');
+    const title = node(validLink ? 'a' : 'span','kb-card-title',card.title);
+    if (validLink) { title.href = card.url; title.target = '_blank'; title.rel = 'noopener'; }
+    body.append(title);
+    const tags = node('div','kb-tags');
+    if (card.project) tags.append(node('span','kb-tag',card.project));
+    for (const [key, prefix] of [['plan','План'],['due','Срок']]) {
+      if (!card[key]) continue;
+      const date = new Date(card[key] + 'T12:00:00Z');
+      const value = Number.isFinite(date.valueOf()) ? dateFormat.format(date) : card[key];
+      tags.append(node('span','kb-tag' + (key === 'due' && !done && card[key] < today ? ' is-late' : ''), prefix + ' · ' + value));
+    }
+    if (tags.childElementCount) body.append(tags);
+    if (!done) {
+      const actions = node('div','kb-actions');
+      function action(text, changes) {
+        const button = node('button','kb-action',text);
+        button.type = 'button';
+        button.onclick = () => update(card,changes);
+        actions.append(button);
+      }
+      action(card.status === 'todo' ? 'Начать' : 'В список', {status:card.status === 'todo' ? 'doing' : 'todo'});
+      action(card.plan === today ? 'Убрать из дня' : 'В план дня', {plan:card.plan === today ? '' : today});
+      body.append(actions);
+    }
+    row.dataset.taskId = String(card.id);
+    row.append(label,body);
+    return row;
+  }
+  const switches = [...board.querySelectorAll('.kb-switch button')];
+  function selectLane(lane) {
+    board.dataset.mobileLane = lane;
+    switches.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lane === lane)));
+  }
+  switches.forEach(b => { b.onclick = () => selectLane(b.dataset.lane); });
+  function draw() {
+    const projects = [...new Set(cards.map(card => card.project).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ru'));
+    const selected = project.value;
+    project.replaceChildren(new Option('Все проекты',''), ...projects.map(p => new Option(p,p)));
+    project.value = projects.includes(selected) ? selected : '';
+    byId('projects').replaceChildren(...projects.map(p => new Option(p,p)));
+    const today = parisDate.format(new Date());
+    const visible = cards.filter(card => (!project.value || project.value === card.project) &&
+      (view.value === 'all' || (card.status !== 'done' && (view.value === 'day' ? card.plan === today : card.due && card.due < today))));
+    for (const lane of ['todo','doing','done']) {
+      const group = visible.filter(card => card.status === lane);
+      byId(lane + '-count').textContent = String(group.length);
+      const toggle = switches.find(b => b.dataset.lane === lane);
+      if (toggle) toggle.querySelector('span').textContent = String(group.length);
+      byId(lane).replaceChildren(...(group.length ? group.map(card => cardRow(card,today)) : [node('p','kb-empty','Задач нет')]));
+    }
+    board.hidden = false;
+    add.disabled = false;
+  }
+  async function read() {
+    const result = await api({action:'list_tasks', include_done:true});
+    if (!Array.isArray(result)) throw new Error('Не удалось загрузить доску.');
+    return result;
+  }
+  async function perform(label, work) {
+    if (pending) return;
+    pending = true;
+    const current = generation;
+    message.textContent = label;
+    const active = () => generation === current;
+    try {
+      const feedback = await work(active);
+      if (active()) message.textContent = feedback || '';
+    } catch (error) {
+      if (!active()) return;
+      if (error.status === 401 || error.status === 403) {
+        lock(); message.textContent = 'Войди в Командный центр как владелец и нажми «Обновить».';
+      } else if (error.status === 409) {
+        message.textContent = 'Карточка изменилась. Нажми «Обновить», чтобы увидеть актуальную версию.';
+      } else {
+        message.textContent = 'Не удалось подтвердить действие. Проверь соединение и обнови доску.';
+        if (error.status === 400) message.textContent = error.message;
+      }
+    } finally { if (active()) pending = false; }
+  }
+  function refresh() {
+    return perform('Загружаю задачи…', async active => {
+      const result = await read();
+      if (active()) { cards = result; draw(); }
+    });
+  }
+  function update(card, changes) {
+    perform('Сохраняю…', async active => {
+      const updated = await api({action:'update_task', id:card.id, revision:card.revision, ...changes});
+      if (!active()) return;
+      cards = cards.map(item => item.id === updated.id ? updated : item);
+      if (updated.status !== 'done' && changes.status) selectLane(updated.status);
+      draw();
+      const next = [...board.querySelectorAll('.kb-card')].find(row => row.dataset.taskId === String(updated.id));
+      const focus = next?.querySelector('input');
+      if (focus && focus.getClientRects().length) focus.focus({preventScroll:true});
+      else if (updated.status === 'done') byId('archive').querySelector('summary').focus({preventScroll:true});
+      else view.focus({preventScroll:true});
+      return 'Задача обновлена.';
+    });
+  }
+  form.onsubmit = e => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    data.title = data.title.trim();
+    if (!data.title) { form.elements.title.focus(); return; }
+    perform('Сохраняю…', async active => {
+      const signature = JSON.stringify(data);
+      if (!draft || draft.signature !== signature) draft = {signature, key:'dashboard:' + crypto.randomUUID()};
+      const saved = await api({action:'create_task', source_key:draft.key, ...data});
+      if (!active()) return;
+      cards = [saved,...cards.filter(card => card.id !== saved.id)];
+      draft = null; form.reset(); setForm(false);
+      project.value = ''; view.value = 'all'; selectLane('todo'); draw(); add.focus();
+      return 'Задача добавлена.';
+    });
+  };
+  add.onclick = () => setForm(form.hidden);
+  byId('cancel').onclick = () => { setForm(false); add.focus(); };
+  project.onchange = view.onchange = () => { if (!board.hidden) draw(); };
+  byId('refresh').onclick = refresh;
+  window.addEventListener('cc-tasks-open', refresh);
+  window.addEventListener('cc-tasks-close', lock);
+  document.addEventListener('visibilitychange', () => {
+    if (document.getElementById('section-tasks').classList.contains('active') && !document.hidden) refresh();
+  });
+})();
+
 function showSection(name) {
   const isMachine = ['mac-mini', 'air', 'pro'].includes(name);
   if (isMachine) selectedMachine = name;
@@ -10051,6 +10369,7 @@ function showSection(name) {
   if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') { setTimeout(ccLoadPlatformResources, 0); setTimeout(ccLoadWorkTools, 0); }
   if (name === 'media') setTimeout(mediaLoad, 0);
+  window.dispatchEvent(new Event(name === 'tasks' ? 'cc-tasks-open' : 'cc-tasks-close'));
   if (name === 'documents') setTimeout(ccLoadDocxx, 0);
   else window.dispatchEvent(new Event('docxx-lock'));
   if (name === 'context') setTimeout(ccLoadContext, 0);
@@ -10062,7 +10381,7 @@ function showSection(name) {
 // «По дням» links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'growth', 'weekly'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'tasks', 'growth', 'weekly'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
   const agentsView = new URLSearchParams(window.location.search).get('view');
   if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
@@ -14389,6 +14708,7 @@ async function refreshPro() {
   if (!data || !data.system) {
     if (machineRecentlySeen('pro')) return;
     renderMachineHealth('pro', null);
+    renderQwenSwitch(null);
     document.getElementById('pro-status').textContent = 'Нет связи';
     document.getElementById('pro-online-badge').textContent = 'не в сети';
     document.getElementById('pro-online-badge').className = 'machine-badge offline';
@@ -14410,7 +14730,101 @@ async function refreshPro() {
   document.getElementById('pro-svc-count').textContent = '';
   renderSvcTable('pro-svc-tbody', svcs, 'proAction');
   renderGauges('pro', sys);
+  renderQwenSwitch(data.ollama);
 }
+
+// ─── Qwen switch (Mark 2026-11-18 «сделай переключатель для qwen в команд центре») ───
+// The MacBook's health API reports `ollama` in /api/all and switches it with POST /api/ollama/{start,stop};
+// this page asks the dashboard server, which lets only the owner through.
+const QWEN_SWITCH_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/machines/ollama`;
+const QWEN_PENDING_MS = 45 * 1000;
+const qwenSwitch = { status: null, pending: null, error: '' };
+
+function gbRu(value) {
+  return (Math.round(value * 10) / 10).toLocaleString('ru-RU', { maximumFractionDigits: 1 });
+}
+
+// What the card says for one `ollama` report; pure, so the tests can read it.
+function qwenSwitchView(status, pending = null, error = '') {
+  if (!status || typeof status !== 'object' || status.installed === false) return null;
+  const running = Boolean(status.running);
+  const loaded = Array.isArray(status.loaded) ? status.loaded : [];
+  const inMemory = loaded.reduce((sum, model) => sum + (Number(model.size_gb) || 0), 0);
+  const disk = Number(status.disk_gb) > 0 ? `${gbRu(status.disk_gb)} ГБ` : '';
+  let state, note, level;
+  if (pending) {
+    level = 'busy';
+    state = pending === 'start' ? 'включаю…' : 'выключаю…';
+    note = pending === 'start' ? 'Запускаю Ollama на MacBook Pro.' : 'Останавливаю Ollama и освобождаю память.';
+  } else if (!running) {
+    level = 'off';
+    state = 'выключена';
+    note = `Память не занимает.${disk ? ` Модель лежит на диске (${disk}).` : ''}`;
+  } else if (loaded.length) {
+    level = 'on';
+    state = 'работает';
+    const names = loaded.map(model => model.name).filter(Boolean).join(', ');
+    note = `${names || 'Модель'} в памяти${inMemory ? `: ${gbRu(inMemory)} ГБ` : ''}. Через 5 минут без запросов память освободится.`;
+  } else {
+    level = 'on';
+    state = 'включена';
+    note = 'Ждёт запроса и память пока не занимает. Чат: ollama run qwen3.8:27b в Терминале.';
+  }
+  if (error && !pending) note = error;
+  return { checked: pending ? pending === 'start' : running, level, state, note, busy: Boolean(pending), error: Boolean(error && !pending) };
+}
+
+function renderQwenSwitch(status) {
+  const card = document.getElementById('pro-qwen');
+  if (!card) return;
+  if (status !== undefined) qwenSwitch.status = status;
+  const pending = qwenSwitch.pending;
+  if (pending && qwenSwitch.status) {
+    const done = Boolean(qwenSwitch.status.running) === (pending.action === 'start');
+    if (done || Date.now() - pending.at > QWEN_PENDING_MS) {
+      if (!done) qwenSwitch.error = 'MacBook не подтвердил переключение. Обнови страницу или попробуй ещё раз.';
+      qwenSwitch.pending = null;
+    }
+  }
+  const view = qwenSwitchView(qwenSwitch.status, qwenSwitch.pending && qwenSwitch.pending.action, qwenSwitch.error);
+  card.hidden = !view;
+  if (!view) return;
+  card.className = `machine-care machine-qwen is-${view.level}`;
+  const button = document.getElementById('pro-qwen-switch');
+  button.setAttribute('aria-checked', String(view.checked));
+  button.disabled = view.busy;
+  button.setAttribute('aria-label', `Qwen на MacBook Pro: ${view.state}. ${view.checked ? 'Нажми, чтобы выключить' : 'Нажми, чтобы включить'}`);
+  document.getElementById('pro-qwen-state').textContent = view.state;
+  const note = document.getElementById('pro-qwen-note');
+  note.textContent = view.note;
+  note.className = `machine-qwen-note${view.error ? ' is-error' : ''}`;
+}
+
+async function toggleQwen() {
+  if (!QWEN_SWITCH_API || qwenSwitch.pending || !qwenSwitch.status) return;
+  const action = qwenSwitch.status.running ? 'stop' : 'start';
+  qwenSwitch.pending = { action, at: Date.now() };
+  qwenSwitch.error = '';
+  renderQwenSwitch();
+  try {
+    const response = await fetch(QWEN_SWITCH_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin',
+      body: JSON.stringify({ action }) });
+    // 504: the MacBook may still be switching (brew can take longer than the wait); the next refresh shows it.
+    if (!response.ok && response.status !== 504) {
+      qwenSwitch.pending = null;
+      qwenSwitch.error = response.status === 401 || response.status === 403
+        ? 'Переключать может только владелец: войди на сайт.'
+        : 'Не получилось: MacBook не ответил. Он включён и не спит?';
+    }
+  } catch (_) {
+    qwenSwitch.pending = null;
+    qwenSwitch.error = 'Не получилось: нет связи с сайтом.';
+  }
+  renderQwenSwitch();
+  if (qwenSwitch.pending) setTimeout(refreshPro, 2500);
+}
+
+document.getElementById('pro-qwen-switch')?.addEventListener('click', toggleQwen);
 
 // ─── MacBook care (Mark 2026-11-02 «визуализируй это в технике когда я нажимаю на мак про») ───
 // Written on the MacBook by builder/mac_care_collector.py every 15 min; the server shows it to the owner only.
@@ -16073,7 +16487,7 @@ const HQ_NODES = [
   { id: 'it', floor: 'dept', icon: '🛠', name: 'ИТ', short: 'машины, доступы, бэкапы', state: 'on', what: 'Следит за Mac mini и ноутбуками: службы, резервные копии, доступы, обновления. Факты о машинах живут здесь, а не в памяти чатов.', from: 'Personal Corp 3, урок 5' },
   { id: 'learning', floor: 'dept', icon: '🎓', name: 'Обучение', short: 'курсы и конспекты', state: 'on', what: 'Хранит расшифровки и конспекты курсов. Любой агент может спросить «что Рис говорил про X» и получить ответ с номером урока.', from: 'Personal Corp 2, урок 1: папка обучения' },
   { id: 'crm', floor: 'dept', icon: '🤝', name: 'CRM', short: 'люди, встречи, договорённости', state: 'plan', what: 'Будущий отдел. Сырые записи встреч (Granola, PLAUD, голосовые) складываются в одну папку и превращаются в карточки людей, компаний, встреч и возможностей. У каждого факта указан источник.', from: 'Personal Corp 2, урок 4. Последний шаг плана' },
-  { id: 'ai', floor: 'dept', icon: '🤖', name: 'Агенты', short: 'ревьюер и руководитель проекта', state: 'plan', what: 'Будущий отдел с постоянными ролями агентов: один ведёт проект, другой независимо проверяет работу и выносит вердикт.', from: 'Personal Corp 3, урок 7; Personal Corp 2, урок 8' },
+  { id: 'ai', floor: 'dept', icon: '🤖', name: 'Агенты', short: 'ревьюер и руководитель проекта', state: 'on', what: 'Отдел corp-ai с постоянными ролями агентов: руководитель ведёт проект, ревьюер независимо проверяет работу и выносит вердикт 🟢/🟡/🔴. Оба агента установлены на Mac mini 10.11.', from: 'Personal Corp 3, урок 7; Personal Corp 2, урок 8' },
   { id: 'research', floor: 'dept', icon: '🔎', name: 'Исследования', short: 'отчёты с источниками', state: 'on', what: 'Проверяет рынок, имена, конкурентов и законы. Каждый отчёт лежит в общем списке с датой и источниками.', from: 'Personal Corp 3, урок 3' },
   { id: 'media', floor: 'dept', icon: '📣', name: 'Медиа', short: 'посты в Telegram и LinkedIn', state: 'on', what: 'Готовит черновики постов по твоим правилам стиля. Публикуешь только ты.', from: 'Personal Corp 3, урок 4; Personal Corp 2, урок 6' },
   { id: 'family', floor: 'dept', icon: '🌳', name: 'Семья', short: 'генеалогия и семейная история', state: 'on', what: 'Собирает семейную историю: архивы, записи разговоров с бабушкой и дедушкой, дерево рода.', from: 'твой собственный отдел' },
@@ -16302,9 +16716,16 @@ const HQ_TRUNK = { you: 'me', hq: 'hq' };
     showStep(last ? 0 : step + 1, true);
     timer = setTimeout(tick, step === HQ_STORY.length - 1 ? HOLD : STEP);
   }
+  // On open the whole diagram is there at once (Макс, 10.11: «сделай чтобы сразу появлялось»);
+  // the floor-by-floor growth plays only on «Показать сначала».
+  function showAll() {
+    clearTimeout(timer);
+    phase = 'story'; wire(); showGrown(floors.length); showStep(0, true);
+    if (!reduced.matches) timer = setTimeout(tick, STEP);
+  }
   function play() {
     clearTimeout(timer);
-    if (reduced.matches) { phase = 'story'; wire(); showGrown(floors.length); showStep(0, true); return; }
+    if (reduced.matches) { showAll(); return; }
     phase = 'grow'; showStep(0, false); wire(); showGrown(0);
     say('', 'Как устроен твой штаб: пять этажей, сверху вниз.');
     timer = setTimeout(tick, 500);
@@ -16319,7 +16740,7 @@ const HQ_TRUNK = { you: 'me', hq: 'hq' };
     let queued = 0;
     new ResizeObserver(() => { cancelAnimationFrame(queued); queued = requestAnimationFrame(wire); }).observe(body);
   } else window.addEventListener('resize', wire);
-  play();
+  showAll();
 })();
 
 // The scene: five glass floors on four posts. Things stand on their floor in tidy rows, every one with

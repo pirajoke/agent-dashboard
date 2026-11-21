@@ -42,6 +42,8 @@ from dashboard_builder.machine_layout import MAX_BODY_BYTES as MACHINE_LAYOUT_MA
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
+import sqlite3
+from dashboard_builder.personal_kanban import Board as PersonalBoard, Conflict as BoardConflict
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.genealogy import GenealogyUnavailable, load_genealogy
 from dashboard_builder import weekly_reports
@@ -81,6 +83,8 @@ GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 # «Журнал починок» for the Медик on Техника (Mark 2026-11-02). Owner only.
 REPAIR_LOG_FILE = HOME / ".agent-bridge" / "machine-repairs.json"
+# Every Qwen switch from the page: request id, what was asked and how it ended (AGENTS.md §10 audit).
+MACHINE_COMMAND_LOG = HOME / ".agent-bridge" / "machine-commands.jsonl"
 # «Генеалогия»: Mark's family research, owner-only (dashboard_builder/genealogy.py).
 GENEALOGY_FILE = HOME / ".agent-bridge" / "genealogy.json"
 MEDIA_LINKEDIN_ACTIONS = {
@@ -1169,6 +1173,19 @@ MACHINE_FIX_TARGETS = {"mini": _health_request, "air": _air_health_request, "pro
 MACHINE_FIX_LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$")
 
 
+def _audit_machine_command(request_id: str, machine: str, command: str, outcome: str, **extra) -> None:
+    """Append one line to the owner-only command log; a log that cannot be written never blocks the command."""
+    entry = {"at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "request_id": request_id,
+             "machine": machine, "command": command, "outcome": outcome, **extra}
+    try:
+        MACHINE_COMMAND_LOG.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(MACHINE_COMMAND_LOG, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        with os.fdopen(fd, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
 def _air_proxy_path(path: str) -> str | None:
     if path.startswith("/api/air/"):
         return "/api/" + path[len("/api/air/"):]
@@ -2001,6 +2018,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/kanban':
+            payload = self._platform_owner_body(8192)
+            if payload is None:
+                return
+            try:
+                if not isinstance(payload, dict):
+                    raise ValueError('Нужен объект задачи')
+                result = PersonalBoard().apply(payload['action'], payload)
+            except BoardConflict as exc:
+                self._json_response(409, {'error': str(exc)})
+            except (KeyError, TypeError, ValueError):
+                self._json_response(400, {'error': 'Проверь поля задачи и даты'})
+            except (OSError, RuntimeError, subprocess.SubprocessError, sqlite3.Error):
+                self._json_response(503, {'error': 'Не удалось подтвердить результат. Обнови доску.'})
+            else:
+                self._json_response(200, result)
+            return
         if parsed.path == '/api/manager/decisions/respond':
             self._handle_manager_decision_response()
             return
@@ -2030,6 +2064,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/machines/fix':
             self._handle_machine_fix()
+            return
+        if parsed.path == '/api/machines/ollama':
+            self._handle_machine_ollama()
             return
         if parsed.path in MEDIA_LINKEDIN_ACTIONS:
             self._handle_media_linkedin_action(parsed.path)
@@ -2890,6 +2927,39 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         self._json_response(200, {'state': 'done', 'machine': machine, 'label': label, 'action': action, 'result': result})
 
+    def _handle_machine_ollama(self):
+        # Mark 2026-11-18 «сделай переключатель для qwen в команд центре»: owner only, the same guard as
+        # the Медик's buttons. It only switches the local Qwen (Ollama) on the MacBook Pro on or off
+        # through that computer's own health API; the model files stay on disk either way.
+        body = self._platform_owner_body(256)
+        if body is None:
+            return
+        action = body.get('action')
+        if action not in ('start', 'stop'):
+            self._json_response(400, {'error': 'invalid_action'})
+            return
+        request_id = secrets.token_hex(8)
+        _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'sent')
+        try:
+            result = MACHINE_FIX_TARGETS['pro']('POST', f'/api/ollama/{action}', {'request_id': request_id})
+        except urllib.error.HTTPError as error:
+            _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'refused', status=error.code)
+            self._json_response(502, {'error': 'machine_refused', 'status': error.code, 'request_id': request_id})
+            return
+        except TimeoutError:
+            # The MacBook may still have run it: the outcome is unknown, not a failure.
+            _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'unknown')
+            self._json_response(504, {'error': 'delivery_unknown', 'request_id': request_id})
+            return
+        except Exception:
+            _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'unreachable')
+            self._json_response(502, {'error': 'machine_unreachable', 'request_id': request_id})
+            return
+        ok = not (isinstance(result, dict) and result.get('ok') is False)
+        _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'done' if ok else 'failed')
+        self._json_response(200 if ok else 502, {'state': 'done' if ok else 'failed', 'machine': 'pro', 'action': action,
+                                                 'request_id': request_id, 'result': result})
+
     def _handle_repair_log_save(self):
         body = self._platform_owner_body(REPAIR_LOG_MAX_BYTES)
         if body is None:
@@ -3093,6 +3163,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/kanban':
+            self.send_response(302)
+            self.send_header('Location', '/?tab=tasks')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
         if self._serve_docxx_info_page(parsed.path):
             return
         if parsed.path == '/api/docxx':
