@@ -50,6 +50,17 @@ Without access to the Mac mini (a cloud agent, for example), read the GitHub com
 gh api repos/pirajoke/agent-dashboard/commits/<sha>/statuses --jq '.[] | select(.context=="mac-mini/deploy") | [.state, .description] | @tsv'
 ```
 
+## MacBook Pro: the same automatic updates
+
+The MacBook Pro keeps its repo code current the same way: the collectors, and the Health API script `builder/macbook/macbook-pro-health.py` once it is in git. Install once, by hand, on the MacBook:
+
+```bash
+git clone https://github.com/pirajoke/agent-dashboard ~/agent-dashboard 2>/dev/null
+cd ~/agent-dashboard && git pull --ff-only && builder/deploy_macbook.sh
+```
+
+This installs `com.pirajoke.macbook-auto-update`. Every 5 minutes it runs `auto_deploy.py` with `builder/deploy_macbook.sh`. That restarts the Health API only when its script changed, checks `:8880/api/all`, and rolls back if the check fails. It marks the commit `macbook-pro/deploy` on GitHub when `gh` is signed in there. A sleeping MacBook catches up when it wakes.
+
 ## Runtime model
 
 The production builder runs on an owner-controlled Mac mini and reads approved local operational sources. It produces:
