@@ -30,6 +30,7 @@ cp "$SRC_DIR/daily_digest.py" "$SCRIPTS_DIR/daily_digest.py"
 cp "$SRC_DIR/agent_task_runner.py" "$SCRIPTS_DIR/agent_task_runner.py"
 cp "$SRC_DIR/context_retell.py" "$SCRIPTS_DIR/context_retell.py"
 cp "$SRC_DIR/docxx_suggest.py" "$SCRIPTS_DIR/docxx_suggest.py"
+cp "$SRC_DIR/claude_mode_switch.py" "$SCRIPTS_DIR/claude_mode_switch.py"
 cp "$SRC_DIR/retire_job_mail.py" "$SCRIPTS_DIR/retire_job_mail.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
@@ -72,6 +73,7 @@ python3 -m py_compile weekly_digest.py daily_digest.py
 python3 -m py_compile agent_task_runner.py
 python3 -m py_compile context_retell.py
 python3 -m py_compile docxx_suggest.py
+python3 -m py_compile claude_mode_switch.py
 python3 -m py_compile retire_job_mail.py
 python3 -m py_compile live_sessions_collector.py
 python3 build-agent-dashboard.py
@@ -152,6 +154,19 @@ if [[ "${DASHBOARD_INSTALL_DOCXX_SUGGEST:-1}" == "1" ]]; then
     "$SRC_DIR/launchd/$SUGGEST_LABEL.plist.template" > "$SUGGEST_PLIST.tmp"
   plutil -lint "$SUGGEST_PLIST.tmp" >/dev/null
   install_launchd_agent "$SUGGEST_PLIST.tmp" "$SUGGEST_PLIST" "$SUGGEST_LABEL"
+fi
+
+# Claude Code permission mode switch for Command Center → Архитектура (Mark 2026-11-17). launchd runs it
+# whenever the site drops a request into ~/.claude-mode/inbox, and every 5 minutes to keep the state fresh.
+MODE_LABEL="com.pirajoke.claude-mode-switch"
+MODE_PLIST="$HOME/Library/LaunchAgents/$MODE_LABEL.plist"
+if [[ "${DASHBOARD_INSTALL_CLAUDE_MODE_SWITCH:-1}" == "1" ]]; then
+  mkdir -p "$HOME/Library/Logs/$MODE_LABEL" "$HOME/.claude-mode/inbox"
+  chmod 700 "$HOME/.claude-mode"
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+    "$SRC_DIR/launchd/$MODE_LABEL.plist.template" > "$MODE_PLIST.tmp"
+  plutil -lint "$MODE_PLIST.tmp" >/dev/null
+  install_launchd_agent "$MODE_PLIST.tmp" "$MODE_PLIST" "$MODE_LABEL"
 fi
 
 # Employer replies now live only in Job Radar's «Ответы» (Mark 2026-10-25). Stop Command Center's own

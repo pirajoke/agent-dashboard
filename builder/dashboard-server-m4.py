@@ -81,6 +81,10 @@ PLATFORM_CARDS_FILE = HOME / ".agent-bridge" / "platform-cards.json"
 MACHINE_LAYOUT_FILE = HOME / ".agent-bridge" / "machine-layout.json"
 GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
+# Claude Code permission mode on this Mac mini (Mark 2026-11-17): the site only drops a request into the
+# inbox; claude_mode_switch.py under launchd checks the Access sign-in again and changes settings.json.
+CLAUDE_MODE_DIR = HOME / ".claude-mode"
+CLAUDE_MODE_STALE_SECONDS = 15 * 60
 # «Журнал починок» for the Медик on Техника (Mark 2026-11-02). Owner only.
 REPAIR_LOG_FILE = HOME / ".agent-bridge" / "machine-repairs.json"
 # Every Qwen switch from the page: request id, what was asked and how it ended (AGENTS.md §10 audit).
@@ -157,6 +161,44 @@ PUBLIC_HOSTS = {"command.meshly.fr"}
 # Behind Cloudflare Access the owner signs in once (a code to their Gmail or Google sign-in)
 # instead of carrying the owner key in every browser. See dashboard_builder/cloudflare_access.py.
 CLOUDFLARE_ACCESS_FILE = HOME / ".agent-bridge" / "cloudflare_access.json"
+
+
+def _claude_mode_enqueue(mode: str, token: str) -> str:
+    """Drop one request for claude_mode_switch.py; written aside and renamed so launchd never sees half a file."""
+    inbox = CLAUDE_MODE_DIR / "inbox"
+    inbox.mkdir(parents=True, exist_ok=True)
+    os.chmod(CLAUDE_MODE_DIR, 0o700)
+    request_id = f"{int(time.time())}-{secrets.token_hex(6)}"
+    payload = json.dumps({"id": request_id, "mode": mode, "requested_at": time.time(), "token": token})
+    tmp = CLAUDE_MODE_DIR / f".request-{request_id}.tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as handle:
+        handle.write(payload)
+    os.replace(tmp, inbox / f"{request_id}.json")
+    return request_id
+
+
+def _claude_mode_view() -> dict:
+    """What the switcher last saw, plus requests still waiting for it. Never the sign-in tokens."""
+    try:
+        state = json.loads((CLAUDE_MODE_DIR / "state.json").read_text())
+    except (OSError, ValueError):
+        state = None
+    pending = []
+    try:
+        pending = sorted(path.stem for path in (CLAUDE_MODE_DIR / "inbox").glob("*.json"))
+    except OSError:
+        pass
+    if not isinstance(state, dict):
+        return {"schema": "claude_mode_v1", "mode": "unknown", "agent": "missing", "pending": pending, "recent": []}
+    observed = state.get("observed_at")
+    try:
+        age = time.time() - datetime.fromisoformat(observed).timestamp()
+    except (TypeError, ValueError):
+        age = None
+    agent = "ok" if age is not None and age <= CLAUDE_MODE_STALE_SECONDS else "stale"
+    keep = ("schema", "mode", "default_mode", "skip_prompt", "observed_at", "changed_at", "changed_by", "last_request", "recent")
+    return {**{key: state.get(key) for key in keep}, "agent": agent, "pending": pending}
 
 
 def _owner_access_app(host: str):
@@ -1993,6 +2035,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         targets.append(candidate.resolve())
                         break
             private_state = (HOME / '.agent-bridge').resolve()
+            # Claude mode requests carry an Access sign-in; settings.json is agent configuration (2026-11-17).
+            claude_private = ((HOME / '.claude-mode').resolve(), (HOME / '.claude').resolve())
             private_files = {MANAGER_DECISIONS_FILE.resolve(),
                              (JARVIS_VAULT_ROOT / "35-Systems" / "PORTFOLIO-REGISTRY.json").resolve()}
             context_catalog = _context_catalog_path()
@@ -2001,9 +2045,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             # an operator overrides the default or requests an implicit index.
             context_roots = {context_catalog.parent.resolve(), context_catalog.resolve().parent,
                              docxx_state_path(HOME).resolve()}
+            # APFS ignores letter case and resolve() keeps the request's spelling: /.CLAUDE-MODE is
+            # the same folder as /.claude-mode, so compare case-folded paths.
+            def _fold(value):
+                return Path(str(value).casefold())
+            roots = [_fold(private_state), *(_fold(root) for root in claude_private), *(_fold(root) for root in context_roots)]
+            files = {_fold(item) for item in private_files}
             protected = any(
-                path.is_relative_to(private_state) or path in private_files
-                or any(path.is_relative_to(root) for root in context_roots)
+                _fold(path) in files or any(_fold(path).is_relative_to(root) for root in roots)
                 for path in targets
             )
         except (OSError, ValueError, RuntimeError):
@@ -2056,6 +2105,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         if parsed.path == '/api/owner-todo':
             self._handle_owner_todo_save()
+            return
+        if parsed.path == '/api/claude-mode':
+            self._handle_claude_mode_request()
             return
         if parsed.path == '/api/machines/repairs':
             self._handle_repair_log_save()
@@ -2883,6 +2935,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         payload['build'] = {key: result.get(key) for key in ('week', 'sent', 'reason', 'notes')}
         self._json_response(200, payload)
 
+    def _handle_claude_mode_request(self):
+        # Only a browser signed in through Cloudflare Access may ask: the owner key that agents on this
+        # machine could read is not enough here. The switcher re-checks the same sign-in before it acts.
+        token = self.headers.get("Cf-Access-Jwt-Assertion", "").strip()
+        if not self._cloudflare_access_owner():
+            self._json_response(401, {'error': 'access_sign_in_required'})
+            return
+        body = self._platform_owner_body(512)
+        if body is None:
+            return
+        mode = body.get('mode') if isinstance(body, dict) else None
+        if mode not in ('bypass', 'standard'):
+            self._json_response(400, {'error': 'invalid_mode'})
+            return
+        try:
+            request_id = _claude_mode_enqueue(mode, token)
+        except OSError:
+            self._json_response(503, {'error': 'claude_mode_unavailable'})
+            return
+        self._json_response(202, {'state': 'pending', 'id': request_id, 'mode': mode})
+
     def _handle_owner_todo_save(self):
         body = self._platform_owner_body(OWNER_TODO_MAX_BYTES)
         if body is None:
@@ -3250,6 +3323,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(401, {'error': 'owner_token_required'})
                 return
             self._handle_media_linkedin_image(parse_qs(parsed.query).get('id', [''])[0])
+            return
+        if parsed.path == '/api/claude-mode':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required'})
+                return
+            self._json_response(200, _claude_mode_view())
             return
         if parsed.path == '/api/owner-todo':
             if not self._decision_owner_authorized():
