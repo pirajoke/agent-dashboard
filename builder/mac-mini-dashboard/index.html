@@ -5472,6 +5472,26 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .arch-modes { display: inline-flex; padding: 3px; gap: 2px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; }
 .arch-modes button { min-height: 34px; padding: 4px 12px; border: 0; border-radius: 9px; background: transparent; color: var(--mm-muted); font: 600 13px/1.2 var(--cc-font); cursor: pointer; }
 .arch-modes button[aria-pressed="true"] { background: var(--mm-selection); color: var(--mm-ink); }
+/* Mark 2026-11-17: one switch for the Claude Code permission mode on the Mac mini. */
+.cm-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 16px; align-items: center; margin: 0 0 16px; padding: 14px 16px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: var(--radius); }
+.cm-card[data-mode="bypass"] { border-color: var(--mm-warning); background: linear-gradient(0deg, var(--mm-warning-soft), var(--mm-warning-soft)) padding-box; }
+.cm-title { font-size: 15px; font-weight: 650; margin: 0 0 2px; }
+.cm-line { font-size: 14px; margin: 0; }
+.cm-sub { font-size: 12px; color: var(--mm-muted); margin: 2px 0 0; }
+.cm-sub.is-warn { color: var(--mm-warning); }
+.cm-toggle { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--mm-muted); }
+.cm-switch { position: relative; width: 52px; height: 30px; flex: 0 0 auto; border-radius: 999px; border: 1px solid var(--mm-control-line); background: var(--mm-surface-hover); cursor: pointer; transition: background .2s, border-color .2s; }
+.cm-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--mm-ink); transition: transform .2s; }
+.cm-switch[aria-checked="true"] { background: var(--mm-warning); border-color: var(--mm-warning); }
+.cm-switch[aria-checked="true"]::after { transform: translateX(22px); background: #fff; }
+.cm-switch:disabled { opacity: .55; cursor: progress; }
+.cm-switch:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.cm-card[data-busy="true"] .cm-toggle span { color: var(--mm-accent); }
+.cm-log { grid-column: 1 / -1; font-size: 12px; color: var(--mm-muted); }
+.cm-log summary { cursor: pointer; width: fit-content; }
+.cm-log ol { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
+.cm-log li time { font-variant-numeric: tabular-nums; margin-right: 6px; }
+@media (max-width: 560px) { .cm-card { grid-template-columns: 1fr; } }
 .arch-kpis { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
 .arch-kpi { display: inline-flex; align-items: baseline; gap: 7px; padding: 7px 12px; background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; color: var(--mm-muted); font-size: 13px; }
 .arch-kpi b { color: var(--mm-ink); font-size: 18px; font-weight: 750; }
@@ -7246,6 +7266,18 @@ a.kb-card-title:hover { text-decoration: underline; }
         <button type="button" id="arch-mode-map" aria-pressed="false">Устройство</button>
       </div>
     </header>
+    <!-- Mark 2026-11-17: «переключатель bypass permission и выключить … вернётся наш расширенный список». Owner only. -->
+    <div class="cm-card" id="claude-mode" data-mode="unknown" hidden>
+      <div>
+        <h3 class="cm-title">Права Claude Code на Mac mini</h3>
+        <p class="cm-line" id="claude-mode-line">Смотрю режим…</p>
+        <p class="cm-sub" id="claude-mode-sub" role="status" aria-live="polite"></p>
+      </div>
+      <label class="cm-toggle"><span id="claude-mode-label">Bypass</span>
+        <button type="button" class="cm-switch" id="claude-mode-switch" role="switch" aria-checked="false" aria-labelledby="claude-mode-label" disabled></button>
+      </label>
+      <details class="cm-log"><summary>Журнал переключений</summary><ol id="claude-mode-log"></ol></details>
+    </div>
     <p class="mm-notice" id="arch-state" role="status" aria-live="polite">Загружаю устройство системы…</p>
     <div class="arch-kpis" id="arch-kpis"></div>
     <div class="arch-blockers" id="arch-blockers" hidden></div>
@@ -10353,7 +10385,7 @@ function showSection(name) {
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
   if (name === 'weekly') setTimeout(weeklyLoad, 0);
-  if (name === 'architecture') setTimeout(archLoad, 0);
+  if (name === 'architecture') { setTimeout(archLoad, 0); setTimeout(claudeModeLoad, 0); }
   if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') { setTimeout(ccLoadPlatformResources, 0); setTimeout(ccLoadWorkTools, 0); }
   if (name === 'media') setTimeout(mediaLoad, 0);
@@ -17089,6 +17121,132 @@ async function archLoad() {
 setInterval(() => {
   const section = document.getElementById('section-architecture');
   if (!document.hidden && section && section.classList.contains('active')) archLoad();
+}, 60000);
+
+// ─── Claude Code permission mode (Mark 2026-11-17) ───
+// The site only asks; claude_mode_switch.py on the Mac mini re-checks the Access sign-in and changes
+// settings.json. «Обычный режим» is auto with the extended allow list; deny rules work in both modes.
+const CLAUDE_MODE_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/claude-mode`;
+let claudeModeWaiting = null;
+let claudeModeData = null;
+
+function claudeModeTime(iso) {
+  const date = iso ? new Date(iso) : null;
+  if (!date || Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('ru-RU', { timeZone: 'Europe/Paris', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function claudeModeEventText(entry) {
+  const name = entry.mode === 'bypass' ? 'bypass' : 'обычный режим';
+  if (entry.event === 'switched') return entry.mode === 'bypass' ? 'Включён bypass' : 'Возвращён обычный режим';
+  if (entry.event === 'unchanged') return `Уже был ${name}`;
+  if (entry.event === 'changed_outside') return `Изменён вручную в settings.json: ${name}`;
+  const reasons = { not_signed_in_owner: 'запрос не от Макса', stale_request: 'запрос устарел', bad_or_repeated_id: 'повтор запроса', unknown_mode: 'непонятный режим', other_mode_left_alone: 'в settings.json свой режим, не трогаю' };
+  return `Отказ: ${reasons[entry.reason] || entry.reason || 'ошибка'}`;
+}
+
+function renderClaudeMode(data) {
+  const card = document.getElementById('claude-mode');
+  if (!card) return;
+  claudeModeData = data;
+  const toggle = document.getElementById('claude-mode-switch');
+  const line = document.getElementById('claude-mode-line');
+  const sub = document.getElementById('claude-mode-sub');
+  const busy = Boolean(claudeModeWaiting) || (data.pending || []).length > 0;
+  card.hidden = false;
+  card.dataset.mode = data.mode || 'unknown';
+  card.dataset.busy = String(busy);
+  toggle.setAttribute('aria-checked', String(data.mode === 'bypass'));
+  toggle.disabled = busy || !['bypass', 'standard'].includes(data.mode);
+  line.textContent = data.mode === 'bypass'
+    ? 'Bypass включён: агенты работают без вопросов. Запреты (deny) действуют.'
+    : data.mode === 'standard'
+      ? 'Обычный режим: auto и наш расширенный список разрешений.'
+      : data.mode === 'other'
+        ? `В settings.json стоит режим «${data.default_mode || '?'}». Переключатель его не трогает.`
+        : 'Режим неизвестен: служба на Mac mini ещё не ответила.';
+  const parts = [];
+  if (busy) parts.push('Переключаю на Mac mini…');
+  else if (data.changed_at) parts.push(`Переключено ${claudeModeTime(data.changed_at)}`);
+  if (!busy) parts.push('Действует для новых сессий Claude Code');
+  if (data.agent && data.agent !== 'ok') parts.push('служба переключения на Mac mini не отвечает');
+  const last = data.last_request;
+  if (!busy && last && last.event === 'refused' && claudeModeWaiting === null && data.recent && data.recent[0] && data.recent[0].id === last.id) {
+    parts.push(claudeModeEventText(last));
+  }
+  sub.textContent = parts.join(' · ');
+  sub.classList.toggle('is-warn', Boolean(data.agent && data.agent !== 'ok'));
+  const log = document.getElementById('claude-mode-log');
+  log.replaceChildren(...(data.recent || []).map((entry) => {
+    const item = document.createElement('li');
+    const time = document.createElement('time');
+    time.dateTime = entry.at || '';
+    time.textContent = claudeModeTime(entry.at);
+    item.append(time, claudeModeEventText(entry));
+    return item;
+  }));
+  if (!(data.recent || []).length) {
+    const item = document.createElement('li');
+    item.textContent = 'Пока ни одного переключения.';
+    log.append(item);
+  }
+}
+
+async function claudeModeLoad() {
+  if (!CLAUDE_MODE_API) return null;
+  try {
+    const response = await fetch(CLAUDE_MODE_API, { headers: mmHeaders(), cache: 'no-store' });
+    if (response.status === 401) { document.getElementById('claude-mode').hidden = true; return null; }
+    const data = await response.json();
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    renderClaudeMode(data);
+    return data;
+  } catch (error) {
+    return null;
+  }
+}
+
+async function claudeModeFlip() {
+  if (!claudeModeData || claudeModeWaiting) return;
+  const mode = claudeModeData.mode === 'bypass' ? 'standard' : 'bypass';
+  const sub = document.getElementById('claude-mode-sub');
+  claudeModeWaiting = 'sending';
+  renderClaudeMode(claudeModeData);
+  try {
+    const response = await fetch(CLAUDE_MODE_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', body: JSON.stringify({ mode }) });
+    const reply = await response.json().catch(() => ({}));
+    if (response.status !== 202) throw new Error(reply.error || `HTTP ${response.status}`);
+    claudeModeWaiting = reply.id;
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const data = await claudeModeLoad();
+      if (data && data.last_request && data.last_request.id === reply.id) break;
+    }
+  } catch (error) {
+    claudeModeWaiting = null;
+    renderClaudeMode(claudeModeData);
+    sub.textContent = error.message === 'access_sign_in_required'
+      ? 'Переключать можно только со входом через command.meshly.fr.'
+      : 'Не получилось отправить запрос на Mac mini.';
+    sub.classList.add('is-warn');
+    return;
+  }
+  const waited = claudeModeWaiting;
+  claudeModeWaiting = null;
+  const data = await claudeModeLoad();
+  if (data && (!data.last_request || data.last_request.id !== waited)) {
+    sub.textContent = 'Mac mini пока не обработал запрос. Проверь службу переключения.';
+    sub.classList.add('is-warn');
+  } else if (data && data.last_request.event === 'refused') {
+    sub.textContent = claudeModeEventText(data.last_request);
+    sub.classList.add('is-warn');
+  }
+}
+
+document.getElementById('claude-mode-switch')?.addEventListener('click', claudeModeFlip);
+setInterval(() => {
+  const section = document.getElementById('section-architecture');
+  if (!document.hidden && !claudeModeWaiting && section && section.classList.contains('active')) claudeModeLoad();
 }, 60000);
 
 // ─── Init ───
