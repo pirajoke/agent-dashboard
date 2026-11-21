@@ -341,7 +341,7 @@ class PreviewHandler(SERVER.Handler):
             payload = {
                 # The Pro is the busy one, so «перегружена» and «заполняется» can be seen next to a calm Mac mini.
                 # A raw macOS host name: the page must still say «MacBook Pro».
-                "system": {"hostname": "MacBook-Pro-de-Example.local", "cpu_percent": 72, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
+                "system": {"hostname": "MacBook-Pro-de-Example.local", "cpu_percent": 72, "gpu_percent": 91, "gpu_memory_gb": 17.6, "memory_wired_gb": 18.4, "memory_compressed_gb": 2.1, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
                 if parsed.path == "/api/pro/all" else
                 {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
                 "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
@@ -349,6 +349,9 @@ class PreviewHandler(SERVER.Handler):
             if parsed.path == "/api/pro/all":
                 # Switched off on purpose: shown as «Выключен» in the archive, never as «Нужно внимание».
                 payload["services"].append({"name": "Agent Supervisor", "label": "fixture.agent-supervisor", "desc": "Agent supervisor", "status": "stopped", "runtime": "Python", "pid": None, "cat": "core"})
+                # Qwen (Ollama) is on and the model is in memory, so the switch shows «работает» and how much it takes.
+                payload["ollama"] = {"installed": True, "running": True, "disk_gb": 17.3,
+                                     "loaded": [{"name": "qwen3.8:27b", "size_gb": 18.2}]}
             if parsed.path == "/api/all" and self._decision_owner_authorized():
                 # A running job the health registry does not list is added by the product rule.
                 payload = SERVER.normalize_payload(payload, loaded={"com.example.fixture-extra": 0}, disabled=set(),
