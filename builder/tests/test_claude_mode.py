@@ -197,7 +197,8 @@ class StaticServingTests(unittest.TestCase):
     def test_request_inbox_and_claude_settings_are_never_served(self):
         # The server serves files from HOME; a waiting request holds an Access sign-in.
         for path in ("/.claude-mode/inbox/", "/.claude-mode/inbox/1800000000-abcdef12.json",
-                     "/.claude-mode/state.json", "/.claude/settings.json"):
+                     "/.claude-mode/state.json", "/.claude/settings.json",
+                     "/.CLAUDE-MODE/inbox/a.json", "/.Claude-Mode/inbox/", "/.CLAUDE/settings.json", "/.Agent-Bridge/owner-todo.json"):
             handler = SERVER.Handler.__new__(SERVER.Handler)
             handler.path, handler.command = path, "GET"
             errors = []

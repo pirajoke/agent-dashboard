@@ -2045,10 +2045,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             # an operator overrides the default or requests an implicit index.
             context_roots = {context_catalog.parent.resolve(), context_catalog.resolve().parent,
                              docxx_state_path(HOME).resolve()}
+            # APFS ignores letter case and resolve() keeps the request's spelling: /.CLAUDE-MODE is
+            # the same folder as /.claude-mode, so compare case-folded paths.
+            def _fold(value):
+                return Path(str(value).casefold())
+            roots = [_fold(private_state), *(_fold(root) for root in claude_private), *(_fold(root) for root in context_roots)]
+            files = {_fold(item) for item in private_files}
             protected = any(
-                path.is_relative_to(private_state) or path in private_files
-                or any(path.is_relative_to(root) for root in claude_private)
-                or any(path.is_relative_to(root) for root in context_roots)
+                _fold(path) in files or any(_fold(path).is_relative_to(root) for root in roots)
                 for path in targets
             )
         except (OSError, ValueError, RuntimeError):
