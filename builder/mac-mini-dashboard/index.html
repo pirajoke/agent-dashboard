@@ -14745,7 +14745,8 @@ async function toggleQwen() {
   try {
     const response = await fetch(QWEN_SWITCH_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin',
       body: JSON.stringify({ action }) });
-    if (!response.ok) {
+    // 504: the MacBook may still be switching (brew can take longer than the wait); the next refresh shows it.
+    if (!response.ok && response.status !== 504) {
       qwenSwitch.pending = null;
       qwenSwitch.error = response.status === 401 || response.status === 403
         ? 'Переключать может только владелец: войди на сайт.'

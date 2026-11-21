@@ -83,6 +83,8 @@ GROWTH_EDITS_JOURNAL = HOME / ".agent-bridge" / "growth-edits.jsonl"
 OWNER_TODO_FILE = HOME / ".agent-bridge" / "owner-todo.json"
 # «Журнал починок» for the Медик on Техника (Mark 2026-11-02). Owner only.
 REPAIR_LOG_FILE = HOME / ".agent-bridge" / "machine-repairs.json"
+# Every Qwen switch from the page: request id, what was asked and how it ended (AGENTS.md §10 audit).
+MACHINE_COMMAND_LOG = HOME / ".agent-bridge" / "machine-commands.jsonl"
 # «Генеалогия»: Mark's family research, owner-only (dashboard_builder/genealogy.py).
 GENEALOGY_FILE = HOME / ".agent-bridge" / "genealogy.json"
 MEDIA_LINKEDIN_ACTIONS = {
@@ -1167,6 +1169,19 @@ def _pro_health_request(method: str, path: str, payload: dict | None = None) -> 
 
 MACHINE_FIX_TARGETS = {"mini": _health_request, "air": _air_health_request, "pro": _pro_health_request}
 MACHINE_FIX_LABEL = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$")
+
+
+def _audit_machine_command(request_id: str, machine: str, command: str, outcome: str, **extra) -> None:
+    """Append one line to the owner-only command log; a log that cannot be written never blocks the command."""
+    entry = {"at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), "request_id": request_id,
+             "machine": machine, "command": command, "outcome": outcome, **extra}
+    try:
+        MACHINE_COMMAND_LOG.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(MACHINE_COMMAND_LOG, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        with os.fdopen(fd, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 
 def _air_proxy_path(path: str) -> str | None:
@@ -2921,15 +2936,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if action not in ('start', 'stop'):
             self._json_response(400, {'error': 'invalid_action'})
             return
+        request_id = secrets.token_hex(8)
+        _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'sent')
         try:
-            result = MACHINE_FIX_TARGETS['pro']('POST', f'/api/ollama/{action}')
+            result = MACHINE_FIX_TARGETS['pro']('POST', f'/api/ollama/{action}', {'request_id': request_id})
         except urllib.error.HTTPError as error:
-            self._json_response(502, {'error': 'machine_refused', 'status': error.code})
+            _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'refused', status=error.code)
+            self._json_response(502, {'error': 'machine_refused', 'status': error.code, 'request_id': request_id})
+            return
+        except TimeoutError:
+            # The MacBook may still have run it: the outcome is unknown, not a failure.
+            _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'unknown')
+            self._json_response(504, {'error': 'delivery_unknown', 'request_id': request_id})
             return
         except Exception:
-            self._json_response(502, {'error': 'machine_unreachable'})
+            _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'unreachable')
+            self._json_response(502, {'error': 'machine_unreachable', 'request_id': request_id})
             return
-        self._json_response(200, {'state': 'done', 'machine': 'pro', 'action': action, 'result': result})
+        ok = not (isinstance(result, dict) and result.get('ok') is False)
+        _audit_machine_command(request_id, 'pro', f'ollama.{action}', 'done' if ok else 'failed')
+        self._json_response(200 if ok else 502, {'state': 'done' if ok else 'failed', 'machine': 'pro', 'action': action,
+                                                 'request_id': request_id, 'result': result})
 
     def _handle_repair_log_save(self):
         body = self._platform_owner_body(REPAIR_LOG_MAX_BYTES)

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import tempfile
 import unittest
 import urllib.error
 from unittest.mock import patch
@@ -29,7 +30,16 @@ def js_function(source, name):
 class QwenSwitchEndpointTests(unittest.TestCase):
     def setUp(self):
         self.calls = []
-        self.machine = lambda method, path, payload=None: self.calls.append((method, path)) or {"running": True}
+        self.payloads = []
+        self.machine = lambda method, path, payload=None: self.calls.append((method, path)) or self.payloads.append(payload) or {"ok": True}
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        self.log = Path(temp.name) / "machine-commands.jsonl"
+
+    def audit(self):
+        if not self.log.exists():
+            return []
+        return [json.loads(line) for line in self.log.read_text(encoding="utf-8").splitlines()]
 
     def call(self, body, *, token="fixture-owner", origin=None):
         handler = SERVER.Handler.__new__(SERVER.Handler)
@@ -45,6 +55,7 @@ class QwenSwitchEndpointTests(unittest.TestCase):
         handler._json_response = lambda status, payload: output.update(status=status, payload=payload)
         handler.send_error = lambda status, *args: output.update(status=status)
         with (patch.dict(SERVER.MACHINE_FIX_TARGETS, {"pro": self.machine}),
+              patch.object(SERVER, "MACHINE_COMMAND_LOG", self.log),
               patch.object(SERVER, "_dashboard_run_token", return_value="fixture-owner"),
               patch.object(SERVER.Handler, "_cloudflare_access_owner", return_value=False)):
             handler.do_POST()
@@ -55,6 +66,26 @@ class QwenSwitchEndpointTests(unittest.TestCase):
         off = self.call({"action": "stop"})
         self.assertEqual((on["status"], off["status"]), (200, 200))
         self.assertEqual(self.calls, [("POST", "/api/ollama/start"), ("POST", "/api/ollama/stop")])
+        # Each command carries its own request id to the MacBook and leaves «sent» then «done» in the log.
+        ids = [payload["request_id"] for payload in self.payloads]
+        self.assertEqual(ids, [on["payload"]["request_id"], off["payload"]["request_id"]])
+        self.assertNotEqual(ids[0], ids[1])
+        self.assertEqual([(e["request_id"], e["command"], e["outcome"]) for e in self.audit()],
+                         [(ids[0], "ollama.start", "sent"), (ids[0], "ollama.start", "done"),
+                          (ids[1], "ollama.stop", "sent"), (ids[1], "ollama.stop", "done")])
+        self.assertEqual(self.log.stat().st_mode & 0o777, 0o600)
+
+    def test_timeout_is_recorded_as_unknown_and_a_brew_failure_as_failed(self):
+        def slow(method, path, payload=None):
+            raise TimeoutError("timed out")
+
+        self.machine = slow
+        unknown = self.call({"action": "start"})
+        self.assertEqual((unknown["status"], unknown["payload"]["error"]), (504, "delivery_unknown"))
+        self.machine = lambda method, path, payload=None: {"ok": False, "output": "Error: brew"}
+        failed = self.call({"action": "stop"})
+        self.assertEqual((failed["status"], failed["payload"]["state"]), (502, "failed"))
+        self.assertEqual([e["outcome"] for e in self.audit()], ["sent", "unknown", "sent", "failed"])
 
     def test_strangers_other_sites_and_odd_actions_change_nothing(self):
         self.assertEqual(self.call({"action": "start"}, token=None)["status"], 401)
@@ -66,7 +97,7 @@ class QwenSwitchEndpointTests(unittest.TestCase):
 
     def test_sleeping_or_old_macbook_is_reported_not_hidden(self):
         def asleep(method, path, payload=None):
-            raise OSError("timed out")
+            raise ConnectionRefusedError("no route")
 
         def old_script(method, path, payload=None):
             raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
