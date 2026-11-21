@@ -125,6 +125,7 @@ const visibleRuntimeServices = s => s; const renderSvcTable = () => {}; const re
 const PRO_API = '/api/pro'; const PRO_API_PATH_PREFIX = '';
 const ccInfoSources = {};
 const refreshMachineCare = () => {};
+const renderQwenSwitch = () => {};
 """
 
 

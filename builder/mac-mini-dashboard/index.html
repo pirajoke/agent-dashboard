@@ -199,6 +199,20 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-badge.offline { background: var(--red-bg); color: var(--red); }
 .machine-health { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: -4px 0 20px; }
 .machine-health:empty { display: none; }
+.machine-qwen-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.machine-qwen-head .machine-care-title { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.machine-qwen-state { font-size: 14px; font-weight: 600; color: var(--text2); }
+.machine-qwen.is-on .machine-qwen-state { color: var(--green); }
+.machine-qwen.is-busy .machine-qwen-state { color: var(--orange, #d97706); }
+.qwen-switch { position: relative; flex: none; width: 52px; height: 30px; border-radius: 15px; border: 1px solid var(--border); background: var(--border); cursor: pointer; padding: 0; transition: background .2s; }
+.qwen-switch > span { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+.qwen-switch[aria-checked="true"] { background: var(--green); border-color: var(--green); }
+.qwen-switch[aria-checked="true"] > span { transform: translateX(22px); }
+.qwen-switch:disabled { opacity: .6; cursor: wait; }
+.qwen-switch:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .qwen-switch, .qwen-switch > span { transition: none; } }
+.machine-qwen-note { margin: 8px 0 0; font-size: 14px; color: var(--text2); }
+.machine-qwen-note.is-error { color: var(--red); }
 .machine-health-item { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card, transparent); color: var(--text); font: inherit; cursor: pointer; }
 .machine-health-item:hover { border-color: var(--text2); }
 .machine-health-label { font-size: 12px; color: var(--text2); }
@@ -7437,6 +7451,13 @@ a.kb-card-title:hover { text-decoration: underline; }
       <span class="machine-badge offline" id="pro-online-badge">проверка</span>
     </div>
     <div class="machine-health" id="pro-health" aria-live="polite"></div>
+    <section class="machine-care machine-qwen" id="pro-qwen" aria-labelledby="pro-qwen-title" hidden>
+      <div class="machine-qwen-head">
+        <h3 class="machine-care-title" id="pro-qwen-title">Qwen <span class="machine-qwen-state" id="pro-qwen-state"></span></h3>
+        <button type="button" role="switch" class="qwen-switch" id="pro-qwen-switch" aria-checked="false" aria-label="Qwen на MacBook Pro"><span></span></button>
+      </div>
+      <p class="machine-qwen-note" id="pro-qwen-note" role="status"></p>
+    </section>
     <section class="machine-thermal" id="pro-thermal" aria-labelledby="pro-thermal-title" hidden>
       <div class="machine-care-head">
         <h3 class="machine-care-title" id="pro-thermal-title">Температура</h3>
@@ -14623,6 +14644,7 @@ async function refreshPro() {
   if (!data || !data.system) {
     if (machineRecentlySeen('pro')) return;
     renderMachineHealth('pro', null);
+    renderQwenSwitch(null);
     document.getElementById('pro-status').textContent = 'Нет связи';
     document.getElementById('pro-online-badge').textContent = 'не в сети';
     document.getElementById('pro-online-badge').className = 'machine-badge offline';
@@ -14644,7 +14666,101 @@ async function refreshPro() {
   document.getElementById('pro-svc-count').textContent = '';
   renderSvcTable('pro-svc-tbody', svcs, 'proAction');
   renderGauges('pro', sys);
+  renderQwenSwitch(data.ollama);
 }
+
+// ─── Qwen switch (Mark 2026-11-18 «сделай переключатель для qwen в команд центре») ───
+// The MacBook's health API reports `ollama` in /api/all and switches it with POST /api/ollama/{start,stop};
+// this page asks the dashboard server, which lets only the owner through.
+const QWEN_SWITCH_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/machines/ollama`;
+const QWEN_PENDING_MS = 45 * 1000;
+const qwenSwitch = { status: null, pending: null, error: '' };
+
+function gbRu(value) {
+  return (Math.round(value * 10) / 10).toLocaleString('ru-RU', { maximumFractionDigits: 1 });
+}
+
+// What the card says for one `ollama` report; pure, so the tests can read it.
+function qwenSwitchView(status, pending = null, error = '') {
+  if (!status || typeof status !== 'object' || status.installed === false) return null;
+  const running = Boolean(status.running);
+  const loaded = Array.isArray(status.loaded) ? status.loaded : [];
+  const inMemory = loaded.reduce((sum, model) => sum + (Number(model.size_gb) || 0), 0);
+  const disk = Number(status.disk_gb) > 0 ? `${gbRu(status.disk_gb)} ГБ` : '';
+  let state, note, level;
+  if (pending) {
+    level = 'busy';
+    state = pending === 'start' ? 'включаю…' : 'выключаю…';
+    note = pending === 'start' ? 'Запускаю Ollama на MacBook Pro.' : 'Останавливаю Ollama и освобождаю память.';
+  } else if (!running) {
+    level = 'off';
+    state = 'выключена';
+    note = `Память не занимает.${disk ? ` Модель лежит на диске (${disk}).` : ''}`;
+  } else if (loaded.length) {
+    level = 'on';
+    state = 'работает';
+    const names = loaded.map(model => model.name).filter(Boolean).join(', ');
+    note = `${names || 'Модель'} в памяти${inMemory ? `: ${gbRu(inMemory)} ГБ` : ''}. Через 5 минут без запросов память освободится.`;
+  } else {
+    level = 'on';
+    state = 'включена';
+    note = 'Ждёт запроса и память пока не занимает. Чат: ollama run qwen3.8:27b в Терминале.';
+  }
+  if (error && !pending) note = error;
+  return { checked: pending ? pending === 'start' : running, level, state, note, busy: Boolean(pending), error: Boolean(error && !pending) };
+}
+
+function renderQwenSwitch(status) {
+  const card = document.getElementById('pro-qwen');
+  if (!card) return;
+  if (status !== undefined) qwenSwitch.status = status;
+  const pending = qwenSwitch.pending;
+  if (pending && qwenSwitch.status) {
+    const done = Boolean(qwenSwitch.status.running) === (pending.action === 'start');
+    if (done || Date.now() - pending.at > QWEN_PENDING_MS) {
+      if (!done) qwenSwitch.error = 'MacBook не подтвердил переключение. Обнови страницу или попробуй ещё раз.';
+      qwenSwitch.pending = null;
+    }
+  }
+  const view = qwenSwitchView(qwenSwitch.status, qwenSwitch.pending && qwenSwitch.pending.action, qwenSwitch.error);
+  card.hidden = !view;
+  if (!view) return;
+  card.className = `machine-care machine-qwen is-${view.level}`;
+  const button = document.getElementById('pro-qwen-switch');
+  button.setAttribute('aria-checked', String(view.checked));
+  button.disabled = view.busy;
+  button.setAttribute('aria-label', `Qwen на MacBook Pro: ${view.state}. ${view.checked ? 'Нажми, чтобы выключить' : 'Нажми, чтобы включить'}`);
+  document.getElementById('pro-qwen-state').textContent = view.state;
+  const note = document.getElementById('pro-qwen-note');
+  note.textContent = view.note;
+  note.className = `machine-qwen-note${view.error ? ' is-error' : ''}`;
+}
+
+async function toggleQwen() {
+  if (!QWEN_SWITCH_API || qwenSwitch.pending || !qwenSwitch.status) return;
+  const action = qwenSwitch.status.running ? 'stop' : 'start';
+  qwenSwitch.pending = { action, at: Date.now() };
+  qwenSwitch.error = '';
+  renderQwenSwitch();
+  try {
+    const response = await fetch(QWEN_SWITCH_API, { method: 'POST', headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin',
+      body: JSON.stringify({ action }) });
+    // 504: the MacBook may still be switching (brew can take longer than the wait); the next refresh shows it.
+    if (!response.ok && response.status !== 504) {
+      qwenSwitch.pending = null;
+      qwenSwitch.error = response.status === 401 || response.status === 403
+        ? 'Переключать может только владелец: войди на сайт.'
+        : 'Не получилось: MacBook не ответил. Он включён и не спит?';
+    }
+  } catch (_) {
+    qwenSwitch.pending = null;
+    qwenSwitch.error = 'Не получилось: нет связи с сайтом.';
+  }
+  renderQwenSwitch();
+  if (qwenSwitch.pending) setTimeout(refreshPro, 2500);
+}
+
+document.getElementById('pro-qwen-switch')?.addEventListener('click', toggleQwen);
 
 // ─── MacBook care (Mark 2026-11-02 «визуализируй это в технике когда я нажимаю на мак про») ───
 // Written on the MacBook by builder/mac_care_collector.py every 15 min; the server shows it to the owner only.
