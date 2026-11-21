@@ -3891,6 +3891,17 @@ button.media-card-open:hover { transform: translateY(-2px); box-shadow: var(--mm
 .media-card .media-car-art { width: 100%; height: 100%; min-height: 96px; aspect-ratio: 1.91 / 1; border-radius: 0; }
 .media-card .media-car-body { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 10px 14px; }
 .media-card.is-sent .media-card-open { opacity: .92; }
+/* «Отменить» on a planned post (Mark 2026-11-18): the draft leaves the plan, «Вернуть» brings it back. */
+.media-card-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
+.media-card-act { min-height: 30px; padding: 3px 12px; border: 1px solid var(--mm-control-line); border-radius: 999px; background: transparent; color: var(--mm-muted); font: inherit; font-size: 12px !important; font-weight: 650 !important; cursor: pointer; }
+.media-card-act:hover, .media-card-act:focus-visible { color: var(--mm-ink); border-color: var(--mm-ink); }
+.media-card-act[data-media-cancel]:hover { color: var(--mm-danger, #c0392b); border-color: currentColor; }
+.media-card-act:disabled { opacity: .6; cursor: progress; }
+.media-card.is-cancelled .media-card-open { opacity: .55; }
+.media-card.is-cancelled .media-car-title { text-decoration: line-through; }
+.media-col-status { margin: 0; padding: 0 4px; color: var(--mm-muted); font-size: 12px; }
+.media-col-status:empty { display: none; }
+.media-col-status.is-bad { color: var(--mm-danger, #c0392b); }
 .media-day { padding: 8px 4px 0; }
 .media-day:first-child { padding-top: 0; }
 .media-day h4 { margin: 0; color: var(--mm-muted); font-size: 11.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -7123,6 +7134,7 @@ a.kb-card-title:hover { text-decoration: underline; }
       <section class="media-board" aria-label="Посты LinkedIn">
         <div class="media-col" data-col="plan"><header><h3>В плане</h3><span class="media-col-count" id="media-count-plan">0</span>
           <button type="button" class="media-col-add" id="media-add-own">+ Своя новость</button></header>
+          <p class="media-col-status" id="media-plan-status" role="status" aria-live="polite"></p>
           <ol class="media-col-list" id="media-col-plan"></ol></div>
         <div class="media-col" data-col="sent"><header><h3>Вышло</h3><span class="media-col-count" id="media-count-sent">0</span></header>
           <ol class="media-col-list" id="media-col-sent"></ol></div>
@@ -12541,12 +12553,14 @@ const MEDIA_CARS = {
   next: ['Следующий', 'is-accent'],
   draft: ['Черновик', ''],
   free: ['Свободно', ''],
+  cancelled: ['Отменена', ''],
 };
 let mediaCars = [];
 
 function mediaCarTag(car) {
   const [label] = MEDIA_CARS[car.kind] || [car.kind];
   if (car.kind === 'draft') return `${label} · в запасе`;
+  if (car.kind === 'cancelled') return `${label} · не выйдет`;
   if (car.at) return `${label} · ${mediaTime(car.at)}`;
   return ['queued', 'submitting'].includes(car.kind) ? `${label} · время Buffer` : label;
 }
@@ -12560,11 +12574,12 @@ function mediaRenderTrain(schedule, today) {
   queued.filter(item => !cars.some(car => car.id === item.id))
     .forEach(item => cars.push({ kind: item.state, id: item.id, title: item.title, at: item.due_at, text: item.text || '' }));
   drafts.forEach(item => cars.push({ kind: item.next_slot ? 'next' : 'draft', id: item.id, title: item.title, at: item.next_slot, text: item.text }));
+  (today?.cancelled || []).forEach(item => cars.push({ kind: 'cancelled', id: item.id, title: item.title, text: item.text || '' }));
   const minute = iso => Math.round(new Date(iso).getTime() / 60000);
   const claimed = new Set(cars.filter(car => car.at).map(car => minute(car.at)));
   (schedule.upcoming_slots || []).filter(slot => !slot.filled && !claimed.has(minute(slot.at))).slice(0, 4)
     .forEach(slot => cars.push({ kind: 'free', at: slot.at, title: `Бот подберёт свежую новость в ${mediaTime(slot.prepares_at)}` }));
-  const rank = { sent: 0, failed: 0, submitting: 1, queued: 1, ambiguous: 1, next: 2, free: 3, draft: 4 };
+  const rank = { sent: 0, failed: 0, submitting: 1, queued: 1, ambiguous: 1, next: 2, free: 3, draft: 4, cancelled: 6 };
   const when = car => (car.at ? new Date(car.at).getTime() : Infinity);
   cars.sort((a, b) => (when(a) - when(b)) || (rank[a.kind] ?? 5) - (rank[b.kind] ?? 5));
   mediaCars = cars;
@@ -12644,14 +12659,15 @@ function mediaRenderBoard() {
   const plan = [], sent = [];
   mediaCars.forEach((car, index) => (['sent', 'failed'].includes(car.kind) ? sent : plan).push([car, index]));
   const time = car => (car.at ? new Date(car.at).getTime() : Infinity);
-  plan.sort((a, b) => time(a[0]) - time(b[0]) || a[1] - b[1]);
+  const last = car => (car.kind === 'cancelled' ? 1 : 0);
+  plan.sort((a, b) => last(a[0]) - last(b[0]) || time(a[0]) - time(b[0]) || a[1] - b[1]);
   sent.sort((a, b) => (time(b[0]) === Infinity ? 0 : time(b[0])) - (time(a[0]) === Infinity ? 0 : time(a[0])));
   const empty = { plan: 'Слотов нет. Добавь время в «Настройках».', sent: 'Пока ничего не вышло.' };
   Object.entries({ plan, sent }).forEach(([col, items]) => {
-    document.getElementById(`media-count-${col}`).textContent = items.filter(([car]) => car.kind !== 'free').length;
+    document.getElementById(`media-count-${col}`).textContent = items.filter(([car]) => !['free', 'cancelled'].includes(car.kind)).length;
     let day = null;
     const rows = items.map(([car, index]) => {
-      const name = mediaDayName(car.at);
+      const name = car.kind === 'cancelled' ? 'Отменено' : mediaDayName(car.at);
       const head = name !== day ? `<li class="media-day"><h4>${mediaEsc(name)}</h4></li>` : '';
       day = name;
       const [, chip] = MEDIA_CARS[car.kind] || ['', ''];
@@ -12661,12 +12677,56 @@ function mediaRenderBoard() {
       }
       return `${head}<li class="media-card is-${mediaEsc(car.kind)}"><button type="button" class="media-card-open" data-media-car="${index}" aria-haspopup="dialog">
         ${mediaCarThumb(car)}<span class="media-car-body"><span class="media-car-tag media-chip ${chip}">${mediaEsc(mediaCarTag(car))}</span>
-        <span class="media-car-title">${mediaEsc(car.title)}</span></span></button></li>`;
+        <span class="media-car-title">${mediaEsc(car.title)}</span></span></button>${mediaCardAction(car)}</li>`;
     }).join('');
     const list = document.getElementById(`media-col-${col}`);
     list.innerHTML = rows || `<li class="media-col-empty">${empty[col]}</li>`;
     mediaThumbsReady(list);
   });
+}
+
+// Only a draft that is not yet in Buffer can be cancelled; Buffer takes it 15 minutes before its time.
+function mediaCardAction(car) {
+  if (!car.id || !MEDIA_API) return '';
+  const title = mediaEsc(car.title || '');
+  if (['next', 'draft'].includes(car.kind)) {
+    return `<div class="media-card-actions"><button type="button" class="media-card-act" data-media-cancel="${mediaEsc(car.id)}" aria-label="Отменить публикацию: ${title}">Отменить</button></div>`;
+  }
+  if (car.kind === 'cancelled') {
+    return `<div class="media-card-actions"><button type="button" class="media-card-act" data-media-restore="${mediaEsc(car.id)}" aria-label="Вернуть в план: ${title}">Вернуть</button></div>`;
+  }
+  return '';
+}
+
+async function mediaCancelToggle(button, cancel) {
+  const id = cancel ? button.dataset.mediaCancel : button.dataset.mediaRestore;
+  const car = mediaCars.find(item => item.id === id);
+  const status = document.getElementById('media-plan-status');
+  if (!car || button.disabled) return;
+  button.disabled = true;
+  status.className = 'media-col-status';
+  status.textContent = cancel ? 'Отменяю…' : 'Возвращаю…';
+  try {
+    await mediaPost(cancel ? 'cancel' : 'restore', { candidate_id: id });
+    const previous = car.kind;
+    car.kind = cancel ? 'cancelled' : 'draft';
+    car.at = null;
+    mediaRenderBoard();
+    mediaRenderAir();
+    status.textContent = cancel
+      ? `«${car.title}» не выйдет. Передумал — нажми «Вернуть».`
+      : `«${car.title}» снова в плане.`;
+    document.querySelector(`[data-media-${cancel ? 'restore' : 'cancel'}="${CSS.escape(id)}"]`)?.focus();
+    // Reload: the freed slot gets the next draft, a restored one gets its slot.
+    setTimeout(mediaLoad, previous === 'next' || !cancel ? 1200 : 4000);
+  } catch (error) {
+    status.className = 'media-col-status is-bad';
+    status.textContent = error.status === 409
+      ? (cancel ? 'Уже ушло в Buffer, здесь не отменить. Обновляю.' : 'Уже не отменена. Обновляю.')
+      : `Не получилось: ${error.message}.`;
+    button.disabled = false;
+    if (error.status === 409) setTimeout(mediaLoad, 800);
+  }
 }
 
 function mediaThumbsReady(root) {
@@ -13152,6 +13212,10 @@ function mediaInit() {
     }
   });
   document.getElementById('media-body').addEventListener('click', event => {
+    const cancel = event.target.closest('[data-media-cancel]');
+    if (cancel) { mediaCancelToggle(cancel, true); return; }
+    const restore = event.target.closest('[data-media-restore]');
+    if (restore) { mediaCancelToggle(restore, false); return; }
     const car = event.target.closest('[data-media-car]');
     if (car) mediaOpenCar(Number(car.dataset.mediaCar), car);
   });

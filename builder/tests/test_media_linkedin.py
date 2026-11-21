@@ -196,6 +196,25 @@ class ForwardingTests(unittest.TestCase):
             self.assertEqual(call.call_args.kwargs["timeout"], 240)
 
 
+    def test_cancel_and_restore_forward_only_a_real_candidate_id(self):
+        cid = "55555555-5555-4555-8555-555555555555"
+        with patch.object(media_linkedin, "call", return_value=(200, {"state": "cancelled"})) as call:
+            for action in (media_linkedin.cancel, media_linkedin.restore):
+                for bad in ({}, {"candidate_id": "../x"}, {"candidate_id": None}):
+                    with self.assertRaises(ValueError):
+                        action(bad)
+            call.assert_not_called()
+            media_linkedin.cancel({"candidate_id": cid})
+            self.assertEqual(call.call_args.args, ("POST", f"/media-control/candidates/{cid}/cancel"))
+            media_linkedin.restore({"candidate_id": cid})
+            self.assertEqual(call.call_args.args, ("POST", f"/media-control/candidates/{cid}/restore"))
+
+    def test_page_lets_the_owner_cancel_a_planned_post(self):
+        for marker in ("data-media-cancel", "data-media-restore", "mediaPost(cancel ? 'cancel' : 'restore'",
+                       'id="media-plan-status"'):
+            self.assertIn(marker, PAGE)
+
+
 class ServerTests(unittest.TestCase):
     def handler(self, *, owner, method="GET", path="/api/media/linkedin", body=None):
         handler = SERVER.Handler.__new__(SERVER.Handler)
@@ -252,6 +271,18 @@ class ServerTests(unittest.TestCase):
         with patch.object(media_linkedin, "call", return_value=(200, {"text": "t", "preview": {}})):
             handler.do_POST()
         self.assertEqual(response, {"status": 200, "payload": {"text": "t", "preview": {}}})
+        cancel = {"candidate_id": "33333333-3333-4333-8333-333333333333"}
+        handler, response = self.handler(owner=False, method="POST", path="/api/media/linkedin/cancel",
+                                         body=cancel)
+        with patch.object(media_linkedin, "call") as call:
+            handler.do_POST()
+            call.assert_not_called()
+        self.assertEqual(response["status"], 401)
+        handler, response = self.handler(owner=True, method="POST", path="/api/media/linkedin/cancel",
+                                         body=cancel)
+        with patch.object(media_linkedin, "call", return_value=(409, {"detail": "in Buffer"})):
+            handler.do_POST()
+        self.assertEqual(response, {"status": 409, "payload": {"detail": "in Buffer"}})
 
 
 class SettingsTests(unittest.TestCase):
