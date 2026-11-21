@@ -27,12 +27,13 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-10-28 on Mark's «унифицированный дизайн»: «Обновить» is the same outlined button as elsewhere.
         # 2026-11-02 on Mark's «визуализируй это в технике когда я нажимаю на мак про»: MacBook Pro gets
         # «Уход и защита» (watchdog, daily check, weekly restart, firewall, updates); «Обновить» reloads it too.
+        # 2026-11-06 on Mark's «по логике расположены»: the care rows sit in groups «Сейчас», «Защита», «Обслуживание».
         # 2026-11-08 on Mark's «температуру компьютера в технике … чтобы мог трекать»: Mac mini and
         # MacBook Pro get «Температура» (now, 24 h chart, peak per day for the week).
         expected = {
             "section-mac-mini": "1010d6e1dd9fef0469cdb73472686a5f81b122dceb8312ae9800d1e8bb538c32",
             "section-air": "744a4d48469d44a53f2b354be488131d4298312b8ade8e681c9861e2cb8ecef3",
-            "section-pro": "a2293f973f0d712f37d2866e0ecdf537b3440b11956d95b4a1dde7bf62d30220",
+            "section-pro": "2b1a1d6bae110bee41204ffbffc7b30966fe6cddce5f1c4e1c0095b000a0266b",
         }
         source = HTML.read_text()
         for identity, digest in expected.items():
@@ -48,11 +49,13 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-10-28 on Mark's «унифицированный дизайн»: every service described in Russian.
         # 2026-11-02 on Mark's «визуализируй это в технике когда я нажимаю на мак про»: MacBook Pro care block.
         # 2026-11-08 on Mark's «температуру компьютера в технике»: the temperature block for Mac mini and MacBook Pro.
+        # 2026-11-10 on the Docker Guardian task: scheduled jobs between clean runs read «Ждёт запуска», not an error.
+        # 2026-11-17 on Mark's «там же есть нагрузка, видеочип, память … это не работает»: GPU tile and wired/compressed memory.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "37cd20b4e54d3f30c0c0b522bfd43c6e96022168c3450291bd418734376b6fe7")
+                         "08282b34ff9c240289c4f3328bea6782f4aef00dc0c36f2e4261e875f7f87a23")
 
 
 if __name__ == "__main__":

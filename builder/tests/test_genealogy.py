@@ -68,15 +68,12 @@ class GenealogyWiringTest(unittest.TestCase):
         self.assertLess(owner, block.index("load_genealogy("), "the owner check must come before reading the file")
         self.assertIn("401", block[:block.index("load_genealogy(")])
 
-    def test_page_reads_the_api_and_embeds_no_family_data(self):
+    def test_page_has_no_genealogy_section_and_no_family_data(self):
         html = PAGE.read_text(encoding="utf-8")
-        self.assertIn('id="section-genealogy"', html)
-        self.assertIn("${DASHBOARD_API}/api/genealogy", html)
-        self.assertIn("if (name === 'genealogy') setTimeout(genLoad, 0);", html)
-        self.assertNotIn("genealogy.json", html)
-        # No tab of its own: it opens from the owner's GEN.AI card on «Платформы».
-        self.assertNotIn('aria-controls="section-genealogy"', html)
-        self.assertIn("parent === 'genealogy' ? 'platforms' : parent", html)
+        # Mark 2026-11-10: the «Генеалогия» section is removed from the command center; the family
+        # site genai.meshly.fr replaces it. The owner-only API stays so the section can come back.
+        self.assertNotIn('id="section-genealogy"', html)
+        self.assertNotIn("/api/genealogy", html)
         # Family surnames and places from the private file must not be in the public page.
         for word in ("Рудник", "Муравич", "Яндашевск", "Грачёвы", "Афанасьев", "Губята", "Мордюшенко"):
             self.assertIsNone(re.search(word, html), word)

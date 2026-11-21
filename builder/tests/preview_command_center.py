@@ -341,7 +341,7 @@ class PreviewHandler(SERVER.Handler):
             payload = {
                 # The Pro is the busy one, so «перегружена» and «заполняется» can be seen next to a calm Mac mini.
                 # A raw macOS host name: the page must still say «MacBook Pro».
-                "system": {"hostname": "MacBook-Pro-de-Example.local", "cpu_percent": 72, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
+                "system": {"hostname": "MacBook-Pro-de-Example.local", "cpu_percent": 72, "gpu_percent": 91, "gpu_memory_gb": 17.6, "memory_wired_gb": 18.4, "memory_compressed_gb": 2.1, "memory_used_gb": 15.2, "memory_total_gb": 16, "disk_used_gb": 420, "disk_total_gb": 500, "uptime": "5 days"}
                 if parsed.path == "/api/pro/all" else
                 {"hostname": "Preview computer", "cpu_percent": 23, "memory_used_gb": 7, "memory_total_gb": 16, "disk_used_gb": 80, "disk_total_gb": 256, "uptime": "2 days"},
                 "services": [dict(service, status="stopped") if MODE == "failure" else dict(service) for service in FIXTURE_SERVICES],
@@ -372,9 +372,10 @@ class PreviewHandler(SERVER.Handler):
                 "ok": True, "state": "stale" if MODE == "stale" else "fresh", "machine": "macbook-pro",
                 "generated_at": stamp(timedelta(hours=3) if MODE == "stale" else timedelta(minutes=4)),
                 "age_seconds": 10800 if MODE == "stale" else 240,
-                "watchdog": {"job": "loaded", "events_7d": 2, "last_event_at": stamp(timedelta(hours=20)), "last_event": "Example App 96% CPU 6 мин — остановлен"},
-                "hygiene": {"job": "loaded", "report_at": stamp(timedelta(hours=2)), "headline": "Диск 27%, кэши в норме", "attention": 0},
-                "restart": {"scheduled": True, "schedule": "restart at 4:00AM Sunday", "boot_at": stamp(timedelta(hours=5))},
+                "watchdog": {"job": "loaded", "events_7d": None, "last_event_at": None, "last_event": "", "log": "missing"},
+                "hygiene": {"job": "loaded", "report_at": stamp(timedelta(hours=14)), "headline": "Замечаний: 4", "attention": 4},
+                # The Sunday restart missed: running for three weeks.
+                "restart": {"scheduled": True, "schedule": "restart at 4:00AM Sunday", "boot_at": stamp(timedelta(days=21))},
                 "firewall": {"enabled": False},
                 "updates": {"pending": ["macOS 26.7.2"], "checked_at": stamp(timedelta(hours=6))},
                 "swap": {"used_gb": 0.8, "total_gb": 2.0},

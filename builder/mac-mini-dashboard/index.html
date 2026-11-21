@@ -22,6 +22,10 @@ document.documentElement.dataset.theme = 'light';
 try {
   if (localStorage.getItem('command-center.theme.v3') === 'dark') document.documentElement.dataset.theme = 'dark';
 } catch (error) { /* stays light */ }
+const CC_LINKS_KEY = 'command-center.links-hidden.v1';
+try {
+  document.documentElement.toggleAttribute('data-links-hidden', localStorage.getItem(CC_LINKS_KEY) === 'true');
+} catch (error) { /* Links stay visible if storage is unavailable. */ }
 </script>
 <style>
 /* One design for every tab (Mark 2026-10-14): the Property OS tokens of MAIN MANAGER, light and dark,
@@ -193,7 +197,7 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-badge { font-size: 11px; padding: 4px 12px; border-radius: 6px; font-weight: 600; }
 .machine-badge.online { background: var(--green-bg); color: var(--green); }
 .machine-badge.offline { background: var(--red-bg); color: var(--red); }
-.machine-health { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: -4px 0 20px; }
+.machine-health { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: -4px 0 20px; }
 .machine-health:empty { display: none; }
 .machine-health-item { display: grid; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--card, transparent); color: var(--text); font: inherit; cursor: pointer; }
 .machine-health-item:hover { border-color: var(--text2); }
@@ -220,6 +224,12 @@ html:has(.tab-name-dialog[open]) { overflow: hidden; }
 .machine-care-when.is-stale { color: var(--orange, #d97706); font-weight: 600; }
 .machine-care-note { font-size: 13px; color: var(--text2); margin: 0; }
 .machine-care-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.machine-care-groups { display: grid; gap: 14px; }
+.machine-care-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 6px; }
+.machine-care-group-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase; color: var(--text2); }
+.machine-care-group-sum { font-size: 12px; color: var(--green); }
+.machine-care-group-sum.has-issues { color: var(--orange, #d97706); font-weight: 600; }
+.machine-care-group-sum.is-unknown { color: var(--text2); }
 .machine-care-row { display: grid; grid-template-columns: 10px 1fr; gap: 4px 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--bg2, rgba(127,127,127,.06)); }
 .machine-care-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; background: var(--text2); }
 .machine-care-row.is-ok .machine-care-dot { background: var(--green); }
@@ -4086,6 +4096,97 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-save { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 8px 8px 8px 14px; border-radius: 999px; background: var(--mm-warning-soft); color: var(--mm-warning); font-size: 13px; font-weight: 600; }
 .media-save[hidden] { display: none; }
 .media-save.is-ok { background: var(--mm-success-soft); color: var(--mm-success); }
+/* Mark 2026-11-10: three channels side by side, schedule on top, no empty columns,
+   smaller pictures. */
+.media-channels { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px; border: 1px solid var(--mm-line); border-radius: 16px; background: var(--mm-surface); box-shadow: var(--mm-shadow-soft); width: fit-content; max-width: 100%; }
+.media-channel-tab { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 16px 6px 8px; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--mm-muted); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.media-channel-tab:hover { color: var(--mm-ink); background: var(--mm-surface-hover); }
+.media-channel-tab[aria-selected="true"] { color: var(--mm-ink); background: var(--mm-surface-hover); border-color: var(--mm-control-line); }
+.media-channel-tab:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
+.media-in-tab, .media-tg-tab, .media-x-tab { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-size: 15px; }
+.media-tg-tab { background: #229ed9; color: #fff; }
+.media-x-tab { background: #0f1419; color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.media-tg-tab svg, .media-x-tab svg { width: 17px; height: 17px; }
+.media-view { display: grid; gap: 16px; min-width: 0; }
+.media-view[hidden] { display: none; }
+.media-schedule { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px 16px; padding: 12px 16px; }
+.media-schedule .media-panel-head { margin: 0; }
+.media-schedule .media-panel-head p { max-width: 260px; }
+.media-schedule .media-slots { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.media-schedule .media-slots li { min-width: 84px; min-height: 42px; padding: 0 22px 0 12px; font-size: 17px; }
+.media-schedule .media-add input[type="time"] { width: 120px; flex: none; }
+.media-schedule .media-save { grid-column: 1 / -1; margin: 0; }
+.media-panel.media-digest-panel, .media-panel.media-news-panel, .media-panel.media-channel-panel, .media-panel.media-comments-panel { padding: 16px 18px; }
+.media-digest-panel > h3, .media-channel-panel > h3 { margin: 0 0 4px; font-size: 16px; font-weight: 750; }
+.media-digest-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 0; padding: 0; list-style: none; }
+.media-digest { flex: 1 1 300px; box-sizing: border-box; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: start; padding: 10px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-background); }
+.media-digest.is-today { flex-basis: 100%; grid-template-columns: 148px minmax(0, 1fr); padding: 12px; }
+.media-digest-cover { aspect-ratio: 1; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: var(--mm-surface-hover); }
+.media-digest.is-today .media-digest-cover { aspect-ratio: 4 / 3; }
+.media-digest-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-digest-cover.is-linkedin { background: linear-gradient(135deg, #0a66c2, #5aa7f0); }
+.media-digest-cover.is-telegram { background: linear-gradient(135deg, #229ed9, #7fd0f5); }
+.media-digest-cover.is-x { background: linear-gradient(135deg, #0f1419, #4a5560); }
+.media-digest-cover > span { box-shadow: none; background: rgba(255,255,255,.18); }
+.media-digest-main { display: grid; gap: 6px; min-width: 0; }
+.media-digest-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12.5px; color: var(--mm-muted); }
+.media-digest-head strong { color: var(--mm-ink); font-size: 13.5px; }
+.media-digest-text { margin: 0; white-space: normal; font-size: 13.5px; line-height: 1.45; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.media-digest.is-today .media-digest-text { -webkit-line-clamp: 4; line-clamp: 4; font-size: 14px; }
+.media-digest-text.is-empty { color: var(--mm-muted); }
+.media-digest-text[hidden], .media-digest-edit[hidden] { display: none; }
+.media-digest-edit { display: grid; gap: 6px; }
+.media-digest textarea { width: 100%; min-height: 140px; padding: 10px 12px; border: 1px solid var(--mm-control-line); border-radius: 12px; background: var(--mm-surface); color: var(--mm-ink); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; box-sizing: border-box; }
+.media-digest[data-channel="x"] textarea { min-height: 84px; }
+.media-digest-editbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.media-digest-count { color: var(--mm-muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.media-digest-count.is-over { color: var(--mm-danger); font-weight: 700; }
+.media-digest-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.media-digest-status { margin-right: auto; color: var(--mm-muted); font-size: 12.5px; }
+.media-digest-empty { flex-basis: 100%; padding: 14px; color: var(--mm-muted); font-size: 13.5px; }
+/* fewer, smaller pictures: a thumbnail, not a poster */
+.media-card-open { grid-template-columns: 112px minmax(0, 1fr); }
+.media-card .media-car-art { min-height: 72px; aspect-ratio: auto; }
+.media-air-card { grid-template-columns: 180px minmax(0, 1fr); }
+.media-car-art.media-air-art { min-height: 120px; }
+.media-col-list { max-height: 420px; }
+/* Max 2026-11-10 «оставь просто значки платформ»: icon-only tabs; Instagram, YouTube, TikTok soon. */
+.media-channels { gap: 4px; padding: 4px; border-radius: 14px; align-items: center; }
+.media-channel-tab { position: relative; gap: 0; min-height: 0; padding: 5px; border-radius: 11px; }
+.media-channel-tab[aria-selected="true"] { background: var(--mm-selection); border-color: var(--mm-accent); }
+.media-channel-tab.is-soon { cursor: default; opacity: .45; filter: grayscale(.6); }
+.media-channel-tab.is-soon:hover { background: transparent; }
+.media-channel-sep { width: 1px; height: 24px; margin: 0 4px; background: var(--mm-line); }
+.media-soon { position: absolute; right: -2px; bottom: -4px; padding: 0 4px; border-radius: 6px; background: var(--mm-surface); border: 1px solid var(--mm-line); color: var(--mm-muted); font-size: 9px; font-style: normal; font-weight: 700; line-height: 13px; }
+.media-ig-tab, .media-yt-tab, .media-tt-tab { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; color: #fff; }
+.media-ig-tab { background: linear-gradient(45deg, #f9a03f, #e1306c 55%, #833ab4); }
+.media-yt-tab { background: #ff0033; }
+.media-tt-tab { background: #0f1419; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.media-ig-tab svg, .media-yt-tab svg, .media-tt-tab svg { width: 18px; height: 18px; }
+/* Max 2026-11-10 «много пустого места… нужен минимализм»: one line per thing, no empty boxes. */
+.media-air { grid-template-columns: minmax(0, 1fr); }
+.media-air-next { display: none; }
+.media-board:has(#media-col-sent .media-col-empty) { grid-template-columns: minmax(0, 1fr); }
+.media-board:has(#media-col-sent .media-col-empty) .media-col[data-col="sent"] { display: none; }
+.media-col .media-card .media-car-art { min-height: 64px; }
+.media-col .media-card-open { grid-template-columns: 72px minmax(0, 1fr); }
+.media-news-art:not(:has(img)) { aspect-ratio: auto; height: 34px; }
+.media-news-art:not(:has(img)) .media-news-art-name { font-size: 13px; }
+@media (max-width: 760px) {
+  .media-schedule { grid-template-columns: minmax(0, 1fr); }
+  .media-schedule .media-slots { gap: 6px; }
+  .media-digest.is-today { grid-template-columns: minmax(0, 1fr); }
+  .media-digest.is-today .media-digest-cover { aspect-ratio: 2.4 / 1; }
+  .media-digest-foot { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .media-digest-foot .media-digest-status { grid-column: 1 / -1; }
+  .media-digest-foot .media-digest-status:empty { display: none; }
+  .media-digest-foot button { min-width: 0; justify-content: center; padding-inline: 8px; font-size: 13.5px; }
+  .media-digest-foot .media-primary { grid-column: 1 / -1; }
+  .media-schedule .media-slots li { flex: 1 1 calc(25% - 6px); min-width: 0; padding: 0 16px 0 8px; font-size: 15px; }
+  .media-channels { width: fit-content; flex-wrap: nowrap; }
+  .media-card-open { grid-template-columns: 84px minmax(0, 1fr); }
+  .media-air-card { grid-template-columns: 110px minmax(0, 1fr); }
+}
 .media-chip { padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; background: var(--mm-surface-hover); color: var(--mm-muted); }
 .media-chip.is-info { background: var(--mm-info-soft); color: var(--mm-info); }
 .media-chip.is-ok { background: var(--mm-success-soft); color: var(--mm-success); }
@@ -5747,97 +5848,66 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   .mm-done-row { padding: 10px 14px; gap: 10px; }
   .mm-tech .mm-health { padding: 10px 14px; }
 }
-/* ─── Генеалогия (Mark 2026-11-05) ─── */
-.gen-wrap { display: grid; gap: 14px; }
-.gen-back { font: inherit; font-size: 13px; background: none; border: 0; padding: 0 0 6px; color: var(--mm-accent); cursor: pointer; }
-.gen-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.gen-stats li { background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 12px; padding: 8px 12px; font-size: 13px; color: var(--mm-muted); }
-.gen-stats strong { display: block; font-size: 18px; color: var(--mm-ink); font-variant-numeric: tabular-nums; }
-.gen-views { display: flex; gap: 6px; flex-wrap: wrap; }
-.gen-view-btn { font: inherit; font-size: 14px; border: 1px solid var(--mm-control-line); background: var(--mm-surface); color: var(--mm-ink); border-radius: 999px; padding: 7px 14px; cursor: pointer; min-height: 36px; }
-.gen-view-btn[aria-pressed="true"] { background: var(--mm-ink); color: var(--mm-surface); border-color: var(--mm-ink); }
-.gen-view-btn:focus-visible, .gen-chip:focus-visible, .gen-node:focus-visible, .gen-play:focus-visible { outline: 2px solid var(--mm-accent); outline-offset: 2px; }
-.gen-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
-.gen-panel { background: var(--mm-surface); border: 1px solid var(--mm-line); border-radius: 16px; box-shadow: var(--mm-shadow-soft); overflow: hidden; }
-.gen-side { padding: 16px; max-height: 760px; overflow: auto; }
-.gen-side h3 { margin: 0 0 4px; font-size: 18px; line-height: 1.25; }
-.gen-side h4 { margin: 14px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--mm-muted); }
-.gen-side p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; }
-.gen-side ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.45; }
-.gen-side li { margin-bottom: 4px; }
-.gen-muted { color: var(--mm-muted); font-size: 13px; }
-.gen-badge { display: inline-block; font-size: 12px; border-radius: 999px; padding: 2px 8px; margin: 2px 4px 2px 0; background: var(--mm-surface-hover); color: var(--mm-ink); }
-.gen-badge[data-s="proven"] { background: var(--mm-success-soft); color: var(--mm-success); }
-.gen-badge[data-s="likely"] { background: var(--mm-info-soft); color: var(--mm-info); }
-.gen-badge[data-s="hyp"], .gen-badge[data-s="cand"] { background: var(--mm-warning-soft); color: var(--mm-warning); }
-.gen-link { font: inherit; background: none; border: 0; padding: 0; color: var(--mm-accent); cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
-.gen-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 14px 0; }
-.gen-chip { font: inherit; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--mm-control-line); background: var(--mm-surface); color: var(--mm-ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; min-height: 30px; }
-.gen-chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); display: inline-block; }
-.gen-chip[aria-pressed="false"] { opacity: .45; }
-.gen-map { height: 560px; background: var(--mm-surface-hover); position: relative; isolation: isolate; z-index: 0; }
-.gen-map-msg { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--mm-muted); font-size: 14px; }
-.gen-timeline { padding: 12px 14px 14px; display: grid; gap: 8px; border-top: 1px solid var(--mm-line); }
-.gen-time-row { display: flex; align-items: center; gap: 12px; }
-.gen-play { font: inherit; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--mm-accent); color: #fff; font-size: 16px; cursor: pointer; flex: none; }
-.gen-year { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 82px; color: var(--mm-ink); }
-.gen-range { flex: 1; accent-color: var(--mm-accent); min-width: 0; }
-.gen-hist { display: flex; align-items: flex-end; gap: 1px; height: 34px; }
-.gen-hist span { flex: 1; background: var(--mm-line); border-radius: 2px 2px 0 0; min-height: 1px; }
-.gen-hist span.on { background: var(--mm-accent); opacity: .55; }
-.gen-hist span.now { background: var(--mm-accent); opacity: 1; }
-.gen-time-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--mm-muted); flex-wrap: wrap; }
-.gen-speed { font: inherit; font-size: 12px; border: 1px solid var(--mm-control-line); background: var(--mm-surface); color: var(--mm-ink); border-radius: 8px; padding: 3px 6px; }
-.gen-trail { stroke-linecap: round; stroke-linejoin: round; }
-.gen-trail-new { stroke-dasharray: 6 8; animation: gen-dash 1.2s linear infinite; }
-@keyframes gen-dash { to { stroke-dashoffset: -28; } }
-:root[data-theme="dark"] .gen-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) saturate(.5); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .gen-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) saturate(.5); } }
-@media (prefers-reduced-motion: reduce) { .gen-trail-new { animation: none; } }
-.gen-tree { height: 620px; position: relative; overflow: hidden; touch-action: none; cursor: grab; }
-.gen-tree svg { width: 100%; height: 100%; display: block; }
-.gen-tree-tools { position: absolute; right: 10px; top: 10px; display: flex; gap: 6px; z-index: 2; }
-.gen-tree-tools button { font: inherit; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--mm-control-line); background: var(--mm-surface); color: var(--mm-ink); cursor: pointer; }
-.gen-search { font: inherit; font-size: 14px; width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--mm-control-line); background: var(--mm-surface); color: var(--mm-ink); box-sizing: border-box; }
-.gen-tree-head { display: flex; gap: 8px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--mm-line); flex-wrap: wrap; }
-.gen-tree-head .gen-search { flex: 1; min-width: 200px; width: auto; }
-.gen-path { font-size: 13px; color: var(--mm-muted); padding: 8px 14px; border-bottom: 1px solid var(--mm-line); line-height: 1.6; }
-.gen-node { cursor: pointer; }
-.gen-node rect { fill: var(--mm-surface); stroke: var(--mm-line); stroke-width: 1; }
-.gen-node .gen-node-bar { stroke: none; }
-.gen-node text { fill: var(--mm-ink); font-size: 12px; font-family: inherit; }
-.gen-node text.gen-node-sub { fill: var(--mm-muted); font-size: 11px; }
-.gen-node.is-focus rect.gen-node-box { stroke: var(--mm-accent); stroke-width: 2.5; }
-.gen-node:hover rect.gen-node-box { stroke: var(--mm-accent); }
-.gen-node.is-uncertain rect.gen-node-box { stroke-dasharray: 4 3; }
-.gen-edge { fill: none; stroke: var(--mm-control-line); stroke-width: 1.5; }
-.gen-edge.is-spouse { stroke-dasharray: 3 3; }
-.gen-row-label { fill: var(--mm-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
-.gen-list { padding: 12px 14px; display: grid; gap: 10px; }
-.gen-table-wrap { overflow: auto; max-height: 640px; }
-.gen-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.gen-table th { position: sticky; top: 0; background: var(--mm-surface); text-align: left; font-size: 12px; color: var(--mm-muted); font-weight: 600; padding: 8px; border-bottom: 1px solid var(--mm-line); }
-.gen-table td { padding: 8px; border-bottom: 1px solid var(--mm-line); vertical-align: top; }
-.gen-table td i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); margin-right: 6px; }
-.gen-empty { padding: 28px; text-align: center; color: var(--mm-muted); }
-.gen-place-pop strong { display: block; margin-bottom: 4px; }
-.gen-place-pop ul { margin: 0; padding-left: 16px; max-height: 180px; overflow: auto; }
-.gen-legend-note { font-size: 12px; color: var(--mm-muted); padding: 6px 14px 0; }
-@media (max-width: 980px) {
-  .gen-layout { grid-template-columns: 1fr; }
-  .gen-side { max-height: none; }
-  .gen-map { height: 420px; }
-  .gen-tree { height: 520px; }
-}
-@media (max-width: 760px) {
-  .gen-map { height: 340px; }
-  .gen-year { font-size: 24px; min-width: 64px; }
-}
 /* Mark 2026-11-06 (GEN.AI card with four links): chips never shrink or get cut off; extra ones move to the next line. */
 .platform-entry .platform-links { flex-wrap: wrap; row-gap: 6px; }
 .platform-entry .platform-links .platform-link { flex: 0 0 auto; max-width: 100%; }
 .platform-entry .platform-links .platform-link .platform-access { overflow: visible; }
 .platform-entry .platform-links:has(> .platform-link:nth-child(3)) { flex-direction: row; align-items: center; }
+html[data-links-hidden] body a[href]:not([href^="#"]) { display: none !important; }
+.cc-eye-slash { display: none; }
+html[data-links-hidden] .cc-eye-slash { display: inline; }
+/* Task board in the Command Center shell. */
+#section-tasks { max-width: 1440px; color: var(--mm-ink); }
+#section-tasks [hidden] { display: none !important; }
+.kb-head, .kb-toolbar, .kb-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.kb-head { justify-content: space-between; }
+.kb-toolbar { align-items: end; padding: 0 0 18px; border-bottom: 1px solid var(--mm-line); }
+.kb-field { display: grid; min-width: 0; gap: 5px; font-size: 13px; font-weight: 600; color: var(--mm-muted); }
+.kb-field :is(input, select), .kb-button { min-height: 44px; max-width: 100%; padding: 8px 13px; border: 1px solid var(--mm-control-line); border-radius: 10px; font: inherit; color: var(--mm-ink); background: var(--mm-surface); }
+.kb-field :is(input, select) { min-width: 0; font-size: 15px; }
+.kb-button { font-size: 14px; font-weight: 600; cursor: pointer; }
+.kb-button:hover { background: var(--mm-selection); }
+.kb-button.kb-primary { background: var(--mm-ink); color: var(--mm-surface); border-color: var(--mm-ink); }
+.kb-button:disabled { opacity: .55; cursor: default; }
+#section-tasks :focus-visible { outline: 3px solid var(--mm-accent); outline-offset: 3px; }
+.kb-form, .kb-lane, .kb-archive { border: 1px solid var(--mm-line); border-radius: 16px; padding: clamp(12px, 2vw, 22px); }
+.kb-form { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 18px; background: var(--mm-surface); }
+.kb-wide { grid-column: 1 / -1; }
+#kb-message { margin: 12px 0; color: var(--mm-muted); }
+#kb-message:empty { margin: 0; }
+.kb-lanes { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); align-items: start; gap: 16px; margin: 18px 0; }
+.kb-lane { min-width: 0; background: color-mix(in srgb, var(--mm-line) 20%, var(--mm-background)); }
+.kb-lane[data-state=doing] { background: color-mix(in srgb, var(--mm-selection) 42%, var(--mm-background)); }
+.kb-lane h3 { display: flex; gap: 9px; align-items: center; margin: 0 0 14px; font-size: 18px; color: var(--mm-ink); }
+.kb-lane h3::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--mm-muted); }
+.kb-lane[data-state=doing] h3::before { background: var(--mm-accent); }
+.kb-count, .kb-tag { display: inline-block; border-radius: 8px; padding: 3px 8px; font-size: 12px; line-height: 1.4; font-weight: 600; color: var(--mm-muted); background: var(--mm-surface); }
+.kb-stack { display: grid; gap: 9px; }
+.kb-card { min-width: 0; display: grid; grid-template-columns: 44px minmax(0,1fr); align-items: start; padding: 9px 12px 9px 3px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-surface); }
+.kb-check { display: grid; place-items: center; height: 44px; cursor: pointer; }
+.kb-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--mm-accent); cursor: pointer; }
+.kb-card-body { padding-top: 9px; overflow-wrap: anywhere; }
+.kb-card-title { font-size: 16px; line-height: 1.35; font-weight: 650; color: var(--mm-ink); text-decoration: none; }
+a.kb-card-title:hover { text-decoration: underline; }
+.kb-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.kb-tag { background: var(--mm-background); }
+.kb-tag.is-late { color: var(--mm-warning); }
+.kb-card .kb-actions { gap: 12px; }
+.kb-action { padding: 0; min-height: 44px; color: var(--mm-accent); background: transparent; border: 0; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.kb-switch { display: none; }
+.kb-archive summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
+.kb-archive .kb-card-title { text-decoration: line-through; color: var(--mm-muted); }
+.kb-empty { margin: 3px 0; color: var(--mm-muted); font-size: 14px; }
+@media (max-width: 760px) {
+  .kb-lanes, .kb-form { grid-template-columns: minmax(0,1fr); }
+  .kb-toolbar .kb-field { flex: 1 1 125px; }
+  .kb-lanes { margin-top: 8px; }
+  .kb-switch { display: flex; gap: 4px; margin-top: 14px; padding: 3px; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-background); }
+  .kb-switch button { flex: 1; min-height: 44px; padding: 3px; color: var(--mm-muted); background: transparent; border: 1px solid transparent; border-radius: 11px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .kb-switch button[aria-pressed=true] { color: var(--mm-ink); background: var(--mm-surface); border-color: var(--mm-control-line); }
+  #kb-board[data-mobile-lane=todo] .kb-lane[data-state=doing],
+  #kb-board[data-mobile-lane=doing] .kb-lane[data-state=todo] { display: none; }
+}
 </style>
 </head>
 <body>
@@ -6200,6 +6270,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <!-- Navigation -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
     <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">Сегодня</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-tasks" aria-pressed="false" onclick="showSection('tasks')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-tasks"/></svg></span><span class="cc-tab-label" data-tab-label="tasks">Задачи</span><span class="pill-badge" id="tasks-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
     <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
     <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
@@ -6213,6 +6284,10 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   <!-- Mark 2026-11-06 «лучше на телефоне»: the phone bar shows four tabs and «Ещё», like a native app. -->
   <button type="button" class="cc-more-tab" id="cc-more-tab" aria-haspopup="dialog" aria-controls="cc-more-dialog"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span><span class="cc-tab-label">Ещё</span></button>
   <div class="cc-side-foot">
+    <button type="button" class="cc-side-button" id="cc-links-toggle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="cc-eye-slash" d="m3 3 18 18"/></svg>
+      <span>Скрыть ссылки</span>
+    </button>
     <button type="button" class="cc-side-button" id="cc-theme-toggle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor"/></svg><span>Тёмная тема</span></button>
     <div class="tab-name-customizer">
       <button type="button" class="cc-side-button" id="edit-tab-names" data-tab-rename aria-haspopup="dialog" aria-controls="tab-name-dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg><span>Настроить вкладки</span></button>
@@ -6254,6 +6329,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       </div>
       <div class="cc-more-list" id="cc-more-list"></div>
       <div class="cc-more-list cc-more-settings">
+        <button type="button" class="cc-more-row" data-more-proxy="cc-links-toggle"></button>
         <button type="button" class="cc-more-row" data-more-proxy="cc-theme-toggle"></button>
         <button type="button" class="cc-more-row" data-more-proxy="edit-tab-names"></button>
       </div>
@@ -6278,6 +6354,38 @@ button.cc-refresh:hover { background: var(--mm-selection); }
   </div>
 
   <main class="cc-main">
+  <section id="section-tasks" class="section" aria-labelledby="kb-title">
+    <header class="cc-page-head kb-head">
+      <h2 class="cc-page-title" id="kb-title">Задачи</h2>
+      <button type="button" class="kb-button kb-primary" id="kb-add" aria-controls="kb-form" aria-expanded="false" disabled>Добавить задачу</button>
+    </header>
+    <form id="kb-form" class="kb-form" hidden>
+      <label class="kb-field kb-wide">Название задачи<input name="title" required maxlength="250" autocomplete="off"></label>
+      <label class="kb-field">Проект<input name="project" list="kb-projects" maxlength="120" autocomplete="off"></label>
+      <datalist id="kb-projects"></datalist>
+      <label class="kb-field">В план на<input type="date" name="plan"></label>
+      <label class="kb-field">Срок<input type="date" name="due"></label>
+      <div class="kb-actions kb-wide"><button class="kb-button kb-primary" type="submit">Сохранить</button><button type="button" class="kb-button" id="kb-cancel">Отмена</button></div>
+    </form>
+    <div class="kb-toolbar">
+      <label class="kb-field">Проект<select id="kb-filter"><option value="">Все проекты</option></select></label>
+      <label class="kb-field">Показать<select id="kb-view"><option value="all">Все задачи</option><option value="day">План дня</option><option value="overdue">Просроченные</option></select></label>
+      <button class="kb-button" type="button" id="kb-refresh">Обновить</button>
+    </div>
+    <p id="kb-message" role="status" aria-live="polite"></p>
+    <div id="kb-board" data-mobile-lane="todo" hidden>
+      <div class="kb-switch" role="group" aria-label="Колонка доски">
+        <button type="button" aria-pressed="true" aria-controls="kb-todo" data-lane="todo">Сделать <span class="kb-count">0</span></button>
+        <button type="button" aria-pressed="false" aria-controls="kb-doing" data-lane="doing">В процессе <span class="kb-count">0</span></button>
+      </div>
+      <div class="kb-lanes">
+        <div class="kb-lane" data-state="todo"><h3><span>Сделать</span><span class="kb-count" id="kb-todo-count">0</span></h3><div id="kb-todo" class="kb-stack"></div></div>
+        <div class="kb-lane" data-state="doing"><h3><span>В процессе</span><span class="kb-count" id="kb-doing-count">0</span></h3><div id="kb-doing" class="kb-stack"></div></div>
+      </div>
+      <details class="kb-archive" id="kb-archive"><summary>Готово <span class="kb-count" id="kb-done-count">0</span></summary><div class="kb-stack" id="kb-done"></div></details>
+    </div>
+  </section>
+
   <section id="section-documents" class="section" aria-labelledby="docxx-title">
     <header class="cc-page-head docxx-head">
       <div><h2 class="cc-page-title" id="docxx-title">Документы</h2><p class="cc-page-lede">Что Mac mini разобрал и куда положил.</p></div>
@@ -6809,6 +6917,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
            big tiles, then a tile per project; «Личное» and the small folders are tiles too.
            The week tile opens «Сводка» in a window. -->
       <div class="mm-home" id="mm-home">
+        <a class="mm-home-label mm-home-head" href="?tab=tasks">Задачи · Канбан</a>
         <div class="mm-todo-slot" id="mm-owner-todo" hidden></div>
         <!-- Mark 2026-11-06 «что важно сегодня»: whether the computers and services are well, from the same
              checks as Техника and its Медик; one calm line when all is fine, the trouble by name when not. -->
@@ -6942,7 +7051,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     <header class="cc-page-head">
       <div>
         <h2 class="cc-page-title" id="media-title">Медиа</h2>
-        <p class="cc-page-lede">LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.</p>
+        <p class="cc-page-lede" id="media-lede">LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.</p>
       </div>
       <div class="media-head-actions">
         <button class="media-ghost" id="media-settings-open" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Настройки</span></button>
@@ -6951,8 +7060,42 @@ button.cc-refresh:hover { background: var(--mm-selection); }
     </header>
     <p class="mm-notice" id="media-state" role="status" aria-live="polite">Загружаю…</p>
     <div class="media-studio" id="media-body" hidden>
-      <!-- Mark 2026-11-05: «сделай как медиа-штаб, красиво». Эфир (следующий выход + день) и доска
-           Черновики → В очереди → Вышло; карточка открывает пост. -->
+      <!-- Mark 2026-11-10: «разделил медиа-отдел: LinkedIn, Telegram и X, переключаюсь по иконке»;
+           «часы наверх, без пустых пробелов, понятная система». One channel at a time. -->
+      <div class="media-channels" role="tablist" aria-label="Канал">
+        <button type="button" role="tab" class="media-channel-tab" id="media-tab-linkedin" data-channel="linkedin" title="LinkedIn" aria-controls="media-view-linkedin" aria-selected="true"><span class="media-in media-in-tab" aria-hidden="true">in</span><span class="media-sr">LinkedIn</span></button>
+        <button type="button" role="tab" class="media-channel-tab" id="media-tab-telegram" data-channel="telegram" title="Telegram" aria-controls="media-view-telegram" aria-selected="false" tabindex="-1"><span class="media-tg-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="media-sr">Telegram</span></button>
+        <button type="button" role="tab" class="media-channel-tab" id="media-tab-x" data-channel="x" title="X" aria-controls="media-view-x" aria-selected="false" tabindex="-1"><span class="media-x-tab" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l16 16M20 4L4 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="media-sr">X</span></button>
+        <span class="media-channel-sep" aria-hidden="true"></span>
+        <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="Instagram · скоро"><span class="media-ig-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="16.8" cy="7.2" r="1.1" fill="currentColor"/></svg></span><span class="media-sr">Instagram, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
+        <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="YouTube · скоро"><span class="media-yt-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 8.5v7l6-3.5z" fill="currentColor"/></svg></span><span class="media-sr">YouTube, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
+        <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="TikTok · скоро"><span class="media-tt-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.5 4v10.2a3.2 3.2 0 1 1-3.2-3.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M13.5 4c.4 2.4 2 4 4.5 4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span><span class="media-sr">TikTok, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
+      </div>
+
+      <div class="media-view" id="media-view-linkedin" role="tabpanel" aria-labelledby="media-tab-linkedin" data-view="linkedin">
+          <article class="media-panel media-schedule" aria-labelledby="media-slots-title">
+            <header class="media-panel-head">
+              <span class="media-tile media-tile-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+              <div>
+                <h3 id="media-slots-title">Расписание</h3>
+                <p id="media-mode-note"></p>
+              </div>
+            </header>
+            <ul class="media-slots" id="media-slots"></ul>
+            <form class="media-add" id="media-add-form">
+              <label class="media-sr" for="media-add-time">Новое время</label>
+              <input type="time" id="media-add-time" step="300" required>
+              <button type="submit" class="media-ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cc-icon-plus"/></svg><span>Добавить время</span></button>
+            </form>
+            <div class="media-save" id="media-save-row" hidden>
+              <span id="media-slots-status" role="status" aria-live="polite">Есть несохранённые изменения</span>
+              <button type="button" class="media-primary" id="media-save-slots">Сохранить</button>
+            </div>
+          </article>
+        <article class="media-panel media-digest-panel" id="media-digest-linkedin" aria-labelledby="media-digest-linkedin-title" hidden>
+          <h3 id="media-digest-linkedin-title">Дайджест дня · английская версия</h3>
+          <ol class="media-digest-list" data-channel="linkedin"></ol>
+        </article>
       <section class="media-air" aria-labelledby="media-air-title">
         <h3 class="media-sr" id="media-air-title">Эфир LinkedIn</h3>
         <div class="media-air-next" id="media-air-next"></div>
@@ -6970,9 +7113,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <div class="media-col" data-col="sent"><header><h3>Вышло</h3><span class="media-col-count" id="media-count-sent">0</span></header>
           <ol class="media-col-list" id="media-col-sent"></ol></div>
       </section>
-
-      <div class="media-layout">
-        <div class="media-main">
         <!-- Mark 2026-11-05 23:03Z: news as picture cards, grouped by how fresh they are; can still be folded. -->
         <article class="media-panel media-news-panel" id="media-news-panel" aria-labelledby="media-news-title">
           <header class="media-panel-head">
@@ -7001,12 +7141,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
             </div>
           </div>
         </article>
-        <!-- The owner's own Telegram channel posts from the news service /today `channel` list (news-bot #80). -->
-        <article class="media-panel media-channel-panel" id="media-channel" aria-labelledby="media-channel-title" hidden>
-          <h3 id="media-channel-title">Telegram · канал</h3>
-          <p class="media-air-note">Твои посты в @technoosingularity: что ждёт своего времени и что вышло за два дня. Время Парижа.</p>
-          <ol class="media-posts-preview" id="media-channel-list"></ol>
-        </article>
         <article class="media-panel media-comments-panel" id="media-comments" aria-labelledby="media-comments-title" hidden>
           <header class="media-panel-head">
             <span class="media-tile media-tile-news" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#cc-icon-media"/></svg></span>
@@ -7027,29 +7161,28 @@ button.cc-refresh:hover { background: var(--mm-selection); }
           </form>
           <ol class="media-posts-preview" id="media-comments-list"></ol>
         </article>
-        </div>
+      </div>
 
-        <div class="media-side">
-          <article class="media-panel" aria-labelledby="media-slots-title">
-            <header class="media-panel-head">
-              <span class="media-tile media-tile-clock" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
-              <div>
-                <h3 id="media-slots-title">Расписание</h3>
-                <p id="media-mode-note"></p>
-              </div>
-            </header>
-            <ul class="media-slots" id="media-slots"></ul>
-            <form class="media-add" id="media-add-form">
-              <label class="media-sr" for="media-add-time">Новое время</label>
-              <input type="time" id="media-add-time" step="300" required>
-              <button type="submit" class="media-ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#cc-icon-plus"/></svg><span>Добавить время</span></button>
-            </form>
-            <div class="media-save" id="media-save-row" hidden>
-              <span id="media-slots-status" role="status" aria-live="polite">Есть несохранённые изменения</span>
-              <button type="button" class="media-primary" id="media-save-slots">Сохранить</button>
-            </div>
-          </article>
-        </div>
+      <div class="media-view" id="media-view-telegram" role="tabpanel" aria-labelledby="media-tab-telegram" data-view="telegram" hidden>
+        <article class="media-panel media-digest-panel" id="media-digest-telegram" aria-labelledby="media-digest-telegram-title">
+          <h3 id="media-digest-telegram-title">Дайджест дня · @technoosingularity</h3>
+          <p class="media-air-note" id="media-digest-telegram-note"></p>
+          <ol class="media-digest-list" data-channel="telegram"></ol>
+        </article>
+        <!-- The owner's own Telegram channel posts from the news service /today `channel` list (news-bot #80). -->
+        <article class="media-panel media-channel-panel" id="media-channel" aria-labelledby="media-channel-title" hidden>
+          <h3 id="media-channel-title">Telegram · канал</h3>
+          <p class="media-air-note">Твои посты в @technoosingularity: что ждёт своего времени и что вышло за два дня. Время Парижа.</p>
+          <ol class="media-posts-preview" id="media-channel-list"></ol>
+        </article>
+      </div>
+
+      <div class="media-view" id="media-view-x" role="tabpanel" aria-labelledby="media-tab-x" data-view="x" hidden>
+        <p class="mm-notice empty" id="media-x-connect" hidden>Аккаунт студии в X ещё не подключён. Посты уже пишутся и видны здесь, но в X ничего не уходит. Создай аккаунт студии и подключи его в Buffer, остальное сделаю я.</p>
+        <article class="media-panel media-digest-panel" id="media-digest-x" aria-labelledby="media-digest-x-title">
+          <h3 id="media-digest-x-title">Пост дня для X · аккаунт студии, по-английски</h3>
+          <ol class="media-digest-list" data-channel="x"></ol>
+        </article>
       </div>
     </div>
     <dialog class="platform-archive-dialog media-post-dialog" id="media-post-dialog" aria-labelledby="media-post-dialog-title">
@@ -7125,66 +7258,6 @@ button.cc-refresh:hover { background: var(--mm-selection); }
       <ol class="hq-story" id="hq-story"></ol>
       <h3 class="hq-head">Что стоит на каждом этаже</h3>
       <div id="hq-groups"></div>
-    </div>
-  </section>
-
-  <!-- Mark 2026-11-05: «вкладка Geneology… историческая линия с 1800 года, как перемещались люди по всей карте».
-       Owner-only: the data comes from /api/genealogy after sign-in and is never part of this page. -->
-  <section id="section-genealogy" class="section" aria-labelledby="genealogy-title">
-    <header class="cc-page-head">
-      <div>
-        <button type="button" class="gen-back" onclick="showSection('platforms')">← Платформы</button>
-        <h2 class="cc-page-title" id="genealogy-title">GEN.AI · Генеалогия</h2>
-        <p class="cc-page-lede">Семейное дерево и карта переездов семьи по годам.</p>
-      </div>
-    </header>
-    <div class="gen-wrap" id="gen-root">
-      <ul class="gen-stats" id="gen-stats" aria-live="polite"></ul>
-      <div class="gen-views" role="group" aria-label="Вид">
-        <button type="button" class="gen-view-btn" data-gen-view="map" aria-pressed="true">Карта переездов</button>
-        <button type="button" class="gen-view-btn" data-gen-view="tree" aria-pressed="false">Дерево</button>
-        <button type="button" class="gen-view-btn" data-gen-view="list" aria-pressed="false">Список</button>
-      </div>
-      <div class="gen-layout">
-        <div class="gen-main">
-          <div class="gen-panel" data-gen-pane="map">
-            <div class="gen-chips" id="gen-chips" role="group" aria-label="Ветки семьи"></div>
-            <p class="gen-legend-note">Точка — место, где в этот год жили люди из дерева; линия — их путь. Пунктир — переезд за последние 5 лет.</p>
-            <div class="gen-map" id="gen-map"><div class="gen-map-msg" id="gen-map-msg">Загружаю…</div></div>
-            <div class="gen-timeline">
-              <div class="gen-time-row">
-                <button type="button" class="gen-play" id="gen-play" aria-label="Проиграть историю">▶</button>
-                <div class="gen-year" id="gen-year" aria-live="off">1900</div>
-                <input type="range" class="gen-range" id="gen-range" min="1770" max="2026" step="1" value="1900" aria-label="Год">
-              </div>
-              <div class="gen-hist" id="gen-hist" aria-hidden="true"></div>
-              <div class="gen-time-meta">
-                <span id="gen-time-summary">—</span>
-                <label>Скорость <select class="gen-speed" id="gen-speed"><option value="450">медленно</option><option value="220" selected>обычно</option><option value="90">быстро</option></select></label>
-              </div>
-            </div>
-          </div>
-          <div class="gen-panel" data-gen-pane="tree" hidden>
-            <div class="gen-tree-head">
-              <input type="search" class="gen-search" id="gen-tree-search" placeholder="Найти человека…" list="gen-names" aria-label="Найти человека в дереве">
-              <button type="button" class="gen-view-btn" id="gen-tree-home">К Максиму</button>
-            </div>
-            <div class="gen-path" id="gen-path"></div>
-            <div class="gen-tree" id="gen-tree">
-              <div class="gen-tree-tools"><button type="button" data-gen-zoom="1.2" aria-label="Приблизить">+</button><button type="button" data-gen-zoom="0.83" aria-label="Отдалить">−</button><button type="button" data-gen-zoom="0" aria-label="Вписать">⤢</button></div>
-              <svg id="gen-tree-svg" role="group" aria-label="Дерево вокруг выбранного человека"></svg>
-            </div>
-          </div>
-          <div class="gen-panel" data-gen-pane="list" hidden>
-            <div class="gen-list">
-              <input type="search" class="gen-search" id="gen-list-search" placeholder="Имя, место или год…" aria-label="Поиск по списку">
-              <div class="gen-table-wrap"><table class="gen-table"><thead><tr><th>Имя</th><th>Годы</th><th>Места</th><th>Статус</th></tr></thead><tbody id="gen-list-body"></tbody></table></div>
-            </div>
-          </div>
-        </div>
-        <aside class="gen-panel gen-side" id="gen-side" aria-live="polite"><p class="gen-muted">Выбери человека на карте, в дереве или в списке.</p></aside>
-      </div>
-      <datalist id="gen-names"></datalist>
     </div>
   </section>
 
@@ -7378,7 +7451,7 @@ button.cc-refresh:hover { background: var(--mm-selection); }
         <span class="machine-care-when" id="pro-care-when"></span>
       </div>
       <p class="machine-care-note" id="pro-care-note" role="status"></p>
-      <ul class="machine-care-list" id="pro-care-list"></ul>
+      <div class="machine-care-groups" id="pro-care-list"></div>
     </section>
 
     <!-- System gauges row — same layout as Mac Mini/Air -->
@@ -8413,7 +8486,7 @@ function initOwnerDecisions() {
 const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
 const TAB_NAME_MAX_CODE_POINTS = 32;
 // Mark 2026-11-06 «меньше вкладок»: the first six are the menu, the rest wait under «Ещё».
-const TAB_NAME_ROUTES = Object.freeze(['work', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'weekly', 'media', 'architecture']);
+const TAB_NAME_ROUTES = Object.freeze(['work', 'tasks', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'weekly', 'media', 'architecture']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
@@ -9996,6 +10069,18 @@ document.addEventListener('visibilitychange', () => {
 // browser and set before the first paint in <head>; without one the page is light (Mark 2026-10-14).
 const CC_THEME_KEY = 'command-center.theme.v3';
 
+const linksButton = document.getElementById('cc-links-toggle');
+function syncLinksButton() {
+  const hidden = document.documentElement.hasAttribute('data-links-hidden');
+  linksButton.querySelector('span').textContent = hidden ? 'Показать ссылки' : 'Скрыть ссылки';
+}
+linksButton.addEventListener('click', () => {
+  const hidden = document.documentElement.toggleAttribute('data-links-hidden');
+  try { localStorage.setItem(CC_LINKS_KEY, String(hidden)); } catch (error) { /* Session-only choice. */ }
+  syncLinksButton();
+});
+syncLinksButton();
+
 function ccIsDark() {
   const theme = document.documentElement.dataset.theme;
   if (theme) return theme === 'dark';
@@ -10029,6 +10114,193 @@ ccSyncThemeButton();
 // Navigation
 // Department names in plain Russian on every screen (the data keeps the English labels).
 const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разработка', Design: 'Дизайн', Infrastructure: 'Инфраструктура', Internal: 'Знания', Finance: 'Финансы' };
+// The section reads the same owner board used by task capture and MCP.
+(() => {
+  const byId = id => document.getElementById('kb-' + id);
+  const form = byId('form'), add = byId('add'), board = byId('board');
+  const project = byId('filter'), view = byId('view'), message = byId('message');
+  const dateFormat = new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short', year:'numeric', timeZone:'UTC'});
+  const parisDate = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Paris', year:'numeric', month:'2-digit', day:'2-digit'});
+  let cards = [], generation = 0, pending = false, draft = null;
+  function node(tag, className, value) {
+    const el = document.createElement(tag);
+    el.className = className;
+    if (value !== undefined) el.textContent = value;
+    return el;
+  }
+  function setForm(open) {
+    form.hidden = !open;
+    add.setAttribute('aria-expanded', String(open));
+    if (open) form.elements.title.focus();
+  }
+  function lock() {
+    generation++;
+    pending = false;
+    cards = [];
+    draft = null;
+    board.hidden = true;
+    add.disabled = true;
+    form.reset();
+    setForm(false);
+    project.replaceChildren(new Option('Все проекты', ''));
+    byId('projects').replaceChildren();
+    for (const lane of ['todo','doing','done']) byId(lane).replaceChildren();
+    byId('archive').open = false;
+    message.textContent = '';
+  }
+  async function api(payload) {
+    const headers = {'Content-Type':'application/json'};
+    try {
+      const token = localStorage.getItem('command-center.jarvis-run-token');
+      if (token) headers['X-Dashboard-Run-Token'] = token;
+    } catch { /* Cookie-based owner sessions can still load the board. */ }
+    const response = await fetch('/api/kanban', {method:'POST', headers, credentials:'same-origin',
+      cache:'no-store', body:JSON.stringify(payload)});
+    if (!response.ok || response.redirected) {
+      const error = new Error('Не удалось подтвердить ответ. Обнови доску.');
+      error.status = response.redirected ? 401 : response.status;
+      if (error.status === 400) error.message = 'Проверь название задачи и даты.';
+      throw error;
+    }
+    return response.json();
+  }
+  function cardRow(card, today) {
+    const done = card.status === 'done', row = node('article','kb-card');
+    const label = node('label','kb-check'), check = document.createElement('input');
+    check.type = 'checkbox';
+    check.checked = done;
+    check.setAttribute('aria-label', (done ? 'Вернуть задачу ' : 'Завершить задачу ') + card.title);
+    check.onchange = () => { check.checked = done; update(card, {status:done ? 'todo' : 'done'}); };
+    label.append(check);
+    const body = node('div','kb-card-body');
+    const validLink = /^https:\/\/github\.com\//i.test(card.url || '');
+    const title = node(validLink ? 'a' : 'span','kb-card-title',card.title);
+    if (validLink) { title.href = card.url; title.target = '_blank'; title.rel = 'noopener'; }
+    body.append(title);
+    const tags = node('div','kb-tags');
+    if (card.project) tags.append(node('span','kb-tag',card.project));
+    for (const [key, prefix] of [['plan','План'],['due','Срок']]) {
+      if (!card[key]) continue;
+      const date = new Date(card[key] + 'T12:00:00Z');
+      const value = Number.isFinite(date.valueOf()) ? dateFormat.format(date) : card[key];
+      tags.append(node('span','kb-tag' + (key === 'due' && !done && card[key] < today ? ' is-late' : ''), prefix + ' · ' + value));
+    }
+    if (tags.childElementCount) body.append(tags);
+    if (!done) {
+      const actions = node('div','kb-actions');
+      function action(text, changes) {
+        const button = node('button','kb-action',text);
+        button.type = 'button';
+        button.onclick = () => update(card,changes);
+        actions.append(button);
+      }
+      action(card.status === 'todo' ? 'Начать' : 'В список', {status:card.status === 'todo' ? 'doing' : 'todo'});
+      action(card.plan === today ? 'Убрать из дня' : 'В план дня', {plan:card.plan === today ? '' : today});
+      body.append(actions);
+    }
+    row.dataset.taskId = String(card.id);
+    row.append(label,body);
+    return row;
+  }
+  const switches = [...board.querySelectorAll('.kb-switch button')];
+  function selectLane(lane) {
+    board.dataset.mobileLane = lane;
+    switches.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lane === lane)));
+  }
+  switches.forEach(b => { b.onclick = () => selectLane(b.dataset.lane); });
+  function draw() {
+    const projects = [...new Set(cards.map(card => card.project).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ru'));
+    const selected = project.value;
+    project.replaceChildren(new Option('Все проекты',''), ...projects.map(p => new Option(p,p)));
+    project.value = projects.includes(selected) ? selected : '';
+    byId('projects').replaceChildren(...projects.map(p => new Option(p,p)));
+    const today = parisDate.format(new Date());
+    const visible = cards.filter(card => (!project.value || project.value === card.project) &&
+      (view.value === 'all' || (card.status !== 'done' && (view.value === 'day' ? card.plan === today : card.due && card.due < today))));
+    for (const lane of ['todo','doing','done']) {
+      const group = visible.filter(card => card.status === lane);
+      byId(lane + '-count').textContent = String(group.length);
+      const toggle = switches.find(b => b.dataset.lane === lane);
+      if (toggle) toggle.querySelector('span').textContent = String(group.length);
+      byId(lane).replaceChildren(...(group.length ? group.map(card => cardRow(card,today)) : [node('p','kb-empty','Задач нет')]));
+    }
+    board.hidden = false;
+    add.disabled = false;
+  }
+  async function read() {
+    const result = await api({action:'list_tasks', include_done:true});
+    if (!Array.isArray(result)) throw new Error('Не удалось загрузить доску.');
+    return result;
+  }
+  async function perform(label, work) {
+    if (pending) return;
+    pending = true;
+    const current = generation;
+    message.textContent = label;
+    const active = () => generation === current;
+    try {
+      const feedback = await work(active);
+      if (active()) message.textContent = feedback || '';
+    } catch (error) {
+      if (!active()) return;
+      if (error.status === 401 || error.status === 403) {
+        lock(); message.textContent = 'Войди в Командный центр как владелец и нажми «Обновить».';
+      } else if (error.status === 409) {
+        message.textContent = 'Карточка изменилась. Нажми «Обновить», чтобы увидеть актуальную версию.';
+      } else {
+        message.textContent = 'Не удалось подтвердить действие. Проверь соединение и обнови доску.';
+        if (error.status === 400) message.textContent = error.message;
+      }
+    } finally { if (active()) pending = false; }
+  }
+  function refresh() {
+    return perform('Загружаю задачи…', async active => {
+      const result = await read();
+      if (active()) { cards = result; draw(); }
+    });
+  }
+  function update(card, changes) {
+    perform('Сохраняю…', async active => {
+      const updated = await api({action:'update_task', id:card.id, revision:card.revision, ...changes});
+      if (!active()) return;
+      cards = cards.map(item => item.id === updated.id ? updated : item);
+      if (updated.status !== 'done' && changes.status) selectLane(updated.status);
+      draw();
+      const next = [...board.querySelectorAll('.kb-card')].find(row => row.dataset.taskId === String(updated.id));
+      const focus = next?.querySelector('input');
+      if (focus && focus.getClientRects().length) focus.focus({preventScroll:true});
+      else if (updated.status === 'done') byId('archive').querySelector('summary').focus({preventScroll:true});
+      else view.focus({preventScroll:true});
+      return 'Задача обновлена.';
+    });
+  }
+  form.onsubmit = e => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form));
+    data.title = data.title.trim();
+    if (!data.title) { form.elements.title.focus(); return; }
+    perform('Сохраняю…', async active => {
+      const signature = JSON.stringify(data);
+      if (!draft || draft.signature !== signature) draft = {signature, key:'dashboard:' + crypto.randomUUID()};
+      const saved = await api({action:'create_task', source_key:draft.key, ...data});
+      if (!active()) return;
+      cards = [saved,...cards.filter(card => card.id !== saved.id)];
+      draft = null; form.reset(); setForm(false);
+      project.value = ''; view.value = 'all'; selectLane('todo'); draw(); add.focus();
+      return 'Задача добавлена.';
+    });
+  };
+  add.onclick = () => setForm(form.hidden);
+  byId('cancel').onclick = () => { setForm(false); add.focus(); };
+  project.onchange = view.onchange = () => { if (!board.hidden) draw(); };
+  byId('refresh').onclick = refresh;
+  window.addEventListener('cc-tasks-open', refresh);
+  window.addEventListener('cc-tasks-close', lock);
+  document.addEventListener('visibilitychange', () => {
+    if (document.getElementById('section-tasks').classList.contains('active') && !document.hidden) refresh();
+  });
+})();
+
 function showSection(name) {
   const isMachine = ['mac-mini', 'air', 'pro'].includes(name);
   if (isMachine) selectedMachine = name;
@@ -10041,8 +10313,7 @@ function showSection(name) {
   });
   const section = document.getElementById('section-' + parent);
   section.classList.add('active');
-  // «Генеалогия» has no tab of its own (Mark 2026-11-05): it opens from the GEN.AI card on «Платформы».
-  const trigger = document.querySelector(`.cc-main-nav [aria-controls="section-${parent === 'genealogy' ? 'platforms' : parent}"]`);
+  const trigger = document.querySelector(`.cc-main-nav [aria-controls="section-${parent}"]`);
   if (trigger) {
     trigger.classList.add('active');
     trigger.setAttribute('aria-pressed', 'true');
@@ -10065,8 +10336,8 @@ function showSection(name) {
   if (name === 'agents') setTimeout(liveSessionsLoad, 0);
   if (name === 'platforms') { setTimeout(ccLoadPlatformResources, 0); setTimeout(ccLoadWorkTools, 0); }
   if (name === 'media') setTimeout(mediaLoad, 0);
+  window.dispatchEvent(new Event(name === 'tasks' ? 'cc-tasks-open' : 'cc-tasks-close'));
   if (name === 'documents') setTimeout(ccLoadDocxx, 0);
-  if (name === 'genealogy') setTimeout(genLoad, 0);
   else window.dispatchEvent(new Event('docxx-lock'));
   if (name === 'context') setTimeout(ccLoadContext, 0);
   else window.dispatchEvent(new Event('context-lock'));
@@ -10077,7 +10348,7 @@ function showSection(name) {
 // «По дням» links (?tab=today) open MAIN MANAGER.
 const INITIAL_TAB = new URLSearchParams(window.location.search).get('tab');
 const INITIAL_SECTION = INITIAL_TAB === 'today' ? 'work' : INITIAL_TAB;
-if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'growth', 'weekly', 'genealogy'].includes(INITIAL_SECTION)) {
+if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms', 'media', 'documents', 'context', 'work', 'tasks', 'growth', 'weekly'].includes(INITIAL_SECTION)) {
   showSection(INITIAL_SECTION);
   const agentsView = new URLSearchParams(window.location.search).get('view');
   if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
@@ -11722,6 +11993,157 @@ function mediaRenderChannel(today) {
   }).join('') : '<li class="media-empty">В канале своих постов не запланировано.</li>';
 }
 
+// Mark 2026-11-10: «медиа-отдел: LinkedIn, Telegram и X, переключаюсь по иконке, смотрю и
+// правлю посты». The daily digest in its three versions (news service /media-control/digests).
+const MEDIA_CHANNELS = ['linkedin', 'telegram', 'x'];
+const MEDIA_DIGEST_LIMITS = { telegram: 3500, linkedin: 2900, x: 280 };
+const MEDIA_DIGEST_STATES = {
+  draft: ['ждёт твоего ✅', 'is-accent'], approved: ['одобрен', 'is-info'], queued: ['в Buffer', 'is-info'],
+  scheduled: ['ждёт времени', 'is-info'], sent: ['опубликован', 'is-ok'], cancelled: ['не публикуем', ''],
+  missing: ['версии нет', 'is-warn'], failed: ['ошибка', 'is-bad'], reconcile_required: ['проверить вручную', 'is-warn'],
+};
+let mediaDigests = null;
+let mediaChannel = 'linkedin';
+try { const saved = localStorage.getItem('media-channel'); if (MEDIA_CHANNELS.includes(saved)) mediaChannel = saved; } catch (_) { /* private mode */ }
+
+const MEDIA_LEDES = {
+  linkedin: 'LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.',
+  telegram: 'Telegram: дайджест дня для канала и посты, которые туда уходят.',
+  x: 'X: короткий пост дня от аккаунта студии, по-английски.',
+};
+const MEDIA_REASONS = {
+  no_english_version: 'английская версия не получилась',
+  no_linkedin_version: 'английская версия не получилась',
+  edited_by_owner: 'текст поправлен вручную',
+};
+function mediaShowChannel(channel, focus = false) {
+  if (!MEDIA_CHANNELS.includes(channel)) return;
+  mediaChannel = channel;
+  const lede = document.getElementById('media-lede');
+  if (lede) lede.textContent = MEDIA_LEDES[channel];
+  try { localStorage.setItem('media-channel', channel); } catch (_) { /* private mode */ }
+  for (const name of MEDIA_CHANNELS) {
+    const tab = document.getElementById(`media-tab-${name}`);
+    const on = name === channel;
+    tab.setAttribute('aria-selected', on ? 'true' : 'false');
+    tab.tabIndex = on ? 0 : -1;
+    document.getElementById(`media-view-${name}`).hidden = !on;
+    if (on && focus) tab.focus();
+  }
+}
+
+// X counts most characters as 1 and links as 23; close enough for a live counter.
+function mediaXLength(text) {
+  return [...String(text).replace(/https?:\/\/\S+/g, 'x'.repeat(23))].reduce((n, ch) => n + (ch.codePointAt(0) > 0x10FF ? 2 : 1), 0);
+}
+function mediaDigestCount(channel, text) {
+  return channel === 'x' ? mediaXLength(text) : String(text).length;
+}
+
+function mediaDigestDay(iso) {
+  const when = new Date(iso || '');
+  return Number.isNaN(when.getTime()) ? '' : mediaParis(when, { day: 'numeric', month: 'long' });
+}
+
+function mediaRenderDigests(data) {
+  mediaDigests = data && Array.isArray(data.items) ? data : null;
+  document.getElementById('media-x-connect').hidden = !(mediaDigests && !mediaDigests.x_connected);
+  const note = document.getElementById('media-digest-telegram-note');
+  note.textContent = mediaDigests
+    ? (mediaDigests.digest_enabled
+      ? `Каждый день в ${String(mediaDigests.draft_hour).padStart(2, '0')}:00 бот присылает черновик тебе в Telegram. Здесь его можно поправить и одобрить. Выходит в ${String(mediaDigests.publish_hour).padStart(2, '0')}:00, LinkedIn через 30 минут, X через час.`
+      : 'Ежедневный дайджест пока выключен. Черновик можно попросить командой /channel_digest в боте.')
+    : '';
+  document.getElementById('media-digest-linkedin').hidden = !mediaDigests;
+  for (const channel of MEDIA_CHANNELS) {
+    const list = document.querySelector(`.media-digest-list[data-channel="${channel}"]`);
+    if (!mediaDigests) {
+      list.innerHTML = '<li class="media-digest-empty">Сервис новостей ещё не обновлён: дайджест появится здесь после выката.</li>';
+      continue;
+    }
+    const items = mediaDigests.items.filter(item => item[channel]);
+    list.innerHTML = items.length ? items.slice(0, 5).map((item, i) => mediaDigestHtml(item, channel, i === 0)).join('')
+      : '<li class="media-digest-empty">Дайджестов за неделю пока нет.</li>';
+  }
+}
+
+function mediaDigestCover(item, channel) {
+  const image = item.linkedin?.image_url;
+  if (typeof image === 'string' && /^https:\/\//i.test(image)) {
+    return `<div class="media-digest-cover"><img src="${mediaEsc(image)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>`;
+  }
+  const icon = document.querySelector(`#media-tab-${channel} > span:first-child`);
+  return `<div class="media-digest-cover is-${channel}" aria-hidden="true">${icon ? icon.outerHTML : ''}</div>`;
+}
+
+function mediaDigestHtml(item, channel, today) {
+  const version = item[channel] || {};
+  const [stateLabel, stateKind] = MEDIA_DIGEST_STATES[version.state] || [version.state || '', ''];
+  const text = String(version.text || '');
+  const limit = MEDIA_DIGEST_LIMITS[channel];
+  const count = mediaDigestCount(channel, text);
+  const editable = item.editable && version.state !== 'missing';
+  const preview = text ? `<p class="media-digest-text">${mediaEsc(text)}</p>`
+    : `<p class="media-digest-text is-empty">${mediaEsc(version.reason ? `Версии нет: ${MEDIA_REASONS[version.reason] || 'модель не справилась'}.` : 'Версии нет.')}</p>`;
+  const edit = editable ? `
+    <div class="media-digest-edit" hidden>
+      <label class="media-sr" for="media-digest-${channel}-${mediaEsc(item.id)}">Текст для ${channel}</label>
+      <textarea id="media-digest-${channel}-${mediaEsc(item.id)}" data-digest-text maxlength="${limit * 2}">${mediaEsc(text)}</textarea>
+      <div class="media-digest-editbar"><span class="media-digest-count${count > limit ? ' is-over' : ''}" data-digest-count>${count} / ${limit}</span>
+        <button type="button" class="media-ghost" data-digest-save>Сохранить</button></div>
+    </div>` : '';
+  const actions = item.editable ? `
+      ${editable ? '<button type="button" class="media-ghost" data-digest-edit aria-expanded="false">Изменить</button>' : ''}
+      <button type="button" class="media-ghost" data-digest-decide="no">✖ Не публиковать</button>
+      <button type="button" class="media-primary" data-digest-decide="yes">✅ Одобрить</button>` : '';
+  return `<li class="media-digest${today ? ' is-today' : ''}" data-id="${mediaEsc(item.id)}" data-channel="${channel}">
+    ${mediaDigestCover(item, channel)}
+    <div class="media-digest-main">
+      <div class="media-digest-head"><strong>${mediaEsc(mediaDigestDay(item.telegram?.due_at))}</strong>
+        <span>${mediaEsc(mediaTime(version.due_at))}</span>
+        ${stateLabel ? `<span class="media-chip ${stateKind}">${mediaEsc(stateLabel)}</span>` : ''}</div>
+      ${preview}${edit}
+      ${actions ? `<div class="media-digest-foot"><span class="media-digest-status" role="status" aria-live="polite"></span>${actions}</div>` : ''}
+    </div>
+  </li>`;
+}
+
+async function mediaDigestAction(button) {
+  const card = button.closest('.media-digest');
+  const status = card.querySelector('.media-digest-status');
+  const id = card.dataset.id;
+  const channel = card.dataset.channel;
+  const buttons = card.querySelectorAll('button');
+  buttons.forEach(b => { b.disabled = true; });
+  try {
+    if (button.hasAttribute('data-digest-save')) {
+      const text = card.querySelector('[data-digest-text]').value;
+      if (mediaDigestCount(channel, text) > MEDIA_DIGEST_LIMITS[channel]) throw new Error('Текст длиннее лимита');
+      status.textContent = 'Сохраняю…';
+      await mediaPost('digest-text', { id, channel, text });
+      status.textContent = 'Сохранено';
+    } else {
+      const approve = button.dataset.digestDecide === 'yes';
+      if (approve && card.querySelector('[data-digest-text]')) {
+        // Save what is on screen first: ✅ must publish exactly what the owner sees.
+        const text = card.querySelector('[data-digest-text]').value;
+        if (text.trim() !== String((mediaDigests?.items || []).find(i => i.id === id)?.[channel]?.text || '').trim()) {
+          await mediaPost('digest-text', { id, channel, text });
+        }
+      }
+      status.textContent = approve ? 'Одобряю…' : 'Отменяю…';
+      const result = await mediaPost('digest-decide', { id, approve });
+      status.textContent = result.state === 'scheduled' ? 'Одобрен, выйдет по расписанию'
+        : result.state === 'cancelled' ? 'Не публикуем' : `Уже решено (${result.state})`;
+      setTimeout(mediaLoad, 800);
+    }
+  } catch (error) {
+    status.textContent = error.status === 409 ? 'Дайджест уже одобрен или отменён' : `Не получилось: ${error.message}`;
+  } finally {
+    buttons.forEach(b => { b.disabled = false; });
+  }
+}
+
 function mediaRender(data) {
   const schedule = data.schedule || {};
   mediaSettings = schedule.settings || null;
@@ -11729,6 +12151,7 @@ function mediaRender(data) {
   mediaRenderStats(schedule, data.today);
   mediaRenderComments(data.comments);
   mediaRenderChannel(data.today);
+  mediaRenderDigests(data.digests);
   mediaSavedSlots = [...(schedule.slots || [])];
   mediaSlots = [...mediaSavedSlots];
   mediaRenderSlots();
@@ -12592,6 +13015,46 @@ function mediaInit() {
   document.getElementById('media-comment-form').addEventListener('submit', mediaCommentCreate);
   document.getElementById('media-comments-list').addEventListener('click', mediaCommentAction);
   document.getElementById('media-refresh').addEventListener('click', mediaLoad);
+  const mediaTabs = document.querySelector('.media-channels');
+  mediaTabs.addEventListener('click', event => {
+    const tab = event.target.closest('[data-channel]');
+    if (tab) mediaShowChannel(tab.dataset.channel);
+  });
+  mediaTabs.addEventListener('keydown', event => {
+    const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const next = (MEDIA_CHANNELS.indexOf(mediaChannel) + step + MEDIA_CHANNELS.length) % MEDIA_CHANNELS.length;
+    mediaShowChannel(MEDIA_CHANNELS[next], true);
+  });
+  mediaShowChannel(mediaChannel);
+  document.getElementById('media-body').addEventListener('input', event => {
+    const area = event.target.closest('[data-digest-text]');
+    if (!area) return;
+    const card = area.closest('.media-digest');
+    const counter = card.querySelector('[data-digest-count]');
+    const limit = MEDIA_DIGEST_LIMITS[card.dataset.channel];
+    const count = mediaDigestCount(card.dataset.channel, area.value);
+    counter.textContent = `${count} / ${limit}`;
+    counter.classList.toggle('is-over', count > limit);
+  });
+  document.getElementById('media-body').addEventListener('click', event => {
+    const toggle = event.target.closest('[data-digest-edit]');
+    if (toggle) {
+      const card = toggle.closest('.media-digest');
+      const open = toggle.getAttribute('aria-expanded') !== 'true';
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.textContent = open ? 'Готово' : 'Изменить';
+      card.querySelector('.media-digest-edit').hidden = !open;
+      const preview = card.querySelector('.media-digest-text');
+      if (!open) preview.textContent = card.querySelector('[data-digest-text]').value;
+      preview.hidden = open;
+      if (open) card.querySelector('[data-digest-text]').focus();
+      return;
+    }
+    const button = event.target.closest('[data-digest-save], [data-digest-decide]');
+    if (button) mediaDigestAction(button);
+  });
   document.getElementById('media-add-form').addEventListener('submit', event => {
     event.preventDefault();
     const input = document.getElementById('media-add-time');
@@ -13553,8 +14016,17 @@ function formatInterval(sec) {
   return `раз в ${sec} с`;
 }
 
+// Scheduled jobs stay in the list (Mark 2026-11-10, Docker Guardian): a healthy one between runs reads «Ждёт запуска».
 function visibleRuntimeServices(services) {
-  return (services || []).filter(s => s.cat !== 'scheduled');
+  return services || [];
+}
+
+// A job launchd starts on a schedule (StartInterval): between runs it has no process, and that is normal
+// while the last run ended cleanly. A failed run or a job launchd has not loaded stays a problem.
+function svcWaiting(s) {
+  if (s.status === 'running' || !(s.interval || s.cat === 'scheduled')) return false;
+  if (SVC_NOTES.some(note => note.test(String(s.desc || '')))) return false;
+  return s.exit_code === null || s.exit_code === undefined || s.exit_code === 0;
 }
 
 const SVC_ARCHIVE_STORAGE_KEY = 'command-center.service-archive.v1';
@@ -13635,7 +14107,7 @@ function svcUid(tbodyId, s) {
 }
 
 function svcProblem(s) {
-  if (svcOffOnPurpose(s)) return null;
+  if (svcOffOnPurpose(s) || svcWaiting(s)) return null;
   const desc = String(s.desc || '');
   if (s.status !== 'running') {
     if (/не загружена в launchd/.test(desc)) return {label: 'Не запущена', why: 'macOS не загрузила задачу, она не выполняется'};
@@ -13815,7 +14287,7 @@ function renderSvcRow(s, tbodyId, actionFn, archived) {
   const name = escapeHtml(s.name || s.label || '—');
   const off = svcOffOnPurpose(s);
   const state = problem ? 'bad' : off ? 'off' : 'ok';
-  const stateLabel = problem ? problem.label : off ? 'Выключен' : 'Работает';
+  const stateLabel = problem ? problem.label : off ? 'Выключен' : svcWaiting(s) ? 'Ждёт запуска' : 'Работает';
   const desc = escapeHtml(svcPlainDesc(s));
   const control = IS_PUBLIC_DASHBOARD || !s.label ? '' : (s.status === 'running'
     ? `<button class="svc-btn stop" type="button" onclick="${actionFn}('${s.label}','stop')">Остановить</button>`
@@ -13824,6 +14296,7 @@ function renderSvcRow(s, tbodyId, actionFn, archived) {
     problem ? ['Что не так', problem.why] : null,
     s.port ? ['Порт', `:${s.port}${s.port_ok === false ? ' — не отвечает' : (s.port_ok ? ' — отвечает' : '')}`] : null,
     s.interval ? ['Расписание', formatInterval(s.interval)] : null,
+    svcWaiting(s) ? ['Сейчас', 'работает по расписанию, последний запуск без ошибок'] : null,
     ['Как запущен', s.runtime || '—'],
     s.desc && s.desc !== svcPlainDesc(s) ? ['Описание', s.desc] : null,
     ['launchd', s.label || '—'],
@@ -13960,7 +14433,9 @@ for (const [key, title] of [['mini', 'Mac mini'], ['air', 'MacBook Air'], ['pro'
     const sys = machineSystem[key] || {};
     const free = sys.disk_total_gb ? `${Math.max(0, Math.round(sys.disk_total_gb - sys.disk_used_gb))} GB` : '';
     const swap = typeof sys.swap_used_gb === 'number' && sys.swap_used_gb > 0 ? `${sys.swap_used_gb} GB` : '';
-    return { title, rows: [['Процессор', text('cpu')], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
+    const gbRow = value => typeof value === 'number' ? `${value} GB` : '';
+    const gpu = typeof sys.gpu_percent === 'number' ? `${Math.round(sys.gpu_percent)}%` : '';
+    return { title, rows: [['Процессор', text('cpu')], ['Видеочип', gpu], ['Память видеочипа', gbRow(sys.gpu_memory_gb)], ['Память', text('ram')], ['Свободно памяти', machineMemoryFree[key] || ''], ['Закреплено в памяти (wired)', gbRow(sys.memory_wired_gb)], ['Сжато', gbRow(sys.memory_compressed_gb)], ['Память на диске (swap)', swap], ['Диск', text('disk')], ['Свободно на диске', free], ['Без перезагрузки', String(machineUptime[key] || text('uptime-val')).replace(/\bdays?\b/, 'дн.').replace(/\bhours?\b/, 'ч').replace(/\bmins?\b/, 'мин')]] };
   };
 }
 
@@ -13980,15 +14455,24 @@ function machineHealthItems(sys) {
     ram: { ok: 'ок', warn: 'занята почти вся', bad: 'перегружена', unknown: 'нет данных' },
     disk: { ok: 'ок', warn: 'заполняется', bad: 'почти полон', unknown: 'нет данных' },
     cpu: { ok: 'спокойно', warn: 'нагружен', bad: 'перегружен', unknown: 'нет данных' },
+    gpu: { ok: 'спокойно', warn: 'нагружен', bad: 'перегружен', unknown: 'нет данных' },
   };
   // Mark 2026-10-26 «показывай тут значения»: the numbers sit on the tile next to the word.
   const gb = value => Number(value).toLocaleString('ru-RU', { maximumFractionDigits: value < 100 ? 1 : 0 });
   const amount = (used, total) => typeof used === 'number' && total ? `${gb(used)} из ${gb(total)} ГБ` : '';
-  return [
+  const items = [
     { id: 'ram', label: 'Память', pct: ram, level: level(ram, 80, 90), value: amount(sys.memory_used_gb, sys.memory_total_gb) },
     { id: 'disk', label: 'Диск', pct: disk, level: level(disk, 80, 90), value: amount(sys.disk_used_gb, sys.disk_total_gb) },
     { id: 'cpu', label: 'Процессор', pct: cpu, level: level(cpu, 60, 85), value: cpu === null ? '' : `${cpu}%` },
-  ].map(item => ({ ...item, word: words[item.id][item.level] }));
+  ];
+  // Mark 2026-11-17: local models (Ollama/Qwen) run on the GPU, so the CPU tile alone never showed them.
+  // Only computers whose health API reports the GPU get this tile.
+  if (typeof sys.gpu_percent === 'number') {
+    const gpu = Math.round(sys.gpu_percent);
+    const gpuMemory = typeof sys.gpu_memory_gb === 'number' && sys.gpu_memory_gb >= 0.1 ? ` · ${gb(sys.gpu_memory_gb)} ГБ` : '';
+    items.push({ id: 'gpu', label: 'Видеочип', pct: gpu, level: level(gpu, 60, 85), value: `${gpu}%${gpuMemory}` });
+  }
+  return items.map(item => ({ ...item, word: words[item.id][item.level] }));
 }
 
 function renderMachineHealth(key, sys) {
@@ -14195,60 +14679,78 @@ function machineCareSchedule(text) {
   return `${action}, ${days[day[0].toLowerCase()]} ${String(hour).padStart(2, '0')}:${time[2]}`;
 }
 
+// Mark 2026-11-06 «по логике расположены»: fixed groups in a fixed order, so a row is always in the same place.
+const MACHINE_CARE_GROUPS = [
+  { id: 'now', title: 'Сейчас' },
+  { id: 'protection', title: 'Защита' },
+  { id: 'upkeep', title: 'Обслуживание' },
+];
+
 function machineCareRows(care, now = Date.now()) {
   const rows = [];
-  const unknown = (label, detail = 'нет данных') => ({ label, level: 'unknown', word: 'неизвестно', detail });
+  const unknown = (group, label, detail = 'нет данных') => ({ group, label, level: 'unknown', word: 'неизвестно', detail });
   const plural = (n, one, few, many) => {
     const t = n % 10, h = n % 100;
     return t === 1 && h !== 11 ? one : t >= 2 && t <= 4 && (h < 12 || h > 14) ? few : many;
   };
+  // Сейчас: what the laptop is doing at this moment.
+  const top = Array.isArray(care.top_processes) ? care.top_processes : null;
+  if (!top) rows.push(unknown('now', 'Процессор'));
+  else {
+    const peak = top.length ? top[0].cpu : 0;
+    rows.push({ group: 'now', label: 'Процессор', level: peak >= 90 ? 'warn' : 'ok', word: peak >= 90 ? 'есть тяжёлый' : 'спокойно',
+      detail: top.length ? `больше всех: ${top.map(p => `${p.name} ${p.cpu}%`).join(', ')}` : 'никто не грузит' });
+  }
+  const sw = care.swap;
+  if (!sw || typeof sw.used_gb !== 'number') rows.push(unknown('now', 'Память на диске (swap)'));
+  else rows.push({ group: 'now', label: 'Память на диске (swap)', level: sw.used_gb >= 6 ? 'bad' : sw.used_gb >= 2 ? 'warn' : 'ok',
+    word: sw.used_gb >= 6 ? 'много' : sw.used_gb >= 2 ? 'заметно' : 'мало', detail: `${sw.used_gb.toLocaleString('ru-RU')} из ${Number(sw.total_gb).toLocaleString('ru-RU')} ГБ` });
+  // Защита: what keeps it from hanging and from the network.
   const w = care.watchdog || {};
-  if (w.job == null && w.events_7d == null) rows.push(unknown('Защита от зависаний'));
-  else if (w.job === 'missing') rows.push({ label: 'Защита от зависаний', level: 'bad', word: 'не запущена', detail: 'cpu-watchdog не найден в launchd' });
+  if (w.job == null && w.events_7d == null) rows.push(unknown('protection', 'Защита от зависаний'));
+  else if (w.job === 'missing') rows.push({ group: 'protection', label: 'Защита от зависаний', level: 'bad', word: 'не запущена', detail: 'cpu-watchdog не найден в launchd' });
   else {
     const n = w.events_7d;
     const last = w.last_event_at ? `последний раз ${machineCareWhen(w.last_event_at, now)}${w.last_event ? `: ${w.last_event}` : ''}` : '';
-    const detail = n == null ? 'журнал не читается'
+    // Only a log that was never written means the watchdog has not stepped in; otherwise the history is unknown.
+    const detail = n == null ? (w.log === 'missing' ? 'ни разу не срабатывала' : 'история срабатываний неизвестна')
       : n === 0 ? `за неделю не срабатывала${last ? `; ${last}` : ''}`
-      : `за неделю ${n} ${plural(n, 'запись', 'записи', 'записей')}; ${last}`;
-    rows.push({ label: 'Защита от зависаний', level: n >= 10 ? 'warn' : 'ok', word: 'работает', detail });
+      : `за неделю ${n} ${plural(n, 'раз', 'раза', 'раз')}; ${last}`;
+    rows.push({ group: 'protection', label: 'Защита от зависаний', level: n >= 10 ? 'warn' : 'ok', word: 'работает', detail });
   }
+  const f = care.firewall || {};
+  if (f.enabled == null) rows.push(unknown('protection', 'Файрвол'));
+  else rows.push({ group: 'protection', label: 'Файрвол', level: f.enabled ? 'ok' : 'warn', word: f.enabled ? 'включён' : 'выключен',
+    detail: f.enabled ? 'входящие подключения под контролем' : 'Настройки → Сеть → Файрвол' });
+  // Обслуживание: regular upkeep.
+  const u = care.updates || {};
+  if (!Array.isArray(u.pending)) rows.push(unknown('upkeep', 'Обновления'));
+  else rows.push({ group: 'upkeep', label: 'Обновления', level: u.pending.length ? 'warn' : 'ok', word: u.pending.length ? `ждут: ${u.pending.length}` : 'всё установлено',
+    detail: u.pending.length ? u.pending.slice(0, 3).join(', ') : (u.checked_at ? `проверено ${machineCareWhen(u.checked_at, now)}` : '') });
+  const r = care.restart || {};
+  const bootAt = Date.parse(r.boot_at || '');
+  const boot = Number.isFinite(bootAt) ? `последний запуск ${machineCareWhen(r.boot_at, now)}` : '';
+  // A weekly restart that left the Mac running for more than 8 days did not happen.
+  const missed = r.scheduled && Number.isFinite(bootAt) && now - bootAt > 8 * 86400000;
+  if (r.scheduled == null) rows.push(unknown('upkeep', 'Перезагрузка по расписанию', boot || 'нет данных'));
+  else if (missed) rows.push({ group: 'upkeep', label: 'Перезагрузка по расписанию', level: 'warn', word: 'не сработала',
+    detail: `по плану ${machineCareSchedule(r.schedule).replace(/^перезагрузка, /, '')}, но Mac не перезагружался с ${machineCareWhen(r.boot_at, now)}` });
+  else rows.push({ group: 'upkeep', label: 'Перезагрузка по расписанию', level: r.scheduled ? 'ok' : 'warn', word: r.scheduled ? 'включена' : 'не настроена',
+    detail: [r.scheduled ? machineCareSchedule(r.schedule) : 'расписания нет', boot].filter(Boolean).join('; ') });
   const h = care.hygiene || {};
   const reportAge = h.report_at ? (now - Date.parse(h.report_at)) / 3600000 : null;
-  if (!h.report_at) rows.push({ label: 'Ежедневная проверка, 10:00', level: h.job === 'missing' ? 'bad' : 'warn', word: h.job === 'missing' ? 'не запущена' : 'нет отчёта', detail: 'отчёт ещё не появлялся' });
+  if (!h.report_at) rows.push({ group: 'upkeep', label: 'Ежедневная проверка, 10:00', level: h.job === 'missing' ? 'bad' : 'warn', word: h.job === 'missing' ? 'не запущена' : 'нет отчёта', detail: 'отчёт ещё не появлялся' });
   else {
     const attention = h.attention > 0 ? `; замечаний: ${h.attention}` : '';
+    // The report's first line often just repeats the count («Замечаний: 4»).
+    const headline = h.headline && !/замечани/i.test(h.headline) ? ` — ${h.headline}` : '';
     const stale = reportAge > 36;
-    rows.push({ label: 'Ежедневная проверка, 10:00', level: stale ? 'warn' : (h.attention > 0 ? 'warn' : 'ok'),
+    rows.push({ group: 'upkeep', label: 'Ежедневная проверка, 10:00', level: stale || h.attention > 0 ? 'warn' : 'ok',
       word: stale ? 'отчёт старый' : (h.attention > 0 ? 'есть замечания' : 'всё чисто'),
-      detail: `отчёт ${machineCareWhen(h.report_at, now)}${attention}${h.headline ? ` — ${h.headline}` : ''}` });
+      detail: `отчёт ${machineCareWhen(h.report_at, now)}${attention}${headline}` });
   }
-  const r = care.restart || {};
-  const boot = r.boot_at ? `последний запуск ${machineCareWhen(r.boot_at, now)}` : '';
-  if (r.scheduled == null) rows.push(unknown('Перезагрузка по воскресеньям', boot || 'нет данных'));
-  else rows.push({ label: 'Перезагрузка по воскресеньям', level: r.scheduled ? 'ok' : 'warn', word: r.scheduled ? 'включена' : 'не настроена',
-    detail: [r.scheduled ? machineCareSchedule(r.schedule) : 'pmset не знает о расписании', boot].filter(Boolean).join('; ') });
-  const f = care.firewall || {};
-  if (f.enabled == null) rows.push(unknown('Файрвол'));
-  else rows.push({ label: 'Файрвол', level: f.enabled ? 'ok' : 'warn', word: f.enabled ? 'включён' : 'выключен',
-    detail: f.enabled ? 'входящие подключения под контролем' : 'Настройки → Сеть → Файрвол' });
-  const u = care.updates || {};
-  if (!Array.isArray(u.pending)) rows.push(unknown('Обновления'));
-  else rows.push({ label: 'Обновления', level: u.pending.length ? 'warn' : 'ok', word: u.pending.length ? `ждут: ${u.pending.length}` : 'всё установлено',
-    detail: u.pending.length ? u.pending.slice(0, 3).join(', ') : (u.checked_at ? `проверено ${machineCareWhen(u.checked_at, now)}` : '') });
-  const sw = care.swap;
-  if (!sw || typeof sw.used_gb !== 'number') rows.push(unknown('Память на диске (swap)'));
-  else rows.push({ label: 'Память на диске (swap)', level: sw.used_gb >= 6 ? 'bad' : sw.used_gb >= 2 ? 'warn' : 'ok',
-    word: sw.used_gb >= 6 ? 'много' : sw.used_gb >= 2 ? 'заметно' : 'мало', detail: `${sw.used_gb.toLocaleString('ru-RU')} из ${Number(sw.total_gb).toLocaleString('ru-RU')} ГБ` });
-  const top = Array.isArray(care.top_processes) ? care.top_processes : null;
-  if (!top) rows.push(unknown('Сейчас грузят процессор'));
-  else {
-    const peak = top.length ? top[0].cpu : 0;
-    rows.push({ label: 'Сейчас грузят процессор', level: peak >= 90 ? 'warn' : 'ok', word: peak >= 90 ? 'есть тяжёлый' : 'спокойно',
-      detail: top.length ? top.map(p => `${p.name} ${p.cpu}%`).join(', ') : 'никто' });
-  }
-  if (typeof care.disabled_agents === 'number') rows.push({ label: 'Отключённые фоновые агенты', level: 'ok',
-    word: `${care.disabled_agents}`, detail: care.disabled_agents ? 'убраны при чистке, вернуть можно по README в той же папке' : 'нет' });
+  if (typeof care.disabled_agents === 'number') rows.push({ group: 'upkeep', label: 'Отключённые фоновые агенты', level: 'ok',
+    word: `${care.disabled_agents} шт.`, detail: care.disabled_agents ? 'убраны при чистке, вернуть можно по README в той же папке' : 'нет' });
   return rows;
 }
 
@@ -14279,7 +14781,24 @@ function renderMachineCare(key, care) {
   } else {
     when.textContent = `обновлено ${machineCareWhen(care.generated_at)}`;
   }
-  for (const row of machineCareRows(care)) {
+  const rows = machineCareRows(care);
+  for (const group of MACHINE_CARE_GROUPS) {
+    const groupRows = rows.filter(row => row.group === group.id);
+    if (!groupRows.length) continue;
+    const section = document.createElement('div'); section.className = 'machine-care-group';
+    const head = document.createElement('div'); head.className = 'machine-care-group-head';
+    const title = document.createElement('h4'); title.className = 'machine-care-group-title'; title.textContent = group.title;
+    const issues = groupRows.filter(row => row.level === 'warn' || row.level === 'bad').length;
+    const unknowns = groupRows.filter(row => row.level === 'unknown').length;
+    const summary = document.createElement('span');
+    summary.className = `machine-care-group-sum${issues ? ' has-issues' : unknowns ? ' is-unknown' : ''}`;
+    // An unknown row never counts as «всё в порядке».
+    summary.textContent = issues ? `требует внимания: ${issues}` : unknowns ? `нет данных: ${unknowns}` : 'всё в порядке';
+    head.append(title, summary);
+    const ul = document.createElement('ul'); ul.className = 'machine-care-list';
+    section.append(head, ul);
+    list.append(section);
+    for (const row of groupRows) {
     const item = document.createElement('li');
     item.className = `machine-care-row is-${row.level}`;
     const dot = document.createElement('span'); dot.className = 'machine-care-dot'; dot.setAttribute('aria-hidden', 'true');
@@ -14289,7 +14808,8 @@ function renderMachineCare(key, care) {
     line.append(label, word);
     item.append(dot, line);
     if (row.detail) { const detail = document.createElement('span'); detail.className = 'machine-care-detail'; detail.textContent = row.detail; item.append(detail); }
-    list.append(item);
+    ul.append(item);
+    }
   }
 }
 
@@ -15122,6 +15642,26 @@ const MEDIC_REPAIRS_WORDS = {
   offline: 'Журнал открывается только на сайте.',
 };
 
+// Mark 2026-11-10: three equal medic restarts in a row read as one line «… ×3» with the time of the latest.
+function medicRepairGroups(entries) {
+  const groups = [];
+  for (const entry of entries || []) {
+    const last = groups[groups.length - 1];
+    if (last && last.entry.machine === entry.machine && last.entry.problem === entry.problem && last.entry.fix === entry.fix) {
+      last.count += 1;
+    } else {
+      groups.push({ entry, count: 1 });
+    }
+  }
+  return groups;
+}
+
+function medicTime(at) {
+  const date = at ? new Date(at) : null;
+  return date && !Number.isNaN(date.getTime())
+    ? `, ${date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}` : '';
+}
+
 function medicHistoryNode() {
   const box = document.createElement('section');
   box.className = 'cc-medic-history';
@@ -15136,11 +15676,11 @@ function medicHistoryNode() {
     const p = document.createElement('p'); p.className = 'cc-medic-advice'; p.textContent = 'Пока ничего не записано.'; box.append(p);
   }
   const list = document.createElement('ul');
-  for (const entry of medicRepairs.slice(0, 8)) {
+  for (const { entry, count } of medicRepairGroups(medicRepairs).slice(0, 8)) {
     const li = document.createElement('li');
     const when = document.createElement('span'); when.className = 'cc-medic-when';
-    when.textContent = `${medicDay(entry.date)} · ${MEDIC_MACHINE_NAMES[entry.machine] || entry.machine}`;
-    const what = document.createElement('span'); what.textContent = entry.problem;
+    when.textContent = `${medicDay(entry.date)}${medicTime(entry.at)} · ${MEDIC_MACHINE_NAMES[entry.machine] || entry.machine}`;
+    const what = document.createElement('span'); what.textContent = count > 1 ? `${entry.problem} ×${count}` : entry.problem;
     const fix = document.createElement('span'); fix.className = 'cc-medic-advice'; fix.textContent = `Сделали: ${entry.fix}`;
     li.append(when, what, fix);
     list.append(li);
@@ -20037,628 +20577,6 @@ document.getElementById('docxx-help-toggle').addEventListener('click',()=>{
 });
 window.addEventListener('docxx-lock',ccDocxxClear);
 document.addEventListener('visibilitychange',()=>{ if(ccDocxxVisible()) ccLoadDocxx(); else ccDocxxClear(); });
-
-// ─── Генеалогия (Mark 2026-11-05) ───
-// «Вкладка Geneology… историческая линия с 1800 года, как перемещались люди по всей карте».
-// The family data is private research (living relatives, places, sources): it is read from the
-// owner-only /api/genealogy and never written into this page. The map library loads only when the tab opens.
-const GENEALOGY_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/genealogy`;
-const GEN_LEAFLET_JS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
-const GEN_LEAFLET_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
-const GEN_MIN_YEAR = 1770;
-const GEN_MAX_YEAR = new Date().getFullYear();
-// Family lines (names, colours, root people) come with the private data, not with this page.
-const GEN_OTHER_BRANCH = { key: 'other', name: 'Другие', color: '#8f8a80', roots: [] };
-let GEN_BRANCHES = [GEN_OTHER_BRANCH];
-const GEN_STATUS = { proven: 'Доказано документом', likely: 'Вероятно', hyp: 'Гипотеза', cand: 'Кандидат', none: 'Семейная память' };
-const gen = {
-  state: 'idle', data: null, by: new Map(), places: {}, view: 'map', year: 1900, playing: null,
-  focus: 'max', hidden: new Set(), map: null, layer: null, mapReady: null, selected: null,
-  zoom: 1, panX: 0, panY: 0, treeBox: null, wired: false,
-};
-
-function genEl(tag, cls, text) {
-  const el = document.createElement(tag);
-  if (cls) el.className = cls;
-  if (text != null) el.textContent = text;
-  return el;
-}
-function genSvg(tag, attrs) {
-  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  Object.entries(attrs || {}).forEach(([k, v]) => el.setAttribute(k, v));
-  return el;
-}
-function genYears(p) {
-  const b = p.by || '', d = p.dy || '';
-  if (p.living && b) return `р. ${b}`;
-  if (b && d) return `${b}–${d}`;
-  if (b) return `р. ${b}`;
-  if (d) return `ум. ${d}`;
-  return '';
-}
-function genShortName(p) {
-  return (p.name || '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
-}
-function genBranch(p) { return GEN_BRANCHES.find(b => b.key === p.branch) || GEN_BRANCHES[GEN_BRANCHES.length - 1]; }
-
-// Each person gets a family line (for colour) and a generation relative to Maxim.
-function genPrepare(data) {
-  const lines = Array.isArray(data.branches) ? data.branches.filter(b => b && typeof b.key === 'string' && /^#[0-9a-f]{6}$/i.test(b.color || '')) : [];
-  GEN_BRANCHES = [...lines.map(b => ({ key: b.key, name: String(b.name || b.key), color: b.color, roots: Array.isArray(b.roots) ? b.roots : [] })), GEN_OTHER_BRANCH];
-  gen.by = new Map();
-  gen.places = data.places || {};
-  data.people.forEach(p => { p.children = []; gen.by.set(p.id, p); });
-  data.people.forEach(p => p.parents.forEach(id => gen.by.get(id)?.children.push(p.id)));
-  const rootOf = {};
-  GEN_BRANCHES.forEach(b => b.roots.forEach(r => { rootOf[r] = b.key; }));
-  const memo = {};
-  const branchOf = (id, seen = new Set()) => {
-    if (memo[id]) return memo[id];
-    if (rootOf[id]) return (memo[id] = rootOf[id]);
-    if (seen.has(id)) return null;
-    seen.add(id);
-    const p = gen.by.get(id);
-    if (!p) return null;
-    const ordered = p.parents.slice().sort((a, b) => (gen.by.get(a)?.sex === 'M' ? -1 : 1) - (gen.by.get(b)?.sex === 'M' ? -1 : 1));
-    for (const par of ordered) { const b = branchOf(par, seen); if (b) return (memo[id] = b); }
-    return null;
-  };
-  data.people.forEach(p => { p.branch = branchOf(p.id); });
-  data.people.forEach(p => {
-    if (!p.branch) {
-      const sp = p.spouses.map(id => gen.by.get(id)).find(s => s && s.branch);
-      p.branch = sp ? sp.branch : 'other';
-    }
-  });
-  const start = gen.by.has('max') ? 'max' : data.people[0]?.id;
-  const queue = start ? [[start, 0]] : [];
-  const seen = new Set();
-  while (queue.length) {
-    const [id, g] = queue.shift();
-    if (seen.has(id)) continue;
-    seen.add(id);
-    const p = gen.by.get(id);
-    p.gen = g;
-    p.parents.forEach(x => queue.push([x, g - 1]));
-    p.children.forEach(x => queue.push([x, g + 1]));
-    p.spouses.forEach(x => queue.push([x, g]));
-  }
-  data.people.forEach(p => {
-    const years = p.stops.map(s => s.y).filter(Boolean);
-    p.start = p.by || (years.length ? Math.min(...years) : null);
-    const last = years.length ? Math.max(...years) : p.start;
-    p.end = p.dy || (p.living ? GEN_MAX_YEAR : (last ? Math.min(last + 25, (p.by || last) + 85, GEN_MAX_YEAR) : null));
-  });
-  gen.focus = start;
-}
-
-async function genLoad() {
-  genWire();
-  if (gen.state === 'ready' || gen.state === 'loading') { genRender(); return; }
-  const side = document.getElementById('gen-side');
-  if (!GENEALOGY_API) { genShowState('Дерево открывается только на сайте командного центра.'); return; }
-  gen.state = 'loading';
-  try {
-    const response = await fetch(GENEALOGY_API, { headers: mmHeaders(), cache: 'no-store', credentials: 'same-origin' });
-    const payload = await response.json().catch(() => ({}));
-    if (response.status === 401) { gen.state = 'idle'; genShowState('Генеалогия видна только тебе после входа.'); return; }
-    if (response.status === 404) { gen.state = 'idle'; genShowState('Файл с деревом ещё не положен на Mac mini.'); return; }
-    if (!response.ok || payload.state !== 'ready' || !Array.isArray(payload.people)) throw new Error('bad');
-    gen.data = payload;
-    genPrepare(payload);
-    gen.state = 'ready';
-    if (side) side.replaceChildren(genEl('p', 'gen-muted', 'Выбери человека на карте, в дереве или в списке.'));
-    genRender();
-  } catch (_) {
-    gen.state = 'idle';
-    genShowState('Mac mini сейчас не отвечает. Попробуй позже.');
-  }
-}
-
-function genShowState(text) {
-  const msg = document.getElementById('gen-map-msg');
-  if (msg) { msg.hidden = false; msg.textContent = text; }
-  const stats = document.getElementById('gen-stats');
-  stats?.replaceChildren();
-  const body = document.getElementById('gen-list-body');
-  if (body) { body.replaceChildren(); const tr = genEl('tr'); const td = genEl('td', 'gen-empty', text); td.colSpan = 4; tr.appendChild(td); body.appendChild(tr); }
-}
-
-function genWire() {
-  if (gen.wired) return;
-  gen.wired = true;
-  document.querySelectorAll('[data-gen-view]').forEach(btn => btn.addEventListener('click', () => genSetView(btn.dataset.genView)));
-  const range = document.getElementById('gen-range');
-  range.max = String(GEN_MAX_YEAR);
-  range.addEventListener('input', () => { genStop(); genSetYear(Number(range.value)); });
-  document.getElementById('gen-play').addEventListener('click', () => (gen.playing ? genStop() : genPlay()));
-  document.getElementById('gen-tree-home').addEventListener('click', () => genFocus(gen.by.has('max') ? 'max' : gen.focus, true));
-  const search = document.getElementById('gen-tree-search');
-  search.addEventListener('change', () => {
-    const q = search.value.trim().toLowerCase();
-    const hit = gen.data?.people.find(p => p.name.toLowerCase() === q) || gen.data?.people.find(p => p.name.toLowerCase().includes(q));
-    if (hit) { genFocus(hit.id, true); search.value = ''; }
-  });
-  document.getElementById('gen-list-search').addEventListener('input', genRenderList);
-  document.querySelectorAll('[data-gen-zoom]').forEach(btn => btn.addEventListener('click', () => {
-    const f = Number(btn.dataset.genZoom);
-    if (!f) { gen.zoom = 1; gen.panX = 0; gen.panY = 0; } else gen.zoom = Math.max(0.3, Math.min(3, gen.zoom * f));
-    genApplyTreeTransform();
-  }));
-  const tree = document.getElementById('gen-tree');
-  let drag = null;
-  tree.addEventListener('pointerdown', e => { if (e.target.closest('.gen-node, button')) return; drag = { x: e.clientX, y: e.clientY, px: gen.panX, py: gen.panY }; tree.setPointerCapture(e.pointerId); });
-  tree.addEventListener('pointermove', e => { if (!drag) return; gen.panX = drag.px + (e.clientX - drag.x); gen.panY = drag.py + (e.clientY - drag.y); genApplyTreeTransform(); });
-  tree.addEventListener('pointerup', () => { drag = null; });
-  tree.addEventListener('wheel', e => { e.preventDefault(); gen.zoom = Math.max(0.3, Math.min(3, gen.zoom * (e.deltaY < 0 ? 1.1 : 0.9))); genApplyTreeTransform(); }, { passive: false });
-}
-
-function genSetView(view) {
-  gen.view = view;
-  document.querySelectorAll('[data-gen-view]').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.genView === view)));
-  document.querySelectorAll('[data-gen-pane]').forEach(pane => { pane.hidden = pane.dataset.genPane !== view; });
-  if (view !== 'map') genStop();
-  genRender();
-}
-
-function genRender() {
-  if (gen.state !== 'ready') return;
-  genRenderStats();
-  if (gen.view === 'map') genRenderMap();
-  if (gen.view === 'tree') genRenderTree();
-  if (gen.view === 'list') genRenderList();
-}
-
-function genRenderStats() {
-  const people = gen.data.people;
-  const gens = people.map(p => p.gen).filter(g => Number.isFinite(g));
-  const starts = people.map(p => p.start).filter(Boolean);
-  const placesUsed = new Set(people.flatMap(p => p.stops.map(s => s.p)));
-  const items = [
-    [people.length, 'человек'],
-    [gens.length ? Math.max(...gens) - Math.min(...gens) + 1 : '—', 'поколений'],
-    [placesUsed.size, 'мест на карте'],
-    [starts.length ? `${Math.min(...starts)}–${GEN_MAX_YEAR}` : '—', 'годы'],
-  ];
-  const host = document.getElementById('gen-stats');
-  host.replaceChildren(...items.map(([v, l]) => { const li = genEl('li'); li.appendChild(genEl('strong', '', String(v))); li.appendChild(document.createTextNode(l)); return li; }));
-  const names = document.getElementById('gen-names');
-  if (names && !names.children.length) names.replaceChildren(...people.map(p => { const o = genEl('option'); o.value = p.name; return o; }));
-}
-
-// ── Map ──
-function genLoadLeaflet() {
-  if (window.L) return Promise.resolve(window.L);
-  if (gen.mapReady) return gen.mapReady;
-  gen.mapReady = new Promise((resolve, reject) => {
-    const css = document.createElement('link');
-    css.rel = 'stylesheet'; css.href = GEN_LEAFLET_CSS;
-    document.head.appendChild(css);
-    const js = document.createElement('script');
-    js.src = GEN_LEAFLET_JS; js.async = true;
-    js.onload = () => (window.L ? resolve(window.L) : reject(new Error('no L')));
-    js.onerror = () => reject(new Error('leaflet'));
-    document.head.appendChild(js);
-  }).catch(err => { gen.mapReady = null; throw err; });
-  return gen.mapReady;
-}
-async function genRenderMap() {
-  genRenderChips();
-  genRenderHist();
-  const msg = document.getElementById('gen-map-msg');
-  if (!gen.map) {
-    try {
-      const L = await genLoadLeaflet();
-      if (gen.map) { genDrawYear(); return; }
-      msg.hidden = true;
-      gen.map = L.map('gen-map', { zoomControl: true, worldCopyJump: true, attributionControl: true }).setView([53.5, 38], 5);
-      // OpenStreetMap's own tiles: no key, attribution required. Dark theme dims them with a CSS filter.
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 12, attribution: '&copy; OpenStreetMap',
-      }).addTo(gen.map);
-      gen.layer = L.layerGroup().addTo(gen.map);
-    } catch (_) {
-      msg.hidden = false;
-      msg.textContent = 'Карта не загрузилась (нет связи с картографическим сервером). Дерево и список работают.';
-      return;
-    }
-  }
-  setTimeout(() => gen.map && gen.map.invalidateSize(), 0);
-  genDrawYear();
-}
-
-function genRenderChips() {
-  const host = document.getElementById('gen-chips');
-  if (host.children.length) return;
-  const present = new Set(gen.data.people.map(p => p.branch));
-  GEN_BRANCHES.filter(b => present.has(b.key)).forEach(b => {
-    const btn = genEl('button', 'gen-chip');
-    btn.type = 'button';
-    btn.style.setProperty('--c', b.color);
-    btn.setAttribute('aria-pressed', 'true');
-    btn.appendChild(genEl('i'));
-    btn.appendChild(document.createTextNode(b.name));
-    btn.addEventListener('click', () => {
-      if (gen.hidden.has(b.key)) gen.hidden.delete(b.key); else gen.hidden.add(b.key);
-      btn.setAttribute('aria-pressed', String(!gen.hidden.has(b.key)));
-      genDrawYear();
-    });
-    host.appendChild(btn);
-  });
-}
-
-function genRenderHist() {
-  const host = document.getElementById('gen-hist');
-  const decades = [];
-  for (let y = Math.floor(GEN_MIN_YEAR / 10) * 10; y <= GEN_MAX_YEAR; y += 10) decades.push(y);
-  const counts = decades.map(d => gen.data.people.filter(p => p.by && p.by >= d && p.by < d + 10).length);
-  const max = Math.max(1, ...counts);
-  host.replaceChildren(...decades.map((d, i) => {
-    const s = genEl('span');
-    s.dataset.decade = d;
-    s.style.height = `${Math.max(4, (counts[i] / max) * 100)}%`;
-    s.title = `${d}-е: ${counts[i]} рождений`;
-    return s;
-  }));
-}
-
-// Where a person is in a given year: the latest stop at or before it, or nowhere if not yet born / gone.
-function genStopAt(p, year) {
-  if (!p.start || p.start > year || (p.end && p.end < year)) return null;
-  let at = null;
-  for (const s of p.stops) {
-    const y = s.y || (s.k === 'birth' ? p.start : null);
-    if (y && y <= year) at = { ...s, y };
-  }
-  return at;
-}
-
-function genSetYear(year) {
-  gen.year = Math.max(GEN_MIN_YEAR, Math.min(GEN_MAX_YEAR, year));
-  document.getElementById('gen-year').textContent = String(gen.year);
-  document.getElementById('gen-range').value = String(gen.year);
-  genDrawYear();
-}
-
-function genDrawYear() {
-  if (gen.state !== 'ready') return;
-  const year = gen.year;
-  const decade = Math.floor(year / 10) * 10;
-  document.querySelectorAll('#gen-hist span').forEach(s => {
-    const d = Number(s.dataset.decade);
-    s.classList.toggle('now', d === decade);
-    s.classList.toggle('on', d < decade);
-  });
-  const people = gen.data.people.filter(p => !gen.hidden.has(p.branch));
-  const here = new Map();
-  let alive = 0;
-  const moves = [];
-  people.forEach(p => {
-    const at = genStopAt(p, year);
-    if (!at) return;
-    alive += 1;
-    if (!here.has(at.p)) here.set(at.p, []);
-    here.get(at.p).push({ p, at });
-    const path = p.stops.filter(s => (s.y || p.start) <= year);
-    if (path.length > 1) moves.push({ p, path });
-  });
-  document.getElementById('gen-time-summary').textContent = alive
-    ? `${year}: ${alive} ${genPlural(alive, 'человек', 'человека', 'человек')} в ${here.size} ${genPlural(here.size, 'месте', 'местах', 'местах')}`
-    : `${year}: в дереве ещё никого нет`;
-  if (!gen.map || !window.L) return;
-  const L = window.L;
-  gen.layer.clearLayers();
-  moves.forEach(({ p, path }) => {
-    const pts = path.map(s => gen.places[s.p]).filter(Boolean).map(pl => [pl.lat, pl.lon]);
-    const uniq = pts.filter((pt, i) => i === 0 || pt[0] !== pts[i - 1][0] || pt[1] !== pts[i - 1][1]);
-    if (uniq.length < 2) return;
-    const color = genBranch(p).color;
-    const lastMove = path[path.length - 1];
-    const fresh = (lastMove.y || 0) >= year - 5;
-    L.polyline(uniq, { color, weight: 2, opacity: 0.45, className: 'gen-trail' }).addTo(gen.layer);
-    if (fresh) L.polyline(uniq.slice(-2), { color, weight: 3.5, opacity: 0.95, className: 'gen-trail gen-trail-new' }).addTo(gen.layer);
-  });
-  here.forEach((list, key) => {
-    const pl = gen.places[key];
-    if (!pl) return;
-    const counts = {};
-    list.forEach(({ p }) => { counts[p.branch] = (counts[p.branch] || 0) + 1; });
-    const main = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
-    const color = (GEN_BRANCHES.find(b => b.key === main) || GEN_BRANCHES[0]).color;
-    const marker = L.circleMarker([pl.lat, pl.lon], {
-      radius: Math.min(26, 6 + Math.sqrt(list.length) * 4), color, weight: 2, fillColor: color, fillOpacity: 0.55,
-    }).addTo(gen.layer);
-    const pop = genEl('div', 'gen-place-pop');
-    pop.appendChild(genEl('strong', '', `${pl.name}${pl.approx ? ' (примерно)' : ''} · ${year}`));
-    const ul = genEl('ul');
-    list.sort((a, b) => (a.p.by || 0) - (b.p.by || 0)).forEach(({ p, at }) => {
-      const li = genEl('li');
-      const btn = genEl('button', 'gen-link', genShortName(p));
-      btn.type = 'button';
-      btn.addEventListener('click', () => genSelect(p.id));
-      li.appendChild(btn);
-      li.appendChild(document.createTextNode(` — ${at.t}${at.y ? `, ${at.y}` : ''}`));
-      ul.appendChild(li);
-    });
-    pop.appendChild(ul);
-    marker.bindPopup(pop);
-    marker.bindTooltip(`${pl.name}: ${list.length}`);
-  });
-  if (gen.selected) genHighlightOnMap(gen.selected);
-}
-
-function genHighlightOnMap(id) {
-  const p = gen.by.get(id);
-  if (!p || !gen.map || !window.L) return;
-  const pts = p.stops.map(s => gen.places[s.p]).filter(Boolean).map(pl => [pl.lat, pl.lon]);
-  if (!pts.length) return;
-  window.L.polyline(pts, { color: genBranch(p).color, weight: 5, opacity: 1 }).addTo(gen.layer);
-  pts.forEach(pt => window.L.circleMarker(pt, { radius: 5, color: '#fff', weight: 2, fillColor: genBranch(p).color, fillOpacity: 1 }).addTo(gen.layer));
-}
-
-function genPlural(n, one, few, many) {
-  const m10 = n % 10, m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
-  return many;
-}
-
-function genPlay() {
-  if (gen.year >= GEN_MAX_YEAR) genSetYear(GEN_MIN_YEAR);
-  const btn = document.getElementById('gen-play');
-  btn.textContent = '❚❚';
-  btn.setAttribute('aria-label', 'Пауза');
-  const step = () => {
-    if (gen.year >= GEN_MAX_YEAR) { genStop(); return; }
-    genSetYear(gen.year + 1);
-    gen.playing = setTimeout(step, Number(document.getElementById('gen-speed').value) || 220);
-  };
-  gen.playing = setTimeout(step, 10);
-}
-function genStop() {
-  if (gen.playing) clearTimeout(gen.playing);
-  gen.playing = null;
-  const btn = document.getElementById('gen-play');
-  if (btn) { btn.textContent = '▶'; btn.setAttribute('aria-label', 'Проиграть историю'); }
-}
-
-// ── Person card ──
-function genSelect(id) {
-  const p = gen.by.get(id);
-  if (!p) return;
-  gen.selected = id;
-  const side = document.getElementById('gen-side');
-  const box = document.createDocumentFragment();
-  const bar = genEl('p', 'gen-muted');
-  bar.style.color = genBranch(p).color;
-  bar.textContent = genBranch(p).name;
-  box.appendChild(bar);
-  box.appendChild(genEl('h3', '', p.name));
-  const meta = genEl('p');
-  const badge = genEl('span', 'gen-badge', GEN_STATUS[p.status] || 'Без статуса');
-  badge.dataset.s = p.status || '';
-  meta.appendChild(badge);
-  if (p.living) meta.appendChild(genEl('span', 'gen-badge', 'жив(а)'));
-  box.appendChild(meta);
-  if (p.role) box.appendChild(genEl('p', 'gen-muted', p.role));
-  const facts = genEl('ul');
-  const line = (label, part) => {
-    if (!part || (!part.date && !part.place)) return;
-    facts.appendChild(genEl('li', '', `${label}: ${[part.date, part.place].filter(Boolean).join(', ')}${part.note ? ` (${part.note})` : ''}`));
-  };
-  line('Рождение', p.birth);
-  if (!p.living) line('Смерть', p.death);
-  if (p.burial) facts.appendChild(genEl('li', '', `Похоронен(а): ${p.burial}`));
-  if (facts.children.length) box.appendChild(facts);
-  const rel = (title, ids) => {
-    const list = ids.map(x => gen.by.get(x)).filter(Boolean);
-    if (!list.length) return;
-    box.appendChild(genEl('h4', '', title));
-    const wrap = genEl('p');
-    list.forEach((q, i) => {
-      const b = genEl('button', 'gen-link', genShortName(q));
-      b.type = 'button';
-      b.addEventListener('click', () => { if (gen.view === 'tree') genFocus(q.id, true); else genSelect(q.id); });
-      wrap.appendChild(b);
-      if (i < list.length - 1) wrap.appendChild(document.createTextNode(', '));
-    });
-    box.appendChild(wrap);
-  };
-  rel('Родители', p.parents);
-  rel('Супруги', p.spouses);
-  rel('Дети', p.children);
-  if (p.stops.length) {
-    box.appendChild(genEl('h4', '', 'Путь по карте'));
-    const ul = genEl('ul');
-    p.stops.forEach(s => ul.appendChild(genEl('li', '', `${s.y || '?'} — ${gen.places[s.p]?.name || s.p}: ${s.t}`)));
-    box.appendChild(ul);
-    const show = genEl('button', 'gen-view-btn', 'Показать путь на карте');
-    show.type = 'button';
-    show.style.marginTop = '8px';
-    show.addEventListener('click', () => {
-      genSetView('map');
-      const target = p.stops.find(s => s.y)?.y || p.start || gen.year;
-      genSetYear(Math.min(GEN_MAX_YEAR, Math.max(target, p.stops[p.stops.length - 1]?.y || target)));
-    });
-    box.appendChild(show);
-  }
-  if (p.story?.length) { box.appendChild(genEl('h4', '', 'История')); p.story.forEach(t => box.appendChild(genEl('p', '', t))); }
-  if (p.events?.length) {
-    box.appendChild(genEl('h4', '', 'События'));
-    const ul = genEl('ul');
-    p.events.forEach(e => ul.appendChild(genEl('li', '', `${e[0] ? `${e[0]} — ` : ''}${e[1]}`)));
-    box.appendChild(ul);
-  }
-  if (p.open?.length) {
-    box.appendChild(genEl('h4', '', 'Что ещё не известно'));
-    const ul = genEl('ul');
-    p.open.forEach(t => ul.appendChild(genEl('li', '', t)));
-    box.appendChild(ul);
-  }
-  if (p.sources?.length) {
-    box.appendChild(genEl('h4', '', 'Источники'));
-    const ul = genEl('ul');
-    p.sources.forEach(s => {
-      const li = genEl('li');
-      if (s.url && /^https:\/\//.test(s.url)) {
-        const a = genEl('a', '', s.label || s.url);
-        a.href = s.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-        li.appendChild(a);
-      } else li.textContent = s.label;
-      ul.appendChild(li);
-    });
-    box.appendChild(ul);
-  }
-  side.replaceChildren(box);
-  if (gen.view === 'map') genDrawYear();
-}
-
-// ── Tree: the chosen person with grandparents, parents, siblings, spouses, children, grandchildren ──
-function genFocus(id, select) {
-  if (!gen.by.has(id)) return;
-  gen.focus = id;
-  gen.zoom = 1; gen.panX = 0; gen.panY = 0;
-  if (gen.view !== 'tree') genSetView('tree'); else genRenderTree();
-  if (select) genSelect(id);
-}
-
-function genPathToMax(id) {
-  if (!gen.by.has('max') || id === 'max') return [];
-  const prev = new Map([[id, null]]);
-  const queue = [id];
-  while (queue.length) {
-    const cur = queue.shift();
-    if (cur === 'max') break;
-    const p = gen.by.get(cur);
-    [...p.parents, ...p.children, ...p.spouses].forEach(n => { if (!prev.has(n)) { prev.set(n, cur); queue.push(n); } });
-  }
-  if (!prev.has('max')) return [];
-  const path = [];
-  for (let at = 'max'; at; at = prev.get(at)) path.push(at);
-  return path.reverse();
-}
-
-function genRenderTree() {
-  const svg = document.getElementById('gen-tree-svg');
-  const p = gen.by.get(gen.focus);
-  if (!p) return;
-  const W = 156, H = 50, GX = 16, GY = 64;
-  const uniq = arr => [...new Set(arr)].filter(id => gen.by.has(id));
-  const parents = uniq(p.parents);
-  const grand = uniq(parents.flatMap(x => gen.by.get(x).parents));
-  const siblings = uniq(parents.flatMap(x => gen.by.get(x).children)).filter(x => x !== p.id);
-  const spouses = uniq(p.spouses);
-  const children = uniq(p.children);
-  const grandkids = uniq(children.flatMap(x => gen.by.get(x).children));
-  const rows = [
-    { label: 'Бабушки и дедушки', ids: grand },
-    { label: 'Родители', ids: parents },
-    { label: '', ids: [...siblings.slice(0, Math.ceil(siblings.length / 2)), p.id, ...spouses, ...siblings.slice(Math.ceil(siblings.length / 2))] },
-    { label: 'Дети', ids: children },
-    { label: 'Внуки', ids: grandkids },
-  ].filter(r => r.ids.length);
-  const pos = new Map();
-  const widest = Math.max(...rows.map(r => r.ids.length)) * (W + GX);
-  rows.forEach((r, ri) => {
-    const rowW = r.ids.length * (W + GX) - GX;
-    const x0 = (widest - rowW) / 2;
-    r.ids.forEach((id, i) => pos.set(id, { x: x0 + i * (W + GX), y: 30 + ri * (H + GY) }));
-  });
-  const totalW = Math.max(widest, W + GX), totalH = 30 + rows.length * (H + GY);
-  svg.replaceChildren();
-  const g = genSvg('g', { id: 'gen-tree-g' });
-  svg.appendChild(g);
-  rows.forEach((r, ri) => { if (r.label) { const t = genSvg('text', { x: 0, y: 22 + ri * (H + GY), class: 'gen-row-label' }); t.textContent = r.label; g.appendChild(t); } });
-  const edge = (a, b, cls) => {
-    const pa = pos.get(a), pb = pos.get(b);
-    if (!pa || !pb) return;
-    const x1 = pa.x + W / 2, y1 = pa.y + H, x2 = pb.x + W / 2, y2 = pb.y;
-    const mid = (y1 + y2) / 2;
-    g.appendChild(genSvg('path', { d: `M${x1},${y1} V${mid} H${x2} V${y2}`, class: `gen-edge ${cls || ''}` }));
-  };
-  pos.forEach((_, id) => {
-    const q = gen.by.get(id);
-    q.parents.forEach(par => { if (pos.has(par) && pos.get(par).y < pos.get(id).y) edge(par, id); });
-  });
-  spouses.forEach(s => {
-    const a = pos.get(p.id), b = pos.get(s);
-    if (!a || !b) return;
-    const x1 = Math.min(a.x, b.x) + W, x2 = Math.max(a.x, b.x);
-    g.appendChild(genSvg('path', { d: `M${x1},${a.y + H / 2} H${x2}`, class: 'gen-edge is-spouse' }));
-  });
-  pos.forEach(({ x, y }, id) => {
-    const q = gen.by.get(id);
-    const node = genSvg('g', { class: `gen-node${id === p.id ? ' is-focus' : ''}${['hyp', 'cand'].includes(q.status) ? ' is-uncertain' : ''}`, transform: `translate(${x},${y})`, tabindex: 0, role: 'button', 'aria-label': `${q.name} ${genYears(q)}` });
-    node.appendChild(genSvg('rect', { class: 'gen-node-box', width: W, height: H, rx: 10 }));
-    node.appendChild(genSvg('rect', { class: 'gen-node-bar', width: 5, height: H - 12, x: 6, y: 6, rx: 2.5, fill: genBranch(q).color }));
-    const name = genShortName(q);
-    const parts = name.split(' ');
-    const l1 = genSvg('text', { x: 18, y: 20 });
-    l1.textContent = parts.slice(0, 2).join(' ').slice(0, 22);
-    const l2 = genSvg('text', { x: 18, y: 38, class: 'gen-node-sub' });
-    l2.textContent = [parts.slice(2).join(' ').slice(0, 14), genYears(q)].filter(Boolean).join(' · ');
-    node.appendChild(l1); node.appendChild(l2);
-    const title = genSvg('title'); title.textContent = q.name; node.appendChild(title);
-    const go = () => (id === p.id ? genSelect(id) : genFocus(id, true));
-    node.addEventListener('click', go);
-    node.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
-    g.appendChild(node);
-  });
-  gen.treeBox = { w: totalW, h: totalH, fx: pos.get(p.id).x + W / 2 };
-  genApplyTreeTransform();
-  const path = genPathToMax(p.id);
-  const host = document.getElementById('gen-path');
-  host.replaceChildren();
-  if (path.length > 1) {
-    host.appendChild(document.createTextNode('Путь до Максима: '));
-    path.forEach((id, i) => {
-      const b = genEl('button', 'gen-link', genShortName(gen.by.get(id)).split(' ').slice(0, 2).join(' '));
-      b.type = 'button';
-      b.addEventListener('click', () => genFocus(id, true));
-      host.appendChild(b);
-      if (i < path.length - 1) host.appendChild(document.createTextNode(' → '));
-    });
-  } else host.textContent = p.id === 'max' ? 'Это Максим. Нажми на любого родственника, чтобы сделать его центром.' : '';
-}
-
-function genApplyTreeTransform() {
-  const svg = document.getElementById('gen-tree-svg');
-  const g = document.getElementById('gen-tree-g');
-  if (!svg || !g || !gen.treeBox) return;
-  const rect = svg.getBoundingClientRect();
-  // Fit the whole family when it is small; a wide family stays readable and centres on the chosen person.
-  const fit = Math.min(1.2, (rect.width - 20) / gen.treeBox.w, (rect.height - 20) / gen.treeBox.h) || 1;
-  const s = Math.max(0.75, fit) * gen.zoom;
-  const wide = gen.treeBox.w * s > rect.width - 20;
-  const x = (wide ? rect.width / 2 - gen.treeBox.fx * s : (rect.width - gen.treeBox.w * s) / 2) + gen.panX;
-  const y = Math.max(10, (rect.height - gen.treeBox.h * s) / 2) + gen.panY;
-  g.setAttribute('transform', `translate(${x},${y}) scale(${s})`);
-}
-
-// ── List ──
-function genRenderList() {
-  if (gen.state !== 'ready') return;
-  const q = document.getElementById('gen-list-search').value.trim().toLowerCase();
-  const body = document.getElementById('gen-list-body');
-  const rows = gen.data.people
-    .filter(p => !q || [p.name, genYears(p), ...p.stops.map(s => gen.places[s.p]?.name || '')].join(' ').toLowerCase().includes(q))
-    .sort((a, b) => (a.gen ?? 99) - (b.gen ?? 99) || (a.by || 3000) - (b.by || 3000));
-  body.replaceChildren(...rows.map(p => {
-    const tr = genEl('tr');
-    const td1 = genEl('td');
-    const i = genEl('i'); i.style.setProperty('--c', genBranch(p).color); td1.appendChild(i);
-    const b = genEl('button', 'gen-link', p.name); b.type = 'button';
-    b.addEventListener('click', () => genSelect(p.id));
-    td1.appendChild(b);
-    tr.appendChild(td1);
-    tr.appendChild(genEl('td', '', genYears(p) || '—'));
-    tr.appendChild(genEl('td', '', [...new Set(p.stops.map(s => gen.places[s.p]?.name).filter(Boolean))].join(' → ') || '—'));
-    tr.appendChild(genEl('td', '', GEN_STATUS[p.status] || '—'));
-    return tr;
-  }));
-  if (!rows.length) { const tr = genEl('tr'); const td = genEl('td', 'gen-empty', 'Никого не нашёл.'); td.colSpan = 4; tr.appendChild(td); body.appendChild(tr); }
-}
-window.addEventListener('resize', () => { if (gen.view === 'tree') genApplyTreeTransform(); });
 
 </script>
 <script>

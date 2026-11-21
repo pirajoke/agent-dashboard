@@ -37,6 +37,15 @@ class CollectorTests(unittest.TestCase):
         self.assertIn("Plaud", status["last_event"])
         self.assertNotIn("/Users/mark", status["last_event"])
 
+    def test_watchdog_log_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(collector.log_state(Path(tmp) / "none.log"), "missing")
+            (Path(tmp) / "w.log").write_text("")
+            self.assertIsNone(collector.log_state(Path(tmp) / "w.log"))
+        self.assertEqual(collector.watchdog_status(None, {}, NOW, "missing")["log"], "missing")
+        self.assertEqual(collector.watchdog_status(None, {}, NOW)["log"], "unreadable")
+        self.assertEqual(collector.watchdog_status("", {}, NOW)["log"], "ok")
+
     def test_unreadable_sources_stay_unknown(self):
         self.assertEqual(collector.watchdog_status(None, None, NOW)["events_7d"], None)
         self.assertEqual(collector.watchdog_status(None, None, NOW)["job"], None)
@@ -220,10 +229,11 @@ class CareRowsTests(unittest.TestCase):
             js_function(source, "machineCareWhen"),
             js_function(source, "machineCareSchedule"),
             js_function(source, "machineCareRows"),
-            f"console.log(JSON.stringify(machineCareRows({json.dumps(care)}, {now}).map(r => [r.label, r.level, r.word])));",
+            f"console.log(JSON.stringify(machineCareRows({json.dumps(care)}, {now}).map(r => [r.label, r.level, r.word, r.group, r.detail])));",
         ])
         out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout
-        return json.loads(out)
+        self.full = json.loads(out)
+        return [row[:3] for row in self.full]
 
     def test_looked_after_macbook_reads_green(self):
         rows = self.rows({
@@ -287,8 +297,49 @@ class CareRowsTests(unittest.TestCase):
         self.assertEqual(rows["Файрвол"], ("warn", "выключен"))
         self.assertEqual(rows["Обновления"], ("warn", "ждут: 1"))
         self.assertEqual(rows["Память на диске (swap)"], ("bad", "много"))
-        self.assertEqual(rows["Сейчас грузят процессор"], ("warn", "есть тяжёлый"))
-        self.assertEqual(rows["Перезагрузка по воскресеньям"][0], "unknown")
+        self.assertEqual(rows["Процессор"], ("warn", "есть тяжёлый"))
+        self.assertEqual(rows["Перезагрузка по расписанию"][0], "unknown")
+
+    def test_rows_come_in_fixed_groups(self):
+        # Mark 2026-11-06 «по логике расположены»: now → protection → upkeep, always in this order.
+        self.rows({"swap": {"used_gb": 1, "total_gb": 2}, "top_processes": [], "firewall": {"enabled": True},
+                   "watchdog": {"job": "loaded"}, "updates": {"pending": []}, "restart": {"scheduled": True},
+                   "hygiene": {"report_at": "2026-11-02T09:00:00Z"}, "disabled_agents": 3})
+        self.assertEqual([(row[3], row[0]) for row in self.full], [
+            ("now", "Процессор"), ("now", "Память на диске (swap)"),
+            ("protection", "Защита от зависаний"), ("protection", "Файрвол"),
+            ("upkeep", "Обновления"), ("upkeep", "Перезагрузка по расписанию"),
+            ("upkeep", "Ежедневная проверка, 10:00"), ("upkeep", "Отключённые фоновые агенты")])
+
+    def test_real_macbook_2026_11_06(self):
+        # What Mark saw: no watchdog log yet, a report whose first line repeats the count,
+        # and a Sunday restart that has not happened since 15 Oct.
+        rows = {row[0]: row for row in self.full_rows({
+            "watchdog": {"job": "loaded", "events_7d": None, "last_event_at": None, "last_event": "", "log": "missing"},
+            "hygiene": {"job": "loaded", "report_at": "2026-11-01T09:00:00Z", "headline": "Замечаний: 4", "attention": 4},
+            "restart": {"scheduled": True, "schedule": "restart at 4:00AM Sunday", "boot_at": "2026-10-15T21:45:00Z"},
+        })}
+        self.assertEqual(rows["Защита от зависаний"][1:3], ["ok", "работает"])
+        self.assertEqual(rows["Защита от зависаний"][4], "ни разу не срабатывала")
+        self.assertEqual(rows["Ежедневная проверка, 10:00"][4].count("амечаний"), 1)
+        self.assertEqual(rows["Перезагрузка по расписанию"][1:3], ["warn", "не сработала"])
+        self.assertTrue(rows["Перезагрузка по расписанию"][4].startswith("по плану вс 04:00, но Mac не перезагружался с "))
+
+    def test_unreadable_watchdog_log_is_not_called_quiet(self):
+        rows = {row[0]: row for row in self.full_rows({"watchdog": {"job": "loaded", "events_7d": None, "log": "unreadable"}})}
+        self.assertEqual(rows["Защита от зависаний"][4], "история срабатываний неизвестна")
+        rows = {row[0]: row for row in self.full_rows({"watchdog": {"job": "loaded", "events_7d": None}})}
+        self.assertEqual(rows["Защита от зависаний"][4], "история срабатываний неизвестна")
+
+    def test_group_summary_never_says_ok_over_unknown_rows(self):
+        source = HTML.read_text()
+        start = source.index("    const issues = groupRows.filter")
+        block = source[start:source.index("head.append(title, summary);", start)]
+        self.assertIn("unknowns ? `нет данных: ${unknowns}` : 'всё в порядке'", block)
+
+    def full_rows(self, care):
+        self.rows(care)
+        return self.full
 
 
 RENDER_SCRIPT = r"""

@@ -66,6 +66,23 @@ class MachineHealthWordsTests(unittest.TestCase):
     def test_missing_numbers_say_so(self):
         self.assertEqual([w[1] for w in self.words({})], ["нет данных"] * 3)
 
+    def test_gpu_tile_appears_only_when_the_computer_reports_it(self):
+        base = {"cpu_percent": 8, "memory_used_gb": 12, "memory_total_gb": 48, "disk_used_gb": 408, "disk_total_gb": 1858}
+        self.assertEqual(len(self.words(base)), 3)
+        # Qwen on the MacBook Pro (Mark 2026-11-17): CPU stays calm while the GPU works.
+        self.assertEqual(self.words({**base, "gpu_percent": 93, "gpu_memory_gb": 17.6})[3], ["Видеочип", "перегружен", "bad"])
+        self.assertEqual(self.words({**base, "gpu_percent": 12})[3], ["Видеочип", "спокойно", "ok"])
+
+    def test_gpu_tile_shows_load_and_model_memory(self):
+        source = HTML.read_text()
+        script = "\n".join([
+            js_function(source, "machinePercent"),
+            js_function(source, "machineHealthItems"),
+            "console.log(JSON.stringify(machineHealthItems({gpu_percent: 71.6, gpu_memory_gb: 17.6}).map(i => i.value)));",
+        ])
+        out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout
+        self.assertEqual(json.loads(out)[3], "72% · 17,6 ГБ")
+
 
 class MachineHealthPageTests(unittest.TestCase):
     def test_each_computer_has_a_health_row_that_opens_the_numbers(self):
