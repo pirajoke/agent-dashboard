@@ -33,6 +33,20 @@ cp "$SRC_DIR/docxx_suggest.py" "$SCRIPTS_DIR/docxx_suggest.py"
 cp "$SRC_DIR/retire_job_mail.py" "$SCRIPTS_DIR/retire_job_mail.py"
 cp "$SRC_DIR/mm-command-center-auth" "$LOCAL_BIN_DIR/mm-command-center-auth"
 cp "$SRC_DIR/dashboard_builder/"*.py "$SCRIPTS_DIR/dashboard_builder/"
+
+# Register tools when this is the host of the existing Jarvis profile.
+# The running Telegram gateway loads the config on its next coordinated reload.
+if [[ -f "$HOME/.hermes/profiles/jarvis/config.yaml" ]]; then
+  uv_bin="$(PATH="$LOCAL_BIN_DIR:/opt/homebrew/bin:$PATH" command -v uv || true)"
+  if [[ -n "$uv_bin" ]]; then
+    if ! PATH="$(dirname "$uv_bin"):$PATH" UV_HTTP_TIMEOUT=15 UV_HTTP_RETRIES=1 \
+        "$uv_bin" run --script "$SCRIPTS_DIR/dashboard_builder/kanban_setup.py"; then
+      echo "Command Center MCP registration pending; inspect the Jarvis profile." >&2
+    fi
+  else
+    echo "Command Center MCP registration pending; uv was not found." >&2
+  fi
+fi
 cp "$SRC_DIR/dashboard-assets/style.css" "$SCRIPTS_DIR/dashboard-assets/style.css"
 cp "$SRC_DIR/dashboard-assets/script.js" "$SCRIPTS_DIR/dashboard-assets/script.js"
 cp "$SRC_DIR/dashboard-assets/ai-town-32x32folk.png" "$SCRIPTS_DIR/dashboard-assets/ai-town-32x32folk.png"

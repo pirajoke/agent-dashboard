@@ -42,6 +42,8 @@ from dashboard_builder.machine_layout import MAX_BODY_BYTES as MACHINE_LAYOUT_MA
 from dashboard_builder.platform_cards import MAX_BODY_BYTES as PLATFORM_CARDS_MAX_BYTES, change_cards, load_cards
 from dashboard_builder.live_sessions import projection as live_sessions_projection
 from dashboard_builder.owner_todo import MAX_BODY_BYTES as OWNER_TODO_MAX_BYTES, change_items as change_owner_todo, load_items as load_owner_todo
+import sqlite3
+from dashboard_builder.personal_kanban import Board as PersonalBoard, Conflict as BoardConflict
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.genealogy import GenealogyUnavailable, load_genealogy
 from dashboard_builder import weekly_reports
@@ -1999,6 +2001,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/api/kanban':
+            payload = self._platform_owner_body(8192)
+            if payload is None:
+                return
+            try:
+                if not isinstance(payload, dict):
+                    raise ValueError('Нужен объект задачи')
+                result = PersonalBoard().apply(payload['action'], payload)
+            except BoardConflict as exc:
+                self._json_response(409, {'error': str(exc)})
+            except (KeyError, TypeError, ValueError):
+                self._json_response(400, {'error': 'Проверь поля задачи и даты'})
+            except (OSError, RuntimeError, subprocess.SubprocessError, sqlite3.Error):
+                self._json_response(503, {'error': 'Не удалось подтвердить результат. Обнови доску.'})
+            else:
+                self._json_response(200, result)
+            return
         if parsed.path == '/api/manager/decisions/respond':
             self._handle_manager_decision_response()
             return
@@ -3115,6 +3134,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlsplit(self.path)
+        if parsed.path == '/kanban':
+            self.send_response(302)
+            self.send_header('Location', '/?tab=tasks')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
         if self._serve_docxx_info_page(parsed.path):
             return
         if parsed.path == '/api/docxx':
