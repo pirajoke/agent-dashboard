@@ -11,6 +11,11 @@ deploy or the check fails, redeploys the previous commit.
 Merging a PR on GitHub is the approval; nothing here pushes, merges or holds a
 token. CI status is read from the public GitHub API without credentials.
 
+After a deploy or a rollback it marks the commit on GitHub with the status
+`mac-mini/deploy` through the `gh` CLI already signed in on the Mac mini
+(Mark 2026-11-21: agents must see a deploy land without reaching the Mac
+mini). This is best effort: no `gh` or no sign-in only skips the mark.
+
 State: ~/.agent-bridge/auto-deploy/state.json (written by deploy_to_scripts.sh
 too, so manual deploys count). Log: ~/.agent-bridge/auto-deploy/deploys.jsonl.
 """
@@ -36,6 +41,8 @@ HEALTH_URL = os.environ.get("AUTO_DEPLOY_HEALTH_URL", "http://127.0.0.1:7777/")
 DEPLOY_PATHS = ("builder/",)
 OK_CONCLUSIONS = {"success", "neutral", "skipped"}
 LOG_KEEP = 500
+STATUS_CONTEXT = "mac-mini/deploy"
+GH_CANDIDATES = ("/opt/homebrew/bin/gh", "/usr/local/bin/gh")
 
 
 def now_iso() -> str:
@@ -88,6 +95,27 @@ def ci_state(sha: str, fetch=None) -> str:
     if all(run.get("conclusion") in OK_CONCLUSIONS for run in runs):
         return "green"
     return "red"
+
+
+def find_gh() -> str | None:
+    # launchd gives a short PATH, so look where Homebrew puts gh too.
+    return shutil.which("gh") or next((path for path in GH_CANDIDATES if os.access(path, os.X_OK)), None)
+
+
+def report_status(sha: str, state: str, description: str, runner=subprocess.run, gh=None) -> bool:
+    """Mark `sha` on GitHub as deployed (success) or rolled back (failure). Never raises."""
+    gh = gh if gh is not None else find_gh()
+    if not gh:
+        return False
+    try:
+        result = runner(
+            [gh, "api", f"repos/{GITHUB_REPO}/statuses/{sha}", "-X", "POST",
+             "-f", f"state={state}", "-f", f"context={STATUS_CONTEXT}", "-f", f"description={description[:140]}"],
+            capture_output=True, text=True, timeout=30,
+        )
+        return result.returncode == 0
+    except (subprocess.SubprocessError, OSError):
+        return False
 
 
 def needs_deploy(changed_files: list[str]) -> bool:
@@ -148,6 +176,7 @@ def run(
     get_ci=ci_state,
     do_deploy=deploy_commit,
     is_healthy=healthy,
+    report=report_status,
     state_dir: Path = STATE_DIR,
 ) -> str:
     """One pass. Returns what happened, for logs and tests."""
@@ -200,6 +229,7 @@ def run(
         state.pop("waiting_reason", None)
         save_state(state, state_dir)
         append_log({"at": now_iso(), "sha": head, "from": deployed, "result": "deployed"}, state_dir)
+        report(head, "success", f"Deployed on the Mac mini at {state['deployed_at']}")
         return "deployed"
 
     reason = "deploy_failed" if not ok else "health_failed"
@@ -215,6 +245,7 @@ def run(
          "output": output[-4000:]},
         state_dir,
     )
+    report(head, "failure", f"{reason}; rollback {rollback}" + (f" to {deployed[:7]}" if deployed else ""))
     return f"{reason}_rollback_{rollback}"
 
 
