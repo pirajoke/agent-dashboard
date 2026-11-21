@@ -38,10 +38,13 @@ REPO_DIR = Path(os.environ.get("AUTO_DEPLOY_REPO_DIR", HOME / "agent-dashboard")
 STATE_DIR = Path(os.environ.get("AUTO_DEPLOY_STATE_DIR", HOME / ".agent-bridge" / "auto-deploy"))
 GITHUB_REPO = "pirajoke/agent-dashboard"
 HEALTH_URL = os.environ.get("AUTO_DEPLOY_HEALTH_URL", "http://127.0.0.1:7777/")
-DEPLOY_PATHS = ("builder/",)
+# The MacBook Pro runs this same loop with its own script, state and status
+# (builder/deploy_macbook.sh, Mark 2026-11-21 «Б + Г»).
+DEPLOY_SCRIPT = os.environ.get("AUTO_DEPLOY_SCRIPT", "builder/deploy_to_scripts.sh")
+DEPLOY_PATHS = tuple(p for p in os.environ.get("AUTO_DEPLOY_PATHS", "builder/").split(",") if p)
 OK_CONCLUSIONS = {"success", "neutral", "skipped"}
 LOG_KEEP = 500
-STATUS_CONTEXT = "mac-mini/deploy"
+STATUS_CONTEXT = os.environ.get("AUTO_DEPLOY_STATUS_CONTEXT", "mac-mini/deploy")
 GH_CANDIDATES = ("/opt/homebrew/bin/gh", "/usr/local/bin/gh")
 
 
@@ -143,7 +146,7 @@ def deploy_commit(sha: str) -> tuple[bool, str]:
         git("worktree", "add", "--detach", str(worktree), sha)
         env = dict(os.environ, DASHBOARD_INSTALL_AUTO_DEPLOY="0", AUTO_DEPLOY_DEPLOYED_SHA=sha)
         result = subprocess.run(
-            [str(worktree / "builder" / "deploy_to_scripts.sh")],
+            [str(worktree / DEPLOY_SCRIPT)],
             capture_output=True, text=True, timeout=900, env=env,
         )
         tail = (result.stdout + result.stderr).strip().splitlines()[-15:]
@@ -229,7 +232,7 @@ def run(
         state.pop("waiting_reason", None)
         save_state(state, state_dir)
         append_log({"at": now_iso(), "sha": head, "from": deployed, "result": "deployed"}, state_dir)
-        report(head, "success", f"Deployed on the Mac mini at {state['deployed_at']}")
+        report(head, "success", f"Deployed at {state['deployed_at']}")
         return "deployed"
 
     reason = "deploy_failed" if not ok else "health_failed"

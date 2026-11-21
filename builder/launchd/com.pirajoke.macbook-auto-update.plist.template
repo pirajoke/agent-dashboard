@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pirajoke.macbook-auto-update</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>__SCRIPTS_DIR__/auto_deploy.py</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__HOME__</string>
+    <key>StartInterval</key>
+    <integer>300</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>AUTO_DEPLOY_REPO_DIR</key>
+        <string>__REPO_DIR__</string>
+        <key>AUTO_DEPLOY_STATE_DIR</key>
+        <string>__STATE_DIR__</string>
+        <key>AUTO_DEPLOY_SCRIPT</key>
+        <string>builder/deploy_macbook.sh</string>
+        <key>AUTO_DEPLOY_HEALTH_URL</key>
+        <string>http://127.0.0.1:8880/api/all</string>
+        <key>AUTO_DEPLOY_STATUS_CONTEXT</key>
+        <string>macbook-pro/deploy</string>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/com.pirajoke.macbook-auto-update/stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/com.pirajoke.macbook-auto-update/stderr.log</string>
+</dict>
+</plist>
