@@ -44,6 +44,12 @@ python3 builder/verify_release.py --expect <text the change adds>
 
 It confirms that auto-deploy put `origin/main` (or `--sha`) live without a failure or rollback, that `:7777` answers 200 and serves every `--expect` text, runs the full test suite on that commit in a throwaway worktree, and takes desktop (1440×1000) and phone (390×844) screenshots through headless Chrome, failing on sideways scroll or uncaught page errors. The report and screenshots go to `~/.agent-bridge/release-checks/<time>/`. Exit code 0 means all good, 2 means auto-deploy has not picked the commit up yet (rerun in 5 minutes), 1 means a failure.
 
+Without access to the Mac mini (a cloud agent, for example), read the GitHub commit status `mac-mini/deploy` on the merged commit. Auto-deploy sets it through the Mac mini's signed-in `gh`: `success` when the commit is live, `failure` after a failed deploy or health check and its rollback.
+
+```bash
+gh api repos/pirajoke/agent-dashboard/commits/<sha>/statuses --jq '.[] | select(.context=="mac-mini/deploy") | [.state, .description] | @tsv'
+```
+
 ## Runtime model
 
 The production builder runs on an owner-controlled Mac mini and reads approved local operational sources. It produces:
