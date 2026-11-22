@@ -150,7 +150,13 @@ SUGGEST_LABEL="com.pirajoke.docxx-suggest"
 SUGGEST_PLIST="$HOME/Library/LaunchAgents/$SUGGEST_LABEL.plist"
 if [[ "${DASHBOARD_INSTALL_DOCXX_SUGGEST:-1}" == "1" ]]; then
   mkdir -p "$HOME/Library/Logs/$SUGGEST_LABEL"
-  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" \
+  # The library sits on Google Drive: macOS lets the job read it only through hq-runner, which holds
+  # Full Disk Access for allowlisted scripts (HQ#70, 21.11). Without the runner, plain python3 as before.
+  SUGGEST_LAUNCHER="/usr/bin/python3"
+  if [[ -x "$HOME/Applications/hq-runner/hq-runner" ]]; then
+    SUGGEST_LAUNCHER="$HOME/Applications/hq-runner/hq-runner"
+  fi
+  sed -e "s|__SCRIPTS_DIR__|$SCRIPTS_DIR|g" -e "s|__HOME__|$HOME|g" -e "s|__DOCXX_LAUNCHER__|$SUGGEST_LAUNCHER|g" \
     "$SRC_DIR/launchd/$SUGGEST_LABEL.plist.template" > "$SUGGEST_PLIST.tmp"
   plutil -lint "$SUGGEST_PLIST.tmp" >/dev/null
   install_launchd_agent "$SUGGEST_PLIST.tmp" "$SUGGEST_PLIST" "$SUGGEST_LABEL"

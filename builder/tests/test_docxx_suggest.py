@@ -162,8 +162,11 @@ class SuggestTests(unittest.TestCase):
         for reply in (first + '\n\n{"note": 1}', 'Вот ответ:\n' + first + '\nГотово {без JSON}'):
             got = SUGGEST.parse_reply(reply, {'a'}, {'Банк'})
             self.assertEqual(got['a']['folder'], 'Банк')
-        with self.assertRaises(ValueError):
-            SUGGEST.parse_reply('нет ответа {сломано', {'a'}, {'Банк'})
+        got = SUGGEST.parse_reply('Пример: {"x": 1}\n' + first, {'a'}, {'Банк'})
+        self.assertEqual(got['a']['folder'], 'Банк')
+        for broken in ('нет ответа {сломано', '{"a": {"folder": "Ба', '{}'):
+            with self.assertRaises(ValueError):
+                SUGGEST.parse_reply(broken, {'a'}, {'Банк'})
 
     def test_deploy_installs_the_job(self):
         deploy = (BUILDER / 'deploy_to_scripts.sh').read_text()
@@ -171,6 +174,10 @@ class SuggestTests(unittest.TestCase):
         self.assertIn('py_compile docxx_suggest.py', deploy)
         plist = (BUILDER / 'launchd' / 'com.pirajoke.docxx-suggest.plist.template').read_text()
         self.assertIn('__SCRIPTS_DIR__/docxx_suggest.py', plist)
+        # 22.11: an auto-deploy re-rendered the plist with bare python3 and dropped hq-runner (Drive access).
+        self.assertIn('<string>__DOCXX_LAUNCHER__</string>', plist)
+        self.assertIn('$HOME/Applications/hq-runner/hq-runner', deploy)
+        self.assertIn('s|__DOCXX_LAUNCHER__|$SUGGEST_LAUNCHER|g', deploy)
 
 
 if __name__ == '__main__':
