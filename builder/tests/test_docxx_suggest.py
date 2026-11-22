@@ -156,6 +156,15 @@ class SuggestTests(unittest.TestCase):
         items = load_suggestions(self.home / '.agent-bridge' / 'docxx-suggestions.json')
         self.assertEqual(docxx_projection(self.state, owner=False, suggestions=items), {'state': 'owner_required'})
 
+    def test_reply_with_a_trailing_object_or_prose_uses_the_first_object(self):
+        # Bead hermes-jarvis-0h5.4.11: «Extra data: line 3 column 1» from a reply with two objects.
+        first = '{"a": {"folder": "Банк", "why": "выписка"}}'
+        for reply in (first + '\n\n{"note": 1}', 'Вот ответ:\n' + first + '\nГотово {без JSON}'):
+            got = SUGGEST.parse_reply(reply, {'a'}, {'Банк'})
+            self.assertEqual(got['a']['folder'], 'Банк')
+        with self.assertRaises(ValueError):
+            SUGGEST.parse_reply('нет ответа {сломано', {'a'}, {'Банк'})
+
     def test_deploy_installs_the_job(self):
         deploy = (BUILDER / 'deploy_to_scripts.sh').read_text()
         self.assertIn('cp "$SRC_DIR/docxx_suggest.py"', deploy)
