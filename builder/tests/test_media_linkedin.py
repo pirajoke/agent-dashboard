@@ -5,6 +5,8 @@ import importlib.util
 import io
 import json
 import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -196,6 +198,19 @@ class ForwardingTests(unittest.TestCase):
             self.assertEqual(call.call_args.kwargs["timeout"], 240)
 
 
+    def test_cancel_and_restore_forward_only_a_real_candidate_id(self):
+        cid = "55555555-5555-4555-8555-555555555555"
+        with patch.object(media_linkedin, "call", return_value=(200, {"state": "cancelled"})) as call:
+            for action in (media_linkedin.cancel, media_linkedin.restore):
+                for bad in ({}, {"candidate_id": "../x"}, {"candidate_id": None}):
+                    with self.assertRaises(ValueError):
+                        action(bad)
+            call.assert_not_called()
+            media_linkedin.cancel({"candidate_id": cid})
+            self.assertEqual(call.call_args.args, ("POST", f"/media-control/candidates/{cid}/cancel"))
+            media_linkedin.restore({"candidate_id": cid})
+            self.assertEqual(call.call_args.args, ("POST", f"/media-control/candidates/{cid}/restore"))
+
 class ServerTests(unittest.TestCase):
     def handler(self, *, owner, method="GET", path="/api/media/linkedin", body=None):
         handler = SERVER.Handler.__new__(SERVER.Handler)
@@ -252,6 +267,18 @@ class ServerTests(unittest.TestCase):
         with patch.object(media_linkedin, "call", return_value=(200, {"text": "t", "preview": {}})):
             handler.do_POST()
         self.assertEqual(response, {"status": 200, "payload": {"text": "t", "preview": {}}})
+        cancel = {"candidate_id": "33333333-3333-4333-8333-333333333333"}
+        handler, response = self.handler(owner=False, method="POST", path="/api/media/linkedin/cancel",
+                                         body=cancel)
+        with patch.object(media_linkedin, "call") as call:
+            handler.do_POST()
+            call.assert_not_called()
+        self.assertEqual(response["status"], 401)
+        handler, response = self.handler(owner=True, method="POST", path="/api/media/linkedin/cancel",
+                                         body=cancel)
+        with patch.object(media_linkedin, "call", return_value=(409, {"detail": "in Buffer"})):
+            handler.do_POST()
+        self.assertEqual(response, {"status": 409, "payload": {"detail": "in Buffer"}})
 
 
 class SettingsTests(unittest.TestCase):
@@ -378,3 +405,111 @@ class PageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+CANCEL_SCRIPT = r"""
+const { chromium } = require('playwright');
+const fs = require('fs');
+const PAGE = fs.readFileSync(process.argv[2], 'utf8');
+const A = '11111111-1111-4111-8111-111111111111', B = '22222222-2222-4222-8222-222222222222';
+const state = { [A]: 'draft', [B]: 'draft' };
+const posts = [];
+let refuse = false;
+const at = h => new Date(Date.now() + h * 3600e3).toISOString();
+const overview = () => {
+  const drafts = [[A, 'Story A'], [B, 'Story B']].filter(([id]) => state[id] === 'draft')
+    .map(([id, title], i) => ({ id, title, next_slot: at(3 + 19 * i), text: title, preview: {} }));
+  const cancelled = [[A, 'Story A'], [B, 'Story B']].filter(([id]) => state[id] === 'cancelled')
+    .map(([id, title]) => ({ id, title, text: title }));
+  return { state: 'ready', news: [], comments: null,
+    schedule: { posts: [], upcoming_slots: [], budget: {}, settings: {}, slots: [] },
+    today: { drafts, queued: [], cancelled, handoff_minutes: 15, channel: [] } };
+};
+(async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1400, height: 1000 } });
+  const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.route('http://dashboard.test/**', route => {
+    const url = new URL(route.request().url());
+    const json = (status, body) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+    if (url.pathname === '/') return route.fulfill({ status: 200, contentType: 'text/html', body: PAGE });
+    if (url.pathname === '/api/media/linkedin') return json(200, overview());
+    const action = url.pathname.split('/').pop();
+    if (route.request().method() === 'POST' && ['cancel', 'restore'].includes(action)) {
+      const { candidate_id: id } = JSON.parse(route.request().postData() || '{}');
+      posts.push([action, id]);
+      if (refuse) return json(409, { detail: 'in Buffer' });
+      const [from, to] = action === 'cancel' ? ['draft', 'cancelled'] : ['cancelled', 'draft'];
+      if (state[id] !== from) return json(409, { detail: 'wrong state' });
+      state[id] = to;
+      return json(200, { id, state: to });
+    }
+    return json(404, {});
+  });
+  await page.goto('http://dashboard.test/?tab=media');
+  await page.waitForSelector('#media-col-plan [data-media-cancel]');
+  const snap = () => page.evaluate(() => ({
+    count: document.getElementById('media-count-plan').textContent,
+    cancel: [...document.querySelectorAll('#media-col-plan [data-media-cancel]')].map(b => b.dataset.mediaCancel),
+    restore: [...document.querySelectorAll('#media-col-plan [data-media-restore]')].map(b => b.dataset.mediaRestore),
+    struck: [...document.querySelectorAll('#media-col-plan .media-card.is-cancelled .media-car-title')].map(e => e.textContent),
+    status: document.getElementById('media-plan-status').textContent,
+    statusBad: document.getElementById('media-plan-status').classList.contains('is-bad'),
+    focus: document.activeElement?.textContent || '',
+  }));
+  const start = await snap();
+  await page.locator(`[data-media-cancel="${A}"]`).focus();
+  await page.keyboard.press('Enter');
+  await page.waitForSelector(`[data-media-restore="${A}"]`);
+  const cancelled = await snap();
+  await page.waitForTimeout(4500);
+  const reloaded = await snap();
+  await page.click(`[data-media-restore="${A}"]`);
+  await page.waitForSelector(`[data-media-cancel="${A}"]`);
+  const restored = await snap();
+  await page.waitForTimeout(1600);
+  refuse = true;
+  await page.click(`[data-media-cancel="${B}"]`);
+  await page.waitForFunction(() => document.getElementById('media-plan-status').classList.contains('is-bad'));
+  const refused = await snap();
+  console.log(JSON.stringify({ start, cancelled, reloaded, restored, refused, posts, errors }));
+  await browser.close();
+})().catch(e => { console.error(e); process.exit(1); });
+"""
+
+
+def _has_playwright():
+    if not shutil.which("node"):
+        return False
+    return subprocess.run(["node", "-e", "require('playwright')"], capture_output=True).returncode == 0
+
+
+@unittest.skipUnless(_has_playwright(), "playwright + chromium are needed to render the page")
+class CancelPlannedPostUiTest(unittest.TestCase):
+    """Mark 2026-11-18: «сделай чтобы я мог и отменять новости по желанию» — clicked in a real page."""
+
+    def test_cancel_restore_and_a_refused_cancel_in_the_rendered_plan(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            script = Path(tmp) / "cancel.js"
+            script.write_text(CANCEL_SCRIPT)
+            result = subprocess.run(["node", str(script), str(BUILDER / "mac-mini-dashboard" / "index.html")],
+                                    capture_output=True, text=True, timeout=120)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        out = json.loads(result.stdout.strip().splitlines()[-1])
+        a, b = "11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"
+        self.assertEqual(out["errors"], [])
+        self.assertEqual((out["start"]["count"], out["start"]["cancel"], out["start"]["restore"]), ("2", [a, b], []))
+        # Keyboard «Отменить»: the request goes out, the card moves to «Отменено», focus lands on «Вернуть».
+        for view in (out["cancelled"], out["reloaded"]):
+            self.assertEqual((view["count"], view["cancel"], view["restore"]), ("1", [b], [a]))
+            self.assertEqual(view["struck"], ["Story A"])
+        self.assertIn("не выйдет", out["cancelled"]["status"])
+        self.assertEqual(out["cancelled"]["focus"], "Вернуть")
+        self.assertEqual((out["restored"]["count"], sorted(out["restored"]["cancel"]), out["restored"]["restore"]),
+                         ("2", sorted([a, b]), []))
+        # A refusal (already in Buffer) shows an error and never a cancelled card.
+        self.assertTrue(out["refused"]["statusBad"])
+        self.assertIn("Buffer", out["refused"]["status"])
+        self.assertEqual(out["refused"]["restore"], [])
+        self.assertIn(b, out["refused"]["cancel"])
+        self.assertEqual(out["posts"], [["cancel", a], ["restore", a], ["cancel", b]])
