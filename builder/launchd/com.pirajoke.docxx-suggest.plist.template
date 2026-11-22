@@ -6,7 +6,7 @@
     <string>com.pirajoke.docxx-suggest</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/usr/bin/python3</string>
+        <string>__DOCXX_LAUNCHER__</string>
         <string>__SCRIPTS_DIR__/docxx_suggest.py</string>
     </array>
     <key>WorkingDirectory</key>

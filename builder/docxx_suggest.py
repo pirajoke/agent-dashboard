@@ -148,12 +148,20 @@ def user_prompt(batch: list[dict[str, Any]], folders: list[str]) -> str:
 
 
 def parse_reply(text: str, ids: set[str], folders: set[str]) -> dict[str, dict[str, Any]]:
-    match = re.search(r"\{[\s\S]*\}", text)
-    if not match:
+    # The model sometimes adds a second JSON object or prose with braces after the answer; a greedy
+    # first-{-to-last-} slice then fails with «Extra data» (bead hermes-jarvis-0h5.4.11, 21.11).
+    # Take the first complete JSON object that answers for this batch (has one of its ids) and ignore
+    # the rest; a cut-off or off-topic reply still fails loudly instead of silently writing nothing.
+    decoder = json.JSONDecoder()
+    for match in re.finditer(r"\{", text):
+        try:
+            data, _ = decoder.raw_decode(text, match.start())
+        except ValueError:
+            continue
+        if isinstance(data, dict) and ids & set(data):
+            break
+    else:
         raise ValueError("suggest_reply_not_json")
-    data = json.loads(match.group(0))
-    if not isinstance(data, dict):
-        raise ValueError("suggest_reply_not_object")
     out = {}
     for key, value in data.items():
         if key not in ids or not isinstance(value, dict):
