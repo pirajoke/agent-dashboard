@@ -49,6 +49,10 @@ if mode == "auth":
 if mode == "error":
     print(json.dumps({"type": "result", "is_error": True, "result": "Overloaded, try again later"}))
     sys.exit(0)
+if mode == "limit" or (mode == "limit-opus" and "claude-opus-5-5" in args):
+    print(json.dumps({"type": "result", "is_error": True,
+                      "result": "You've hit your weekly limit · resets 1pm (Europe/Paris)"}))
+    sys.exit(1)
 body = text[text.index("Активность за"):]
 products = json.loads(body[body.index("["):body.rindex("]") + 1])
 if mode == "partial" or (mode == "partial-once" and "В прошлом ответе" not in text):
@@ -100,8 +104,13 @@ class SummarizerTest(unittest.TestCase):
         self.token_file = Path(self.tmp.name) / "claude_oauth_token"
         self.token = patch.object(SUMMARIZER, "TOKEN_FILE", self.token_file)
         self.token.start()
+        # Never the real HQ pause file on the Mac mini: tests use a stub helper or none.
+        self.limit_log = Path(self.tmp.name) / "limit.jsonl"
+        self.limit = patch.object(SUMMARIZER, "LIMIT_PY", Path(self.tmp.name) / "no-hq" / "claude_limit.py")
+        self.limit.start()
 
     def tearDown(self):
+        self.limit.stop()
         self.token.stop()
         self.env.stop()
         self.tmp.cleanup()
@@ -317,6 +326,67 @@ class SummarizerTest(unittest.TestCase):
         self.assertEqual(status["pending"], 2)
         self.assertEqual(len(self._calls()), 1)  # stops at the first failure
         self.assertFalse((self.root / "summaries" / f"{self.yesterday}.json").exists())
+
+    def _stub_limit(self, paused_until=None):
+        stub = Path(self.tmp.name) / "hq" / "claude_limit.py"
+        stub.parent.mkdir(exist_ok=True)
+        stub.write_text(f"""
+import json
+from datetime import datetime
+LOG = {str(self.limit_log)!r}
+def _w(*a):
+    with open(LOG, "a") as f:
+        f.write(json.dumps(a) + "\\n")
+def paused():
+    _w("paused")
+    return datetime.fromisoformat({paused_until!r}) if {paused_until!r} else None
+def hit(source, text):
+    _w("hit", source, text)
+def clear(source):
+    _w("clear", source)
+""", encoding="utf-8")
+        self.limit.stop()
+        self.limit = patch.object(SUMMARIZER, "LIMIT_PY", stub)
+        self.limit.start()
+
+    def _limit_calls(self):
+        return [json.loads(x) for x in self.limit_log.read_text().splitlines()] if self.limit_log.exists() else []
+
+    def test_limit_on_main_model_falls_back_and_clears_pause(self):
+        self._stub_limit()
+        os.environ["FAKE_CLAUDE_MODE"] = "limit-opus"
+        self.assertEqual(self._run("--model", "claude-opus-5-5"), 0)
+        status = self._status()
+        self.assertTrue(status["ok"])
+        self.assertEqual(status["fallback_model"], "claude-sonnet-5-5")
+        self.assertEqual(self._summary(self.yesterday)["model"], "claude-sonnet-5-5")
+        models = [c["args"][c["args"].index("--model") + 1] for c in self._calls()]
+        self.assertEqual(models[0], "claude-opus-5-5")
+        self.assertTrue(all(m == "claude-sonnet-5-5" for m in models[1:]), "after a limit the run stays on fallback")
+        self.assertIn(["clear", "daily-work-summarizer"], self._limit_calls())
+
+    def test_limit_on_every_model_pauses_and_leaves_a_notice(self):
+        self._stub_limit()
+        os.environ["FAKE_CLAUDE_MODE"] = "limit"
+        self.assertEqual(self._run("--model", "claude-opus-5-5"), 1)
+        status = self._status()
+        self.assertFalse(status["ok"])
+        self.assertTrue(status["reason"].startswith("claude_limit: You've hit your weekly limit"))
+        self.assertEqual(len(self._calls()), 2)  # main model, then the fallback once
+        hits = [c for c in self._limit_calls() if c[0] == "hit"]
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0][1], "daily-work-summarizer")
+
+    def test_paused_run_does_not_call_claude(self):
+        self._stub_limit("2099-01-01T12:00:00+00:00")
+        self.assertEqual(self._run(), 1)
+        self.assertEqual(self._calls(), [])
+        self.assertEqual(self._status()["reason"], "claude_limit_paused until 2099-01-01T12:00:00Z")
+
+    def test_limit_without_hq_helper_still_reports(self):
+        os.environ["FAKE_CLAUDE_MODE"] = "limit"
+        self.assertEqual(self._run(), 1)
+        self.assertTrue(self._status()["reason"].startswith("claude_limit:"))
 
     def test_saved_token_is_passed_to_the_cli(self):
         self.assertEqual(self._run("--max-days", "1"), 0)

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -62,6 +63,12 @@ DATE_HINT = re.compile(r"\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}[./]\d{1,2}(?:[./]\d{2,4
                        r"|\b\d{1,2}\s+(?:янв|фев|мар|апр|ма[йя]|июн|июл|авг|сен|окт|ноя|дек"
                        r"|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*", re.IGNORECASE)
 AUTH_ERROR = re.compile(r"\b401\b|authenticat|not logged in|/login", re.IGNORECASE)
+# Subscription limit (Max 2026-11-22: «лимит Claude молча останавливает сводку дня»): try the fallback model once,
+# then pause every background Claude job until the reset and leave one notice for Max's morning «Решения дня».
+LIMIT_ERROR = re.compile(r"hit your (?:\w+ )?limit|(?:weekly|session|usage|5-hour) limit (?:reached|exceeded)", re.I)
+FALLBACK_MODEL = os.environ.get("DAILY_SUMMARY_FALLBACK_MODEL", "claude-sonnet-5-5")
+# Shared pause/notice helper from HQ (pirajoke/hq hq/scripts/claude_limit.py); without it only the fallback applies.
+LIMIT_PY = Path(os.environ.get("DAILY_SUMMARY_LIMIT_PY") or HOME / "HQ" / "hq" / "scripts" / "claude_limit.py")
 
 SYSTEM_PROMPT = """Ты пишешь короткие новости дня для Марка, владельца нескольких продуктов: что за день \
 произошло в каждом его проекте. Он не хочет технических деталей: ему нужно понять, что изменилось, \
@@ -244,6 +251,8 @@ def call_claude(cli: str, model: str, system: str, prompt: str, workdir: Path) -
         detail = redact(" ".join((str(envelope.get("result") or "") if failed else (result.stderr or result.stdout)).split()))[:200]
         if AUTH_ERROR.search(detail) or AUTH_ERROR.search(result.stderr or ""):
             raise RuntimeError("claude_auth_failed: " + detail)
+        if LIMIT_ERROR.search(detail):
+            raise RuntimeError("claude_limit: " + detail)
         if failed:
             raise RuntimeError("claude_error: " + detail)
         if "unknown option" not in (result.stderr or "").lower():
@@ -336,6 +345,19 @@ def summarize_day(cli: str, model: str, day: str, products: list[dict[str, Any]]
 
 # ── run ──────────────────────────────────────────────────────────────────────
 
+def limit_helper():
+    """hq/scripts/claude_limit.py as a module, or None when HQ is not on this machine."""
+    try:
+        spec = importlib.util.spec_from_file_location("hq_claude_limit", LIMIT_PY)
+        if spec is None or spec.loader is None or not LIMIT_PY.is_file():
+            return None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    except Exception:
+        return None
+
+
 def due_days(out: Path, inputs: dict[str, list[dict[str, Any]]], force: str | None, today: str | None = None) -> list[str]:
     """Newest first: days with new activity, and a day summarized while it was still going."""
     due = []
@@ -377,26 +399,54 @@ def main(argv: list[str] | None = None) -> int:
         for day in due:
             print(f"--- {day} ---\n{user_prompt(day, inputs[day], day == today)}\n")
         return 0
+    limit = limit_helper() if due else None
+    until = None
+    if limit is not None:
+        try:
+            until = limit.paused()
+        except Exception:
+            until = None
+    if until:
+        status.update(ok=False, reason="claude_limit_paused until " + iso_z(until))
+        due = []
     cli = find_cli(args.claude) if due else None
     if due and not cli:
         status.update(ok=False, reason="claude_not_found")
+    model = args.model
     for day in due if cli else []:
         products = inputs[day]
         ids = {product["id"] for product in products}
         try:
-            summary = summarize_day(cli, args.model, day, products, args.out / WORKDIR_NAME, day == today)
+            try:
+                summary = summarize_day(cli, model, day, products, args.out / WORKDIR_NAME, day == today)
+            except RuntimeError as error:
+                if not str(error).startswith("claude_limit:") or not FALLBACK_MODEL or model == FALLBACK_MODEL:
+                    raise
+                model = FALLBACK_MODEL  # the rest of this run too: the main model is out for now
+                status["fallback_model"] = model
+                summary = summarize_day(cli, model, day, products, args.out / WORKDIR_NAME, day == today)
         except (RuntimeError, ValueError) as error:
             status.update(ok=False, reason=redact(str(error))[:240])
+            if str(error).startswith("claude_limit:") and limit is not None:
+                try:
+                    limit.hit("daily-work-summarizer", str(error))
+                except Exception:
+                    pass
             break
         # Projects still left out after a retry stay without bullets for this
         # input; they are listed rather than retried every run.
         write_json(args.out / "summaries" / f"{day}.json", {
             "schema": SCHEMA, "prompt_version": PROMPT_VERSION, "date": day,
-            "generated_at": iso_z(datetime.now(timezone.utc)), "model": args.model,
+            "generated_at": iso_z(datetime.now(timezone.utc)), "model": model,
             "input_hash": input_hash(products), "in_progress": day == today, **summary,
             "missing": sorted(ids - _answered(summary)),
         })
         status["written"].append(day)
+        if limit is not None and len(status["written"]) == 1:
+            try:
+                limit.clear("daily-work-summarizer")
+            except Exception:
+                pass
     status["pending"] = len([day for day in outstanding if day not in status["written"]])
     write_json(args.out / "summaries" / "status.json", status)
     print(json.dumps(status, ensure_ascii=False))
