@@ -49,6 +49,25 @@ _cache: dict = {}
 _lock = threading.Lock()
 
 
+_ROOTS = ("HQ/hq", ".hermes/profiles/jarvis", "AGENTS.md")
+
+
+def _target_ok(home: Path, path: Path) -> bool:
+    """A symlink may only point at a file under the same allowed roots, and passes the same filter."""
+    try:
+        target = path.resolve(strict=True)
+    except OSError:
+        return False
+    for root in _ROOTS:
+        try:
+            base = (home / root).resolve()
+        except OSError:
+            continue
+        if target == base or base in target.parents:
+            return _allowed(target)
+    return False
+
+
 def _allowed(path: Path) -> bool:
     name = path.name
     if ".bak" in name or not name.endswith(".md"):
@@ -79,7 +98,7 @@ def _entries(home: Path):
                     key = str(path.resolve())
                 except OSError:
                     key = str(path)
-                if key in seen or not _allowed(path):
+                if key in seen or not _allowed(path) or not _target_ok(home, path):
                     continue
                 if "*" in rel and path.name.startswith("_"):
                     continue
@@ -102,9 +121,10 @@ def _inline(text: str) -> str:
         codes.append(f"<code>{html.escape(match.group(1))}</code>")
         return f"\x00{len(codes) - 1}\x00"
 
+    text = text.replace("\x00", "")
     text = _INLINE_CODE.sub(keep, text)
     text = html.escape(text, quote=False)
-    text = _LINK.sub(lambda m: f'<a href="{html.escape(m.group(2))}" rel="noopener noreferrer" target="_blank">{m.group(1)}</a>', text)
+    text = _LINK.sub(lambda m: f'<a href="{html.escape(html.unescape(m.group(2)))}" rel="noopener noreferrer" target="_blank">{m.group(1)}</a>', text)
     text = _BOLD.sub(r"<strong>\1</strong>", text)
     text = _ITALIC.sub(r"<em>\1</em>", text)
     return re.sub(r"\x00(\d+)\x00", lambda m: codes[int(m.group(1))], text)
@@ -159,7 +179,7 @@ def render_markdown(text: str) -> str:
             flush_para()
             i += 1
             continue
-        if stripped.startswith("<!--"):
+        if stripped.startswith("<!--") and any("-->" in rest for rest in lines[i:]):
             while i < len(lines) and "-->" not in lines[i]:
                 i += 1
             i += 1
@@ -225,12 +245,19 @@ def render_markdown(text: str) -> str:
 
 # ── Projection ────────────────────────────────────────────────────────────────
 
+def _safe_render(text: str) -> str:
+    try:
+        return render_markdown(text)
+    except Exception:  # one odd file must not take the whole tab down
+        return f"<pre><code>{html.escape(text)}</code></pre>"
+
+
 def _file_id(home: Path, path: Path) -> str:
     try:
         rel = path.relative_to(home)
     except ValueError:
         rel = path
-    return re.sub(r"[^a-z0-9]+", "-", str(rel).lower()).strip("-")
+    return re.sub(r"[^a-z0-9_]+", "-", str(rel).lower()).strip("-")
 
 
 def collect(home: Path) -> dict:
@@ -253,7 +280,7 @@ def collect(home: Path) -> dict:
             "title": title,
             "path": shown,
             "modified": datetime.fromtimestamp(stat.st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "html": render_markdown(text),
+            "html": _safe_render(text),
         }
         groups.setdefault(group, {"id": group, "title": group_title, "files": []})["files"].append(entry)
     ordered = [groups[g] for g, _, _ in GROUPS if g in groups]

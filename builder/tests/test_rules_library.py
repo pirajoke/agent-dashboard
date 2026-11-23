@@ -69,6 +69,22 @@ class RulesLibraryTests(unittest.TestCase):
         self.assertEqual(out.count("<ol>"), 1)
         self.assertEqual(out.count("</ol>"), 1)
 
+    def test_symlink_out_of_hq_is_not_read(self):
+        outside = self.home / "elsewhere" / "secret.md"
+        outside.parent.mkdir()
+        outside.write_text("# leak\n")
+        (self.home / "HQ/hq/jarvis-topics/evil.md").symlink_to(outside)
+        (self.home / "HQ/hq/jarvis-topics/perm.md").symlink_to(self.home / "HQ/hq/permissions/pending.md")
+        html_all = " ".join(f["html"] for g in RULES.collect(self.home)["groups"] for f in g["files"])
+        self.assertNotIn("leak", html_all)
+        self.assertNotIn("secret-ish", html_all)
+
+    def test_odd_input_does_not_break(self):
+        self.assertIn('href="https://a.b/?x=1&amp;y=2"', RULES.render_markdown("[l](https://a.b/?x=1&y=2)"))
+        self.assertIn("остаток", RULES.render_markdown("<!-- открыт\n\nостаток"))
+        RULES.render_markdown("a \x000\x00 `b`")
+        self.assertNotEqual(RULES._file_id(self.home, self.home / "_rules.md"), RULES._file_id(self.home, self.home / "rules.md"))
+
     def test_javascript_links_are_not_links(self):
         out = RULES.render_markdown("[x](javascript:alert(1))")
         self.assertNotIn("<a ", out)

@@ -7198,8 +7198,6 @@ a.kb-card-title:hover { text-decoration: underline; }
     <div class="growth-grid" id="growth-grid"></div>
   </section>
 
-  <!-- Mark 2026-11-07: «Итоги недели» — every saved week, newest first, and «Собрать сводку сейчас».
-       Projects drop notes into the weekly inbox; the week groups them by direction. Owner only. -->
   <!-- Макс 2026-11-23: «Правила» — every rule file of HQ and Jarvis, read live, nothing editable. Owner only. -->
   <section id="section-rules" class="section" aria-labelledby="rules-title">
     <header class="cc-page-head">
@@ -7215,6 +7213,8 @@ a.kb-card-title:hover { text-decoration: underline; }
     </div>
   </section>
 
+  <!-- Mark 2026-11-07: «Итоги недели» — every saved week, newest first, and «Собрать сводку сейчас».
+       Projects drop notes into the weekly inbox; the week groups them by direction. Owner only. -->
   <section id="section-weekly" class="section" aria-labelledby="weekly-title">
     <header class="cc-page-head">
       <div>
@@ -17957,7 +17957,6 @@ async function loadGrowth() {
   }
 }
 
-// Mark 2026-11-07: «Итоги недели». Owner sees every saved week; «Собрать сводку сейчас» builds this week so far.
 // Макс 2026-11-23: «Правила». Read-only list of rule files; the server renders the Markdown (escaped).
 const RULES_API = (!IS_FILE_DASHBOARD) ? `${DASHBOARD_API}/api/rules` : 'https://command.meshly.fr/api/rules';
 let rulesBusy = false;
@@ -18024,6 +18023,7 @@ document.getElementById('rules-nav').addEventListener('click', event => {
   if (button) rulesShow(button.dataset.rulesId, true);
 });
 
+// Mark 2026-11-07: «Итоги недели». Owner sees every saved week; «Собрать сводку сейчас» builds this week so far.
 const WEEKLY_API = (!IS_FILE_DASHBOARD) ? `${DASHBOARD_API}/api/weekly` : 'https://command.meshly.fr/api/weekly';
 let weeklyBusy = false;
 
