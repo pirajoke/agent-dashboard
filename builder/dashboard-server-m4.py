@@ -29,6 +29,7 @@ from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
 )
 from dashboard_builder.context_library import context_library_projection
+from dashboard_builder.orange_audio import default_path as orange_audio_path, orange_audio_projection
 from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
 from dashboard_builder.docxx_search import docxx_search
 from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions, load_suggestions as docxx_load_suggestions, suggestions_path as docxx_suggestions_path
@@ -3280,6 +3281,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 catalog, owner=owner, query=query.get('q', [''])[0],
                 source=query.get('source', [''])[0], kind=query.get('kind', [''])[0],
                 record_id=query.get('id', [None])[0]))
+            return
+        if parsed.path == '/api/orange-audio':
+            # Orange Audio + Granola meetings (Mark 2026-11-23). Owner only; the catalog lives in ~/.agent-bridge,
+            # which static serving already refuses.
+            owner = self._decision_owner_authorized()
+            query = parse_qs(parsed.query, keep_blank_values=True)
+            self._json_response(200, orange_audio_projection(
+                orange_audio_path(HOME), owner=owner, query=query.get('q', [''])[0],
+                meeting_id=query.get('id', [None])[0]))
             return
         if parsed.path == '/api/platform-resources':
             owner = self._decision_owner_authorized()
