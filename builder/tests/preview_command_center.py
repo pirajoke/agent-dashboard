@@ -46,6 +46,36 @@ FIXTURE_SERVICES = [
 ]
 
 
+def orange_fixture(meeting_id=None, q=""):
+    """Synthetic Orange Audio catalog shaped like orange_catalog.py output."""
+    from dashboard_builder.orange_audio import orange_audio_projection
+    base = STARTED.replace(minute=0, second=0, microsecond=0)
+    turns = [{"t": "00:00:04", "who": "Макс", "text": "Привет! Давай пройдёмся по запуску."},
+             {"t": "00:00:11", "who": "Собеседник", "text": "Да, по плану всё готово, осталось проверить оплату."},
+             {"t": "00:01:02", "who": "Макс", "text": "Тогда я пишу инструкцию, а ты проверяешь оплату до пятницы."}]
+    summary = ("## Итог\n- Запуск готов, осталась проверка оплаты.\n- Договорились о сроке: пятница.\n"
+               "## Договорённости\n- Демо в понедельник в 10:00.\n"
+               "## Задачи Макса\n- [ ] Написать инструкцию — до четверга\n"
+               "## Задачи собеседника\n- [ ] Проверить оплату — до пятницы\n")
+    rows = [
+        ("1" * 32, "Пример: созвон о запуске", 0, 34, ["granola", "orange"], "granola", "", ["Пример Собеседник"], summary),
+        ("2" * 32, "Звонок Telegram", 3, 12, ["orange"], "orange", "Telegram", [], ""),
+        ("3" * 32, "Пример: еженедельная встреча", 26, 58, ["granola"], "granola", "", ["Команда"], summary),
+        ("4" * 32, "Пример: звонок в Chrome", 50, 128, ["orange"], "orange", "Chrome", [], summary),
+    ]
+    meetings = []
+    for mid, title, hours_ago, minutes, sources, primary, app, people, text in rows:
+        start = base - timedelta(hours=hours_ago)
+        meetings.append({"id": mid, "title": title, "start": start.isoformat(), "end": (start + timedelta(minutes=minutes)).isoformat(),
+                         "duration_min": minutes, "primary": primary, "sources": sources, "app": app, "people": people,
+                         "summary": text, "transcripts": {s: turns for s in sources}})
+    catalog = {"schema": 1, "generated_at": STARTED.isoformat(), "state": "ready", "issues": [],
+               "sources": [{"source": "orange", "state": "observed"}, {"source": "granola", "state": "observed"}], "meetings": meetings}
+    path = Path(tempfile.gettempdir()) / "orange-audio-preview.json"
+    path.write_text(json.dumps(catalog, ensure_ascii=False))
+    return orange_audio_projection(path, owner=True, query=q, meeting_id=meeting_id)
+
+
 def prepare_navigation_fixture():
     if FIXTURE_STATE is None:
         raise RuntimeError("preview fixture needs its isolated temporary state")
@@ -232,6 +262,13 @@ class PreviewHandler(SERVER.Handler):
             return
         if parsed.path == "/api/docxx":
             self._json_response(200, docxx_fixture(MODE))
+            return
+        if parsed.path == "/api/orange-audio":
+            # Synthetic meetings only (Orange Audio + Granola shape); nothing from the owner's catalog.
+            if not self._decision_owner_authorized():
+                self._json_response(200, {"state": "owner_required", "meetings": []})
+                return
+            self._json_response(200, orange_fixture(query.get("id", [None])[0], query.get("q", [""])[0]))
             return
         if parsed.path == "/api/context-library":
             # Synthetic content only. Never read the operator's vault for previews.
