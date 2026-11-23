@@ -4814,7 +4814,7 @@ html:has(.platform-archive-dialog[open]) { overflow: hidden; }
 .oa-row strong { font-size:14px; font-weight:650; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .oa-row small { grid-column:2; color:var(--mm-muted); font-size:12px; line-height:1.4; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .oa-note, .oa-empty { min-width:0; background:var(--mm-surface); border:1px solid var(--mm-line); border-radius:16px; padding:24px 28px 32px; box-shadow:var(--mm-shadow-soft); }
-.oa-note[hidden], .oa-empty[hidden] { display:none; }
+.oa[hidden], .oa-note[hidden], .oa-empty[hidden] { display:none; }
 .oa-empty { display:grid; place-items:center; gap:8px; min-height:320px; color:var(--mm-muted); text-align:center; }
 .oa-empty p { margin:0; }
 .oa-mascot { width:64px; height:56px; border-radius:50% 50% 46% 46%; background:radial-gradient(circle at 35% 42%, #2b1a0e 0 4px, transparent 5px), radial-gradient(circle at 65% 42%, #2b1a0e 0 4px, transparent 5px), linear-gradient(180deg, #ffb066, #ec6b10); box-shadow:inset 0 -6px 0 rgb(0 0 0 / .08); position:relative; }
@@ -11584,8 +11584,19 @@ document.getElementById('oa-show-transcript').addEventListener('click', () => { 
 document.getElementById('oa-back').addEventListener('click', () => { oaCloseNote(); document.getElementById('oa-list').querySelector('.oa-row')?.focus(); });
 document.getElementById('oa-search').addEventListener('input', () => { clearTimeout(oaTimer); oaTimer = setTimeout(oaLoad, 300); });
 window.addEventListener('context-lock', () => oaClear('Встречи видны только владельцу.'));
-document.addEventListener('visibilitychange', () => { if (oaVisible()) oaLoad(); });
-setInterval(() => { if (oaVisible() && !oaOpenId) oaLoad(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (!oaVisible()) return; if (oaOpenId) oaRefreshOpen(); else oaLoad(); });
+// An open meeting is re-read too: its summary may arrive a few minutes after the call (keeps the chosen tab).
+async function oaRefreshOpen() {
+  const id = oaOpenId; if (!id) return;
+  const generation = ++oaGeneration;
+  try {
+    const data = await oaFetch(new URLSearchParams({id}));
+    if (generation !== oaGeneration || oaOpenId !== id || !data.meeting || data.meeting.id !== id) return;
+    if (JSON.stringify(data.meeting) === JSON.stringify(oaMeeting)) return;
+    oaMeeting = data.meeting; oaRender();
+  } catch (error) { /* keep what is shown; the next tick tries again */ }
+}
+setInterval(() => { if (!oaVisible()) return; if (oaOpenId) oaRefreshOpen(); else oaLoad(); }, 60000);
 
 
 // ── Platform edits ── Mark 2026-10-20: «кнопку Эдит … менять название, статус, приоритетность», then «менять описание».
