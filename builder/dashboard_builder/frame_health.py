@@ -41,16 +41,38 @@ def frame_health_projection(path: Path, *, owner: bool, now: datetime | None = N
         return {"ok": False, "state": "unreadable"}
     now = now or datetime.now(timezone.utc)
     generated = _parse_time(data.get("at"))
-    age = int((now - generated).total_seconds()) if generated else None
+    if generated is None:  # without a time we cannot say how old it is
+        return {"ok": False, "state": "unreadable"}
+    age = int((now - generated).total_seconds())
     payload: dict[str, Any] = {
         "ok": True,
-        "state": "stale" if age is None or age > STALE_AFTER_SECONDS else "fresh",
+        "state": "stale" if age > STALE_AFTER_SECONDS else "fresh",
         "generated_at": data.get("at"),
         "age_seconds": age,
     }
     for key in _FIELDS:
         payload[key] = data.get(key)
-    beads = payload.get("beads")
-    if isinstance(beads, dict):  # bead ids are internal; the tile needs counts only
-        payload["beads"] = {k: beads.get(k) for k in ("new", "closed", "open")}
+    # Schema check: a field of the wrong shape becomes unknown (None), never a guess.
+    for key in ("ticks", "ticks_max", "plans", "fix_closed", "green_streak"):
+        if not _is_int(payload[key]):
+            payload[key] = None
+    for key in ("night_ok", "warn"):
+        if not isinstance(payload[key], bool):
+            payload[key] = None
+    payload["beads"] = _counts(payload["beads"], ("new", "closed", "open"))  # bead ids are internal
+    payload["review"] = _counts(payload["review"], ("green", "yellow", "red"))
+    payload["autoloop"] = _counts(payload["autoloop"], ("total", "scheduled"))
+    services = payload["failed_services"]
+    payload["failed_services"] = ([str(x) for x in services if isinstance(x, str)]
+                                  if isinstance(services, list) else None)
     return payload
+
+
+def _is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _counts(value: Any, keys: tuple[str, ...]) -> dict[str, int] | None:
+    if not isinstance(value, dict) or not all(_is_int(value.get(k)) for k in keys):
+        return None
+    return {k: value[k] for k in keys}

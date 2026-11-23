@@ -15245,11 +15245,13 @@ function renderFrameHealth(f) {
   note.textContent = '';
   if (f.state === 'stale') {
     when.className = 'machine-care-when is-stale';
-    when.textContent = `устарело: такт не писал с ${machineCareWhen(f.generated_at)}`;
+    when.textContent = `устарело: такт не писал с ${machineCareWhen(f.generated_at) || 'неизвестного времени'}`;
   } else {
     when.textContent = `обновлено ${machineCareWhen(f.generated_at)}`;
   }
   const rows = frameHealthRows(f);
+  // Old data is not a «зелёный» answer: an ok row from a stale file only says what was true then.
+  if (f.state === 'stale') rows.forEach(row => { if (row.level === 'ok') { row.level = 'unknown'; row.word = `было: ${row.word}`; } });
   for (const group of FRAME_GROUPS) {
     const groupRows = rows.filter(row => row.group === group.id);
     const section = document.createElement('div'); section.className = 'machine-care-group';
@@ -15259,7 +15261,8 @@ function renderFrameHealth(f) {
     const unknowns = groupRows.filter(row => row.level === 'unknown').length;
     const summary = document.createElement('span');
     summary.className = `machine-care-group-sum${issues ? ' has-issues' : unknowns ? ' is-unknown' : ''}`;
-    summary.textContent = issues ? `требует внимания: ${issues}` : unknowns ? `нет данных: ${unknowns}` : 'всё в порядке';
+    summary.textContent = issues ? `требует внимания: ${issues}` : f.state === 'stale' ? 'данные устарели'
+      : unknowns ? `нет данных: ${unknowns}` : 'всё в порядке';
     head.append(title, summary);
     const ul = document.createElement('ul'); ul.className = 'machine-care-list';
     section.append(head, ul);

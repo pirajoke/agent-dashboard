@@ -49,7 +49,13 @@ class ProjectionTests(unittest.TestCase):
         self.assertEqual(frame_health_projection(Path("/nonexistent/f.json"), owner=True)["state"], "not_installed")
         self.assertEqual(frame_health_projection(self.write("{oops"), owner=True)["state"], "unreadable")
         self.assertEqual(frame_health_projection(self.write("[]"), owner=True)["state"], "unreadable")
-        self.assertEqual(frame_health_projection(self.write("{}"), owner=True, now=NOW)["state"], "stale")
+        self.assertEqual(frame_health_projection(self.write("{}"), owner=True, now=NOW)["state"], "unreadable")
+
+    def test_wrong_shapes_become_unknown(self):
+        bad = dict(SAMPLE, ticks="24", night_ok="yes", review={"green": 1}, failed_services="x", autoloop=[1])
+        out = frame_health_projection(self.write(json.dumps(bad)), owner=True, now=NOW)
+        for key in ("ticks", "night_ok", "review", "failed_services", "autoloop"):
+            self.assertIsNone(out[key], key)
 
 
 class WiringTests(unittest.TestCase):
@@ -91,6 +97,8 @@ const { chromium } = require('playwright');
       renderFrameHealth({ ...sample, state: 'fresh', generated_at: new Date(Date.now() - 60000).toISOString() });
       result.fresh = read();
       renderFrameHealth({ state: 'stale', generated_at: new Date(Date.now() - 4 * 3600000).toISOString() });
+      result.staleEmpty = read();
+      renderFrameHealth({ ...sample, failed_services: [], state: 'stale', generated_at: new Date(Date.now() - 48 * 3600000).toISOString() });
       result.stale = read();
       renderFrameHealth({ state: 'owner_only' });
       result.owner = read();
@@ -136,9 +144,13 @@ class RenderTests(unittest.TestCase):
             self.assertIn("is-warn", labels["Службы Mac mini"][0])
             self.assertEqual(fresh["sums"], ["всё в порядке", "всё в порядке", "требует внимания: 1"])
             self.assertFalse(fresh["overflow"], name)
+            self.assertEqual(view["staleEmpty"]["sums"], ["данные устарели"] * 3)
             stale = view["stale"]
             self.assertIn("устарело", stale["when"])
-            self.assertEqual(stale["sums"], ["нет данных: 3", "нет данных: 3", "нет данных: 2"])
+            # A frame that died two days ago must not look healthy.
+            self.assertEqual(stale["sums"], ["данные устарели"] * 3)
+            self.assertFalse([row for row in stale["rows"] if "is-ok" in row[0]])
+            self.assertTrue(all(row[2].startswith("было: ") for row in stale["rows"]))
             self.assertIn("только владельцу", view["owner"]["note"])
             self.assertEqual(view["owner"]["rows"], [])
             self.assertIn("Нет связи", view["offline"]["note"])
