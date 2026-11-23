@@ -31,7 +31,8 @@ GROUPS = (
         (".hermes/profiles/jarvis/SOUL.md", "Характер Джарвиса (SOUL)"),
     )),
     ("agents", "Агенты HQ", (
-        ("HQ/hq/global/AGENTS.md", "Общие правила агентов"),
+        ("AGENTS.md", "Общие правила (установлены на Mac mini)"),
+        ("HQ/hq/global/AGENTS.md", "Общие правила: исходник в HQ"),
         ("HQ/hq/global/CLAUDE.md", "Общие правила: CLAUDE.md"),
         ("HQ/hq/AGENTS.md", "Правила штаба"),
         ("HQ/hq/CLAUDE.md", "Штаб: CLAUDE.md"),

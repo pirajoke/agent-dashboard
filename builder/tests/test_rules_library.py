@@ -26,6 +26,7 @@ class RulesLibraryTests(unittest.TestCase):
         write(self.home, "HQ/hq/jarvis-topics/projects.json", "{}")
         write(self.home, "HQ/hq/permissions/pending.md", "# secret-ish\n")
         write(self.home, "HQ/hq/AGENTS.md", "# Штаб\n")
+        write(self.home, "AGENTS.md", "# Общие\n")
         (self.home / "HQ/hq/CLAUDE.md").symlink_to("AGENTS.md")
         RULES._cache.clear()
 
@@ -36,21 +37,21 @@ class RulesLibraryTests(unittest.TestCase):
         data = RULES.collect(self.home)
         groups = {g["id"]: [f["title"] for f in g["files"]] for g in data["groups"]}
         self.assertEqual(groups["jarvis"], ["Правила Джарвиса", "Тема: 💰 Финансы"])
-        self.assertEqual(groups["agents"], ["Правила штаба"])  # CLAUDE.md symlink is the same file
+        self.assertEqual(groups["agents"], ["Общие правила (установлены на Mac mini)", "Правила штаба"])  # CLAUDE.md symlink is the same file
         paths = [f["path"] for g in data["groups"] for f in g["files"]]
         self.assertFalse(any(".bak" in p or "permissions" in p or p.endswith(".json") for p in paths))
         self.assertTrue(all(p.startswith("~/") for p in paths))
 
     def test_public_sees_only_a_count(self):
         data = RULES.projection(self.home, owner=False)
-        self.assertEqual(data, {"ok": True, "owner_view": False, "count": 3})
+        self.assertEqual(data, {"ok": True, "owner_view": False, "count": 4})
         self.assertTrue(RULES.projection(self.home, owner=True)["owner_view"])
 
     def test_cache_is_at_most_a_minute(self):
         RULES.projection(self.home, owner=True, now=1000.0)
         write(self.home, "HQ/hq/docs/max-words.md", "# Слова\n")
-        self.assertEqual(RULES.projection(self.home, owner=False, now=1030.0)["count"], 3)
-        self.assertEqual(RULES.projection(self.home, owner=False, now=1061.0)["count"], 4)
+        self.assertEqual(RULES.projection(self.home, owner=False, now=1030.0)["count"], 4)
+        self.assertEqual(RULES.projection(self.home, owner=False, now=1061.0)["count"], 5)
 
     def test_markdown_is_escaped(self):
         out = RULES.render_markdown("# T <b>\n\n**жирно** `<x>` [s](https://a.b/c)\n\n<script>alert(1)</script>\n\n| a | b |\n|---|---|\n| 1 | <i> |\n")
