@@ -12,7 +12,9 @@ import tempfile
 import stat
 
 MAX_BYTES = 2 * 1024 * 1024
-SOURCES = ('krisp', 'granola')
+SOURCES = ('krisp', 'granola', 'orange')
+# Orange Audio = Max's own call recorder (CallRecorder → hq call_files.py), Max 2026-11-23.
+ID_FIELDS = {'krisp': 'meeting_id', 'granola': 'granola_id', 'orange': 'call_id'}
 
 def sha(raw):
     return hashlib.sha256(raw).hexdigest()
@@ -113,7 +115,7 @@ def import_transcript_exports(vault, intake, state_file, dry_run=False):
                 raw, text = read(p)  # Incomplete canonical index must never permit a duplicate.
                 fm, body = front(text); source = fm.get('source','')
                 if source not in SOURCES: continue
-                upstream = fm.get('meeting_id') if source == 'krisp' else fm.get('granola_id')
+                upstream = fm.get(ID_FIELDS[source])
                 keys=[]
                 if upstream: keys.append(source+':id:'+upstream)
                 if fm.get('import_sha256'): keys.append(source+':sha:'+fm['import_sha256'])
@@ -126,7 +128,7 @@ def import_transcript_exports(vault, intake, state_file, dry_run=False):
                 except (OSError,UnicodeError,ValueError):
                     result['unsupported'] += 1; continue
                 digest = sha(raw); fm,body = front(text)
-                field = 'meeting_id' if source == 'krisp' else 'granola_id'
+                field = ID_FIELDS[source]
                 upstream = fm.get(field,'')
                 if len(upstream)>256 or any(ord(c)<32 for c in upstream):
                     result['unsupported']+=1;continue
