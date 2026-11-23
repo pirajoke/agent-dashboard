@@ -6551,7 +6551,7 @@ a.kb-card-title:hover { text-decoration: underline; }
     <p class="cc-page-lede">Записи встреч и обновления проектов. Нажми на запись, чтобы прочитать.</p></div></header>
     <form class="context-controls" id="context-filters" role="search">
       <label class="context-search-field"><span class="cc-visually-hidden">Найти в записях</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input id="context-search" type="search" maxlength="1000" placeholder="Найти: тема, решение или проект" autocomplete="off"></label>
-      <label><span class="cc-visually-hidden">Источник</span><select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
+      <label><span class="cc-visually-hidden">Источник</span><select id="context-source"><option value="">Все источники</option><option value="plaud">PLAUD</option><option value="krisp">Krisp</option><option value="granola">Granola</option><option value="orange">Orange Audio</option><option value="other">Другие записи</option><option value="project-update">Обновления проектов</option></select></label>
       <label><span class="cc-visually-hidden">Тип</span><select id="context-kind"><option value="">Все записи</option><option value="transcript">Встречи</option><option value="update">Обновления</option></select></label>
       <button type="submit" aria-label="Обновить записи" title="Обновить">↻</button>
     </form>
@@ -10977,7 +10977,7 @@ let ccContextGeneration = 0;
 let ccContextController = null;
 let ccContextTimer = null;
 let ccContextRecordId = null;
-const ccContextNames = {plaud:'PLAUD',krisp:'Krisp',granola:'Granola',other:'Другие записи','project-update':'Обновления проектов'};
+const ccContextNames = {plaud:'PLAUD',krisp:'Krisp',granola:'Granola',orange:'Orange Audio',other:'Другие записи','project-update':'Обновления проектов'};
 // Mark 2026-10-24: «в контексте ничего не показывается». When the site doesn't recognise the owner,
 // a private tab used to show one small grey line and looked broken. Now it says so plainly, with a way out.
 function ccOwnerGate(what) {

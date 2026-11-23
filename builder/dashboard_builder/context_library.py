@@ -19,8 +19,9 @@ from urllib.parse import urlencode, urlsplit, parse_qs
 MAX_NOTE = 2 * 1024 * 1024
 MAX_CATALOG = 32 * 1024 * 1024
 RID = re.compile(r'^[a-f0-9]{32}$')
-SOURCES = ('plaud', 'krisp', 'granola', 'other', 'project-update')
-ROOTS = ('10-Transcripts', '00-Inbox/plaud', '00-Inbox/krisp', '00-Inbox/granola',
+# 'orange' = Orange Audio, Max's own call recorder (Max 2026-11-23). The update log root stays last.
+SOURCES = ('plaud', 'krisp', 'granola', 'orange', 'other', 'project-update')
+ROOTS = ('10-Transcripts', '00-Inbox/plaud', '00-Inbox/krisp', '00-Inbox/granola', '00-Inbox/orange',
          '90-Operations/project-update-webhook/logs')
 
 
@@ -180,7 +181,9 @@ def build_catalog(vault, previous=None, now=None):
         source = 'project-update' if kind == 'update' else meta.get('source', '').lower()
         if source not in SOURCES:
             source = next((s for s in SOURCES[:3] if s in relative.lower()), 'other')
-        upstream = next((meta[k] for k in ('plaud_id', 'meeting_id', 'granola_id', 'writeback_id') if meta.get(k)), '')
+            if source == 'other' and relative.startswith('00-Inbox/orange/'):
+                source = 'orange'
+        upstream = next((meta[k] for k in ('plaud_id', 'meeting_id', 'granola_id', 'call_id', 'writeback_id') if meta.get(k)), '')
         # Fallback journals reuse this marker; it is provenance, not an event ID.
         if source == 'project-update' and upstream == 'manual-fallback':
             upstream = ''

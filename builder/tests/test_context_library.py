@@ -122,6 +122,27 @@ class CollectorTests(FixtureCase):
         granola = next(s for s in out['sources'] if s.get('source', s.get('id')) == 'granola')
         self.assertIn('not_observed', granola.values())
 
+    def test_orange_audio_call_is_its_own_source_with_call_id_identity(self):
+        """Max 2026-11-23: Orange Audio (own call recorder) sits next to Granola."""
+        text = '---\ntype: transcript\nsource: orange\ncall_id: "fixture-call-1"\ntitle: "Synthetic call"\ndate: 2026-11-23\n---\n' + BODY
+        path = self.note('00-Inbox/orange/a.md', text)
+        self.note('00-Inbox/orange/no-front.md', '# Synthetic call without frontmatter\nBody')
+        before = self.build()
+        calls = [r for r in before['records'] if r['source'] == 'orange']
+        self.assertEqual(len(calls), 2)
+        first = next(r for r in calls if r['source_id'] == 'fixture-call-1')
+        self.assertEqual((first['title'], first['date']), ('Synthetic call', '2026-11-23'))
+        state = next(s for s in before['sources'] if s['source'] == 'orange')['state']
+        self.assertEqual(state, 'observed')
+        path.unlink()
+        self.note('00-Inbox/orange/moved.md', text.replace(BODY, 'Edited body'))
+        after = self.build(before)
+        self.assertEqual(next(r for r in after['records'] if r['source_id'] == 'fixture-call-1')['id'], first['id'])
+        self.snapshot.write_text(json.dumps(after), encoding='utf-8')
+        out = self.project(source='orange')
+        self.assertTrue(out['records'])
+        self.assertTrue(all(r['source'] == 'orange' for r in out['records']))
+
     def test_ac2_upstream_id_survives_move_and_content_edit(self):
         path = self.note('00-Inbox/krisp/old.md', '---\nmeeting_id: fixture-krisp\n---\nOld body')
         before = self.build()

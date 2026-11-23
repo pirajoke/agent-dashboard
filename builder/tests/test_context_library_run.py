@@ -97,6 +97,22 @@ class ContextLibraryRunTests(unittest.TestCase):
         self.assertEqual(self.snapshot(self.output), output_before)
         self.assertEqual(self.snapshot(self.intake), source_before)
 
+    def test_orange_audio_intake_imports_once_by_call_id(self):
+        call = self.intake / 'orange' / 'call.md'
+        call.parent.mkdir()
+        call.write_text('---\ntitle: "Synthetic call"\ndate: 2026-11-23\ncall_id: fixture-call\n---\n# Synthetic call\n\n## Резюме\n\n' + PRIVATE + '\n')
+        first = self.run_cli()
+        self.assertEqual(first.returncode, 0, first.stderr)
+        notes = list((self.vault / '00-Inbox/orange').glob('*.md'))
+        self.assertEqual(len(notes), 1)
+        self.assertIn('source: orange', notes[0].read_text())
+        self.assertIn('call_id: "fixture-call"', notes[0].read_text())
+        data = json.loads((self.state / 'catalog.json').read_text())
+        self.assertIn('orange', {r['source'] for r in data['records']})
+        second = self.run_cli()
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertEqual(len(list((self.vault / '00-Inbox/orange').glob('*.md'))), 1)
+
     def test_safe1_missing_vault_preserves_last_good_catalog_and_exports(self):
         self.assertEqual(self.run_cli().returncode, 0)
         before_catalog = (self.state / 'catalog.json').read_bytes()
