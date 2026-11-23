@@ -207,7 +207,7 @@ Validation: `PYTHONPATH=builder python3 -m unittest builder.tests.test_context_l
 Fixtures must be synthetic. Local live collection, private Drive sharing, scheduler
 configuration and deployment are separate operator stages.
 
-Manual Krisp/Granola exports can be ingested with `context_library_run.py --config /private/config.json` (or `--dry-run`). The private JSON specifies `vault`, `output`, `state_dir`, and `intake`; all directories must already exist. Only `intake/krisp` and `intake/granola` UTF-8 TXT/MD are read, and canonical notes go to the corresponding `00-Inbox` service folder. Existing source IDs and import hashes prevent repeated notes. Conflicting content is preserved for review. Source exports are never removed. State and locks stay outside data roots. Run only one scheduled writer. This is automatic processing of manually exported files, not an authenticated cloud integration with either service.
+Manual Krisp/Granola exports can be ingested with `context_library_run.py --config /private/config.json` (or `--dry-run`). The private JSON specifies `vault`, `output`, `state_dir`, and `intake`; all directories must already exist. Only `intake/krisp`, `intake/granola` and `intake/orange` (Orange Audio — the owner's own call recorder, identity `call_id`) UTF-8 TXT/MD are read, and canonical notes go to the corresponding `00-Inbox` service folder. Existing source IDs and import hashes prevent repeated notes. Conflicting content is preserved for review. Source exports are never removed. State and locks stay outside data roots. Run only one scheduled writer. This is automatic processing of manually exported files, not an authenticated cloud integration with either service.
 
 ## «Архитектура»: how the agent system is wired
 
