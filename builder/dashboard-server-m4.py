@@ -35,6 +35,7 @@ from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path
 from dashboard_builder.docxx_public_pages import PAGES as DOCXX_INFO_PAGES, CONTENT_SECURITY_POLICY as DOCXX_INFO_CSP
 from dashboard_builder.daily_work import work_projection
 from dashboard_builder.mac_care import care_projection
+from dashboard_builder.frame_health import frame_health_projection
 from dashboard_builder.platform_resources import owner_projects_projection, platform_resources_projection
 from dashboard_builder.work_tools import work_tools_projection
 from dashboard_builder.platform_edits import MAX_BODY_BYTES as PLATFORM_EDITS_MAX_BYTES, load_edits, save_card_edit
@@ -137,6 +138,7 @@ def _weekly_payload(owner: bool) -> dict:
 AUTO_DEPLOY_STATE_FILE = HOME / ".agent-bridge" / "auto-deploy" / "state.json"
 INFRA_CHANGES_DIR = HOME / ".agent-bridge" / "infra-changes"
 MAC_CARE_DIR = HOME / ".agent-bridge" / "mac-care"
+FRAME_HEALTH_FILE = HOME / ".agent-bridge" / "frame-health.json"
 JARVIS_PIPELINE_SCRIPT = SCRIPTS_DIR / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_REPORT_DIR = HOME / "Library" / "Logs" / "jarvis-agent-pipeline"
 JARVIS_PIPELINE_LOG_FILE = HOME / "Library" / "Logs" / "dashboard-jarvis-pipeline-run.log"
@@ -227,6 +229,7 @@ PUBLIC_BRIDGE_PATHS = {
     "/api/work/daily",
     "/api/infra/changes",
     "/api/machines/care",
+    "/api/frame/health",
     "/api/growth",
 }
 PUBLIC_FILE_PATHS = {
@@ -3507,6 +3510,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             # Owner only: process names, firewall and update lists stay off the public page.
             machine = (parse_qs(parsed.query).get('machine') or ['macbook-pro'])[0]
             self._json_response(200, care_projection(MAC_CARE_DIR, machine, owner=self._dashboard_run_authorized()))
+            return
+        if parsed.path == '/api/frame/health':
+            # Owner only, like machine care: service names and bead counts are not for the public page.
+            self._json_response(200, frame_health_projection(FRAME_HEALTH_FILE, owner=self._dashboard_run_authorized()))
             return
         if parsed.path == '/api/growth':
             self._handle_growth()

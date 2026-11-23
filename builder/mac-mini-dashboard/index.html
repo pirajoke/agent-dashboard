@@ -7387,6 +7387,14 @@ a.kb-card-title:hover { text-decoration: underline; }
       <p class="machine-care-note" id="mini-thermal-note" role="status"></p>
       <div id="mini-thermal-body"></div>
     </section>
+    <section class="machine-care" id="mini-frame" aria-labelledby="mini-frame-title" hidden>
+      <div class="machine-care-head">
+        <h3 class="machine-care-title" id="mini-frame-title">Здоровье каркаса</h3>
+        <span class="machine-care-when" id="mini-frame-when"></span>
+      </div>
+      <p class="machine-care-note" id="mini-frame-note" role="status"></p>
+      <div class="machine-care-groups" id="mini-frame-list"></div>
+    </section>
 
     <!-- System gauges row -->
     <div class="machine-gauges" hidden style="display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:16px; margin-bottom:24px;">
@@ -14652,6 +14660,7 @@ function renderGauges(prefix, sys) {
 // ─── Mac Mini ───
 async function refreshMini() {
   refreshMachineCare('mini', 'mac-mini');
+  refreshFrameHealth();
   if (!MAC_MINI_API) {
     document.getElementById('mini-status').textContent = 'Нет связи';
     document.getElementById('mini-online-badge').textContent = 'не в сети';
@@ -15168,6 +15177,118 @@ function renderMachineThermal(key, care) {
     }
     body.append(list);
   }
+}
+
+// ─── Здоровье каркаса (Макс 2026-11-23): hourly tact, beads, night walk, executor, review, autoloop ───
+// heartbeat.py in pirajoke/hq writes ~/.agent-bridge/frame-health.json every hour; owner only.
+const FRAME_HEALTH_API = (!IS_FILE_DASHBOARD)
+  ? `${DASHBOARD_API}/api/frame/health`
+  : 'https://command.meshly.fr/api/frame/health';
+const FRAME_GROUPS = [
+  { id: 'rhythm', title: 'Ритм' },
+  { id: 'work', title: 'Работа агентов' },
+  { id: 'quality', title: 'Качество и службы' },
+];
+
+function frameHealthRows(f) {
+  const rows = [];
+  const unknown = (group, label) => ({ group, label, level: 'unknown', word: 'неизвестно', detail: 'нет данных' });
+  const max = typeof f.ticks_max === 'number' ? f.ticks_max : 24;
+  if (typeof f.ticks !== 'number') rows.push(unknown('rhythm', 'Такт раз в час'));
+  else rows.push({ group: 'rhythm', label: 'Такт раз в час', level: f.ticks >= max ? 'ok' : f.ticks >= max - 3 ? 'warn' : 'bad',
+    word: `${f.ticks} из ${max}`, detail: 'успешных тактов за сутки' });
+  if (typeof f.night_ok !== 'boolean') rows.push(unknown('rhythm', 'Ночной обход 06:30'));
+  else rows.push({ group: 'rhythm', label: 'Ночной обход 06:30', level: f.night_ok ? 'ok' : 'warn',
+    word: f.night_ok ? 'отчёт есть' : 'нет отчёта', detail: 'отчёт за сегодня' });
+  const al = f.autoloop;
+  if (!al || typeof al.scheduled !== 'number') rows.push(unknown('rhythm', 'agent-autoloop'));
+  else rows.push({ group: 'rhythm', label: 'agent-autoloop', level: al.scheduled > 0 ? 'ok' : 'warn',
+    word: al.scheduled > 0 ? `по расписанию: ${al.scheduled}` : 'нет расписания', detail: `всего правил: ${al.total}` });
+  const b = f.beads;
+  if (!b || typeof b.open !== 'number') rows.push(unknown('work', 'Биды'));
+  else rows.push({ group: 'work', label: 'Биды', level: 'ok', word: `открыто ${b.open}`,
+    detail: `за сутки: новых ${b.new}, закрыто ${b.closed}` });
+  if (typeof f.fix_closed !== 'number') rows.push(unknown('work', 'Исполнитель 07:00 и 14:00'));
+  else rows.push({ group: 'work', label: 'Исполнитель 07:00 и 14:00', level: 'ok', word: `закрыл ${f.fix_closed}`, detail: 'бидов за сегодня' });
+  if (typeof f.plans !== 'number') rows.push(unknown('work', 'Планы «Лорен Тан»'));
+  else rows.push({ group: 'work', label: 'Планы «Лорен Тан»', level: 'ok', word: `${f.plans}`, detail: 'планов перед работой за сутки' });
+  const r = f.review;
+  if (!r || typeof r.green !== 'number') rows.push(unknown('quality', 'Ревью «дядя Боб»'));
+  else rows.push({ group: 'quality', label: 'Ревью «дядя Боб»', level: r.red ? 'bad' : f.warn ? 'warn' : 'ok',
+    word: `🟢${r.green} 🟡${r.yellow} 🔴${r.red}`,
+    detail: f.warn ? `${f.green_streak} 🟢 подряд без замечаний: ревью могло стать формальным` : 'вердикты за сутки' });
+  const svc = f.failed_services;
+  if (!Array.isArray(svc)) rows.push(unknown('quality', 'Службы Mac mini'));
+  else rows.push({ group: 'quality', label: 'Службы Mac mini', level: svc.length ? 'warn' : 'ok',
+    word: svc.length ? `сбоев: ${svc.length}` : 'без сбоев', detail: svc.length ? svc.slice(0, 4).join(', ') : 'все com.pirajoke.* в порядке' });
+  return rows;
+}
+
+function renderFrameHealth(f) {
+  const host = document.getElementById('mini-frame');
+  if (!host) return;
+  const note = document.getElementById('mini-frame-note');
+  const list = document.getElementById('mini-frame-list');
+  const when = document.getElementById('mini-frame-when');
+  host.hidden = false;
+  when.className = 'machine-care-when';
+  when.textContent = '';
+  list.replaceChildren();
+  const messages = {
+    owner_only: 'Подробности видны только владельцу. Войди как владелец, чтобы их увидеть.',
+    not_installed: 'Каркас ещё не присылал данные. Они появятся после ближайшего часового такта.',
+    unreadable: 'Файл каркаса не читается. Следующий такт перезапишет его в течение часа.',
+  };
+  if (!f || !f.state) { note.textContent = 'Нет связи с Command Center, попробую ещё раз.'; return; }
+  if (messages[f.state]) { note.textContent = messages[f.state]; return; }
+  if (f.state !== 'fresh' && f.state !== 'stale') { note.textContent = 'Нет данных.'; return; }
+  note.textContent = '';
+  if (f.state === 'stale') {
+    when.className = 'machine-care-when is-stale';
+    when.textContent = `устарело: такт не писал с ${machineCareWhen(f.generated_at)}`;
+  } else {
+    when.textContent = `обновлено ${machineCareWhen(f.generated_at)}`;
+  }
+  const rows = frameHealthRows(f);
+  for (const group of FRAME_GROUPS) {
+    const groupRows = rows.filter(row => row.group === group.id);
+    const section = document.createElement('div'); section.className = 'machine-care-group';
+    const head = document.createElement('div'); head.className = 'machine-care-group-head';
+    const title = document.createElement('h4'); title.className = 'machine-care-group-title'; title.textContent = group.title;
+    const issues = groupRows.filter(row => row.level === 'warn' || row.level === 'bad').length;
+    const unknowns = groupRows.filter(row => row.level === 'unknown').length;
+    const summary = document.createElement('span');
+    summary.className = `machine-care-group-sum${issues ? ' has-issues' : unknowns ? ' is-unknown' : ''}`;
+    summary.textContent = issues ? `требует внимания: ${issues}` : unknowns ? `нет данных: ${unknowns}` : 'всё в порядке';
+    head.append(title, summary);
+    const ul = document.createElement('ul'); ul.className = 'machine-care-list';
+    section.append(head, ul);
+    list.append(section);
+    for (const row of groupRows) {
+      const item = document.createElement('li');
+      item.className = `machine-care-row is-${row.level}`;
+      const dot = document.createElement('span'); dot.className = 'machine-care-dot'; dot.setAttribute('aria-hidden', 'true');
+      const line = document.createElement('span'); line.className = 'machine-care-line';
+      const label = document.createElement('span'); label.className = 'machine-care-label'; label.textContent = row.label;
+      const word = document.createElement('span'); word.className = 'machine-care-word'; word.textContent = row.word;
+      line.append(label, word);
+      item.append(dot, line);
+      if (row.detail) { const detail = document.createElement('span'); detail.className = 'machine-care-detail'; detail.textContent = row.detail; item.append(detail); }
+      ul.append(item);
+    }
+  }
+}
+
+let frameHealthLoadedAt = 0;
+async function refreshFrameHealth(force = false) {
+  if (!force && frameHealthLoadedAt && Date.now() - frameHealthLoadedAt < MACHINE_CARE_REFRESH_MS) return;
+  frameHealthLoadedAt = Date.now();
+  let data = null;
+  try {
+    const response = await fetch(FRAME_HEALTH_API, { headers: jarvisRunHeaders(), signal: AbortSignal.timeout(5000) });
+    if (response.ok) data = await response.json();
+  } catch { data = null; }
+  renderFrameHealth(data);
 }
 
 async function refreshMachineCare(key, machine, force = false) {

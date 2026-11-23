@@ -31,8 +31,9 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-11-08 on Mark's «температуру компьютера в технике … чтобы мог трекать»: Mac mini and
         # MacBook Pro get «Температура» (now, 24 h chart, peak per day for the week).
         # 2026-11-18 on Mark's «сделай переключатель для qwen в команд центре»: MacBook Pro gets the Qwen switch.
+        # 2026-11-23 on Max's «закрой последнюю» to the offered tile: Mac mini gets «Здоровье каркаса».
         expected = {
-            "section-mac-mini": "1010d6e1dd9fef0469cdb73472686a5f81b122dceb8312ae9800d1e8bb538c32",
+            "section-mac-mini": "e0100c245ea9bd9d7a98a62f0250c671f2eac81bb5ce4ed78765b1c927e90f03",
             "section-air": "744a4d48469d44a53f2b354be488131d4298312b8ade8e681c9861e2cb8ecef3",
             "section-pro": "4af065ee4834c283b1456d16a2c616e4af6ce94026362218d74a01425f0b2e54",
         }
@@ -53,11 +54,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-11-10 on the Docker Guardian task: scheduled jobs between clean runs read «Ждёт запуска», not an error.
         # 2026-11-17 on Mark's «там же есть нагрузка, видеочип, память … это не работает»: GPU tile and wired/compressed memory.
         # 2026-11-18 on Mark's «сделай переключатель для qwen в команд центре»: the Qwen switch on the MacBook Pro.
+        # 2026-11-23 on Max's «закрой последнюю» to the offered tile: «Здоровье каркаса» renderer, loaded with Mac mini.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "eeef979a56c32559eb3bd5a5e68a0611118601a9ceda2bd90900780c3ae0580c")
+                         "dc38ca46c378134a285034a21ac7c00ca43ced946a4b5429c07588d0e91bb2b5")
 
 
 if __name__ == "__main__":
