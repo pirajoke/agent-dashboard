@@ -48,6 +48,7 @@ import sqlite3
 from dashboard_builder.personal_kanban import Board as PersonalBoard, Conflict as BoardConflict
 from dashboard_builder.shared_task_board import projection as shared_task_board_projection
 from dashboard_builder.genealogy import GenealogyUnavailable, load_genealogy
+from dashboard_builder import rules_library
 from dashboard_builder import weekly_reports
 from dashboard_builder.repair_log import MAX_BODY_BYTES as REPAIR_LOG_MAX_BYTES, change_entries as change_repair_log, load_entries as load_repair_log
 from dashboard_builder.infra_changes import infra_projection
@@ -3245,6 +3246,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Location', '/?tab=tasks')
             self.send_header('Content-Length', '0')
             self.end_headers()
+            return
+        if parsed.path in ('/rules', '/rules/'):
+            # Макс 2026-11-23: «вкладка правила» — read-only view of the HQ and Jarvis rule files.
+            self.send_response(302)
+            self.send_header('Location', '/?tab=rules')
+            self.send_header('Content-Length', '0')
+            self.end_headers()
+            return
+        if parsed.path == '/api/rules':
+            # Owner sees the files; anyone else only how many there are. Never writes.
+            try:
+                self._json_response(200, rules_library.projection(HOME, owner=self._decision_owner_authorized()))
+            except OSError:
+                self._json_response(200, {'ok': False, 'state': 'unavailable', 'reason': 'rules_unreadable'})
             return
         if self._serve_docxx_info_page(parsed.path):
             return
