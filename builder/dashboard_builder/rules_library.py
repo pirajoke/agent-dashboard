@@ -2,8 +2,8 @@
 
 Read-only view of the rule files that steer Jarvis and the HQ agents. Files are read live, with a
 cache of at most a minute, and nothing here ever writes. Only a fixed list of Markdown files is
-shown: Jarvis topic files, the HQ AGENTS/CLAUDE files and three reference docs. Backups
-(``*.bak*``), permissions, secrets, ``.env`` and config files are never read.
+shown: Jarvis topic files, the HQ AGENTS/CLAUDE files, three reference docs and the skills registry.
+Backups (``*.bak*``), permissions, secrets, ``.env`` and config files are never read.
 
 Markdown is turned into HTML here with a small renderer that escapes every piece of text first,
 so a rule file cannot inject markup into the page.
@@ -41,6 +41,10 @@ GROUPS = (
         ("HQ/hq/docs/rules-history.md", "История правил"),
         ("HQ/hq/docs/rules-freshness.md", "Свежесть правил"),
         ("HQ/hq/docs/max-words.md", "Слова Макса"),
+    )),
+    # Макс 2026-11-24: «найди этот скилл добавь в команд центр» — the HQ skills registry, read-only.
+    ("skills", "Скиллы", (
+        ("HQ/hq/skills-registry.md", "Реестр скиллов"),
     )),
 )
 

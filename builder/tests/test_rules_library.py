@@ -42,6 +42,13 @@ class RulesLibraryTests(unittest.TestCase):
         self.assertFalse(any(".bak" in p or "permissions" in p or p.endswith(".json") for p in paths))
         self.assertTrue(all(p.startswith("~/") for p in paths))
 
+    def test_skills_registry_has_its_own_group(self):
+        write(self.home, "HQ/hq/skills-registry.md", "# Реестр скиллов штаба\n\n| Скилл | Статус |\n|---|---|\n| `redaktura` | включён |\n")
+        data = RULES.collect(self.home)
+        skills = [g for g in data["groups"] if g["id"] == "skills"]
+        self.assertEqual([f["title"] for f in skills[0]["files"]], ["Реестр скиллов"])
+        self.assertIn("<code>redaktura</code>", skills[0]["files"][0]["html"])
+
     def test_public_sees_only_a_count(self):
         data = RULES.projection(self.home, owner=False)
         self.assertEqual(data, {"ok": True, "owner_view": False, "count": 4})
