@@ -12346,6 +12346,7 @@ function mediaPersonalHtml(item) {
     + `${meta ? `<span class="media-personal-meta">${mediaEsc(meta)}</span>` : ''}`
     + `${item.note ? `<span class="media-personal-meta">${mediaEsc(item.note)}</span>` : ''}${link}</div></li>`;
 }
+let mediaPersonalKey = '';
 async function mediaPersonalLoad() {
   const list = document.getElementById('media-personal-list');
   if (!MEDIA_PERSONAL_API || !list) return;
@@ -12354,9 +12355,24 @@ async function mediaPersonalLoad() {
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.state !== 'ready') throw new Error(`HTTP ${response.status}`);
     const items = Array.isArray(data.items) ? data.items : [];
+    const key = JSON.stringify(items);
+    if (key === mediaPersonalKey) return;  // keep a playing video playing
+    mediaPersonalKey = key;
     list.innerHTML = items.length ? items.map(mediaPersonalHtml).join('')
       : '<li class="media-personal-empty">Пока пусто. Агенты кладут сюда опубликованные видео и картинки.</li>';
+    // Signed in with the owner token instead of Cloudflare Access: <video>/<img> cannot send the header,
+    // so fetch the file with it and show it from memory (no seeking then, but it plays).
+    const headers = mmHeaders();
+    if (headers['X-Dashboard-Run-Token']) {
+      for (const el of list.querySelectorAll('video[src], img[src]')) {
+        const url = el.getAttribute('src');
+        el.removeAttribute('src');
+        fetch(url, { headers, cache: 'no-store' }).then(r => (r.ok ? r.blob() : null))
+          .then(blob => { if (blob) el.src = URL.createObjectURL(blob); }).catch(() => {});
+      }
+    }
   } catch (_) {
+    mediaPersonalKey = '';
     list.innerHTML = '<li class="media-personal-empty">Личные медиа сейчас не загрузились.</li>';
   }
 }

@@ -2934,8 +2934,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         path, mime = found
         try:
-            size = path.stat().st_size
-            handle = path.open('rb')
+            fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+            handle = os.fdopen(fd, 'rb')
+            size = os.fstat(fd).st_size
         except OSError:
             self._json_response(404, {'error': 'file_not_found'})
             return
@@ -2949,13 +2950,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     end = min(int(match.group(2)), size - 1) if match.group(2) else size - 1
                 else:
                     start = max(0, size - int(match.group(2)))
-                if start > end or start >= size:
+                if match.group(1) and match.group(2) and int(match.group(2)) < start:
+                    start, end = 0, size - 1  # RFC 9110: an invalid range is ignored
+                    match = None
+                elif start >= size or (not match.group(1) and int(match.group(2)) == 0):
                     self.send_response(416)
                     self.send_header('Content-Range', f'bytes */{size}')
                     self.send_header('Content-Length', '0')
                     self.end_headers()
                     return
-                ranged = True
+                ranged = match is not None
             length = end - start + 1 if size else 0
             self.send_response(206 if ranged else 200)
             self.send_header('Content-Type', mime)
@@ -2966,8 +2970,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Cache-Control', 'private, no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
             self.end_headers()
-            if self.command == 'HEAD':
-                return
             handle.seek(start)
             left = length
             while left > 0:

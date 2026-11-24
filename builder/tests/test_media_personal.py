@@ -111,6 +111,15 @@ class ServerTests(unittest.TestCase):
         tail = self.serve("bytes=-3")
         self.assertEqual(tail.wfile.getvalue(), b"hij")
         self.assertEqual(self.serve("bytes=20-").status, 416)
+        self.assertEqual(self.serve("bytes=-0").status, 416)
+        bad = self.serve("bytes=5-3")
+        self.assertEqual((bad.status, bad.wfile.getvalue()), (200, b"abcdefghij"))
+
+    def test_symlink_swapped_after_check_is_not_followed(self):
+        target = self.base / "files" / self.item["file"]
+        target.unlink()
+        os.symlink(self.base / "v.mp4", target)
+        self.assertEqual(self.serve().status, 404)
 
     def test_routes_are_owner_only(self):
         source = (BUILDER / "dashboard-server-m4.py").read_text()

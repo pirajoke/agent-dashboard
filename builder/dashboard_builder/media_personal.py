@@ -14,6 +14,7 @@ Everything here is owner-only; the server checks the owner before calling it.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import os
 import re
@@ -143,6 +144,12 @@ def add(*, file: str | None, url: str | None, title: str, where: list[str], publ
     if not file and not url:
         raise ValueError("give --file or --url")
     (base / "files").mkdir(parents=True, exist_ok=True)
+    with open(base / ".lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)  # two agents adding at once must not lose an item
+        return _add_locked(base, file=file, url=url, title=title, where=where, published=published, note=note)
+
+
+def _add_locked(base: Path, *, file, url, title, where, published, note) -> dict:
     items = _read(base)
     item_id = f"{(published or date.today().isoformat())}-{uuid.uuid4().hex[:8]}"
     entry = {"id": item_id, "title": title.strip(), "note": note.strip(), "where": where,
