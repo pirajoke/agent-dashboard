@@ -4217,6 +4217,18 @@ button.media-car-open:hover { transform: translateY(-2px); border-color: var(--m
 .media-channel-tab { position: relative; gap: 0; min-height: 0; padding: 5px; border-radius: 11px; }
 .media-channel-tab[aria-selected="true"] { background: var(--mm-selection); border-color: var(--mm-accent); }
 .media-channel-tab.is-soon { cursor: default; opacity: .45; filter: grayscale(.6); }
+.media-me-tab { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: var(--mm-ink); color: var(--mm-surface); }
+.media-me-tab svg { width: 20px; height: 20px; }
+.media-personal-panel { display: grid; gap: 10px; padding: 16px 18px; }
+.media-personal-panel h3 { margin: 0; font-size: 15px; font-weight: 750; }
+.media-personal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.media-personal-item { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--mm-line); border-radius: 14px; background: var(--mm-surface); overflow: hidden; }
+.media-personal-item video, .media-personal-item img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: #000; }
+.media-personal-body { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px 12px; }
+.media-personal-body b { font-size: 14px; line-height: 1.35; }
+.media-personal-meta { color: var(--mm-muted); font-size: 12.5px; }
+.media-personal-body a { color: var(--mm-accent); font-size: 12.5px; font-weight: 650; }
+.media-personal-empty { padding: 18px 10px; color: var(--mm-muted); font-size: 13px; text-align: center; }
 .media-channel-tab.is-soon:hover { background: transparent; }
 .media-channel-sep { width: 1px; height: 24px; margin: 0 4px; background: var(--mm-line); }
 .media-soon { position: absolute; right: -2px; bottom: -4px; padding: 0 4px; border-radius: 6px; background: var(--mm-surface); border: 1px solid var(--mm-line); color: var(--mm-muted); font-size: 9px; font-style: normal; font-weight: 700; line-height: 13px; }
@@ -7253,6 +7265,8 @@ a.kb-card-title:hover { text-decoration: underline; }
         <button type="button" role="tab" class="media-channel-tab" id="media-tab-linkedin" data-channel="linkedin" title="LinkedIn" aria-controls="media-view-linkedin" aria-selected="true"><span class="media-in media-in-tab" aria-hidden="true">in</span><span class="media-sr">LinkedIn</span></button>
         <button type="button" role="tab" class="media-channel-tab" id="media-tab-telegram" data-channel="telegram" title="Telegram" aria-controls="media-view-telegram" aria-selected="false" tabindex="-1"><span class="media-tg-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 4 3 11l6 2 2 6 3-4 5 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 13 9-6-6 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span><span class="media-sr">Telegram</span></button>
         <button type="button" role="tab" class="media-channel-tab" id="media-tab-x" data-channel="x" title="X" aria-controls="media-view-x" aria-selected="false" tabindex="-1"><span class="media-x-tab" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4l16 16M20 4L4 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></span><span class="media-sr">X</span></button>
+        <!-- Mark 2026-11-24: «в разделе медиа сделай личные медиа и туда генерации опубликованные кидай». -->
+        <button type="button" role="tab" class="media-channel-tab" id="media-tab-personal" data-channel="personal" title="Личное" aria-controls="media-view-personal" aria-selected="false" tabindex="-1"><span class="media-me-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M5 19.5c1.2-3.4 3.9-5 7-5s5.8 1.6 7 5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></span><span class="media-sr">Личное</span></button>
         <span class="media-channel-sep" aria-hidden="true"></span>
         <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="Instagram · скоро"><span class="media-ig-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="3.6" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="16.8" cy="7.2" r="1.1" fill="currentColor"/></svg></span><span class="media-sr">Instagram, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
         <button type="button" class="media-channel-tab is-soon" aria-disabled="true" tabindex="-1" title="YouTube · скоро"><span class="media-yt-tab" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 8.5v7l6-3.5z" fill="currentColor"/></svg></span><span class="media-sr">YouTube, скоро</span><i class="media-soon" aria-hidden="true">скоро</i></button>
@@ -7370,6 +7384,14 @@ a.kb-card-title:hover { text-decoration: underline; }
         <article class="media-panel media-digest-panel" id="media-digest-x" aria-labelledby="media-digest-x-title">
           <h3 id="media-digest-x-title">Пост дня для X · аккаунт студии, по-английски</h3>
           <ol class="media-digest-list" data-channel="x"></ol>
+        </article>
+      </div>
+
+      <div class="media-view" id="media-view-personal" role="tabpanel" aria-labelledby="media-tab-personal" data-view="personal" hidden>
+        <article class="media-panel media-personal-panel" aria-labelledby="media-personal-title">
+          <h3 id="media-personal-title">Личные медиа · опубликованные генерации</h3>
+          <p class="media-air-note" id="media-personal-note">Видео и картинки про тебя, которые уже вышли: где и когда.</p>
+          <ol class="media-personal-grid" id="media-personal-list"></ol>
         </article>
       </div>
     </div>
@@ -12309,8 +12331,55 @@ async function mediaPost(path, body) {
   return data;
 }
 
+const MEDIA_PERSONAL_API = IS_FILE_DASHBOARD ? null : `${DASHBOARD_API}/api/media/personal`;
+function mediaPersonalDay(value) {
+  const when = new Date(`${value}T12:00:00Z`);
+  return Number.isNaN(when.getTime()) ? '' : when.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function mediaPersonalHtml(item) {
+  const src = mediaEsc(item.src || '');
+  const view = item.kind === 'video' ? `<video controls preload="metadata" playsinline src="${src}"></video>`
+    : item.kind === 'image' ? `<img loading="lazy" alt="" src="${src}">` : '';
+  const meta = [mediaPersonalDay(item.published), (item.where || []).join(' · ')].filter(Boolean).join(' · ');
+  const link = item.url ? `<a href="${mediaEsc(item.url)}" target="_blank" rel="noopener noreferrer">Открыть публикацию ↗</a>` : '';
+  return `<li class="media-personal-item">${view}<div class="media-personal-body"><b>${mediaEsc(item.title)}</b>`
+    + `${meta ? `<span class="media-personal-meta">${mediaEsc(meta)}</span>` : ''}`
+    + `${item.note ? `<span class="media-personal-meta">${mediaEsc(item.note)}</span>` : ''}${link}</div></li>`;
+}
+let mediaPersonalKey = '';
+async function mediaPersonalLoad() {
+  const list = document.getElementById('media-personal-list');
+  if (!MEDIA_PERSONAL_API || !list) return;
+  try {
+    const response = await fetch(MEDIA_PERSONAL_API, { headers: mmHeaders(), cache: 'no-store' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.state !== 'ready') throw new Error(`HTTP ${response.status}`);
+    const items = Array.isArray(data.items) ? data.items : [];
+    const key = JSON.stringify(items);
+    if (key === mediaPersonalKey) return;  // keep a playing video playing
+    mediaPersonalKey = key;
+    list.innerHTML = items.length ? items.map(mediaPersonalHtml).join('')
+      : '<li class="media-personal-empty">Пока пусто. Агенты кладут сюда опубликованные видео и картинки.</li>';
+    // Signed in with the owner token instead of Cloudflare Access: <video>/<img> cannot send the header,
+    // so fetch the file with it and show it from memory (no seeking then, but it plays).
+    const headers = mmHeaders();
+    if (headers['X-Dashboard-Run-Token']) {
+      for (const el of list.querySelectorAll('video[src], img[src]')) {
+        const url = el.getAttribute('src');
+        el.removeAttribute('src');
+        fetch(url, { headers, cache: 'no-store' }).then(r => (r.ok ? r.blob() : null))
+          .then(blob => { if (blob) el.src = URL.createObjectURL(blob); }).catch(() => {});
+      }
+    }
+  } catch (_) {
+    mediaPersonalKey = '';
+    list.innerHTML = '<li class="media-personal-empty">Личные медиа сейчас не загрузились.</li>';
+  }
+}
+
 async function mediaLoad() {
   if (!MEDIA_API || mediaLoading) return;
+  mediaPersonalLoad();
   mediaLoading = true;
   try {
     const response = await fetch(MEDIA_API, { headers: mmHeaders(), cache: 'no-store' });
@@ -12374,7 +12443,7 @@ function mediaRenderChannel(today) {
 
 // Mark 2026-11-10: «медиа-отдел: LinkedIn, Telegram и X, переключаюсь по иконке, смотрю и
 // правлю посты». The daily digest in its three versions (news service /media-control/digests).
-const MEDIA_CHANNELS = ['linkedin', 'telegram', 'x'];
+const MEDIA_CHANNELS = ['linkedin', 'telegram', 'x', 'personal'];
 const MEDIA_DIGEST_LIMITS = { telegram: 3500, linkedin: 2900, x: 280 };
 const MEDIA_DIGEST_STATES = {
   draft: ['ждёт твоего ✅', 'is-accent'], approved: ['одобрен', 'is-info'], queued: ['в Buffer', 'is-info'],
@@ -12389,6 +12458,7 @@ const MEDIA_LEDES = {
   linkedin: 'LinkedIn: когда выходят посты, что уже в очереди и какие новости можно отправить самому.',
   telegram: 'Telegram: дайджест дня для канала и посты, которые туда уходят.',
   x: 'X: короткий пост дня от аккаунта студии, по-английски.',
+  personal: 'Личное: твои опубликованные генерации, видео и картинки.',
 };
 const MEDIA_REASONS = {
   no_english_version: 'английская версия не получилась',
@@ -12436,6 +12506,7 @@ function mediaRenderDigests(data) {
   document.getElementById('media-digest-linkedin').hidden = !mediaDigests;
   for (const channel of MEDIA_CHANNELS) {
     const list = document.querySelector(`.media-digest-list[data-channel="${channel}"]`);
+    if (!list) continue;
     if (!mediaDigests) {
       list.innerHTML = '<li class="media-digest-empty">Сервис новостей ещё не обновлён: дайджест появится здесь после выката.</li>';
       continue;

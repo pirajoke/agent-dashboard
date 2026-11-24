@@ -24,6 +24,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 
 from dashboard_builder.cloudflare_access import AccessGate, configured_access_app, discover_access_app
 from dashboard_builder import media_linkedin
+from dashboard_builder import media_personal
 from dashboard_builder.manager_events import project_manager_event
 from dashboard_builder.owner_decisions import (
     DecisionConflict, DecisionJournal, decision_projection, reviewed_response,
@@ -2921,6 +2922,66 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _handle_media_personal_file(self, item_id: str):
+        # One stored video or picture, with byte ranges so Safari can play and seek a video.
+        try:
+            found = media_personal.file_for(item_id)
+        except ValueError:
+            self._json_response(400, {'error': 'invalid_request'})
+            return
+        if found is None:
+            self._json_response(404, {'error': 'file_not_found'})
+            return
+        path, mime = found
+        try:
+            fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+            handle = os.fdopen(fd, 'rb')
+            size = os.fstat(fd).st_size
+        except OSError:
+            self._json_response(404, {'error': 'file_not_found'})
+            return
+        with handle:
+            start, end = 0, size - 1
+            ranged = False
+            match = re.match(r'^bytes=(\d*)-(\d*)$', self.headers.get('Range', '').strip())
+            if match and size and (match.group(1) or match.group(2)):
+                if match.group(1):
+                    start = int(match.group(1))
+                    end = min(int(match.group(2)), size - 1) if match.group(2) else size - 1
+                else:
+                    start = max(0, size - int(match.group(2)))
+                if match.group(1) and match.group(2) and int(match.group(2)) < start:
+                    start, end = 0, size - 1  # RFC 9110: an invalid range is ignored
+                    match = None
+                elif start >= size or (not match.group(1) and int(match.group(2)) == 0):
+                    self.send_response(416)
+                    self.send_header('Content-Range', f'bytes */{size}')
+                    self.send_header('Content-Length', '0')
+                    self.end_headers()
+                    return
+                ranged = match is not None
+            length = end - start + 1 if size else 0
+            self.send_response(206 if ranged else 200)
+            self.send_header('Content-Type', mime)
+            self.send_header('Content-Length', str(length))
+            self.send_header('Accept-Ranges', 'bytes')
+            if ranged:
+                self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
+            self.send_header('Cache-Control', 'private, no-store')
+            self.send_header('X-Content-Type-Options', 'nosniff')
+            self.end_headers()
+            handle.seek(start)
+            left = length
+            while left > 0:
+                chunk = handle.read(min(left, 256 * 1024))
+                if not chunk:
+                    break
+                try:
+                    self.wfile.write(chunk)
+                except (BrokenPipeError, ConnectionResetError):
+                    return
+                left -= len(chunk)
+
     def _handle_weekly_build(self):
         # Mark 2026-11-07: «Собрать сводку сейчас». Owner only; builds the week so far and saves it, and sends it
         # to Telegram only when asked. The Monday job still sends the finished week.
@@ -3353,6 +3414,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(401, {'error': 'owner_token_required'})
                 return
             self._handle_media_linkedin_image(parse_qs(parsed.query).get('id', [''])[0])
+            return
+        if parsed.path == '/api/media/personal':
+            # Mark 2026-11-24: «личные медиа», his own published generations. Owner only.
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required', 'state': 'owner_required', 'items': []})
+                return
+            self._json_response(200, media_personal.overview())
+            return
+        if parsed.path == '/api/media/personal/file':
+            if not self._decision_owner_authorized():
+                self._json_response(401, {'error': 'owner_token_required'})
+                return
+            self._handle_media_personal_file(parse_qs(parsed.query).get('id', [''])[0])
             return
         if parsed.path == '/api/claude-mode':
             if not self._decision_owner_authorized():
