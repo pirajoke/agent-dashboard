@@ -6054,6 +6054,15 @@ a.kb-card-title:hover { text-decoration: underline; }
 .kb-archive summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
 .kb-archive .kb-card-title { text-decoration: line-through; color: var(--mm-muted); }
 .kb-empty { margin: 3px 0; color: var(--mm-muted); font-size: 14px; }
+.kb-card { transition: opacity .2s; }
+.kb-card.is-busy { opacity: .6; }
+.kb-card-note { margin: 4px 0 0; font-size: 13px; color: var(--mm-muted); }
+.kb-card-note:empty { display: none; }
+.kb-card-note.is-error { color: var(--mm-warning); font-weight: 600; }
+.kb-toast { position: fixed; z-index: 60; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 14px; align-items: center; max-width: min(560px, calc(100vw - 32px)); padding: 6px 8px 6px 16px; border-radius: 12px; color: var(--mm-surface); background: var(--mm-ink); box-shadow: 0 8px 24px rgb(0 0 0 / .18); font-size: 14px; font-weight: 600; }
+.kb-toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.kb-toast .kb-action { color: var(--mm-surface); text-decoration: underline; flex: none; }
+@media (prefers-reduced-motion: reduce) { .kb-card { transition: none; } }
 @media (max-width: 760px) {
   .kb-lanes, .kb-form { grid-template-columns: minmax(0,1fr); }
   .kb-toolbar .kb-field { flex: 1 1 125px; }
@@ -6531,6 +6540,7 @@ a.kb-card-title:hover { text-decoration: underline; }
       <button class="kb-button" type="button" id="kb-refresh">Обновить</button>
     </div>
     <p id="kb-message" role="status" aria-live="polite"></p>
+    <div id="kb-toast" class="kb-toast" role="status" aria-live="polite" hidden></div>
     <div id="kb-board" data-mobile-lane="todo" hidden>
       <div class="kb-switch" role="group" aria-label="Колонка доски">
         <button type="button" aria-pressed="true" aria-controls="kb-todo" data-lane="todo">Сделать <span class="kb-count">0</span></button>
@@ -10359,6 +10369,7 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
   const dateFormat = new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short', year:'numeric', timeZone:'UTC'});
   const parisDate = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Paris', year:'numeric', month:'2-digit', day:'2-digit'});
   let cards = [], generation = 0, pending = false, draft = null;
+  const busy = new Set();
   function node(tag, className, value) {
     const el = document.createElement(tag);
     el.className = className;
@@ -10373,6 +10384,7 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
   function lock() {
     generation++;
     pending = false;
+    busy.clear();
     cards = [];
     draft = null;
     board.hidden = true;
@@ -10407,7 +10419,11 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
     check.type = 'checkbox';
     check.checked = done;
     check.setAttribute('aria-label', (done ? 'Вернуть задачу ' : 'Завершить задачу ') + card.title);
-    check.onchange = () => { check.checked = done; update(card, {status:done ? 'todo' : 'done'}); };
+    // Mark 2026-11-25 «не тыкаются для завершения кнопки»: the box used to snap back while GitHub answered
+    // (~2 s) with the only status line at the top of the page. Now it stays ticked, the card shows its own
+    // status, and a second click while saving is not lost.
+    check.onchange = () => update(card, {status:done ? 'todo' : 'done'}, row);
+    if (busy.has(card.id)) { row.classList.add('is-busy'); check.disabled = true; check.checked = !done; }
     label.append(check);
     const body = node('div','kb-card-body');
     const validLink = /^https:\/\/github\.com\//i.test(card.url || '');
@@ -10428,13 +10444,16 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
       function action(text, changes) {
         const button = node('button','kb-action',text);
         button.type = 'button';
-        button.onclick = () => update(card,changes);
+        button.onclick = () => update(card,changes,row);
         actions.append(button);
       }
       action(card.status === 'todo' ? 'Начать' : 'В список', {status:card.status === 'todo' ? 'doing' : 'todo'});
       action(card.plan === today ? 'Убрать из дня' : 'В план дня', {plan:card.plan === today ? '' : today});
       body.append(actions);
     }
+    const note = node('p','kb-card-note');
+    note.setAttribute('role','status');
+    body.append(note);
     row.dataset.taskId = String(card.id);
     row.append(label,body);
     return row;
@@ -10496,20 +10515,70 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
       if (active()) { cards = result; draw(); }
     });
   }
-  function update(card, changes) {
-    perform('Сохраняю…', async active => {
-      const updated = await api({action:'update_task', id:card.id, revision:card.revision, ...changes});
+  function cardNote(row, text, bad) {
+    const note = row && row.querySelector('.kb-card-note');
+    if (note) { note.textContent = text; note.classList.toggle('is-error', Boolean(bad)); }
+  }
+  function toast(text, undo) {
+    const box = byId('toast');
+    box.replaceChildren(node('span','',text));
+    if (undo) {
+      const button = node('button','kb-action','Вернуть');
+      button.type = 'button';
+      button.onclick = () => { box.hidden = true; undo(); };
+      box.append(button);
+    }
+    box.hidden = false;
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => { box.hidden = true; }, 6000);
+  }
+  // One card at a time per card, not one action for the whole board: a slow GitHub answer for one task
+  // must not swallow a click on another. A stale revision (Jarvis or an agent touched the issue) is
+  // re-read and retried once instead of asking for «Обновить».
+  async function update(card, changes, row) {
+    if (busy.has(card.id)) return;
+    const current = generation;
+    const active = () => generation === current;
+    busy.add(card.id);
+    if (row) { row.classList.add('is-busy'); row.querySelectorAll('input,button').forEach(el => { el.disabled = true; }); }
+    cardNote(row, 'Сохраняю…');
+    const send = base => api({action:'update_task', id:base.id, revision:base.revision, ...changes});
+    try {
+      let updated;
+      try { updated = await send(card); }
+      catch (error) {
+        if (error.status !== 409) throw error;
+        const fresh = (await read()).find(item => item.id === card.id);
+        if (!fresh) throw error;
+        updated = fresh.status === changes.status && changes.plan === undefined ? fresh : await send(fresh);
+      }
       if (!active()) return;
+      busy.delete(card.id);
       cards = cards.map(item => item.id === updated.id ? updated : item);
       if (updated.status !== 'done' && changes.status) selectLane(updated.status);
       draw();
-      const next = [...board.querySelectorAll('.kb-card')].find(row => row.dataset.taskId === String(updated.id));
+      if (changes.status === 'done') {
+        toast('✅ Готово: ' + updated.title, () => update(updated, {status:'todo'}));
+      } else if (changes.status) {
+        toast(changes.status === 'doing' ? 'В работе: ' + updated.title : 'Вернул в список: ' + updated.title);
+      } else {
+        toast(changes.plan ? 'В плане дня: ' + updated.title : 'Убрал из плана дня: ' + updated.title);
+      }
+      const next = [...board.querySelectorAll('.kb-card')].find(r => r.dataset.taskId === String(updated.id));
       const focus = next?.querySelector('input');
       if (focus && focus.getClientRects().length) focus.focus({preventScroll:true});
-      else if (updated.status === 'done') byId('archive').querySelector('summary').focus({preventScroll:true});
-      else view.focus({preventScroll:true});
-      return 'Задача обновлена.';
-    });
+    } catch (error) {
+      busy.delete(card.id);
+      if (!active()) return;
+      if (error.status === 401 || error.status === 403) {
+        lock(); message.textContent = 'Войди в Командный центр как владелец и нажми «Обновить».';
+        return;
+      }
+      if (row) { row.classList.remove('is-busy'); row.querySelectorAll('input,button').forEach(el => { el.disabled = false; }); }
+      const box = row && row.querySelector('input[type=checkbox]');
+      if (box) box.checked = card.status === 'done';
+      cardNote(row, error.status === 400 ? error.message : 'Не сохранилось. Нажми ещё раз.', true);
+    }
   }
   form.onsubmit = e => {
     e.preventDefault();
