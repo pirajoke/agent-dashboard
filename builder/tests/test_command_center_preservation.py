@@ -56,11 +56,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-11-18 on Mark's «сделай переключатель для qwen в команд центре»: the Qwen switch on the MacBook Pro.
         # 2026-11-23 on Max's «закрой последнюю» to the offered tile: «Здоровье каркаса» renderer, loaded with Mac mini.
         # 2026-11-25 on Max's «убери только мусор»: the unreachable «Service Logs» page and its loaders are gone.
+        # 2026-11-25 on Max's «добавь уборщика в command center»: the desktop janitor group in the MacBook Pro care block.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "a99e72f54c4634228b066457f185d1ddf39c1fe79a3d77e1f053a7534256db79")
+                         "5b5e241825577a167c5b3f877b45f3f96d055d426444fb0f74c7361ac87b6a8b")
 
 
 if __name__ == "__main__":

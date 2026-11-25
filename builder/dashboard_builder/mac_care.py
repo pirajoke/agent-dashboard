@@ -20,7 +20,7 @@ from typing import Any
 STALE_AFTER_SECONDS = 45 * 60
 _MACHINE = re.compile(r"^[a-z0-9-]{1,40}$")
 _SECTIONS = ("watchdog", "hygiene", "restart", "firewall", "updates", "swap", "top_processes", "disabled_agents",
-             "thermal")
+             "thermal", "janitor")
 _PRESSURE_RANK = {"nominal": 0, "moderate": 1, "heavy": 2, "trapping": 3, "sleeping": 4}
 
 

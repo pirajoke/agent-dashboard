@@ -15531,7 +15531,43 @@ const MACHINE_CARE_GROUPS = [
   { id: 'now', title: 'Сейчас' },
   { id: 'protection', title: 'Защита' },
   { id: 'upkeep', title: 'Обслуживание' },
+  { id: 'janitor', title: 'Уборщик рабочего стола' },
 ];
+
+// Mark 2026-11-25 «добавь уборщика в command center»: the screenshot sorter on the MacBook.
+const JANITOR_WHERE = { drive: 'в Drive', nov: 'в nov stuff', trash: 'в Корзину', leave: 'оставлено (пароли)', skip: 'пропущено', error: 'ошибка' };
+
+function machineJanitorSplit(counts) {
+  if (!counts) return '';
+  return Object.keys(JANITOR_WHERE).filter(k => counts[k] > 0).map(k => `${counts[k]} ${JANITOR_WHERE[k]}`).join(', ');
+}
+
+function machineJanitorRows(j, now = Date.now()) {
+  if (!j) return [];
+  const rows = [];
+  const label = `Разбор скриншотов${j.schedule ? `, каждый день ${j.schedule}` : ''}`;
+  const lastAt = Date.parse(j.last_run_at || '');
+  const ageH = Number.isFinite(lastAt) ? (now - lastAt) / 3600000 : null;
+  const split = machineJanitorSplit(j.last_run);
+  const problems = j.last_run ? (j.last_run.error || 0) + (j.last_run.skip || 0) : 0;
+  const lastText = Number.isFinite(lastAt)
+    ? `последний раз ${machineCareWhen(j.last_run_at, now)}: ${split || 'нечего было разбирать'}`
+    : 'ещё не запускался';
+  if (j.log === 'unreadable') {
+    rows.push({ group: 'janitor', label, level: j.job === 'missing' ? 'bad' : 'unknown', word: j.job === 'missing' ? 'не запущен' : 'неизвестно', detail: 'журнал уборщика не читается, что он сделал — неизвестно' });
+    return rows;
+  }
+  if (j.job === 'missing') rows.push({ group: 'janitor', label, level: 'bad', word: 'не запущен', detail: `com.max.screenshot-sorter не найден в launchd; ${lastText}` });
+  else if (ageH == null || ageH > 36) rows.push({ group: 'janitor', label, level: 'warn', word: ageH == null ? 'ещё не работал' : 'давно не работал', detail: lastText });
+  else rows.push({ group: 'janitor', label, level: problems ? 'warn' : 'ok', word: problems ? `не разобрал: ${problems}` : 'работает', detail: lastText });
+  const w = j.week || {};
+  const total = Object.keys(JANITOR_WHERE).reduce((sum, k) => sum + (w[k] || 0), 0);
+  rows.push({ group: 'janitor', label: 'За неделю', level: 'ok', word: `${total} шт.`, detail: machineJanitorSplit(w) || 'скриншотов не было' });
+  const recent = Array.isArray(j.recent) ? j.recent.slice(0, 4) : [];
+  if (recent.length) rows.push({ group: 'janitor', label: 'Последние решения', level: 'ok', word: '',
+    detail: recent.map(r => `${JANITOR_WHERE[r.action] || r.action}: ${r.title || 'без названия'}`).join(' · ') });
+  return rows;
+}
 
 function machineCareRows(care, now = Date.now()) {
   const rows = [];
@@ -15598,6 +15634,7 @@ function machineCareRows(care, now = Date.now()) {
   }
   if (typeof care.disabled_agents === 'number') rows.push({ group: 'upkeep', label: 'Отключённые фоновые агенты', level: 'ok',
     word: `${care.disabled_agents} шт.`, detail: care.disabled_agents ? 'убраны при чистке, вернуть можно по README в той же папке' : 'нет' });
+  rows.push(...machineJanitorRows(care.janitor, now));
   return rows;
 }
 
@@ -21439,6 +21476,7 @@ const WATCHERS = [
   { id: 'manager', group: 'doers', name: 'MAIN MANAGER', watches: 'Очередь работы по всем проектам', does: 'Собирает, что надо продолжить, раздаёт задачи исполнителям и показывает очередь в кампусе.', why: 'Работа по проектам идёт, даже когда ты не пишешь.', when: 'Каждые 15 минут, раздача каждую минуту' },
   { id: 'bridge', group: 'doers', name: 'Рабочие Codex', watches: 'Очередь задач MAIN MANAGER', does: 'Шесть рабочих берут задачи из очереди и выполняют их через Codex.', why: 'Это руки MAIN MANAGER.', when: 'Всегда включены, проверяют очередь каждые 30 секунд' },
   { id: 'claude', group: 'doers', name: 'Claude Code', watches: 'Твои просьбы здесь, в чате, и свои PR', does: 'Делает изменения и открывает PR. Сам чинит красные проверки и отвечает на замечания, пока PR не станет готовым.', why: 'За каждым PR, который открыл Claude, следит сам Claude.', when: 'Когда ты просишь' },
+  { id: 'desktop-janitor', group: 'doers', name: 'Уборщик рабочего стола', watches: 'Скриншоты на рабочем столе MacBook', does: 'Claude смотрит каждый скриншот: важное кладёт в Google Drive (Мой диск → Скриншоты), остальное в папку nov stuff, мусор в Корзину. Скриншоты с паролями не трогает. Каждое решение записано, день можно откатить.', why: 'Рабочий стол не зарастает скриншотами, а нужное не теряется.', when: 'Каждый день в 21:30' },
   { id: 'docxx', group: 'doers', name: 'Разбор документов', watches: 'Папку DOCXX Inbox в iCloud и DOCXXx в Google Drive', does: 'Забирает новые документы, называет их по содержимому и кладёт на место. Неясные откладывает тебе на разбор.', why: 'Документы с телефона сами оказываются в нужной папке.', when: 'Каждые 5 минут, уборка каждый день в 10:00' },
 
   { id: 'alerts', group: 'tell', name: 'Тревоги служб', watches: 'Службы Mac mini', does: 'Пишет в Telegram, когда служба упала и когда поднялась снова.', why: 'Ты узнаёшь о поломке сразу, а не когда что-то не открылось.', when: 'Каждые 2 минуты' },
