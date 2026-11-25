@@ -31,6 +31,7 @@ from dashboard_builder.owner_decisions import (
 )
 from dashboard_builder.context_library import context_library_projection
 from dashboard_builder.orange_audio import default_path as orange_audio_path, orange_audio_projection
+from dashboard_builder.call_tasks import default_dir as call_tasks_dir, call_tasks_projection, record_mark as call_task_mark
 from dashboard_builder.docxx import docxx_projection, state_path as docxx_state_path
 from dashboard_builder.docxx_search import docxx_search
 from dashboard_builder.docxx_actions import apply as docxx_apply, decisions_path as docxx_decisions_path, folders_view as docxx_folders, load_decisions as docxx_load_decisions, load_suggestions as docxx_load_suggestions, suggestions_path as docxx_suggestions_path
@@ -2090,6 +2091,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 self._json_response(200, result)
             return
+        if parsed.path == '/api/call-tasks':
+            # A tick on a task from a call: one line in marks.jsonl; call_tasks.py on this Mac writes it into the
+            # CRM card and the Jarvis day plan. Same owner guard as the other owner writes.
+            body = self._platform_owner_body(2048)
+            if body is None:
+                return
+            try:
+                self._json_response(200, {'state': 'saved', **call_task_mark(call_tasks_dir(HOME), body)})
+            except LookupError:
+                self._json_response(404, {'error': 'task_not_found'})
+            except ValueError:
+                self._json_response(400, {'error': 'invalid_task_mark'})
+            except OSError:
+                self._json_response(503, {'error': 'call_tasks_unavailable'})
+            return
         if parsed.path == '/api/manager/decisions/respond':
             self._handle_manager_decision_response()
             return
@@ -3357,6 +3373,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 catalog, owner=owner, query=query.get('q', [''])[0],
                 source=query.get('source', [''])[0], kind=query.get('kind', [''])[0],
                 record_id=query.get('id', [None])[0]))
+            return
+        if parsed.path == '/api/call-tasks':
+            # Tasks from calls with their call, project and status (Mark 2026-11-25). Owner only.
+            self._json_response(200, call_tasks_projection(call_tasks_dir(HOME), owner=self._decision_owner_authorized()))
             return
         if parsed.path == '/api/orange-audio':
             # Orange Audio + Granola meetings (Mark 2026-11-23). Owner only; the catalog lives in ~/.agent-bridge,
