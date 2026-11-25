@@ -104,6 +104,12 @@ class CollectorTests(unittest.TestCase):
             self.assertEqual(status["last_run"]["drive"], 0)
             self.assertEqual(status["job"], "missing")
         self.assertIsNone(collector.janitor_status(Path("/nonexistent"), None, {}, NOW))
+        with unittest.mock.patch.object(collector, "read_text", return_value=None), \
+                unittest.mock.patch.object(collector, "log_state", return_value="unreadable"):
+            status = collector.janitor_status(Path("/x"), plist, {"com.max.screenshot-sorter": None}, NOW)
+        self.assertEqual(status["log"], "unreadable")
+        self.assertIsNone(status["week"])
+        self.assertIsNone(status["last_run_at"])
 
     def test_hygiene_report_headline_and_attention(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -300,6 +306,9 @@ class CareRowsTests(unittest.TestCase):
         self.assertIn(["Разбор скриншотов", "warn", "давно не работал"], old)
         self.rows(base)
         self.assertNotIn("janitor", [row[3] for row in self.full])
+        unreadable = self.rows({**base, "janitor": {"job": "loaded", "log": "unreadable", "week": None, "recent": []}})
+        self.assertIn(["Разбор скриншотов", "unknown", "неизвестно"], unreadable)
+        self.assertNotIn("За неделю", [row[0] for row in unreadable])
 
     def thermal(self, care):
         source = HTML.read_text()

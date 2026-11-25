@@ -266,6 +266,12 @@ def janitor_status(log_dir: Path, plist_bytes: bytes | None, jobs: dict[str, int
     tsv = read_text(log_dir / "decisions.tsv")
     if tsv is None and plist_bytes is None:
         return None
+    # A log that exists but can't be read means «unknown», never «nothing was sorted».
+    log = log_state(log_dir / "decisions.tsv") if tsv is None else None
+    if log == "unreadable":
+        return {"job": job_state(jobs, "screenshot-sorter"), "schedule": _janitor_schedule(plist_bytes),
+                "log": "unreadable", "last_run_at": None, "last_run_found": None, "last_run": None,
+                "week": None, "recent": []}
     rows = []
     for line in (tsv or "").splitlines()[1:]:
         parts = line.split("\t")
@@ -304,6 +310,7 @@ def janitor_status(log_dir: Path, plist_bytes: bytes | None, jobs: dict[str, int
     return {
         "job": job_state(jobs, "screenshot-sorter"),
         "schedule": _janitor_schedule(plist_bytes),
+        "log": log,
         "last_run_at": last_run_at,
         "last_run_found": found,
         "last_run": counts(last_run) if last_run_at else None,

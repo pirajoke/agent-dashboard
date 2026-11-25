@@ -15553,6 +15553,10 @@ function machineJanitorRows(j, now = Date.now()) {
   const lastText = Number.isFinite(lastAt)
     ? `последний раз ${machineCareWhen(j.last_run_at, now)}: ${split || 'нечего было разбирать'}`
     : 'ещё не запускался';
+  if (j.log === 'unreadable') {
+    rows.push({ group: 'janitor', label, level: j.job === 'missing' ? 'bad' : 'unknown', word: j.job === 'missing' ? 'не запущен' : 'неизвестно', detail: 'журнал уборщика не читается, что он сделал — неизвестно' });
+    return rows;
+  }
   if (j.job === 'missing') rows.push({ group: 'janitor', label, level: 'bad', word: 'не запущен', detail: `com.max.screenshot-sorter не найден в launchd; ${lastText}` });
   else if (ageH == null || ageH > 36) rows.push({ group: 'janitor', label, level: 'warn', word: ageH == null ? 'ещё не работал' : 'давно не работал', detail: lastText });
   else rows.push({ group: 'janitor', label, level: problems ? 'warn' : 'ok', word: problems ? `не разобрал: ${problems}` : 'работает', detail: lastText });
