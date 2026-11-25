@@ -6,6 +6,7 @@ import re
 import shutil
 import sqlite3
 import subprocess
+import time
 from datetime import date, datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -61,15 +62,28 @@ def marker(meta):
     return '<!-- cc-task ' + json.dumps(meta, ensure_ascii=False).replace('<', r'\u003c').replace('>', r'\u003e') + ' -->'
 
 
+# Each board request used to spend two extra GitHub calls (who am I, is the repo private) before the real
+# one, so a tick took ~2 s (Mark 2026-11-25 «не тыкаются кнопки»). The answers are kept for 10 minutes,
+# only for the real GitHub client; a repo that stops being private is noticed within that window.
+_CHECKED = {}
+CHECK_TTL_S = 600
+
+
 class Board:
     def __init__(self, *, api=gh, repo=None, ledger=None):
         self.api = api
-        self.repo = repo or os.environ.get('COMMAND_CENTER_TASK_REPO') or (api('GET', 'user')['login'] + '/HQ')
-        if not re.fullmatch(r'[\w.-]+/[\w.-]+', self.repo):
-            raise ValueError('Некорректный репозиторий')
+        cached = api is gh and _CHECKED.get(repo or '')
+        if cached and time.monotonic() - cached[1] < CHECK_TTL_S:
+            self.repo = cached[0]
+        else:
+            self.repo = repo or os.environ.get('COMMAND_CENTER_TASK_REPO') or (api('GET', 'user')['login'] + '/HQ')
+            if not re.fullmatch(r'[\w.-]+/[\w.-]+', self.repo):
+                raise ValueError('Некорректный репозиторий')
+            if api('GET', f'repos/{self.repo}').get('private') is not True:
+                raise RuntimeError('Для личных задач нужен закрытый репозиторий')
+            if api is gh:
+                _CHECKED[repo or ''] = (self.repo, time.monotonic())
         self.root = f'repos/{self.repo}'
-        if api('GET', self.root).get('private') is not True:
-            raise RuntimeError('Для личных задач нужен закрытый репозиторий')
         self.ledger = ledger or Path.home() / '.agent-bridge' / 'kanban-requests.sqlite3'
 
     def task(self, issue):
