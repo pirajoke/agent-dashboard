@@ -10615,10 +10615,11 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
         lock(); message.textContent = 'Войди в Командный центр как владелец и нажми «Обновить».';
         return;
       }
-      if (row) { row.classList.remove('is-busy'); row.querySelectorAll('input,button').forEach(el => { el.disabled = false; }); }
-      const box = row && row.querySelector('input[type=checkbox]');
-      if (box) box.checked = card.status === 'done';
-      cardNote(row, error.status === 400 ? error.message : 'Не сохранилось. Нажми ещё раз.', true);
+      // Another card's save may have redrawn the board meanwhile: redraw from the confirmed state and
+      // put the error on the card that is on screen now, not on a detached old row.
+      draw();
+      const current = [...board.querySelectorAll('.kb-card')].find(r => r.dataset.taskId === String(card.id));
+      cardNote(current, error.status === 400 ? error.message : 'Не сохранилось. Нажми ещё раз.', true);
     }
   }
   form.onsubmit = e => {
