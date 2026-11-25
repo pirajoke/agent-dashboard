@@ -391,8 +391,9 @@ class ImageTests(unittest.TestCase):
 
 class PageTests(unittest.TestCase):
     def test_media_tab_is_a_stable_route_with_owner_controls(self):
-        self.assertIn("aria-controls=\"section-media\"", PAGE)
-        self.assertIn("onclick=\"showSection('media')\"", PAGE)
+        # Max 2026-11-25: «Медиа» is a tab inside «Проекты»; ?tab=media still opens it.
+        self.assertIn("['media', 'Медиа']", PAGE)
+        self.assertIn('data-group-sections="platforms documents media"', PAGE)
         self.assertIn("if (name === 'media') setTimeout(mediaLoad, 0);", PAGE)
         for element in ("media-air-next", "media-dayline", "media-col-plan", "media-col-sent", "media-train-stats", "media-post-dialog", "media-post-dialog-list", "media-slots",
                         "media-add-form", "media-save-slots", "media-news", "media-prepare", "media-review", "media-send"):

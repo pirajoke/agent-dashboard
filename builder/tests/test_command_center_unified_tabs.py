@@ -655,13 +655,20 @@ process.stdout.write(JSON.stringify({keyboard,dragged,restored:readPlatformOrder
         nav = nav_match.group(1)
         # Mark 2026-10-14: «По дням» (today) is gone, MAIN MANAGER is the first tab.
         # Mark 2026-11-06 «меньше вкладок»: the first four are the menu, the rest wait under «Ещё».
-        routes = ("work", "tasks", "platforms", "documents", "agents", "machines", "context", "growth", "weekly", "media", "rules", "architecture")
+        # Max 2026-11-25 «скомпактуй отделы»: four sections in the menu, each holding several old tabs.
+        routes = ("overview", "tasks", "projects", "system")
+        sections = {
+            "overview": ("work", "weekly", "growth"),
+            "tasks": ("tasks", "context"),
+            "projects": ("platforms", "documents", "media"),
+            "system": ("agents", "machines", "architecture", "rules"),
+        }
 
         for route in routes:
             with self.subTest(route=route):
                 button = re.search(
-                    rf"<button\b(?=[^>]*\baria-controls=\"section-{route}\")"
-                    rf"(?=[^>]*\bonclick=\"showSection\('{route}'\)\")[^>]*>",
+                    rf"<button\b(?=[^>]*\bdata-group-sections=\"{' '.join(sections[route])}\")"
+                    rf"(?=[^>]*\bonclick=\"showGroup\('{route}'\)\")[^>]*>",
                     nav,
                 )
                 self.assertIsNotNone(
