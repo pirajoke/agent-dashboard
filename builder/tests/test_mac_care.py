@@ -76,6 +76,35 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(status["pending"], ["macOS Tahoe 26.7.2"])
         self.assertEqual(status["checked_at"], "2026-11-01T09:00:00Z")
 
+    def test_janitor_reads_the_sorter_log(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            local = lambda delta: (NOW - delta).astimezone().strftime("%Y-%m-%d %H:%M:%S")
+            lines = ["time\taction\tsource\tdest\tconfidence\ttitle\treason",
+                     f"{local(timedelta(days=20))}\tnov\t/Users/mark/Desktop/a.png\t/x\t0.8\tСтарое\t",
+                     f"{local(timedelta(days=1, minutes=3))}\tdrive\t/Users/mark/Desktop/b.png\t/Users/mark/Drive/b.png\t0.8\tНаградной лист\t",
+                     f"{local(timedelta(days=1, minutes=2))}\ttrash\t/Users/mark/Desktop/c.png\t~/.Trash\t0.9\tПустой скрин\t",
+                     f"{local(timedelta(days=1, minutes=1))}\tplan-nov\t/Users/mark/Desktop/d.png\t\t0.7\tПлан\t",
+                     f"{local(timedelta(days=1))}\tundo\t2026-11-01\t\t\t\tвозвращено 0"]
+            (folder / "decisions.tsv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+            plist = plistlib.dumps({"Label": "com.max.screenshot-sorter", "StartCalendarInterval": {"Hour": 21, "Minute": 30}})
+            status = collector.janitor_status(folder, plist, {"com.max.screenshot-sorter": None}, NOW)
+            self.assertEqual(status["job"], "loaded")
+            self.assertEqual(status["schedule"], "21:30")
+            self.assertEqual(status["last_run"]["drive"], 1)
+            self.assertEqual(status["last_run"]["trash"], 1)
+            self.assertEqual(status["last_run"]["nov"], 0)
+            self.assertEqual(status["week"]["nov"], 0)
+            self.assertEqual(status["recent"][0]["title"], "Пустой скрин")
+            self.assertNotIn("/Users", json.dumps(status, ensure_ascii=False))
+            # A later run with nothing to sort moves «last run» forward.
+            (folder / "last-run.json").write_text(json.dumps({"at": (NOW - timedelta(hours=2)).isoformat(), "found": 0}))
+            status = collector.janitor_status(folder, plist, {}, NOW)
+            self.assertEqual(status["last_run_found"], 0)
+            self.assertEqual(status["last_run"]["drive"], 0)
+            self.assertEqual(status["job"], "missing")
+        self.assertIsNone(collector.janitor_status(Path("/nonexistent"), None, {}, NOW))
+
     def test_hygiene_report_headline_and_attention(self):
         with tempfile.TemporaryDirectory() as tmp:
             report = Path(tmp) / "latest.md"
@@ -228,6 +257,9 @@ class CareRowsTests(unittest.TestCase):
         script = "\n".join([
             js_function(source, "machineCareWhen"),
             js_function(source, "machineCareSchedule"),
+            source[source.index("const JANITOR_WHERE"):source.index("function machineJanitorSplit(")],
+            js_function(source, "machineJanitorSplit"),
+            js_function(source, "machineJanitorRows"),
             js_function(source, "machineCareRows"),
             f"console.log(JSON.stringify(machineCareRows({json.dumps(care)}, {now}).map(r => [r.label, r.level, r.word, r.group, r.detail])));",
         ])
@@ -248,6 +280,26 @@ class CareRowsTests(unittest.TestCase):
         })
         self.assertTrue(all(level == "ok" for _, level, _ in rows), rows)
         self.assertEqual(len(rows), 8)
+
+    def test_janitor_rows(self):
+        base = {"disabled_agents": 0}
+        rows = self.rows({**base, "janitor": {
+            "job": "loaded", "schedule": "21:30", "last_run_at": "2026-11-01T20:30:00Z", "last_run_found": 17,
+            "last_run": {"drive": 3, "nov": 12, "trash": 2, "leave": 0, "skip": 0, "error": 0},
+            "week": {"drive": 3, "nov": 12, "trash": 2, "leave": 1, "skip": 0, "error": 0},
+            "recent": [{"at": "2026-11-01T20:30:00Z", "action": "drive", "title": "Наградной лист"}]}})
+        janitor = [row for row in self.full if row[3] == "janitor"]
+        self.assertEqual([r[0] for r in janitor], ["Разбор скриншотов, каждый день 21:30", "За неделю", "Последние решения"])
+        self.assertEqual(janitor[0][1:3], ["ok", "работает"])
+        self.assertIn("3 в Drive, 12 в nov stuff, 2 в Корзину", janitor[0][4])
+        self.assertEqual(janitor[1][2], "18 шт.")
+        self.assertIn("Наградной лист", janitor[2][4])
+        missing = self.rows({**base, "janitor": {"job": "missing", "week": {}, "recent": []}})
+        self.assertIn(["Разбор скриншотов", "bad", "не запущен"], missing)
+        old = self.rows({**base, "janitor": {"job": "loaded", "last_run_at": "2026-10-28T20:30:00Z", "last_run": {}, "week": {}}})
+        self.assertIn(["Разбор скриншотов", "warn", "давно не работал"], old)
+        self.rows(base)
+        self.assertNotIn("janitor", [row[3] for row in self.full])
 
     def thermal(self, care):
         source = HTML.read_text()

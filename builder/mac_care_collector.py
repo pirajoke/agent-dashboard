@@ -36,6 +36,12 @@ DEFAULT_OUT = HOME / ".agent-bridge" / "mac-care"
 WATCHDOG_LOG = HOME / "Library" / "Logs" / "cpu-watchdog.log"
 HYGIENE_REPORT = HOME / "Reports" / "mac-hygiene" / "latest.md"
 DISABLED_AGENTS_DIR = HOME / "Library" / "LaunchAgents-disabled"
+# Mark 2026-11-25 «добавь уборщика в command center»: the desktop screenshot sorter
+# (~/scripts/screenshot-sorter, launchd com.max.screenshot-sorter) logs every decision here.
+JANITOR_LOG_DIR = HOME / "Library" / "Logs" / "screenshot-sorter"
+JANITOR_PLIST = HOME / "Library" / "LaunchAgents" / "com.max.screenshot-sorter.plist"
+JANITOR_ACTIONS = ("drive", "nov", "trash", "leave", "skip", "error")
+JANITOR_RECENT = 6
 SOFTWARE_UPDATE_PLIST = Path("/Library/Preferences/com.apple.SoftwareUpdate.plist")
 FIREWALL_TOOL = "/usr/libexec/ApplicationFirewall/socketfilterfw"
 WATCHDOG_WEEK = timedelta(days=7)
@@ -234,6 +240,77 @@ def disabled_agents(folder: Path) -> int | None:
         return sum(1 for item in folder.iterdir() if item.suffix == ".plist")
     except OSError:
         return None
+
+
+def _janitor_schedule(plist_bytes: bytes | None) -> str | None:
+    try:
+        data = plistlib.loads(plist_bytes) if plist_bytes else None
+    except Exception:
+        return None
+    interval = data.get("StartCalendarInterval") if isinstance(data, dict) else None
+    if isinstance(interval, list):
+        interval = interval[0] if interval else None
+    if not isinstance(interval, dict) or "Hour" not in interval:
+        return None
+    return f"{int(interval['Hour']):02d}:{int(interval.get('Minute', 0)):02d}"
+
+
+def janitor_status(log_dir: Path, plist_bytes: bytes | None, jobs: dict[str, int | None] | None,
+                   now: datetime) -> dict[str, Any] | None:
+    """What the desktop janitor did: last run, counts per action, the week, a few recent decisions.
+
+    Reads ``decisions.tsv`` (local time, one line per screenshot) and ``last-run.json`` (written at the
+    end of every run, also when there was nothing to sort). Paths never leave the Mac: only the action,
+    the time and the short title Claude gave the picture. None when the janitor is not installed.
+    """
+    tsv = read_text(log_dir / "decisions.tsv")
+    if tsv is None and plist_bytes is None:
+        return None
+    rows = []
+    for line in (tsv or "").splitlines()[1:]:
+        parts = line.split("\t")
+        if len(parts) < 2 or parts[1] not in JANITOR_ACTIONS:
+            continue
+        try:
+            at = datetime.strptime(parts[0], "%Y-%m-%d %H:%M:%S").astimezone()
+        except ValueError:
+            continue
+        rows.append((at, parts[1], clean_text(parts[5], 80) if len(parts) > 5 else ""))
+    rows.sort(key=lambda item: item[0])
+    # One run = rows less than 15 minutes apart.
+    last_run: list[tuple[datetime, str, str]] = []
+    for row in rows:
+        if last_run and row[0] - last_run[-1][0] > timedelta(minutes=15):
+            last_run = []
+        last_run.append(row)
+    counts = lambda items: {action: sum(1 for _, a, _ in items if a == action) for action in JANITOR_ACTIONS}
+    week = [row for row in rows if row[0] >= now - timedelta(days=7)]
+    last_run_at = iso_z(last_run[-1][0]) if last_run else None
+    found = len(last_run) if last_run else None
+    marker = read_text(log_dir / "last-run.json")
+    try:
+        info = json.loads(marker) if marker else None
+    except ValueError:
+        info = None
+    if isinstance(info, dict) and isinstance(info.get("at"), str):
+        try:
+            marked = datetime.fromisoformat(info["at"]).astimezone()
+        except ValueError:
+            marked = None
+        if marked and (not last_run or marked > last_run[-1][0] + timedelta(minutes=15)):
+            # A run after the last logged one found nothing to sort.
+            last_run, last_run_at = [], iso_z(marked)
+            found = info.get("found") if isinstance(info.get("found"), int) else 0
+    return {
+        "job": job_state(jobs, "screenshot-sorter"),
+        "schedule": _janitor_schedule(plist_bytes),
+        "last_run_at": last_run_at,
+        "last_run_found": found,
+        "last_run": counts(last_run) if last_run_at else None,
+        "week": counts(week),
+        "recent": [{"at": iso_z(at), "action": action, "title": title}
+                   for at, action, title in reversed(rows[-JANITOR_RECENT:])],
+    }
 
 
 def read_bytes(path: Path) -> bytes | None:
@@ -445,6 +522,7 @@ def collect(now: datetime | None = None) -> dict[str, Any]:
         "swap": swap_status(run(["sysctl", "vm.swapusage"])),
         "top_processes": top_processes(run(["ps", "-Ao", "pcpu=,comm=", "-r"])),
         "disabled_agents": disabled_agents(DISABLED_AGENTS_DIR),
+        "janitor": janitor_status(JANITOR_LOG_DIR, read_bytes(JANITOR_PLIST), jobs, now),
         "thermal": thermal_status(sensors_in_child(),
                                   run(["notifyutil", "-g", "com.apple.system.thermalpressurelevel"])),
     }

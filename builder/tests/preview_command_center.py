@@ -421,6 +421,12 @@ class PreviewHandler(SERVER.Handler):
                 "swap": {"used_gb": 0.8, "total_gb": 2.0},
                 "top_processes": [{"name": "Example Browser", "cpu": 31}, {"name": "WindowServer", "cpu": 12}, {"name": "Example Sync", "cpu": 4}],
                 "disabled_agents": 16,
+                "janitor": {"job": "loaded", "schedule": "21:30", "last_run_at": stamp(timedelta(hours=19)), "last_run_found": 18,
+                            "last_run": {"drive": 3, "nov": 12, "trash": 2, "leave": 1, "skip": 0, "error": 0},
+                            "week": {"drive": 3, "nov": 12, "trash": 2, "leave": 1, "skip": 0, "error": 0},
+                            "recent": [{"at": stamp(timedelta(hours=19)), "action": "drive", "title": "Пример: план поездки"},
+                                       {"at": stamp(timedelta(hours=19)), "action": "nov", "title": "Пример: слайд курса"},
+                                       {"at": stamp(timedelta(hours=19)), "action": "trash", "title": "Пустой тёмный скриншот"}]},
             })
             return
         if parsed.path.startswith("/api/"):
