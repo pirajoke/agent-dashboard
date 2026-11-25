@@ -71,7 +71,7 @@ fire('pointermove', {target: t, pointerId: 1, buttons: 1, clientX: 50, clientY: 
 fire('pointerup', {target: t, pointerId: 1});
 const swallowed = fire('click', {target: t});
 out.mouse = order();
-out.saved = store.get('command-center.tab-order.v1') || null;
+out.saved = store.get('command-center.tab-order.v2') || null;
 out.clickAfterDragSwallowed = Boolean(swallowed.stopped);
 out.status = orderStatus.textContent;
 // Touch: a finger that moves before the long press is a scroll, nothing moves.
@@ -96,12 +96,12 @@ out.keyHandled = Boolean(key.prevented);
 out.resetShown = !resetButton.hidden;
 resetButton.click();
 out.reset = order();
-out.savedAfterReset = store.get('command-center.tab-order.v1') || null;
+out.savedAfterReset = store.get('command-center.tab-order.v2') || null;
 out.resetHiddenAgain = resetButton.hidden;
 // Mark 2026-11-06: six tabs are the menu, the rest wait in «Ещё»; dragging across the line moves one in or out.
 t = find('machines');
 fire('keydown', {target: t, altKey: true, key: 'ArrowUp'});
-out.intoMenu = {order: order(), more: inMore(), saved: store.get('command-center.tab-menu-count.v1') || null, hasMore: navClasses.has('has-more')};
+out.intoMenu = {order: order(), more: inMore(), saved: store.get('command-center.tab-menu-count.v2') || null, hasMore: navClasses.has('has-more')};
 resetButton.click();
 fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
 fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
@@ -109,9 +109,9 @@ fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
 fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
 fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
 fire('keydown', {target: find('work'), altKey: true, key: 'ArrowDown'});
-out.outOfMenu = {order: order(), more: inMore(), saved: store.get('command-center.tab-menu-count.v1') || null};
+out.outOfMenu = {order: order(), more: inMore(), saved: store.get('command-center.tab-menu-count.v2') || null};
 resetButton.click();
-out.resetMore = {more: inMore(), saved: store.get('command-center.tab-menu-count.v1') || null};
+out.resetMore = {more: inMore(), saved: store.get('command-center.tab-menu-count.v2') || null};
 process.stdout.write(JSON.stringify(out));
 """
 
@@ -120,7 +120,12 @@ def run(saved: dict[str, str]) -> dict:
     page = PAGE.read_text(encoding="utf-8")
     start = page.index(START)
     end = page.index(END, start) + len(END)
-    harness = HARNESS.replace("SAVED", json.dumps(saved)).replace("CODE", page[start:end])
+    code = page[start:end]
+    # Max 2026-11-25: the real menu has four sections and no «Ещё». The fixture keeps seven tabs and a
+    # menu of six, so the «Ещё» mechanics (still used when he hides a section) stay covered.
+    assert "const TAB_MENU_DEFAULT = 4;" in code
+    code = code.replace("const TAB_MENU_DEFAULT = 4;", "const TAB_MENU_DEFAULT = 6;")
+    harness = HARNESS.replace("SAVED", json.dumps(saved)).replace("CODE", code)
     result = subprocess.run(["node", "-e", harness], capture_output=True, text=True, timeout=30)
     if result.returncode:
         raise AssertionError(result.stderr[-2000:])
@@ -163,13 +168,13 @@ class TabOrderTest(unittest.TestCase):
         self.assertEqual(data["resetMore"], {"more": "machines", "saved": None})
 
     def test_saved_menu_size_is_kept(self):
-        self.assertEqual(run({"command-center.tab-menu-count.v1": "3"})["more"], "platforms,documents,context,machines")
-        self.assertEqual(run({"command-center.tab-menu-count.v1": "99"})["more"], "machines")
+        self.assertEqual(run({"command-center.tab-menu-count.v2": "3"})["more"], "platforms,documents,context,machines")
+        self.assertEqual(run({"command-center.tab-menu-count.v2": "99"})["more"], "machines")
 
     def test_saved_order_is_cleaned(self):
-        saved = {"command-center.tab-order.v1": json.dumps(["machines", "bogus", "work", "machines", 3])}
+        saved = {"command-center.tab-order.v2": json.dumps(["machines", "bogus", "work", "machines", 3])}
         self.assertEqual(run(saved)["loaded"], "machines,work,growth,agents,platforms,documents,context")
-        self.assertEqual(run({"command-center.tab-order.v1": "{not json"})["loaded"],
+        self.assertEqual(run({"command-center.tab-order.v2": "{not json"})["loaded"],
                          "work,growth,agents,platforms,documents,context,machines")
 
 

@@ -37,7 +37,7 @@ class _DashboardParser(HTMLParser):
         attributes = dict(attrs)
         classes = (attributes.get("class") or "").split()
         onclick = attributes.get("onclick") or ""
-        target = re.fullmatch(r"showSection\(['\"]([^'\"]+)['\"]\)", onclick)
+        target = re.fullmatch(r"show(?:Section|Group)\(['\"]([^'\"]+)['\"]\)", onclick)
         if tag == "nav":
             self._main_navigation = attributes.get("aria-label") == "Command Center sections"
         if tag == "button" and "nav-pill" in classes and target and self._main_navigation:
@@ -208,18 +208,11 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         self.assertEqual(
             [(item["target"], item["text"]) for item in parser.navigation],
             [
-                ("work", "Сегодня"),
-                ("tasks", "Задачи"),
-                ("platforms", "Платформы"),
-                ("documents", "Документы"),
-                ("agents", "Агенты"),
-                ("machines", "Техника"),
-                ("context", "Контекст"),
-                ("growth", "Точки роста"),
-                ("weekly", "Итоги недели"),  # Mark 2026-11-07
-                ("media", "Медиа"),
-                ("rules", "Правила"),  # Макс 2026-11-23
-                ("architecture", "Архитектура"),
+                # Max 2026-11-25 «скомпактуй отделы»: four sections; the old tabs are rows inside them.
+                ("overview", "Обзор"),
+                ("tasks", "Задачи и встречи"),
+                ("projects", "Проекты"),
+                ("system", "Система"),
             ],
         )
 
@@ -228,7 +221,7 @@ class DepartmentCampusVisualIntegrationTests(unittest.TestCase):
         active_navigation = [
             item["target"] for item in parser.navigation if item["active"]
         ]
-        self.assertEqual(active_navigation, ["work"])
+        self.assertEqual(active_navigation, ["overview"])
         self.assertEqual(parser.active_sections, ["work"])
 
         initial_guard = re.search(

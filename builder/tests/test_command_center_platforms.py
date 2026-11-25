@@ -68,6 +68,11 @@ class _CommandCenterParser(HTMLParser):
         if tag == "button" and "nav-pill" in classes and nav_target:
             self._nav_target = nav_target.group(1)
             self._nav_text = []
+        # Max 2026-11-25: a menu section opens a group of tabs; each tab in it is reachable from the menu.
+        group_sections = attributes.get("data-group-sections")
+        if tag == "button" and "nav-pill" in classes and group_sections:
+            self._nav_target = group_sections
+            self._nav_text = []
 
         if attributes.get("id") == "section-platforms":
             self.platform_section_count += 1
@@ -94,9 +99,9 @@ class _CommandCenterParser(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "button" and self._nav_target is not None:
-            self.nav_targets[self._nav_target] = " ".join(
-                "".join(self._nav_text).split()
-            )
+            label = " ".join("".join(self._nav_text).split())
+            for target in self._nav_target.split():
+                self.nav_targets[target] = label
             self._nav_target = None
             self._nav_text = []
 
@@ -120,7 +125,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
             ("mac-mini", "Mac mini"),
             ("air", "Air"),
             ("pro", "Pro"),
-            ("agents", "Агенты"),
+            ("agents", "Система"),
         ):
             self.assertIn(target, self.parser.nav_targets)
             self.assertIn(label, self.parser.nav_targets[target])
@@ -128,7 +133,7 @@ class CommandCenterPlatformsTests(unittest.TestCase):
     def test_platforms_is_a_reachable_top_level_surface(self):
         self.assertEqual(self.parser.platform_section_count, 1)
         self.assertIn("platforms", self.parser.nav_targets)
-        self.assertIn("Платформы", self.parser.nav_targets["platforms"])
+        self.assertIn("Проекты", self.parser.nav_targets["platforms"])
 
         initial_guard = re.search(
             r"\[([^\]]+)\]\.includes\(INITIAL_SECTION\)",

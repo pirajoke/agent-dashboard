@@ -6464,19 +6464,12 @@ a.kb-card-title:hover { text-decoration: underline; }
   </div>
 
   <!-- Navigation -->
+  <!-- Max 2026-11-25 «скомпактуй отделы»: four sections in the menu; every old tab lives on as a sub-tab inside one of them. -->
   <nav class="nav-pills cc-main-nav" aria-label="Command Center sections">
-    <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" onclick="showSection('work')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="work">Сегодня</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-tasks" aria-pressed="false" onclick="showSection('tasks')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-tasks"/></svg></span><span class="cc-tab-label" data-tab-label="tasks">Задачи</span><span class="pill-badge" id="tasks-badge">12</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" onclick="showSection('platforms')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="platforms">Платформы</span><span class="pill-badge" id="platforms-badge">12</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-documents" aria-pressed="false" onclick="showSection('documents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-docs"/></svg></span><span class="cc-tab-label" data-tab-label="documents">Документы</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" onclick="showSection('agents')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="agents">Агенты</span><span class="pill-badge" id="agents-badge"></span></button>
-    <button class="nav-pill" type="button" aria-controls="section-machines" aria-pressed="false" onclick="showSection('machines')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-machines"/></svg></span><span class="cc-tab-label" data-tab-label="machines">Техника</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-context" aria-pressed="false" onclick="showSection('context')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-context"/></svg></span><span class="cc-tab-label" data-tab-label="context">Контекст</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-growth" aria-pressed="false" onclick="showSection('growth')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-growth"/></svg></span><span class="cc-tab-label" data-tab-label="growth">Точки роста</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-weekly" aria-pressed="false" onclick="showSection('weekly')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-weekly"/></svg></span><span class="cc-tab-label" data-tab-label="weekly">Итоги недели</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-media" aria-pressed="false" onclick="showSection('media')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-media"/></svg></span><span class="cc-tab-label" data-tab-label="media">Медиа</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-rules" aria-pressed="false" onclick="showSection('rules')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-rules"/></svg></span><span class="cc-tab-label" data-tab-label="rules">Правила</span></button>
-    <button class="nav-pill" type="button" aria-controls="section-architecture" aria-pressed="false" onclick="showSection('architecture')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-architecture"/></svg></span><span class="cc-tab-label" data-tab-label="architecture">Архитектура</span></button>
+    <button class="nav-pill active" type="button" aria-controls="section-work" aria-pressed="true" data-group-sections="work weekly growth" data-group="overview" onclick="showGroup('overview')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-work"/></svg></span><span class="cc-tab-label" data-tab-label="overview">Обзор</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-tasks" aria-pressed="false" data-group-sections="tasks context" data-group="tasks" onclick="showGroup('tasks')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-tasks"/></svg></span><span class="cc-tab-label" data-tab-label="tasks">Задачи и встречи</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-platforms" aria-pressed="false" data-group-sections="platforms documents media" data-group="projects" onclick="showGroup('projects')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-platforms"/></svg></span><span class="cc-tab-label" data-tab-label="projects">Проекты</span></button>
+    <button class="nav-pill" type="button" aria-controls="section-agents" aria-pressed="false" data-group-sections="agents machines architecture rules" data-group="system" onclick="showGroup('system')"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><use href="#cc-icon-agents"/></svg></span><span class="cc-tab-label" data-tab-label="system">Система</span></button>
   </nav>
   <!-- Mark 2026-11-06 «лучше на телефоне»: the phone bar shows four tabs and «Ещё», like a native app. -->
   <button type="button" class="cc-more-tab" id="cc-more-tab" aria-haspopup="dialog" aria-controls="cc-more-dialog"><span class="pill-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></span><span class="cc-tab-label">Ещё</span></button>
@@ -6551,6 +6544,7 @@ a.kb-card-title:hover { text-decoration: underline; }
   </div>
 
   <main class="cc-main">
+  <div class="cc-subnav cc-group-subnav" id="cc-group-subnav" role="group" aria-label="Вкладки раздела"></div>
   <section id="section-tasks" class="section" aria-labelledby="kb-title">
     <header class="cc-page-head kb-head">
       <h2 class="cc-page-title" id="kb-title">Задачи</h2>
@@ -7785,47 +7779,6 @@ a.kb-card-title:hover { text-decoration: underline; }
 
   </section>
 
-  <!-- ═══════════════ GENERAL ═══════════════ -->
-  <div id="section-general" class="section">
-    <div class="drag-grid" id="general-grid">
-
-      <div class="drag-widget" data-widget="finances" data-size="normal">
-        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
-        <div class="card">
-          <div class="card-title collapsible">Finances</div>
-          <div id="finances-container">
-            <div class="finance-row">
-              <div><div class="finance-project">FastData Voice Agent</div><div class="finance-detail">Миграция заказчику</div></div>
-              <div><div class="finance-amount received">+850 EUR</div><div class="finance-amount pending">850 EUR pending</div></div>
-            </div>
-            <div class="finance-row">
-              <div><div class="finance-project">Zerkalo</div><div class="finance-detail">MVP ready, waiting</div></div>
-              <div><div class="finance-amount received">+200 EUR</div></div>
-            </div>
-            <div class="finance-total"><span>Total received</span><span>1 050 EUR</span></div>
-            <div class="finance-total" style="background:var(--orange-bg);margin-top:8px"><span>Pending</span><span style="color:var(--orange)">850 EUR</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="drag-widget" data-widget="hooks" data-size="wide">
-        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
-        <div class="card">
-          <div class="card-title collapsible">Active Hooks</div>
-          <div id="hooks-container">
-            <div class="hook-item"><span class="hook-icon">🔄</span><div class="hook-info"><div class="hook-name">Obsidian auto-pull</div><div class="hook-desc">git pull before reading vault</div></div><span class="hook-event">PreToolUse</span></div>
-            <div class="hook-item"><span class="hook-icon">🔒</span><div class="hook-info"><div class="hook-name">Block secrets</div><div class="hook-desc">.env, credentials, tokens blocked</div></div><span class="hook-event">PreToolUse</span></div>
-            <div class="hook-item"><span class="hook-icon">📤</span><div class="hook-info"><div class="hook-name">Obsidian auto-push</div><div class="hook-desc">git commit+push after MCP writes</div></div><span class="hook-event">PostToolUse</span></div>
-            <div class="hook-item"><span class="hook-icon">🚀</span><div class="hook-info"><div class="hook-name">Maxim-Site auto-deploy</div><div class="hook-desc">git push on file edit (async)</div></div><span class="hook-event">PostToolUse</span></div>
-            <div class="hook-item"><span class="hook-icon">🔁</span><div class="hook-info"><div class="hook-name">Auto-sync all repos</div><div class="hook-desc">Push ObsidianVault, maxim-site, current project</div></div><span class="hook-event">Stop</span></div>
-          </div>
-        </div>
-      </div>
-
-
-    </div>
-  </div>
-
   <!-- ═══════════════ AGENTS ═══════════════ -->
   <div id="section-agents" class="section">
     <header class="cc-page-head">
@@ -8159,15 +8112,6 @@ a.kb-card-title:hover { text-decoration: underline; }
     </div>
   </div>
 
-  <!-- ═══════════════ LOGS ═══════════════ -->
-  <div id="section-logs" class="section">
-    <div class="card">
-      <div class="card-title">Service Logs</div>
-      <div class="log-tabs" id="log-tabs"></div>
-      <div class="log-output" id="log-output">Select a service to view logs...</div>
-    </div>
-  </div>
-
   </main>
 </div>
 
@@ -8419,7 +8363,6 @@ const JARVIS_DEPARTMENTS_API = (!IS_FILE_DASHBOARD)
   ? `${DASHBOARD_API}/api/manager/departments`
   : 'https://command.meshly.fr/api/manager/departments';
 const IS_PUBLIC_DASHBOARD = window.location.hostname === 'command.meshly.fr';
-let currentLogService = null;
 const PIXEL_AGENTS_PIN_KEY = 'command-center.pixel-agents.pinned';
 const PIXEL_AGENTS_VIEW_KEY = 'command-center.pixel-agents.view';
 const IS_LOOPBACK_HEALTH_GATEWAY = window.location.protocol === 'http:'
@@ -8771,16 +8714,17 @@ function initOwnerDecisions() {
 }
 
 // Top-level labels are browser-local preferences. Stable routes and aria-controls never change.
-const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v1';
+const TAB_NAME_STORAGE_KEY = 'command-center.tab-names.v2';
 const TAB_NAME_MAX_CODE_POINTS = 32;
 // Mark 2026-11-06 «меньше вкладок»: the first six are the menu, the rest wait under «Ещё».
-const TAB_NAME_ROUTES = Object.freeze(['work', 'tasks', 'platforms', 'documents', 'agents', 'machines', 'context', 'growth', 'weekly', 'media', 'rules', 'architecture']);
+const TAB_NAME_ROUTES = Object.freeze(['overview', 'tasks', 'projects', 'system']);
 const TAB_NAME_DEFAULTS = Object.freeze(Object.fromEntries(TAB_NAME_ROUTES.map(route => {
   const label = document.querySelector(`[data-tab-label="${route}"]`);
   return [route, label ? label.textContent.trim() : route];
 })));
 let activeTabNames = { ...TAB_NAME_DEFAULTS };
-const TAB_PAGE_TITLE_IDS = Object.freeze({ work: 'mm-title', growth: 'growth-title', agents: 'agents-title', platforms: 'platforms-title', context: 'context-title', documents: 'docxx-title', machines: 'machines-title' });
+// Section names no longer rename page headings: a section holds several pages.
+const TAB_PAGE_TITLE_IDS = Object.freeze({});
 
 function sanitizeTabName(value) {
   const normalized = String(value ?? '').normalize('NFC')
@@ -8971,7 +8915,7 @@ document.getElementById('reset-tab-names').addEventListener('click', resetTabNam
 
 // Mark 2026-10-26: menu items can be dragged into any order; on a phone a long press picks one up.
 // The order is a browser-local preference like the names. Routes and onclick handlers never change.
-const TAB_ORDER_STORAGE_KEY = 'command-center.tab-order.v1';
+const TAB_ORDER_STORAGE_KEY = 'command-center.tab-order.v2';
 const TAB_ORDER_LONG_PRESS_MS = 380;
 const TAB_ORDER_MOVE_SLOP = 8;
 const tabOrderNav = document.querySelector('.cc-main-nav');
@@ -8998,8 +8942,8 @@ function tabOrderIsDefault(order) {
 // Mark 2026-11-06 «ставь 6 вкладок … переносить в «Ещё» или выносить из «Ещё» … и убрать «Ещё»»:
 // how many of his tabs (in his order) are the menu; the rest wait in «Ещё». All of them = no «Ещё».
 // A browser-local preference like the order. The phone bar has room for four and keeps its own «Ещё».
-const TAB_MENU_STORAGE_KEY = 'command-center.tab-menu-count.v1';
-const TAB_MENU_DEFAULT = 6;
+const TAB_MENU_STORAGE_KEY = 'command-center.tab-menu-count.v2';
+const TAB_MENU_DEFAULT = 4;
 let tabMenuCount = (() => {
   try {
     const saved = Number(localStorage.getItem(TAB_MENU_STORAGE_KEY));
@@ -10802,6 +10746,41 @@ const ccCallTasks = (() => {
   return {load, renderList, renderMeeting};
 })();
 
+// Max 2026-11-25 «скомпактуй отделы, чтобы в них были все функции»: the old tabs are grouped into four
+// sections. Each section shows its tabs as a row on top of the page; every tab and ?tab= link still works.
+const CC_GROUPS = Object.freeze([
+  { id: 'overview', tabs: [['work', 'Сегодня'], ['weekly', 'Итоги недели'], ['growth', 'Точки роста']] },
+  { id: 'tasks', tabs: [['tasks', 'Задачи'], ['context', 'Встречи и контекст']] },
+  { id: 'projects', tabs: [['platforms', 'Платформы'], ['documents', 'Документы'], ['media', 'Медиа']] },
+  { id: 'system', tabs: [['agents', 'Агенты'], ['machines', 'Техника'], ['architecture', 'Архитектура'], ['rules', 'Правила']] },
+]);
+const ccGroupLast = {};
+
+function ccGroupOf(section) {
+  return CC_GROUPS.find(group => group.tabs.some(([route]) => route === section)) || null;
+}
+
+function showGroup(id) {
+  const group = CC_GROUPS.find(item => item.id === id);
+  if (!group) return;
+  showSection(ccGroupLast[id] || group.tabs[0][0]);
+}
+
+function renderGroupSubnav(group, active) {
+  const bar = document.getElementById('cc-group-subnav');
+  if (!bar) return;
+  bar.hidden = group.tabs.length < 2;
+  bar.replaceChildren(...group.tabs.map(([route, label]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    button.setAttribute('aria-controls', 'section-' + route);
+    button.setAttribute('aria-pressed', route === active ? 'true' : 'false');
+    button.addEventListener('click', () => showSection(route));
+    return button;
+  }));
+}
+
 function showSection(name) {
   const isMachine = ['mac-mini', 'air', 'pro'].includes(name);
   if (isMachine) selectedMachine = name;
@@ -10814,7 +10793,10 @@ function showSection(name) {
   });
   const section = document.getElementById('section-' + parent);
   section.classList.add('active');
-  const trigger = document.querySelector(`.cc-main-nav [aria-controls="section-${parent}"]`);
+  // Max 2026-11-25: the menu holds four sections; the open tab lights up the section that holds it.
+  const group = ccGroupOf(parent);
+  const trigger = group ? document.querySelector(`.cc-main-nav [data-group="${group.id}"]`) : null;
+  if (group) { ccGroupLast[group.id] = parent; renderGroupSubnav(group, parent); }
   if (trigger) {
     trigger.classList.add('active');
     trigger.setAttribute('aria-pressed', 'true');
@@ -10828,7 +10810,6 @@ function showSection(name) {
     machineTrigger.setAttribute('aria-pressed', 'true');
   }
   if (parent === 'agents' && ownerDecisionsReady) refreshOwnerDecisions(true);
-  if (name === 'logs' && !currentLogService) loadLogTabs();
   // Deferred: ?tab=work calls showSection before the MAIN MANAGER block is initialised.
   if (name === 'work') setTimeout(openMainManager, 0);
   if (name === 'growth') setTimeout(loadGrowth, 0);
@@ -10856,7 +10837,7 @@ if (['mac-mini', 'air', 'pro', 'machines', 'agents', 'architecture', 'platforms'
   if (INITIAL_SECTION === 'agents' && ['watchers', 'campus', 'decisions'].includes(agentsView)) showAgentsView(agentsView);
 } else {
   const firstTab = tabOrderButtons()[0];
-  showSection(firstTab ? tabOrderRoute(firstTab) : 'work');
+  showGroup(firstTab ? tabOrderRoute(firstTab) : 'overview');
 }
 
 function initPixelAgentsFrame() {
@@ -15957,32 +15938,6 @@ async function proAction(label, action) {
   setTimeout(refreshPro, 1500);
 }
 
-// ─── Logs ───
-async function loadLogTabs() {
-  if (IS_PUBLIC_DASHBOARD) {
-    document.getElementById('log-tabs').innerHTML = '';
-    document.getElementById('log-output').textContent = 'Logs are available from the private/local dashboard only.';
-    return;
-  }
-  const data = await fetchJSON(LOCAL_API, '/api/all');
-  if (!data) return;
-  const svcs = data.services_detailed || data.services || [];
-  document.getElementById('log-tabs').innerHTML = svcs
-    .filter(s => s.log)
-    .map(s => `<button class="log-tab" onclick="loadLogs('${s.label}', this)">${s.name}</button>`)
-    .join('');
-}
-
-async function loadLogs(label, btn) {
-  currentLogService = label;
-  document.querySelectorAll('.log-tab').forEach(t => t.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const data = await fetchJSON(LOCAL_API, '/api/logs/' + label);
-  const el = document.getElementById('log-output');
-  el.textContent = data ? data.log : 'Failed to load logs';
-  el.scrollTop = el.scrollHeight;
-}
-
 // ─── AI Island ───
 const ISLAND_NODE_LABELS = {
   you: 'You',
@@ -18102,7 +18057,6 @@ initPixelAgentsView();
 initPixelAgentsPin();
 initDragDrop();
 setInterval(refreshAll, 5000);
-setInterval(() => { if (currentLogService) loadLogs(currentLogService); }, 10000);
 
 // ── «Точки роста» ──
 // Areas Mark wants to grow into, read by the server from his Obsidian note. Progress is the share of

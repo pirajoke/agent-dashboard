@@ -55,11 +55,12 @@ class ExistingMachinePreservationTests(unittest.TestCase):
         # 2026-11-17 on Mark's «там же есть нагрузка, видеочип, память … это не работает»: GPU tile and wired/compressed memory.
         # 2026-11-18 on Mark's «сделай переключатель для qwen в команд центре»: the Qwen switch on the MacBook Pro.
         # 2026-11-23 on Max's «закрой последнюю» to the offered tile: «Здоровье каркаса» renderer, loaded with Mac mini.
+        # 2026-11-25 on Max's «убери только мусор»: the unreachable «Service Logs» page and its loaders are gone.
         source = HTML.read_text()
         start = source.index('// ─── Shared: render service table')
         end = source.index('// ─── AI Island')
         self.assertEqual(sha256(source[start:end].encode()).hexdigest(),
-                         "a0df356f43e2f02698fbbeaea89c550e64bc265e7643950a882de33acb4da376")
+                         "a99e72f54c4634228b066457f185d1ddf39c1fe79a3d77e1f053a7534256db79")
 
 
 if __name__ == "__main__":
