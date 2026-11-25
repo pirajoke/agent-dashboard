@@ -83,7 +83,8 @@ class DeployMacbookTest(unittest.TestCase):
         for expected in ("builder/deploy_macbook.sh", "http://127.0.0.1:8880/api/all", "macbook-pro/deploy",
                          f"{self.scripts}/auto_deploy.py", str(self.repo)):
             self.assertIn(expected, plist)
-        self.assertNotIn("__", plist)
+        # Every __PLACEHOLDER__ is filled in. (A bare "__" can be part of the random temp folder name.)
+        self.assertNotRegex(plist, r"__[A-Z_]+__")
         state = json.loads((self.home / ".agent-bridge" / "macbook-auto-update" / "state.json").read_text())
         head = subprocess.run(["git", "-C", str(self.repo), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
         self.assertEqual(state["deployed_sha"], head)
