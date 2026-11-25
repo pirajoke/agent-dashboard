@@ -6054,6 +6054,45 @@ a.kb-card-title:hover { text-decoration: underline; }
 .kb-archive summary { cursor: pointer; min-height: 44px; align-content: center; font-weight: 600; }
 .kb-archive .kb-card-title { text-decoration: line-through; color: var(--mm-muted); }
 .kb-empty { margin: 3px 0; color: var(--mm-muted); font-size: 14px; }
+.ct { margin: 18px 0 0; padding: clamp(12px, 2vw, 22px); border: 1px solid var(--mm-line); border-radius: 16px; background: var(--mm-surface); }
+.ct-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.ct-head h3 { display: flex; gap: 9px; align-items: center; margin: 0; font-size: 18px; color: var(--mm-ink); }
+.ct-toggle { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; font-size: 14px; color: var(--mm-muted); cursor: pointer; }
+.ct-lede { margin: 4px 0 12px; font-size: 14px; color: var(--mm-muted); }
+.ct-status { margin: 0 0 10px; font-size: 14px; color: var(--mm-muted); }
+.ct-status:empty { display: none; }
+.ct-list { display: grid; gap: 12px; }
+.ct-call { min-width: 0; padding: 12px 14px; border: 1px solid var(--mm-line); border-radius: 12px; background: var(--mm-background); scroll-margin-top: 16px; }
+.ct-call.is-target { border-color: var(--mm-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--mm-accent) 35%, transparent); }
+.ct-call-top { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.ct-call-title { margin: 0; font-size: 16px; font-weight: 650; line-height: 1.35; color: var(--mm-ink); overflow-wrap: anywhere; }
+.ct-progress { font-size: 13px; font-weight: 650; color: var(--mm-muted); white-space: nowrap; }
+.ct-progress.is-done { color: var(--mm-success, var(--mm-accent)); }
+.ct-meta { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 4px; }
+.ct-steps { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 2px; }
+.ct-step { display: grid; grid-template-columns: 36px minmax(0,1fr); align-items: start; }
+.ct-step label { display: grid; place-items: center; height: 36px; cursor: pointer; }
+.ct-step input { width: 20px; height: 20px; margin: 0; accent-color: var(--mm-accent); cursor: pointer; }
+.ct-step p { margin: 8px 0 6px; font-size: 15px; line-height: 1.4; color: var(--mm-ink); overflow-wrap: anywhere; }
+.ct-step.is-done p { color: var(--mm-muted); text-decoration: line-through; }
+.ct-step small { display: block; margin: -4px 0 6px; font-size: 12.5px; color: var(--mm-muted); }
+.ct-step small:empty { display: none; }
+.ct-step small.is-error { color: var(--mm-warning); font-weight: 600; }
+.ct-others { margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--mm-line); font-size: 14px; color: var(--mm-muted); }
+.ct-others ul { margin: 4px 0 0; padding-left: 18px; }
+.ct-others li { margin: 2px 0; overflow-wrap: anywhere; }
+.ct-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; }
+.ct-in-meeting { margin: 0 0 18px; }
+.ct-in-meeting h4 { margin: 0; font-size: 15px; }
+.kb-card { transition: opacity .2s; }
+.kb-card.is-busy { opacity: .6; }
+.kb-card-note { margin: 4px 0 0; font-size: 13px; color: var(--mm-muted); }
+.kb-card-note:empty { display: none; }
+.kb-card-note.is-error { color: var(--mm-warning); font-weight: 600; }
+.kb-toast { position: fixed; z-index: 60; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 14px; align-items: center; max-width: min(560px, calc(100vw - 32px)); padding: 6px 8px 6px 16px; border-radius: 12px; color: var(--mm-surface); background: var(--mm-ink); box-shadow: 0 8px 24px rgb(0 0 0 / .18); font-size: 14px; font-weight: 600; }
+.kb-toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.kb-toast .kb-action { color: var(--mm-surface); text-decoration: underline; flex: none; }
+@media (prefers-reduced-motion: reduce) { .kb-card { transition: none; } }
 @media (max-width: 760px) {
   .kb-lanes, .kb-form { grid-template-columns: minmax(0,1fr); }
   .kb-toolbar .kb-field { flex: 1 1 125px; }
@@ -6524,7 +6563,18 @@ a.kb-card-title:hover { text-decoration: underline; }
       <label class="kb-field">Показать<select id="kb-view"><option value="all">Все задачи</option><option value="day">План дня</option><option value="overdue">Просроченные</option></select></label>
       <button class="kb-button" type="button" id="kb-refresh">Обновить</button>
     </div>
+    <!-- Mark 2026-11-25: «задачи из call … не вижу куда они уходят … когда сделаны … в каком контексте». -->
+    <section id="ct-calls" class="ct" aria-labelledby="ct-title" hidden>
+      <div class="ct-head">
+        <h3 id="ct-title">📞 Из звонков <span class="kb-count" id="ct-count">0</span></h3>
+        <label class="ct-toggle"><input type="checkbox" id="ct-show-done"> Показать закрытые звонки</label>
+      </div>
+      <p class="ct-lede">Задачи, которые записались из созвонов. Галочка закрывает шаг в карточке встречи и в плане дня Jarvis.</p>
+      <p id="ct-status" class="ct-status" role="status" aria-live="polite"></p>
+      <div id="ct-list" class="ct-list"></div>
+    </section>
     <p id="kb-message" role="status" aria-live="polite"></p>
+    <div id="kb-toast" class="kb-toast" role="status" aria-live="polite" hidden></div>
     <div id="kb-board" data-mobile-lane="todo" hidden>
       <div class="kb-switch" role="group" aria-label="Колонка доски">
         <button type="button" aria-pressed="true" aria-controls="kb-todo" data-lane="todo">Сделать <span class="kb-count">0</span></button>
@@ -6671,6 +6721,7 @@ a.kb-card-title:hover { text-decoration: underline; }
         <button type="button" class="oa-back" id="oa-back">← Все встречи</button>
         <h3 id="oa-title" class="oa-title"></h3>
         <div id="oa-meta" class="oa-meta"></div>
+        <div id="oa-tasks" class="ct-in-meeting" hidden></div>
         <div class="oa-tabs" role="tablist" aria-label="Что открыть">
           <button type="button" role="tab" id="oa-show-summary" aria-selected="true">Резюме</button>
           <button type="button" role="tab" id="oa-show-transcript" aria-selected="false">Расшифровка</button>
@@ -10303,6 +10354,7 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
   const dateFormat = new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short', year:'numeric', timeZone:'UTC'});
   const parisDate = new Intl.DateTimeFormat('sv-SE', {timeZone:'Europe/Paris', year:'numeric', month:'2-digit', day:'2-digit'});
   let cards = [], generation = 0, pending = false, draft = null;
+  const busy = new Set();
   function node(tag, className, value) {
     const el = document.createElement(tag);
     el.className = className;
@@ -10317,6 +10369,7 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
   function lock() {
     generation++;
     pending = false;
+    busy.clear();
     cards = [];
     draft = null;
     board.hidden = true;
@@ -10351,7 +10404,11 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
     check.type = 'checkbox';
     check.checked = done;
     check.setAttribute('aria-label', (done ? 'Вернуть задачу ' : 'Завершить задачу ') + card.title);
-    check.onchange = () => { check.checked = done; update(card, {status:done ? 'todo' : 'done'}); };
+    // Mark 2026-11-25 «не тыкаются для завершения кнопки»: the box used to snap back while GitHub answered
+    // (~2 s) with the only status line at the top of the page. Now it stays ticked, the card shows its own
+    // status, and a second click while saving is not lost.
+    check.onchange = () => update(card, {status:done ? 'todo' : 'done'}, row);
+    if (busy.has(card.id)) { row.classList.add('is-busy'); check.disabled = true; check.checked = !done; }
     label.append(check);
     const body = node('div','kb-card-body');
     const validLink = /^https:\/\/github\.com\//i.test(card.url || '');
@@ -10372,13 +10429,16 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
       function action(text, changes) {
         const button = node('button','kb-action',text);
         button.type = 'button';
-        button.onclick = () => update(card,changes);
+        button.onclick = () => update(card,changes,row);
         actions.append(button);
       }
       action(card.status === 'todo' ? 'Начать' : 'В список', {status:card.status === 'todo' ? 'doing' : 'todo'});
       action(card.plan === today ? 'Убрать из дня' : 'В план дня', {plan:card.plan === today ? '' : today});
       body.append(actions);
     }
+    const note = node('p','kb-card-note');
+    note.setAttribute('role','status');
+    body.append(note);
     row.dataset.taskId = String(card.id);
     row.append(label,body);
     return row;
@@ -10440,20 +10500,71 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
       if (active()) { cards = result; draw(); }
     });
   }
-  function update(card, changes) {
-    perform('Сохраняю…', async active => {
-      const updated = await api({action:'update_task', id:card.id, revision:card.revision, ...changes});
+  function cardNote(row, text, bad) {
+    const note = row && row.querySelector('.kb-card-note');
+    if (note) { note.textContent = text; note.classList.toggle('is-error', Boolean(bad)); }
+  }
+  function toast(text, undo) {
+    const box = byId('toast');
+    box.replaceChildren(node('span','',text));
+    if (undo) {
+      const button = node('button','kb-action','Вернуть');
+      button.type = 'button';
+      button.onclick = () => { box.hidden = true; undo(); };
+      box.append(button);
+    }
+    box.hidden = false;
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => { box.hidden = true; }, 6000);
+  }
+  // One card at a time per card, not one action for the whole board: a slow GitHub answer for one task
+  // must not swallow a click on another. A stale revision (Jarvis or an agent touched the issue) is
+  // re-read and retried once instead of asking for «Обновить».
+  async function update(card, changes, row) {
+    if (busy.has(card.id)) return;
+    const current = generation;
+    const active = () => generation === current;
+    busy.add(card.id);
+    if (row) { row.classList.add('is-busy'); row.querySelectorAll('input,button').forEach(el => { el.disabled = true; }); }
+    cardNote(row, 'Сохраняю…');
+    const send = base => api({action:'update_task', id:base.id, revision:base.revision, ...changes});
+    try {
+      let updated;
+      try { updated = await send(card); }
+      catch (error) {
+        if (error.status !== 409) throw error;
+        const fresh = (await read()).find(item => item.id === card.id);
+        if (!fresh) throw error;
+        updated = fresh.status === changes.status && changes.plan === undefined ? fresh : await send(fresh);
+      }
       if (!active()) return;
+      busy.delete(card.id);
       cards = cards.map(item => item.id === updated.id ? updated : item);
       if (updated.status !== 'done' && changes.status) selectLane(updated.status);
       draw();
-      const next = [...board.querySelectorAll('.kb-card')].find(row => row.dataset.taskId === String(updated.id));
+      if (changes.status === 'done') {
+        toast('✅ Готово: ' + updated.title, () => update(updated, {status:'todo'}));
+      } else if (changes.status) {
+        toast(changes.status === 'doing' ? 'В работе: ' + updated.title : 'Вернул в список: ' + updated.title);
+      } else {
+        toast(changes.plan ? 'В плане дня: ' + updated.title : 'Убрал из плана дня: ' + updated.title);
+      }
+      const next = [...board.querySelectorAll('.kb-card')].find(r => r.dataset.taskId === String(updated.id));
       const focus = next?.querySelector('input');
       if (focus && focus.getClientRects().length) focus.focus({preventScroll:true});
-      else if (updated.status === 'done') byId('archive').querySelector('summary').focus({preventScroll:true});
-      else view.focus({preventScroll:true});
-      return 'Задача обновлена.';
-    });
+    } catch (error) {
+      busy.delete(card.id);
+      if (!active()) return;
+      if (error.status === 401 || error.status === 403) {
+        lock(); message.textContent = 'Войди в Командный центр как владелец и нажми «Обновить».';
+        return;
+      }
+      // Another card's save may have redrawn the board meanwhile: redraw from the confirmed state and
+      // put the error on the card that is on screen now, not on a detached old row.
+      draw();
+      const current = [...board.querySelectorAll('.kb-card')].find(r => r.dataset.taskId === String(card.id));
+      cardNote(current, error.status === 400 ? error.message : 'Не сохранилось. Нажми ещё раз.', true);
+    }
   }
   form.onsubmit = e => {
     e.preventDefault();
@@ -10480,6 +10591,159 @@ const CC_DEPARTMENT_NAMES = { Sales: 'Продажи', Development: 'Разра�
   document.addEventListener('visibilitychange', () => {
     if (document.getElementById('section-tasks').classList.contains('active') && !document.hidden) refresh();
   });
+})();
+
+// ── Tasks from calls ── Mark 2026-11-25: «создаются задачи из call, но я не вижу куда они уходят и как их
+// посмотреть и увидеть когда они сделаны. и в каком контексте».
+// One place: «Задачи» → «📞 Из звонков» (and the same list inside the meeting in «Встречи»). Data: /api/call-tasks,
+// owner only, built on the Mac mini from the CRM cards (the card stays the source of truth). A tick is POSTed,
+// written into the card and the Jarvis day plan by call_tasks.py within ~10 minutes; the page shows it at once.
+const ccCallTasks = (() => {
+  const $ = id => document.getElementById(id);
+  const dayFormat = new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short'});
+  const doneFormat = new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit', timeZone:'Europe/Paris'});
+  const PROJECTS = {offrys:'Offrys', employus:'EmployUs', genealogy:'Генеалогия', family:'Семья', studio:'AI Studio'};
+  let data = null, loading = null, target = new URLSearchParams(location.search).get('call');
+  const busy = new Set(), touched = new Set();   // a call ticked here stays in view until the page reloads
+  function el(tag, cls, text) { const n = document.createElement(tag); if (cls) n.className = cls; if (text !== undefined) n.textContent = text; return n; }
+  function headers() { return {...(typeof jarvisRunHeaders === 'function' ? jarvisRunHeaders() : {}), 'Content-Type':'application/json'}; }
+  async function load() {
+    if (!DASHBOARD_API) return null;
+    if (loading) return loading;
+    loading = (async () => {
+      try {
+        const r = await fetch(`${DASHBOARD_API}/api/call-tasks`, {headers: headers(), credentials:'same-origin', cache:'no-store'});
+        if (!r.ok || r.redirected) throw new Error('unavailable');
+        data = await r.json();
+      } catch { data = {state:'unavailable', calls:[]}; }
+      finally { loading = null; }
+      return data;
+    })();
+    return loading;
+  }
+  function project(p) { return PROJECTS[(p || '').toLowerCase()] || p; }
+  function openMeeting(id) {
+    oaPendingOpen = id;
+    showSection('context');
+    oaShowSwitch('meetings');
+  }
+  function openTasks(call) {
+    target = call;
+    showSection('tasks');
+  }
+  function stepRow(call, step) {
+    const li = el('li', 'ct-step' + (step.done ? ' is-done' : ''));
+    const label = el('label'), box = document.createElement('input');
+    box.type = 'checkbox'; box.checked = step.done; box.disabled = busy.has(step.id);
+    box.setAttribute('aria-label', (step.done ? 'Вернуть: ' : 'Сделано: ') + step.text);
+    label.append(box);
+    const body = el('div', 'ct-step-body'), p = el('p', '', step.text);
+    const note = el('small', '');
+    if (busy.has(step.id)) note.textContent = 'Сохраняю…';
+    else if (step.done) note.textContent = '✅ Сделано' + (step.done_at && !Number.isNaN(new Date(step.done_at).valueOf()) ? ' · ' + doneFormat.format(new Date(step.done_at)) : '') + (step.pending ? ' · в карточку попадёт за ~10 мин' : '');
+    body.append(p, note);
+    box.onchange = () => toggle(call, step, box.checked, note, box);
+    li.append(label, body);
+    return li;
+  }
+  async function toggle(call, step, done, note, box) {
+    if (busy.has(step.id)) return;
+    busy.add(step.id); touched.add(call.card); box.disabled = true; note.className = ''; note.textContent = 'Сохраняю…';
+    try {
+      const r = await fetch(`${DASHBOARD_API}/api/call-tasks`, {method:'POST', headers: headers(), credentials:'same-origin', cache:'no-store',
+        body: JSON.stringify({id: step.id, card: call.card, done})});
+      if (!r.ok || r.redirected) throw new Error(String(r.status));
+      const saved = await r.json();
+      step.done = done; step.done_at = done ? saved.at : ''; step.pending = true;
+      busy.delete(step.id);
+      renderAll();
+    } catch (error) {
+      busy.delete(step.id);
+      box.disabled = false; box.checked = step.done;
+      note.className = 'is-error';
+      note.textContent = error.message === '404' ? 'Карточка изменилась, обнови страницу.' : 'Не сохранилось. Нажми ещё раз.';
+    }
+  }
+  function callBlock(call, inMeeting) {
+    const box = el('article', 'ct-call');
+    box.dataset.call = call.call;
+    const done = call.steps.filter(s => s.done).length;
+    const top = el('div', 'ct-call-top');
+    top.append(el(inMeeting ? 'h4' : 'h4', 'ct-call-title', inMeeting ? '✅ Задачи из этой встречи' : call.title));
+    if (call.steps.length) top.append(el('span', 'ct-progress' + (done === call.steps.length ? ' is-done' : ''), `${done} из ${call.steps.length} сделано`));
+    box.append(top);
+    if (!inMeeting) {
+      const meta = el('div', 'ct-meta');
+      const d = new Date((call.start || call.date + 'T12:00:00Z'));
+      if (!Number.isNaN(d.valueOf())) meta.append(el('span', 'kb-tag', '📞 ' + dayFormat.format(d) + (call.duration_min ? ` · ${call.duration_min} мин` : '')));
+      if (call.project) meta.append(el('span', 'kb-tag', project(call.project)));
+      for (const person of call.people.slice(0, 3)) meta.append(el('span', 'kb-tag', person));
+      box.append(meta);
+    }
+    if (call.steps.length) {
+      const ul = el('ul', 'ct-steps');
+      call.steps.forEach(s => ul.append(stepRow(call, s)));
+      box.append(ul);
+    }
+    if (call.others.length) {
+      const others = el('div', 'ct-others');
+      others.append(el('span', '', '⏳ Ждём от других'));
+      const ul = el('ul');
+      for (const o of call.others) ul.append(el('li', '', `${o.who}: ${o.text}` + (o.due ? ` · ${o.due}` : '')));
+      others.append(ul);
+      box.append(others);
+    }
+    const links = el('div', 'ct-links');
+    if (!inMeeting && call.meeting_id) {
+      const b = el('button', 'kb-action', 'Открыть звонок: резюме и расшифровка'); b.type = 'button';
+      b.onclick = () => openMeeting(call.meeting_id); links.append(b);
+    }
+    if (inMeeting) {
+      const b = el('button', 'kb-action', 'Все задачи из звонков'); b.type = 'button';
+      b.onclick = () => openTasks(call.call); links.append(b);
+    }
+    if (links.childElementCount) box.append(links);
+    return box;
+  }
+  function renderList() {
+    const section = $('ct-calls'); if (!section || !data) return;
+    const status = $('ct-status'), list = $('ct-list');
+    if (data.state === 'owner_required' || data.state === 'unavailable' && !data.calls.length) { section.hidden = data.state === 'owner_required'; status.textContent = data.state === 'unavailable' ? 'Задачи из звонков сейчас недоступны.' : ''; list.replaceChildren(); return; }
+    section.hidden = false;
+    if (data.state === 'not_installed') { status.textContent = 'Список ещё не собран на Mac mini: появится в течение 10 минут после обновления.'; list.replaceChildren(); return; }
+    status.textContent = data.state === 'stale' ? 'Mac mini давно не обновлял список: новые звонки могут не попасть.' : '';
+    const showDone = $('ct-show-done').checked;
+    const open = c => c.steps.some(s => !s.done) || (!c.steps.length && c.others.length);
+    const calls = data.calls.filter(c => showDone || open(c) || c.call === target || touched.has(c.card));
+    $('ct-count').textContent = String(data.calls.reduce((n, c) => n + c.steps.filter(s => !s.done).length, 0));
+    list.replaceChildren(...(calls.length ? calls.map(c => callBlock(c, false)) : [el('p', 'kb-empty', 'Открытых задач из звонков нет 🎉')]));
+    if (target) {
+      const node = [...list.querySelectorAll('.ct-call')].find(n => n.dataset.call === target);
+      if (node) { node.classList.add('is-target'); node.scrollIntoView({block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+      target = null;
+    }
+  }
+  let meetingTarget = null;
+  async function renderMeeting(id, container) {
+    meetingTarget = {id, container};
+    container.hidden = true; container.replaceChildren();
+    await load();
+    if (meetingTarget?.id !== id || !data) return;
+    const call = (data.calls || []).find(c => c.meeting_id === id);
+    if (!call) return;
+    container.replaceChildren(callBlock(call, true));
+    container.hidden = false;
+  }
+  function renderAll() {
+    renderList();
+    if (meetingTarget && oaOpenId === meetingTarget.id) {
+      const call = (data.calls || []).find(c => c.meeting_id === meetingTarget.id);
+      if (call) meetingTarget.container.replaceChildren(callBlock(call, true));
+    }
+  }
+  $('ct-show-done')?.addEventListener('change', renderList);
+  window.addEventListener('cc-tasks-open', async () => { await load(); renderList(); });
+  return {load, renderList, renderMeeting};
 })();
 
 // Max 2026-11-25 «скомпактуй отделы, чтобы в них были все функции»: the old tabs are grouped into four
@@ -11504,6 +11768,8 @@ setInterval(()=>{if(ccContextVisible())ccLoadContext(ccContextRecordId);},60000)
 // ── Orange Audio meetings ── Mark 2026-11-23: «функционал гранолы … в командный центр … своя гранола, Orange Audio».
 // Granola-like: meetings grouped by day on the left, the open meeting (summary / transcript) on the right.
 // Data: /api/orange-audio, owner only, built on the Mac mini from Orange Audio recordings + Granola notes.
+// A link from a call task («Открыть звонок») opens its meeting once the list has loaded.
+let oaPendingOpen = null;
 let oaGeneration = 0, oaController = null, oaTimer = null, oaOpenId = null, oaMeeting = null, oaView = 'summary', oaSource = null;
 const oaNames = {orange: 'Orange Audio', granola: 'Granola'};
 function oaVisible() { return !document.hidden && !!document.querySelector('#section-context.active') && !document.getElementById('oa-view').hidden; }
@@ -11579,6 +11845,7 @@ async function oaLoad() {
       row.append(dot, title, meta); row.addEventListener('click', () => oaOpen(m.id)); list.append(row);
     }
     if (!list.childElementCount) oaStatus(document.getElementById('oa-search').value ? 'Ничего не нашлось.' : 'Пока нет встреч: после первого созвона они появятся здесь.');
+    if (oaPendingOpen) { const id = oaPendingOpen; oaPendingOpen = null; oaOpen(id); }
   } catch (error) {
     if (generation !== oaGeneration || error.name === 'AbortError') return;
     if (error.message === 'owner_required') { oaClear(''); document.getElementById('oa-list').replaceChildren(ccOwnerGate('Встречи')); return; }
@@ -11637,6 +11904,7 @@ async function oaOpen(id) {
     const note = document.getElementById('oa-note'); note.hidden = false;
     document.getElementById('oa-view').classList.add('is-reading');
     oaRender(); note.focus({preventScroll: true});
+    ccCallTasks.renderMeeting(m.id, document.getElementById('oa-tasks'));
     if (window.matchMedia('(max-width: 820px)').matches) window.scrollTo({top: 0});
   } catch (error) {
     if (generation !== oaGeneration || error.name === 'AbortError') return;
